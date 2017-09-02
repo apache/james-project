@@ -36,9 +36,9 @@ import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.future.FutureResponse;
-import org.apache.james.protocols.api.future.FutureResponse.ResponseListener;
 import org.apache.james.protocols.api.future.FutureResponseImpl;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -46,12 +46,13 @@ import org.apache.james.protocols.api.future.FutureResponseImpl;
  *
  */
 public class CommandDispatcher<Session extends ProtocolSession> implements ExtensibleHandler, LineHandler<Session> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CommandDispatcher.class);
     /**
      * The list of available command handlers
      */
-    private final HashMap<String, List<CommandHandler<Session>>> commandHandlerMap = new HashMap<String, List<CommandHandler<Session>>>();
+    private final HashMap<String, List<CommandHandler<Session>>> commandHandlerMap = new HashMap<>();
 
-    private final List<ProtocolHandlerResultHandler<Response, Session>> rHandlers = new ArrayList<ProtocolHandlerResultHandler<Response, Session>>();
+    private final List<ProtocolHandlerResultHandler<Response, Session>> rHandlers = new ArrayList<>();
 
     private final Collection<String> mandatoryCommands;
     
@@ -82,7 +83,7 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
     protected void addToMap(String commandName, CommandHandler<Session> cmdHandler) {
         List<CommandHandler<Session>> handlers = commandHandlerMap.get(commandName);
         if(handlers == null) {
-            handlers = new ArrayList<CommandHandler<Session>>();
+            handlers = new ArrayList<>();
             commandHandlerMap.put(commandName, handlers);
         }
         handlers.add(cmdHandler);
@@ -100,8 +101,8 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
         if (command == null) {
             return null;
         }
-        if (session.getLogger().isDebugEnabled()) {
-            session.getLogger().debug("Lookup command handler for command: " + command);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Lookup command handler for command: " + command);
         }
         List<CommandHandler<Session>> handlers =  commandHandlerMap.get(command);
         if(handlers == null) {
@@ -158,7 +159,7 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
             }
             return dispatchCommandHandlers(session, request);
         } catch (Exception e) {
-            session.getLogger().debug("Unable to parse request", e);
+            LOGGER.debug("Unable to parse request", e);
             return session.newFatalErrorResponse();
         } 
 
@@ -174,8 +175,8 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
      * @return response
      */
     protected Response dispatchCommandHandlers(Session session, Request request) {
-        if (session.getLogger().isDebugEnabled()) {
-            session.getLogger().debug(getClass().getName() + " received: " + request.getCommand());
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(getClass().getName() + " received: " + request.getCommand());
         }
         List<CommandHandler<Session>> commandHandlers = getCommandHandlers(request.getCommand(), session);
         // fetch the command handlers registered to the command
@@ -198,36 +199,33 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
         return null;
     }
 
-    private Response executeResultHandlers(final Session session, Response response, final long executionTime, final CommandHandler<Session> cHandler, final Iterator<ProtocolHandlerResultHandler<Response, Session>> resultHandlers) {
+    private Response executeResultHandlers(final Session session, Response responseFuture, final long executionTime, final CommandHandler<Session> cHandler, final Iterator<ProtocolHandlerResultHandler<Response, Session>> resultHandlers) {
         // Check if the there is a ResultHandler left to execute if not just return the response
         if (resultHandlers.hasNext()) {
             // Special handling of FutureResponse
             // See PROTOCOLS-37
-            if (response instanceof FutureResponse) {
+            if (responseFuture instanceof FutureResponse) {
                 final FutureResponseImpl futureResponse = new FutureResponseImpl();
-                ((FutureResponse) response).addListener(new ResponseListener() {
+                ((FutureResponse) responseFuture).addListener(response -> {
+                    Response r = resultHandlers.next().onResponse(session, response, executionTime, cHandler);
 
-                    public void onResponse(FutureResponse response) {
-                        Response r = resultHandlers.next().onResponse(session, response, executionTime, cHandler);
-                        
-                        // call the next ResultHandler 
-                        r = executeResultHandlers(session, r, executionTime, cHandler, resultHandlers);
-                        
-                        // notify the FutureResponse that we are ready
-                        futureResponse.setResponse(r);
-                    }
+                    // call the next ResultHandler
+                    r = executeResultHandlers(session, r, executionTime, cHandler, resultHandlers);
+
+                    // notify the FutureResponse that we are ready
+                    futureResponse.setResponse(r);
                 });
                 
                 // just return the new FutureResponse which will get notified once its ready
                 return futureResponse;
             }  else {
-                response = resultHandlers.next().onResponse(session, response, executionTime, cHandler);
+                responseFuture = resultHandlers.next().onResponse(session, responseFuture, executionTime, cHandler);
                 
                 // call the next ResultHandler 
-                return executeResultHandlers(session, response, executionTime, cHandler, resultHandlers);
+                return executeResultHandlers(session, responseFuture, executionTime, cHandler, resultHandlers);
             }
         }
-        return response;
+        return responseFuture;
     }
     /**
      * Parse the line into a {@link Request}

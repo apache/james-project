@@ -21,16 +21,19 @@ package org.apache.james.imap.encode;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.AnnotationResponse;
 import org.apache.james.mailbox.model.MailboxAnnotation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AnnotationResponseEncoder extends AbstractChainedImapEncoder {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AnnotationResponseEncoder.class);
 
     public AnnotationResponseEncoder(ImapEncoder next) {
         super(next);
@@ -43,7 +46,7 @@ public class AnnotationResponseEncoder extends AbstractChainedImapEncoder {
         composer.untagged();
         composer.commandName(ImapConstants.ANNOTATION_RESPONSE_NAME);
 
-        composer.quote(Optional.fromNullable(response.getMailboxName()).or(""));
+        composer.quote(Optional.ofNullable(response.getMailboxName()).orElse(""));
         composeAnnotations(composer, session, response.getMailboxAnnotations());
 
         composer.end();
@@ -61,10 +64,10 @@ public class AnnotationResponseEncoder extends AbstractChainedImapEncoder {
 
     private void composeAnnotation(ImapResponseComposer composer, ImapSession session, MailboxAnnotation annotation) throws IOException {
         if (annotation.isNil()) {
-            session.getLog().warn("There is nil data of key {} on store: ", annotation.getKey().asString());
+            LOGGER.warn("There is nil data of key {} on store: ", annotation.getKey().asString());
         } else {
             composer.message(annotation.getKey().asString());
-            composer.quote(annotation.getValue().or(""));
+            composer.quote(annotation.getValue().orElse(""));
         }
     }
 

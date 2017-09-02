@@ -21,9 +21,8 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_ENABLE;
 
+import java.io.Closeable;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -40,23 +39,31 @@ import org.apache.james.imap.message.response.EnableResponse;
 import org.apache.james.imap.processor.PermitEnableCapabilityProcessor.EnableException;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> implements CapabilityImplementingProcessor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(EnableProcessor.class);
 
-    private final static List<PermitEnableCapabilityProcessor> capabilities = new ArrayList<PermitEnableCapabilityProcessor>();
+    private final static List<PermitEnableCapabilityProcessor> capabilities = new ArrayList<>();
     public final static String ENABLED_CAPABILITIES = "ENABLED_CAPABILITIES";
-    private final static List<String> CAPS = Collections.unmodifiableList(Arrays.asList(SUPPORTS_ENABLE));
+    private final static List<String> CAPS = ImmutableList.of(SUPPORTS_ENABLE);
+    private final CapabilityProcessor capabilityProcessor;
 
     public EnableProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, List<PermitEnableCapabilityProcessor> capabilities,
-            MetricFactory metricFactory) {
-        this(next, mailboxManager, factory, metricFactory);
+            MetricFactory metricFactory, CapabilityProcessor capabilityProcessor) {
+        this(next, mailboxManager, factory, metricFactory, capabilityProcessor);
         EnableProcessor.capabilities.addAll(capabilities);
 
     }
 
     public EnableProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+            MetricFactory metricFactory, CapabilityProcessor capabilityProcessor) {
         super(EnableRequest.class, next, mailboxManager, factory, metricFactory);
+        this.capabilityProcessor = capabilityProcessor;
     }
 
 
@@ -76,19 +83,19 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
             unsolicitedResponses(session, responder, false);
             okComplete(command, tag, responder);
         } catch (EnableException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Unable to enable extension", e);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Unable to enable extension", e);
             }
             taggedBad(command, tag, responder, HumanReadableText.FAILED);
         }
     }
    
-    public static Set<String> enable(ImapRequest request, Responder responder, ImapSession session, Iterator<String> caps) throws EnableException {
-        Set<String> enabledCaps = new HashSet<String>();
+    public Set<String> enable(ImapRequest request, Responder responder, ImapSession session, Iterator<String> caps) throws EnableException {
+        Set<String> enabledCaps = new HashSet<>();
         while(caps.hasNext()) {
             String cap = caps.next();
             // Check if the CAPABILITY is supported at all
-            if (CapabilityProcessor.getSupportedCapabilities(session).contains(cap)) {
+            if (capabilityProcessor.getSupportedCapabilities(session).contains(cap)) {
                 for (PermitEnableCapabilityProcessor enableProcessor : capabilities) {
                     if (enableProcessor.getPermitEnableCapabilities(session).contains(cap)) {
                         enableProcessor.enable(request, responder, session, cap);
@@ -121,7 +128,7 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
         Set<String> caps = (Set<String>) session.getAttribute(ENABLED_CAPABILITIES);
         
         if (caps == null) {
-            caps = new HashSet<String>();
+            caps = new HashSet<>();
             session.setAttribute(ENABLED_CAPABILITIES, caps);
         } 
         return caps;
@@ -135,4 +142,11 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
         return CAPS;
     }
 
+    @Override
+    protected Closeable addContextToMDC(EnableRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "ENABLE")
+            .addContext("capabilities", ImmutableList.copyOf(message.getCapabilities()))
+            .build();
+    }
 }

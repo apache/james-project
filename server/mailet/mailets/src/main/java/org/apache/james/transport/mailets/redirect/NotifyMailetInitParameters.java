@@ -19,9 +19,10 @@
 
 package org.apache.james.transport.mailets.redirect;
 
+import java.util.Optional;
+
 import org.apache.mailet.base.GenericMailet;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 
 public class NotifyMailetInitParameters implements InitParameters {
@@ -110,7 +111,7 @@ public class NotifyMailetInitParameters implements InitParameters {
     public Optional<String> getReplyTo() {
         String recipients = mailet.getInitParameter("replyTo", mailet.getInitParameter("replyto"));
         if (Strings.isNullOrEmpty(recipients)) {
-            return Optional.absent();
+            return Optional.empty();
         }
         return Optional.of(recipients);
     }

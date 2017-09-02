@@ -28,7 +28,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -54,15 +54,13 @@ import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.NoopMetricFactory;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockitoAnnotations;
-import org.slf4j.Logger;
-
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 public class GetAnnotationProcessorTest {
     private static final String TAG = "TAG";
@@ -92,7 +90,6 @@ public class GetAnnotationProcessorTest {
 
     private GetAnnotationRequest.Builder annotationRequestBuilder;
     private MailboxPath inbox;
-    private Logger log;
     private ArgumentCaptor<HumanReadableText> humanTextCaptor;
     private ArgumentCaptor<ResponseCode> captorResponsecode;
     private ArgumentCaptor<AnnotationResponse> captorAnnotationResponse;
@@ -104,7 +101,6 @@ public class GetAnnotationProcessorTest {
         mockStatusResponseFactory = mock(StatusResponseFactory.class);
         mockResponder = mock(ImapProcessor.Responder.class);
         mockImapSession = mock(ImapSession.class);
-        log = mock(Logger.class);
 
         mailboxSession = new MockMailboxSession("username");
         inbox = MailboxPath.inbox(mailboxSession);
@@ -119,7 +115,6 @@ public class GetAnnotationProcessorTest {
 
         when(mockImapSession.getState()).thenReturn(ImapSessionState.SELECTED);
         when(mockImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
-        when(mockImapSession.getLog()).thenReturn(log);
     }
 
     @Before

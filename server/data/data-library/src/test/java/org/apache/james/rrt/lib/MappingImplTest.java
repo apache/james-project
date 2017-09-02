@@ -127,4 +127,9 @@ public class MappingImplTest {
     public void getErrorMessageShouldReturnWhenErrorWithoutMessage() {
         assertThat(MappingImpl.error("").getErrorMessage()).isEqualTo("");
     }
+
+    @Test
+    public void toStringShouldReturnValuePrefixedAsByMoreObject() {
+        assertThat(MappingImpl.of("value").toString()).isEqualTo("MappingImpl{mapping=value}");
+    }
 }

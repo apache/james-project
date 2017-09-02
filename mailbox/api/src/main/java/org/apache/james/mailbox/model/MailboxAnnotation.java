@@ -19,14 +19,15 @@
 
 package org.apache.james.mailbox.model;
 
+import java.util.Optional;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 public class MailboxAnnotation {
     public static MailboxAnnotation nil(MailboxAnnotationKey key) {
-        return new MailboxAnnotation(key, Optional.<String> absent());
+        return new MailboxAnnotation(key, Optional.empty());
     }
 
     public static MailboxAnnotation newInstance(MailboxAnnotationKey key, String value) {

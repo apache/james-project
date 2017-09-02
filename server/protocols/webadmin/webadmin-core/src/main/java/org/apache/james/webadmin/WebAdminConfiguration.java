@@ -30,6 +30,7 @@ public class WebAdminConfiguration {
 
     public static final boolean DEFAULT_CORS_DISABLED = false;
     public static final String CORS_ALL_ORIGINS = "*";
+    public static final String DEFAULT_HOST = "localhost";
 
     public static WebAdminConfiguration testingConfiguration() {
         return WebAdminConfiguration.builder()
@@ -52,6 +53,7 @@ public class WebAdminConfiguration {
         private Optional<Boolean> enableCORS = Optional.empty();
         private Optional<TlsConfiguration> tlsConfiguration = Optional.empty();
         private Optional<String> urlCORSOrigin = Optional.empty();
+        private Optional<String> host = Optional.empty();
 
         public Builder tls(TlsConfiguration tlsConfiguration) {
             this.tlsConfiguration = Optional.of(tlsConfiguration);
@@ -98,6 +100,11 @@ public class WebAdminConfiguration {
             return enableCORS(false);
         }
 
+        public Builder host(String host) {
+            this.host = Optional.ofNullable(host);
+            return this;
+        }
+
         public WebAdminConfiguration build() {
             Preconditions.checkState(enabled.isPresent(), "You need to explicitly enable or disable WebAdmin server");
             Preconditions.checkState(!enabled.get() || port.isPresent(), "You need to specify a port for WebAdminConfiguration");
@@ -105,7 +112,8 @@ public class WebAdminConfiguration {
                 port,
                 tlsConfiguration,
                 enableCORS.orElse(DEFAULT_CORS_DISABLED),
-                urlCORSOrigin.orElse(CORS_ALL_ORIGINS));
+                urlCORSOrigin.orElse(CORS_ALL_ORIGINS),
+                host.orElse(DEFAULT_HOST));
         }
     }
 
@@ -114,14 +122,17 @@ public class WebAdminConfiguration {
     private final Optional<TlsConfiguration> tlsConfiguration;
     private final boolean enableCORS;
     private final String urlCORSOrigin;
+    private final String host;
 
     @VisibleForTesting
-    WebAdminConfiguration(boolean enabled, Optional<Port> port, Optional<TlsConfiguration> tlsConfiguration, boolean enableCORS, String urlCORSOrigin) {
+    WebAdminConfiguration(boolean enabled, Optional<Port> port, Optional<TlsConfiguration> tlsConfiguration,
+                          boolean enableCORS, String urlCORSOrigin, String host) {
         this.enabled = enabled;
         this.port = port;
         this.tlsConfiguration = tlsConfiguration;
         this.enableCORS = enableCORS;
         this.urlCORSOrigin = urlCORSOrigin;
+        this.host = host;
     }
 
     public boolean isEnabled() {
@@ -148,6 +159,10 @@ public class WebAdminConfiguration {
         return tlsConfiguration.isPresent();
     }
 
+    public String getHost() {
+        return host;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof WebAdminConfiguration) {
@@ -157,13 +172,14 @@ public class WebAdminConfiguration {
                 && Objects.equals(this.port, that.port)
                 && Objects.equals(this.tlsConfiguration, that.tlsConfiguration)
                 && Objects.equals(this.enableCORS, that.enableCORS)
-                && Objects.equals(this.urlCORSOrigin, that.urlCORSOrigin);
+                && Objects.equals(this.urlCORSOrigin, that.urlCORSOrigin)
+                && Objects.equals(this.host, that.host);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(enabled, port, tlsConfiguration, enableCORS, urlCORSOrigin);
+        return Objects.hash(enabled, port, tlsConfiguration, enableCORS, urlCORSOrigin, host);
     }
 }

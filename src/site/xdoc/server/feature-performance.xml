@@ -79,23 +79,23 @@
     </subsection>
 
     <subsection name="Measuring dequeueing speed">
-      <p>James can spool more than 100 mails per second (configured with Maildir mail storage).</p>
+      <p>James can spool more than 65 mails per second (configured with Maildir mail storage and the FileMailQueue).</p>
 
-      <p>We ran following command (from postfix distribution) with only 10 dequeue threads.</p>
+      <p>We ran some SMTP Gatling load testing during 5 minutes (https://github.com/linagora/james-gatling)</p>
 
-      <source>time smtp-source -A -C1500 -l 100 -m 100000 -s 500 -d -c -f user@domain.net -t te localhost:25 100000</source>
+      <source>sbt
+gatling:testOnly org.apache.james.gatling.smtp.scenari.NoAuthenticationNoEncryptionScenario</source>
 
       <p>The result was:</p>
       <ol>
-        <li>The queuing of the 100000 emails took 8 minutes.</li>
-        <li>The dequeueing of the 100000 emails took 16 minutes.</li>
+        <li>During these 5 minutes, 29.924 mails where enqueued (~100 email per second)</li>
+        <li>The dequeueing of these emails took 7 minutes and 40 seconds (~65 emails per second)</li>
       </ol>
 
-      <p>We thus have a throughput of more than <b>100 mails/second</b>.</p>
+      <p>We thus have a throughput of more than <b>65 mails/second</b>.</p>
 
-      <p>These numbers are obtained with the out-of-the-box configuration (not optimized).
-        I you run for example (depends on JVM) with <code>-XX:+UseParallelGC -XX:+AggressiveOpts -XX:+UseFastAccessorMethods</code>,
-        you may have 10000 mails enqueued in 38 seconds, which represents <b>263 mails per second</b>.</p>
+      <p>These numbers are obtained with the out-of-the-box configuration (not optimized), on a HDD disk. Better performance is expected with
+        better hardware and further JVM tuning (-XX:+UseParallelGC -XX:+AggressiveOpts -XX:+UseFastAccessorMethods).</p>
     </subsection>
 
   </section>

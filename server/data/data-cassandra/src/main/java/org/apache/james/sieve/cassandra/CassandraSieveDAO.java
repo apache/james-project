@@ -33,11 +33,9 @@ import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.SIZE;
 import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.TABLE_NAME;
 import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.USER_NAME;
 
-
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -49,6 +47,7 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Select;
+import com.github.steveash.guavate.Guavate;
 
 public class CassandraSieveDAO {
 
@@ -116,7 +115,7 @@ public class CassandraSieveDAO {
                 .map(row -> new ScriptSummary(
                     row.getString(SCRIPT_NAME),
                     row.getBool(IS_ACTIVE)))
-                .collect(Collectors.toList()));
+                .collect(Guavate.toImmutableList()));
     }
 
     public CompletableFuture<Boolean> updateScriptActivation(String user, String scriptName, boolean active) {

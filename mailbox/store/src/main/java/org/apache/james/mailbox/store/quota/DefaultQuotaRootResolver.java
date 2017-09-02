@@ -31,7 +31,6 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -67,12 +66,8 @@ public class DefaultQuotaRootResolver implements QuotaRootResolver {
         }
         String namespace = parts.get(0);
         String user = parts.get(1);
-        return Lists.transform(factory.getMailboxMapper(mailboxSession).findMailboxWithPathLike(new MailboxPath(namespace, user, "%")),
-            new Function<Mailbox, MailboxPath>() {
-                @Override
-                public MailboxPath apply(Mailbox idMailbox) {
-                    return idMailbox.generateAssociatedPath();
-                }
-            });
+        return Lists.transform(factory.getMailboxMapper(mailboxSession)
+            .findMailboxWithPathLike(new MailboxPath(namespace, user, "%")),
+            Mailbox::generateAssociatedPath);
     }
 }

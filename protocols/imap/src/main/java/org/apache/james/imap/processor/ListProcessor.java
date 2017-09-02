@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,8 +47,12 @@ import org.apache.james.mailbox.model.MailboxMetaData.Children;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ListProcessor.class);
 
     public ListProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
@@ -92,14 +97,12 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
      * @param responder
      */
     protected final void doProcess(String referenceName, String mailboxName, ImapSession session, String tag, ImapCommand command, Responder responder, MailboxTyper mailboxTyper) {
+        String user = ImapSessionUtils.getUserName(session);
+        final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
         try {
             // Should the namespace section be returned or not?
             final boolean isRelative;
-
             final List<MailboxMetaData> results;
-
-            final String user = ImapSessionUtils.getUserName(session);
-            final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
 
             if (mailboxName.length() == 0) {
                 // An empty mailboxName signifies a request for the hierarchy
@@ -124,34 +127,21 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
                 }
                 // Get the mailbox for the reference name.
                 final MailboxPath rootPath = new MailboxPath(referenceRoot, "", "");
-                results = new ArrayList<MailboxMetaData>(1);
+                results = new ArrayList<>(1);
                 results.add(new MailboxMetaData() {
 
-                    /**
-                     * @see org.apache.james.mailbox.MailboxMetaData#inferiors()
-                     */
                     public Children inferiors() {
                         return Children.CHILDREN_ALLOWED_BUT_UNKNOWN;
                     }
 
-                    /**
-                     * @see org.apache.james.mailbox.MailboxMetaData#getSelectability()
-                     */
                     public Selectability getSelectability() {
                         return Selectability.NOSELECT;
                     }
-
-                    /**
-                     * @see org.apache.james.mailbox.MailboxMetaData#getHierarchyDelimiter()
-                     */
+                    
                     public char getHierarchyDelimiter() {
                         return mailboxSession.getPathDelimiter();
                     }
 
-                    /**
-                     * (non-Javadoc)
-                     * @see org.apache.james.mailbox.MailboxMetaData#getPath()
-                     */
                     public MailboxPath getPath() {
                         return rootPath;
                     }
@@ -190,9 +180,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
 
             okComplete(command, tag, responder);
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("List failed", e);
-            }
+            LOGGER.error("List failed for mailboxName " + mailboxName + " and user" + user, e);
             no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
         }
     }
@@ -246,5 +234,14 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
 
     protected boolean isAcceptable(ImapMessage message) {
         return ListRequest.class.equals(message.getClass());
+    }
+
+    @Override
+    protected Closeable addContextToMDC(ListRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "LIST")
+            .addContext("base", message.getBaseReferenceName())
+            .addContext("pattern", message.getMailboxPattern())
+            .build();
     }
 }

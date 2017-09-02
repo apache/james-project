@@ -48,7 +48,7 @@ public class SortingHierarchicalCollections<T, Id> {
         DependencyGraph<T> graph = new DependencyGraph<>(m ->
                 parentId.apply(m).map(mapOfElementsById::get));
 
-        elements.stream().forEach(graph::registerItem);
+        elements.forEach(graph::registerItem);
 
         return graph.getBuildChain().collect(Collectors.toList());
     }

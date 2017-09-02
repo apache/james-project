@@ -18,17 +18,20 @@
  ****************************************************************/
 package org.apache.james.dnsservice.library;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collection;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.TemporaryResolutionException;
-import static org.junit.Assert.*;
 import org.junit.Test;
-import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 public class MXHostAddressIteratorTest {
 
@@ -73,16 +76,14 @@ public class MXHostAddressIteratorTest {
                 throw new UnsupportedOperationException();
             }
         };
-        MXHostAddressIterator it = new MXHostAddressIterator(Arrays.asList("localhost", "localhost2").iterator(), dns,
-                false, LoggerFactory.getLogger(this.getClass()));
+        MXHostAddressIterator it = new MXHostAddressIterator(Arrays.asList("localhost", "localhost2").iterator(), dns, false);
         for (int i = 0; i < 4; i++) {
             assertTrue(it.hasNext());
             assertNotNull(it.next());
         }
         assertFalse(it.hasNext());
 
-        it = new MXHostAddressIterator(Arrays.asList("localhost", "localhost2").iterator(), dns, true, LoggerFactory.
-                getLogger(this.getClass()));
+        it = new MXHostAddressIterator(Arrays.asList("localhost", "localhost2").iterator(), dns, true);
         for (int i = 0; i < 2; i++) {
             assertTrue(it.hasNext());
             assertNotNull(it.next());
@@ -129,8 +130,7 @@ public class MXHostAddressIteratorTest {
         };
 
         // See JAMES-1271
-        MXHostAddressIterator it = new MXHostAddressIterator(Arrays.asList("localhost").iterator(), dns, false,
-                LoggerFactory.getLogger(this.getClass()));
+        MXHostAddressIterator it = new MXHostAddressIterator(Arrays.asList("localhost").iterator(), dns, false);
         assertFalse(it.hasNext());
     }
 }

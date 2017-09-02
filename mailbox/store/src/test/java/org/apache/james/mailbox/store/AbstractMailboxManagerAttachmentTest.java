@@ -20,13 +20,12 @@
 package org.apache.james.mailbox.store;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-
+import java.util.Optional;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
@@ -47,8 +46,6 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.base.Optional;
 
 public abstract class AbstractMailboxManagerAttachmentTest {
     private static final String USERNAME = "user@domain.tld";
@@ -131,7 +128,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         List<MessageAttachment> attachments = messages.next().getAttachments();
         assertThat(attachments).hasSize(1);
         assertThat(attachmentMapper.getAttachment(attachments.get(0).getAttachmentId()).getStream())
-            .hasContentEqualTo(ClassLoader.getSystemResourceAsStream("eml/gimp.png"));
+            .hasSameContentAs(ClassLoader.getSystemResourceAsStream("eml/gimp.png"));
     }
 
     @Test
@@ -154,9 +151,9 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         List<MessageAttachment> attachments = messages.next().getAttachments();
         assertThat(attachments).hasSize(2);
         assertThat(attachmentMapper.getAttachment(attachments.get(0).getAttachmentId()).getStream())
-            .hasContentEqualTo(ClassLoader.getSystemResourceAsStream("eml/4037_014.jpg"));
+            .hasSameContentAs(ClassLoader.getSystemResourceAsStream("eml/4037_014.jpg"));
         assertThat(attachmentMapper.getAttachment(attachments.get(1).getAttachmentId()).getStream())
-            .hasContentEqualTo(ClassLoader.getSystemResourceAsStream("eml/4037_015.jpg"));
+            .hasSameContentAs(ClassLoader.getSystemResourceAsStream("eml/4037_015.jpg"));
     }
 
     @Test

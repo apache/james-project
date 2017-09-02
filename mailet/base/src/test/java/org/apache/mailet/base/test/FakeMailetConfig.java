@@ -20,12 +20,11 @@
 package org.apache.mailet.base.test;
 
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.Properties;
 
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetContext;
-
-import com.google.common.base.Optional;
 
 /**
  * MailetConfig over Properties
@@ -44,18 +43,18 @@ public class FakeMailetConfig implements MailetConfig {
         private Properties properties;
 
         private Builder() {
-            mailetName = Optional.absent();
-            mailetContext = Optional.absent();
+            mailetName = Optional.empty();
+            mailetContext = Optional.empty();
             properties = new Properties();
         }
 
         public Builder mailetName(String mailetName) {
-            this.mailetName = Optional.fromNullable(mailetName);
+            this.mailetName = Optional.ofNullable(mailetName);
             return this;
         }
 
         public Builder mailetContext(MailetContext mailetContext) {
-            this.mailetContext = Optional.fromNullable(mailetContext);
+            this.mailetContext = Optional.ofNullable(mailetContext);
             return this;
         }
 
@@ -65,8 +64,8 @@ public class FakeMailetConfig implements MailetConfig {
         }
 
         public FakeMailetConfig build() {
-            return new FakeMailetConfig(mailetName.or(DEFAULT_MAILET_NAME), 
-                    mailetContext.or(FakeMailContext.defaultContext()), 
+            return new FakeMailetConfig(mailetName.orElse(DEFAULT_MAILET_NAME),
+                    mailetContext.orElse(FakeMailContext.defaultContext()),
                     properties);
         }
     }

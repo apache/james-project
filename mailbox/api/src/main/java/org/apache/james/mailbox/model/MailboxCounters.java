@@ -19,15 +19,16 @@
 
 package org.apache.james.mailbox.model;
 
+import java.util.Optional;
+
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 public class MailboxCounters {
 
     public static class Builder {
-        private Optional<Long> count = Optional.absent();
-        private Optional<Long> unseen = Optional.absent();
+        private Optional<Long> count = Optional.empty();
+        private Optional<Long> unseen = Optional.empty();
 
         public Builder count(long count) {
             this.count = Optional.of(count);

@@ -23,6 +23,8 @@ import java.util.Collection;
 import java.util.Optional;
 
 import org.apache.james.util.Host;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.PoolingOptions;
@@ -32,7 +34,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class ClusterBuilder {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClusterBuilder.class);
     private final static String DEFAULT_CLUSTER_IP = "localhost";
     public static final int DEFAULT_CASSANDRA_PORT = 9042;
 
@@ -173,11 +175,14 @@ public class ClusterBuilder {
         poolingOptions.ifPresent(clusterBuilder::withPoolingOptions);
 
         Cluster cluster = clusterBuilder.build();
-
-        queryLogger.map(queryLoggerConfiguration ->
-            cluster.register(queryLoggerConfiguration.getQueryLogger(cluster)));
-
-        return cluster;
+        try {
+            queryLogger.map(queryLoggerConfiguration ->
+                cluster.register(queryLoggerConfiguration.getQueryLogger()));
+            return cluster;
+        } catch (Exception e) {
+            cluster.close();
+            throw e;
+        }
     }
 
     private Optional<Integer> getRefreshSchemaIntervalMillis() {
@@ -189,8 +194,14 @@ public class ClusterBuilder {
     }
 
     private Collection<Host> getServersFromHostAndPort() {
-        String host = this.host.orElse(DEFAULT_CLUSTER_IP);
-        int port = this.port.orElse(DEFAULT_CASSANDRA_PORT);
+        String host = this.host.orElseGet(() -> {
+            LOGGER.info("No cassandra host specified. Falling back to {}", DEFAULT_CLUSTER_IP);
+            return DEFAULT_CLUSTER_IP;
+        });
+        int port = this.port.orElseGet(() -> {
+            LOGGER.info("No cassandra port specified. Falling back to {}", DEFAULT_CASSANDRA_PORT);
+            return DEFAULT_CASSANDRA_PORT;
+        });
 
         return ImmutableList.of(Host.from(host, port));
     }

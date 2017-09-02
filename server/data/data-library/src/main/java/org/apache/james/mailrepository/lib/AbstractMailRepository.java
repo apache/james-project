@@ -27,17 +27,18 @@ import javax.mail.MessagingException;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.repository.api.Initializable;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class represent an AbstractMailRepository. All MailRepositories should
  * extend this class.
  */
-public abstract class AbstractMailRepository implements MailRepository, LogEnabled, Configurable, Initializable {
+public abstract class AbstractMailRepository implements MailRepository, Configurable, Initializable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMailRepository.class);
 
     /**
      * Whether 'deep debugging' is turned on.
@@ -49,16 +50,6 @@ public abstract class AbstractMailRepository implements MailRepository, LogEnabl
      * based on the key
      */
     private final Lock lock = new Lock();
-
-    private Logger logger;
-
-    public void setLog(Logger logger) {
-        this.logger = logger;
-    }
-
-    protected Logger getLogger() {
-        return logger;
-    }
 
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
         doConfigure(configuration);
@@ -98,10 +89,10 @@ public abstract class AbstractMailRepository implements MailRepository, LogEnabl
             }
             internalStore(mc);
         } catch (MessagingException e) {
-            getLogger().error("Exception caught while storing mail " + key, e);
+            LOGGER.error("Exception caught while storing mail " + key, e);
             throw e;
         } catch (Exception e) {
-            getLogger().error("Exception caught while storing mail " + key, e);
+            LOGGER.error("Exception caught while storing mail " + key, e);
             throw new MessagingException("Exception caught while storing mail " + key, e);
         } finally {
             if (!wasLocked) {

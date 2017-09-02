@@ -19,6 +19,8 @@
 
 package org.apache.james.transport.mailets.redirect;
 
+import java.util.Arrays;
+
 public enum SpecialAddressKind {
     SENDER("sender"),
     REVERSE_PATH("reverse.path"),
@@ -37,12 +39,10 @@ public enum SpecialAddressKind {
     }
 
     public static SpecialAddressKind forValue(String value) {
-        for (SpecialAddressKind kind : values()) {
-            if (kind.value.equals(value)) {
-                return kind;
-            }
-        }
-        return null;
+        return Arrays.stream(values())
+            .filter(kind -> kind.value.equals(value))
+            .findFirst()
+            .orElse(null);
     }
 
     public String getValue() {

@@ -39,7 +39,7 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     private final Map<AttachmentId, Attachment> attachmentsById;
 
     public InMemoryAttachmentMapper() {
-        attachmentsById = new ConcurrentHashMap<AttachmentId, Attachment>(INITIAL_SIZE);
+        attachmentsById = new ConcurrentHashMap<>(INITIAL_SIZE);
     }
 
     @Override

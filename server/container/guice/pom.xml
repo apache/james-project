@@ -22,21 +22,54 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>james-server</artifactId>
         <groupId>org.apache.james</groupId>
-        <version>3.0.0-RC2-SNAPSHOT</version>
+        <artifactId>james-server</artifactId>
+        <version>3.1.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>james-server-guice</artifactId>
-    <name>Apache James :: Server :: Guice</name>
     <packaging>pom</packaging>
+    <name>Apache James :: Server :: Guice</name>
+
+    <modules>
+        <module>cassandra-guice</module>
+        <module>cassandra-ldap-guice</module>
+        <module>configuration</module>
+        <module>custom-mailets</module>
+        <module>es-metric-reporter</module>
+        <module>guice-common</module>
+        <module>jmx</module>
+        <module>jpa-common-guice</module>
+        <module>jpa-guice</module>
+        <module>jpa-smtp</module>
+        <module>mailbox</module>
+        <module>mailet</module>
+        <module>memory-guice</module>
+        <module>onami</module>
+        <module>protocols/imap</module>
+        <module>protocols/jmap</module>
+        <module>protocols/lmtp</module>
+        <module>protocols/managedsieve</module>
+        <module>protocols/pop</module>
+        <module>protocols/smtp</module>
+        <module>protocols/webadmin</module>
+        <module>protocols/webadmin-cassandra</module>
+        <module>protocols/webadmin-data</module>
+        <module>protocols/webadmin-mailbox</module>
+        <module>protocols/webadmin-swagger</module>
+    </modules>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-guice-configuration</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>james-server-guice-es-resporter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -97,6 +130,11 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>james-server-guice-webadmin-cassandra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-guice-webadmin-data</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -107,35 +145,26 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>james-server-guice-webadmin-swagger</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-jpa-common-guice</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.internetitem</groupId>
+                <artifactId>logback-elasticsearch-appender</artifactId>
+                <version>1.5</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-core</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
         </dependencies>
     </dependencyManagement>
 
-    <modules>
-        <module>configuration</module>
-        <module>guice-common</module>
-        <module>cassandra-guice</module>
-        <module>cassandra-ldap-guice</module>
-        <module>custom-mailets</module>
-        <module>mailbox</module>
-        <module>mailet</module>
-        <module>memory-guice</module>
-        <module>jpa-common-guice</module>
-        <module>jpa-guice</module>
-        <module>jpa-smtp</module>
-        <module>jmx</module>
-        <module>onami</module>
-        <module>protocols/imap</module>
-        <module>protocols/jmap</module>
-        <module>protocols/lmtp</module>
-        <module>protocols/managedsieve</module>
-        <module>protocols/pop</module>
-        <module>protocols/smtp</module>
-        <module>protocols/webadmin</module>
-        <module>protocols/webadmin-mailbox</module>
-        <module>protocols/webadmin-data</module>
-    </modules>
 </project>
-

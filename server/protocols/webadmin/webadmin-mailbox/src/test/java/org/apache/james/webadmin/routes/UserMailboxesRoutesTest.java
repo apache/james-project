@@ -525,7 +525,7 @@ public class UserMailboxesRoutesTest {
         @Before
         public void setUp() throws Exception {
             mailboxManager = mock(MailboxManager.class);
-            when(mailboxManager.createSystemSession(any(), any())).thenReturn(mock(MailboxSession.class));
+            when(mailboxManager.createSystemSession(any())).thenReturn(mock(MailboxSession.class));
 
             createServer(mailboxManager);
         }

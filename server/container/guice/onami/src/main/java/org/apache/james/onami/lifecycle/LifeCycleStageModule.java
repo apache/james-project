@@ -96,13 +96,10 @@ public abstract class LifeCycleStageModule extends LifeCycleModule {
             @Override
             protected <I> void hear(final Method stageMethod, final TypeLiteral<I> parentType,
                                     final TypeEncounter<I> encounter, final Class<? extends Annotation> annotationType) {
-                encounter.register(new InjectionListener<I>() {
-                    @Override
-                    public void afterInjection(I injectee) {
-                        Stageable stageable = new StageableMethod(stageMethod, injectee);
-                        stager.register(stageable);
-                        typeMapper.registerType(stageable, parentType);
-                    }
+                encounter.register((InjectionListener<I>) injectee -> {
+                    Stageable stageable = new StageableMethod(stageMethod, injectee);
+                    stager.register(stageable);
+                    typeMapper.registerType(stageable, parentType);
                 });
             }
         });

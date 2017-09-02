@@ -10,7 +10,6 @@ import java.util.Arrays;
 
 public class JMSMailQueueTest extends AbstractJMSMailQueueTest {
 
-    private JMSMailQueue queue;
     private static BrokerService broker;
 
     @BeforeClass
@@ -43,13 +42,4 @@ public class JMSMailQueueTest extends AbstractJMSMailQueueTest {
         return aBroker;
     }
 
-    @Override
-    public JMSMailQueue getQueue() {
-        return queue;
-    }
-
-    @Override
-    public void setQueue(JMSMailQueue queue) {
-        this.queue = queue;
-    }
 }

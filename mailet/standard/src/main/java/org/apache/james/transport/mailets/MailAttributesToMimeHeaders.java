@@ -17,11 +17,8 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
 package org.apache.james.transport.mailets;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -30,14 +27,14 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
+import com.google.common.base.Strings;
 
 /**
- * <p>Convert attributes to headers</p>
- * 
+ * <p>Convert attributes of type String to headers</p>
+ *
  * <p>Sample configuration:</p>
  * <pre><code>
  * &lt;mailet match="All" class="MailAttributesToMimeHeaders"&gt;
@@ -48,26 +45,19 @@ import com.google.common.collect.ImmutableMap.Builder;
  * </code></pre>
  */
 public class MailAttributesToMimeHeaders extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailAttributesToMimeHeaders.class);
 
-    private static final String CONFIGURATION_ERROR_MESSAGE = "Invalid config. Please use \"attributeName; headerName\"";
     private Map<String, String> mappings;
 
     @Override
     public void init() throws MessagingException {
-        String simplemappings = getInitParameter("simplemapping");
-        Builder<String, String> mappingsBuilder = ImmutableMap.builder();
-        if (simplemappings != null) {
-            for (String mapping : Splitter.on(',').split(simplemappings)) {
-                List<String> pair = Splitter.on(';').trimResults().splitToList(mapping);
-                if (pair.size() != 2) {
-                    throw new MessagingException(CONFIGURATION_ERROR_MESSAGE);
-                }
-                mappingsBuilder.put(pair.get(0), pair.get(1));
-            }
-        } else {
-            throw new MessagingException(CONFIGURATION_ERROR_MESSAGE);
+        String simpleMappings = getInitParameter("simplemapping");
+
+        if (Strings.isNullOrEmpty(simpleMappings)) {
+            throw new MessagingException("simplemapping is required");
         }
-        mappings = mappingsBuilder.build();
+
+        mappings = MappingArgument.parse(simpleMappings);
     }
 
     @Override
@@ -83,7 +73,7 @@ public class MailAttributesToMimeHeaders extends GenericMailet {
             }
             message.saveChanges();
         } catch (MessagingException e) {
-            log(e.getMessage());
+            LOGGER.error("Encountered exception", e);
         }
     }
 

@@ -5,16 +5,59 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-server</artifactId>
-        <version>3.0.0-RC2-SNAPSHOT</version>
+        <version>3.1.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <groupId>org.apache.james.karaf</groupId>
     <artifactId>james-karaf-integration</artifactId>
     <packaging>pom</packaging>
     <name>Apache James :: Karaf :: Integration tests</name>
 
     <dependencies>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Apache Felix Karaf integration -->
+        <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>james-karaf-distribution</artifactId>
+            <type>tar.gz</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.karaf</groupId>
+                    <artifactId>org.apache.karaf.client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.osgi</groupId>
+                    <artifactId>org.eclipse.osgi</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>james-karaf-features</artifactId>
+            <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>james-server-dnsservice-api</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.james</groupId>
             <artifactId>james-server-dnsservice-dnsjava</artifactId>
@@ -27,12 +70,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.james</groupId>
-            <artifactId>james-server-dnsservice-api</artifactId>
+            <artifactId>james-server-mailetcontainer-camel</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>james-server-mailetcontainer-camel</artifactId>
+            <groupId>org.apache.karaf.tooling.exam</groupId>
+            <artifactId>org.apache.karaf.tooling.exam.container</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -40,11 +83,6 @@
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.karaf.tooling.exam</groupId>
-            <artifactId>org.apache.karaf.tooling.exam.container</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
@@ -59,57 +97,17 @@
         </dependency>
 
         <dependency>
+            <groupId>org.ops4j.pax.swissbox</groupId>
+            <artifactId>pax-swissbox-tinybundles</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.ops4j.pax.url</groupId>
             <artifactId>pax-url-aether</artifactId>
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.framework</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.ops4j.pax.swissbox</groupId>
-            <artifactId>pax-swissbox-tinybundles</artifactId>
-        </dependency>
-
-        <!-- Apache Felix Karaf integration -->
-        <dependency>
-            <groupId>org.apache.james.karaf</groupId>
-            <artifactId>james-karaf-distribution</artifactId>
-            <scope>test</scope>
-            <type>tar.gz</type>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.karaf</groupId>
-                    <artifactId>org.apache.karaf.client</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.eclipse.osgi</groupId>
-                    <artifactId>org.eclipse.osgi</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.james.karaf</groupId>
-            <artifactId>james-karaf-features</artifactId>
-            <type>pom</type>
-        </dependency>
-
     </dependencies>
-
 
     <build>
         <plugins>

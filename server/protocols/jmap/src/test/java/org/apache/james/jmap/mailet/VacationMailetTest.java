@@ -203,6 +203,8 @@ public class VacationMailetTest {
             .thenReturn(CompletableFuture.completedFuture(false));
         when(notificationRegistry.isRegistered(secondAccountId, RecipientId.fromMailAddress(originalSender)))
             .thenReturn(CompletableFuture.completedFuture(false));
+        when(notificationRegistry.register(any(), any(), any()))
+            .thenReturn(CompletableFuture.completedFuture(null));
 
         testee.service(mail);
 

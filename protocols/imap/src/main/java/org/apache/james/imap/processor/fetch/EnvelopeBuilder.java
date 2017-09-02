@@ -42,14 +42,10 @@ import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.address.MailboxList;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class EnvelopeBuilder {
-    private final Logger logger;
-
-    public EnvelopeBuilder(Logger logger) {
-        super();
-        this.logger = logger;
-    }
+    private static final Logger LOGGER = LoggerFactory.getLogger(EnvelopeBuilder.class);
 
     public FetchResponse.Envelope buildEnvelope(Headers headers) throws MailboxException {
         final String date = headerValue(headers, ImapConstants.RFC822_DATE);
@@ -133,7 +129,7 @@ public final class EnvelopeBuilder {
 
                 AddressList addressList = LenientAddressParser.DEFAULT.parseAddressList(value);
                 final int size = addressList.size();
-                final List<FetchResponse.Envelope.Address> addresses = new ArrayList<FetchResponse.Envelope.Address>(size);
+                final List<FetchResponse.Envelope.Address> addresses = new ArrayList<>(size);
                 for (Address address : addressList) {
                     if (address instanceof Group) {
                         final Group group = (Group) address;
@@ -145,7 +141,7 @@ public final class EnvelopeBuilder {
                         addresses.add(mailboxAddress);
 
                     } else {
-                        logger.warn("Unknown address type");
+                        LOGGER.warn("Unknown address type {}", address.getClass());
                     }
                 }
 

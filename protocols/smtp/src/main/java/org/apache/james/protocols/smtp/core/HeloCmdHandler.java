@@ -19,9 +19,7 @@
 
 package org.apache.james.protocols.smtp.core;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 import javax.inject.Inject;
 
@@ -38,6 +36,8 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HeloHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
 
+import com.google.common.collect.ImmutableSet;
+
 /**
  * Handles HELO command
  */
@@ -47,7 +47,7 @@ public class HeloCmdHandler extends AbstractHookableCmdHandler<HeloHook> {
     /**
      * The name of the command handled by the command handler
      */
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList(COMMAND_NAME));
+    private static final Collection<String> COMMANDS = ImmutableSet.of(COMMAND_NAME);
 
     private static final Response DOMAIN_REQUIRED =  new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,
             DSNStatus.getStatus(DSNStatus.PERMANENT,

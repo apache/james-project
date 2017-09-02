@@ -134,7 +134,7 @@ public class RequestHandlerTest {
 
 
     @Test(expected=IllegalStateException.class)
-    public void processShouldThrowWhenUnknownMethod() {
+    public void processShouldThrowWhenUnknownMethod() throws Exception {
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("unknwonMethod"),
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{\"id\": \"id\"}"),
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
@@ -199,7 +199,7 @@ public class RequestHandlerTest {
     }
 
     @Test
-    public void processShouldWorkWhenKnownMethod() {
+    public void processShouldWorkWhenKnownMethod() throws Exception {
         ObjectNode parameters = new ObjectNode(new JsonNodeFactory(false));
         parameters.put("id", "testId");
         parameters.put("name", "testName");

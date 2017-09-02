@@ -19,6 +19,7 @@
 
 package org.apache.james.metrics.dropwizard;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
@@ -52,6 +53,7 @@ public class DropWizardMetricFactory implements MetricFactory {
         return new DropWizardTimeMetric(name, metricRegistry.timer(name).time());
     }
 
+    @PostConstruct
     public void start() throws ConfigurationException {
         jmxReporter.start();
     }

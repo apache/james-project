@@ -19,7 +19,6 @@
 package org.apache.james.mailbox.maildir.mail;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -43,9 +42,12 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MaildirMailboxMapper extends NonTransactionalMapper implements MailboxMapper {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MaildirMailboxMapper.class);
     /**
      * The {@link MaildirStore} the mailboxes reside in
      */
@@ -54,7 +56,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     /**
      * A request-scoped list of mailboxes in order to refer to them via id
      */
-    private final ArrayList<Mailbox> mailboxCache = new ArrayList<Mailbox>();
+    private final ArrayList<Mailbox> mailboxCache = new ArrayList<>();
 
     private final MailboxSession session;
     
@@ -99,7 +101,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
                     FileUtils.forceDelete(file);
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.error("Error while deleting file " + file, e);
             }
         }
     }
@@ -131,7 +133,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
         FilenameFilter filter = MaildirMessageName.createRegexFilter(searchPattern);
         File root = maildirStore.getMailboxRootForUser(mailboxPath.getUser());
         File[] folders = root.listFiles(filter);
-        ArrayList<Mailbox> mailboxList = new ArrayList<Mailbox>();
+        ArrayList<Mailbox> mailboxList = new ArrayList<>();
         for (File folder : folders)
             if (folder.isDirectory()) {
                 Mailbox mailbox = maildirStore.loadMailbox(session, root, mailboxPath.getNamespace(), mailboxPath.getUser(), folder.getName());
@@ -240,7 +242,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     public List<Mailbox> list() throws MailboxException {
         
        File maildirRoot = maildirStore.getMaildirRoot();
-       List<Mailbox> mailboxList = new ArrayList<Mailbox>();
+       List<Mailbox> mailboxList = new ArrayList<>();
         
        if (maildirStore.getMaildirLocation().endsWith("/" + MaildirStore.PATH_FULLUSER)) {
            File[] users = maildirRoot.listFiles();
@@ -314,12 +316,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
             
             // List all INBOX sub folders.
             
-            File[] mailboxes = user.listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File pathname) {
-                    return pathname.getName().startsWith(".");
-                }
-            });
+            File[] mailboxes = user.listFiles(pathname -> pathname.getName().startsWith("."));
             
             for (File mailbox: mailboxes) {
                

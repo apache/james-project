@@ -26,6 +26,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.JMAPModule;
 import org.apache.james.jmap.JMAPServer;
+import org.apache.james.utils.MessageIdProbe;
 import org.apache.james.jmap.crypto.JamesSignatureHandler;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.utils.ConfigurationPerformer;
@@ -49,6 +50,7 @@ public class JMAPServerModule extends AbstractModule {
         install(new JMAPModule());
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(JMAPModuleConfigurationPerformer.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(JmapGuiceProbe.class);
+        Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(MessageIdProbe.class);
     }
 
     @Singleton

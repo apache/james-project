@@ -25,8 +25,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
@@ -38,15 +36,15 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
-
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import spark.Request;
+import spark.Response;
+import spark.Service;
 
 @RunWith(JUnitParamsRunner.class)
 public abstract class AbstractFileSystemTest {
+    private static final int RANDOM_PORT = 0;
     private static final String FAKE_DIRECTORY = "b7b73e3a-5234-11e5-87f2-9b171f273b49/";
     private static final String FAKE_FILE = "d9091ae6-521f-11e5-b666-bb11fef67c2a";
     private static final String EXISTING_CLASSPATH_FILE = "classpathTest.txt";
@@ -56,16 +54,16 @@ public abstract class AbstractFileSystemTest {
 
     protected FileSystem fileSystem;
     
-    private HttpServer httpServer;
+    private Service httpServer;
     private File rootDirectory;
     
     protected abstract FileSystem buildFileSystem(String configurationRootDirectory);
 
     @Before
     public void setUp() throws Exception {
-        httpServer = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
-        httpServer.createContext("/", new SlashHandler());
-        httpServer.start();
+        httpServer = Service.ignite().port(RANDOM_PORT);
+        httpServer.get("/", (Request request, Response response) -> "content");
+        httpServer.awaitInitialization();
         
         rootDirectory = tmpFolder.getRoot();
         createSubFolderWithAFileIn("conf", "conf.txt", "confcontent");
@@ -83,23 +81,7 @@ public abstract class AbstractFileSystemTest {
 
     @After
     public void tearDown() throws Exception {
-        httpServer.stop(0);
-    }
-
-    private static class SlashHandler implements HttpHandler {
-
-        @Override
-        public void handle(HttpExchange exchange) throws IOException {
-            if (exchange.getRequestURI().getPath().equals("/")) {
-                String response = "content";
-                exchange.sendResponseHeaders(200, response.length());
-                OutputStream responseBody = exchange.getResponseBody();
-                responseBody.write(response.getBytes());
-                responseBody.close();
-            } else {
-                exchange.sendResponseHeaders(404, 0);
-            }
-        }
+        httpServer.stop();
     }
 
     @Test
@@ -213,7 +195,7 @@ public abstract class AbstractFileSystemTest {
     }
 
     private String replacePort(String url) {
-        return url.replace("$PORT$", String.valueOf(httpServer.getAddress().getPort()));
+        return url.replace("$PORT$", String.valueOf(httpServer.port()));
     }
 
     public static class FileToCreateProvider {

@@ -20,12 +20,13 @@
 package org.apache.james.jmap.utils;
 
 import java.util.Date;
-
+import java.util.Optional;
 import javax.mail.Flags.Flag;
 
 import org.apache.james.jmap.model.Filter;
 import org.apache.james.jmap.model.FilterCondition;
 import org.apache.james.jmap.model.FilterOperator;
+import org.apache.james.jmap.model.Keyword;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
@@ -75,7 +76,31 @@ public class FilterToSearchQuery {
         filter.getMaxSize().ifPresent(maxSize -> searchQuery.andCriteria(SearchQuery.sizeLessThan(maxSize)));
         filter.getMinSize().ifPresent(minSize -> searchQuery.andCriteria(SearchQuery.sizeGreaterThan(minSize)));
         filter.getHasAttachment().ifPresent(hasAttachment -> searchQuery.andCriteria(SearchQuery.hasAttachment(hasAttachment)));
+        filter.getHasKeyword().ifPresent(hasKeyword -> {
+            keywordQuery(hasKeyword, true).ifPresent(hasKeywordCriterion
+                -> searchQuery.andCriteria(hasKeywordCriterion));
+        });
+        filter.getNotKeyword().ifPresent(notKeyword -> {
+            keywordQuery(notKeyword, false).ifPresent(notKeywordCriterion
+                -> searchQuery.andCriteria(notKeywordCriterion));
+        });
+
         return searchQuery;
+    }
+
+    private Optional<Criterion> keywordQuery(String stringKeyword, boolean isSet) {
+        Keyword keyword = new Keyword(stringKeyword);
+        if (keyword.isExposedImapKeyword()) {
+            return Optional.of(getFlagCriterion(keyword, isSet));
+        }
+
+        return Optional.empty();
+    }
+
+    private Criterion getFlagCriterion(Keyword keyword, boolean isSet) {
+        return keyword.asSystemFlag()
+            .map(flag -> SearchQuery.flagSet(flag, isSet))
+            .orElse(SearchQuery.flagSet(keyword.getFlagName(), isSet));
     }
 
     private Criterion convertOperator(FilterOperator filter) {

@@ -40,6 +40,8 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.hbase.HBaseId;
 import org.apache.james.mailbox.hbase.io.ChunkInputStream;
+import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.FlagsBuilder;
@@ -106,7 +108,7 @@ public class HBaseMailboxMessage implements MailboxMessage {
         this.uid = uid;
         this.messageId = messageId;
         this.modSeq = modSeq;
-        this.userFlags = new ArrayList<String>();
+        this.userFlags = new ArrayList<>();
         setFlags(original.createFlags());
 
         // A copy of a message is recent
@@ -130,7 +132,7 @@ public class HBaseMailboxMessage implements MailboxMessage {
         this.mailboxId = mailboxId;
         this.messageId = messageId;
         this.internalDate = internalDate;
-        userFlags = new ArrayList<String>();
+        userFlags = new ArrayList<>();
 
         setFlags(flags);
         this.contentOctets = contentOctets;
@@ -139,6 +141,15 @@ public class HBaseMailboxMessage implements MailboxMessage {
         this.mediaType = propertyBuilder.getMediaType();
         this.subType = propertyBuilder.getSubType();
         this.properties = propertyBuilder.toProperties();
+    }
+
+    @Override
+    public ComposedMessageIdWithMetaData getComposedMessageIdWithMetaData() {
+        return ComposedMessageIdWithMetaData.builder()
+            .modSeq(modSeq)
+            .flags(createFlags())
+            .composedMessageId(new ComposedMessageId(mailboxId, getMessageId(), uid))
+            .build();
     }
 
     @Override
@@ -214,7 +225,7 @@ public class HBaseMailboxMessage implements MailboxMessage {
      */
     @Override
     public List<Property> getProperties() {
-        return new ArrayList<Property>(properties);
+        return new ArrayList<>(properties);
     }
 
     /**
@@ -309,15 +320,16 @@ public class HBaseMailboxMessage implements MailboxMessage {
         return FlagsBuilder.createFlags(this, createUserFlags());
     }
 
+    @Override
+    public long getHeaderOctets() {
+        return bodyStartOctet;
+    }
+
     /**
      * This implementation supports user flags
      */
     public String[] createUserFlags() {
-        String[] flags = new String[userFlags.size()];
-        for (int i = 0; i < userFlags.size(); i++) {
-            flags[i] = userFlags.get(i);
-        }
-        return flags;
+        return userFlags.toArray(new String[userFlags.size()]);
     }
 
     @Override

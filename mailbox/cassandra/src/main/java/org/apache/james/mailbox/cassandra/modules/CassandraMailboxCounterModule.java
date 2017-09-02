@@ -47,6 +47,7 @@ public class CassandraMailboxCounterModule implements CassandraModule {
                     .addColumn(CassandraMailboxCountersTable.COUNT, counter())
                     .addColumn(CassandraMailboxCountersTable.UNSEEN, counter())
                     .withOptions()
+                    .comment("Holds messages count and unseen message count for each mailbox.")
                     .compactionOptions(SchemaBuilder.leveledStrategy())
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));

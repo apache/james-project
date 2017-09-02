@@ -19,145 +19,147 @@
 -->
 <document>
 
- <properties>
-  <title>Apache James Server 3 - Server Wide Configuration</title>
- </properties>
+    <properties>
+        <title>Apache James Server 3 - Server Wide Configuration</title>
+    </properties>
 
-<body>
+    <body>
 
-  <section name="Server Wide Configuration">
-  
-    <subsection name="Introduction">
-    
-      <p>There are a number of global configuration files that do not fall into any one 
-        component. They have effects that are global in scope across the server.</p>
-      
-      <p>Some of these files are crucial, while others can be ignored by any but the most sophisticated 
-        server administrators.</p>
-        
-    </subsection>
-    
-    <subsection name="spring-server.xml">
-    
-      <p>In James distribution, the spring files are located under conf/context folder and splitted into a main 
-         file (james-server-context.xml) which imports 4 other files (1 per mailbox type): james-mailbox-jcr-context.xml, james-mailbox-jpa-context.xml, 
-         james-mailbox-maildir-context.xml, james-mailbox-memory-context.xml.</p>
-    
-      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/container/spring/src/main/resources/META-INF/org/apache/james/spring-server.xml">spring-server.xml</a> in GIT to
-         get some examples and hints.</p>
-      
-      <p>spring beans files are the place where the Apache James Server wiring is done. It should be modified only by expert-users.</p>
-      
-      <p>In combination with james-database.properties and META-INF/persistence.xml, the datasource to access the database is defined in spring-server.xml</p>
-      
-    </subsection>
+        <section name="Server Wide Configuration">
 
-    <subsection name="james-database.properties">
-    
-      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/james-database-template.properties">james-database.properties</a> in GIT to get some examples and hints.</p>
+            <subsection name="Introduction">
 
-      <p>The database connection in database.properties</p>
+                <p>There are a number of global configuration files that do not fall into any one
+                    component. They have effects that are global in scope across the server.</p>
 
-      <p>James has the capacity to use a JDBC-compatible database for storage of both message and user 
-         data. This section explains how to configure James to utilize a database for storage.</p>
-    
-      <p>To avoid vendor-specific issues, the JPA (Java Persistence Architecture) is used (using the Apache OpenJPA implementation).</p>
-      
-      <p>There must be a database instance accessible from the James server.  An account with appropriate
-         privileges (select, insert, delete into tables, and on initial startup creation of tables) and
-         with sufficient quota for the data to be inserted into the database must be available.</p>
-      
-      <p>Also, since James will use JDBC to access the database, an appropriate JDBC driver must be 
-         available for installation. You can place the JDBC driver jar in the conf/lib folder, it will
-         be automatically loaded.</p>
-      
-      <dl>
-        <dt><strong>database.driverClassName</strong></dt>
-        <dd>he class name of the database driver to be used.</dd>
-        <dt><strong>database.url</strong></dt>
-        <dd>The JDBC connection URL for your database/driver.</dd>
-        <dt><strong>database.username</strong></dt>
-        <dd>The user id of the database account to be used by this connection.</dd>
-        <dt><strong>database.password</strong></dt>
-        <dd>The password of the database account to be used by this connection.</dd>
-        <dt><strong>vendorAdapter.database</strong></dt>
-        <dd>Supported adapters are: DB2, DERBY, H2, HSQL, INFORMIX, MYSQL, ORACLE, POSTGRESQL, SQL_SERVER, SYBASE .</dd>
-        <dt><strong>openjpa.streaming</strong></dt>
-        <dd>true or false - Use streaming for Blobs. This is only supported on a limited set of databases atm. You
-        should check if its supported by your DB before enable it. See <a href="http://openjpa.apache.org/builds/latest/docs/manual/ref_guide_mapping_jpa.html">http://openjpa.apache.org/builds/latest/docs/manual/ref_guide_mapping_jpa.html</a> (#7.11. LOB Streaming).</dd>
-      </dl>
-      
-      <p>Note for postgresql databases: Add standard_conforming_strings=off to your postgresql.xml, otherwise you 
-        will get ""Invalid escape string Hint: Escape string must be empty or one character. {prepstmnt 174928937 
-        SELECT t0.mailbox_id, t0.mailbox_highest_modseq, t0.mailbox_last_uid, t0.mailbox_name, t0.mailbox_namespace,
-         t0.mailbox_uid_validity, t0.user_name FROM public.james_mailbox t0 WHERE (t0.mailbox_name LIKE ? 
-         ESCAPE '\\' AND t0.user_name = ? AND t0.mailbox_namespace = ?) [params=?, ?, ?]} [code=0, state=22025]"</p>
-         
-    </subsection>
-    
-    <subsection name="META-INF/persistence.xml">
-    
-      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/META-INF/persistence.xml">META-INF/persistence.xml</a> in GIT to get some examples and hints.</p>
-      
-      <p>The JPA mapping and properties are defined in the in META-INF/persistence.xml.</p>
-      
-      <p>You can override the definition in external file and importing the external file in the persistence.xml (see jpa-mappings.xml provided example in GIT)</p>
+                <p>Some of these files are crucial, while others can be ignored by any but the most sophisticated
+                    server administrators.</p>
 
-            <source>
-&lt;mapping-file&gt;META-INF/jpa-mappings.xml&lt;/mapping-file&gt;</source>
-    
-      </subsection>
+            </subsection>
 
-    <subsection name="jmx.properties">
-    
-      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/jmx-template.properties">jmx.properties</a> in GIT to get some examples and hints.</p>
-      
-      <p>This is used to configure the JMX MBean server via which all management is achieved (also used by via the james-cli).</p>
-      
-      <dl>
-        <dt><strong>jmx.address</strong></dt>
-        <dd>The IP address (host name) the MBean Server will bind/listen to.</dd>
-        <dt><strong>jmx.port</strong></dt>
-        <dd>The port number the MBean Server will bind/listen to.</dd>
-      </dl>
-      
-      <p>To access from a remote location, it has been reported that -Dcom.sun.management.jmxremote.ssl=false is 
-         needed in the startup script.</p>
+            <subsection name="spring-server.xml">
 
-    </subsection>
+                <p>In James distribution, the spring files are located under conf/context folder and splitted into a main
+                    file (james-server-context.xml) which imports 4 other files (1 per mailbox type): james-mailbox-jcr-context.xml, james-mailbox-jpa-context.xml,
+                    james-mailbox-maildir-context.xml, james-mailbox-memory-context.xml.</p>
 
-    <subsection name="sqlResources.xml">
-    
-      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/sqlResources.xml">sqlResources.xml</a> in GIT to get some examples and hints.</p>
-      
-      <p>This file is deprecated but some mailets... still need it. The standard way to access database
-         is JPA, but some functionalities are not yet migrated and still need the sqlResources.xml resources.</p>
-    
-      <p>The precise SQL statements used by Apache James Server to modify and view data stored in the database 
-         are specified in sqlResources.xml file.</p>
-      
-      <p>If you are using a SQL database with unusual SQL commands or data types, you may
-         need to add special entries to this file.  The James team
-         does try to keep sqlResources.xml updated, so if you do run into a
-         special case, please let us know.</p>
-      
-      <p>Also, if the database tables are not created a priori, but rather are to be created by James
-         upon startup, special attention should be paid to the "create table" statements in this file.  Such
-         statements tend to be both very database and very database instance specific.</p>
+                <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/container/spring/src/main/resources/META-INF/org/apache/james/spring-server.xml">spring-server.xml</a> in GIT to
+                    get some examples and hints.</p>
 
-    </subsection>
+                <p>spring beans files are the place where the Apache James Server wiring is done. It should be modified only by expert-users.</p>
 
-    <subsection name="JCR Repository Configuration">
+                <p>In combination with james-database.properties and META-INF/persistence.xml, the datasource to access the database is defined in spring-server.xml</p>
 
-      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/jcr-repository-template.xml">jcr-repository.xml</a> in GIT to get some examples and hints.</p>
-      
-      <p>Used to configure the JCR mailbox (if configure in mailbox.xml).</p>
+            </subsection>
 
-    </subsection>
+            <subsection name="james-database.properties">
 
-  </section>
+                <p>This configuration file is only relevant when using JPA, with Spring or Guice.</p>
 
-</body>
+                <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/james-database.properties">james.properties</a> in GIT to get some examples and hints.</p>
+
+                <p>The database connection in database.properties</p>
+
+                <p>James has the capacity to use a JDBC-compatible database for storage of both message and user
+                    data. This section explains how to configure James to utilize a database for storage.</p>
+
+                <p>To avoid vendor-specific issues, the JPA (Java Persistence Architecture) is used (using the Apache OpenJPA implementation).</p>
+
+                <p>There must be a database instance accessible from the James server.  An account with appropriate
+                    privileges (select, insert, delete into tables, and on initial startup creation of tables) and
+                    with sufficient quota for the data to be inserted into the database must be available.</p>
+
+                <p>Also, since James will use JDBC to access the database, an appropriate JDBC driver must be
+                    available for installation. You can place the JDBC driver jar in the conf/lib folder, it will
+                    be automatically loaded.</p>
+
+                <dl>
+                    <dt><strong>database.driverClassName</strong></dt>
+                    <dd>he class name of the database driver to be used.</dd>
+                    <dt><strong>database.url</strong></dt>
+                    <dd>The JDBC connection URL for your database/driver.</dd>
+                    <dt><strong>database.username</strong></dt>
+                    <dd>The user id of the database account to be used by this connection.</dd>
+                    <dt><strong>database.password</strong></dt>
+                    <dd>The password of the database account to be used by this connection.</dd>
+                    <dt><strong>vendorAdapter.database</strong></dt>
+                    <dd>Supported adapters are: DB2, DERBY, H2, HSQL, INFORMIX, MYSQL, ORACLE, POSTGRESQL, SQL_SERVER, SYBASE .</dd>
+                    <dt><strong>openjpa.streaming</strong></dt>
+                    <dd>true or false - Use streaming for Blobs. This is only supported on a limited set of databases atm. You
+                        should check if its supported by your DB before enable it. See <a href="http://openjpa.apache.org/builds/latest/docs/manual/ref_guide_mapping_jpa.html">http://openjpa.apache.org/builds/latest/docs/manual/ref_guide_mapping_jpa.html</a> (#7.11. LOB Streaming).</dd>
+                </dl>
+
+                <p>Note for postgresql databases: Add standard_conforming_strings=off to your postgresql.xml, otherwise you
+                    will get ""Invalid escape string Hint: Escape string must be empty or one character. {prepstmnt 174928937
+                    SELECT t0.mailbox_id, t0.mailbox_highest_modseq, t0.mailbox_last_uid, t0.mailbox_name, t0.mailbox_namespace,
+                    t0.mailbox_uid_validity, t0.user_name FROM public.james_mailbox t0 WHERE (t0.mailbox_name LIKE ?
+                    ESCAPE '\\' AND t0.user_name = ? AND t0.mailbox_namespace = ?) [params=?, ?, ?]} [code=0, state=22025]"</p>
+
+            </subsection>
+
+            <subsection name="META-INF/persistence.xml">
+
+                <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/META-INF/persistence.xml">META-INF/persistence.xml</a> in GIT to get some examples and hints.</p>
+
+                <p>The JPA mapping and properties are defined in the in META-INF/persistence.xml.</p>
+
+                <p>You can override the definition in external file and importing the external file in the persistence.xml (see jpa-mappings.xml provided example in GIT)</p>
+
+                <source>
+                    &lt;mapping-file&gt;META-INF/jpa-mappings.xml&lt;/mapping-file&gt;</source>
+
+            </subsection>
+
+            <subsection name="jmx.properties">
+
+                <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/jmx.properties">jmx.properties</a> in GIT to get some examples and hints.</p>
+
+                <p>This is used to configure the JMX MBean server via which all management is achieved (also used by via the james-cli).</p>
+
+                <dl>
+                    <dt><strong>jmx.address</strong></dt>
+                    <dd>The IP address (host name) the MBean Server will bind/listen to.</dd>
+                    <dt><strong>jmx.port</strong></dt>
+                    <dd>The port number the MBean Server will bind/listen to.</dd>
+                </dl>
+
+                <p>To access from a remote location, it has been reported that -Dcom.sun.management.jmxremote.ssl=false is
+                    needed in the startup script.</p>
+
+            </subsection>
+
+            <subsection name="sqlResources.xml">
+
+                <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/sqlResources.xml">sqlResources.xml</a> in GIT to get some examples and hints.</p>
+
+                <p>This file is deprecated but some mailets... still need it. The standard way to access database
+                    is JPA, but some functionalities are not yet migrated and still need the sqlResources.xml resources.</p>
+
+                <p>The precise SQL statements used by Apache James Server to modify and view data stored in the database
+                    are specified in sqlResources.xml file.</p>
+
+                <p>If you are using a SQL database with unusual SQL commands or data types, you may
+                    need to add special entries to this file.  The James team
+                    does try to keep sqlResources.xml updated, so if you do run into a
+                    special case, please let us know.</p>
+
+                <p>Also, if the database tables are not created a priori, but rather are to be created by James
+                    upon startup, special attention should be paid to the "create table" statements in this file.  Such
+                    statements tend to be both very database and very database instance specific.</p>
+
+            </subsection>
+
+            <subsection name="JCR Repository Configuration">
+
+                <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/jcr-repository.xml">jcr-repository.xml</a> in GIT to get some examples and hints.</p>
+
+                <p>Used to configure the JCR mailbox (if configure in mailbox.xml).</p>
+
+            </subsection>
+
+        </section>
+
+    </body>
 
 </document>
 

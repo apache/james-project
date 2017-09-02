@@ -21,13 +21,11 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Optional;
-
 import javax.mail.Flags;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.mailbox.FlagsBuilder;
-import org.apache.james.mailbox.cassandra.CassandraId;
+import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
 import org.junit.After;
 import org.junit.Before;
@@ -56,29 +54,29 @@ public class CassandraApplicableFlagDAOTest {
     @After
     public void tearDown() throws Exception {
         cassandra.clearAllTables();
+        cassandra.close();
     }
 
     @Test
     public void updateApplicableFlagsShouldReturnEmptyByDefault() throws Exception {
-        Optional<Flags> actual = testee.retrieveApplicableFlag(CASSANDRA_ID).join();
-        assertThat(actual.isPresent()).isFalse();
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).join())
+            .isEmpty();
     }
 
     @Test
     public void updateApplicableFlagsShouldSupportEmptyUserFlags() throws Exception {
         testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of()).join();
 
-        Optional<Flags> actual = testee.retrieveApplicableFlag(CASSANDRA_ID).join();
-        assertThat(actual.isPresent()).isFalse();
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).join())
+            .isEmpty();
     }
 
     @Test
     public void updateApplicableFlagsShouldUpdateUserFlag() throws Exception {
         testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).join();
 
-        Optional<Flags> actual = testee.retrieveApplicableFlag(CASSANDRA_ID).join();
-        assertThat(actual.isPresent()).isTrue();
-        assertThat(actual.get()).isEqualTo(new Flags(USER_FLAG));
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).join())
+            .contains(new Flags(USER_FLAG));
     }
 
     @Test
@@ -86,9 +84,8 @@ public class CassandraApplicableFlagDAOTest {
         testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).join();
         testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG2)).join();
 
-        Optional<Flags> actual = testee.retrieveApplicableFlag(CASSANDRA_ID).join();
-        assertThat(actual.isPresent()).isTrue();
-        assertThat(actual.get()).isEqualTo(FlagsBuilder.builder().add(USER_FLAG, USER_FLAG2).build());
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).join())
+            .contains(FlagsBuilder.builder().add(USER_FLAG, USER_FLAG2).build());
     }
 
     @Test
@@ -96,9 +93,8 @@ public class CassandraApplicableFlagDAOTest {
         testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).join();
         testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).join();
 
-        Optional<Flags> actual = testee.retrieveApplicableFlag(CASSANDRA_ID).join();
-        assertThat(actual.isPresent()).isTrue();
-        assertThat(actual.get()).isEqualTo(new Flags(USER_FLAG));
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).join())
+            .contains(new Flags(USER_FLAG));
     }
 
     @Test
@@ -106,19 +102,16 @@ public class CassandraApplicableFlagDAOTest {
         testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).join();
         testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG, USER_FLAG2)).join();
 
-
-        Optional<Flags> actual = testee.retrieveApplicableFlag(CASSANDRA_ID).join();
-        assertThat(actual.isPresent()).isTrue();
-        assertThat(actual.get()).isEqualTo(FlagsBuilder.builder().add(USER_FLAG, USER_FLAG2).build());
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).join())
+            .contains(FlagsBuilder.builder().add(USER_FLAG, USER_FLAG2).build());
     }
 
     @Test
     public void updateApplicableFlagsShouldUpdateMultiFlags() throws Exception {
         testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG, USER_FLAG2)).join();
 
-        Optional<Flags> actual = testee.retrieveApplicableFlag(CASSANDRA_ID).join();
-        assertThat(actual.isPresent()).isTrue();
-        assertThat(actual.get()).isEqualTo(FlagsBuilder.builder().add(USER_FLAG, USER_FLAG2).build());
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).join())
+            .contains(FlagsBuilder.builder().add(USER_FLAG, USER_FLAG2).build());
     }
 
 }

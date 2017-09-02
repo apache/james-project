@@ -19,9 +19,7 @@
 
 package org.apache.james.protocols.smtp.core;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -44,12 +42,17 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.MailHook;
 import org.apache.james.protocols.smtp.hook.MailParametersHook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Handles MAIL command
  */
 public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("MAIL"));
+    private static final Collection<String> COMMANDS = ImmutableSet.of("MAIL");
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailCmdHandler.class);
     private static final Response SENDER_ALREADY_SPECIFIED =  new SMTPResponse(SMTPRetCode.BAD_SEQUENCE, DSNStatus
             .getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_OTHER)
             + " Sender already specified").immutable();
@@ -213,25 +216,25 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
                         }
                     } else {
                         // Unexpected option attached to the Mail command
-                        if (session.getLogger().isDebugEnabled()) {
+                        if (LOGGER.isDebugEnabled()) {
                             StringBuilder debugBuffer = new StringBuilder(128)
                                     .append(
                                             "MAIL command had unrecognized/unexpected option ")
                                     .append(mailOptionName).append(
                                             " with value ").append(
                                             mailOptionValue);
-                            session.getLogger().debug(debugBuffer.toString());
+                            LOGGER.debug(debugBuffer.toString());
                         }
                     }
                 }
             }
             if (session.getConfiguration().useAddressBracketsEnforcement()
                     && (!sender.startsWith("<") || !sender.endsWith(">"))) {
-                if (session.getLogger().isInfoEnabled()) {
+                if (LOGGER.isInfoEnabled()) {
                     StringBuilder errorBuffer = new StringBuilder(128).append(
                             "Error parsing sender address: ").append(sender)
                             .append(": did not start and end with < >");
-                    session.getLogger().info(errorBuffer.toString());
+                    LOGGER.info(errorBuffer.toString());
                 }
                 return SYNTAX_ERROR;
             }
@@ -256,12 +259,12 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
                 try {
                     senderAddress = new MailAddress(sender);
                 } catch (Exception pe) {
-                    if (session.getLogger().isInfoEnabled()) {
+                    if (LOGGER.isInfoEnabled()) {
                         StringBuilder errorBuffer = new StringBuilder(256)
                                 .append("Error parsing sender address: ")
                                 .append(sender).append(": ").append(
                                         pe.getMessage());
-                        session.getLogger().info(errorBuffer.toString());
+                        LOGGER.info(errorBuffer.toString());
                     }
                     return SYNTAX_ERROR_ADDRESS;
                 }
@@ -310,7 +313,7 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public void wireExtensions(Class interfaceName, List extension) {
         if (MailParametersHook.class.equals(interfaceName)) {
-            this.paramHooks = new HashMap<String, MailParametersHook>();
+            this.paramHooks = new HashMap<>();
             for (MailParametersHook hook : (Iterable<MailParametersHook>) extension) {
                 String[] params = hook.getMailParamNames();
                 for (String param : params) {

@@ -21,12 +21,11 @@ package org.apache.james.transport.mailets.remoteDelivery;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-
+import java.util.Optional;
+import java.util.function.Function;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.sun.mail.smtp.SMTPAddressFailedException;
 import com.sun.mail.smtp.SMTPSendFailedException;
@@ -64,18 +63,13 @@ public class EnhancedMessagingException {
     }
 
     private boolean messageIndicatesServerException() {
-        return Optional.fromNullable(messagingException.getMessage())
-            .transform(startWith5())
-            .or(false);
+        return Optional.ofNullable(messagingException.getMessage())
+            .map(startWith5())
+            .orElse(false);
     }
 
     private Function<String, Boolean> startWith5() {
-        return new Function<String, Boolean>() {
-            @Override
-            public Boolean apply(String input) {
-                return input.startsWith("5");
-            }
-        };
+        return message -> message.startsWith("5");
     }
 
     private Optional<Integer> computeReturnCode() {
@@ -100,7 +94,7 @@ public class EnhancedMessagingException {
             } catch (IllegalStateException ise) {
             }
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     public Optional<String> computeCommand() {
@@ -112,19 +106,16 @@ public class EnhancedMessagingException {
             } catch (IllegalStateException ise) {
             }
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     public Optional<InternetAddress> computeAddress() {
         if (hasReturnCode()) {
             try {
                 return Optional.of((InternetAddress) invokeGetter(messagingException, "getAddress"));
-            } catch (ClassCastException cce) {
-            } catch (IllegalArgumentException iae) {
-            } catch (IllegalStateException ise) {
-            }
+            } catch (ClassCastException | IllegalArgumentException | IllegalStateException cce) { }
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     public String computeAction() {
@@ -145,7 +136,7 @@ public class EnhancedMessagingException {
             if (currentMessagingException.hasNestedMessagingException()) {
                 currentMessagingException = currentMessagingException.getNestedMessagingException();
             } else {
-                return Optional.absent();
+                return Optional.empty();
             }
         }
     }

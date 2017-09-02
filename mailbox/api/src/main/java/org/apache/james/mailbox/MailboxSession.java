@@ -24,8 +24,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.slf4j.Logger;
-
 /**
  * Mailbox session.
  */
@@ -74,13 +72,6 @@ public interface MailboxSession {
      * Closes this session.
      */
     void close();
-
-    /**
-     * Gets the logger for this session context.
-     * 
-     * @return not null
-     */
-    Logger getLog();
 
     /**
      * Gets the user executing this session.

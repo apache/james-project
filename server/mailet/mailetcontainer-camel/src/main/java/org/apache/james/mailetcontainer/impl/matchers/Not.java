@@ -21,29 +21,28 @@ package org.apache.james.mailetcontainer.impl.matchers;
 
 import java.util.ArrayList;
 import java.util.Collection;
-
+import java.util.Optional;
 import javax.mail.MessagingException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 
+/**
+ * This is the Not CompositeMatcher - consider what wasn't in the result set
+ * of each child matcher. Of course it is easier to understand if it only
+ * includes one matcher in the composition, the normal recommended use. @See
+ * CompositeMatcher interface.
+ *
+ * @return Collection of Recipients from the Negated composition of the child
+ *         Matcher(s).
+ */
 public class Not extends GenericCompositeMatcher {
 
-    /**
-     * This is the Not CompositeMatcher - consider what wasn't in the result set
-     * of each child matcher. Of course it is easier to understand if it only
-     * includes one matcher in the composition, the normal recommended use. @See
-     * CompositeMatcher interface.
-     * 
-     * @return Collectiom of Recipient from the Negated composition of the child
-     *         Matcher(s).
-     */
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
-        Collection<MailAddress> finalResult = Optional.fromNullable(Lists.newArrayList(mail.getRecipients())).or(new ArrayList<MailAddress>());
+        Collection<MailAddress> finalResult = Optional.ofNullable(Lists.newArrayList(mail.getRecipients())).orElse(new ArrayList<>());
         for (Matcher matcher : getMatchers()) {
             Collection<MailAddress> matcherResult = matcher.match(mail);
             if (matcherResult != null) {

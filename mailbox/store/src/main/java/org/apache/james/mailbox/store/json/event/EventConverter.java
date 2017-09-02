@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.store.json.event;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,8 +41,12 @@ import org.apache.james.mailbox.store.json.event.dto.MailboxSessionDataTransferO
 import org.apache.james.mailbox.store.json.event.dto.MessageMetaDataDataTransferObject;
 import org.apache.james.mailbox.store.json.event.dto.UpdatedFlagsDataTransferObject;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableMap;
 
 public class EventConverter {
 
@@ -98,7 +101,8 @@ public class EventConverter {
             case ADDED:
                 return eventFactory.added(eventDataTransferObject.getSession().getMailboxSession(),
                     retrieveMetadata(eventDataTransferObject.getMetaDataProxyMap()),
-                    mailbox);
+                    mailbox,
+                    ImmutableMap.<MessageUid, MailboxMessage>of());
             case DELETED:
                 return eventFactory.expunged(eventDataTransferObject.getSession().getMailboxSession(),
                     retrieveMetadata(eventDataTransferObject.getMetaDataProxyMap()),
@@ -146,10 +150,9 @@ public class EventConverter {
                                                                MailboxDataTransferObject mailboxIntermediate,
                                                                List<MessageUid> uids,
                                                                List<UpdatedFlags> updatedFlagsList) {
-        ArrayList<UpdatedFlagsDataTransferObject> updatedFlagsDataTransferObjects = new ArrayList<UpdatedFlagsDataTransferObject>();
-        for(UpdatedFlags updatedFlags : updatedFlagsList) {
-            updatedFlagsDataTransferObjects.add(new UpdatedFlagsDataTransferObject(updatedFlags));
-        }
+        List<UpdatedFlagsDataTransferObject> updatedFlagsDataTransferObjects = updatedFlagsList.stream()
+            .map(UpdatedFlagsDataTransferObject::new)
+            .collect(Guavate.toImmutableList());
         return EventDataTransferObject.builder()
             .type(EventType.FLAGS)
             .session(new MailboxSessionDataTransferObject(session))
@@ -164,7 +167,7 @@ public class EventConverter {
                                                                        MailboxDataTransferObject mailboxIntermediate,
                                                                        List<MessageUid> uids,
                                                                        MailboxListener.MetaDataHoldingEvent event) {
-        HashMap<MessageUid, MessageMetaDataDataTransferObject> metaDataProxyMap = new HashMap<MessageUid, MessageMetaDataDataTransferObject>();
+        HashMap<MessageUid, MessageMetaDataDataTransferObject> metaDataProxyMap = new HashMap<>();
         for(MessageUid uid : uids) {
             metaDataProxyMap.put(uid, new MessageMetaDataDataTransferObject(
                 event.getMetaData(uid)
@@ -181,7 +184,7 @@ public class EventConverter {
 
     private SortedMap<MessageUid, MessageMetaData> retrieveMetadata(Map<MessageUid, MessageMetaDataDataTransferObject> metaDataProxyMap) {
         if(metaDataProxyMap != null) {
-            TreeMap<MessageUid, MessageMetaData> result = new TreeMap<MessageUid, MessageMetaData>();
+            TreeMap<MessageUid, MessageMetaData> result = new TreeMap<>();
             Set<Map.Entry<MessageUid, MessageMetaDataDataTransferObject>> entrySet = metaDataProxyMap.entrySet();
             for (Map.Entry<MessageUid, MessageMetaDataDataTransferObject> entry : entrySet) {
                 result.put(entry.getKey(), entry.getValue().getMetadata());
@@ -194,11 +197,9 @@ public class EventConverter {
     }
 
     private List<UpdatedFlags> retrieveUpdatedFlags(List<UpdatedFlagsDataTransferObject> updatedFlagsDataTransferObject) {
-        List<UpdatedFlags> result = new ArrayList<UpdatedFlags>();
-        for(UpdatedFlagsDataTransferObject proxy : updatedFlagsDataTransferObject) {
-            result.add(proxy.retrieveUpdatedFlags());
-        }
-        return result;
+        return updatedFlagsDataTransferObject.stream()
+            .map(UpdatedFlagsDataTransferObject::retrieveUpdatedFlags)
+            .collect(Guavate.toImmutableList());
     }
 
 }

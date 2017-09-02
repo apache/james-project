@@ -19,16 +19,14 @@
 
 package org.apache.james.mpt.ant;
 
-import junit.framework.TestCase;
-
 import org.apache.james.mpt.DiscardProtocol;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.resources.Union;
 
+import junit.framework.TestCase;
+
 public class TestAddUser extends TestCase {
 
-    private static final int PORT = 10001;
-    
     DiscardProtocol fakeServer;
     
     DiscardProtocol.Record record;
@@ -37,13 +35,13 @@ public class TestAddUser extends TestCase {
     
     protected void setUp() throws Exception {
         super.setUp();
-        fakeServer = new DiscardProtocol(PORT);
+        fakeServer = new DiscardProtocol();
         fakeServer.start();
         record = fakeServer.recordNext();
         
         subject = new MailProtocolTestTask();
         subject.setHost("127.0.0.1");
-        subject.setPort(PORT+1);
+        subject.setPort(fakeServer.getPort());
         subject.add(new Union());
         subject.setProject(new Project());
     }
@@ -55,7 +53,7 @@ public class TestAddUser extends TestCase {
 
     public void testShouldExecuteScriptAgainstPort() throws Exception {
         MailProtocolTestTask.AddUser user = subject.createAddUser();
-        user.setPort(PORT);
+        user.setPort(fakeServer.getPort());
         user.setPasswd("PASSWORD");
         user.setUser("USER");
         final String script = "This script adds a user";

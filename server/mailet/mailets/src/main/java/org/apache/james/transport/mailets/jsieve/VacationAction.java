@@ -30,13 +30,15 @@ import org.apache.jsieve.mail.optional.ActionVacation;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.joda.time.Days;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class VacationAction implements MailAction {
+    private static final Logger LOGGER = LoggerFactory.getLogger(VacationAction.class);
 
     @Override
     public void execute(Action action, Mail mail, ActionContext context) throws MessagingException {
@@ -68,11 +70,7 @@ public class VacationAction implements MailAction {
     private boolean isValidForReply(final Mail mail, ActionVacation actionVacation, final ActionContext context) {
         Set<MailAddress> currentMailAddresses = ImmutableSet.copyOf(mail.getRecipients());
         Set<MailAddress> allowedMailAddresses = ImmutableSet.<MailAddress>builder().addAll(
-            Lists.transform(actionVacation.getAddresses(), new Function<String, MailAddress>() {
-                public MailAddress apply(String s) {
-                    return retrieveAddressFromString(s, context);
-                }
-            }))
+            Lists.transform(actionVacation.getAddresses(), s -> retrieveAddressFromString(s, context)))
             .add(context.getRecipient())
             .build();
         return !Sets.intersection(currentMailAddresses, allowedMailAddresses).isEmpty();
@@ -82,7 +80,7 @@ public class VacationAction implements MailAction {
         try {
             return new MailAddress(address);
         } catch (AddressException e) {
-            context.getLog().warn("Mail address " + address + " was not well formatted : " + e.getLocalizedMessage());
+            LOGGER.warn("Mail address " + address + " was not well formatted : " + e.getLocalizedMessage());
             return null;
         }
     }

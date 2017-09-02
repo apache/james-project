@@ -23,9 +23,6 @@ import org.apache.james.protocols.api.ProtocolImpl;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
-import org.apache.james.protocols.api.logger.Logger;
-import org.apache.james.protocols.smtp.SMTPConfiguration;
-import org.apache.james.protocols.smtp.SMTPSessionImpl;
 
 /**
  * {@link ProtocolImpl} which creates {@link SMTPSessionImpl} instances
@@ -34,13 +31,17 @@ import org.apache.james.protocols.smtp.SMTPSessionImpl;
  */
 public class SMTPProtocol extends ProtocolImpl {
 
-    public SMTPProtocol(ProtocolHandlerChain chain, SMTPConfiguration config, Logger logger) {
-        super(chain, config, logger);
+    public SMTPProtocol(ProtocolHandlerChain chain, SMTPConfiguration config) {
+        super(chain, config);
     }
 
     @Override
     public ProtocolSession newSession(ProtocolTransport transport) {
-        return new SMTPSessionImpl(logger, transport, (SMTPConfiguration) getConfiguration());
+        return new SMTPSessionImpl(transport, (SMTPConfiguration) getConfiguration());
     }
 
+    @Override
+    public String getName() {
+        return "SMTP";
+    }
 }

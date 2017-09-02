@@ -25,7 +25,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
 
-
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.display.CharsetUtil;
@@ -38,13 +37,10 @@ import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(JMock.class)
 public class SearchCommandParserCharsetTest {
 
     private static final Charset UTF8 = Charset.forName("UTF-8");
@@ -100,7 +96,6 @@ public class SearchCommandParserCharsetTest {
                     with(same(command)), 
                     with(equal(HumanReadableText.BAD_CHARSET)),
                     with(equal(StatusResponse.ResponseCode.badCharset(CharsetUtil.getAvailableCharsetNames()))));
-            oneOf (session).getLog(); returnValue(new MockLogger());
         }});
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream("CHARSET BOGUS ".getBytes("US-ASCII")),

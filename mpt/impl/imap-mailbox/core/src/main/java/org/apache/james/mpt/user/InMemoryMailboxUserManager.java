@@ -35,7 +35,7 @@ public class InMemoryMailboxUserManager implements SubscriptionManager {
     private final Map<String, MailboxUser> users;
 
     public InMemoryMailboxUserManager() {
-        this.users = new HashMap<String, MailboxUser>();
+        this.users = new HashMap<>();
     }
 
     public boolean isAuthentic(String userid, CharSequence password) {
@@ -91,12 +91,10 @@ public class InMemoryMailboxUserManager implements SubscriptionManager {
     }
 
     public void endProcessingRequest(MailboxSession session) {
-        // TODO Auto-generated method stub
         
     }
 
     public void startProcessingRequest(MailboxSession session) {
-        // TODO Auto-generated method stub
         
     }
 

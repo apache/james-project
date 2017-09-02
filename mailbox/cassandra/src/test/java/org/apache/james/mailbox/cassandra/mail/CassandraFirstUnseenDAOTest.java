@@ -21,11 +21,9 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Optional;
-
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.cassandra.CassandraId;
+import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
 import org.junit.After;
 import org.junit.Before;
@@ -51,6 +49,7 @@ public class CassandraFirstUnseenDAOTest {
     @After
     public void tearDown() {
         cassandra.clearAllTables();
+        cassandra.close();
     }
 
     @Test
@@ -63,10 +62,8 @@ public class CassandraFirstUnseenDAOTest {
     public void addUnreadShouldThenBeReportedAsFirstUnseen() {
         testee.addUnread(MAILBOX_ID, UID_1).join();
 
-        Optional<MessageUid> firstUnseen = testee.retrieveFirstUnread(MAILBOX_ID).join();
-
-        assertThat(firstUnseen.isPresent()).isTrue();
-        assertThat(firstUnseen.get()).isEqualTo(UID_1);
+        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).join())
+            .contains(UID_1);
     }
 
     @Test
@@ -75,9 +72,8 @@ public class CassandraFirstUnseenDAOTest {
 
         testee.addUnread(MAILBOX_ID, UID_2).join();
 
-        Optional<MessageUid> firstUnseen = testee.retrieveFirstUnread(MAILBOX_ID).join();
-        assertThat(firstUnseen.isPresent()).isTrue();
-        assertThat(firstUnseen.get()).isEqualTo(UID_1);
+        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).join())
+            .contains(UID_1);
     }
 
     @Test
@@ -86,9 +82,8 @@ public class CassandraFirstUnseenDAOTest {
 
         testee.addUnread(MAILBOX_ID, UID_1).join();
 
-        Optional<MessageUid> firstUnseen = testee.retrieveFirstUnread(MAILBOX_ID).join();
-        assertThat(firstUnseen.isPresent()).isTrue();
-        assertThat(firstUnseen.get()).isEqualTo(UID_1);
+        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).join())
+            .contains(UID_1);
     }
 
     @Test
@@ -97,9 +92,8 @@ public class CassandraFirstUnseenDAOTest {
 
         testee.addUnread(MAILBOX_ID, UID_1).join();
 
-        Optional<MessageUid> firstUnseen = testee.retrieveFirstUnread(MAILBOX_ID).join();
-        assertThat(firstUnseen.isPresent()).isTrue();
-        assertThat(firstUnseen.get()).isEqualTo(UID_1);
+        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).join())
+            .contains(UID_1);
     }
 
 
@@ -107,8 +101,8 @@ public class CassandraFirstUnseenDAOTest {
     public void removeUnreadShouldReturnWhenNoData() {
         testee.removeUnread(MAILBOX_ID, UID_1).join();
 
-        Optional<MessageUid> firstUnseen = testee.retrieveFirstUnread(MAILBOX_ID).join();
-        assertThat(firstUnseen.isPresent()).isFalse();
+        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).join())
+            .isEmpty();
     }
 
     @Test
@@ -117,8 +111,8 @@ public class CassandraFirstUnseenDAOTest {
 
         testee.removeUnread(MAILBOX_ID, UID_1).join();
 
-        Optional<MessageUid> firstUnseen = testee.retrieveFirstUnread(MAILBOX_ID).join();
-        assertThat(firstUnseen.isPresent()).isFalse();
+        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).join())
+            .isEmpty();
     }
 
     @Test
@@ -128,9 +122,8 @@ public class CassandraFirstUnseenDAOTest {
 
         testee.removeUnread(MAILBOX_ID, UID_2).join();
 
-        Optional<MessageUid> firstUnseen = testee.retrieveFirstUnread(MAILBOX_ID).join();
-        assertThat(firstUnseen.isPresent()).isTrue();
-        assertThat(firstUnseen.get()).isEqualTo(UID_1);
+        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).join())
+            .contains(UID_1);
     }
 
     @Test
@@ -140,8 +133,7 @@ public class CassandraFirstUnseenDAOTest {
 
         testee.removeUnread(MAILBOX_ID, UID_1).join();
 
-        Optional<MessageUid> firstUnseen = testee.retrieveFirstUnread(MAILBOX_ID).join();
-        assertThat(firstUnseen.isPresent()).isTrue();
-        assertThat(firstUnseen.get()).isEqualTo(UID_2);
+        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).join())
+            .contains(UID_2);
     }
 }

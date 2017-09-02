@@ -39,7 +39,7 @@ import org.apache.james.protocols.smtp.hook.HookResultHook;
  */
 public class HookResultJMXMonitor implements HookResultHook, ExtensibleHandler, ProtocolHandler {
 
-    private final Map<String, HookStats> hookStats = new HashMap<String, HookStats>();
+    private final Map<String, HookStats> hookStats = new HashMap<>();
     private String jmxPath;
 
     /**
@@ -63,7 +63,7 @@ public class HookResultJMXMonitor implements HookResultHook, ExtensibleHandler, 
      * org.apache.james.protocols.api.handler.ExtensibleHandler#getMarkerInterfaces()
      */
     public List<Class<?>> getMarkerInterfaces() {
-        List<Class<?>> marker = new ArrayList<Class<?>>();
+        List<Class<?>> marker = new ArrayList<>();
         marker.add(Hook.class);
         return marker;
     }

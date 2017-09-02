@@ -29,14 +29,11 @@
 
   <subsection name="Java Virtual Machine">
   
-    <p>James requires a Java Runtime Environment. Java version 1.6 or higher is required to run the 
+    <p>James 3.0 requires a Java Runtime Environment. Java version 1.6 or higher is required to run the
        James application. The exact JREs available depends on the platform. In addition, the environment variable JAVA_HOME should be set to
        the JRE home directory before running James.</p>
-       
-    <p>If you run JDK7, James will not start due to a bug in JAXB. As temporary workaround, you can
-       download the latest 2.1 version of JAXB from <a href="http://jaxb.java.net/2.1.13/JAXB2_20100510.jar">
-       http://jaxb.java.net/2.1.13/JAXB2_20100510.jar</a>
-       and copy the extracted jaxb-impl.jar into conf/lib.</p>
+
+    <p>After James 3.0 release, James requires Java version 1.8 or higher.</p>
     
     <p>James 3.0 has been successfully tested on OpenJDK, Sun JDK and IBM JDK</p>
   
@@ -90,6 +87,10 @@
       <p>Alternatively, if you don't want your build to be handled via Docker, you can follow <a href="quick-start-cassandra.html">
           Guice Cassandra quick-start</a> </p>
 
+      <p>Note that install instructions from command line are available for <a href="install/cassandra-guice.html">Cassandra-Guice</a>,
+          <a href="install/jpa-guice.html">JPA-Guice</a> and <a href="install/jpa-smtp-guice.html">JPA-SMTP-Guice</a>.
+      </p>
+
       <p>A <a href="https://github.com/apache/james-project/blob/9502cfebfd9a4eaebbba7dda802d1fe0ad3589b7/dockerfiles/run/docker-compose.yml">
           docker-compose</a> is available for Guice + Cassandra + ElasticSearch</p>
   </section>
@@ -134,11 +135,9 @@
       </div>
   -->
     <p>After unpacking the binary, the next step is to adjust the initial configuration.  
-       All configuration files are embedded in jars. We ship in the conf folder template configuration files.
+       All configuration files are embedded in jars. We ship in the conf folder the configuration files that can be edited to match your needs.
     </p>
-    
-    <p>You can override the default configuration : copy the conf folder any ...-template... you need and update according to your needs.</p>
-    
+
     <p>Additional system files reside under the./conf/META-INF folder.</p>
     
     <p>The out of the box configuration makes certain assumptions and has some default 
@@ -206,7 +205,7 @@ $ telnet 127.0.0.1 25
 Trying 127.0.0.1...
 Connected to localhost.
 Escape character is '^]'.
-220 172.16.1.131 SMTP Server (JAMES SMTP Server 3.0-beta4) ready Sat, 6 Nov 2010 17:31:33 +0100 (CET)
+220 172.16.1.131 SMTP Server (JAMES SMTP Server 3.0.0) ready Wed, 20 Jul 2017 17:31:33 +0100 (CET)
 ehlo test
 250-172.16.1.131 Hello test (aoscommunity.com [127.0.0.1])
 250-PIPELINING

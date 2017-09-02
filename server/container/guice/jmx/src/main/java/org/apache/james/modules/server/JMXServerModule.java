@@ -47,7 +47,6 @@ import org.apache.james.user.api.UsersRepositoryManagementMBean;
 import org.apache.james.user.lib.UsersRepositoryManagement;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceMailboxManagerResolver;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -94,7 +93,6 @@ public class JMXServerModule extends AbstractModule {
         bind(SieveRepositoryManagementMBean.class).to(SieveRepositoryManagement.class);
         Multibinder<ConfigurationPerformer> configurationMultibinder = Multibinder.newSetBinder(binder(), ConfigurationPerformer.class);
         configurationMultibinder.addBinding().to(JMXModuleConfigurationPerformer.class);
-        configurationMultibinder.addBinding().to(MailboxManagementLogSetter.class);
     }
 
     @Singleton
@@ -146,27 +144,6 @@ public class JMXServerModule extends AbstractModule {
             } catch (Exception e) {
                 Throwables.propagate(e);
             }
-        }
-
-        @Override
-        public List<Class<? extends Configurable>> forClasses() {
-            return ImmutableList.of();
-        }
-    }
-
-    @Singleton
-    public static class MailboxManagementLogSetter implements ConfigurationPerformer {
-
-        private final MailboxManagerManagement mailboxManagerManagement;
-
-        @Inject
-        public MailboxManagementLogSetter(MailboxManagerManagement mailboxManagerManagement) {
-            this.mailboxManagerManagement = mailboxManagerManagement;
-        }
-
-        @Override
-        public void initModule() {
-            mailboxManagerManagement.setLog(LoggerFactory.getLogger(MailboxManagerManagement.class));
         }
 
         @Override

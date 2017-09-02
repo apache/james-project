@@ -27,7 +27,7 @@
 
   <section name="POP3 Configuration">
   
-    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/pop3server-template.xml">pop3server-template.xml</a> in GIT to get some examples and hints.</p>
+    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/pop3server.xml">pop3server.xml</a> in GIT to get some examples and hints.</p>
 
     <p>The POP3 service is controlled by a configuration block in the pop3server.xml.
        The pop3server tag defines the boundaries of the configuration block.  It encloses 

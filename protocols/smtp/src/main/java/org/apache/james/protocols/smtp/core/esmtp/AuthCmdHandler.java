@@ -24,7 +24,6 @@ package org.apache.james.protocols.smtp.core.esmtp;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -49,6 +48,11 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookResultHook;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MailParametersHook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 
 /**
@@ -61,9 +65,10 @@ import org.apache.james.protocols.smtp.hook.MailParametersHook;
  */
 public class AuthCmdHandler
     implements CommandHandler<SMTPSession>, EhloExtension, ExtensibleHandler, MailParametersHook {
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("AUTH"));
+    private static final Collection<String> COMMANDS = ImmutableSet.of("AUTH");
+    private static final Logger LOGGER = LoggerFactory.getLogger(CommandHandler.class);
     private static final String[] MAIL_PARAMS = { "AUTH" };
-    private static final List<String> ESMTP_FEATURES = Collections.unmodifiableList(Arrays.asList("AUTH LOGIN PLAIN", "AUTH=LOGIN PLAIN"));
+    private static final List<String> ESMTP_FEATURES = ImmutableList.of("AUTH LOGIN PLAIN", "AUTH=LOGIN PLAIN");
     
     private static final Response AUTH_ABORTED = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH) + " Authentication aborted").immutable();
     private static final Response ALREADY_AUTH = new SMTPResponse(SMTPRetCode.BAD_SEQUENCE, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.DELIVERY_OTHER)+" User has previously authenticated. "
@@ -262,7 +267,7 @@ public class AuthCmdHandler
                 try {
                     pass = authTokenizer.nextToken();             // Password
                 }
-                catch (java.util.NoSuchElementException _) {
+                catch (java.util.NoSuchElementException ignored) {
                     // If we got here, this is what happened.  RFC 2595
                     // says that "the client may leave the authorization
                     // identity empty to indicate that it is the same as
@@ -379,7 +384,7 @@ public class AuthCmdHandler
         
         if (hooks != null) {
             for (AuthHook rawHook : hooks) {
-                session.getLogger().debug("executing  hook " + rawHook);
+                LOGGER.debug("executing  hook " + rawHook);
 
                 long start = System.currentTimeMillis();
                 HookResult hRes = rawHook.doAuth(session, user, pass);
@@ -387,7 +392,7 @@ public class AuthCmdHandler
 
                 if (rHooks != null) {
                     for (HookResultHook rHook : rHooks) {
-                        session.getLogger().debug("executing  hook " + rHook);
+                        LOGGER.debug("executing  hook " + rHook);
                         hRes = rHook.onHookResult(session, hRes, executionTime, rawHook);
                     }
                 }
@@ -396,11 +401,11 @@ public class AuthCmdHandler
 
                 if (res != null) {
                     if (SMTPRetCode.AUTH_FAILED.equals(res.getRetCode())) {
-                        session.getLogger().info("AUTH method " + authType + " failed");
+                        LOGGER.info("AUTH method " + authType + " failed");
                     } else if (SMTPRetCode.AUTH_OK.equals(res.getRetCode())) {
-                        if (session.getLogger().isDebugEnabled()) {
+                        if (LOGGER.isDebugEnabled()) {
                             // TODO: Make this string a more useful debug message
-                            session.getLogger().debug("AUTH method " + authType + " succeeded");
+                            LOGGER.debug("AUTH method " + authType + " succeeded");
                         }
                     }
                     return res;
@@ -409,7 +414,7 @@ public class AuthCmdHandler
         }
 
         res = AUTH_FAILED;
-        session.getLogger().error("AUTH method "+authType+" failed from " + user + "@" + session.getRemoteAddress().getAddress().getHostAddress()); 
+        LOGGER.error("AUTH method "+authType+" failed from " + user + "@" + session.getRemoteAddress().getAddress().getHostAddress());
         return res;
     }
 
@@ -484,13 +489,13 @@ public class AuthCmdHandler
      * @param initialResponse the initial response line passed in with the AUTH command
      */
     private Response doUnknownAuth(SMTPSession session, String authType, String initialResponse) {
-        if (session.getLogger().isInfoEnabled()) {
+        if (LOGGER.isInfoEnabled()) {
             StringBuilder errorBuffer =
                 new StringBuilder(128)
                     .append("AUTH method ")
                         .append(authType)
                         .append(" is an unrecognized authentication type");
-            session.getLogger().info(errorBuffer.toString());
+            LOGGER.info(errorBuffer.toString());
         }
         return UNKNOWN_AUTH_TYPE;
     }
@@ -520,7 +525,7 @@ public class AuthCmdHandler
      * @see org.apache.james.protocols.api.handler.ExtensibleHandler#getMarkerInterfaces()
      */
     public List<Class<?>> getMarkerInterfaces() {
-        List<Class<?>> classes = new ArrayList<Class<?>>(1);
+        List<Class<?>> classes = new ArrayList<>(1);
         classes.add(AuthHook.class);
         return classes;
     }

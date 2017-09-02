@@ -20,7 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import java.util.List;
-
+import java.util.Optional;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
@@ -41,8 +41,9 @@ import org.apache.james.transport.util.TosUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
@@ -91,6 +92,7 @@ import com.google.common.collect.ImmutableList;
  * </p>
  */
 public class Forward extends GenericMailet implements RedirectNotify {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Forward.class);
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[] {
             "debug", "passThrough", "fakeDomainCheck", "forwardto", "forwardTo" };
@@ -111,7 +113,7 @@ public class Forward extends GenericMailet implements RedirectNotify {
 
     @Override
     public InitParameters getInitParameters() {
-        return RedirectMailetInitParameters.from(this, Optional.of(TypeCode.NONE), Optional.<TypeCode> absent());
+        return RedirectMailetInitParameters.from(this, Optional.of(TypeCode.NONE), Optional.empty());
     }
 
     @Override
@@ -127,7 +129,7 @@ public class Forward extends GenericMailet implements RedirectNotify {
     @Override
     public void init() throws MessagingException {
         if (getInitParameters().isDebug()) {
-            log("Initializing");
+            LOGGER.debug("Initializing");
         }
 
         // check that all init parameters have been declared in
@@ -136,7 +138,7 @@ public class Forward extends GenericMailet implements RedirectNotify {
 
         if (getInitParameters().isStatic()) {
             if (getInitParameters().isDebug()) {
-                log(getInitParameters().asString());
+                LOGGER.debug(getInitParameters().asString());
             }
         }
     }
@@ -202,7 +204,7 @@ public class Forward extends GenericMailet implements RedirectNotify {
 
     @Override
     public Optional<MailAddress> getReplyTo() throws MessagingException {
-        return Optional.absent();
+        return Optional.empty();
     }
 
     @Override
@@ -212,17 +214,17 @@ public class Forward extends GenericMailet implements RedirectNotify {
 
     @Override
     public Optional<MailAddress> getReversePath() throws MessagingException {
-        return Optional.absent();
+        return Optional.empty();
     }
 
     @Override
     public Optional<MailAddress> getReversePath(Mail originalMail) throws MessagingException {
-        return Optional.absent();
+        return Optional.empty();
     }
 
     @Override
     public Optional<MailAddress> getSender() throws MessagingException {
-        return Optional.absent();
+        return Optional.empty();
     }
 
     @Override
@@ -232,7 +234,7 @@ public class Forward extends GenericMailet implements RedirectNotify {
 
     @Override
     public Optional<String> getSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
-        return Optional.absent();
+        return Optional.empty();
     }
 
     @Override

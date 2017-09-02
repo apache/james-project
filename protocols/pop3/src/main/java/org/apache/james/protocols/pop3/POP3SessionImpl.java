@@ -22,7 +22,6 @@ import org.apache.james.protocols.api.ProtocolConfiguration;
 import org.apache.james.protocols.api.ProtocolSessionImpl;
 import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.api.Response;
-import org.apache.james.protocols.api.logger.Logger;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
 
 /**
@@ -36,8 +35,8 @@ public class POP3SessionImpl extends ProtocolSessionImpl implements POP3Session 
     private Mailbox mailbox;
 
     
-    public POP3SessionImpl(Logger logger, ProtocolTransport transport, ProtocolConfiguration configData) {
-        super(logger, transport, configData);
+    public POP3SessionImpl(ProtocolTransport transport, ProtocolConfiguration configData) {
+        super(transport, configData);
     }
 
     /**

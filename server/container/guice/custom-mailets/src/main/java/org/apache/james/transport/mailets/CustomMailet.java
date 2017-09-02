@@ -24,6 +24,12 @@ import javax.mail.MessagingException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
+
+/**
+ * Mailet introduced for testing purposes.
+ *
+ * Does nothing.
+ */
 public class CustomMailet extends GenericMailet {
 
     @Override

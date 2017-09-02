@@ -29,7 +29,7 @@
 
     <subsection name="dnsservice.xml">
 
-      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/dnsservice-template.xml">dnsservice-template.xml</a> in GIT to get some examples and hints.</p>
+      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/dnsservice.xml">dnsservice.xml</a> in GIT to get some examples and hints.</p>
 
       <p>Specifies DNS Server information for use by various components inside Apache James Server.</p>
 

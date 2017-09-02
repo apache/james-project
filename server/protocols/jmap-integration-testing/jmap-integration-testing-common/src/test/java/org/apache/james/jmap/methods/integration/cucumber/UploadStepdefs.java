@@ -24,12 +24,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.BufferedInputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 
 import javax.inject.Inject;
 
-import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Async;
 import org.apache.http.client.fluent.Content;
@@ -41,9 +41,11 @@ import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.util.CountDownConsumeInputStream;
 import org.apache.james.util.ZeroedInputStream;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
@@ -175,11 +177,19 @@ public class UploadStepdefs {
 
     @Then("^the user should receive a specified JSON content$")
     public void jsonResponse() throws Exception {
-        assertThat(response.getHeaders("Content-Type")).extracting(Header::getValue).containsExactly(org.apache.http.entity.ContentType.APPLICATION_JSON.toString());
+        assertThat(response.getHeaders("Content-Type"))
+            .extracting(header ->
+                normalizeContentType(header.getValue()))
+            .containsExactly(
+                normalizeContentType(org.apache.http.entity.ContentType.APPLICATION_JSON.toString()));
         DocumentContext jsonPath = JsonPath.parse(response.getEntity().getContent());
         assertThat(jsonPath.<String>read("blobId")).isEqualTo(_1M_ZEROED_FILE_BLOB_ID);
         assertThat(jsonPath.<String>read("type")).isEqualTo("application/octet-stream");
         assertThat(jsonPath.<Integer>read("size")).isEqualTo(_1M);
+    }
+
+    private String normalizeContentType(String input) {
+        return CharMatcher.WHITESPACE.removeFrom(input.toLowerCase(Locale.US));
     }
 
     @Then("^\"([^\"]*)\" should be able to retrieve the content$")

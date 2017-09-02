@@ -18,12 +18,16 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import static org.junit.Assert.assertEquals;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+
 import javax.mail.internet.ParseException;
+
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.mock.MockDNSService;
 import org.apache.james.protocols.smtp.MailAddress;
@@ -32,7 +36,6 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.apache.james.smtpserver.fastfail.ValidRcptMX;
-import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 public class ValidRcptMXTest {
@@ -44,8 +47,8 @@ public class ValidRcptMXTest {
     private SMTPSession setupMockedSMTPSession(MailAddress rcpt) {
         return new BaseFakeSMTPSession() {
 
-            private final HashMap<String, Object> sstate = new HashMap<String, Object>();
-            private final HashMap<String, Object> connectionState = new HashMap<String, Object>();
+            private final HashMap<String, Object> sstate = new HashMap<>();
+            private final HashMap<String, Object> connectionState = new HashMap<>();
 
             @Override
             public Object setAttachment(String key, Object value, State state) {
@@ -79,7 +82,7 @@ public class ValidRcptMXTest {
 
             @Override
             public Collection<String> findMXRecords(String hostname) {
-                Collection<String> mx = new ArrayList<String>();
+                Collection<String> mx = new ArrayList<>();
 
                 if (hostname.equals(INVALID_HOST)) {
                     mx.add(INVALID_MX);
@@ -101,7 +104,7 @@ public class ValidRcptMXTest {
 
     @Test
     public void testRejectLoopbackMX() throws ParseException, MailAddressException {
-        Collection<String> bNetworks = new ArrayList<String>();
+        Collection<String> bNetworks = new ArrayList<>();
         bNetworks.add("127.0.0.1");
 
         DNSService dns = setupMockedDNSServer();

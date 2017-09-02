@@ -12,6 +12,7 @@ printUsage() {
 ORIGIN=/origin
 CASSANDRA_DESTINATION=/cassandra/destination
 JPA_DESTINATION=/jpa/destination
+SPRING_DESTINATION=/spring/destination
 
 for arg in "$@"
 do
@@ -70,5 +71,10 @@ if [ $? -eq 0 ]; then
       cp -r server/container/guice/jpa-guice/target/james-server-jpa-guice.lib $JPA_DESTINATION || true
       cp server/container/cli/target/james-server-cli.jar $JPA_DESTINATION || true
       cp -r server/container/cli/target/james-server-cli.lib $JPA_DESTINATION || true
+   fi
+
+   if [ -d "$SPRING_DESTINATION" ]; then
+      echo "Copying SPRING jars"
+      cp server/app/target/james-server-app-*-app.zip $SPRING_DESTINATION
    fi
 fi

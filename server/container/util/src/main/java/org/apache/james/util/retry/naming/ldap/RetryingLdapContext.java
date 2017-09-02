@@ -30,7 +30,6 @@ import javax.naming.ldap.LdapContext;
 import org.apache.james.util.retry.api.RetrySchedule;
 import org.apache.james.util.retry.naming.LoggingRetryHandler;
 import org.apache.james.util.retry.naming.directory.RetryingDirContext;
-import org.slf4j.Logger;
 
 /**
  * <code>RetryingLdapContext</code> retries the methods defined by <code>javax.naming.ldap.LdapContext</code>
@@ -48,8 +47,8 @@ abstract public class RetryingLdapContext extends RetryingDirContext implements 
      * @param maxRetries
      * @throws NamingException
      */
-    public RetryingLdapContext(RetrySchedule schedule, int maxRetries, Logger logger) throws NamingException {
-        super(schedule, maxRetries, logger);
+    public RetryingLdapContext(RetrySchedule schedule, int maxRetries) throws NamingException {
+        super(schedule, maxRetries);
     }
 
     /**
@@ -57,7 +56,7 @@ abstract public class RetryingLdapContext extends RetryingDirContext implements 
      */
     @Override
     public ExtendedResponse extendedOperation(final ExtendedRequest request) throws NamingException {
-        return (ExtendedResponse) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(), getLogger()){
+        return (ExtendedResponse) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()){
 
             @Override
             public Object operation() throws NamingException {
@@ -70,7 +69,7 @@ abstract public class RetryingLdapContext extends RetryingDirContext implements 
      */
     @Override
     public Control[] getConnectControls() throws NamingException {
-        return (Control[]) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(), getLogger()){
+        return (Control[]) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()){
 
             @Override
             public Object operation() throws NamingException {
@@ -83,7 +82,7 @@ abstract public class RetryingLdapContext extends RetryingDirContext implements 
      */
     @Override
     public Control[] getRequestControls() throws NamingException {
-        return (Control[]) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(), getLogger()){
+        return (Control[]) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()){
 
             @Override
             public Object operation() throws NamingException {
@@ -96,7 +95,7 @@ abstract public class RetryingLdapContext extends RetryingDirContext implements 
      */
     @Override
     public Control[] getResponseControls() throws NamingException {
-        return (Control[]) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(), getLogger()){
+        return (Control[]) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()){
 
             @Override
             public Object operation() throws NamingException {
@@ -110,7 +109,7 @@ abstract public class RetryingLdapContext extends RetryingDirContext implements 
     @Override
     public LdapContext newInstance(final Control[] requestControls) throws NamingException {
         final Context context = getDelegate();
-        return new RetryingLdapContext(getSchedule(), getMaxRetries(), getLogger()) {
+        return new RetryingLdapContext(getSchedule(), getMaxRetries()) {
 
             @Override
             public Context newDelegate() throws NamingException {
@@ -124,7 +123,7 @@ abstract public class RetryingLdapContext extends RetryingDirContext implements 
      */
     @Override
     public void reconnect(final Control[] connCtls) throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(), getLogger()){
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()){
 
             @Override
             public Object operation() throws NamingException {
@@ -138,7 +137,7 @@ abstract public class RetryingLdapContext extends RetryingDirContext implements 
      */
     @Override
     public void setRequestControls(final Control[] requestControls) throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries(), getLogger()){
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()){
 
             @Override
             public Object operation() throws NamingException {

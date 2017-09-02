@@ -27,7 +27,9 @@
 
   <section name="Cassandra Configuration">
 
-    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/cassandra-template.properties">cassandra-template.properties</a> to get some examples and hints.</p>
+    Note: Cassandra is only available with Guice wiring (cassandra-guice and cassandra-guice-ldap).
+
+    <p>Consult <a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/cassandra.properties">cassandra.properties</a> to get some examples and hints.</p>
 
       <dl>
         <dt><strong>cassandra.nodes</strong></dt>
@@ -91,10 +93,83 @@
         <dd>Optional.
           If specified defines the Cassandra <a href="http://docs.datastax.com/en/developer/java-driver/2.1/manual/pooling/">Specify heartbeat timeout</a></dd>
 
+        <dt><strong>mailbox.max.retry.acl</strong></dt>
+        <dd>Optional. Defaults to 1000.<br/> Controls the number of retries upon Cassandra ACL updates.</dd>
+        <dt><strong>mailbox.max.retry.modseq</strong></dt>
+        <dd>Optional. Defaults to 100000.<br/> Controls the number of retries upon Cassandra ModSeq generation.</dd>
+        <dt><strong>mailbox.max.retry.uid</strong></dt>
+        <dd>Optional. Defaults to 100000.<br/> Controls the number of retries upon Cassandra Uid generation.</dd>
+        <dt><strong>mailbox.max.retry.message.flags.update</strong></dt>
+        <dd>Optional. Defaults to 1000.<br/> Controls the number of retries upon Cassandra flags update, in MessageMapper.</dd>
+        <dt><strong>mailbox.max.retry.message.id.flags.update</strong></dt>
+        <dd>Optional. Defaults to 1000.<br/> Controls the number of retries upon Cassandra flags update, in MessageIdMapper.</dd>
+        <dt><strong>fetch.advance.row.count</strong></dt>
+        <dd>Optional. Defaults to 1000.<br/> Controls the number of remaining rows we should wait before prefetch when paging.</dd>
+        <dt><strong>chunk.size.flags.update</strong></dt>
+        <dd>Optional. Defaults to 20.<br/> Controls the number of messages flags updates to be performed concurently by MessageMapper.</dd>
+        <dt><strong>chunk.size.message.read</strong></dt>
+        <dd>Optional. Defaults to 100.<br/> Controls the number of messages to be retrieved in parallel.</dd>
+        <dt><strong>chunk.size.expunge</strong></dt>
+        <dd>Optional. Defaults to 100.<br/> Controls the number of messages to be expunged in parallel.</dd>
+        <dt><strong>mailbox.blob.part.size</strong></dt>
+        <dd>Optional. Defaults to 102400 (100KB).<br/> Controls the size of blob parts used to store messages.</dd>
       </dl>
 
 
 <p>If you want more explanation about Cassandra configuration, you should visit the dedicated <a href="http://docs.datastax.com/en/cassandra/2.1/cassandra/gettingStartedCassandraIntro.html">documentation</a>.</p>
+
+  </section>
+
+  <section name="Cassandra migration process">
+    <p>Cassandra upgrades implies the creation of a new table. Thus restarting James is needed, as new tables are created on restart.</p>
+
+    <p>Once done, we ship code that tries to read from new tables, and if not possible backs up to old tables. You can thus safely run
+    without running additional migrations.</p>
+
+    <p>On the fly migration can be enabled. However, one might want to force the migration in a controlled fashion, and update
+    automatically current schema version used (assess in the database old versions is no more used, as the corresponding tables are empty).
+    Note that this process is safe: we ensure the service is not running concurrently on this James instance, that it does not bump
+    version upon partial failures, that race condition in version upgrades will be idempotent, etc...</p>
+
+    <p>These schema updates can be triggered by <a href="manage-webadmin.html">webadmin</a> using the Cassandra backend.</p>
+
+    <p>Note that currently the progress can be tracked by logs.</p>
+
+    Here are the implemented migrations:
+
+    <subsection name="From V1 to V2">
+
+      <p>Migration tag on git repository: <a href="https://github.com/apache/james-project/releases/tag/cassandra_migration_v1_to_v2">cassandra_migration_v1_to_v2</a></p>
+
+      <p>Goal is to create a messageV2 table that aims at replacing message table. Message table is both storing message
+        metadata and blobs. It have been proven inefficient. Instead version 2 is chunking message blobs and storing it
+        in an other table. The migration process involves moving all messages from message table to messageV2 table
+        (contains only metadata) and blobs / blobParts tables.</p>
+
+      <p>Read more about this migration <a href="https://medium.com/p/7e8607eb3c4f">here</a>.</p>
+
+      <p>Summary of available options for this migration:</p>
+
+      <dl>
+        <dt><strong>migration.v1.v2.on.the.fly</strong></dt>
+        <dd>Only available on tag cassandra_migration_v1_to_v2. Optional. Defaults to false.<br/> Controls wether v1 to v2 migration should be run on the fly.</dd>
+        <dt><strong>migration.v1.v2.thread.count</strong></dt>
+        <dd>Only available on tag cassandra_migration_v1_to_v2. Optional. Defaults to 2.<br/> Controls the number of threads used to asynchronously migrate from v1 to v2.</dd>
+        <dt><strong>migration.v1.v2.queue.length</strong></dt>
+        <dd>Only available on tag cassandra_migration_v1_to_v2. Optional. Defaults to 1000.<br/> Controls the queue size of v1 to v2 migration task. Drops when full.</dd>
+        <dt><strong>migration.v1.read.fetch.size</strong></dt>
+        <dd>Only available on tag cassandra_migration_v1_to_v2. Optional. Defaults to 10.<br/> Controls the fetch size of the request to retrieve all messages stored in V1 during the migration process.</dd>
+      </dl>
+
+    </subsection>
+
+    <subsection name="From V2 to V3">
+
+      <p>Migration tag on git repository: <a href="https://github.com/apache/james-project/releases/tag/cassandra_migration_v2_to_v3">cassandra_migration_v2_to_v3</a></p>
+
+      <p>Goal is to drop <b>message</b> table. After this migration, one can manually delete this table.</p>
+
+    </subsection>
 
   </section>
 

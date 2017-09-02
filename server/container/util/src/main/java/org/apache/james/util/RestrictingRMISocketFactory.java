@@ -34,7 +34,7 @@ public class RestrictingRMISocketFactory extends RMISocketFactory {
 
     private final String address;
 
-    private final List<ServerSocket> sockets = new ArrayList<ServerSocket>();
+    private final List<ServerSocket> sockets = new ArrayList<>();
 
     public RestrictingRMISocketFactory(String address) {
         this.address = address;

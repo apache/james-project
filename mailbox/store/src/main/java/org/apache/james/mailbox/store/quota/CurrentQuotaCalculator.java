@@ -36,7 +36,6 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
-import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 
@@ -70,14 +69,11 @@ public class CurrentQuotaCalculator {
     private List<Mailbox> retrieveMailboxes(QuotaRoot quotaRoot, MailboxSession session) throws MailboxException {
         List<MailboxPath> paths = quotaRootResolver.retrieveAssociatedMailboxes(quotaRoot, session);
         final MailboxMapper mapper = factory.getMailboxMapper(session);
-        return Lists.transform(paths, new Function<MailboxPath, Mailbox>() {
-            @Override
-            public Mailbox apply(MailboxPath mailboxPath) {
-                try {
-                    return mapper.findMailboxByPath(mailboxPath);
-                } catch (MailboxException e) {
-                    throw Throwables.propagate(e);
-                }
+        return Lists.transform(paths, mailboxPath -> {
+            try {
+                return mapper.findMailboxByPath(mailboxPath);
+            } catch (MailboxException e) {
+                throw Throwables.propagate(e);
             }
         });
     }

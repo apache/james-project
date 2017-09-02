@@ -21,18 +21,22 @@
 
 package org.apache.james.transport.mailets.debug;
 
-import org.apache.mailet.base.GenericMailet;
-import org.apache.mailet.Mail;
+import java.io.IOException;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import java.io.IOException;
+
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Debugging purpose Mailet.  Sends the message to System.err
  *
  */
 public class DumpSystemErr extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DumpSystemErr.class);
 
     /**
      * Writes the message to System.err .
@@ -46,7 +50,7 @@ public class DumpSystemErr extends GenericMailet {
             MimeMessage message = mail.getMessage();
             message.writeTo(System.err);
         } catch (IOException ioe) {
-            log("error printing message", ioe);
+            LOGGER.error("error printing message", ioe);
         }
     }
 

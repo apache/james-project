@@ -34,11 +34,13 @@ public class CassandraActiveScriptDAOTest {
     public static final String USER = "user";
     public static final String SCRIPT_NAME = "sciptName";
     public static final String NEW_SCRIPT_NAME = "newScriptName";
-    private static CassandraCluster cassandra = CassandraCluster.create(new CassandraSieveRepositoryModule());
+    
+    private CassandraCluster cassandra;
     private CassandraActiveScriptDAO activeScriptDAO;
 
     @Before
     public void setUp() {
+        cassandra = CassandraCluster.create(new CassandraSieveRepositoryModule());
         cassandra.ensureAllTables();
         activeScriptDAO = new CassandraActiveScriptDAO(cassandra.getConf());
     }
@@ -46,6 +48,7 @@ public class CassandraActiveScriptDAOTest {
     @After
     public void tearDown() {
         cassandra.clearAllTables();
+        cassandra.close();
     }
 
     @Test

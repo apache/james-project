@@ -34,7 +34,6 @@ import org.apache.commons.net.pop3.POP3Reply;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.api.handler.WiringException;
-import org.apache.james.protocols.api.utils.MockLogger;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.pop3.core.AbstractApopCmdHandler;
 import org.apache.james.protocols.pop3.core.AbstractPassCmdHandler;
@@ -50,7 +49,7 @@ public abstract class AbstractPOP3ServerTest {
     private static final Message MESSAGE2 = new Message("Subject: test2\r\nX-Header: value2\r\n", "My Body with a DOT.\r\n.\r\n");
 
     private POP3Protocol createProtocol(AbstractPassCmdHandler handler) throws WiringException {
-        return new POP3Protocol(new POP3ProtocolHandlerChain(handler), new POP3Configuration(), new MockLogger());
+        return new POP3Protocol(new POP3ProtocolHandlerChain(handler), new POP3Configuration());
     }
     
     protected abstract ProtocolServer createServer(Protocol protocol);
@@ -512,7 +511,7 @@ public abstract class AbstractPOP3ServerTest {
     }
 
     private final class TestApopCmdHandler extends AbstractApopCmdHandler {
-        private final Map<String, Mailbox> mailboxes = new HashMap<String, Mailbox>();
+        private final Map<String, Mailbox> mailboxes = new HashMap<>();
        
         public void add(String username, Mailbox mailbox) {
             mailboxes.put(username, mailbox);

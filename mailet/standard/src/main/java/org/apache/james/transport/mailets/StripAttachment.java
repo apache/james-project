@@ -31,9 +31,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
-
 import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -42,16 +42,17 @@ import javax.mail.Part;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.DecoderUtil;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
@@ -81,6 +82,7 @@ import com.google.common.collect.ImmutableList;
  * </p>
  */
 public class StripAttachment extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StripAttachment.class);
 
     private static final String MULTIPART_MIME_TYPE = "multipart/*";
     public static final String PATTERN_PARAMETER_NAME = "pattern";
@@ -193,7 +195,7 @@ public class StripAttachment extends GenericMailet {
           logMessage.append(attributeName);
           logMessage.append("]");
       }
-      log(logMessage.toString());
+      LOGGER.debug(logMessage.toString());
     }
     
     /**
@@ -289,7 +291,7 @@ public class StripAttachment extends GenericMailet {
             }
             return atLeastOneRemoved || subpartHasBeenChanged;
         } catch (Exception e) {
-            log("Failing while analysing part for attachments (StripAttachment mailet).", e);
+            LOGGER.error("Failing while analysing part for attachments (StripAttachment mailet).", e);
             return false;
         }
     }
@@ -342,7 +344,7 @@ public class StripAttachment extends GenericMailet {
         @SuppressWarnings("unchecked")
         List<String> attributeValues = (List<String>) mail.getAttribute(attributeName);
         if (attributeValues == null) {
-            attributeValues = new ArrayList<String>();
+            attributeValues = new ArrayList<>();
             mail.setAttribute(attributeName, (Serializable) attributeValues);
         }
         attributeValues.add(filename);
@@ -358,7 +360,7 @@ public class StripAttachment extends GenericMailet {
         @SuppressWarnings("unchecked")
         Map<String, byte[]> fileNamesToPartContent = (Map<String, byte[]>) mail.getAttribute(attributeName);
         if (fileNamesToPartContent == null) {
-            fileNamesToPartContent = new LinkedHashMap<String, byte[]>();
+            fileNamesToPartContent = new LinkedHashMap<>();
             mail.setAttribute(attributeName, (Serializable) fileNamesToPartContent);
         }
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -383,7 +385,7 @@ public class StripAttachment extends GenericMailet {
     private String renameWithConfigurationPattern(String fileName) {
         if (filenameReplacingPatterns != null) {
             boolean debug = false;
-            return new ContentReplacer(debug, this).applyPatterns(filenameReplacingPatterns, fileName);
+            return new ContentReplacer(debug).applyPatterns(filenameReplacingPatterns, fileName);
         }
         return fileName;
     }
@@ -406,10 +408,10 @@ public class StripAttachment extends GenericMailet {
         if (patternsAreEquals()) {
             return false;
         }
-        boolean result = isMatchingPattern(name, regExPattern).or(false) 
-                || !isMatchingPattern(name, notRegExPattern).or(true);
+        boolean result = isMatchingPattern(name, regExPattern).orElse(false)
+                || !isMatchingPattern(name, notRegExPattern).orElse(true);
 
-        log("attachment " + name + " " + ((result) ? "matches" : "does not match"));
+        LOGGER.debug("attachment " + name + " " + ((result) ? "matches" : "does not match"));
         return result;
     }
 
@@ -422,7 +424,7 @@ public class StripAttachment extends GenericMailet {
         if (pattern != null) {
             return Optional.of(pattern.matcher(name).matches());
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     /**
@@ -438,19 +440,19 @@ public class StripAttachment extends GenericMailet {
         try {
             File outputFile = outputFile(part, fileName);
 
-            log("saving content of " + outputFile.getName() + "...");
+            LOGGER.debug("saving content of " + outputFile.getName() + "...");
             IOUtils.copy(part.getInputStream(), new FileOutputStream(outputFile));
 
             return Optional.of(outputFile.getName());
         } catch (Exception e) {
-            log("Error while saving contents of", e);
-            return Optional.absent();
+            LOGGER.error("Error while saving contents of", e);
+            return Optional.empty();
         }
     }
 
     private File outputFile(Part part, Optional<String> fileName) throws MessagingException, IOException {
-        Optional<String> maybePartFileName = Optional.fromNullable(part.getFileName());
-        return createTempFile(fileName.or(maybePartFileName).orNull());
+        Optional<String> maybePartFileName = Optional.ofNullable(part.getFileName());
+        return createTempFile(fileName.orElse(maybePartFileName.orElse(null)));
     }
 
     private File createTempFile(String originalFileName) throws IOException {

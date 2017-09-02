@@ -21,46 +21,39 @@ package org.apache.james.transport.mailets.remoteDelivery;
 
 import java.util.Arrays;
 import java.util.List;
-
+import java.util.Optional;
 import javax.mail.Address;
 import javax.mail.internet.AddressException;
 
+import org.apache.james.util.OptionalUtils;
 import org.apache.mailet.MailAddress;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class AddressesArrayToMailAddressListConverter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AddressesArrayToMailAddressListConverter.class);
 
-    public static List<MailAddress> getAddressesAsMailAddress(Address[] addresses, final Logger logger) {
+    public static List<MailAddress> getAddressesAsMailAddress(Address[] addresses) {
         if (addresses == null) {
             return ImmutableList.of();
         }
-        return FluentIterable.from(Arrays.asList(addresses)).transform(new Function<Address, Optional<MailAddress>>() {
-            @Override
-            public Optional<MailAddress> apply(Address input) {
-                try {
-                    return Optional.of(new MailAddress(input.toString()));
-                } catch (AddressException e) {
-                    logger.debug("Can't parse unsent address: {}", e.getMessage());
-                    return Optional.absent();
-                }
-            }
-        }).filter(new Predicate<Optional<MailAddress>>() {
-            @Override
-            public boolean apply(Optional<MailAddress> input) {
-                return input.isPresent();
-            }
-        }).transform(new Function<Optional<MailAddress>, MailAddress>() {
-            @Override
-            public MailAddress apply(Optional<MailAddress> input) {
-                return input.get();
-            }
-        }).toList();
+        return Arrays.asList(addresses)
+            .stream()
+            .map(address -> toMailAddress(address))
+            .flatMap(OptionalUtils::toStream)
+            .collect(Guavate.toImmutableList());
+    }
+
+    private static Optional<MailAddress> toMailAddress(Address address) {
+        try {
+            return Optional.of(new MailAddress(address.toString()));
+        } catch (AddressException e) {
+            LOGGER.debug("Can't parse unsent address " + address, e);
+            return Optional.empty();
+        }
     }
 
 }

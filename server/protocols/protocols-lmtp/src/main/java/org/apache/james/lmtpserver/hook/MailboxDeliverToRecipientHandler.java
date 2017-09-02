@@ -31,7 +31,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.protocols.lib.Slf4jLoggerAdapter;
 import org.apache.james.protocols.lmtp.hook.DeliverToRecipientHook;
 import org.apache.james.protocols.smtp.MailAddress;
 import org.apache.james.protocols.smtp.MailEnvelope;
@@ -42,6 +41,8 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link DeliverToRecipientHook} which deliver the message directly to the recipients mailbox.
@@ -49,6 +50,7 @@ import org.apache.james.user.api.UsersRepositoryException;
  *
  */
 public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailboxDeliverToRecipientHandler.class);
   
     private UsersRepository users;
     private MailboxManager mailboxManager;
@@ -76,7 +78,7 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
                 username = recipient.getLocalPart();
             }
 
-            MailboxSession mailboxSession = mailboxManager.createSystemSession(username, new Slf4jLoggerAdapter(session.getLogger()));
+            MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
             MailboxPath inbox = MailboxPath.inbox(mailboxSession);
 
             mailboxManager.startProcessingRequest(mailboxSession);
@@ -88,15 +90,8 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
             mailboxManager.getMailbox(MailboxPath.inbox(mailboxSession), mailboxSession).appendMessage(envelope.getMessageInputStream(), new Date(), mailboxSession, true, null);
             mailboxManager.endProcessingRequest(mailboxSession);
             result = new HookResult(HookReturnCode.OK, SMTPRetCode.MAIL_OK, DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received");
-
-        } catch (IOException e) {
-            session.getLogger().info("Unexpected error handling DATA stream", e);
-            result = new HookResult(HookReturnCode.DENYSOFT, " Temporary error deliver message to " + recipient);
-        } catch (MailboxException e) {
-            session.getLogger().info("Unexpected error handling DATA stream", e);
-            result = new HookResult(HookReturnCode.DENYSOFT, " Temporary error deliver message to " + recipient);
-        } catch (UsersRepositoryException e) {
-            session.getLogger().info("Unexpected error handling DATA stream", e);
+        } catch (IOException | MailboxException | UsersRepositoryException e) {
+            LOGGER.error("Unexpected error handling DATA stream", e);
             result = new HookResult(HookReturnCode.DENYSOFT, " Temporary error deliver message to " + recipient);
         }
         return result;

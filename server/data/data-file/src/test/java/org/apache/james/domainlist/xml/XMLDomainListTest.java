@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.dnsservice.api.DNSService;
@@ -35,9 +34,12 @@ import org.apache.james.domainlist.api.DomainListException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 public class XMLDomainListTest {
+
+    public static final String DEFAULT_DOMAIN = "default.domain";
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -50,7 +52,7 @@ public class XMLDomainListTest {
         for (String name : names) {
             configuration.addProperty("domainnames.domainname", name);
         }
-        configuration.addProperty("defaultDomain", "default.domain");
+        configuration.addProperty("defaultDomain", DEFAULT_DOMAIN);
         return configuration;
     }
 
@@ -77,65 +79,55 @@ public class XMLDomainListTest {
     // See https://issues.apache.org/jira/browse/JAMES-998
     @Test
     public void testNoConfiguredDomains() throws Exception {
-        List<String> domains = new ArrayList<String>();
-        XMLDomainList dom = new XMLDomainList();
-        dom.setLog(LoggerFactory.getLogger("MockLog"));
+        List<String> domains = new ArrayList<>();
+        XMLDomainList dom = new XMLDomainList(setUpDNSServer("localhost"));
         dom.configure(setUpConfiguration(false, false, domains));
-        dom.setDNSService(setUpDNSServer("localhost"));
 
-        assertThat(dom.getDomains()).describedAs("No domain found").isEmpty();
+        assertThat(dom.getDomains()).containsOnly(DEFAULT_DOMAIN);
     }
 
     @Test
     public void testGetDomains() throws Exception {
-        List<String> domains = new ArrayList<String>();
+        List<String> domains = new ArrayList<>();
         domains.add("domain1.");
         domains.add("domain2.");
 
-        XMLDomainList dom = new XMLDomainList();
-        dom.setLog(LoggerFactory.getLogger("MockLog"));
+        XMLDomainList dom = new XMLDomainList(setUpDNSServer("localhost"));
         dom.configure(setUpConfiguration(false, false, domains));
-        dom.setDNSService(setUpDNSServer("localhost"));
 
-        assertThat(dom.getDomains()).describedAs("Two domain found").hasSize(2);
+        assertThat(dom.getDomains()).hasSize(3);
     }
 
     @Test
     public void testGetDomainsAutoDetectNotLocalHost() throws Exception {
-        List<String> domains = new ArrayList<String>();
+        List<String> domains = new ArrayList<>();
         domains.add("domain1.");
 
-        XMLDomainList dom = new XMLDomainList();
-        dom.setLog(LoggerFactory.getLogger("MockLog"));
+        XMLDomainList dom = new XMLDomainList(setUpDNSServer("local"));
         dom.configure(setUpConfiguration(true, false, domains));
 
-        dom.setDNSService(setUpDNSServer("local"));
-        assertThat(dom.getDomains()).describedAs("Two domains found").hasSize(2);
+        assertThat(dom.getDomains()).hasSize(3);
     }
 
     @Test
     public void testGetDomainsAutoDetectLocalHost() throws Exception {
-        List<String> domains = new ArrayList<String>();
+        List<String> domains = new ArrayList<>();
         domains.add("domain1.");
 
-        XMLDomainList dom = new XMLDomainList();
-        dom.setLog(LoggerFactory.getLogger("MockLog"));
+        XMLDomainList dom = new XMLDomainList(setUpDNSServer("localhost"));
         dom.configure(setUpConfiguration(true, false, domains));
 
-        dom.setDNSService(setUpDNSServer("localhost"));
-
-        assertThat(dom.getDomains()).describedAs("One domain found").hasSize(1);
+        assertThat(dom.getDomains()).hasSize(2);
     }
 
     @Test
     public void addDomainShouldFailWhenAlreadyConfigured() throws Exception {
         expectedException.expect(DomainListException.class);
 
-        List<String> domains = new ArrayList<String>();
+        List<String> domains = new ArrayList<>();
         domains.add("domain1");
 
-        XMLDomainList testee = new XMLDomainList();
-        testee.setLog(LoggerFactory.getLogger("MockLog"));
+        XMLDomainList testee = new XMLDomainList(setUpDNSServer("hostname"));
         testee.configure(setUpConfiguration(true, false, domains));
 
         testee.addDomain("newDomain");
@@ -145,11 +137,10 @@ public class XMLDomainListTest {
     public void removeDomainShouldFailWhenAlreadyConfigured() throws Exception {
         expectedException.expect(DomainListException.class);
 
-        List<String> domains = new ArrayList<String>();
+        List<String> domains = new ArrayList<>();
         domains.add("domain1");
 
-        XMLDomainList testee = new XMLDomainList();
-        testee.setLog(LoggerFactory.getLogger("MockLog"));
+        XMLDomainList testee = new XMLDomainList(setUpDNSServer("localhost"));
         testee.configure(setUpConfiguration(true, false, domains));
 
         testee.removeDomain("newDomain");
@@ -159,15 +150,14 @@ public class XMLDomainListTest {
     public void configureShouldNotFailWhenConfiguringDefaultDomain() throws Exception {
         DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
 
-        configuration.addProperty("autodetect", true);
+        configuration.addProperty("autodetect", false);
         configuration.addProperty("autodetectIP", false);
         configuration.addProperty("domainnames.domainname", "domain1");
         configuration.addProperty("defaultDomain", "localhost");
 
-        XMLDomainList testee = new XMLDomainList();
-        testee.setLog(LoggerFactory.getLogger("MockLog"));
+        XMLDomainList testee = new XMLDomainList(setUpDNSServer("localhost"));
         testee.configure(configuration);
 
-        assertThat(testee.getDomainListInternal()).hasSize(2);
+        assertThat(testee.getDomainListInternal()).hasSize(3);
     }
 }

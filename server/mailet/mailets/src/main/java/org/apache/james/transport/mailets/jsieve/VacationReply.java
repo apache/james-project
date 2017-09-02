@@ -19,13 +19,9 @@
 
 package org.apache.james.transport.mailets.jsieve;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
-
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
 import javax.activation.DataHandler;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
@@ -34,11 +30,17 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
-import java.io.IOException;
-import java.util.List;
+
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 public class VacationReply {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(VacationReply.class);
 
     public static class Builder {
 
@@ -90,8 +92,8 @@ public class VacationReply {
         }
 
         private String generateNotificationSubject() {
-            return Optional.fromNullable(subject)
-                .or(context.getRecipient() + " is currently in vacation");
+            return Optional.ofNullable(subject)
+                .orElse(context.getRecipient() + " is currently in vacation");
         }
 
         private Multipart generateNotificationContent() throws MessagingException {
@@ -124,18 +126,16 @@ public class VacationReply {
         }
 
         private MailAddress retrieveOriginalSender() throws AddressException {
-            return Optional.fromNullable(from).transform(new Function<String, MailAddress>() {
-                public MailAddress apply(String address) {
-                    return retrieveAddressFromString(address, context);
-                }
-            }).or(context.getRecipient());
+            return Optional.ofNullable(from)
+                .map(address -> retrieveAddressFromString(address, context))
+                .orElse(context.getRecipient());
         }
 
         private MailAddress retrieveAddressFromString(String address, ActionContext context) {
             try {
                 return new MailAddress(address);
             } catch (AddressException e) {
-                context.getLog().warn("Mail address " + address + " was not well formatted : " + e.getLocalizedMessage());
+                LOGGER.warn("Mail address " + address + " was not well formatted : " + e.getLocalizedMessage());
                 return null;
             }
         }

@@ -21,15 +21,12 @@ package org.apache.james.backends.jpa;
 
 import java.util.HashMap;
 import java.util.List;
-
+import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 import org.apache.openjpa.persistence.OpenJPAPersistence;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 public class JpaTestCluster {
@@ -39,7 +36,7 @@ public class JpaTestCluster {
     }
 
     public static JpaTestCluster create(List<Class<?>> clazz) {
-        HashMap<String, String> properties = new HashMap<String, String>();
+        HashMap<String, String> properties = new HashMap<>();
         properties.put("openjpa.ConnectionDriverName", org.h2.Driver.class.getName());
         properties.put("openjpa.ConnectionURL", "jdbc:h2:mem:mailboxintegrationtesting;DB_CLOSE_DELAY=-1"); // Memory H2 database
         properties.put("openjpa.jdbc.SynchronizeMappings", "buildSchema(ForeignKeys=true)"); // Create Foreign Keys
@@ -50,20 +47,11 @@ public class JpaTestCluster {
         properties.put("openjpa.Log", "JDBC=WARN, SQL=WARN, Runtime=WARN");
         properties.put("openjpa.ConnectionFactoryProperties", "PrettyPrint=true, PrettyPrintLineLength=72");
         properties.put("openjpa.MetaDataFactory", "jpa(Types=" +
-            Joiner.on(";").join(
-                FluentIterable.from(clazz)
-                    .transform(toFQDN()))
+                clazz.stream()
+                    .map(Class::getName)
+                    .collect(Collectors.joining(";"))
             + ")");
         return new JpaTestCluster(OpenJPAPersistence.getEntityManagerFactory(properties));
-    }
-
-    private static Function<Class<?>, String> toFQDN() {
-        return new Function<Class<?>, String>() {
-            @Override
-            public String apply(Class<?> input) {
-                return input.getName();
-            }
-        };
     }
 
     private final EntityManagerFactory entityManagerFactory;

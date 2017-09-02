@@ -31,12 +31,14 @@ import org.apache.james.core.MimeMessageUtil;
 import org.apache.james.transport.mailets.utils.MimeMessageUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.RFC2822Headers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 public class MailMessageAlteringUtils {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailMessageAlteringUtils.class);
     private static final char LINE_BREAK = '\n';
 
     public static Builder from(RedirectNotify mailet) {
@@ -87,9 +89,6 @@ public class MailMessageAlteringUtils {
 
     /**
      * Builds the message of the newMail in case it has to be altered.
-     *
-     * @param originalMail the original Mail object
-     * @param newMail      the Mail object to build
      */
     private void alterNewMessage() throws MessagingException {
 
@@ -114,7 +113,7 @@ public class MailMessageAlteringUtils {
             multipart.addBodyPart(contentPartRoot);
 
             if (mailet.getInitParameters().isDebug()) {
-                mailet.log("attachmentType:" + mailet.getInitParameters().getAttachmentType());
+                LOGGER.debug("attachmentType:" + mailet.getInitParameters().getAttachmentType());
             }
             if (!mailet.getInitParameters().getAttachmentType().equals(TypeCode.NONE)) {
                 multipart.addBodyPart(getAttachmentPart(originalMessage, head));
@@ -193,7 +192,7 @@ public class MailMessageAlteringUtils {
         }
 
         if (mailet.getInitParameters().isDebug()) {
-            mailet.log("inline:" + mailet.getInitParameters().getInLineType());
+            LOGGER.debug("inline:" + mailet.getInitParameters().getInLineType());
         }
         switch (mailet.getInitParameters().getInLineType()) {
             case ALL:

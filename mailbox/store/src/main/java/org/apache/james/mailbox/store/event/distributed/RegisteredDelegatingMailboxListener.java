@@ -19,6 +19,9 @@
 
 package org.apache.james.mailbox.store.event.distributed;
 
+import java.util.Collection;
+import java.util.Set;
+
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -32,9 +35,6 @@ import org.apache.james.mailbox.store.publisher.Publisher;
 import org.apache.james.mailbox.store.publisher.Topic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collection;
-import java.util.Set;
 
 public class RegisteredDelegatingMailboxListener implements DistributedDelegatingMailboxListener {
 
@@ -109,9 +109,7 @@ public class RegisteredDelegatingMailboxListener implements DistributedDelegatin
             deliverToMailboxPathRegisteredListeners(event);
             sendToRemoteJames(event);
         } catch (Throwable t) {
-            event.getSession()
-                .getLog()
-                .error("Error while delegating event " + event.getClass().getCanonicalName(), t);
+            LOGGER.error("Error while delegating event " + event.getClass().getCanonicalName(), t);
         }
     }
 
@@ -160,16 +158,14 @@ public class RegisteredDelegatingMailboxListener implements DistributedDelegatin
         try {
             serializedEvent = eventSerializer.serializeEvent(event);
         } catch (Exception e) {
-            event.getSession()
-                .getLog()
-                .error("Unable to serialize " + event.getClass().getCanonicalName(), e);
+            LOGGER.error("Unable to serialize " + event.getClass().getCanonicalName(), e);
             return;
         }
         for (Topic topic : topics) {
             try {
                 publisher.publish(topic, serializedEvent);
             } catch (Throwable t) {
-                event.getSession().getLog().error("Unable to send serialized event to topic " + topic);
+                LOGGER.error("Unable to send serialized event to topic " + topic);
             }
         }
     }

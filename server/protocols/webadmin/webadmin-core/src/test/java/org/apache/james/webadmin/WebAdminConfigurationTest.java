@@ -174,6 +174,30 @@ public class WebAdminConfigurationTest {
     }
 
     @Test
+    public void builderShouldDefineHostWithDefault() {
+        assertThat(
+            WebAdminConfiguration.builder()
+                .enabled()
+                .port(PORT)
+                .build())
+            .extracting(WebAdminConfiguration::getHost)
+            .containsExactly(WebAdminConfiguration.DEFAULT_HOST);
+    }
+
+    @Test
+    public void builderShouldDefineHostWithSetting() {
+        String host = "any.host";
+        assertThat(
+            WebAdminConfiguration.builder()
+                .enabled()
+                .port(PORT)
+                .host(host)
+                .build())
+            .extracting(WebAdminConfiguration::getHost)
+            .containsExactly(host);
+    }
+
+    @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(WebAdminConfiguration.class).verify();
     }

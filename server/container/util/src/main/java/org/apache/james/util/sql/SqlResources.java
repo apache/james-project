@@ -19,14 +19,6 @@
 
 package org.apache.james.util.sql;
 
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.NodeList;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -34,6 +26,15 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.NodeList;
 
 /**
  * Provides a set of SQL String resources (eg SQL Strings) to use for a database
@@ -45,10 +46,10 @@ import java.util.regex.Pattern;
  */
 public class SqlResources {
     /** A map of statement types to SQL statements */
-    private final Map<String, String> m_sql = new HashMap<String, String>();
+    private final Map<String, String> m_sql = new HashMap<>();
 
     /** A map of engine specific options */
-    private final Map<String, String> m_dbOptions = new HashMap<String, String>();
+    private final Map<String, String> m_dbOptions = new HashMap<>();
 
     /** A set of all used String values */
     static private final Map<String, String> stringTable = java.util.Collections.synchronizedMap(new HashMap<String, String>());
@@ -170,7 +171,7 @@ public class SqlResources {
 
         // Get parameters defined within the file as defaults,
         // and use supplied parameters as overrides.
-        Map<String, String> parameters = new HashMap<String, String>();
+        Map<String, String> parameters = new HashMap<>();
         // First read from the <params> element, if it exists.
         Element parametersElement = (Element) (sectionElement.getElementsByTagName("parameters").item(0));
         if (parametersElement != null) {
@@ -189,8 +190,8 @@ public class SqlResources {
         // 2 maps - one for storing default statements,
         // the other for statements with a "db" attribute matching this
         // connection.
-        Map<String, String> defaultSqlStatements = new HashMap<String, String>();
-        Map<String, String> dbProductSqlStatements = new HashMap<String, String>();
+        Map<String, String> defaultSqlStatements = new HashMap<>();
+        Map<String, String> dbProductSqlStatements = new HashMap<>();
 
         // Process each sql statement, replacing string parameters,
         // and adding to the appropriate map..

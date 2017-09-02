@@ -54,7 +54,7 @@ public class ResultUtils {
     static final Charset US_ASCII = Charset.forName("US-ASCII");
 
     public static List<MessageResult.Header> createHeaders(MailboxMessage document) throws IOException {
-        final List<MessageResult.Header> results = new ArrayList<MessageResult.Header>();
+        final List<MessageResult.Header> results = new ArrayList<>();
         MimeConfig config = MimeConfig.custom().setMaxLineLen(-1).setMaxHeaderLen(-1).build();
         final MimeStreamParser parser = new MimeStreamParser(config);
         parser.setContentHandler(new AbstractContentHandler() {
@@ -133,9 +133,7 @@ public class ResultUtils {
             }
             return messageResult;
 
-        } catch (IOException e) {
-            throw new MailboxException("Unable to parse message", e);
-        } catch (MimeException e) {
+        } catch (IOException | MimeException e) {
             throw new MailboxException("Unable to parse message", e);
         }
 

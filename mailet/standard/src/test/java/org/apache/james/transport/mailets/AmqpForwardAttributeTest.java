@@ -20,7 +20,6 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -184,33 +183,27 @@ public class AmqpForwardAttributeTest {
     }
 
     @Test
-    public void serviceShouldLogWhenTimeoutException() throws Exception {
+    public void serviceShouldNotFailWhenTimeoutException() throws Exception {
         mailet.init(mailetConfig);
         Mail mail = mock(Mail.class);
         when(mail.getAttribute(MAIL_ATTRIBUTE)).thenReturn(ATTRIBUTE_CONTENT);
         ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
-        TimeoutException expectedLoggedException = new TimeoutException();
-        when(connectionFactory.newConnection()).thenThrow(expectedLoggedException);
+        when(connectionFactory.newConnection()).thenThrow(new TimeoutException());
         mailet.setConnectionFactory(connectionFactory);
 
         mailet.service(mail);
-
-        verify(logger).error(any(String.class), eq(expectedLoggedException));
     }
 
     @Test
-    public void serviceShouldLogWhenIOException() throws Exception {
+    public void serviceShouldNotFailWhenIOException() throws Exception {
         mailet.init(mailetConfig);
         Mail mail = mock(Mail.class);
         when(mail.getAttribute(MAIL_ATTRIBUTE)).thenReturn(ATTRIBUTE_CONTENT);
         ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
-        IOException expectedLoggedException = new IOException();
-        when(connectionFactory.newConnection()).thenThrow(expectedLoggedException);
+        when(connectionFactory.newConnection()).thenThrow(new IOException());
         mailet.setConnectionFactory(connectionFactory);
 
         mailet.service(mail);
-
-        verify(logger).error(any(String.class), eq(expectedLoggedException));
     }
 
     @Test

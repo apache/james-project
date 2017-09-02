@@ -46,8 +46,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
@@ -58,8 +56,6 @@ import de.bechte.junit.runners.context.HierarchicalContextRunner;
 
 @RunWith(HierarchicalContextRunner.class)
 public class DomainRoutesTest {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(DomainRoutesTest.class);
     public static final String DOMAIN = "domain";
 
     private WebAdminServer webAdminServer;
@@ -94,9 +90,7 @@ public class DomainRoutesTest {
             when(dnsService.getHostName(any())).thenReturn("localhost");
             when(dnsService.getLocalHost()).thenReturn(InetAddress.getByName("localhost"));
 
-            MemoryDomainList domainList = new MemoryDomainList();
-            domainList.setDNSService(dnsService);
-            domainList.setLog(LOGGER);
+            MemoryDomainList domainList = new MemoryDomainList(dnsService);
             domainList.setAutoDetectIP(false);
             createServer(domainList);
         }

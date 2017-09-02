@@ -20,41 +20,34 @@
 package org.apache.james.transport.matchers.utils;
 
 import java.util.Set;
-
 import javax.mail.internet.AddressException;
 
 import org.apache.mailet.MailAddress;
 
-import com.google.common.base.Function;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
+
 
 public class MailAddressCollectionReader {
 
     public static Set<MailAddress> read(String condition) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(condition));
-        return FluentIterable.from(Splitter.onPattern("(,| |\t)")
-            .split(condition))
-            .filter(new Predicate<String>() {
-                @Override
-                public boolean apply(String s) {
-                    return !Strings.isNullOrEmpty(s);
-                }
-            })
-            .transform(new Function<String, MailAddress>() {
-                @Override
-                public MailAddress apply(String s) {
-                    try {
-                        return new MailAddress(s);
-                    } catch (AddressException e) {
-                        throw Throwables.propagate(e);
-                    }
-                }
-            }).toSet();
+        return Splitter.onPattern("(,| |\t)").splitToList(condition)
+            .stream()
+            .filter(s -> !Strings.isNullOrEmpty(s))
+            .map(s -> getMailAddress(s))
+            .collect(Guavate.toImmutableSet());
+    }
+
+    private static MailAddress getMailAddress(String s) {
+        try {
+            return new MailAddress(s);
+        } catch (AddressException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
 }

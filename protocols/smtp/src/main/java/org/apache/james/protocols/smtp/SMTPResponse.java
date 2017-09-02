@@ -84,7 +84,7 @@ public class SMTPResponse extends AbstractResponse {
      * @see org.apache.james.protocols.api.Response#getLines()
      */
     public List<CharSequence> getLines() {
-        List<CharSequence> responseList = new ArrayList<CharSequence>();
+        List<CharSequence> responseList = new ArrayList<>();
 
         for (int k = 0; k < lines.size(); k++) {
             StringBuilder respBuff = new StringBuilder(256);

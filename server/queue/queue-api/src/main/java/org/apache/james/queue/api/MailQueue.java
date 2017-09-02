@@ -84,7 +84,7 @@ public interface MailQueue {
     /**
      * Dequeue the next ready-to-process Mail of the queue. This method will
      * block until a Mail is ready and then process the operation.
-     * Implementations should take care todo some kind of transactions to not
+     * Implementations should take care to do some kind of transactions to not
      * loose any mail on error
      */
     MailQueueItem deQueue() throws MailQueueException, InterruptedException;
@@ -93,7 +93,6 @@ public interface MailQueue {
      * Exception which will get thrown if any problems occur while working the
      * {@link MailQueue}
      */
-    @SuppressWarnings("serial")
     class MailQueueException extends MessagingException {
         public MailQueueException(String msg, Exception e) {
             super(msg, e);

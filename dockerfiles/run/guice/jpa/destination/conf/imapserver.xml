@@ -35,6 +35,10 @@ under the License.
 		</tls>
 		<connectionLimit>0</connectionLimit>
 		<connectionLimitPerIP>0</connectionLimitPerIP>
+		<idleTimeInterval>120</idleTimeInterval>
+		<idleTimeIntervalUnit>SECONDS</idleTimeIntervalUnit>
+		<disabledCaps>ACL|MOVE</disabledCaps>
+		<enableIdle>true</enableIdle>
 	</imapserver>
 	<imapserver enabled="true">
 		<jmxName>imapserver-ssl</jmxName>
@@ -50,5 +54,9 @@ under the License.
 		</tls>
 		<connectionLimit>0</connectionLimit>
 		<connectionLimitPerIP>0</connectionLimitPerIP>
+		<idleTimeInterval>120</idleTimeInterval>
+		<idleTimeIntervalUnit>SECONDS</idleTimeIntervalUnit>
+		<disabledCaps>ACL|MOVE</disabledCaps>
+		<enableIdle>true</enableIdle>
 	</imapserver>
 </imapservers>

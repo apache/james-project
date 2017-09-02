@@ -31,8 +31,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.mailbox.cassandra.CassandraId;
+import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -47,7 +48,6 @@ import com.google.common.base.Throwables;
 public class CassandraACLMapperTest {
 
     public static final CassandraId MAILBOX_ID = CassandraId.of(UUID.fromString("464765a0-e4e7-11e4-aba4-710c1de3782b"));
-    public static final int MAX_RETRY = 100;
     private CassandraACLMapper cassandraACLMapper;
     private CassandraCluster cassandra;
     private CassandraAsyncExecutor cassandraAsyncExecutor;
@@ -58,7 +58,7 @@ public class CassandraACLMapperTest {
         cassandra = CassandraCluster.create(new CassandraAclModule());
         cassandra.ensureAllTables();
         cassandraAsyncExecutor = new CassandraAsyncExecutor(cassandra.getConf());
-        cassandraACLMapper = new CassandraACLMapper(MAILBOX_ID, cassandra.getConf(), cassandraAsyncExecutor, MAX_RETRY);
+        cassandraACLMapper = new CassandraACLMapper(MAILBOX_ID, cassandra.getConf(), cassandraAsyncExecutor, CassandraConfiguration.DEFAULT_CONFIGURATION);
         executor = Executors.newFixedThreadPool(2);
     }
 
@@ -66,18 +66,7 @@ public class CassandraACLMapperTest {
     public void tearDown() {
         cassandra.clearAllTables();
         executor.shutdownNow();
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void creatingACLMapperWithNegativeMaxRetryShouldFail() {
-        int maxRetry = -1;
-        new CassandraACLMapper(MAILBOX_ID, cassandra.getConf(), cassandraAsyncExecutor, maxRetry);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void creatingACLMapperWithNullMaxRetryShouldFail() {
-        int maxRetry = 0;
-        new CassandraACLMapper(MAILBOX_ID, cassandra.getConf(), cassandraAsyncExecutor, maxRetry);
+        cassandra.close();
     }
 
     @Test
@@ -208,7 +197,7 @@ public class CassandraACLMapperTest {
             CassandraACLMapper aclMapper = new CassandraACLMapper(MAILBOX_ID,
                 cassandra.getConf(),
                 new CassandraAsyncExecutor(cassandra.getConf()),
-                MAX_RETRY,
+                CassandraConfiguration.DEFAULT_CONFIGURATION,
                 runnable);
             try {
                 aclMapper.updateACL(new SimpleMailboxACL.SimpleMailboxACLCommand(key, MailboxACL.EditMode.ADD, rights));

@@ -28,28 +28,26 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageUidTable.MAILBOX_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageUidTable.NEXT_UID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageUidTable.TABLE_NAME;
-
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-
 import javax.inject.Inject;
 
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.FunctionRunnerWithRetry;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.cassandra.CassandraId;
+import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.util.OptionalConverter;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
+import com.google.common.annotations.VisibleForTesting;
 
 public class CassandraUidProvider implements UidProvider {
-    private static final int DEFAULT_MAX_RETRY = 100000;
     private static final String CONDITION = "Condition";
 
     private final CassandraAsyncExecutor executor;
@@ -58,12 +56,18 @@ public class CassandraUidProvider implements UidProvider {
     private final PreparedStatement updateStatement;
     private final PreparedStatement selectStatement;
 
-    public CassandraUidProvider(Session session, int maxRetry) {
+    @Inject
+    public CassandraUidProvider(Session session, CassandraConfiguration cassandraConfiguration) {
         this.executor = new CassandraAsyncExecutor(session);
-        this.runner = new FunctionRunnerWithRetry(maxRetry);
+        this.runner = new FunctionRunnerWithRetry(cassandraConfiguration.getUidMaxRetry());
         this.selectStatement = prepareSelect(session);
         this.updateStatement = prepareUpdate(session);
         this.insertStatement = prepareInsert(session);
+    }
+
+    @VisibleForTesting
+    public CassandraUidProvider(Session session) {
+        this(session, CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     private PreparedStatement prepareSelect(Session session) {
@@ -84,11 +88,6 @@ public class CassandraUidProvider implements UidProvider {
             .value(NEXT_UID, MessageUid.MIN_VALUE.asLong())
             .value(MAILBOX_ID, bindMarker(MAILBOX_ID))
             .ifNotExists());
-    }
-
-    @Inject
-    public CassandraUidProvider(Session session) {
-        this(session, DEFAULT_MAX_RETRY);
     }
 
     @Override
@@ -123,8 +122,8 @@ public class CassandraUidProvider implements UidProvider {
     }
 
     @Override
-    public com.google.common.base.Optional<MessageUid> lastUid(MailboxSession mailboxSession, Mailbox mailbox) throws MailboxException {
-        return OptionalConverter.toGuava(findHighestUid((CassandraId) mailbox.getMailboxId()).join());
+    public Optional<MessageUid> lastUid(MailboxSession mailboxSession, Mailbox mailbox) throws MailboxException {
+        return findHighestUid((CassandraId) mailbox.getMailboxId()).join();
     }
 
     private CompletableFuture<Optional<MessageUid>> findHighestUid(CassandraId mailboxId) {

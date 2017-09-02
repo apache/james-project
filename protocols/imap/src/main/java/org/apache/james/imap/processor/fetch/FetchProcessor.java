@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor.fetch;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -50,8 +51,14 @@ import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.mailbox.model.MessageResult.MimePath;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FetchProcessor.class);
 
     public FetchProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
@@ -97,7 +104,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                 condstoreEnablingCommand(session, responder,  metaData, true);
             }
             
-            List<MessageRange> ranges = new ArrayList<MessageRange>();
+            List<MessageRange> ranges = new ArrayList<>();
 
             for (IdRange range : idSet) {
                 MessageRange messageSet = messageRange(session.getSelected(), range, useUids);
@@ -126,14 +133,12 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             unsolicitedResponses(session, responder, omitExpunged, useUids);
             okComplete(command, tag, responder);
         } catch (MessageRangeException e) {
-            if (session.getLog().isDebugEnabled()) {
-                session.getLog().debug("Fetch failed for mailbox " + session.getSelected().getPath() + " because of invalid sequence-set " + idSet.toString(), e);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Fetch failed for mailbox " + session.getSelected().getPath() + " because of invalid sequence-set " + ImmutableList.copyOf(idSet), e);
             }
             taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Fetch failed for mailbox " + session.getSelected().getPath() + " and sequence-set " + idSet.toString(), e);
-            }
+            LOGGER.error("Fetch failed for mailbox " + session.getSelected().getPath() + " and sequence-set " + ImmutableList.copyOf(idSet), e);
             no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
         }
     }
@@ -154,7 +159,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
      * @throws MailboxException
      */
     protected void processMessageRanges(ImapSession session, MessageManager mailbox, List<MessageRange> ranges, FetchData fetch, boolean useUids, MailboxSession mailboxSession, Responder responder) throws MailboxException {
-        final FetchResponseBuilder builder = new FetchResponseBuilder(new EnvelopeBuilder(session.getLog()));
+        final FetchResponseBuilder builder = new FetchResponseBuilder(new EnvelopeBuilder());
         FetchGroup resultToFetch = getFetchGroup(fetch);
 
         for (MessageRange range : ranges) {
@@ -173,17 +178,15 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                 } catch (MessageRangeException e) {
                     // we can't for whatever reason find the message so
                     // just skip it and log it to debug
-                    if (session.getLog().isDebugEnabled()) {
-                        session.getLog().debug("Unable to find message with uid " + result.getUid(), e);
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Unable to find message with uid " + result.getUid(), e);
                     }
                 } catch (MailboxException e) {
                     // we can't for whatever reason find parse all requested parts of the message. This may because it was deleted while try to access the parts.
                     // So we just skip it 
                     //
                     // See IMAP-347
-                    if (session.getLog().isDebugEnabled()) {
-                        session.getLog().debug("Unable to fetch message with uid " + result.getUid() + ", so skip it", e);
-                    }
+                    LOGGER.error("Unable to fetch message with uid " + result.getUid() + ", so skip it", e);
                 }
             }
 
@@ -248,4 +251,13 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         }
     }
 
+    @Override
+    protected Closeable addContextToMDC(FetchRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "FETCH")
+            .addContext("useUid", message.isUseUids())
+            .addContext("idSet", IdRange.toString(message.getIdSet()))
+            .addContext("fetchedData", message.getFetch())
+            .build();
+    }
 }

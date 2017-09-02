@@ -29,6 +29,7 @@ import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.protocols.imap.DecodingException;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link ImapDecoder} implementation which parse the data via lookup the right
@@ -36,6 +37,7 @@ import org.slf4j.Logger;
  * response will get generated via the {@link StatusResponseFactory}.
  */
 public class DefaultImapDecoder implements ImapDecoder {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultImapDecoder.class);
 
     private final StatusResponseFactory responseFactory;
 
@@ -63,14 +65,12 @@ public class DefaultImapDecoder implements ImapDecoder {
      */
     public ImapMessage decode(ImapRequestLineReader request, ImapSession session) {
         ImapMessage message;
-        final Logger logger = session.getLog();
-
         try {
             final String tag = request.tag();
             message = decodeCommandTagged(request, tag, session);
         } catch (DecodingException e) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Cannot parse tag", e);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Cannot parse tag", e);
             }
             message = unknownCommand(null, session);
         }
@@ -79,15 +79,15 @@ public class DefaultImapDecoder implements ImapDecoder {
 
     private ImapMessage decodeCommandTagged(ImapRequestLineReader request, String tag, ImapSession session) {
         ImapMessage message;
-        if (session.getLog().isDebugEnabled()) {
-            session.getLog().debug("Got <tag>: " + tag);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Got <tag>: " + tag);
         }
         try {
             final String commandName = request.atom();
             message = decodeCommandNamed(request, tag, commandName, session);
         } catch (DecodingException e) {
-            if (session.getLog().isDebugEnabled()) {
-                session.getLog().debug("Error during initial request parsing", e);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Error during initial request parsing", e);
             }
             message = unknownCommand(tag, session);
         }
@@ -120,13 +120,13 @@ public class DefaultImapDecoder implements ImapDecoder {
 
     private ImapMessage decodeCommandNamed(ImapRequestLineReader request, String tag, String commandName, ImapSession session) {
         ImapMessage message;
-        if (session.getLog().isDebugEnabled()) {
-            session.getLog().debug("Got <command>: " + commandName);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Got <command>: " + commandName);
         }
         final ImapCommandParser command = imapCommands.getParser(commandName);
         if (command == null) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Missing command implementation for commmand " + commandName);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Missing command implementation for commmand " + commandName);
             }
             message = unknownCommand(tag, session);
         } else {

@@ -19,11 +19,16 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
+
+import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.message.request.ExamineRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 public class ExamineProcessor extends AbstractSelectionProcessor<ExamineRequest> {
 
@@ -32,4 +37,17 @@ public class ExamineProcessor extends AbstractSelectionProcessor<ExamineRequest>
         super(ExamineRequest.class, next, mailboxManager, statusResponseFactory, true, metricFactory);
     }
 
+    @Override
+    protected Closeable addContextToMDC(ExamineRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "EXAMINE")
+            .addContext("mailbox", message.getMailboxName())
+            .addContext("condstore", Boolean.toString(message.getCondstore()))
+            .addContext("knownModseq", message.getKnownModSeq())
+            .addContext("knownUids", UidRange.toString(message.getKnownUidSet()))
+            .addContext("knownIdRange", IdRange.toString(message.getKnownSequenceSet()))
+            .addContext("lastKnownUidValidity", message.getLastKnownUidValidity())
+            .addContext("uidSet", UidRange.toString(message.getUidSet()))
+            .build();
+    }
 }

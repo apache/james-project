@@ -22,27 +22,26 @@ package org.apache.james.transport.mailets;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
-
 import javax.mail.MessagingException;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.ParseException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
-import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 
 public class ContentReplacer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ContentReplacer.class);
 
     private final boolean debug;
-    private final GenericMailet logOwner;
 
-    public ContentReplacer(boolean debug, GenericMailet logOwner) {
+    public ContentReplacer(boolean debug) {
         this.debug = debug;
-        this.logOwner = logOwner;
     }
 
     public String applyPatterns(List<ReplacingPattern> patterns, String text) {
@@ -70,7 +69,7 @@ public class ContentReplacer {
 
     private String replaceFirst(ReplacingPattern replacingPattern, Matcher matcher) {
         if (debug) {
-            logOwner.log("Subject rule match: " + replacingPattern.getMatcher());
+            LOGGER.debug("Subject rule match: " + replacingPattern.getMatcher());
         }
         return matcher.replaceFirst(replacingPattern.getSubstitution());
     }
@@ -87,10 +86,7 @@ public class ContentReplacer {
             if (subjectChanged || contentChanged) {
                 mail.getMessage().saveChanges();
             }
-        } catch (MessagingException e) {
-            throw new MailetException("Error in replace", e);
-            
-        } catch (IOException e) {
+        } catch (MessagingException | IOException e) {
             throw new MailetException("Error in replace", e);
         }
     }

@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.methods;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -35,8 +37,10 @@ import org.apache.james.jmap.model.VacationResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 
 public class SetVacationResponseMethod implements Method {
 
@@ -77,7 +81,11 @@ public class SetVacationResponseMethod implements Method {
         SetVacationRequest setVacationRequest = (SetVacationRequest) request;
 
         TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + METHOD_NAME.getName());
-        try {
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.ACTION, "SET_VACATION")
+                     .addContext("update", setVacationRequest.getUpdate())
+                     .build()) {
             if (!setVacationRequest.isValid()) {
                 return Stream.of(JmapResponse
                     .builder()
@@ -92,6 +100,8 @@ public class SetVacationResponseMethod implements Method {
             return process(clientId,
                 AccountId.fromString(mailboxSession.getUser().getUserName()),
                 setVacationRequest.getUpdate().get(Vacation.ID));
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
         } finally {
             timeMetric.stopAndPublish();
         }
@@ -102,7 +112,7 @@ public class SetVacationResponseMethod implements Method {
     private Stream<JmapResponse> process(ClientId clientId, AccountId accountId, VacationResponse vacationResponse) {
         if (vacationResponse.isValid()) {
             vacationRepository.modifyVacation(accountId, vacationResponse.getPatch()).join();
-            notificationRegistry.flush(accountId);
+            notificationRegistry.flush(accountId).join();
             return Stream.of(JmapResponse.builder()
                 .clientId(clientId)
                 .responseName(RESPONSE_NAME)

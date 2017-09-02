@@ -19,20 +19,22 @@
 
 package org.apache.james.mailbox.store.event.distributed;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableSet;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.publisher.Topic;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.publisher.Topic;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 
 public class DistantMailboxPathRegister implements MailboxPathRegister {
     private static final int DEFAULT_MAX_RETRY = 1000;
@@ -50,7 +52,7 @@ public class DistantMailboxPathRegister implements MailboxPathRegister {
     public DistantMailboxPathRegister(DistantMailboxPathRegisterMapper mapper, int maxRetry, long schedulerPeriodInS) {
         this.maxRetry = maxRetry;
         this.mapper = mapper;
-        this.registeredMailboxPathCount = new ConcurrentHashMap<MailboxPath, Long>();
+        this.registeredMailboxPathCount = new ConcurrentHashMap<>();
         this.topic = new Topic(UUID.randomUUID().toString());
         this.timer = new Timer();
         this.schedulerPeriodInS = schedulerPeriodInS;

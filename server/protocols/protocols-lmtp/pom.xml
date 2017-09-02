@@ -21,9 +21,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>james-server</artifactId>
         <groupId>org.apache.james</groupId>
-        <version>3.0.0-RC2-SNAPSHOT</version>
+        <artifactId>james-server</artifactId>
+        <version>3.1.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -34,19 +34,43 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-mailet-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-data-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-lifecycle-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-protocols-library</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-protocols-smtp</artifactId>
             <exclusions>
                 <exclusion>
-                    <groupId>org.apache.james</groupId>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-dnsservice-api</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>org.apache.james</groupId>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-dnsservice-library</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>org.apache.james</groupId>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-queue-api</artifactId>
                 </exclusion>
                 <exclusion>
@@ -56,20 +80,24 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>james-server-lifecycle-api</artifactId>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>james-server-core</artifactId>
+            <groupId>commons-configuration</groupId>
+            <artifactId>commons-configuration</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>james-server-protocols-library</artifactId>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>apache-mailet-api</artifactId>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-annotation_1.1_spec</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.james.protocols</groupId>
@@ -77,7 +105,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.james.protocols</groupId>
-            <artifactId>protocols-smtp</artifactId>
+            <artifactId>protocols-lmtp</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.james.protocols</groupId>
@@ -85,39 +113,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.james.protocols</groupId>
-            <artifactId>protocols-lmtp</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>apache-james-mailbox-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>james-server-data-api</artifactId>
+            <artifactId>protocols-smtp</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>commons-configuration</groupId>
-            <artifactId>commons-configuration</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.mail</groupId>
-            <artifactId>javax.mail</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.geronimo.specs</groupId>
-            <artifactId>geronimo-annotation_1.1_spec</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>javax.inject</groupId>
-          <artifactId>javax.inject</artifactId>
         </dependency>
     </dependencies>
 

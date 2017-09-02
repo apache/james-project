@@ -23,6 +23,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 
 import javax.mail.MessagingException;
 
@@ -87,11 +88,8 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
     public boolean isAutoSubmitted(Mail mail) throws MessagingException {
         String[] headers = mail.getMessage().getHeader(AUTO_SUBMITTED_HEADER);
         if (headers != null) {
-            for (String header : headers) {
-                if (header.equalsIgnoreCase(AUTO_REPLIED_VALUE)) {
-                    return true;
-                }
-            }
+            return Arrays.stream(headers)
+                .anyMatch(header -> header.equalsIgnoreCase(AUTO_REPLIED_VALUE));
         }
         return false;
     }

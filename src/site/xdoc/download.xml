@@ -136,34 +136,12 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
       </code></p>
     
     </subsection>
-  
-    <subsection name="Nightly Builds">
-   
-      <p>The software listed above represents the latest Release Build
-         available from the Apache James Project.</p>
-<!-- 
-Do not promote snapshots, See JAMES-1558
-
-      <p>The James project also provides 
-         <a href="http://people.apache.org/builds/james/nightly/">Nighly Builds</a>:
-        <u>periodic snapshots during development</u>. Generally, these are considered
-        stable snapshots, but they have not undergone as much testing as a
-        Release Build, nor have they been voted upon for release by the
-        developer community. These are simply convenient test builds.
-        Sometimes the purpose for a Nightly Build could be soliciting feedback on
-        a specific change.</p>
-    
-      <p>James continous integration can be found on 
-      <a href="https://hudson.apache.org/hudson/view/G-L/view/James/">Hudson</a>.</p>
--->    
-  
-    </subsection>
 
   </section>
 
   <section name='Apache James Server'>
 
-    <subsection name="Apache James 3.0-RC1 is for early adopters">
+    <subsection name="Apache James 3.0.0 is the stable version">
 
       <div class="ui-widget">
         <div class="ui-priority-secondary ui-corner-all apache-james-crypto-notice">
@@ -182,17 +160,17 @@ Do not promote snapshots, See JAMES-1558
       </div>
 
       <ul>
-        <li>Source code <a href="https://github.com/apache/james-project/releases/tag/james-project-3.0.0-RC1">on GitHub</a></li>
+        <li>Source code <a href="https://github.com/apache/james-project/releases/tag/james-project-3.0.0">on GitHub</a></li>
 
         <li>Binary (ZIP Format): <a
-                href="http://www.apache.org/dist/james/server/james-server-app-3.0.0-RC1-app.zip">apache-james-3.0.0-RC1-app.zip</a> [<a
-                href="http://www.apache.org/dist/james/server/james-server-app-3.0.0-RC1-app.zip.asc">PGP</a>]</li>
+                href="http://www.apache.org/dist/james/server/3.0.0/james-server-app-3.0.0-app.zip">apache-james-3.0.0-app.zip</a> [<a
+                href="http://www.apache.org/dist/james/server/3.0.0/james-server-app-3.0.0-app.zip.md5.sig">PGP</a>]</li>
 
       </ul>
 
     </subsection>
     
-    <subsection name="Apache James 2.3.2.1 is the stable version">
+    <subsection name="Apache James 2.3.2.1 is the previous stable version">
     
       <p>This release has many enhancements and bug fixes over the previous
       release.  See the <a

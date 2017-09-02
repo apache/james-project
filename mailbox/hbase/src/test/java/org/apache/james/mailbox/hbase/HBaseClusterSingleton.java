@@ -103,15 +103,11 @@ public final class HBaseClusterSingleton {
         } finally {
             if (hbaseCluster != null) {
                 // add a shutdown hook for shuting down the minicluster.
-                Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        try {
-                            hbaseCluster.shutdown();
-                        } catch (IOException e) {
-                            throw new RuntimeException("Exception shuting down cluster.");
-                        }
+                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    try {
+                        hbaseCluster.shutdown();
+                    } catch (IOException e) {
+                        throw new RuntimeException("Exception shuting down cluster.");
                     }
                 }));
             }

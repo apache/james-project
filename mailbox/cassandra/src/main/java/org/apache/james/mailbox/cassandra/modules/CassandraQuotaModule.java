@@ -50,6 +50,7 @@ public class CassandraQuotaModule implements CassandraModule {
                     .addColumn(CassandraCurrentQuota.MESSAGE_COUNT, counter())
                     .addColumn(CassandraCurrentQuota.STORAGE, counter())
                     .withOptions()
+                    .comment("Holds per quota-root current values. Quota-roots defines groups of mailboxes which shares quotas limitations.")
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))),
             new CassandraTable(CassandraMaxQuota.TABLE_NAME,
@@ -59,6 +60,7 @@ public class CassandraQuotaModule implements CassandraModule {
                     .addColumn(CassandraMaxQuota.MESSAGE_COUNT, bigint())
                     .addColumn(CassandraMaxQuota.STORAGE, bigint())
                     .withOptions()
+                    .comment("Holds per quota-root limitations. Limitations can concern the number of messages in a quota-root or the total size of a quota-root.")
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))),
             new CassandraTable(CassandraDefaultMaxQuota.TABLE_NAME,
@@ -67,6 +69,7 @@ public class CassandraQuotaModule implements CassandraModule {
                     .addPartitionKey(CassandraDefaultMaxQuota.TYPE, text())
                     .addColumn(CassandraDefaultMaxQuota.VALUE, bigint())
                     .withOptions()
+                    .comment("Holds defaults limitations definition.")
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
         types = ImmutableList.of();

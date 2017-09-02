@@ -82,7 +82,7 @@ public class MimeDescriptorImpl implements MimeDescriptor {
     private static MimeDescriptorImpl createDescriptor(
             final MimeTokenStream parser) throws IOException, MimeException {
         EntityState next = parser.next();
-        final Collection<MessageResult.Header> headers = new ArrayList<MessageResult.Header>();
+        final Collection<MessageResult.Header> headers = new ArrayList<>();
         while (next != EntityState.T_BODY
                 && next != EntityState.T_END_OF_STREAM
                 && next != EntityState.T_START_MULTIPART) {
@@ -169,7 +169,7 @@ public class MimeDescriptorImpl implements MimeDescriptor {
         final String subType = descriptor.getSubType();
         final String type = descriptor.getMediaType();
         final String transferEncoding = descriptor.getTransferEncoding();
-        final Map<String, String> contentTypeParameters = new TreeMap<String, String>(descriptor.getContentTypeParameters());
+        final Map<String, String> contentTypeParameters = new TreeMap<>(descriptor.getContentTypeParameters());
         final String codeset = descriptor.getCharset();
         if (codeset == null) {
             if ("TEXT".equals(type)) {
@@ -187,7 +187,7 @@ public class MimeDescriptorImpl implements MimeDescriptor {
         final String disposition = descriptor.getContentDispositionType();
         final Map<String, String> dispositionParams = descriptor
                 .getContentDispositionParameters();
-        final Collection<MimeDescriptor> parts = new ArrayList<MimeDescriptor>();
+        final Collection<MimeDescriptor> parts = new ArrayList<>();
         final String location = descriptor.getContentLocation();
         final String md5 = descriptor.getContentMD5Raw();
         return new MimeDescriptorImpl(
@@ -331,11 +331,7 @@ public class MimeDescriptorImpl implements MimeDescriptor {
         Iterator<MessageResult.Header> hIt = headers.iterator();
         while(hIt.hasNext()) {
             MessageResult.Header header = hIt.next();
-            try {
-                sb.append(header.getName()).append(": " ).append(header.getValue()).append("\r\n");
-            } catch (MailboxException e) {
-                throw new IOException("Unable to read headers", e);
-            }
+            sb.append(header.getName()).append(": " ).append(header.getValue()).append("\r\n");
         }
         sb.append("\r\n");
         return new ByteArrayInputStream(sb.toString().getBytes(US_ASCII));

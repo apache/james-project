@@ -20,10 +20,9 @@
 package org.apache.james.transport.mailets.redirect;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import java.util.Optional;
 
 import org.junit.Test;
-
-import com.google.common.base.Optional;
 
 public class LoadedOnceInitParametersTest {
 

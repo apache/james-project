@@ -19,9 +19,7 @@
 
 package org.apache.james.protocols.smtp.core.esmtp;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -39,6 +37,9 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HeloHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
 /**
  * Handles EHLO command
  */
@@ -48,9 +49,9 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
      * The name of the command handled by the command handler
      */
     private final static String COMMAND_NAME = "EHLO";
-    private final static Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList(COMMAND_NAME));
+    private final static Collection<String> COMMANDS = ImmutableSet.of(COMMAND_NAME);
     // see http://issues.apache.org/jira/browse/JAMES-419
-    private final static List<String> ESMTP_FEATURES = Collections.unmodifiableList(Arrays.asList("PIPELINING", "ENHANCEDSTATUSCODES", "8BITMIME"));
+    private final static List<String> ESMTP_FEATURES = ImmutableList.of("PIPELINING", "ENHANCEDSTATUSCODES", "8BITMIME");
     private static final Response DOMAIN_ADDRESS_REQUIRED = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG) + " Domain address required: " + COMMAND_NAME).immutable();
     
     private List<EhloExtension> ehloExtensions;

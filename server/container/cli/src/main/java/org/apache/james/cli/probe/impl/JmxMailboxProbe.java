@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
-
 import javax.mail.Flags;
 import javax.management.MalformedObjectNameException;
 
@@ -37,15 +36,15 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 
 public class JmxMailboxProbe implements MailboxProbe, JmxProbe {
-    
+
     private final static String MAILBOXCOPIER_OBJECT_NAME = "org.apache.james:type=component,name=mailboxcopier";
     private final static String MAILBOXMANAGER_OBJECT_NAME = "org.apache.james:type=component,name=mailboxmanagerbean";
     private final static String REINDEXER_OBJECT_NAME = "org.apache.james:type=component,name=reindexerbean";
-    
+
     private MailboxCopierManagementMBean mailboxCopierManagement;
     private MailboxManagerManagementMBean mailboxManagerManagement;
     private ReIndexerManagementMBean reIndexerManagement;
-    
+
     public JmxMailboxProbe connect(JmxConnection jmxc) throws IOException {
         try {
             mailboxCopierManagement = jmxc.retrieveBean(MailboxCopierManagementMBean.class, MAILBOXCOPIER_OBJECT_NAME);
@@ -56,7 +55,7 @@ public class JmxMailboxProbe implements MailboxProbe, JmxProbe {
         }
         return this;
     }
-    
+
 
     @Override
     public void copyMailbox(String srcBean, String dstBean) throws Exception {
@@ -84,6 +83,11 @@ public class JmxMailboxProbe implements MailboxProbe, JmxProbe {
     }
 
     @Override
+    public void importEmlFileToMailbox(String namespace, String user, String name, String emlpath) {
+        mailboxManagerManagement.importEmlFileToMailbox(namespace, user, name, emlpath);
+    }
+
+    @Override
     public void reIndexMailbox(String namespace, String user, String name) throws Exception {
         reIndexerManagement.reIndex(namespace, user, name);
     }
@@ -96,7 +100,6 @@ public class JmxMailboxProbe implements MailboxProbe, JmxProbe {
 
     @Override
     public Mailbox getMailbox(String namespace, String user, String name) {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -104,14 +107,12 @@ public class JmxMailboxProbe implements MailboxProbe, JmxProbe {
     @Override
     public ComposedMessageId appendMessage(String username, MailboxPath mailboxPath, InputStream message,
             Date internalDate, boolean isRecent, Flags flags) throws MailboxException {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
     @Override
     public Collection<String> listSubscriptions(String user) throws Exception {
-        // TODO Auto-generated method stub
         return null;
     }
 

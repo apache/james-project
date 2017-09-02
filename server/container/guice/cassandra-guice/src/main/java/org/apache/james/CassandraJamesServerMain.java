@@ -29,6 +29,7 @@ import org.apache.james.modules.mailbox.CassandraMailboxModule;
 import org.apache.james.modules.mailbox.CassandraSessionModule;
 import org.apache.james.modules.mailbox.ElasticSearchMailboxModule;
 import org.apache.james.modules.mailbox.TikaMailboxModule;
+import org.apache.james.modules.metrics.CassandraMetricsModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
 import org.apache.james.modules.protocols.JMAPServerModule;
 import org.apache.james.modules.protocols.LMTPServerModule;
@@ -37,10 +38,12 @@ import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
+import org.apache.james.modules.server.CassandraRoutesModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.ESMetricReporterModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
+import org.apache.james.modules.server.SwaggerRoutesModules;
 import org.apache.james.modules.server.WebAdminServerModule;
 
 import com.google.inject.Module;
@@ -57,8 +60,10 @@ public class CassandraJamesServerMain {
             new ManageSieveServerModule(),
             new WebAdminServerModule(),
             new DataRoutesModules(),
-            new MailboxRoutesModule());
-    
+            new MailboxRoutesModule(),
+            new CassandraRoutesModule(),
+            new SwaggerRoutesModules());
+
     public static final Module cassandraServerModule = Modules.combine(
         new JMAPServerModule(),
         new CassandraUsersRepositoryModule(),
@@ -72,6 +77,7 @@ public class CassandraJamesServerMain {
         new TikaMailboxModule(),
         new ActiveMQQueueModule(),
         new ESMetricReporterModule(),
+        new CassandraMetricsModule(),
         new MailboxModule());
 
 

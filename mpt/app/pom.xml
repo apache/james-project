@@ -21,9 +21,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>apache-james-mpt</artifactId>
         <groupId>org.apache.james</groupId>
-        <version>3.0.0-RC2-SNAPSHOT</version>
+        <artifactId>apache-james-mpt</artifactId>
+        <version>3.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -72,14 +72,6 @@ interfaces to the MPT library.</description>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                    </execution>
-                </executions>
                 <configuration>
                     <artifactSet>
                         <includes>
@@ -90,6 +82,14 @@ interfaces to the MPT library.</description>
                         </includes>
                     </artifactSet>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
@@ -117,11 +117,11 @@ interfaces to the MPT library.</description>
                 <executions>
                     <execution>
                         <id>create-javadocs</id>
-                        <phase>package</phase>
                         <goals>
                             <goal>javadoc</goal>
                             <goal>jar</goal>
                         </goals>
+                        <phase>package</phase>
                     </execution>
                 </executions>
             </plugin>

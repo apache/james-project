@@ -19,17 +19,16 @@
 
 package org.apache.james.transport.mailets;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
@@ -109,7 +108,7 @@ public class ReplaceContent extends GenericMailet {
     private Optional<Charset> initCharset() {
         String charsetName = getInitParameter(PARAMETER_NAME_CHARSET);
         if (Strings.isNullOrEmpty(charsetName)) {
-            return Optional.absent();
+            return Optional.empty();
         }
         return Optional.of(Charset.forName(charsetName));
     }
@@ -126,15 +125,8 @@ public class ReplaceContent extends GenericMailet {
                     .addAllSubjectReplacingUnits(subjectPatternFile())
                     .addAllBodyReplacingUnits(bodyPatternFile())
                     .build();
-        } catch (FileNotFoundException e) {
+        } catch (MailetException | IOException e) {
             throw new MailetException("Failed initialization", e);
-            
-        } catch (MailetException e) {
-            throw new MailetException("Failed initialization", e);
-            
-        } catch (IOException e) {
-            throw new MailetException("Failed initialization", e);
-            
         }
     }
 
@@ -172,6 +164,6 @@ public class ReplaceContent extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MailetException {
-        new ContentReplacer(debug, this).replaceMailContentAndSubject(mail, replaceConfig, charset);
+        new ContentReplacer(debug).replaceMailContentAndSubject(mail, replaceConfig, charset);
     }
 }

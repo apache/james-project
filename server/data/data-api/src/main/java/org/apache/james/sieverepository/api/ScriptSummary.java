@@ -20,6 +20,7 @@
 
 package org.apache.james.sieverepository.api;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 public class ScriptSummary {
@@ -54,5 +55,13 @@ public class ScriptSummary {
     @Override
     public final int hashCode() {
         return Objects.hashCode(name, activeFile);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("name",  name)
+            .add("activeFile", activeFile)
+            .toString();
     }
 }

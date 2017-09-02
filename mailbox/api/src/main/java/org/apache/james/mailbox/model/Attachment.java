@@ -107,6 +107,15 @@ public class Attachment {
         return new ByteArrayInputStream(bytes);
     }
 
+    /**
+     * Be careful the returned array is not a copy of the attachment byte array.
+     * Mutating it will mutate the attachment!
+     * @return the attachment content
+     */
+    public byte[] getBytes() {
+        return bytes;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Attachment) {

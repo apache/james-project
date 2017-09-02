@@ -103,8 +103,6 @@ public class DownloadStepdefs {
                 ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml"), new Date(), false, new Flags());
         
         attachmentsByMessageId.put(messageId, attachmentId);
-        // TODO
-        //blobIdByAttachmentId.put(attachmentId, "<correctComputedBlobId>");
     }
 
     @Given("^\"([^\"]*)\" mailbox \"([^\"]*)\" contains a message \"([^\"]*)\" with multiple same inlined attachments \"([^\"]*)\"$")

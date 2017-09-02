@@ -30,6 +30,16 @@ import org.apache.mailet.base.MailetUtil;
 
 import com.google.common.collect.ImmutableList;
 
+/**
+ * This matcher matches emails that have too many lines. This allows better rejection of emails when, for instance, MIME4J
+ * is configured with a limited number of lines.
+ *
+ * <p>The example below will match mail with more than 10000 lines</p>
+ *
+ * <pre><code>
+ * &lt;mailet match=&quot;TooManyLines=10000&quot; class=&quot;&lt;any-class&gt;&quot;/&gt;
+ * </code></pre>
+ */
 public class TooManyLines extends GenericMatcher {
 
     private int maximumLineCount;

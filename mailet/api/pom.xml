@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>apache-mailet</artifactId>
-        <version>3.0.0-RC2-SNAPSHOT</version>
+        <version>3.1.0-SNAPSHOT</version>
         <relativePath>../</relativePath>
     </parent>
 
@@ -36,6 +36,10 @@
     <inceptionYear>2007</inceptionYear>
 
     <dependencies>
+        <dependency>
+            <groupId>com.github.steveash.guavate</groupId>
+            <artifactId>guavate</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
@@ -52,14 +56,13 @@
         <dependency>
             <groupId>nl.jqno.equalsverifier</groupId>
             <artifactId>equalsverifier</artifactId>
-            <version>1.7.5</version>
             <scope>test</scope>
         </dependency>
-            <dependency>
-                <groupId>org.assertj</groupId>
-                <artifactId>assertj-core</artifactId>
-                <scope>test</scope>
-            </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>

@@ -34,12 +34,14 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.james.transport.KeyStoreHolder;
 import org.apache.james.transport.SMIMESignerInfo;
-import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetConfig;
+import org.apache.mailet.base.GenericMailet;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.mail.smime.SMIMEException;
 import org.bouncycastle.mail.smime.SMIMESigned;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -100,6 +102,7 @@ import org.bouncycastle.mail.smime.SMIMESigned;
  * 
  */
 public class SMIMECheckSignature extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SMIMECheckSignature.class);
     
     protected KeyStoreHolder trustedCertificateStore;
     
@@ -133,7 +136,7 @@ public class SMIMECheckSignature extends GenericMailet {
         try {
             if (file != null) trustedCertificateStore = new KeyStoreHolder(file, password, type);
             else {
-                log("No trusted store path specified, using default store.");
+                LOGGER.info("No trusted store path specified, using default store.");
                 trustedCertificateStore = new KeyStoreHolder(password);
             }
         } catch (Exception e) {
@@ -166,31 +169,27 @@ public class SMIMECheckSignature extends GenericMailet {
             if (signed != null) {
                 signers = trustedCertificateStore.verifySignatures(signed);
                 strippedMessage = signed.getContent();
-            } else log("Content not identified as signed");
+            } else LOGGER.info("Content not identified as signed");
             
             // These errors are logged but they don't cause the 
             // message to change its state. The message 
             // is considered as not signed and the process will
             // go on.
-        } catch (CMSException e) {
-            log("Error during the analysis of the signed message", e);
+        } catch (CMSException | SMIMEException e) {
+            LOGGER.error("Error during the analysis of the signed message", e);
             signers = null;
         } catch (IOException e) {
-            log("IO error during the analysis of the signed message", e);
-            signers = null;
-        } catch (SMIMEException e) {
-            log("Error during the analysis of the signed message", e);
+            LOGGER.error("IO error during the analysis of the signed message", e);
             signers = null;
         } catch (Exception e) {
-            e.printStackTrace();
-            log("Generic error occured during the analysis of the message", e);
+            LOGGER.error("Generic error occured during the analysis of the message", e);
             signers = null;
         }
         
         // If at least one mail signer is found 
         // the mail attributes are set.
         if (signers != null) {
-            ArrayList<X509Certificate> signerinfolist = new ArrayList<X509Certificate>();
+            ArrayList<X509Certificate> signerinfolist = new ArrayList<>();
 
             for (SMIMESignerInfo info : signers) {
                 if (info.isSignValid()

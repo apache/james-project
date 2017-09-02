@@ -30,8 +30,6 @@ import org.apache.james.mailetcontainer.api.mock.MockMatcherLoader;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessorTest;
 import org.apache.james.metrics.api.NoopMetricFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class CamelMailetProcessorTest extends AbstractStateMailetProcessorTest {
 
@@ -40,11 +38,6 @@ public class CamelMailetProcessorTest extends AbstractStateMailetProcessorTest {
         CamelMailetProcessor processor = null;
         try {
             processor = new CamelMailetProcessor(new NoopMetricFactory());
-            Logger log = LoggerFactory.getLogger("MockLog");
-            // slf4j can't set programmatically any log level. It's just a
-            // facade
-            // log.setLevel(SimpleLog.LOG_LEVEL_DEBUG);
-            processor.setLog(log);
             processor.setCamelContext(new DefaultCamelContext());
             processor.setMailetContext(new MockMailetContext());
             processor.setMailetLoader(new MockMailetLoader());

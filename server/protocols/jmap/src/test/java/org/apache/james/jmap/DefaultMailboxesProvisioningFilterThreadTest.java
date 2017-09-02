@@ -20,6 +20,7 @@ package org.apache.james.jmap;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.james.mailbox.MailboxListener;
@@ -45,9 +46,7 @@ import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.Test;
-import org.slf4j.Logger;
 
-import com.google.common.base.Optional;
 import com.google.testing.threadtester.AnnotatedTestRunner;
 import com.google.testing.threadtester.ThreadedAfter;
 import com.google.testing.threadtester.ThreadedBefore;
@@ -179,12 +178,12 @@ public class DefaultMailboxesProvisioningFilterThreadTest {
         }
 
         @Override
-        public MailboxSession createSystemSession(String userName, Logger log) throws BadCredentialsException, MailboxException {
+        public MailboxSession createSystemSession(String userName) throws BadCredentialsException, MailboxException {
             return mailboxSession;
         }
 
         @Override
-        public MailboxSession login(String userid, String passwd, Logger log) throws BadCredentialsException, MailboxException {
+        public MailboxSession login(String userid, String passwd) throws BadCredentialsException, MailboxException {
             return null;
         }
 
@@ -269,7 +268,7 @@ public class DefaultMailboxesProvisioningFilterThreadTest {
         }
 
         @Override
-        public MailboxSession loginAsOtherUser(String adminUserId, String passwd, String realUserId, Logger log) throws BadCredentialsException, MailboxException {
+        public MailboxSession loginAsOtherUser(String adminUserId, String passwd, String realUserId) throws BadCredentialsException, MailboxException {
             return null;
         }
     }

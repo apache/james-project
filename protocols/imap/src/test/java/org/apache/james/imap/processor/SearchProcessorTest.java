@@ -25,8 +25,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.TimeZone;
-
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
@@ -39,7 +39,6 @@ import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.DayMonthYear;
 import org.apache.james.imap.api.message.request.SearchKey;
 import org.apache.james.imap.api.message.request.SearchOperation;
-import org.apache.james.imap.api.message.request.SearchResultOption;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -57,19 +56,13 @@ import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
 import org.apache.james.metrics.api.NoopMetricFactory;
+
 import org.jmock.Expectations;
 import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
-
-@RunWith(JMock.class)
 public class SearchProcessorTest {
     private static final int DAY = 6;
 
@@ -126,9 +119,7 @@ public class SearchProcessorTest {
     SelectedMailbox selectedMailbox;
 
     private Mockery mockery = new JUnit4Mockery();
-    
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
-    
+
     @Before
     public void setUp() throws Exception {
         serverResponseFactory = mockery.mock(StatusResponseFactory.class);
@@ -343,11 +334,11 @@ public class SearchProcessorTest {
     @Test
     public void testAND() throws Exception {
         expectsGetSelectedMailbox();
-        List<SearchKey> keys = new ArrayList<SearchKey>();
+        List<SearchKey> keys = new ArrayList<>();
         keys.add(SearchKey.buildOn(DAY_MONTH_YEAR));
         keys.add(SearchKey.buildOld());
         keys.add(SearchKey.buildLarger(SIZE));
-        List<Criterion> criteria = new ArrayList<Criterion>();
+        List<Criterion> criteria = new ArrayList<>();
         criteria.add(SearchQuery.internalDateOn(getDate(DAY, MONTH, YEAR), DateResolution.Day));
         criteria.add(SearchQuery.flagIsUnSet(Flag.RECENT));
         criteria.add(SearchQuery.sizeGreaterThan(SIZE));
@@ -496,7 +487,6 @@ public class SearchProcessorTest {
             allowing(session).setAttribute(SearchProcessor.SEARCH_MODSEQ, null);
             allowing(session).getAttribute(
                     with(equal(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY))); will(returnValue((MailboxSession) mailboxSession));
-                    allowing(session).getLog(); will(returnValue(logger));
             oneOf(mailbox).search(
                     with(equal(query)),
                     with(equal(mailboxSession)));will(
@@ -506,7 +496,7 @@ public class SearchProcessorTest {
             allowing(selectedMailbox).hasNewApplicableFlags(); will(returnValue(false));
           
         }});
-        SearchRequest message = new SearchRequest(command, new SearchOperation(key, new ArrayList<SearchResultOption>()), false, TAG);
+        SearchRequest message = new SearchRequest(command, new SearchOperation(key, new ArrayList<>()), false, TAG);
         processor.doProcess(message, session, TAG, command, responder);
     }
 

@@ -24,59 +24,55 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.ATTACHMENTS;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.BODY;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.BODY_CONTENT;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.BODY_OCTECTS;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.BODY_START_OCTET;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.FIELDS;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.FULL_CONTENT_OCTETS;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.HEADERS;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.HEADER_CONTENT;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.INTERNAL_DATE;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.METADATA;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.PROPERTIES;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.TABLE_NAME;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.TEXTUAL_LINE_COUNT;
-
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.ATTACHMENTS;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.BODY;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.BODY_CONTENT;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.BODY_OCTECTS;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.BODY_START_OCTET;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.FIELDS;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.FULL_CONTENT_OCTETS;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.HEADERS;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.HEADER_CONTENT;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.INTERNAL_DATE;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.METADATA;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.PROPERTIES;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.TABLE_NAME;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.TEXTUAL_LINE_COUNT;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.util.Date;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import javax.inject.Inject;
-import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.cassandra.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.table.CassandraMessageTable.Attachments;
-import org.apache.james.mailbox.cassandra.table.CassandraMessageTable.Properties;
+import org.apache.james.mailbox.cassandra.ids.BlobId;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.mail.utils.Limit;
+import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table;
+import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.Attachments;
+import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.Properties;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
-import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
 import org.apache.james.util.CompletableFutureUtil;
 import org.apache.james.util.FluentFutureStream;
 import org.apache.james.util.streams.JamesCollectors;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
@@ -85,35 +81,46 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.io.ByteStreams;
+import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
 
 public class CassandraMessageDAO {
+    public static final long DEFAULT_LONG_VALUE = 0L;
+    public static final String DEFAULT_OBJECT_VALUE = null;
+    private static final byte[] EMPTY_BYTE_ARRAY = {};
 
-    public static final int CHUNK_SIZE_ON_READ = 100;
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final CassandraTypesProvider typesProvider;
+    private final CassandraBlobsDAO blobsDAO;
+    private final CassandraConfiguration configuration;
     private final PreparedStatement insert;
     private final PreparedStatement delete;
     private final PreparedStatement selectMetadata;
     private final PreparedStatement selectHeaders;
     private final PreparedStatement selectFields;
     private final PreparedStatement selectBody;
+    private final Cid.CidParser cidParser;
 
     @Inject
-    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider) {
+    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, CassandraBlobsDAO blobsDAO, CassandraConfiguration cassandraConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.typesProvider = typesProvider;
+        this.blobsDAO = blobsDAO;
+        this.configuration = cassandraConfiguration;
         this.insert = prepareInsert(session);
         this.delete = prepareDelete(session);
         this.selectMetadata = prepareSelect(session, METADATA);
         this.selectHeaders = prepareSelect(session, HEADERS);
         this.selectFields = prepareSelect(session, FIELDS);
         this.selectBody = prepareSelect(session, BODY);
+        this.cidParser = Cid.parser().relaxed();
+    }
+
+    @VisibleForTesting
+    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, CassandraBlobsDAO blobsDAO) {
+        this(session, typesProvider, blobsDAO, CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     private PreparedStatement prepareSelect(Session session, String[] fields) {
@@ -124,90 +131,98 @@ public class CassandraMessageDAO {
 
     private PreparedStatement prepareInsert(Session session) {
         return session.prepare(insertInto(TABLE_NAME)
-                .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
-                .value(INTERNAL_DATE, bindMarker(INTERNAL_DATE))
-                .value(BODY_START_OCTET, bindMarker(BODY_START_OCTET))
-                .value(FULL_CONTENT_OCTETS, bindMarker(FULL_CONTENT_OCTETS))
-                .value(BODY_OCTECTS, bindMarker(BODY_OCTECTS))
-                .value(BODY_CONTENT, bindMarker(BODY_CONTENT))
-                .value(HEADER_CONTENT, bindMarker(HEADER_CONTENT))
-                .value(PROPERTIES, bindMarker(PROPERTIES))
-                .value(TEXTUAL_LINE_COUNT, bindMarker(TEXTUAL_LINE_COUNT))
-                .value(ATTACHMENTS, bindMarker(ATTACHMENTS)));
+            .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
+            .value(INTERNAL_DATE, bindMarker(INTERNAL_DATE))
+            .value(BODY_START_OCTET, bindMarker(BODY_START_OCTET))
+            .value(FULL_CONTENT_OCTETS, bindMarker(FULL_CONTENT_OCTETS))
+            .value(BODY_OCTECTS, bindMarker(BODY_OCTECTS))
+            .value(BODY_CONTENT, bindMarker(BODY_CONTENT))
+            .value(HEADER_CONTENT, bindMarker(HEADER_CONTENT))
+            .value(PROPERTIES, bindMarker(PROPERTIES))
+            .value(TEXTUAL_LINE_COUNT, bindMarker(TEXTUAL_LINE_COUNT))
+            .value(ATTACHMENTS, bindMarker(ATTACHMENTS)));
     }
 
     private PreparedStatement prepareDelete(Session session) {
         return session.prepare(QueryBuilder.delete()
-                .from(TABLE_NAME)
-                .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
+            .from(TABLE_NAME)
+            .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
     }
 
     public CompletableFuture<Void> save(MailboxMessage message) throws MailboxException {
+        return saveContent(message).thenCompose(pair ->
+            cassandraAsyncExecutor.executeVoid(boundWriteStatement(message, pair)));
+    }
+
+    private CompletableFuture<Pair<Optional<BlobId>, Optional<BlobId>>> saveContent(MailboxMessage message) throws MailboxException {
         try {
-            CassandraMessageId messageId = (CassandraMessageId) message.getMessageId();
-            BoundStatement boundStatement = insert.bind()
-                .setUUID(MESSAGE_ID, messageId.get())
-                .setDate(INTERNAL_DATE, message.getInternalDate())
-                .setInt(BODY_START_OCTET, (int) (message.getFullContentOctets() - message.getBodyOctets()))
-                .setLong(FULL_CONTENT_OCTETS, message.getFullContentOctets())
-                .setLong(BODY_OCTECTS, message.getBodyOctets())
-                .setBytes(BODY_CONTENT, toByteBuffer(message.getBodyContent()))
-                .setBytes(HEADER_CONTENT, toByteBuffer(message.getHeaderContent()))
-                .setList(PROPERTIES, message.getProperties().stream()
-                    .map(x -> typesProvider.getDefinedUserType(PROPERTIES)
-                        .newValue()
-                        .setString(Properties.NAMESPACE, x.getNamespace())
-                        .setString(Properties.NAME, x.getLocalName())
-                        .setString(Properties.VALUE, x.getValue()))
-                    .collect(Collectors.toList()))
-                .setList(ATTACHMENTS, message.getAttachments().stream()
-                    .map(this::toUDT)
-                    .collect(Collectors.toList()));
-
-            return cassandraAsyncExecutor.executeVoid(setTextualLineCount(boundStatement, message.getTextualLineCount()));
-
+            return CompletableFutureUtil.combine(
+                blobsDAO.save(
+                    IOUtils.toByteArray(
+                        message.getHeaderContent())),
+                blobsDAO.save(
+                    IOUtils.toByteArray(
+                        message.getBodyContent())),
+                Pair::of);
         } catch (IOException e) {
-            throw new MailboxException("Error saving mail", e);
+            throw new MailboxException("Error saving mail content", e);
         }
     }
 
-    private BoundStatement setTextualLineCount(BoundStatement boundStatement, Long textualLineCount) {
-        return Optional.ofNullable(textualLineCount)
-               .map(value -> boundStatement.setLong(TEXTUAL_LINE_COUNT, value))
-               .orElseGet(() -> boundStatement.setToNull(TEXTUAL_LINE_COUNT));
+    private BoundStatement boundWriteStatement(MailboxMessage message, Pair<Optional<BlobId>, Optional<BlobId>> pair) {
+        CassandraMessageId messageId = (CassandraMessageId) message.getMessageId();
+        return insert.bind()
+            .setUUID(MESSAGE_ID, messageId.get())
+            .setTimestamp(INTERNAL_DATE, message.getInternalDate())
+            .setInt(BODY_START_OCTET, (int) (message.getHeaderOctets()))
+            .setLong(FULL_CONTENT_OCTETS, message.getFullContentOctets())
+            .setLong(BODY_OCTECTS, message.getBodyOctets())
+            .setString(BODY_CONTENT, pair.getRight().map(BlobId::getId).orElse(DEFAULT_OBJECT_VALUE))
+            .setString(HEADER_CONTENT, pair.getLeft().map(BlobId::getId).orElse(DEFAULT_OBJECT_VALUE))
+            .setLong(TEXTUAL_LINE_COUNT, Optional.ofNullable(message.getTextualLineCount()).orElse(DEFAULT_LONG_VALUE))
+            .setList(PROPERTIES, buildPropertiesUdt(message))
+            .setList(ATTACHMENTS, buildAttachmentUdt(message));
     }
 
-    private UDTValue toUDT(org.apache.james.mailbox.model.MessageAttachment messageAttachment) {
+    private ImmutableList<UDTValue> buildAttachmentUdt(MailboxMessage message) {
+        return message.getAttachments().stream()
+            .map(this::toUDT)
+            .collect(Guavate.toImmutableList());
+    }
+
+    private UDTValue toUDT(MessageAttachment messageAttachment) {
         return typesProvider.getDefinedUserType(ATTACHMENTS)
             .newValue()
             .setString(Attachments.ID, messageAttachment.getAttachmentId().getId())
-            .setString(Attachments.NAME, messageAttachment.getName().orNull())
-            .setString(Attachments.CID, messageAttachment.getCid().transform(Cid::getValue).orNull())
+            .setString(Attachments.NAME, messageAttachment.getName().orElse(null))
+            .setString(Attachments.CID, messageAttachment.getCid().map(Cid::getValue).orElse(null))
             .setBool(Attachments.IS_INLINE, messageAttachment.isInline());
     }
 
-    private ByteBuffer toByteBuffer(InputStream stream) throws IOException {
-        return ByteBuffer.wrap(ByteStreams.toByteArray(stream));
+    private List<UDTValue> buildPropertiesUdt(MailboxMessage message) {
+        return message.getProperties().stream()
+            .map(x -> typesProvider.getDefinedUserType(PROPERTIES)
+                .newValue()
+                .setString(Properties.NAMESPACE, x.getNamespace())
+                .setString(Properties.NAME, x.getLocalName())
+                .setString(Properties.VALUE, x.getValue()))
+            .collect(Guavate.toImmutableList());
     }
 
-    public CompletableFuture<Stream<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>>> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Optional<Integer> limit) {
+    public CompletableFuture<Stream<MessageResult>> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
         return CompletableFutureUtil.chainAll(
-            getLimitedIdStream(messageIds.stream().distinct(), limit)
-                .collect(JamesCollectors.chunker(CHUNK_SIZE_ON_READ)),
-            ids -> FluentFutureStream.of(
-                ids.stream()
-                    .map(id -> retrieveRow(id, fetchType)
-                        .thenApply((ResultSet resultSet) ->
-                            message(resultSet.one(), id, fetchType))))
-                .completableFuture())
+                limit.applyOnStream(messageIds.stream().distinct())
+                    .collect(JamesCollectors.chunker(configuration.getMessageReadChunkSize())),
+            ids -> rowToMessages(fetchType, ids))
             .thenApply(stream -> stream.flatMap(Function.identity()));
     }
 
-    private Stream<ComposedMessageIdWithMetaData> getLimitedIdStream(Stream<ComposedMessageIdWithMetaData> messageIds, Optional<Integer> limit) {
-        return limit
-            .filter(value -> value > 0)
-            .map(messageIds::limit)
-            .orElse(messageIds);
+    private CompletableFuture<Stream<MessageResult>> rowToMessages(FetchType fetchType, Collection<ComposedMessageIdWithMetaData> ids) {
+        return FluentFutureStream.of(
+            ids.stream()
+                .map(id -> retrieveRow(id, fetchType)
+                    .thenCompose((ResultSet resultSet) -> message(resultSet, id, fetchType))))
+            .completableFuture();
     }
 
     private CompletableFuture<ResultSet> retrieveRow(ComposedMessageIdWithMetaData messageId, FetchType fetchType) {
@@ -218,22 +233,32 @@ public class CassandraMessageDAO {
             .setUUID(MESSAGE_ID, cassandraMessageId.get()));
     }
 
-    private Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> message(Row row,ComposedMessageIdWithMetaData messageIdWithMetaData, FetchType fetchType) {
+    private CompletableFuture<MessageResult>
+    message(ResultSet rows,ComposedMessageIdWithMetaData messageIdWithMetaData, FetchType fetchType) {
         ComposedMessageId messageId = messageIdWithMetaData.getComposedMessageId();
 
-        MessageWithoutAttachment messageWithoutAttachment =
-            new MessageWithoutAttachment(
-                messageId.getMessageId(),
-                row.getDate(INTERNAL_DATE),
-                row.getLong(FULL_CONTENT_OCTETS),
-                row.getInt(BODY_START_OCTET),
-                buildContent(row, fetchType),
-                messageIdWithMetaData.getFlags(),
-                getPropertyBuilder(row),
-                messageId.getMailboxId(),
-                messageId.getUid(),
-                messageIdWithMetaData.getModSeq());
-        return Pair.of(messageWithoutAttachment, getAttachments(row, fetchType));
+        if (rows.isExhausted()) {
+            return CompletableFuture.completedFuture(notFound(messageIdWithMetaData));
+        }
+
+        Row row = rows.one();
+        CompletableFuture<byte[]> contentFuture = buildContentRetriever(fetchType).apply(row);
+
+        return contentFuture.thenApply(content -> {
+            MessageWithoutAttachment messageWithoutAttachment =
+                new MessageWithoutAttachment(
+                    messageId.getMessageId(),
+                    row.getTimestamp(INTERNAL_DATE),
+                    row.getLong(FULL_CONTENT_OCTETS),
+                    row.getInt(BODY_START_OCTET),
+                    new SharedByteArrayInputStream(content),
+                    messageIdWithMetaData.getFlags(),
+                    getPropertyBuilder(row),
+                    messageId.getMailboxId(),
+                    messageId.getUid(),
+                    messageIdWithMetaData.getModSeq());
+            return found(Pair.of(messageWithoutAttachment, getAttachments(row, fetchType)));
+        });
     }
 
     private PropertyBuilder getPropertyBuilder(Row row) {
@@ -247,13 +272,13 @@ public class CassandraMessageDAO {
 
     private Stream<MessageAttachmentRepresentation> getAttachments(Row row, FetchType fetchType) {
         switch (fetchType) {
-        case Full:
-        case Body:
-            List<UDTValue> udtValues = row.getList(ATTACHMENTS, UDTValue.class);
+            case Full:
+            case Body:
+                List<UDTValue> udtValues = row.getList(ATTACHMENTS, UDTValue.class);
 
-            return attachmentByIds(udtValues);
-        default:
-            return Stream.of();
+                return attachmentByIds(udtValues);
+            default:
+                return Stream.of();
         }
     }
 
@@ -264,11 +289,11 @@ public class CassandraMessageDAO {
 
     private MessageAttachmentRepresentation messageAttachmentByIdFrom(UDTValue udtValue) {
         return MessageAttachmentRepresentation.builder()
-                .attachmentId(AttachmentId.from(udtValue.getString(Attachments.ID)))
-                .name(udtValue.getString(Attachments.NAME))
-                .cid(Optional.ofNullable(udtValue.getString(Attachments.CID)).map(Cid::from))
-                .isInline(udtValue.getBool(Attachments.IS_INLINE))
-                .build();
+            .attachmentId(AttachmentId.from(udtValue.getString(Attachments.ID)))
+            .name(udtValue.getString(Attachments.NAME))
+            .cid(cidParser.parse(udtValue.getString(CassandraMessageV2Table.Attachments.CID)))
+            .isInline(udtValue.getBool(Attachments.IS_INLINE))
+            .build();
     }
 
     private PreparedStatement retrieveSelect(FetchType fetchType) {
@@ -291,188 +316,68 @@ public class CassandraMessageDAO {
             .setUUID(MESSAGE_ID, messageId.get()));
     }
 
-    private SharedByteArrayInputStream buildContent(Row row, FetchType fetchType) {
+    private Function<Row, CompletableFuture<byte[]>> buildContentRetriever(FetchType fetchType) {
         switch (fetchType) {
             case Full:
-                return new SharedByteArrayInputStream(getFullContent(row));
+                return this::getFullContent;
             case Headers:
-                return new SharedByteArrayInputStream(getFieldContent(HEADER_CONTENT, row));
+                return this::getHeaderContent;
             case Body:
-                return new SharedByteArrayInputStream(getBodyContent(row));
+                return row -> getBodyContent(row)
+                    .thenApply(data -> Bytes.concat(new byte[row.getInt(BODY_START_OCTET)], data));
             case Metadata:
-                return new SharedByteArrayInputStream(new byte[]{});
+                return row -> CompletableFuture.completedFuture(EMPTY_BYTE_ARRAY);
             default:
                 throw new RuntimeException("Unknown FetchType " + fetchType);
         }
     }
 
-    private byte[] getFullContent(Row row) {
-        return Bytes.concat(getFieldContent(HEADER_CONTENT, row), getFieldContent(BODY_CONTENT, row));
+    private CompletableFuture<byte[]> getFullContent(Row row) {
+        return CompletableFutureUtil.combine(
+            getHeaderContent(row),
+            getBodyContent(row),
+            Bytes::concat);
     }
 
-    private byte[] getBodyContent(Row row) {
-        return Bytes.concat(new byte[row.getInt(BODY_START_OCTET)], getFieldContent(BODY_CONTENT, row));
+    private CompletableFuture<byte[]> getBodyContent(Row row) {
+        return getFieldContent(BODY_CONTENT, row);
     }
 
-    private byte[] getFieldContent(String field, Row row) {
-        byte[] headerContent = new byte[row.getBytes(field).remaining()];
-        row.getBytes(field).get(headerContent);
-        return headerContent;
+    private CompletableFuture<byte[]> getHeaderContent(Row row) {
+        return getFieldContent(HEADER_CONTENT, row);
     }
 
-    public static class MessageAttachmentRepresentation {
-
-        public static Builder builder() {
-            return new Builder();
-        }
-
-        public static class Builder {
-
-            private AttachmentId attachmentId;
-            private Optional<String> name;
-            private Optional<Cid> cid;
-            private Optional<Boolean> isInline;
-
-            private Builder() {
-                name = Optional.empty();
-                cid = Optional.empty();
-                isInline = Optional.empty();
-            }
-
-            public Builder attachmentId(AttachmentId attachmentId) {
-                Preconditions.checkArgument(attachmentId != null);
-                this.attachmentId = attachmentId;
-                return this;
-            }
-
-            public Builder name(String name) {
-                this.name = Optional.ofNullable(name);
-                return this;
-            }
-
-            public Builder cid(Optional<Cid> cid) {
-                Preconditions.checkNotNull(cid);
-                this.cid = cid;
-                return this;
-            }
-
-
-            public Builder cid(Cid cid) {
-                this.cid = Optional.ofNullable(cid);
-                return this;
-            }
-
-            public Builder isInline(boolean isInline) {
-                this.isInline = Optional.of(isInline);
-                return this;
-            }
-
-            public MessageAttachmentRepresentation build() {
-                Preconditions.checkState(attachmentId != null, "'attachmentId' is mandatory");
-                boolean builtIsInLine = isInline.orElse(false);
-                return new MessageAttachmentRepresentation(attachmentId, name, cid, builtIsInLine);
-            }
-        }
-
-        private final AttachmentId attachmentId;
-        private final Optional<String> name;
-        private final Optional<Cid> cid;
-        private final boolean isInline;
-
-        @VisibleForTesting
-        MessageAttachmentRepresentation(AttachmentId attachmentId, Optional<String> name, Optional<Cid> cid, boolean isInline) {
-            this.attachmentId = attachmentId;
-            this.name = name;
-            this.cid = cid;
-            this.isInline = isInline;
-        }
-
-        public AttachmentId getAttachmentId() {
-            return attachmentId;
-        }
-
-        public Optional<String> getName() {
-            return name;
-        }
-
-        public Optional<Cid> getCid() {
-            return cid;
-        }
-
-        public boolean isInline() {
-            return isInline;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof MessageAttachmentRepresentation) {
-                MessageAttachmentRepresentation other = (MessageAttachmentRepresentation) obj;
-                return Objects.equal(attachmentId, other.attachmentId)
-                    && Objects.equal(name, other.name)
-                    && Objects.equal(cid, other.cid)
-                    && Objects.equal(isInline, other.isInline);
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hashCode(attachmentId, name, cid, isInline);
-        }
-
-        @Override
-        public String toString() {
-            return MoreObjects
-                    .toStringHelper(this)
-                    .add("attachmentId", attachmentId)
-                    .add("name", name)
-                    .add("cid", cid)
-                    .add("isInline", isInline)
-                    .toString();
-        }
+    private CompletableFuture<byte[]> getFieldContent(String field, Row row) {
+        return blobsDAO.read(BlobId.from(row.getString(field)));
     }
 
-    static class MessageWithoutAttachment {
+    public static MessageResult notFound(ComposedMessageIdWithMetaData id) {
+        return new MessageResult(id, Optional.empty());
+    }
 
-        private final MessageId messageId;
-        private final Date internalDate;
-        private final Long size;
-        private final Integer boduSize;
-        private final SharedByteArrayInputStream content;
-        private final Flags flags;
-        private final PropertyBuilder propertyBuilder;
-        private final MailboxId mailboxId;
-        private final MessageUid messageUid;
-        private final long modSeq;
+    public static MessageResult found(Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> message) {
+        return new MessageResult(message.getLeft().getMetadata(), Optional.of(message));
+    }
 
-        public MessageWithoutAttachment(MessageId messageId, Date internalDate, Long size, Integer boduSize, SharedByteArrayInputStream content,
-                                        Flags flags, PropertyBuilder propertyBuilder, MailboxId mailboxId, MessageUid messageUid, long modSeq) {
-            this.messageId = messageId;
-            this.internalDate = internalDate;
-            this.size = size;
-            this.boduSize = boduSize;
-            this.content = content;
-            this.flags = flags;
-            this.propertyBuilder = propertyBuilder;
-            this.mailboxId = mailboxId;
-            this.messageUid = messageUid;
-            this.modSeq = modSeq;
+    public static class MessageResult {
+        private final ComposedMessageIdWithMetaData metaData;
+        private final Optional<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> message;
+
+        public MessageResult(ComposedMessageIdWithMetaData metaData, Optional<Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>>> message) {
+            this.metaData = metaData;
+            this.message = message;
         }
 
-        public SimpleMailboxMessage toMailboxMessage(List<MessageAttachment> attachments) {
-            SimpleMailboxMessage simpleMailboxMessage = new SimpleMailboxMessage(messageId, internalDate, size, boduSize,
-                content, flags, propertyBuilder, mailboxId, attachments);
-            simpleMailboxMessage.setUid(messageUid);
-            simpleMailboxMessage.setModSeq(modSeq);
-            return simpleMailboxMessage;
+        public ComposedMessageIdWithMetaData getMetadata() {
+            return metaData;
         }
 
-        public MailboxId getMailboxId() {
-            return mailboxId;
+        public boolean isFound() {
+            return message.isPresent();
         }
 
-        public MessageId getMessageId() {
-            return messageId;
+        public Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> message() {
+            return message.get();
         }
     }
 }

@@ -37,18 +37,20 @@ import org.apache.james.imap.api.message.request.SearchKey;
 import org.apache.james.imap.api.message.request.SearchOperation;
 import org.apache.james.imap.api.message.request.SearchResultOption;
 import org.apache.james.imap.api.message.response.StatusResponse;
-import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapRequestLineReader;
-import org.apache.james.imap.decode.ImapRequestLineReader.CharacterValidator;
 import org.apache.james.imap.message.request.SearchRequest;
 import org.apache.james.protocols.imap.DecodingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Parse SEARCH commands
  */
 public class SearchCommandParser extends AbstractUidCommandParser {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SearchCommandParser.class);
 
     public SearchCommandParser() {
         super(ImapCommand.selectedStateCommand(ImapConstants.SEARCH_COMMAND_NAME));
@@ -140,23 +142,18 @@ public class SearchCommandParser extends AbstractUidCommandParser {
             // Just consume the [<entry-name> <entry-type-req>] and ignore it
             // See RFC4551 3.4. MODSEQ Search Criterion in SEARCH
             request.consumeQuoted();
-            request.consumeWord(new CharacterValidator() {
-                
-                /*
-                 * (non-Javadoc)
-                 * @see org.apache.james.imap.decode.ImapRequestLineReader.CharacterValidator#isValid(char)
-                 */
-                public boolean isValid(char chr) {
-                    return true;
-                }
-            });
+            /*
+             * (non-Javadoc)
+             * @see org.apache.james.imap.decode.ImapRequestLineReader.CharacterValidator#isValid(char)
+             */
+            request.consumeWord(chr -> true);
             return SearchKey.buildModSeq(request.number());
         }
     }
 
     private SearchKey paren(ImapSession session, ImapRequestLineReader request, Charset charset) throws DecodingException {
         request.consume();
-        List<SearchKey> keys = new ArrayList<SearchKey>();
+        List<SearchKey> keys = new ArrayList<>();
         addUntilParen(session, request, keys, charset);
         return SearchKey.buildAnd(keys);
     }
@@ -890,7 +887,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         final SearchKey firstKey = searchKey(session, request, null, true);
         final SearchKey result;
         if (request.nextChar() == ' ') {
-            List<SearchKey> keys = new ArrayList<SearchKey>();
+            List<SearchKey> keys = new ArrayList<>();
             keys.add(firstKey);
             while (request.nextChar() == ' ') {
                 request.nextWordChar();
@@ -915,7 +912,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
      * Parse the {@link SearchResultOption}'s which are used for ESEARCH
      */
     private List<SearchResultOption> parseOptions(ImapRequestLineReader reader) throws DecodingException {
-        List<SearchResultOption> options = new ArrayList<SearchResultOption>();
+        List<SearchResultOption> options = new ArrayList<>();
         reader.consumeChar('(');
         reader.nextWordChar();
         
@@ -1023,15 +1020,12 @@ public class SearchCommandParser extends AbstractUidCommandParser {
             
             
             if (options == null) {
-                options = new ArrayList<SearchResultOption>();
+                options = new ArrayList<>();
             }
 
             return new SearchRequest(command, new SearchOperation(finalKey, options), useUids, tag);
-        } catch (IllegalCharsetNameException e) {
-            session.getLog().debug("Unable to decode request", e);
-            return unsupportedCharset(tag, command);
-        } catch (UnsupportedCharsetException e) {
-            session.getLog().debug("Unable to decode request", e);
+        } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
+            LOGGER.debug("Unable to decode request", e);
             return unsupportedCharset(tag, command);
         }
     }

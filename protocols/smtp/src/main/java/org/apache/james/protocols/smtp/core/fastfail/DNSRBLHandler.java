@@ -33,11 +33,14 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.RcptHook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
   * Connect handler for DNSRBL processing
   */
 public class DNSRBLHandler implements RcptHook {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DNSRBLHandler.class);
 
     /**
      * The lists of rbl servers to be checked to limit spam
@@ -119,7 +122,7 @@ public class DNSRBLHandler implements RcptHook {
          * This whould make no sense.
          */
         if (session.isRelayingAllowed()) {
-            session.getLogger().info("Ipaddress " + session.getRemoteAddress().getAddress() + " is allowed to relay. Don't check it");
+            LOGGER.info("Ipaddress " + session.getRemoteAddress().getAddress() + " is allowed to relay. Don't check it");
             return;
         }
         
@@ -135,14 +138,14 @@ public class DNSRBLHandler implements RcptHook {
                 String[] rblList = whitelist;
                 for (String rbl : rblList) {
                     if (resolve(reversedOctets + rbl)) {
-                        if (session.getLogger().isInfoEnabled()) {
-                            session.getLogger().info("Connection from " + ipAddress + " whitelisted by " + rbl);
+                        if (LOGGER.isInfoEnabled()) {
+                            LOGGER.info("Connection from " + ipAddress + " whitelisted by " + rbl);
                         }
 
                         return;
                     } else {
-                        if (session.getLogger().isDebugEnabled()) {
-                            session.getLogger().debug("IpAddress " + session.getRemoteAddress().getAddress() + " not listed on " + rbl);
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug("IpAddress " + session.getRemoteAddress().getAddress() + " not listed on " + rbl);
                         }
                     }
                 }
@@ -152,8 +155,8 @@ public class DNSRBLHandler implements RcptHook {
                 String[] rblList = blacklist;
                 for (String rbl : rblList) {
                     if (resolve(reversedOctets + rbl)) {
-                        if (session.getLogger().isInfoEnabled()) {
-                            session.getLogger().info("Connection from " + ipAddress + " restricted by " + rbl + " to SMTP AUTH/postmaster/abuse.");
+                        if (LOGGER.isInfoEnabled()) {
+                            LOGGER.info("Connection from " + ipAddress + " restricted by " + rbl + " to SMTP AUTH/postmaster/abuse.");
                         }
 
                         // we should try to retrieve details
@@ -173,8 +176,8 @@ public class DNSRBLHandler implements RcptHook {
                         return;
                     } else {
                         // if it is unknown, it isn't blocked
-                        if (session.getLogger().isDebugEnabled()) {
-                            session.getLogger().debug("unknown host exception thrown:" + rbl);
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug("unknown host exception thrown:" + rbl);
                         }
                     }
 

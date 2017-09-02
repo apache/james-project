@@ -19,19 +19,19 @@
 
 package org.apache.james.util.bayesian;
 
-import org.apache.james.util.sql.JDBCUtil;
-import org.apache.james.util.sql.SqlResources;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import java.io.File;
-
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.DatabaseMetaData;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.james.util.sql.JDBCUtil;
+import org.apache.james.util.sql.SqlResources;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Manages the persistence of the spam bayesian analysis corpus using a JDBC
@@ -45,28 +45,17 @@ import java.sql.DatabaseMetaData;
  * @since 2.3.0
  */
 
-abstract public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
+public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JDBCBayesianAnalyzer.class);
 
     /** Public object representing a lock on database activity. */
     public final static String DATABASE_LOCK = "database lock";
 
     /**
-     * An abstract method which child classes override to handle logging of
-     * errors in their particular environments.
-     * 
-     * @param errorString
-     *            the error message generated
-     */
-    abstract protected void delegatedLog(String errorString);
-
-    /**
      * The JDBCUtil helper class
      */
-    private final JDBCUtil theJDBCUtil = new JDBCUtil() {
-        protected void delegatedLog(String logString) {
-            JDBCBayesianAnalyzer.this.delegatedLog(logString);
-        }
-    };
+    private final JDBCUtil theJDBCUtil = new JDBCUtil();
 
     /** Contains all of the sql strings for this component. */
     private final SqlResources sqlQueries = new SqlResources();
@@ -75,7 +64,7 @@ abstract public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
     private String sqlFileName;
 
     /** Holds value of property sqlParameters. */
-    private Map<String, String> sqlParameters = new HashMap<String, String>();
+    private Map<String, String> sqlParameters = new HashMap<>();
 
     /** Holds value of property lastDatabaseUpdateTime. */
     private static long lastDatabaseUpdateTime;
@@ -172,7 +161,7 @@ abstract public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
                 }
             }
             // Verbose.
-            delegatedLog("Ham tokens count: " + ham.size());
+            LOGGER.debug("Ham tokens count: " + ham.size());
 
             rs.close();
             pstmt.close();
@@ -192,7 +181,7 @@ abstract public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
             }
 
             // Verbose.
-            delegatedLog("Spam tokens count: " + spam.size());
+            LOGGER.error("Spam tokens count: " + spam.size());
 
             rs.close();
             pstmt.close();
@@ -213,6 +202,7 @@ abstract public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
                 try {
                     rs.close();
                 } catch (java.sql.SQLException se) {
+                    LOGGER.info("Exception ignored", se);
                 }
 
                 rs = null;
@@ -222,6 +212,7 @@ abstract public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
                 try {
                     pstmt.close();
                 } catch (java.sql.SQLException se) {
+                    LOGGER.info("Exception ignored", se);
                 }
 
                 pstmt = null;
@@ -413,7 +404,7 @@ abstract public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
 
             StringBuffer logBuffer;
             logBuffer = new StringBuffer(64).append("Created table '").append(tableName).append("' using sqlResources string '").append(createSqlStringName).append("'.");
-            delegatedLog(logBuffer.toString());
+            LOGGER.error(logBuffer.toString());
 
         } finally {
             theJDBCUtil.closeJDBCStatement(createStatement);

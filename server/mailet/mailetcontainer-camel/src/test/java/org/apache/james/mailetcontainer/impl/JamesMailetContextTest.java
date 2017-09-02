@@ -26,21 +26,20 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.domainlist.lib.AbstractDomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.mailet.MailAddress;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class JamesMailetContextTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(JamesMailetContextTest.class);
-
     public static final String DOMAIN_COM = "domain.com";
     public static final String USERNAME = "user";
     public static final String USERMAIL = USERNAME + "@" + DOMAIN_COM;
     public static final String PASSWORD = "password";
+    public static final DNSService DNS_SERVICE = null;
 
     private MemoryDomainList domainList;
     private MemoryUsersRepository usersRepository;
@@ -49,8 +48,12 @@ public class JamesMailetContextTest {
 
     @Before
     public void setUp() throws Exception {
-        domainList = new MemoryDomainList();
-        domainList.setLog(LOGGER);
+        domainList = new MemoryDomainList(DNS_SERVICE);
+        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(false);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
+        domainList.configure(configuration);
+
         usersRepository = MemoryUsersRepository.withVirtualHosting();
         usersRepository.setDomainList(domainList);
         testee = new JamesMailetContext();
@@ -91,7 +94,6 @@ public class JamesMailetContextTest {
             .thenReturn(DOMAIN_COM);
 
         domainList.configure(configuration);
-        domainList.addDomain(DOMAIN_COM);
         usersRepository.addUser(USERMAIL, PASSWORD);
 
         assertThat(testee.isLocalUser(USERNAME)).isTrue();

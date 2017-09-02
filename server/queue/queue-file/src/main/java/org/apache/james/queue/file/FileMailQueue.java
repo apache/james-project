@@ -20,9 +20,7 @@ package org.apache.james.queue.file;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -51,6 +49,7 @@ import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link ManageableMailQueue} implementation which use the fs to store {@link Mail}'s
@@ -59,14 +58,14 @@ import org.slf4j.Logger;
  * loading the needed meta-data into memory for fast access.
  */
 public class FileMailQueue implements ManageableMailQueue {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileMailQueue.class);
 
-    private final ConcurrentHashMap<String, FileItem> keyMappings = new ConcurrentHashMap<String, FileMailQueue.FileItem>();
-    private final BlockingQueue<String> inmemoryQueue = new LinkedBlockingQueue<String>();
+    private final ConcurrentHashMap<String, FileItem> keyMappings = new ConcurrentHashMap<>();
+    private final BlockingQueue<String> inmemoryQueue = new LinkedBlockingQueue<>();
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private final static AtomicLong COUNTER = new AtomicLong();
     private final String queueDirName;
     private final File queueDir;
-    private final Logger log;
 
     private final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
     private final boolean sync;
@@ -75,9 +74,8 @@ public class FileMailQueue implements ManageableMailQueue {
     private final static String NEXT_DELIVERY = "FileQueueNextDelivery";
     private final static int SPLITCOUNT = 10;
 
-    public FileMailQueue(MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, File parentDir, String queuename, boolean sync, Logger log) throws IOException {
+    public FileMailQueue(MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, File parentDir, String queuename, boolean sync) throws IOException {
         this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
-        this.log = log;
         this.sync = sync;
         this.queueDir = new File(parentDir, queuename);
         this.queueDirName = queueDir.getAbsolutePath();
@@ -91,12 +89,7 @@ public class FileMailQueue implements ManageableMailQueue {
             File qDir = new File(queueDir, Integer.toString(i));
             FileUtils.forceMkdir(qDir);
 
-            String[] files = qDir.list(new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    return name.endsWith(OBJECT_EXTENSION);
-                }
-            });
+            String[] files = qDir.list((dir, name) -> name.endsWith(OBJECT_EXTENSION));
 
             for (String name : files) {
 
@@ -129,24 +122,17 @@ public class FileMailQueue implements ManageableMailQueue {
 
                         // Schedule a task which will put the mail in the queue
                         // for processing after a given delay
-                        scheduler.schedule(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                try {
-                                    inmemoryQueue.put(key);
-                                } catch (InterruptedException e) {
-                                    Thread.currentThread().interrupt();
-                                    throw new RuntimeException("Unable to init", e);
-                                }
+                        scheduler.schedule(() -> {
+                            try {
+                                inmemoryQueue.put(key);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                                throw new RuntimeException("Unable to init", e);
                             }
                         }, next - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
                     }
-
-                } catch (ClassNotFoundException e1) {
-                    log.error("Unable to load Mail", e1);
-                } catch (IOException e) {
-                    log.error("Unable to load Mail", e);
+                } catch (ClassNotFoundException | IOException e) {
+                    LOGGER.error("Unable to load Mail", e);
                 } finally {
                     if (oin != null) {
                         try {
@@ -192,17 +178,13 @@ public class FileMailQueue implements ManageableMailQueue {
 
             if (delay > 0) {
                 // The message should get delayed so schedule it for later
-                scheduler.schedule(new Runnable() {
+                scheduler.schedule(() -> {
+                    try {
+                        inmemoryQueue.put(key);
 
-                    @Override
-                    public void run() {
-                        try {
-                            inmemoryQueue.put(key);
-
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                            throw new RuntimeException("Unable to init", e);
-                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException("Unable to init", e);
                     }
                 }, delay, unit);
 
@@ -211,16 +193,8 @@ public class FileMailQueue implements ManageableMailQueue {
             }
 
             //TODO: Think about exception handling in detail
-        } catch (FileNotFoundException e) {
+        } catch (IOException | MessagingException | InterruptedException e) {
             throw new MailQueueException("Unable to enqueue mail", e);
-        } catch (IOException e) {
-            throw new MailQueueException("Unable to enqueue mail", e);
-
-        } catch (MessagingException e) {
-            throw new MailQueueException("Unable to enqueue mail", e);
-        } catch (InterruptedException e) {
-            throw new MailQueueException("Unable to enqueue mail", e);
-
         } finally {
             if (out != null) {
                 try {
@@ -299,15 +273,8 @@ public class FileMailQueue implements ManageableMailQueue {
                 return mailQueueItemDecoratorFactory.decorate(fileMailQueueItem);
 
                 // TODO: Think about exception handling in detail
-            } catch (FileNotFoundException e) {
+            } catch (IOException | ClassNotFoundException | MessagingException e) {
                 throw new MailQueueException("Unable to dequeue", e);
-            } catch (IOException e) {
-                throw new MailQueueException("Unable to dequeue", e);
-            } catch (ClassNotFoundException e) {
-                throw new MailQueueException("Unable to dequeue", e);
-            } catch (MessagingException e) {
-                throw new MailQueueException("Unable to dequeue", e);
-
             } finally {
                 if (oin != null) {
                     try {
@@ -392,7 +359,7 @@ public class FileMailQueue implements ManageableMailQueue {
             try {
                 FileUtils.forceDelete(new File(getMessageFile()));
             } catch (IOException e) {
-                log.debug("Remove of msg file for mail failed");
+                LOGGER.debug("Remove of msg file for mail failed");
             }
         }
     }
@@ -501,13 +468,8 @@ public class FileMailQueue implements ManageableMailQueue {
                                 }
                             };
                             return true;
-                        } catch (FileNotFoundException e) {
-                            log.info("Unable to load mail", e);
-                        } catch (IOException e) {
-                            log.info("Unable to load mail", e);
-
-                        } catch (ClassNotFoundException e) {
-                            log.info("Unable to load mail", e);
+                        } catch (IOException | ClassNotFoundException e) {
+                            LOGGER.info("Unable to load mail", e);
                         } finally {
                             if (in != null) {
                                 try {

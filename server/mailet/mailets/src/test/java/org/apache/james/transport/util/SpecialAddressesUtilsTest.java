@@ -19,14 +19,12 @@
 package org.apache.james.transport.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.guava.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
-
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
@@ -43,7 +41,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 public class SpecialAddressesUtilsTest {
@@ -461,16 +458,16 @@ public class SpecialAddressesUtilsTest {
 
     @Test
     public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnAbsentWhenSenderInitParameterIsAbsent() throws Exception {
-        Optional<MailAddress> sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress(Optional.<String> absent(), ImmutableList.of("postmaster", "sender", "unaltered"));
+        Optional<MailAddress> sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress(Optional.empty(), ImmutableList.of("postmaster", "sender", "unaltered"));
 
-        assertThat(sender).isAbsent();
+        assertThat(sender).isEmpty();
     }
 
     @Test
     public void getFirstSpecialAddressIfMatchingOrGivenAddressShouldReturnAbsentWhenSenderInitParameterIsEmpty() throws Exception {
         Optional<MailAddress> sender = testee.getFirstSpecialAddressIfMatchingOrGivenAddress(Optional.of(""), ImmutableList.of("postmaster", "sender", "unaltered"));
 
-        assertThat(sender).isAbsent();
+        assertThat(sender).isEmpty();
     }
 
     @Test

@@ -21,23 +21,33 @@ package org.apache.james.mpt.imapmailbox.suite;
 
 import java.util.Locale;
 
-import javax.inject.Inject;
-
-import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseSelectedState;
+import org.apache.james.mpt.api.ImapHostSystem;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.Before;
 import org.junit.Test;
 
-public class Copy extends BaseSelectedState {
+public abstract class Copy implements ImapTestConstants {
 
-    @Inject
-    private static HostSystem system;
+    protected abstract ImapHostSystem createImapHostSystem();
     
-    public Copy() throws Exception {
-        super(system);
-    }
+    private ImapHostSystem system;
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
+    @Before
+    public void setUp() throws Exception {
+        system = createImapHostSystem();
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
+        BasicImapCommands.prepareMailbox(simpleScriptedTestProtocol);
+    }
+    
     @Test
     public void copyCommandShouldRespectTheRFC() throws Exception {
-        scriptTest("Copy", Locale.US);
+        simpleScriptedTestProtocol.run("Copy");
     }
 }

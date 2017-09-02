@@ -37,14 +37,12 @@ import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.mock.MockMailboxManager;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.LoggerFactory;
 
 /**
  * Test class for the {@link MailboxCopierImpl} implementation.
@@ -54,7 +52,8 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class MailboxCopierTest {
-    
+
+    public static final boolean AUTHENTIC = true;
     /**
      * The instance for the test mailboxCopier.
      */
@@ -81,10 +80,8 @@ public class MailboxCopierTest {
      */
     @Before
     public void setup() throws BadCredentialsException, MailboxException {
-        
         mailboxCopier = new MailboxCopierImpl();
-        mailboxCopier.setLog(LoggerFactory.getLogger(MailboxCopierTest.class.getName()));
-        
+
         srcMemMailboxManager = newInMemoryMailboxManager();
         dstMemMailboxManager = newInMemoryMailboxManager();
         
@@ -132,7 +129,7 @@ public class MailboxCopierTest {
      */
     private void assertMailboxManagerSize(MailboxManager mailboxManager, int multiplicationFactor) throws BadCredentialsException, MailboxException {
         
-        MailboxSession mailboxSession = mailboxManager.createSystemSession("manager", LoggerFactory.getLogger("src-mailbox-copier"));        
+        MailboxSession mailboxSession = mailboxManager.createSystemSession("manager");
         mailboxManager.startProcessingRequest(mailboxSession);
 
         List<MailboxPath> mailboxPathList = mailboxManager.list(mailboxSession);
@@ -161,18 +158,9 @@ public class MailboxCopierTest {
         MessageParser messageParser = new MessageParser();
 
         return new StoreMailboxManager(
-            new InMemoryMailboxSessionMapperFactory(), 
-            new Authenticator() {
-                public boolean isAuthentic(String userid, CharSequence passwd) {
-                    return true;
-                }
-            },
-            new Authorizator() {
-                @Override
-                public AuthorizationState canLoginAsOtherUser(String userId, String otherUserId) {
-                    return AuthorizationState.NOT_ADMIN;
-                }
-            },
+            new InMemoryMailboxSessionMapperFactory(),
+            (userid, passwd) -> AUTHENTIC,
+            (userId, otherUserId) -> Authorizator.AuthorizationState.NOT_ADMIN,
             aclResolver,
             groupMembershipResolver,
             messageParser,

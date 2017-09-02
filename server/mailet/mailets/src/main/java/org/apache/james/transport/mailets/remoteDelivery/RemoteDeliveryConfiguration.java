@@ -21,15 +21,17 @@ package org.apache.james.transport.mailets.remoteDelivery;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 
 import org.apache.james.domainlist.api.DomainList;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.base.MailetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -88,12 +90,12 @@ public class RemoteDeliveryConfiguration {
     private final Properties javaxAdditionalProperties;
 
     public RemoteDeliveryConfiguration(MailetConfig mailetConfig, DomainList domainList) {
-        isDebug = MailetUtil.getInitParameter(mailetConfig, DEBUG).or(false);
-        startTLS = MailetUtil.getInitParameter(mailetConfig, START_TLS).or(false);
-        isSSLEnable = MailetUtil.getInitParameter(mailetConfig, SSL_ENABLE).or(false);
-        usePriority = MailetUtil.getInitParameter(mailetConfig, USE_PRIORITY).or(false);
-        sendPartial = MailetUtil.getInitParameter(mailetConfig, SENDPARTIAL).or(false);
-        outGoingQueueName = Optional.fromNullable(mailetConfig.getInitParameter(OUTGOING)).or(DEFAULT_OUTGOING_QUEUE_NAME);
+        isDebug = MailetUtil.getInitParameter(mailetConfig, DEBUG).orElse(false);
+        startTLS = MailetUtil.getInitParameter(mailetConfig, START_TLS).orElse(false);
+        isSSLEnable = MailetUtil.getInitParameter(mailetConfig, SSL_ENABLE).orElse(false);
+        usePriority = MailetUtil.getInitParameter(mailetConfig, USE_PRIORITY).orElse(false);
+        sendPartial = MailetUtil.getInitParameter(mailetConfig, SENDPARTIAL).orElse(false);
+        outGoingQueueName = Optional.ofNullable(mailetConfig.getInitParameter(OUTGOING)).orElse(DEFAULT_OUTGOING_QUEUE_NAME);
         bounceProcessor = mailetConfig.getInitParameter(BOUNCE_PROCESSOR);
         bindAddress = mailetConfig.getInitParameter(BIND);
 
@@ -123,11 +125,12 @@ public class RemoteDeliveryConfiguration {
     private Properties computeJavaxProperties(MailetConfig mailetConfig) {
         Properties result = new Properties();
         // deal with <mail.*> attributes, passing them to javamail
-        for (String propertyName : ImmutableList.copyOf(mailetConfig.getInitParameterNames())) {
-            if (propertyName.startsWith(JAVAX_PREFIX)) {
-                result.put(propertyName, mailetConfig.getInitParameter(propertyName));
-            }
-        }
+        result.putAll(
+            ImmutableList.copyOf(mailetConfig.getInitParameterNames())
+                .stream()
+                .filter(propertyName -> propertyName.startsWith(JAVAX_PREFIX))
+                .map(propertyName -> Pair.of(propertyName, mailetConfig.getInitParameter(propertyName)))
+                .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue)));
         return result;
     }
 
@@ -143,8 +146,8 @@ public class RemoteDeliveryConfiguration {
     private int computeConnectionTimeout(MailetConfig mailetConfig) {
         try {
             return Integer.valueOf(
-                Optional.fromNullable(mailetConfig.getInitParameter(CONNECTIONTIMEOUT))
-                    .or(String.valueOf(DEFAULT_CONNECTION_TIMEOUT)));
+                Optional.ofNullable(mailetConfig.getInitParameter(CONNECTIONTIMEOUT))
+                    .orElse(String.valueOf(DEFAULT_CONNECTION_TIMEOUT)));
         } catch (Exception e) {
             LOGGER.warn("Invalid timeout setting: {}", mailetConfig.getInitParameter(TIMEOUT));
             return DEFAULT_CONNECTION_TIMEOUT;
@@ -167,8 +170,8 @@ public class RemoteDeliveryConfiguration {
     private DelaysAndMaxRetry computeDelaysAndMaxRetry(MailetConfig mailetConfig) {
         try {
             int intendedMaxRetries = Integer.valueOf(
-                Optional.fromNullable(mailetConfig.getInitParameter(MAX_RETRIES))
-                    .or(String.valueOf(DEFAULT_MAX_RETRY)));
+                Optional.ofNullable(mailetConfig.getInitParameter(MAX_RETRIES))
+                    .orElse(String.valueOf(DEFAULT_MAX_RETRY)));
             return DelaysAndMaxRetry.from(intendedMaxRetries, mailetConfig.getInitParameter(DELAY_TIME));
         } catch (Exception e) {
             LOGGER.warn("Invalid maxRetries setting: {}", mailetConfig.getInitParameter(MAX_RETRIES));

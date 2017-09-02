@@ -20,7 +20,6 @@
 package org.apache.james.transport.mailets.delivery;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -40,11 +39,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class MailboxAppenderTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MailboxAppenderTest.class);
 
     public static final String USER = "user";
     public static final String FOLDER = "folder";
@@ -70,9 +66,9 @@ public class MailboxAppenderTest {
         integrationResources = new InMemoryIntegrationResources();
         integrationResources.init();
         mailboxManager = new ManagerTestResources(integrationResources).getMailboxManager();
-        testee = new MailboxAppender(mailboxManager, mock(Logger.class));
+        testee = new MailboxAppender(mailboxManager);
 
-        session = mailboxManager.createSystemSession("TEST", LOGGER);
+        session = mailboxManager.createSystemSession("TEST");
     }
 
     @After

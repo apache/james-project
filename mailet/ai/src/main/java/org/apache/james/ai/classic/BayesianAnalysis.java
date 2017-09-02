@@ -37,6 +37,8 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -121,16 +123,17 @@ import org.apache.mailet.base.RFC2822Headers;
  * @since 2.3.0
  */
 @Experimental
-public class BayesianAnalysis extends GenericMailet implements Log {
+public class BayesianAnalysis extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BayesianAnalysis.class);
     /**
      * The JDBCUtil helper class
      */
-    private final JDBCUtil theJDBCUtil = new JDBCUtil(this);
+    private final JDBCUtil theJDBCUtil = new JDBCUtil();
 
     /**
      * The JDBCBayesianAnalyzer class that does all the work.
      */
-    private final JDBCBayesianAnalyzer analyzer = new JDBCBayesianAnalyzer(this);
+    private final JDBCBayesianAnalyzer analyzer = new JDBCBayesianAnalyzer();
 
     DataSource datasource;
 
@@ -229,16 +232,16 @@ public class BayesianAnalysis extends GenericMailet implements Log {
         ignoreLocalSender = Boolean.valueOf(getInitParameter("ignoreLocalSender"));
 
         if (ignoreLocalSender) {
-            log("Will ignore messages coming from local senders");
+            LOGGER.debug("Will ignore messages coming from local senders");
         } else {
-            log("Will analyze messages coming from local senders");
+            LOGGER.debug("Will analyze messages coming from local senders");
         }
 
         String maxSizeParam = getInitParameter("maxSize");
         if (maxSizeParam != null) {
             setMaxSize(Integer.parseInt(maxSizeParam));
         }
-        log("maxSize: " + getMaxSize());
+        LOGGER.debug("maxSize: " + getMaxSize());
 
         String tag = getInitParameter("tagSubject");
         if (tag != null && tag.equals("false")) {
@@ -318,7 +321,7 @@ public class BayesianAnalysis extends GenericMailet implements Log {
             }
             if (probability > 0.1) {
                 final Collection<MailAddress> recipients = mail.getRecipients();
-                log(headerName + ": " + probabilityString + "; From: " + senderString + "; Recipient(s): " + getAddressesString(recipients));
+                LOGGER.debug(headerName + ": " + probabilityString + "; From: " + senderString + "; Recipient(s): " + getAddressesString(recipients));
 
                 // Check if we should tag the subject
                 if (tagSubject) {
@@ -329,7 +332,7 @@ public class BayesianAnalysis extends GenericMailet implements Log {
             saveChanges(message);
 
         } catch (Exception e) {
-            log("Exception: " + e.getMessage(), e);
+            LOGGER.error("Exception: " + e.getMessage(), e);
             throw new MessagingException("Exception thrown", e);
         }
     }
@@ -349,7 +352,7 @@ public class BayesianAnalysis extends GenericMailet implements Log {
                 analyzer.tokenCountsClear();
             }
 
-            log("BayesianAnalysis Corpus loaded");
+            LOGGER.error("BayesianAnalysis Corpus loaded");
 
             touchLastCorpusLoadTime();
 
@@ -389,7 +392,7 @@ public class BayesianAnalysis extends GenericMailet implements Log {
                 message.setSubject(toAppend + " " + subject, "iso-8859-1");
             }
         } catch (MessagingException ex) {
-            log("Failure to append to subject phrase: '" + toAppend + "'", ex);
+            LOGGER.error("Failure to append to subject phrase: '" + toAppend + "'", ex);
         }
     }
 

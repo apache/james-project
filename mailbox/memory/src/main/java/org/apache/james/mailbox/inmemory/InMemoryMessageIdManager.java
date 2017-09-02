@@ -21,7 +21,8 @@ package org.apache.james.mailbox.inmemory;
 
 import java.util.HashSet;
 import java.util.List;
-
+import java.util.Optional;
+import java.util.function.Predicate;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
@@ -42,10 +43,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -102,7 +100,9 @@ public class InMemoryMessageIdManager implements MessageIdManager {
         filterOnMailboxSession(mailboxIds, mailboxSession);
 
         if (!messages.isEmpty()) {
-            ImmutableSet<MailboxId> currentMailboxes = currentMailboxes(messages).toSet();
+            ImmutableSet<MailboxId> currentMailboxes = messages.stream()
+                .map(MessageResult::getMailboxId)
+                .collect(Guavate.toImmutableSet());
 
             HashSet<MailboxId> targetMailboxes = Sets.newHashSet(mailboxIds);
             List<MailboxId> mailboxesToRemove = ImmutableList.copyOf(Sets.difference(currentMailboxes, targetMailboxes));
@@ -123,17 +123,10 @@ public class InMemoryMessageIdManager implements MessageIdManager {
     }
 
     private List<MailboxId> getUsersMailboxIds(final MailboxSession mailboxSession) throws MailboxException {
-        return FluentIterable.from(mailboxManager.search(userMailboxes(mailboxSession), mailboxSession))
-            .transform(getMailboxIdFromMetadata()).toList();
-    }
-
-    private Function<MailboxMetaData, MailboxId> getMailboxIdFromMetadata() {
-        return new Function<MailboxMetaData, MailboxId>() {
-            @Override
-            public MailboxId apply(MailboxMetaData input) {
-                return input.getId();
-            }
-        };
+        return mailboxManager.search(userMailboxes(mailboxSession), mailboxSession)
+            .stream()
+            .map(MailboxMetaData::getId)
+            .collect(Guavate.toImmutableList());
     }
 
     private MailboxQuery userMailboxes(MailboxSession mailboxSession) {
@@ -155,9 +148,8 @@ public class InMemoryMessageIdManager implements MessageIdManager {
     }
 
     private void filterOnMailboxSession(List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxNotFoundException {
-        boolean isForbidden = FluentIterable.from(mailboxIds)
-            .firstMatch(findMailboxBelongsToAnotherSession(mailboxSession))
-            .isPresent();
+        boolean isForbidden = mailboxIds.stream()
+            .anyMatch(findMailboxBelongsToAnotherSession(mailboxSession));
 
         if (isForbidden) {
             throw new MailboxNotFoundException("Mailbox does not belong to session");
@@ -165,42 +157,25 @@ public class InMemoryMessageIdManager implements MessageIdManager {
     }
 
     private Predicate<MailboxId> findMailboxBelongsToAnotherSession(final MailboxSession mailboxSession) {
-        return new Predicate<MailboxId>() {
-            @Override
-            public boolean apply(MailboxId input) {
-                try {
-                    MailboxPath currentMailbox = mailboxManager.getMailbox(input, mailboxSession).getMailboxPath();
-                    return !mailboxSession.getUser().isSameUser(currentMailbox.getUser());
-                } catch (MailboxException e) {
-                    return true;
-                }
+        return input -> {
+            try {
+                MailboxPath currentMailbox = mailboxManager.getMailbox(input, mailboxSession).getMailboxPath();
+                return !mailboxSession.getUser().isSameUser(currentMailbox.getUser());
+            } catch (MailboxException e) {
+                return true;
             }
         };
-    }
-
-    private FluentIterable<MailboxId> currentMailboxes(List<MessageResult> messages) {
-        return FluentIterable.from(messages).transform(new Function<MessageResult, MailboxId>() {
-            @Override
-            public MailboxId apply(MessageResult message) {
-                return message.getMailboxId();
-            }
-        });
     }
 
     private Optional<MessageResult> findMessageWithId(MailboxId mailboxId, MessageId messageId, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
-        return FluentIterable.from(retrieveAllMessages(mailboxId, fetchGroup, mailboxSession))
+        return retrieveAllMessages(mailboxId, fetchGroup, mailboxSession)
+            .stream()
             .filter(filterByMessageId(messageId))
-            .first();
+            .findFirst();
     }
 
     private Predicate<MessageResult> filterByMessageId(final MessageId messageId) {
-        return new Predicate<MessageResult>() {
-
-            @Override
-            public boolean apply(MessageResult messageResult) {
-                return messageResult.getMessageId().equals(messageId);
-            }
-        };
+        return messageResult -> messageResult.getMessageId().equals(messageId);
     }
 
     private ImmutableList<MessageResult> retrieveAllMessages(MailboxId mailboxId, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {

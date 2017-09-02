@@ -20,6 +20,7 @@ package org.apache.james.protocols.api.handler;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 /**
@@ -41,14 +42,11 @@ public abstract class AbstractProtocolHandlerChain implements ProtocolHandlerCha
      */
     @SuppressWarnings("unchecked")
     public <T> LinkedList<T> getHandlers(Class<T> type) {
-        LinkedList<T> result = new LinkedList<T>();
         List<ProtocolHandler> handlers = getHandlers();
-        for (ProtocolHandler handler : handlers) {
-            if (type.isInstance(handler)) {
-                result.add((T) handler);
-            }
-        }
-        return result;
+        return handlers.stream()
+            .filter(type::isInstance)
+            .map(handler -> (T) handler)
+            .collect(Collectors.toCollection(LinkedList::new));
     }
     
     /**

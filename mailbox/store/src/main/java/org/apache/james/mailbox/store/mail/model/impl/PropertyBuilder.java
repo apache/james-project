@@ -39,7 +39,6 @@ import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_CONTE
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_MEDIA_TYPE_NAME;
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_MIME_TYPE_SPACE;
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_SUB_TYPE_NAME;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -47,10 +46,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.function.Predicate;
 
 import org.apache.james.mailbox.store.mail.model.Property;
 
-import com.google.common.base.Predicate;
+import com.github.steveash.guavate.Guavate;
 
 /**
  * Builds properties
@@ -62,14 +62,9 @@ public class PropertyBuilder {
     public static final String HAS_ATTACHMENT = "HAS_ATTACHMENT";
 
     public static Predicate<Property> isHasAttachmentProperty() {
-        return new Predicate<Property>() {
-            @Override
-            public boolean apply(Property input) {
-                return input.getNamespace().equals(PropertyBuilder.JAMES_INTERNALS)
-                    && input.getLocalName().equals(PropertyBuilder.HAS_ATTACHMENT)
-                    && input.getValue().equals("true");
-            }
-        };
+        return property -> property.getNamespace().equals(PropertyBuilder.JAMES_INTERNALS)
+            && property.getLocalName().equals(PropertyBuilder.HAS_ATTACHMENT)
+            && property.getValue().equals("true");
     }
 
     private Long textualLineCount;
@@ -77,7 +72,7 @@ public class PropertyBuilder {
 
     public PropertyBuilder(List<Property> props) {
         textualLineCount = null;
-        properties = new ArrayList<SimpleProperty>(props.size());
+        properties = new ArrayList<>(props.size());
         for (Property property:props) {
             properties.add(new SimpleProperty(property));
         }
@@ -85,7 +80,7 @@ public class PropertyBuilder {
     
     public PropertyBuilder() {
         textualLineCount = null;
-        properties = new ArrayList<SimpleProperty>(INITIAL_CAPACITY);
+        properties = new ArrayList<>(INITIAL_CAPACITY);
     }
 
     /**
@@ -115,14 +110,11 @@ public class PropertyBuilder {
      * or null when no property has the given name and namespace
      */
     public String getFirstValue(String namespace, String localName) {
-        String result = null;
-        for (SimpleProperty property: properties) {
-            if (property.isNamed(namespace, localName)) {
-                result = property.getValue();
-                break;
-            }
-        }
-        return result;
+        return properties.stream()
+            .filter(property -> property.isNamed(namespace, localName))
+            .findFirst()
+            .map(SimpleProperty::getValue)
+            .orElse(null);
     }
     
     /**
@@ -132,13 +124,10 @@ public class PropertyBuilder {
      * @return not null
      */
     public List<String> getValues(String namespace, String localName) {
-        List<String> results = new ArrayList<String>();
-        for (SimpleProperty property: properties) {
-            if (property.isNamed(namespace, localName)) {
-                results.add(property.getValue());
-            }
-        }
-        return results;
+        return properties.stream()
+            .filter(property -> property.isNamed(namespace, localName))
+            .map(SimpleProperty::getValue)
+            .collect(Guavate.toImmutableList());
     }
     
     /**
@@ -188,7 +177,7 @@ public class PropertyBuilder {
      * @return values indexed by local name
      */
     public SortedMap<String,String> getProperties(String namespace) {
-        final SortedMap<String, String> parameters = new TreeMap<String, String>();
+        final SortedMap<String, String> parameters = new TreeMap<>();
         for (SimpleProperty property : properties) {
             if (property.isInSpace(namespace)) {
                 parameters.put(property.getLocalName(), property.getValue());
@@ -476,7 +465,7 @@ public class PropertyBuilder {
      * @return not null
      */
     public List<Property> toProperties() {
-        return new ArrayList<Property>(properties);
+        return new ArrayList<>(properties);
     }
 
     /**

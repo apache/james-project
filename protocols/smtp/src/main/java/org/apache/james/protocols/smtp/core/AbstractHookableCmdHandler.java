@@ -19,6 +19,8 @@
 
 package org.apache.james.protocols.smtp.core;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -37,12 +39,18 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookResultHook;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
+import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Throwables;
 
 /**
  * Abstract class which Handle hook-aware CommanHandler.
  * 
  */
 public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.protocols.smtp.hook.Hook> implements CommandHandler<SMTPSession>, ExtensibleHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractHookableCmdHandler.class);
 
     private final MetricFactory metricFactory;
     private List<Hook> hooks;
@@ -65,7 +73,10 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
         String parameters = request.getArgument();
         Response response = doFilterChecks(session, command, parameters);
 
-        try {
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.ACTION, command)
+                     .build()) {
             if (response == null) {
 
                 response = processHooks(session, command, parameters);
@@ -77,6 +88,8 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
             } else {
                 return response;
             }
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
         } finally {
             timeMetric.stopAndPublish();
         }
@@ -102,7 +115,7 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
             int i = 0;
             while (i < count) {
                 Hook rawHook = hooks.get(i);
-                session.getLogger().debug("executing hook " + rawHook.getClass().getName());
+                LOGGER.debug("executing hook " + rawHook.getClass().getName());
                 long start = System.currentTimeMillis();
 
                 HookResult hRes = callHook(rawHook, session, parameters);
@@ -110,7 +123,7 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
 
                 if (rHooks != null) {
                     for (HookResultHook rHook : rHooks) {
-                        session.getLogger().debug("executing hook " + rHook);
+                        LOGGER.debug("executing hook " + rHook);
                         hRes = rHook.onHookResult(session, hRes, executionTime, rawHook);
                     }
                 }
@@ -260,7 +273,7 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
      * @see org.apache.james.protocols.api.handler.ExtensibleHandler#getMarkerInterfaces()
      */
     public List<Class<?>> getMarkerInterfaces() {
-        List<Class<?>> classes = new ArrayList<Class<?>>(2);
+        List<Class<?>> classes = new ArrayList<>(2);
         classes.add(getHookInterface());
         classes.add(HookResultHook.class);
         return classes;

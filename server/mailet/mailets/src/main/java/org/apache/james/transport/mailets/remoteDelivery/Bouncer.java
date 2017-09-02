@@ -32,23 +32,23 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Bouncer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Bouncer.class);
 
     public static final String DELIVERY_ERROR = "delivery-error";
     private final RemoteDeliveryConfiguration configuration;
     private final MailetContext mailetContext;
-    private final Logger logger;
 
-    public Bouncer(RemoteDeliveryConfiguration configuration, MailetContext mailetContext, Logger logger) {
+    public Bouncer(RemoteDeliveryConfiguration configuration, MailetContext mailetContext) {
         this.configuration = configuration;
         this.mailetContext = mailetContext;
-        this.logger = logger;
     }
 
     public void bounce(Mail mail, Exception ex) {
         if (mail.getSender() == null) {
-            logger.debug("Null Sender: no bounce will be generated for {}", mail.getName());
+            LOGGER.debug("Null Sender: no bounce will be generated for {}", mail.getName());
         } else {
             if (configuration.getBounceProcessor() != null) {
                 mail.setAttribute(DELIVERY_ERROR, getErrorMsg(ex));
@@ -56,7 +56,7 @@ public class Bouncer {
                 try {
                     mailetContext.sendMail(mail);
                 } catch (MessagingException e) {
-                    logger.warn("Exception re-inserting failed mail: ", e);
+                    LOGGER.warn("Exception re-inserting failed mail: ", e);
                 }
             } else {
                 bounceWithMailetContext(mail, ex);
@@ -66,13 +66,13 @@ public class Bouncer {
 
 
     private void bounceWithMailetContext(Mail mail, Exception ex) {
-        logger.debug("Sending failure message " + mail.getName());
+        LOGGER.debug("Sending failure message " + mail.getName());
         try {
             mailetContext.bounce(mail, explanationText(mail, ex));
         } catch (MessagingException me) {
-            logger.warn("Encountered unexpected messaging exception while bouncing message: {}", me.getMessage());
+            LOGGER.warn("Encountered unexpected messaging exception while bouncing message: {}", me.getMessage());
         } catch (Exception e) {
-            logger.warn("Encountered unexpected exception while bouncing message: {}", e.getMessage());
+            LOGGER.warn("Encountered unexpected exception while bouncing message: {}", e.getMessage());
         }
     }
 

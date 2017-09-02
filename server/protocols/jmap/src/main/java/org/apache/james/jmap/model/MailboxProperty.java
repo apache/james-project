@@ -21,6 +21,7 @@ package org.apache.james.jmap.model;
 import java.util.Arrays;
 import java.util.Optional;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 public enum MailboxProperty implements Property {
@@ -56,5 +57,12 @@ public enum MailboxProperty implements Property {
         return Arrays.stream(values())
             .filter(element -> element.fieldName.equals(value))
             .findAny();
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("fieldName", fieldName)
+            .toString();
     }
 }

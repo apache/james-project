@@ -43,7 +43,7 @@ import org.apache.mailet.MailAddress;
  */
 public class MailPriorityHandler implements JamesMessageHook, ProtocolHandler {
 
-    private final Map<String, Integer> prioMap = new HashMap<String, Integer>();
+    private final Map<String, Integer> prioMap = new HashMap<>();
 
     /**
      * @see
@@ -93,7 +93,7 @@ public class MailPriorityHandler implements JamesMessageHook, ProtocolHandler {
 
     @Override
     public void destroy() {
-        // nothing todo
+        // nothing to do
     }
 
 }

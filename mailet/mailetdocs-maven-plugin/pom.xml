@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>apache-mailet</artifactId>
-        <version>3.0.0-RC2-SNAPSHOT</version>
+        <version>3.1.0-SNAPSHOT</version>
         <relativePath>../</relativePath>
     </parent>
 
@@ -31,21 +31,40 @@
     <packaging>maven-plugin</packaging>
 
     <name>Apache James :: Mailetdocs Maven Plugin</name>
-    <description>
-        This plugin generates documentation for Mailets by collating
-        information available from implementation source.
-    </description>
+    <description>This plugin generates documentation for Mailets by collating
+        information available from implementation source.</description>
     <url>http://james.apache.org/mailet/maven-mailetdocs-plugin/</url>
     <inceptionYear>2008</inceptionYear>
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.maven.artifact</groupId>
-            <artifactId>maven-artifact</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-mailet-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.thoughtworks.qdox</groupId>
+            <artifactId>qdox</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven.artifact</groupId>
+            <artifactId>maven-artifact</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
@@ -54,32 +73,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.maven.reporting</groupId>
-            <artifactId>maven-reporting-impl</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.maven.reporting</groupId>
             <artifactId>maven-reporting-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>apache-mailet-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.thoughtworks.qdox</groupId>
-            <artifactId>qdox</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
+            <groupId>org.apache.maven.reporting</groupId>
+            <artifactId>maven-reporting-impl</artifactId>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>

@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
+
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -36,9 +38,12 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StatusProcessor.class);
 
     public StatusProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
@@ -56,12 +61,11 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
     protected void doProcess(StatusRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
         final MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
         final StatusDataItems statusDataItems = request.getStatusDataItems();
-        final Logger logger = session.getLog();
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
 
         try {
-            if (logger != null && logger.isDebugEnabled()) {
-                logger.debug("Status called on mailbox named " + mailboxPath);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Status called on mailbox named " + mailboxPath);
             }
 
             final MailboxManager mailboxManager = getMailboxManager();
@@ -91,9 +95,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
             okComplete(command, tag, responder);
 
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Status failed for mailbox " + mailboxPath, e);
-            }
+            LOGGER.error("Status failed for mailbox " + mailboxPath, e);
             no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
         }
     }
@@ -158,5 +160,14 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
             messages = null;
         }
         return messages;
+    }
+
+    @Override
+    protected Closeable addContextToMDC(StatusRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "STATUS")
+            .addContext("mailbox", message.getMailboxName())
+            .addContext("parameters", message.getStatusDataItems())
+            .build();
     }
 }

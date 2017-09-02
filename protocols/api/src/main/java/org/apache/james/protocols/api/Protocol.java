@@ -25,6 +25,7 @@ import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
  * Define a protocol
  */
 public interface Protocol {
+    String getName();
 
     /**
      * Return the {@link ProtocolHandlerChain} which is defined for the {@link Protocol}

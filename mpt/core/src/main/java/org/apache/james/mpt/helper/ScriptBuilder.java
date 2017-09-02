@@ -28,6 +28,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Locale;
 
 import org.apache.commons.lang.StringUtils;
@@ -1459,13 +1460,8 @@ public class ScriptBuilder {
         }
 
         private boolean ignoreLine(String line) {
-            boolean result = false;
-            for (String entry : IGNORE_LINES_CONTAINING) {
-                if (line.indexOf(entry) > 0) {
-                    result = true;
-                    break;
-                }
-            }
+            boolean result = Arrays.stream(IGNORE_LINES_CONTAINING)
+                .anyMatch(entry -> line.indexOf(entry) > 0);
             for (int i = 0; i < IGNORE_LINES_STARTING_WITH.length && !result; i++) {
                 if (line.startsWith(IGNORE_LINES_STARTING_WITH[i])) {
                     result = true;

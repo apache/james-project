@@ -23,12 +23,17 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.james.smtpserver.TLDLookup;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class URIScanner {
+    private static final Logger LOGGER = LoggerFactory.getLogger(URIScanner.class);
 
     // These regular expressions "inspired" by Spamassassin
     static private final String reserved = ";/?:@&=+$,[]\\#|";
@@ -186,18 +191,12 @@ public class URIScanner {
      * @return newDomains the domains which were extracted
      */
     static public HashSet<String> scanContentForDomains(HashSet<String> domains, CharSequence content) {
-        HashSet<String> newDomains = new HashSet<String>();
         HashSet<String> hosts = scanContentForHosts(content);
-        for (String host : hosts) {
-            final String domain = domainFromHost(host);
-
-            if (null != domain) {
-                if (!domains.contains(domain)) {
-                    newDomains.add(domain);
-                }
-            }
-        }
-        return newDomains;
+        return hosts.stream()
+            .map(URIScanner::domainFromHost)
+            .filter(Objects::nonNull)
+            .filter(domain -> !domains.contains(domain))
+            .collect(Collectors.toCollection(HashSet::new));
     }
 
     /**
@@ -209,7 +208,7 @@ public class URIScanner {
      * @return a HashSet containing host strings
      */
     static protected HashSet<String> scanContentForHosts(CharSequence content) {
-        HashSet<String> set = new HashSet<String>();
+        HashSet<String> set = new HashSet<>();
 
         // look for URIs
         Matcher mat = uriPattern.matcher(content);
@@ -252,9 +251,9 @@ public class URIScanner {
         mat = emailAddrPattern.matcher(content);
         while (mat.find()) {
             String found = mat.group();
-            debugOut("******** mailfound=\"" + found + "\"");
+            LOGGER.debug("******** mailfound=\"" + found + "\"");
             found = "mailto://" + found;
-            debugOut("*******6 mailfoundfound=\"" + found + "\" after cleanup 6");
+            LOGGER.debug("*******6 mailfoundfound=\"" + found + "\" after cleanup 6");
 
             String host = hostFromUriStr(found);
             if (null != host) {
@@ -279,14 +278,14 @@ public class URIScanner {
      *         could be found
      */
     static protected String hostFromUriStr(String uriStr) {
-        debugOut("hostFromUriStr(\"" + uriStr + "\")");
+        LOGGER.debug("hostFromUriStr(\"" + uriStr + "\")");
         String host = null;
         URI uri;
         try {
             uri = new URI(uriStr);
             host = uri.getHost();
         } catch (URISyntaxException e) {
-            debugOut(e.getMessage());
+            LOGGER.error("Caught exception", e);
         }
         return host;
     }
@@ -305,7 +304,7 @@ public class URIScanner {
      * @return the registrar domain portion of the supplied host string
      */
     static protected String domainFromHost(String host) {
-        debugOut("domainFromHost(\"" + host + "\")");
+        LOGGER.debug("domainFromHost(\"" + host + "\")");
         String domain = null;
         Matcher mat;
 
@@ -314,7 +313,7 @@ public class URIScanner {
         if (mat.find()) {
             // reverse the octets now
             domain = mat.group(5) + "." + mat.group(4) + "." + mat.group(3) + "." + mat.group(2);
-            debugOut("domain=\"" + domain + "\"");
+            LOGGER.debug("domain=\"" + domain + "\"");
             return domain;
         }
 
@@ -324,7 +323,7 @@ public class URIScanner {
             String tld = mat.group(2);
             if (TLDLookup.isThreePartTLD(tld)) {
                 domain = mat.group(1);
-                debugOut("domain=\"" + domain + ", tld=\"" + tld + "\"");
+                LOGGER.debug("domain=\"" + domain + ", tld=\"" + tld + "\"");
                 return domain;
             }
         }
@@ -335,7 +334,7 @@ public class URIScanner {
             String tld = mat.group(2);
             if (TLDLookup.isTwoPartTLD(tld)) {
                 domain = mat.group(1);
-                debugOut("domain=\"" + domain + ", tld=\"" + tld + "\"");
+                LOGGER.debug("domain=\"" + domain + ", tld=\"" + tld + "\"");
                 return domain;
             }
         }
@@ -345,21 +344,10 @@ public class URIScanner {
         if (mat.find()) {
             String tld = mat.group(2);
             domain = mat.group(1);
-            debugOut("domain=\"" + domain + ", tld=\"" + tld + "\"");
+            LOGGER.debug("domain=\"" + domain + ", tld=\"" + tld + "\"");
             return domain;
         }
         return domain;
-    }
-
-    /**
-     * Debugging output
-     */
-    private static void debugOut(String msg) {
-        /* controls testing/debug output */
-        boolean testing = false;
-        if (testing) {
-            System.out.println(msg);
-        }
     }
 
     /**

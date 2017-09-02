@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -38,10 +39,14 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
 public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotationRequest> implements CapabilityImplementingProcessor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SetAnnotationProcessor.class);
 
     public SetAnnotationProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
@@ -64,14 +69,23 @@ public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotati
 
             okComplete(command, tag, responder);
         } catch (MailboxNotFoundException e) {
-            session.getLog().info(command.getName() + " failed for mailbox " + mailboxName, e);
+            LOGGER.info(command.getName() + " failed for mailbox " + mailboxName, e);
             no(command, tag, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
         } catch (AnnotationException e) {
-            session.getLog().info(command.getName() + " failed for mailbox " + mailboxName, e);
+            LOGGER.info(command.getName() + " failed for mailbox " + mailboxName, e);
             no(command, tag, responder, new HumanReadableText(HumanReadableText.MAILBOX_ANNOTATION_KEY, e.getMessage()));
         } catch (MailboxException e) {
-            session.getLog().info(command.getName() + " failed for mailbox " + mailboxName, e);
+            LOGGER.error(command.getName() + " failed for mailbox " + mailboxName, e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
+    }
+
+    @Override
+    protected Closeable addContextToMDC(SetAnnotationRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "SET_ANNOTATION")
+            .addContext("mailbox", message.getMailboxName())
+            .addContext("annotations", message.getMailboxAnnotations())
+            .build();
     }
 }

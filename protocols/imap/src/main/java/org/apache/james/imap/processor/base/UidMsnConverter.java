@@ -21,12 +21,13 @@ package org.apache.james.imap.processor.base;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+import java.util.TreeSet;
 
 import org.apache.james.mailbox.MessageUid;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 
 public class UidMsnConverter {
@@ -35,15 +36,22 @@ public class UidMsnConverter {
 
     @VisibleForTesting final ArrayList<MessageUid> uids;
 
-    public UidMsnConverter(Iterator<MessageUid> iterator) {
-        uids = Lists.newArrayList(iterator);
-        Collections.sort(uids);
+    public UidMsnConverter() {
+        this.uids = Lists.newArrayList();
+    }
+
+    public synchronized void addAll(List<MessageUid> addedUids) {
+        TreeSet<MessageUid> tmp = new TreeSet<>();
+        tmp.addAll(uids);
+        tmp.addAll(addedUids);
+        uids.clear();
+        uids.addAll(tmp);
     }
 
     public synchronized Optional<Integer> getMsn(MessageUid uid) {
         int position = Collections.binarySearch(uids, uid);
         if (position < 0) {
-            return Optional.absent();
+            return Optional.empty();
         }
         return Optional.of(position + 1);
     }
@@ -52,12 +60,12 @@ public class UidMsnConverter {
         if (msn <= uids.size() && msn > 0) {
             return Optional.of(uids.get(msn - 1));
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     public synchronized Optional<MessageUid> getLastUid() {
         if (uids.isEmpty()) {
-            return Optional.absent();
+            return Optional.empty();
         }
         return getUid(getLastMsn());
     }

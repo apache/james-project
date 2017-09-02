@@ -18,13 +18,13 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail;
 
+import java.util.Optional;
+
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-
-import com.google.common.base.Optional;
 
 /**
  * Take care of provide uids for a given {@link Mailbox}. Be aware that implementations

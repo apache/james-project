@@ -18,43 +18,43 @@
     under the License.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>apache-james-mpt</artifactId>
         <groupId>org.apache.james</groupId>
-        <version>3.0.0-RC2-SNAPSHOT</version>
+        <artifactId>apache-james-mpt</artifactId>
+        <version>3.1.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
-
-    <name>Apache James MPT ManageSieve</name>
 
     <artifactId>apache-james-mpt-managesieve</artifactId>
     <packaging>pom</packaging>
 
+    <name>Apache James MPT ManageSieve</name>
+
     <modules>
+        <module>cassandra</module>
         <module>core</module>
         <module>file</module>
-        <module>cassandra</module>
     </modules>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.apache.james</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>apache-james-mpt-managesieve-cassandra</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>org.apache.james</groupId>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mpt-managesieve-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>apache-james-mpt-managesieve-file</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james</groupId>
-                <artifactId>apache-james-mpt-managesieve-core</artifactId>
-                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

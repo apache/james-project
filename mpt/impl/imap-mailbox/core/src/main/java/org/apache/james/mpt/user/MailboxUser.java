@@ -33,7 +33,7 @@ class MailboxUser {
 
     public MailboxUser(String userName) {
         this.userName = userName;
-        this.subscriptions = new HashSet<String>();
+        this.subscriptions = new HashSet<>();
     }
 
     public String getUserName() {

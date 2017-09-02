@@ -32,19 +32,30 @@ import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.plugin.StatisticsBrokerPlugin;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.james.filesystem.api.FileSystem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 
 public class EmbeddedActiveMQ {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(EmbeddedActiveMQ.class);
+    private static final String KAHADB_STORE_LOCATION = "file://var/store/activemq/brokers/KahaDB";
+    private static final String BLOB_TRANSFER_LOCATION = "file://var/store/activemq/blob-transfer";
+    private static final String BROCKERS_LOCATION = "file://var/store/activemq/brokers";
+    private static final String BROKER_ID = "broker";
+    private static final String BROKER_NAME = "james";
+    private static final String BROCKER_URI = "tcp://localhost:0";
 
     private final ActiveMQConnectionFactory activeMQConnectionFactory;
     private final PersistenceAdapter persistenceAdapter;
     private BrokerService brokerService;
 
     @Inject
-        private EmbeddedActiveMQ(FileSystem fileSystem, PersistenceAdapter persistenceAdapter) {
+    private EmbeddedActiveMQ(FileSystem fileSystem, PersistenceAdapter persistenceAdapter) {
         this.persistenceAdapter = persistenceAdapter;
         try {
+            persistenceAdapter.setDirectory(fileSystem.getFile(KAHADB_STORE_LOCATION));
             launchEmbeddedBroker(fileSystem);
         } catch (Exception e) {
             throw Throwables.propagate(e);
@@ -77,21 +88,21 @@ public class EmbeddedActiveMQ {
 
     private BlobTransferPolicy createBlobTransferPolicy(FileSystem fileSystem) {
         FileSystemBlobTransferPolicy blobTransferPolicy = new FileSystemBlobTransferPolicy();
-        blobTransferPolicy.setDefaultUploadUrl("file://var/store/activemq/blob-transfer");
+        blobTransferPolicy.setDefaultUploadUrl(BLOB_TRANSFER_LOCATION);
         blobTransferPolicy.setFileSystem(fileSystem);
         return blobTransferPolicy;
     }
 
     private void launchEmbeddedBroker(FileSystem fileSystem) throws Exception {
         brokerService = new BrokerService();
-        brokerService.setBrokerName("james");
+        brokerService.setBrokerName(BROKER_NAME);
         brokerService.setUseJmx(false);
         brokerService.setPersistent(true);
-        brokerService.setDataDirectoryFile(fileSystem.getFile("file://var/store/activemq/brokers"));
+        brokerService.setDataDirectoryFile(fileSystem.getFile(BROCKERS_LOCATION));
         brokerService.setUseShutdownHook(false);
         brokerService.setSchedulerSupport(false);
-        brokerService.setBrokerId("broker");
-        String[] uris = {"tcp://localhost:0"};
+        brokerService.setBrokerId(BROKER_ID);
+        String[] uris = {BROCKER_URI};
         brokerService.setTransportConnectorURIs(uris);
         ManagementContext managementContext = new ManagementContext();
         managementContext.setCreateConnector(false);
@@ -99,9 +110,9 @@ public class EmbeddedActiveMQ {
         brokerService.setPersistenceAdapter(persistenceAdapter);
         BrokerPlugin[] brokerPlugins = {new StatisticsBrokerPlugin()};
         brokerService.setPlugins(brokerPlugins);
-        String[] transportConnectorsURIs = {"tcp://localhost:0"};
+        String[] transportConnectorsURIs = {BROCKER_URI};
         brokerService.setTransportConnectorURIs(transportConnectorsURIs);
         brokerService.start();
-        System.out.println("Started : " + brokerService.isStarted());
+        LOGGER.info("Started embedded activeMq");
     }
 }

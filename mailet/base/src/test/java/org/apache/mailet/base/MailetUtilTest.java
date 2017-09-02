@@ -20,8 +20,6 @@
 package org.apache.mailet.base;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.guava.api.Assertions.assertThat;
-
 import javax.mail.MessagingException;
 
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -89,7 +87,7 @@ public class MailetUtilTest {
     public void getInitParameterShouldReturnAbsentWhenNull() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .build();
-        assertThat(MailetUtil.getInitParameter(mailetConfig, A_PARAMETER)).isAbsent();
+        assertThat(MailetUtil.getInitParameter(mailetConfig, A_PARAMETER)).isEmpty();
     }
 
     @Test
@@ -177,6 +175,6 @@ public class MailetUtilTest {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .setProperty(A_PARAMETER, value)
             .build();
-        return MailetUtil.getInitParameter(mailetConfig, A_PARAMETER).or(defaultValue);
+        return MailetUtil.getInitParameter(mailetConfig, A_PARAMETER).orElse(defaultValue);
     }
 }

@@ -29,7 +29,6 @@ import org.apache.james.user.lib.AbstractUsersRepository;
 import org.apache.james.user.lib.AbstractUsersRepositoryTest;
 import org.junit.After;
 import org.junit.Before;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
 import com.google.common.base.Throwables;
@@ -47,7 +46,6 @@ public class JcrUserRepositoryTest extends AbstractUsersRepositoryTest {
         config.addProperty("username", "admin");
         config.addProperty("password", "test");
         repos.configure(config);
-        repos.setLog(LoggerFactory.getLogger("MockLog"));
         return repos;
     }
 

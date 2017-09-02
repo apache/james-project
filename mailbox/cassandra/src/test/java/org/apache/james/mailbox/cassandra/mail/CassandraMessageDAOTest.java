@@ -16,37 +16,43 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.ByteArrayInputStream;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
+
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.cassandra.CassandraId;
-import org.apache.james.mailbox.cassandra.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.ids.CassandraId;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.mail.utils.Limit;
+import org.apache.james.mailbox.cassandra.modules.CassandraBlobModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
-import org.apache.james.mailbox.model.Attachment;
-import org.apache.james.mailbox.model.AttachmentId;
-import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
-import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
-
-import com.github.steveash.guavate.Guavate;
-import com.google.common.collect.ImmutableList;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
+import com.google.common.primitives.Bytes;
 
 public class CassandraMessageDAOTest {
     private static final int BODY_START = 16;
@@ -57,28 +63,23 @@ public class CassandraMessageDAOTest {
     private CassandraCluster cassandra;
 
     private CassandraMessageDAO testee;
+    private CassandraBlobsDAO blobsDAO;
     private CassandraMessageId.Factory messageIdFactory;
 
-    private SimpleMailboxMessage messageWith1Attachment;
+    private SimpleMailboxMessage message;
     private CassandraMessageId messageId;
-    private Attachment attachment;
     private ComposedMessageId composedMessageId;
     private List<ComposedMessageIdWithMetaData> messageIds;
 
     @Before
     public void setUp() {
-        cassandra = CassandraCluster.create(new CassandraMessageModule());
+        cassandra = CassandraCluster.create(new CassandraModuleComposite(new CassandraMessageModule(), new CassandraBlobModule()));
         cassandra.ensureAllTables();
 
         messageIdFactory = new CassandraMessageId.Factory();
         messageId = messageIdFactory.generate();
-        testee = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider());
-
-        attachment = Attachment.builder()
-                .attachmentId(AttachmentId.from("123"))
-                .bytes("attachment".getBytes())
-                .type("content")
-                .build();
+        blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
+        testee = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), blobsDAO);
 
         composedMessageId = new ComposedMessageId(MAILBOX_ID, messageId, messageUid);
 
@@ -92,53 +93,99 @@ public class CassandraMessageDAOTest {
     @After
     public void tearDown() {
         cassandra.clearAllTables();
+        cassandra.close();
     }
 
     @Test
-    public void saveShouldStoreMessageWithAttachmentAndCid() throws Exception {
-        messageWith1Attachment = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder(),
-                ImmutableList.of(MessageAttachment.builder()
-                        .attachment(attachment)
-                        .cid(Cid.from("<cid>"))
-                        .isInline(true)
-                        .build()));
+    public void saveShouldSaveNullValueForTextualLineCountAsZero() throws Exception {
+        message = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder());
 
-        testee.save(messageWith1Attachment).join();
+        testee.save(message).join();
 
-        List<Optional<CassandraMessageDAO.MessageAttachmentRepresentation>> attachmentRepresentation = testee.retrieveMessages(messageIds, MessageMapper.FetchType.Body, Optional.empty())
-                .get()
-                .map(pair -> pair.getRight())
-                .map(streamAttachemnt -> streamAttachemnt.findFirst())
-                .collect(Guavate.toImmutableList());
+        MessageWithoutAttachment attachmentRepresentation =
+            toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Metadata, Limit.unlimited()));
 
-        Cid expectedCid = Cid.from("cid");
-
-        assertThat(attachmentRepresentation).hasSize(1);
-        assertThat(attachmentRepresentation.get(0).get().getCid().get()).isEqualTo(expectedCid);
+        assertThat(attachmentRepresentation.getPropertyBuilder().getTextualLineCount())
+            .isEqualTo(0L);
     }
 
     @Test
-    public void saveShouldStoreMessageWithAttachmentButNoCid() throws Exception {
-        messageWith1Attachment = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder(),
-                ImmutableList.of(MessageAttachment.builder()
-                        .attachment(attachment)
-                        .isInline(true)
-                        .build()));
+    public void saveShouldSaveTextualLineCount() throws Exception {
+        long textualLineCount = 10L;
+        PropertyBuilder propertyBuilder = new PropertyBuilder();
+        propertyBuilder.setTextualLineCount(textualLineCount);
+        message = createMessage(messageId, CONTENT, BODY_START, propertyBuilder);
 
-        testee.save(messageWith1Attachment).join();
+        testee.save(message).join();
 
-        List<Optional<CassandraMessageDAO.MessageAttachmentRepresentation>> attachmentRepresentation = testee.retrieveMessages(messageIds, MessageMapper.FetchType.Body, Optional.empty())
-                .get()
-                .map(pair -> pair.getRight())
-                .map(streamAttachemnt -> streamAttachemnt.findFirst())
-                .collect(Guavate.toImmutableList());
+        MessageWithoutAttachment attachmentRepresentation =
+            toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Metadata, Limit.unlimited()));
 
-        assertThat(attachmentRepresentation).hasSize(1);
-        assertThat(attachmentRepresentation.get(0).get().getCid().isPresent()).isFalse();
+        assertThat(attachmentRepresentation.getPropertyBuilder().getTextualLineCount()).isEqualTo(textualLineCount);
     }
 
-    private SimpleMailboxMessage createMessage(MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder, List<MessageAttachment> attachments) {
-        return new SimpleMailboxMessage(messageId, new Date(), content.length(), bodyStart, new SharedByteArrayInputStream(content.getBytes()), new Flags(), propertyBuilder, MAILBOX_ID, attachments);
+    @Test
+    public void saveShouldStoreMessageWithFullContent() throws Exception {
+        message = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder());
+
+        testee.save(message).join();
+
+        MessageWithoutAttachment attachmentRepresentation =
+            toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Full, Limit.unlimited()));
+
+        assertThat(IOUtils.toString(attachmentRepresentation.getContent(), Charsets.UTF_8))
+            .isEqualTo(CONTENT);
+    }
+
+    @Test
+    public void saveShouldStoreMessageWithBodyContent() throws Exception {
+        message = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder());
+
+        testee.save(message).join();
+
+        MessageWithoutAttachment attachmentRepresentation =
+            toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Body, Limit.unlimited()));
+
+        byte[] expected = Bytes.concat(
+            new byte[BODY_START],
+            CONTENT.substring(BODY_START).getBytes(Charsets.UTF_8));
+        assertThat(IOUtils.toString(attachmentRepresentation.getContent(), Charsets.UTF_8))
+            .isEqualTo(IOUtils.toString(new ByteArrayInputStream(expected), Charsets.UTF_8));
+    }
+
+    @Test
+    public void saveShouldStoreMessageWithHeaderContent() throws Exception {
+        message = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder());
+
+        testee.save(message).join();
+
+        MessageWithoutAttachment attachmentRepresentation =
+            toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Headers, Limit.unlimited()));
+
+        assertThat(IOUtils.toString(attachmentRepresentation.getContent(), Charsets.UTF_8))
+            .isEqualTo(CONTENT.substring(0, BODY_START));
+    }
+
+    private SimpleMailboxMessage createMessage(MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder) {
+        return SimpleMailboxMessage.builder()
+            .messageId(messageId)
+            .mailboxId(MAILBOX_ID)
+            .uid(messageUid)
+            .internalDate(new Date())
+            .bodyStartOctet(bodyStart)
+            .size(content.length())
+            .content(new SharedByteArrayInputStream(content.getBytes(Charsets.UTF_8)))
+            .flags(new Flags())
+            .propertyBuilder(propertyBuilder)
+            .build();
+    }
+
+    private MessageWithoutAttachment toMessage(CompletableFuture<Stream<CassandraMessageDAO.MessageResult>> readOptional) throws InterruptedException, java.util.concurrent.ExecutionException {
+        return readOptional.join()
+            .map(CassandraMessageDAO.MessageResult::message)
+            .map(Pair::getLeft)
+            .findAny()
+            .orElseThrow(() -> new IllegalStateException("Collection is not supposed to be empty"));
     }
 
 }

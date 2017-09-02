@@ -46,7 +46,7 @@ public final class StringUtils {
      */
     public static String[] split(String text, String pattern) {
         String[] array = text.split(pattern, -1);
-        ArrayList<String> list = new ArrayList<String>();
+        ArrayList<String> list = new ArrayList<>();
         for (int i = 0; i < array.length; i++) {
             boolean escaped = false;
             if (i > 0 && array[i - 1].endsWith("\\")) {
@@ -77,7 +77,7 @@ public final class StringUtils {
             StringBuilder sb = new StringBuilder();
             byte buf[] = message.getBytes();
             byte[] md5 = md.digest(buf);
-            //System.out.println(message);
+
             for (byte aMd5 : md5) {
                 String tmpStr = "0" + Integer.toHexString((0xff & aMd5));
                 sb.append(tmpStr.substring(tmpStr.length() - 2));

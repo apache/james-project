@@ -22,19 +22,19 @@ package org.apache.james.mailbox.store;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
+import java.util.function.Function;
+import java.util.function.Predicate;
 import javax.mail.Flags;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.manager.MailboxManagerFixture;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -54,12 +54,11 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
+import org.apache.commons.lang.NotImplementedException;
 
-import com.google.common.base.Function;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 
 public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory {
@@ -72,7 +71,7 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
     private final SimpleMailbox mailbox3;
     private final SimpleMailbox mailbox4;
 
-    private final List<MailboxMessage> messages = new ArrayList<MailboxMessage>();
+    private final List<MailboxMessage> messages = new ArrayList<>();
     private final MailboxMapper mailboxMapper;
     private final MessageIdMapper messageIdMapper;
 
@@ -161,17 +160,17 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
 
             @Override
             public List<MailboxMessage> find(final List<MessageId> messageIds, MessageMapper.FetchType fetchType) {
-                return FluentIterable.from(messages)
+                return messages.stream()
                     .filter(withMessageIdOneOf(messageIds))
-                    .toList();
+                    .collect(Guavate.toImmutableList());
             }
 
             @Override
             public List<MailboxId> findMailboxes(final MessageId messageId) {
-                return FluentIterable.from(messages)
+                return messages.stream()
                     .filter(withMessageId(messageId))
-                    .transform(toMailboxId())
-                    .toList();
+                    .map(MailboxMessage::getMailboxId)
+                    .collect(Guavate.toImmutableList());
             }
 
             @Override
@@ -180,30 +179,35 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
             }
 
             @Override
+            public void copyInMailbox(MailboxMessage mailboxMessage) throws MailboxNotFoundException, MailboxException {
+                messages.add(mailboxMessage);
+            }
+
+            @Override
             public void delete(final MessageId messageId) {
                 messages.removeAll(
-                    FluentIterable.from(messages)
-                        .filter(inMailbox(messageId))
-                        .toList());
+                    messages.stream()
+                        .filter(withMessageId(messageId))
+                        .collect(Guavate.toImmutableList()));
             }
 
             @Override
             public void delete(final MessageId messageId, final List<MailboxId> mailboxIds) {
                 messages.removeAll(
-                    FluentIterable.from(messages)
+                    messages.stream()
                         .filter(withMessageId(messageId))
                         .filter(inMailboxes(mailboxIds))
-                        .toList());
+                        .collect(Guavate.toImmutableList()));
             }
 
             @Override
             public Map<MailboxId, UpdatedFlags> setFlags(MessageId messageId, List<MailboxId> mailboxIds, Flags newState, MessageManager.FlagsUpdateMode updateMode) throws MailboxException {
-                final List<Map.Entry<MailboxId, UpdatedFlags>> entries = FluentIterable.from(messages)
+                final List<Map.Entry<MailboxId, UpdatedFlags>> entries = messages.stream()
                     .filter(withMessageId(messageId))
                     .filter(inMailboxes(mailboxIds))
-                    .transform(toMapEntryOfUpdatedFlags(newState, updateMode))
+                    .map(toMapEntryOfUpdatedFlags(newState, updateMode))
                     .filter(isChanged())
-                    .toList();
+                    .collect(Guavate.toImmutableList());
                 ImmutableMap.Builder<MailboxId, UpdatedFlags> builder = ImmutableMap.builder();
                 for (Map.Entry<MailboxId, UpdatedFlags> entry : entries) {
                     builder.put(entry);
@@ -285,73 +289,32 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
         messages.clear();
     }
 
-    private Function<MailboxMessage, MailboxId> toMailboxId() {
-        return new Function<MailboxMessage, MailboxId>() {
-            @Override
-            public MailboxId apply(MailboxMessage input) {
-                return input.getMailboxId();
-            }
-        };
-    }
-
     private Predicate<MailboxMessage> withMessageIdOneOf(final List<MessageId> messageIds) {
-        return new Predicate<MailboxMessage>() {
-            @Override
-            public boolean apply(MailboxMessage input) {
-                return messageIds.contains(input.getMessageId());
-            }
-        };
-    }
-
-    private Predicate<MailboxMessage> inMailbox(final MessageId messageId) {
-        return new Predicate<MailboxMessage>() {
-            @Override
-            public boolean apply(MailboxMessage input) {
-                return input.getMailboxId().equals(messageId);
-            }
-        };
+        return mailboxMessage -> messageIds.contains(mailboxMessage.getMessageId());
     }
 
     private Predicate<MailboxMessage> inMailboxes(final List<MailboxId> mailboxIds) {
-        return new Predicate<MailboxMessage>() {
-            @Override
-            public boolean apply(MailboxMessage input) {
-                return mailboxIds.contains(input.getMailboxId());
-            }
-        };
+        return mailboxMessage -> mailboxIds.contains(mailboxMessage.getMailboxId());
     }
 
     private Predicate<MailboxMessage> withMessageId(final MessageId messageId) {
-        return new Predicate<MailboxMessage>() {
-            @Override
-            public boolean apply(MailboxMessage input) {
-                return input.getMessageId().equals(messageId);
-            }
-        };
+        return mailboxMessage -> mailboxMessage.getMessageId().equals(messageId);
     }
 
     private Predicate<Map.Entry<MailboxId, UpdatedFlags>> isChanged() {
-        return new Predicate<Map.Entry<MailboxId, UpdatedFlags>>() {
-            @Override
-            public boolean apply(Map.Entry<MailboxId, UpdatedFlags> entry) {
-                return entry.getValue().flagsChanged();
-            }
-        };
+        return entry -> entry.getValue().flagsChanged();
     }
 
     private Function<MailboxMessage, Map.Entry<MailboxId, UpdatedFlags>> toMapEntryOfUpdatedFlags(final Flags newState, final MessageManager.FlagsUpdateMode updateMode) {
-        return new Function<MailboxMessage, Map.Entry<MailboxId, UpdatedFlags>>() {
-            @Override
-            public Map.Entry<MailboxId, UpdatedFlags> apply(MailboxMessage input) {
-                Preconditions.checkState(updateMode.equals(MessageManager.FlagsUpdateMode.ADD));
-                return new AbstractMap.SimpleEntry<MailboxId, UpdatedFlags>(input.getMailboxId(),
-                    UpdatedFlags.builder()
-                        .uid(input.getUid())
-                        .modSeq(input.getModSeq())
-                        .newFlags(newState)
-                        .oldFlags(input.createFlags())
-                        .build());
-            }
+        return mailboxMessage -> {
+            Preconditions.checkState(updateMode.equals(MessageManager.FlagsUpdateMode.ADD));
+            return new AbstractMap.SimpleEntry<>(mailboxMessage.getMailboxId(),
+                UpdatedFlags.builder()
+                    .uid(mailboxMessage.getUid())
+                    .modSeq(mailboxMessage.getModSeq())
+                    .newFlags(newState)
+                    .oldFlags(mailboxMessage.createFlags())
+                    .build());
         };
     }
 }

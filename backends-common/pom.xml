@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements. See the NOTICE file
@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-project</artifactId>
-        <version>3.0.0-RC2-SNAPSHOT</version>
+        <version>3.1.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>james-backends-common</artifactId>
@@ -33,53 +33,10 @@
     <description>Apache James Backends: common utils to access backends</description>
     <inceptionYear>2015</inceptionYear>
 
-    <properties>
-        <assertj-3.version>3.2.0</assertj-3.version>
-        <junit.version>4.11</junit.version>
-        <slf4j.version>1.7.7</slf4j.version>
-    </properties>
-
     <modules>
         <module>cassandra</module>
-        <module>jpa</module>
         <module>elasticsearch</module>
+        <module>jpa</module>
     </modules>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.apache.james</groupId>
-                <artifactId>james-server-util-java8</artifactId>
-                <version>3.0.0-RC2-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>18.0</version>
-            </dependency>
-            <dependency>
-                <groupId>javax.inject</groupId>
-                <artifactId>javax.inject</artifactId>
-                <version>1</version>
-            </dependency>
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${junit.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>${slf4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-simple</artifactId>
-                <version>${slf4j.version}</version>
-                <scope>test</scope>
-            </dependency>
-        </dependencies>
-
-    </dependencyManagement>
 
 </project>

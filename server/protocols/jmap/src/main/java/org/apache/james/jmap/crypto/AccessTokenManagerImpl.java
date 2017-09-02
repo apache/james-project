@@ -44,7 +44,7 @@ public class AccessTokenManagerImpl implements AccessTokenManager {
     public AccessToken grantAccessToken(String username) {
         Preconditions.checkNotNull(username);
         AccessToken accessToken = AccessToken.generate();
-        accessTokenRepository.addToken(username, accessToken);
+        accessTokenRepository.addToken(username, accessToken).join();
         return accessToken;
     }
 

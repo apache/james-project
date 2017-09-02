@@ -116,15 +116,7 @@ public class SMIMEKeyHolder implements KeyHolder{
         
         try {
             InitJCE.init();
-        } catch (InstantiationException e) {
-            NoSuchProviderException ex = new NoSuchProviderException("Error during cryptography provider initialization. Has bcprov-jdkxx-yyy.jar been copied in the lib directory or installed in the system?");
-            ex.initCause(e);
-            throw ex;
-        } catch (IllegalAccessException e) {
-            NoSuchProviderException ex = new NoSuchProviderException("Error during cryptography provider initialization. Has bcprov-jdkxx-yyy.jar been copied in the lib directory or installed in the system?");
-            ex.initCause(e);
-            throw ex;
-        } catch (ClassNotFoundException e) {
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
             NoSuchProviderException ex = new NoSuchProviderException("Error during cryptography provider initialization. Has bcprov-jdkxx-yyy.jar been copied in the lib directory or installed in the system?");
             ex.initCause(e);
             throw ex;
@@ -164,7 +156,7 @@ public class SMIMEKeyHolder implements KeyHolder{
             throw new KeyStoreException("The \"" + keyAlias + "\" X509Certificate alias was not found in keystore.");
         }
         java.security.cert.Certificate[] certificateChain = keyStore.getCertificateChain(keyAlias);
-        ArrayList<java.security.cert.Certificate> certList = new ArrayList<java.security.cert.Certificate>();
+        ArrayList<java.security.cert.Certificate> certList = new ArrayList<>();
         if (certificateChain == null) {
             certList.add(this.certificate);
         } else {

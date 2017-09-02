@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
+
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -33,8 +35,12 @@ import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CloseProcessor.class);
 
     public CloseProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
@@ -57,10 +63,15 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
             }
 
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Close failed for mailbox " + session.getSelected().getPath() , e);
-            }
+            LOGGER.error("Close failed for mailbox " + session.getSelected().getPath() , e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
+    }
+
+    @Override
+    protected Closeable addContextToMDC(CloseRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "CLOSE")
+            .build();
     }
 }

@@ -33,9 +33,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
-
 import javax.inject.Inject;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -119,11 +119,11 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.util.IOUtils;
 import org.apache.lucene.util.Version;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -135,6 +135,7 @@ import com.google.common.collect.ImmutableSet;
  * @param 
  */
 public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
+    private static final Logger LOGGER = LoggerFactory.getLogger(LuceneMessageSearchIndex.class);
     private final static Date MAX_DATE;
     private final static Date MIN_DATE;
     
@@ -464,29 +465,21 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             .inMailboxes(mailboxId)
             .build();
 
-        return FluentIterable.from(searchMultimap(multimailboxesSearchQuery, session))
-            .transform(new Function<SearchResult, MessageUid>() {
-                @Override
-                public MessageUid apply(SearchResult input) {
-                    return input.getMessageUid();
-                }
-            })
+        return searchMultimap(multimailboxesSearchQuery, session)
+            .stream()
+            .map(SearchResult::getMessageUid)
             .iterator();
     }
 
     @Override
     public List<MessageId> search(MailboxSession session, MultimailboxesSearchQuery searchQuery, long limit) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
-        return FluentIterable.from(searchMultimap(searchQuery, session))
-            .transform(new Function<SearchResult, MessageId>() {
-                @Override
-                public MessageId apply(SearchResult input) {
-                    return input.getMessageId().get();
-                }
-            })
+        return searchMultimap(searchQuery, session)
+            .stream()
+            .map(searchResult -> searchResult.getMessageId().get())
             .filter(SearchUtil.distinct())
             .limit(Long.valueOf(limit).intValue())
-            .toList();
+            .collect(Guavate.toImmutableList());
     }
     
     private List<SearchResult> searchMultimap(MultimailboxesSearchQuery searchQuery, MailboxSession session) throws MailboxException {
@@ -514,7 +507,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                 Document doc = searcher.doc(sDoc.doc);
                 MessageUid uid = MessageUid.of(Long.valueOf(doc.get(UID_FIELD)));
                 MailboxId mailboxId = mailboxIdFactory.fromString(doc.get(MAILBOX_ID_FIELD));
-                Optional<MessageId> messageId = toMessageId(Optional.fromNullable(doc.get(MESSAGE_ID_FIELD)));
+                Optional<MessageId> messageId = toMessageId(Optional.ofNullable(doc.get(MESSAGE_ID_FIELD)));
                 results.add(new SearchResult(messageId, mailboxId, uid));
             }
         } catch (IOException e) {
@@ -535,7 +528,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         if (messageIdField.isPresent()) {
             return Optional.of(messageIdFactory.fromString(messageIdField.get()));
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     private Query buildQueryFromMailboxes(ImmutableSet<MailboxId> mailboxIds) {
@@ -614,9 +607,12 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                             sentDate =  cal.getTime();
                             
                         } catch (org.apache.james.mime4j.field.datetime.parser.ParseException e) {
-                            session.getLog().debug("Unable to parse Date header for proper indexing", e);
+                            LOGGER.debug("Unable to parse Date header for proper indexing", e);
                             // This should never happen anyway fallback to the already parsed field
                             sentDate = ((DateTimeField) f).getDate();
+                        }
+                        if (sentDate == null) {
+                            sentDate = membership.getInternalDate();
                         }
 
                     } 
@@ -754,21 +750,17 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         try {
             // parse the message to index headers and body
             parser.parse(membership.getFullContent());
-        } catch (MimeException e) {
+        } catch (MimeException | IOException e) {
             // This should never happen as it was parsed before too without problems.            
             throw new MailboxException("Unable to index content of message", e);
-        } catch (IOException e) {
-            // This should never happen as it was parsed before too without problems.
-            // anyway let us just skip the body and headers in the index
-            throw new MailboxException("Unable to index content of message", e);
         }
-       
+
 
         return doc;
     }
 
     private static boolean hasAttachment(MailboxMessage membership) {
-       return FluentIterable.from(membership.getProperties())
+       return membership.getProperties().stream()
             .anyMatch(PropertyBuilder.isHasAttachmentProperty());
     }
 
@@ -998,7 +990,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         IndexSearcher searcher = null;
 
         try {
-            Set<MessageUid> uids = new HashSet<MessageUid>();
+            Set<MessageUid> uids = new HashSet<>();
             searcher = new IndexSearcher(IndexReader.open(writer, true));
             
             // query for all the documents sorted by uid
@@ -1018,7 +1010,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                 }
             }
             
-            List<MessageRange> ranges = MessageRange.toRanges(new ArrayList<MessageUid>(uids));
+            List<MessageRange> ranges = MessageRange.toRanges(new ArrayList<>(uids));
             UidRange[] nRanges = new UidRange[ranges.size()];
             for (int i = 0; i < ranges.size(); i++) {
                 MessageRange range = ranges.get(i);
@@ -1039,7 +1031,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
     
     private Sort createSort(List<SearchQuery.Sort> sorts) {
-        List<SortField> fields = new ArrayList<SortField>();
+        List<SortField> fields = new ArrayList<>();
 
         for (SearchQuery.Sort sort : sorts) {
             boolean reverse = sort.isReverse();
@@ -1056,7 +1048,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                 }
             }
         }
-        // add the uid sorting as last so if no other sorting was able todo the job it will get sorted by the uid
+        // add the uid sorting as last so if no other sorting was able to do the job it will get sorted by the uid
         fields.add(UID_SORT);
         Sort sort = new Sort();
         sort.setSort(fields.toArray(new SortField[0]));
@@ -1275,8 +1267,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         try {
             writer.addDocument(doc);
             writer.addDocument(flagsDoc);
-        } catch (CorruptIndexException e) {
-            throw new MailboxException("Unable to add message to index", e);
         } catch (IOException e) {
             throw new MailboxException("Unable to add message to index", e);
         }
@@ -1347,7 +1337,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * @param f
      */
     private void indexFlags(Document doc, Flags f) {
-        List<String> fString = new ArrayList<String>();
+        List<String> fString = new ArrayList<>();
         Flag[] flags = f.getSystemFlags();
         for (Flag flag : flags) {
             fString.add(toString(flag));
@@ -1401,9 +1391,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         
         try {
             writer.deleteDocuments(query);
-        } catch (CorruptIndexException e) {
-            throw new MailboxException("Unable to delete message from index", e);
-
         } catch (IOException e) {
             throw new MailboxException("Unable to delete message from index", e);
         }

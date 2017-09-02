@@ -21,7 +21,7 @@ package org.apache.james.pop3server.mailbox;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -40,12 +40,15 @@ import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
+
 public class MailboxAdapter implements Mailbox {
 
     private static abstract class POP3FetchGroup implements FetchGroup {
         @Override
         public Set<PartContentDescriptor> getPartContentDescriptors() {
-            return new HashSet<PartContentDescriptor>();
+            return new HashSet<>();
         }
     }
 
@@ -151,13 +154,13 @@ public class MailboxAdapter implements Mailbox {
         try {
             mailboxManager.startProcessingRequest(session);
             Iterator<MessageResult> results = manager.getMessages(MessageRange.all(), METADATA_GROUP, session);
-            List<MessageMetaData> mList = new ArrayList<MessageMetaData>();
+            List<MessageMetaData> mList = new ArrayList<>();
             while (results.hasNext()) {
                 MessageResult result = results.next();
                 MessageMetaData metaData = new MessageMetaData(String.valueOf(result.getUid().asLong()), result.getSize());
                 mList.add(metaData);
             }
-            return Collections.unmodifiableList(mList);
+            return ImmutableList.copyOf(mList);
         } catch (MailboxException e) {
             throw new IOException("Unable to retrieve messages", e);
         } finally {
@@ -167,11 +170,9 @@ public class MailboxAdapter implements Mailbox {
 
     @Override
     public void remove(String... uids) throws IOException {
-        List<MessageUid> uidList = new ArrayList<MessageUid>();
-
-        for (String uid : uids) {
-            uidList.add(MessageUid.of(Long.valueOf(uid)));
-        }
+        List<MessageUid> uidList = Arrays.stream(uids)
+            .map(uid -> MessageUid.of(Long.valueOf(uid)))
+            .collect(Guavate.toImmutableList());
 
         List<MessageRange> ranges = MessageRange.toRanges(uidList);
         try {

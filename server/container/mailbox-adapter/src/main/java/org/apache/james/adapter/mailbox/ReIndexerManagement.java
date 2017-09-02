@@ -19,12 +19,18 @@
 
 package org.apache.james.adapter.mailbox;
 
+import java.io.Closeable;
+import java.io.IOException;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.util.MDCBuilder;
+
+import com.google.common.base.Throwables;
 
 public class ReIndexerManagement implements ReIndexerManagementMBean {
 
@@ -37,11 +43,27 @@ public class ReIndexerManagement implements ReIndexerManagementMBean {
 
     @Override
     public void reIndex(String namespace, String user, String name) throws MailboxException {
-        reIndexer.reIndex(new MailboxPath(namespace, user, name));
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addContext(MDCBuilder.ACTION, "reIndex")
+                     .build()) {
+            reIndexer.reIndex(new MailboxPath(namespace, user, name));
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     @Override
     public void reIndex() throws MailboxException {
-        reIndexer.reIndex();
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addContext(MDCBuilder.ACTION, "reIndex")
+                     .build()) {
+            reIndexer.reIndex();
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
     }
 }

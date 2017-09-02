@@ -37,14 +37,12 @@ import javax.inject.Inject;
 import javax.mail.Flags;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.mailbox.cassandra.CassandraId;
+import org.apache.james.mailbox.cassandra.ids.CassandraId;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Update;
 import com.datastax.driver.core.querybuilder.Update.Assignments;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
 public class CassandraApplicableFlagDAO {
 

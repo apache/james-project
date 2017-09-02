@@ -27,15 +27,12 @@ import static org.mockito.Mockito.when;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 public class QuotaCheckerTest {
 
@@ -54,72 +51,27 @@ public class QuotaCheckerTest {
 
     @Test
     public void quotaCheckerShouldNotThrowOnRegularQuotas() throws MailboxException {
-        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenAnswer(new Answer<QuotaRoot>() {
-            @Override
-            public QuotaRoot answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return QUOTA_ROOT;
-            }
-        });
-        when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenAnswer(new Answer<Quota>() {
-            @Override
-            public Quota answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return QuotaImpl.quota(10, 100);
-            }
-        });
-        when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenAnswer(new Answer<Quota>() {
-            @Override
-            public Quota answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return QuotaImpl.quota(100, 1000);
-            }
-        });
+        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
+        when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(QuotaImpl.quota(10, 100));
+        when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(QuotaImpl.quota(100, 1000));
         QuotaChecker quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
         assertThat(quotaChecker.tryAddition(0, 0)).isTrue();
     }
 
     @Test
     public void quotaCheckerShouldNotThrowOnRegularModifiedQuotas() throws MailboxException {
-        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenAnswer(new Answer<QuotaRoot>() {
-            @Override
-            public QuotaRoot answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return QUOTA_ROOT;
-            }
-        });
-        when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenAnswer(new Answer<Quota>() {
-            @Override
-            public Quota answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return QuotaImpl.quota(10, 100);
-            }
-        });
-        when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenAnswer(new Answer<Quota>() {
-            @Override
-            public Quota answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return QuotaImpl.quota(100, 1000);
-            }
-        });
+        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
+        when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(QuotaImpl.quota(10, 100));
+        when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(QuotaImpl.quota(100, 1000));
         QuotaChecker quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
         assertThat(quotaChecker.tryAddition(89, 899)).isTrue();
     }
 
     @Test
     public void quotaCheckerShouldNotThrowOnReachedMaximumQuotas() throws MailboxException {
-        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenAnswer(new Answer<QuotaRoot>() {
-            @Override
-            public QuotaRoot answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return QUOTA_ROOT;
-            }
-        });
-        when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenAnswer(new Answer<Quota>() {
-            @Override
-            public Quota answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return QuotaImpl.quota(10, 100);
-            }
-        });
-        when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenAnswer(new Answer<Quota>() {
-            @Override
-            public Quota answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return QuotaImpl.quota(100, 1000);
-            }
-        });
+        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
+        when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(QuotaImpl.quota(10, 100));
+        when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(QuotaImpl.quota(100, 1000));
         QuotaChecker quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
         assertThat(quotaChecker.tryAddition(90, 900)).isTrue();
     }
@@ -128,24 +80,9 @@ public class QuotaCheckerTest {
     public void quotaCheckerShouldThrowOnExceededMessages() throws MailboxException {
         QuotaChecker quotaChecker;
         try {
-            when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenAnswer(new Answer<QuotaRoot>() {
-                @Override
-                public QuotaRoot answer(InvocationOnMock invocationOnMock) throws Throwable {
-                    return QUOTA_ROOT;
-                }
-            });
-            when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenAnswer(new Answer<Quota>() {
-                @Override
-                public Quota answer(InvocationOnMock invocationOnMock) throws Throwable {
-                    return QuotaImpl.quota(10, 100);
-                }
-            });
-            when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenAnswer(new Answer<Quota>() {
-                @Override
-                public Quota answer(InvocationOnMock invocationOnMock) throws Throwable {
-                    return QuotaImpl.quota(100, 1000);
-                }
-            });
+            when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
+            when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(QuotaImpl.quota(10, 100));
+            when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(QuotaImpl.quota(100, 1000));
             quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
         } catch(Exception e) {
             fail("Exception caught : ", e);
@@ -158,24 +95,9 @@ public class QuotaCheckerTest {
     public void quotaCheckerShouldThrowOnExceededStorage() throws MailboxException {
         QuotaChecker quotaChecker;
         try {
-            when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenAnswer(new Answer<QuotaRoot>() {
-                @Override
-                public QuotaRoot answer(InvocationOnMock invocationOnMock) throws Throwable {
-                    return QUOTA_ROOT;
-                }
-            });
-            when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenAnswer(new Answer<Quota>() {
-                @Override
-                public Quota answer(InvocationOnMock invocationOnMock) throws Throwable {
-                    return QuotaImpl.quota(10, 100);
-                }
-            });
-            when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenAnswer(new Answer<Quota>() {
-                @Override
-                public Quota answer(InvocationOnMock invocationOnMock) throws Throwable {
-                    return QuotaImpl.quota(100, 1000);
-                }
-            });
+            when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
+            when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(QuotaImpl.quota(10, 100));
+            when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(QuotaImpl.quota(100, 1000));
             quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
         } catch(Exception e) {
             fail("Exception caught : ", e);

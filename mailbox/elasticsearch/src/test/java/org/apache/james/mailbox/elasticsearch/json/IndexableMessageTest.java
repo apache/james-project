@@ -502,38 +502,6 @@ public class IndexableMessageTest {
         // Then
         assertThat(indexableMessage.getText()).contains("subject should be parsed");
     }
-    
-    @Test
-    public void  shouldHandleCorrectlyMessageIdHavingSerializeMethodThatThrowAnException() throws Exception {
-       MessageId invalidMessageIdThatThrowException = mock(MessageId.class);
-       when(invalidMessageIdThatThrowException.serialize())
-           .thenThrow(new UnsupportedOperationException());
-       
-        // When
-        MailboxMessage mailboxMessage = mock(MailboxMessage.class);
-        TestId mailboxId = TestId.of(1);
-        when(mailboxMessage.getMailboxId())
-            .thenReturn(mailboxId);
-        when(mailboxMessage.getMessageId())
-            .thenReturn(invalidMessageIdThatThrowException);
-        when(mailboxMessage.getFullContent())
-            .thenReturn(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/bodyMakeTikaToFail.eml"))));
-        when(mailboxMessage.createFlags())
-            .thenReturn(new Flags());
-        when(mailboxMessage.getUid())
-            .thenReturn(MESSAGE_UID);
-
-        IndexableMessage indexableMessage = IndexableMessage.builder()
-                .message(mailboxMessage)
-                .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
-                .extractor(textExtractor)
-                .zoneId(ZoneId.of("Europe/Paris"))
-                .indexAttachments(IndexAttachments.YES)
-                .build();
-
-        // Then
-        assertThat(indexableMessage.getMessageId()).isNull();
-    }
 
     @Test
     public void shouldHandleCorrectlyMessageIdHavingSerializeMethodThatReturnNull() throws Exception {

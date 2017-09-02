@@ -19,9 +19,12 @@
 
 package org.apache.james.imap.processor.base;
 
+import java.io.Closeable;
+
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.util.MDCBuilder;
 
 public class ImapResponseMessageProcessor extends AbstractChainedProcessor<ImapResponseMessage> {
 
@@ -31,5 +34,12 @@ public class ImapResponseMessageProcessor extends AbstractChainedProcessor<ImapR
 
     protected void doProcess(ImapResponseMessage acceptableMessage, Responder responder, ImapSession session) {
         responder.respond(acceptableMessage);
+    }
+
+    @Override
+    protected Closeable addContextToMDC(ImapResponseMessage message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "RESPOND")
+            .build();
     }
 }

@@ -19,15 +19,11 @@
 
 package org.apache.james;
 
-import java.util.Arrays;
-
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.modules.mailbox.ElasticSearchConfiguration;
 import org.apache.james.util.streams.SwarmGenericContainer;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-import org.testcontainers.shaded.com.github.dockerjava.api.model.ExposedPort;
-import org.testcontainers.shaded.com.github.dockerjava.api.model.Ports.Binding;
 
 import com.google.inject.Module;
 
@@ -36,11 +32,6 @@ public class DockerElasticSearchRule implements GuiceModuleTestRule {
 
     private static final int ELASTIC_SEARCH_PORT = 9300;
     public static final int ELASTIC_SEARCH_HTTP_PORT = 9200;
-
-    private static boolean isBindingToEveryThing(Binding binding) {
-        String bindingIp = binding.getHostIp();
-        return bindingIp == null || bindingIp.equals("0.0.0.0");
-    }
 
     public PropertiesConfiguration getElasticSearchConfigurationForDocker() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
@@ -62,7 +53,8 @@ public class DockerElasticSearchRule implements GuiceModuleTestRule {
         return configuration;
     }
 
-    private SwarmGenericContainer elasticSearchContainer = new SwarmGenericContainer("elasticsearch:2.2.2");
+    private SwarmGenericContainer elasticSearchContainer = new SwarmGenericContainer("elasticsearch:2.2.2")
+        .withExposedPorts(ELASTIC_SEARCH_HTTP_PORT, ELASTIC_SEARCH_PORT);
 
     @Override
     public Statement apply(Statement base, Description description) {
@@ -80,21 +72,6 @@ public class DockerElasticSearchRule implements GuiceModuleTestRule {
 
     public String getIp() {
         return elasticSearchContainer.getIp();
-    }
-
-    public int getBindingPort() {
-        Binding[] bindings =  elasticSearchContainer
-                .getContainerInfo()
-                .getNetworkSettings()
-                .getPorts()
-                .getBindings()
-                .get(ExposedPort.tcp(ELASTIC_SEARCH_PORT));
-
-        return Integer.valueOf(
-                Arrays.stream(bindings)
-                    .filter(DockerElasticSearchRule::isBindingToEveryThing)
-                    .map(binding -> binding.getHostPortSpec())
-                    .findFirst().get());
     }
 
     public SwarmGenericContainer getElasticSearchContainer() {

@@ -24,9 +24,9 @@ package org.apache.james.transport.matchers;
 import java.util.Collection;
 import java.util.StringTokenizer;
 
-import org.apache.mailet.base.GenericMatcher;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.GenericMatcher;
 
 /**
  * <P>Matches mails that are sent by an SMTP authenticated user present in a supplied list.</P>
@@ -48,7 +48,7 @@ public class SMTPAuthUserIs extends GenericMatcher {
 
     public void init() throws javax.mail.MessagingException {
         StringTokenizer st = new StringTokenizer(getCondition(), ", \t", false);
-        users = new java.util.HashSet<String>();
+        users = new java.util.HashSet<>();
         while (st.hasMoreTokens()) {
             users.add(st.nextToken());
         }

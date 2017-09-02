@@ -20,32 +20,30 @@
 package org.apache.james.transport.mailets.remoteDelivery;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
 
 import org.apache.mailet.base.MailAddressFixture;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class AddressesArrayToMailAddressListConverterTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AddressesArrayToMailAddressListConverterTest.class);
+
+    private static final String WRONG_INTERNET_ADDRESS = "!!";
 
     @Test
     public void getAddressesAsMailAddressShouldReturnEmptyOnNull() {
-        assertThat(AddressesArrayToMailAddressListConverter.getAddressesAsMailAddress(null, LOGGER)).isEmpty();
+        assertThat(AddressesArrayToMailAddressListConverter.getAddressesAsMailAddress(null)).isEmpty();
     }
 
     @Test
     public void getAddressesAsMailAddressShouldReturnEmptyOnEmpty() {
-        assertThat(AddressesArrayToMailAddressListConverter.getAddressesAsMailAddress(new Address[]{}, LOGGER)).isEmpty();
+        assertThat(AddressesArrayToMailAddressListConverter.getAddressesAsMailAddress(new Address[]{})).isEmpty();
     }
 
     @Test
     public void getAddressesAsMailAddressShouldWorkWithSingleValue() throws Exception {
         assertThat(AddressesArrayToMailAddressListConverter.getAddressesAsMailAddress(new Address[]{
-            new InternetAddress(MailAddressFixture.ANY_AT_JAMES.toString())}, LOGGER))
+            new InternetAddress(MailAddressFixture.ANY_AT_JAMES.toString())}))
             .containsOnly(MailAddressFixture.ANY_AT_JAMES);
     }
 
@@ -53,7 +51,15 @@ public class AddressesArrayToMailAddressListConverterTest {
     public void getAddressesAsMailAddressShouldWorkWithTwoValues() throws Exception {
         assertThat(AddressesArrayToMailAddressListConverter.getAddressesAsMailAddress(new Address[]{
             new InternetAddress(MailAddressFixture.ANY_AT_JAMES.toString()),
-            new InternetAddress(MailAddressFixture.OTHER_AT_JAMES.toString())}, LOGGER))
+            new InternetAddress(MailAddressFixture.OTHER_AT_JAMES.toString())}))
             .containsOnly(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES);
+    }
+
+    @Test
+    public void getAddressesAsMailAddressShouldFilterErrorMailAddress() throws Exception {
+        assertThat(AddressesArrayToMailAddressListConverter.getAddressesAsMailAddress(new Address[]{
+            new InternetAddress(MailAddressFixture.ANY_AT_JAMES.toString()),
+            new InternetAddress(WRONG_INTERNET_ADDRESS)}))
+            .containsOnly(MailAddressFixture.ANY_AT_JAMES);
     }
 }

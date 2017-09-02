@@ -20,15 +20,12 @@
 package org.apache.james.transport.mailets.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
+import java.util.Optional;
 import java.util.Properties;
-
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.junit.Test;
-
-import com.google.common.base.Optional;
 
 public class MimeMessageModifierTest {
 
@@ -49,7 +46,7 @@ public class MimeMessageModifierTest {
         String expectedSubject = "subject";
         message.setSubject(expectedSubject);
 
-        new MimeMessageModifier(message).replaceSubject(Optional.<String> absent());
+        new MimeMessageModifier(message).replaceSubject(Optional.empty());
 
         assertThat(message.getSubject()).isEqualTo(expectedSubject);
     }

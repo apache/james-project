@@ -186,7 +186,7 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
      */
     @Override
     public Iterator<String> list() throws UsersRepositoryException {
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
         HTableInterface table = null;
         ResultScanner resultScanner = null;
         try {

@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
+
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -31,8 +33,12 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SubscribeProcessor extends AbstractSubscriptionProcessor<SubscribeRequest> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SubscribeProcessor.class);
 
     public SubscribeProcessor(ImapProcessor next, MailboxManager mailboxManager, SubscriptionManager subscriptionManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
@@ -56,12 +62,19 @@ public class SubscribeProcessor extends AbstractSubscriptionProcessor<SubscribeR
             okComplete(command, tag, responder);
 
         } catch (SubscriptionException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Subscribe failed for mailbox " + mailboxName, e);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Subscribe failed for mailbox " + mailboxName, e);
             }
             unsolicitedResponses(session, responder, false);
             no(command, tag, responder, HumanReadableText.GENERIC_SUBSCRIPTION_FAILURE);
         }
     }
 
+    @Override
+    protected Closeable addContextToMDC(SubscribeRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "SUBSCRIBE")
+            .addContext("mailbox", message.getMailboxName())
+            .build();
+    }
 }

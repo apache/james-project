@@ -21,7 +21,7 @@ package org.apache.james.transport.mailets.redirect;
 
 import java.util.List;
 import java.util.Locale;
-
+import java.util.Optional;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
@@ -30,7 +30,6 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.StringUtils;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -126,7 +125,7 @@ public class AddressExtractor {
      */
     private Optional<MailAddress> getSpecialAddress(String addressString) throws MessagingException {
         if (Strings.isNullOrEmpty(addressString)) {
-            return Optional.absent();
+            return Optional.empty();
         }
 
         Optional<MailAddress> specialAddress = asSpecialAddress(addressString);
@@ -136,7 +135,7 @@ public class AddressExtractor {
             }
             return specialAddress;
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     private Optional<MailAddress> asSpecialAddress(String addressString) {
@@ -171,15 +170,11 @@ public class AddressExtractor {
         if (lowerCaseTrimed.equals("null")) {
             return Optional.of(SpecialAddress.NULL);
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     private boolean isAllowed(String addressString, List<String> allowedSpecials) {
-        for (String allowedSpecial : allowedSpecials) {
-            if (addressString.equals(allowedSpecial.toLowerCase(Locale.US).trim())) {
-                return true;
-            }
-        }
-        return false;
+        return allowedSpecials.stream()
+            .anyMatch(allowedSpecial -> addressString.equals(allowedSpecial.toLowerCase(Locale.US).trim()));
     }
 }

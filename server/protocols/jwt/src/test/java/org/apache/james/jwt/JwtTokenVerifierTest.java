@@ -58,6 +58,11 @@ public class JwtTokenVerifierTest {
         "-yDYktd4WT8MYhqY7MgS-wR0vO9jZFv8ZCgd_MkKCvCO0HmMjP5iQPZ0kqGkgWUH7X123tfR38MfbCVAdPDba-K3MfkogV1xvDhlkPScFr_6MxE" +
         "xtedOK2JnQZn7t9sUzSrcyjWverm7gZkPptkIVoS8TsEeMMME5vFXe_nqkEG69q3kuBUm_33tbR5oNS0ZGZKlG9r41lHBjyf9J1xN4UYV8n866d" +
         "a7RPPCzshIWUtO0q9T2umWTnp-6OnOdBCkndrZmRR6pPxsD5YL0_77Wq8KT_5__fGA";
+    // Generated on https://jwt.io/
+    private static final String TOKEN_NONE_ALGORITHM = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwi" +
+        "bmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.2XijNOVI9LXP9nWf-oj2SEWWNlcwmxzlQNGK1WdaWcQ";
+    private static final String TOKEN_NONE_ALGORITHM_NO_SIGNATURE = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwi" +
+        "bmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.";
     private JwtTokenVerifier sut;
 
     @Rule
@@ -116,8 +121,32 @@ public class JwtTokenVerifierTest {
     }
 
     @Test
+    public void verifyShouldNotAcceptNoneAlgorithm() {
+        assertThat(sut.verify(TOKEN_NONE_ALGORITHM)).isFalse();
+    }
+
+    @Test
+    public void verifyShouldNotAcceptNoneAlgorithmWithoutSignature() {
+        assertThat(sut.verify(TOKEN_NONE_ALGORITHM_NO_SIGNATURE)).isFalse();
+    }
+
+    @Test
     public void shouldReturnUserLoginFromValidToken() {
         assertThat(sut.extractLogin(VALID_TOKEN_WITHOUT_ADMIN)).isEqualTo("1234567890");
+    }
+
+    @Test
+    public void hasAttributeShouldReturnFalseOnNoneAlgorithm() throws Exception {
+        boolean authorized = sut.hasAttribute("admin", true, TOKEN_NONE_ALGORITHM);
+
+        assertThat(authorized).isFalse();
+    }
+
+    @Test
+    public void hasAttributeShouldReturnFalseOnNoneAlgorithmWithoutSignature() throws Exception {
+        boolean authorized = sut.hasAttribute("admin", true, TOKEN_NONE_ALGORITHM_NO_SIGNATURE);
+
+        assertThat(authorized).isFalse();
     }
 
     @Test

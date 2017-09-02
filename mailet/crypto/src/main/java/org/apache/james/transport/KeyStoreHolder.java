@@ -87,20 +87,12 @@ public class KeyStoreHolder {
 
         try {
             InitJCE.init();
-        } catch (InstantiationException e) {
-            NoSuchProviderException ex = new NoSuchProviderException("Error during cryptography provider initialization. Has bcprov-jdkxx-yyy.jar been copied in the lib directory or installed in the system?");
-            ex.initCause(e);
-            throw ex;
-        } catch (IllegalAccessException e) {
-            NoSuchProviderException ex = new NoSuchProviderException("Error during cryptography provider initialization. Has bcprov-jdkxx-yyy.jar been copied in the lib directory or installed in the system?");
-            ex.initCause(e);
-            throw ex;
-        } catch (ClassNotFoundException e) {
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
             NoSuchProviderException ex = new NoSuchProviderException("Error during cryptography provider initialization. Has bcprov-jdkxx-yyy.jar been copied in the lib directory or installed in the system?");
             ex.initCause(e);
             throw ex;
         }
-        
+
         if (keyStoreType == null) {
             keyStoreType = KeyStore.getDefaultType();
         }
@@ -131,7 +123,7 @@ public class KeyStoreHolder {
             .build();
         SignerInformationStore siginfo = signed.getSignerInfos();
         Collection<SignerInformation> sigCol = siginfo.getSigners();
-        List<SMIMESignerInfo> result = new ArrayList<SMIMESignerInfo>(sigCol.size());
+        List<SMIMESignerInfo> result = new ArrayList<>(sigCol.size());
         // I iterate over the signer collection 
         // checking if the signatures put
         // on the message are valid.

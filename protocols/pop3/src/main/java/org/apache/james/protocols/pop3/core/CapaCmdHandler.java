@@ -20,13 +20,9 @@
 package org.apache.james.protocols.pop3.core;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -38,13 +34,15 @@ import org.apache.james.protocols.api.handler.WiringException;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 
+import com.google.common.collect.ImmutableSet;
+
 /**
  * This handler is used to handle CAPA commands
  */
 public class CapaCmdHandler implements CommandHandler<POP3Session>, ExtensibleHandler, CapaCapability {    
     private List<CapaCapability> caps;
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("CAPA"));
-    private static final Set<String> CAPS = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList("PIPELINING")));
+    private static final Collection<String> COMMANDS = ImmutableSet.of("CAPA");
+    private static final Set<String> CAPS = ImmutableSet.of("PIPELINING");
 
     @Override
     public void init(Configuration config) throws ConfigurationException {

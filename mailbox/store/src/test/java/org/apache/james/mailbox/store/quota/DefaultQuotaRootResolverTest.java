@@ -23,8 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
-
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -33,8 +31,6 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import com.google.common.collect.Lists;
 
@@ -74,18 +70,8 @@ public class DefaultQuotaRootResolverTest {
     @Test
     public void retrieveAssociatedMailboxesShouldWork() throws Exception {
         final MailboxMapper mockedMapper = mock(MailboxMapper.class);
-        when(mockedFactory.getMailboxMapper(null)).thenAnswer(new Answer<MailboxMapper>() {
-            @Override
-            public MailboxMapper answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return mockedMapper;
-            }
-        });
-        when(mockedMapper.findMailboxWithPathLike(PATH_LIKE)).thenAnswer(new Answer<List<SimpleMailbox>>() {
-            @Override
-            public List<SimpleMailbox> answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return Lists.newArrayList(MAILBOX, MAILBOX_2);
-            }
-        });
+        when(mockedFactory.getMailboxMapper(null)).thenReturn(mockedMapper);
+        when(mockedMapper.findMailboxWithPathLike(PATH_LIKE)).thenReturn(Lists.newArrayList(MAILBOX, MAILBOX_2));
         assertThat(testee.retrieveAssociatedMailboxes(QUOTA_ROOT, null)).containsOnly(MAILBOX_PATH, MAILBOX_PATH_2);
     }
 

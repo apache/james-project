@@ -23,8 +23,20 @@ import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.AbstractMessageIdManagerSideEffectTest;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 
 public class CassandraMessageIdManagerSideEffectTest extends AbstractMessageIdManagerSideEffectTest {
+
+    @BeforeClass
+    public static void init() {
+        CassandraMessageIdManagerTestSystem.init();
+    }
+
+    @AfterClass
+    public static void close() {
+        CassandraMessageIdManagerTestSystem.stop();
+    }
 
     @Override
     protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, MailboxEventDispatcher dispatcher) throws Exception {

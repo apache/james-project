@@ -26,17 +26,17 @@ import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.io.StringReader;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.TimeZone;
-
 import javax.mail.Flags;
 
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedSearchException;
@@ -69,10 +69,9 @@ import org.apache.james.mime4j.message.HeaderImpl;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.james.mime4j.utils.search.MessageMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -80,6 +79,8 @@ import com.google.common.collect.Lists;
  * Utility methods to help perform search operations.
  */
 public class MessageSearches implements Iterable<SimpleMessageSearchIndex.SearchResult> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageSearches.class);
 
     private static final MimeConfig MIME_ENTITY_CONFIG = MimeConfig.custom()
         .setMaxContentLen(-1)
@@ -91,12 +92,10 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
 
     private Iterator<MailboxMessage> messages;
     private SearchQuery query;
-    private MailboxSession session;
 
-    public MessageSearches(Iterator<MailboxMessage> messages, SearchQuery query, MailboxSession session) {
+    public MessageSearches(Iterator<MailboxMessage> messages, SearchQuery query) {
         this.messages = messages;
         this.query = query;
-        this.session = session;
     }
 
     /**
@@ -115,23 +114,16 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
                     builder.add(m);
                 }
             } catch (MailboxException e) {
-                if (session != null && session.getLog() != null) {
-                    session.getLog().debug("Unable to search message " + m.getUid(), e);
-                }
+                LOGGER.error("Unable to search message " + m.getUid(), e);
             }
         }
-        List<MailboxMessage> sortedResults = FluentIterable.from(builder.build())
-            .toSortedList(CombinedComparator.create(query.getSorts()));
-        return FluentIterable.from(sortedResults)
-            .transform(new Function<MailboxMessage, SimpleMessageSearchIndex.SearchResult>() {
-                @Override
-                public SimpleMessageSearchIndex.SearchResult apply(MailboxMessage input) {
-                    return new SimpleMessageSearchIndex.SearchResult(
-                        Optional.of(input.getMessageId()),
-                        input.getMailboxId(),
-                        input.getUid());
-                }
-            })
+        return builder.build()
+            .stream()
+            .sorted(CombinedComparator.create(query.getSorts()))
+            .map(mailboxMessage -> new SimpleMessageSearchIndex.SearchResult(
+                Optional.of(mailboxMessage.getMessageId()),
+                mailboxMessage.getMailboxId(),
+                mailboxMessage.getUid()))
             .iterator();
     }
 
@@ -217,9 +209,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
                 return messageContains(value, message);
             }
             throw new UnsupportedSearchException();
-        } catch (IOException e) {
-            throw new MailboxException("Unable to parse message", e);
-        } catch (MimeException e) {
+        } catch (IOException | MimeException e) {
             throw new MailboxException("Unable to parse message", e);
         }
     }
@@ -230,14 +220,13 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
     }
 
     private boolean isInMessage(String value, InputStream input, boolean header) throws IOException, MimeException {
-        MessageMatcher.MessageMatcherBuilder builder = MessageMatcher.builder()
+        return MessageMatcher.builder()
             .searchContents(Lists.<CharSequence>newArrayList(value))
             .caseInsensitive(true)
-            .includeHeaders(header);
-        if (session != null && session.getLog() != null) {
-            builder.logger(session.getLog());
-        }
-        return builder.build().messageMatches(input);
+            .includeHeaders(header)
+            .logger(LOGGER)
+            .build()
+            .messageMatches(input);
     }
 
     private boolean messageContains(String value, MailboxMessage message) throws IOException, MimeException {
@@ -364,12 +353,8 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
         SearchQuery.UidInOperator operator = criterion.getOperator();
         UidRange[] ranges = operator.getRange();
         MessageUid uid = message.getUid();
-        for (UidRange numericRange : ranges) {
-            if (numericRange.isIn(uid)) {
-                return true;
-            }
-        }
-        return false;
+        return Arrays.stream(ranges)
+            .anyMatch(numericRange -> numericRange.isIn(uid));
     }
 
     private boolean matches(SearchQuery.HeaderCriterion criterion, MailboxMessage message)
@@ -435,13 +420,9 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
     private boolean exists(String headerName, MailboxMessage message) throws MailboxException, IOException {
         List<Header> headers = ResultUtils.createHeaders(message);
 
-        for (Header header : headers) {
-            String name = header.getName();
-            if (headerName.equalsIgnoreCase(name)) {
-                return true;
-            }
-        }
-        return false;
+        return headers.stream()
+            .map(Header::getName)
+            .anyMatch(headerName::equalsIgnoreCase);
     }
 
     private boolean matches(SearchQuery.ContainsOperator operator, String headerName,
@@ -516,7 +497,8 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
 
 
     private boolean matches(SearchQuery.AttachmentCriterion criterion, MailboxMessage message) throws UnsupportedSearchException {
-        boolean mailHasAttachments = FluentIterable.from(message.getProperties())
+        boolean mailHasAttachments = message.getProperties()
+            .stream()
             .anyMatch(PropertyBuilder.isHasAttachmentProperty());
         return mailHasAttachments == criterion.getOperator().isSet();
     }

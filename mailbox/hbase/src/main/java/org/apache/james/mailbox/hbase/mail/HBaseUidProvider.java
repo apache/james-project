@@ -21,14 +21,9 @@ package org.apache.james.mailbox.hbase.mail;
 import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOXES_TABLE;
 import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOX_CF;
 import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOX_LASTUID;
-
 import java.io.IOException;
+import java.util.Optional;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -36,8 +31,11 @@ import org.apache.james.mailbox.hbase.HBaseId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-
-import com.google.common.base.Optional;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.util.Bytes;
 /**
  * Message UidProvider for HBase.
  * 
@@ -73,7 +71,7 @@ public class HBaseUidProvider implements UidProvider {
             }
             long rawUid = Bytes.toLong(result.getValue(MAILBOX_CF, MAILBOX_LASTUID));
             if (rawUid == 0) {
-                return Optional.absent();
+                return Optional.empty();
             }
             return Optional.of(MessageUid.of(rawUid));
         } catch (IOException e) {

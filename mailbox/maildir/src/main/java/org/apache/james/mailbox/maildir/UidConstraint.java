@@ -22,7 +22,7 @@ import java.util.LinkedList;
 
 public class UidConstraint {
     
-    private final LinkedList<Constraint> constraints = new LinkedList<Constraint>();
+    private final LinkedList<Constraint> constraints = new LinkedList<>();
     
     public UidConstraint append(Constraint constraint) {
         constraints.add(constraint);
@@ -50,10 +50,8 @@ public class UidConstraint {
     }
     
     public boolean isAllowed(long uid) {
-        for (Constraint constraint : constraints)
-            if (!constraint.isAllowed(uid))
-                return false;
-        return true;
+        return constraints.stream()
+            .allMatch(constraint -> constraint.isAllowed(uid));
     }
 
     public abstract static class Constraint {

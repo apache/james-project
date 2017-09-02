@@ -26,13 +26,14 @@ import static org.apache.james.imap.api.ImapConstants.SUPPORTS_RFC3348;
 import static org.apache.james.imap.api.ImapConstants.UTF8;
 import static org.apache.james.imap.api.ImapConstants.VERSION;
 
+import java.io.Closeable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.display.CharsetUtil;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -41,13 +42,16 @@ import org.apache.james.imap.message.request.CapabilityRequest;
 import org.apache.james.imap.message.response.CapabilityResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
+
+import com.google.common.collect.ImmutableList;
 
 public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequest> implements CapabilityImplementingProcessor {
 
     private final static List<String> CAPS;
     
     static {
-        List<String> caps = new ArrayList<String>();
+        List<String> caps = new ArrayList<>();
         caps.add(VERSION);
         caps.add(SUPPORTS_LITERAL_PLUS);
         caps.add(SUPPORTS_RFC3348);
@@ -57,25 +61,39 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
             caps.add(SUPPORTS_I18NLEVEL_1);
         }
         caps.add(SUPPORTS_CONDSTORE);
-        CAPS = Collections.unmodifiableList(caps);
+        CAPS = ImmutableList.copyOf(caps);
     }
     
-    private static final List<CapabilityImplementingProcessor> capabilities = new ArrayList<CapabilityImplementingProcessor>();
-    private static final Set<String> disabledCaps = new HashSet<String>();
+    private final List<CapabilityImplementingProcessor> capabilities = new ArrayList<>();
+    private final Set<String> disabledCaps = new HashSet<>();
     
-    public CapabilityProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, List<CapabilityImplementingProcessor> capabilities, Set<String> disabledCaps,
+    public CapabilityProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, List<CapabilityImplementingProcessor> capabilities,
             MetricFactory metricFactory) {
-        this(next, mailboxManager, factory, disabledCaps, metricFactory);
-        CapabilityProcessor.capabilities.addAll(capabilities);
+        this(next, mailboxManager, factory, metricFactory);
+        capabilities.addAll(capabilities);
 
     }
 
-    public CapabilityProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, Set<String> disabledCaps,
+    public CapabilityProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
         super(CapabilityRequest.class, next, mailboxManager, factory, metricFactory);
-        CapabilityProcessor.disabledCaps.addAll(disabledCaps);
-        capabilities.add(this); 
+        capabilities.add(this);
         
+    }
+
+    @Override
+    public void configure(ImapConfiguration imapConfiguration) {
+        super.configure(imapConfiguration);
+
+        disabledCaps.addAll(imapConfiguration.getDisabledCaps());
+        if (shouldDisableCondstore(imapConfiguration)) {
+            disabledCaps.add(SUPPORTS_CONDSTORE);
+        }
+    }
+
+    private boolean shouldDisableCondstore(ImapConfiguration imapConfiguration) {
+        return !imapConfiguration.isCondstoreEnable() 
+                && !disabledCaps.contains(SUPPORTS_CONDSTORE);
     }
 
     /**
@@ -116,13 +134,20 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
      * @param session
      * @return supported
      */
-    public static Set<String> getSupportedCapabilities(ImapSession session) {
-        Set<String> caps = new HashSet<String>();
+    public Set<String> getSupportedCapabilities(ImapSession session) {
+        Set<String> caps = new HashSet<>();
         for (CapabilityImplementingProcessor capability : capabilities) {
             caps.addAll(capability.getImplementedCapabilities(session));
         }
         caps.removeAll(disabledCaps);
         return caps;
+    }
+
+    @Override
+    protected Closeable addContextToMDC(CapabilityRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "CAPABILITY")
+            .build();
     }
     
 

@@ -20,14 +20,12 @@
 package org.apache.james.jmap.methods;
 
 import static org.apache.james.jmap.methods.Method.JMAP_PREFIX;
-
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 import javax.mail.Flags;
 import javax.mail.MessagingException;
@@ -40,6 +38,7 @@ import org.apache.james.jmap.model.Attachment;
 import org.apache.james.jmap.model.BlobId;
 import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessageId;
+import org.apache.james.jmap.model.Keywords;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
@@ -68,8 +67,9 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
-import org.apache.james.util.OptionalConverter;
+import org.apache.james.util.OptionalUtils;
 import org.apache.mailet.Mail;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,6 +81,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+
 
 public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
@@ -249,7 +250,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     
     private boolean isAppendToMailboxWithRole(Role role, CreationMessage entry, MailboxSession mailboxSession) throws MailboxException {
         return getMailboxWithRole(mailboxSession, role)
-                .map(box -> entry.isIn(box))
+                .map(entry::isIn)
                 .orElse(false);
     }
 
@@ -290,16 +291,20 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         byte[] messageContent = mimeMessageConverter.convert(createdEntry, messageAttachments);
         SharedByteArrayInputStream content = new SharedByteArrayInputStream(messageContent);
         Date internalDate = Date.from(createdEntry.getValue().getDate().toInstant());
-        Flags flags = getMessageFlags(createdEntry.getValue());
+
+        Flags flags = createdEntry.getValue()
+            .getKeywords()
+            .map(Keywords::asFlags)
+            .orElse(new Flags());
 
         ComposedMessageId message = outbox.appendMessage(content, internalDate, session, flags.contains(Flags.Flag.RECENT), flags);
 
         return MetaDataWithContent.builder()
                 .uid(message.getUid())
                 .flags(flags)
-                .size(messageContent.length)
                 .internalDate(internalDate.toInstant())
                 .sharedContent(content)
+                .size(messageContent.length)
                 .attachments(messageAttachments)
                 .mailboxId(outbox.getId())
                 .messageId(message.getMessageId())
@@ -310,7 +315,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         ThrowingFunction<Attachment, Optional<MessageAttachment>> toMessageAttachment = att -> messageAttachment(session, att);
         return attachments.stream()
             .map(Throwing.function(toMessageAttachment).sneakyThrow())
-            .flatMap(OptionalConverter::toStream)
+            .flatMap(OptionalUtils::toStream)
             .collect(Guavate.toImmutableList());
     }
 
@@ -330,23 +335,6 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
             LOG.error(String.format("Attachment %s is not well-formed", attachment.getBlobId()), e);
             return Optional.empty();
         }
-    }
-
-    private Flags getMessageFlags(CreationMessage message) {
-        Flags result = new Flags();
-        if (!message.isIsUnread()) {
-            result.add(Flags.Flag.SEEN);
-        }
-        if (message.isIsFlagged()) {
-            result.add(Flags.Flag.FLAGGED);
-        }
-        if (message.isIsAnswered() || message.getInReplyToMessageId().isPresent()) {
-            result.add(Flags.Flag.ANSWERED);
-        }
-        if (message.isIsDraft()) {
-            result.add(Flags.Flag.DRAFT);
-        }
-        return result;
     }
 
     private MessageWithId sendMessage(CreationMessageId creationId, MetaDataWithContent message, MailboxSession session) throws MailboxException, MessagingException {

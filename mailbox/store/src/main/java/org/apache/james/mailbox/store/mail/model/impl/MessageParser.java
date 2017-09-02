@@ -24,13 +24,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
+import java.util.function.Function;
 
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.codec.DecodeMonitor;
-import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.james.mime4j.dom.Body;
 import org.apache.james.mime4j.dom.Entity;
 import org.apache.james.mime4j.dom.Message;
@@ -44,11 +45,10 @@ import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.stream.MimeConfig;
+import org.apache.james.mime4j.util.MimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 public class MessageParser {
@@ -69,29 +69,19 @@ public class MessageParser {
             ContentDispositionField.DISPOSITION_TYPE_ATTACHMENT.toLowerCase(Locale.US),
             ContentDispositionField.DISPOSITION_TYPE_INLINE.toLowerCase(Locale.US));
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageParser.class);
-    private static final Function<String, Optional<Cid>> STRING_TO_CID_FUNCTION = new Function<String, Optional<Cid>>() {
-        @Override
-        public Optional<Cid> apply(String cid) {
-            try {
-                return Optional.of(Cid.from(cid));
-            } catch (IllegalArgumentException e) {
-                return Optional.absent();
-            }
-        }
-    };
 
-    private static final Function<ContentIdField, Optional<Cid>> CONTENT_ID_FIELD_TO_OPTIONAL_CID_FUNCTION = new Function<ContentIdField, Optional<Cid>>() {
-        @Override
-        public Optional<Cid> apply(ContentIdField field) {
-            return Optional.fromNullable(field.getId())
-                    .transform(STRING_TO_CID_FUNCTION)
-                    .or(Optional.<Cid>absent());
-        }
-    };
+    private final Cid.CidParser cidParser;
+
+    public MessageParser() {
+        cidParser = Cid.parser()
+            .relaxed()
+            .unwrap();
+    }
 
     public List<MessageAttachment> retrieveAttachments(InputStream fullContent) throws MimeException, IOException {
         DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();
         defaultMessageBuilder.setMimeEntityConfig(MIME_ENTITY_CONFIG);
+        defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT);
         Message message = defaultMessageBuilder.parseMessage(fullContent);
         Body body = message.getBody();
         try {
@@ -139,18 +129,19 @@ public class MessageParser {
 
     private MessageAttachment retrieveAttachment(MessageWriter messageWriter, Entity entity) throws IOException {
         Optional<ContentTypeField> contentTypeField = getContentTypeField(entity);
+        Optional<ContentDispositionField> contentDispositionField = getContentDispositionField(entity);
         Optional<String> contentType = contentType(contentTypeField);
-        Optional<String> name = name(contentTypeField);
+        Optional<String> name = name(contentTypeField, contentDispositionField);
         Optional<Cid> cid = cid(readHeader(entity, CONTENT_ID, ContentIdField.class));
         boolean isInline = isInline(readHeader(entity, CONTENT_DISPOSITION, ContentDispositionField.class));
 
         return MessageAttachment.builder()
                 .attachment(Attachment.builder()
                     .bytes(getBytes(messageWriter, entity.getBody()))
-                    .type(contentType.or(DEFAULT_CONTENT_TYPE))
+                    .type(contentType.orElse(DEFAULT_CONTENT_TYPE))
                     .build())
-                .name(name.orNull())
-                .cid(cid.orNull())
+                .name(name.orElse(null))
+                .cid(cid.orElse(null))
                 .isInline(isInline)
                 .build();
     }
@@ -163,42 +154,40 @@ public class MessageParser {
         return castField(entity.getHeader().getField(CONTENT_TYPE), ContentTypeField.class);
     }
 
+    private Optional<ContentDispositionField> getContentDispositionField(Entity entity) {
+        return castField(entity.getHeader().getField(CONTENT_DISPOSITION), ContentDispositionField.class);
+    }
+
     @SuppressWarnings("unchecked")
     private <U extends ParsedField> Optional<U> castField(Field field, Class<U> clazz) {
         if (field == null || !clazz.isInstance(field)) {
-            return Optional.absent();
+            return Optional.empty();
         }
         return Optional.of((U) field);
     }
 
     private Optional<String> contentType(Optional<ContentTypeField> contentTypeField) {
-        return contentTypeField.transform(new Function<ContentTypeField, Optional<String>>() {
-            @Override
-            public Optional<String> apply(ContentTypeField field) {
-                return Optional.fromNullable(field.getMimeType());
-            }
-        }).or(Optional.<String> absent());
+        return contentTypeField.map(ContentTypeField::getMimeType);
     }
 
-    private Optional<String> name(Optional<ContentTypeField> contentTypeField) {
-        return contentTypeField.transform(new Function<ContentTypeField, Optional<String>>() {
-            @Override
-            public Optional<String> apply(ContentTypeField field) {
-                return Optional.fromNullable(field.getParameter("name"))
-                  .transform(
-                          new Function<String, String>() {
-                              public String apply(String input) {
-                                  DecodeMonitor monitor = null;
-                                  return DecoderUtil.decodeEncodedWords(input, monitor);
-                              }
-                          });
-            }
-        }).or(Optional.<String> absent());
+    private Optional<String> name(Optional<ContentTypeField> contentTypeField, Optional<ContentDispositionField> contentDispositionField) {
+        return contentTypeField
+            .map(field -> Optional.ofNullable(field.getParameter("name")))
+            .filter(Optional::isPresent)
+            .orElseGet(() -> contentDispositionField.map(ContentDispositionField::getFilename))
+            .map(MimeUtil::unscrambleHeaderValue);
     }
 
     private Optional<Cid> cid(Optional<ContentIdField> contentIdField) {
-        return contentIdField.transform(CONTENT_ID_FIELD_TO_OPTIONAL_CID_FUNCTION)
-                .or(Optional.<Cid>absent());
+        if (!contentIdField.isPresent()) {
+            return Optional.empty();
+        }
+        return contentIdField.map(toCid())
+            .get();
+    }
+
+    private Function<ContentIdField, Optional<Cid>> toCid() {
+        return contentIdField -> cidParser.parse(contentIdField.getId());
     }
 
     private boolean isMultipart(Entity entity) {
@@ -206,26 +195,18 @@ public class MessageParser {
     }
 
     private boolean isInline(Optional<ContentDispositionField> contentDispositionField) {
-        return contentDispositionField.transform(new Function<ContentDispositionField, Boolean>() {
-            @Override
-            public Boolean apply(ContentDispositionField field) {
-                return field.isInline();
-            }
-        }).or(false);
+        return contentDispositionField.map(ContentDispositionField::isInline)
+            .orElse(false);
     }
 
     private boolean isAttachment(Entity part, Context context) {
         if (context == Context.BODY && isTextPart(part)) {
             return false;
         }
-        return Optional.fromNullable(part.getDispositionType())
-                .transform(new Function<String, Boolean>() {
-
-                    @Override
-                    public Boolean apply(String dispositionType) {
-                        return ATTACHMENT_CONTENT_DISPOSITIONS.contains(dispositionType.toLowerCase(Locale.US));
-                    }
-                }).or(false);
+        return Optional.ofNullable(part.getDispositionType())
+                .map(dispositionType -> ATTACHMENT_CONTENT_DISPOSITIONS.contains(
+                    dispositionType.toLowerCase(Locale.US)))
+            .orElse(false);
     }
 
     private boolean isTextPart(Entity part) {
@@ -245,7 +226,7 @@ public class MessageParser {
         return out.toByteArray();
     }
 
-    private static enum Context {
+    private enum Context {
         BODY,
         OTHER;
 

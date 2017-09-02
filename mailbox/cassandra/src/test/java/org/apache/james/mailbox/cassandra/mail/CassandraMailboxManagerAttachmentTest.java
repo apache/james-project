@@ -27,10 +27,11 @@ import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
-import org.apache.james.mailbox.cassandra.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraBlobModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraDeletedMessageModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
@@ -45,21 +46,35 @@ import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 
 public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManagerAttachmentTest {
-    private static final CassandraCluster cassandra = CassandraCluster.create(new CassandraModuleComposite(
-            new CassandraAclModule(),
-            new CassandraMailboxModule(),
-            new CassandraMessageModule(),
-            new CassandraMailboxCounterModule(),
-            new CassandraMailboxRecentsModule(),
-            new CassandraFirstUnseenModule(),
-            new CassandraDeletedMessageModule(),
-            new CassandraModSeqModule(),
-            new CassandraUidModule(),
-            new CassandraAttachmentModule(),
-            new CassandraApplicableFlagsModule()));
-    public static final int MAX_ACL_RETRY = 10;
+
+    private static CassandraCluster cassandra;
+
+    @BeforeClass
+    public static void init() {
+        cassandra = CassandraCluster.create(
+                new CassandraModuleComposite(
+                    new CassandraAclModule(),
+                    new CassandraMailboxModule(),
+                    new CassandraMessageModule(),
+                    new CassandraBlobModule(),
+                    new CassandraMailboxCounterModule(),
+                    new CassandraMailboxRecentsModule(),
+                    new CassandraFirstUnseenModule(),
+                    new CassandraDeletedMessageModule(),
+                    new CassandraModSeqModule(),
+                    new CassandraUidModule(),
+                    new CassandraAttachmentModule(),
+                    new CassandraApplicableFlagsModule()));
+    }
+
+    @AfterClass
+    public static void close() {
+        cassandra.close();
+    }
 
     private CassandraMailboxSessionMapperFactory mailboxSessionMapperFactory;
     private CassandraMailboxManager mailboxManager;
@@ -68,15 +83,18 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
     public CassandraMailboxManagerAttachmentTest() throws Exception {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
 
-        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider(), MAX_ACL_RETRY);
+        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
         CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(cassandra.getConf(), cassandra.getTypesProvider());
         CassandraFirstUnseenDAO firstUnseenDAO = new CassandraFirstUnseenDAO(cassandra.getConf());
         CassandraDeletedMessageDAO deletedMessageDAO = new CassandraDeletedMessageDAO(cassandra.getConf());
+
+        CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
+        CassandraMessageDAO messageDAO = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), blobsDAO);
         mailboxSessionMapperFactory = new CassandraMailboxSessionMapperFactory(
                 new CassandraUidProvider(cassandra.getConf()),
                 new CassandraModSeqProvider(cassandra.getConf()),
                 cassandra.getConf(),
-                new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider()),
+            messageDAO,
                 new CassandraMessageIdDAO(cassandra.getConf(), messageIdFactory),
                 new CassandraMessageIdToImapUidDAO(cassandra.getConf(), messageIdFactory),
                 new CassandraMailboxCounterDAO(cassandra.getConf()),

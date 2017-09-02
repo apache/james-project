@@ -20,9 +20,9 @@
 package org.apache.james.jmap.model;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
 import javax.mail.Flags;
 
 import org.apache.james.jmap.methods.ValidationResult;
@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -47,10 +48,16 @@ public class UpdateMessagePatch {
         private Optional<Boolean> isFlagged = Optional.empty();
         private Optional<Boolean> isUnread = Optional.empty();
         private Optional<Boolean> isAnswered = Optional.empty();
+        private Optional<Map<String, Boolean>> keywords = Optional.empty();
         private Set<ValidationResult> validationResult = Sets.newHashSet();
 
         public Builder mailboxIds(List<String> mailboxIds) {
             this.mailboxIds = Optional.of(ImmutableList.copyOf(mailboxIds));
+            return this;
+        }
+
+        public Builder keywords(Map<String, Boolean> keywords) {
+            this.keywords = Optional.of(ImmutableMap.copyOf(keywords));
             return this;
         }
 
@@ -81,28 +88,36 @@ public class UpdateMessagePatch {
                     .message("mailboxIds property is not supposed to be empty")
                     .build()));
             }
-            return new UpdateMessagePatch(mailboxIds, isUnread, isFlagged, isAnswered, ImmutableList.copyOf(validationResult));
+
+            Optional<Keywords> updateKeywords = Keywords.factory()
+                .throwOnImapNonExposedKeywords()
+                .fromMapOrOldKeyword(keywords, getOldKeywords());
+
+            return new UpdateMessagePatch(mailboxIds, updateKeywords, ImmutableList.copyOf(validationResult));
         }
+
+        private Optional<OldKeyword> getOldKeywords() {
+            if (isAnswered.isPresent() || isFlagged.isPresent() || isUnread.isPresent()) {
+                Optional<Boolean> isDraft = Optional.empty();
+                return Optional.of(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft));
+            }
+            return Optional.empty();
+        }
+
     }
 
     private final Optional<List<String>> mailboxIds;
-    private final Optional<Boolean> isUnread;
-    private final Optional<Boolean> isFlagged;
-    private final Optional<Boolean> isAnswered;
+    private final Optional<Keywords> keywords;
 
     private final ImmutableList<ValidationResult> validationErrors;
 
     @VisibleForTesting
     UpdateMessagePatch(Optional<List<String>> mailboxIds,
-                       Optional<Boolean> isUnread,
-                       Optional<Boolean> isFlagged,
-                       Optional<Boolean> isAnswered,
+                       Optional<Keywords> keywords,
                        ImmutableList<ValidationResult> validationResults) {
 
         this.mailboxIds = mailboxIds;
-        this.isUnread = isUnread;
-        this.isFlagged = isFlagged;
-        this.isAnswered = isAnswered;
+        this.keywords = keywords;
         this.validationErrors = validationResults;
     }
 
@@ -110,16 +125,12 @@ public class UpdateMessagePatch {
         return mailboxIds;
     }
 
-    public Optional<Boolean> isUnread() {
-        return isUnread;
+    public Optional<Keywords> getKeywords() {
+        return keywords;
     }
 
-    public Optional<Boolean> isFlagged() {
-        return isFlagged;
-    }
-
-    public Optional<Boolean> isAnswered() {
-        return isAnswered;
+    public boolean isFlagsIdentity() {
+        return !keywords.isPresent();
     }
 
     public ImmutableList<ValidationResult> getValidationErrors() {
@@ -131,19 +142,12 @@ public class UpdateMessagePatch {
     }
 
     public Flags applyToState(Flags currentFlags) {
-        Flags newStateFlags = new Flags();
-
-        if (isFlagged().orElse(currentFlags.contains(Flags.Flag.FLAGGED))) {
-            newStateFlags.add(Flags.Flag.FLAGGED);
-        }
-        if (isAnswered().orElse(currentFlags.contains(Flags.Flag.ANSWERED))) {
-            newStateFlags.add(Flags.Flag.ANSWERED);
-        }
-        boolean shouldMessageBeMarkSeen = isUnread().map(b -> !b).orElse(currentFlags.contains(Flags.Flag.SEEN));
-        if (shouldMessageBeMarkSeen) {
-            newStateFlags.add(Flags.Flag.SEEN);
-        }
-        return newStateFlags;
+        return keywords.map(keyword -> {
+            if (currentFlags.contains(Flags.Flag.DRAFT) != keyword.getKeywords().contains(Keyword.DRAFT)) {
+                throw new IllegalArgumentException("Cannot add or remove draft flag");
+            }
+            return keyword.asFlagsWithRecentAndDeletedFrom(currentFlags);
+        }).orElse(new Flags());
     }
 
 }

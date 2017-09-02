@@ -27,7 +27,7 @@
 
 <section name="IMAP4 Configuration">
 
-      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/imapserver-template.xml">imapserver-template.xml</a> in GIT to get some examples and hints.</p>
+      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/imapserver.xml">imapserver.xml</a> in GIT to get some examples and hints.</p>
 
     <p>The IMAP4 service is controlled by a configuration block in the imap4server.xml.
        The imap4server tag defines the boundaries of the configuration block.  It encloses 

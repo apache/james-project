@@ -18,16 +18,17 @@
  ****************************************************************/
 package org.apache.james.mailrepository;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.util.Iterator;
+
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.file.MBoxMailRepository;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import org.junit.Test;
-import org.slf4j.LoggerFactory;
 
 /**
  * NOTE this test *WAS* disabled because MBoxMailRepository does not currently
@@ -48,7 +49,6 @@ public class MBoxMailRepositoryTest {
 
         defaultConfiguration.addProperty("[@destinationURL]", mboxPath);
         defaultConfiguration.addProperty("[@type]", "MAIL");
-        mr.setLog(LoggerFactory.getLogger("MockLog"));
         mr.configure(defaultConfiguration);
 
         return mr;

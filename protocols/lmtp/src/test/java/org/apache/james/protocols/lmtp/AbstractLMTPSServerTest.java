@@ -43,7 +43,7 @@ public abstract class AbstractLMTPSServerTest extends AbstractLMTPServerTest{
 
     protected final class LMTPSClient extends SMTPSClient implements LMTPClient{
 
-        private final List<Integer> replies = new ArrayList<Integer>();
+        private final List<Integer> replies = new ArrayList<>();
         private int rcptCount = 0;
         
 
@@ -93,13 +93,10 @@ public abstract class AbstractLMTPSServerTest extends AbstractLMTPServerTest{
             for (int i = 0; i < rcptCount; i++) {
                 replies.add(getReply());
             }
-            
-            for (int code: replies) {
-                if (SMTPReply.isPositiveCompletion(code)) {
-                    return true;
-                }
-            }
-            return false;
+
+            return replies.stream()
+                .mapToInt(code -> code)
+                .anyMatch(SMTPReply::isPositiveCompletion);
         }
 
         

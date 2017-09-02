@@ -46,6 +46,7 @@ public class CassandraModSeqModule implements CassandraModule {
                     .addPartitionKey(CassandraMessageModseqTable.MAILBOX_ID, timeuuid())
                     .addColumn(CassandraMessageModseqTable.NEXT_MODSEQ, bigint())
                     .withOptions()
+                    .comment("Holds and is used to generate MODSEQ. A monotic counter is implemented on top of this table.")
                     .compactionOptions(SchemaBuilder.leveledStrategy())
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));

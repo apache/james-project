@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageResult;
 
 public final class ResultHeader implements MessageResult.Header {
@@ -47,14 +46,14 @@ public final class ResultHeader implements MessageResult.Header {
     /**
      * @see org.apache.james.mailbox.model.MessageResult.Header#getName()
      */
-    public String getName() throws MailboxException {
+    public String getName() {
         return name;
     }
 
     /**
      * @see org.apache.james.mailbox.model.MessageResult.Header#getValue()
      */
-    public String getValue() throws MailboxException {
+    public String getValue() {
         return value;
     }
 

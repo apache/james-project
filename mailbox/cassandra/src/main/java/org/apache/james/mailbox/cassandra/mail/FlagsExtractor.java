@@ -40,7 +40,6 @@ public class FlagsExtractor {
             }
         }
         row.getSet(Flag.USER_FLAGS, String.class)
-            .stream()
             .forEach(flags::add);
         return flags;
     }
@@ -48,7 +47,6 @@ public class FlagsExtractor {
     public Flags getApplicableFlags() {
         Flags flags = new Flags();
         row.getSet(Flag.USER_FLAGS, String.class)
-            .stream()
             .forEach(flags::add);
         return flags;
     }

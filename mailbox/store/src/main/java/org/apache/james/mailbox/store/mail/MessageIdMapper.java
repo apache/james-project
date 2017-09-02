@@ -40,6 +40,8 @@ public interface MessageIdMapper {
 
     void save(MailboxMessage mailboxMessage) throws MailboxNotFoundException, MailboxException;
 
+    void copyInMailbox(MailboxMessage mailboxMessage) throws MailboxNotFoundException, MailboxException;
+
     void delete(MessageId messageId);
 
     void delete(MessageId messageId, List<MailboxId> mailboxIds);

@@ -20,14 +20,11 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.guava.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Properties;
-
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
@@ -143,17 +140,17 @@ public class ForwardTest {
 
     @Test
     public void getReplyToShouldReturnNull() throws Exception {
-        assertThat(forward.getReplyTo()).isAbsent();
+        assertThat(forward.getReplyTo()).isEmpty();
     }
 
     @Test
     public void getReversePathShouldReturnAbsent() throws Exception {
-        assertThat(forward.getReversePath()).isAbsent();
+        assertThat(forward.getReversePath()).isEmpty();
     }
 
     @Test
     public void getSenderShouldReturnAbsent() throws Exception {
-        assertThat(forward.getSender()).isAbsent();
+        assertThat(forward.getSender()).isEmpty();
     }
 
     @Test

@@ -99,7 +99,7 @@ public class ElasticSearchIndexer {
     
     public IndexResponse indexMessage(String id, String content) {
         checkArgument(content);
-        LOGGER.debug(String.format("Indexing %s: %s", id, content));
+        LOGGER.debug("Indexing {}: {}", id, content);
         return client.prepareIndex(indexName.getValue(), typeName.getValue(), id)
             .setSource(content)
             .get();

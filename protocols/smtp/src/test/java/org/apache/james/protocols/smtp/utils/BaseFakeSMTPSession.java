@@ -27,8 +27,6 @@ import java.util.Map;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.LineHandler;
-import org.apache.james.protocols.api.logger.Logger;
-import org.apache.james.protocols.api.utils.MockLogger;
 import org.apache.james.protocols.smtp.SMTPConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
 
@@ -36,8 +34,6 @@ import org.apache.james.protocols.smtp.SMTPSession;
  * Abstract class to simplify the mocks
  */
 public class BaseFakeSMTPSession implements SMTPSession {
-
-    private static final Logger log = new MockLogger();
 
     @Override
     public boolean needsCommandInjectionDetection() {
@@ -130,13 +126,6 @@ public class BaseFakeSMTPSession implements SMTPSession {
      */
     public void popLineHandler() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
-    }
-
-    /**
-     * @see org.apache.james.protocols.smtp.SMTPSession#getLogger()
-     */
-    public Logger getLogger() {
-        return log;
     }
 
     public boolean isStartTLSSupported() {

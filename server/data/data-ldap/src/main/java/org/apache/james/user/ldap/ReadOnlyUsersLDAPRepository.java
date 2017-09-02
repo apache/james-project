@@ -25,9 +25,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
-
 import javax.annotation.PostConstruct;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
@@ -39,11 +39,7 @@ import javax.naming.directory.SearchResult;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.lang.StringUtils;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
@@ -51,10 +47,14 @@ import org.apache.james.user.ldap.api.LdapConstants;
 import org.apache.james.util.retry.DoublingRetrySchedule;
 import org.apache.james.util.retry.api.RetrySchedule;
 import org.apache.james.util.retry.naming.ldap.RetryingLdapContext;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.lang.StringUtils;
 import org.apache.mailet.MailAddress;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
+import com.github.steveash.guavate.Guavate;
 
 /**
  * <p>
@@ -234,7 +234,8 @@ import com.google.common.base.Optional;
  * @see ReadOnlyLDAPGroupRestriction
  *
  */
-public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurable, LogEnabled {
+public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyUsersLDAPRepository.class);
 
     // The name of the factory class which creates the initial context
     // for the LDAP service provider
@@ -335,8 +336,6 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     // retries.
     private int maxRetries = 0;
 
-    private Logger log;
-
     /**
      * Creates a new instance of ReadOnlyUsersLDAPRepository.
      *
@@ -387,7 +386,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         //see if there is a filter argument
         filter = configuration.getString("[@filter]");
 
-        administratorId = Optional.fromNullable(configuration.getString("[@administratorId]"));
+        administratorId = Optional.ofNullable(configuration.getString("[@administratorId]"));
 
         checkState();
     }
@@ -414,8 +413,8 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      */
     @PostConstruct
     public void init() throws Exception {
-        if (log.isDebugEnabled()) {
-            log.debug(this.getClass().getName() + ".init()" + '\n' + "LDAP host: " + ldapHost + '\n' + "User baseDN: " + userBase + '\n' + "userIdAttribute: " + userIdAttribute + '\n' + "Group restriction: " + restriction + '\n' + "UseConnectionPool: " + useConnectionPool + '\n' + "connectionTimeout: " + connectionTimeout + '\n' + "readTimeout: " + readTimeout + '\n' + "retrySchedule: " + schedule + '\n' + "maxRetries: " + maxRetries + '\n');
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(this.getClass().getName() + ".init()" + '\n' + "LDAP host: " + ldapHost + '\n' + "User baseDN: " + userBase + '\n' + "userIdAttribute: " + userIdAttribute + '\n' + "Group restriction: " + restriction + '\n' + "UseConnectionPool: " + useConnectionPool + '\n' + "connectionTimeout: " + connectionTimeout + '\n' + "readTimeout: " + readTimeout + '\n' + "retrySchedule: " + schedule + '\n' + "maxRetries: " + maxRetries + '\n');
         }
         // Setup the initial LDAP context
         updateLdapContext();
@@ -446,7 +445,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      *             Propagated from underlying LDAP communication API.
      */
     protected LdapContext computeLdapContext() throws NamingException {
-        return new RetryingLdapContext(schedule, maxRetries, log) {
+        return new RetryingLdapContext(schedule, maxRetries) {
 
             @Override
             public Context newDelegate() throws NamingException {
@@ -522,7 +521,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      *             Propagated from the LDAP communication layer.
      */
     private Set<String> getAllUsersFromLDAP() throws NamingException {
-        Set<String> result = new HashSet<String>();
+        Set<String> result = new HashSet<>();
 
         SearchControls sc = new SearchControls();
         sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
@@ -553,7 +552,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      */
     private Collection<ReadOnlyLDAPUser> buildUserCollection(Collection<String> userDNs)
             throws NamingException {
-        List<ReadOnlyLDAPUser> results = new ArrayList<ReadOnlyLDAPUser>();
+        List<ReadOnlyLDAPUser> results = new ArrayList<>();
 
         for (String userDN : userDNs) {
             ReadOnlyLDAPUser user = buildUser(userDN);
@@ -655,7 +654,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         try {
             return getValidUsers().size();
         } catch (NamingException e) {
-            log.error("Unable to retrieve user count from ldap", e);
+            LOGGER.error("Unable to retrieve user count from ldap", e);
             throw new UsersRepositoryException("Unable to retrieve user count from ldap", e);
 
         }
@@ -683,7 +682,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         try {
           return searchAndBuildUser(name);
         } catch (NamingException e) {
-            log.error("Unable to retrieve user from ldap", e);
+            LOGGER.error("Unable to retrieve user from ldap", e);
             throw new UsersRepositoryException("Unable to retrieve user from ldap", e);
 
         }
@@ -704,7 +703,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
             }
 
         } catch (NamingException e) {
-            log.error("Unable to retrieve user from ldap", e);
+            LOGGER.error("Unable to retrieve user from ldap", e);
             throw new UsersRepositoryException("Unable to retrieve user from ldap", e);
 
         }
@@ -715,19 +714,17 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      * @see UsersRepository#list()
      */
     public Iterator<String> list() throws UsersRepositoryException {
-        List<String> result = new ArrayList<String>();
         try {
-
-            for (ReadOnlyLDAPUser readOnlyLDAPUser : buildUserCollection(getValidUsers())) {
-                result.add(readOnlyLDAPUser.getUserName());
-            }
+            return buildUserCollection(getValidUsers())
+                .stream()
+                .map(ReadOnlyLDAPUser::getUserName)
+                .collect(Guavate.toImmutableList())
+                .iterator();
         } catch (NamingException namingException) {
             throw new UsersRepositoryException(
                     "Unable to retrieve users list from LDAP due to unknown naming error.",
                     namingException);
         }
-
-        return result.iterator();
     }
 
     private Collection<String> getValidUsers() throws NamingException {
@@ -737,7 +734,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         if (restriction.isActivated()) {
             Map<String, Collection<String>> groupMembershipList = restriction
                     .getGroupMembershipLists(ldapContext);
-            validUserDNs = new ArrayList<String>();
+            validUserDNs = new ArrayList<>();
 
             Iterator<String> userDNIterator = userDNs.iterator();
             String userDN;
@@ -756,7 +753,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      * @see UsersRepository#removeUser(java.lang.String)
      */
     public void removeUser(String name) throws UsersRepositoryException {
-        log.warn("This user-repository is read-only. Modifications are not permitted.");
+        LOGGER.warn("This user-repository is read-only. Modifications are not permitted.");
         throw new UsersRepositoryException(
                 "This user-repository is read-only. Modifications are not permitted.");
 
@@ -774,7 +771,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      * @see UsersRepository#addUser(java.lang.String, java.lang.String)
      */
     public void addUser(String username, String password) throws UsersRepositoryException {
-        log.error("This user-repository is read-only. Modifications are not permitted.");
+        LOGGER.error("This user-repository is read-only. Modifications are not permitted.");
         throw new UsersRepositoryException(
                 "This user-repository is read-only. Modifications are not permitted.");
     }
@@ -782,16 +779,9 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     /**
      */
     public void updateUser(User user) throws UsersRepositoryException {
-        log.error("This user-repository is read-only. Modifications are not permitted.");
+        LOGGER.error("This user-repository is read-only. Modifications are not permitted.");
         throw new UsersRepositoryException(
                 "This user-repository is read-only. Modifications are not permitted.");
-    }
-
-    /**
-     * @see org.apache.james.lifecycle.api.LogEnabled#setLog(org.slf4j.Logger)
-     */
-    public void setLog(Logger log) {
-        this.log = log;
     }
 
     /**

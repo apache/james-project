@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 
 import org.apache.commons.net.pop3.POP3Reply;
 import org.apache.commons.net.pop3.POP3SClient;
@@ -31,7 +32,6 @@ import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.api.handler.WiringException;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
-import org.apache.james.protocols.api.utils.MockLogger;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.pop3.core.AbstractPassCmdHandler;
 import org.apache.james.protocols.pop3.utils.MockMailbox;
@@ -44,7 +44,7 @@ public abstract class AbstractStartTlsPOP3ServerTest {
     private static final int RANDOM_PORT = 0;
 
     private POP3Protocol createProtocol(AbstractPassCmdHandler handler) throws WiringException {
-        return new POP3Protocol(new POP3ProtocolHandlerChain(handler), new POP3Configuration(), new MockLogger());
+        return new POP3Protocol(new POP3ProtocolHandlerChain(handler), new POP3Configuration());
     }
     
     protected POP3SClient createClient() {
@@ -78,13 +78,8 @@ public abstract class AbstractStartTlsPOP3ServerTest {
             assertEquals(POP3Reply.OK, client.sendCommand("CAPA"));
             client.getAdditionalReply();
 
-            boolean startTlsCapa = false;
-            for (String cap: client.getReplyStrings()) {
-                if (cap.equalsIgnoreCase("STLS")) {
-                    startTlsCapa = true;
-                    break;
-                }
-            }
+            boolean startTlsCapa = Arrays.stream(client.getReplyStrings())
+                .anyMatch(cap -> cap.equalsIgnoreCase("STLS"));
             assertTrue(startTlsCapa);
             
             assertTrue(client.execTLS());

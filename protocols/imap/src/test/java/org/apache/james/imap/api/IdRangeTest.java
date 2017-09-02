@@ -18,10 +18,12 @@
  ****************************************************************/
 package org.apache.james.imap.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import static org.junit.Assert.*;
 
 import org.apache.james.imap.api.message.IdRange;
 import org.junit.Test;
@@ -34,7 +36,7 @@ public class IdRangeTest {
         IdRange r2 = new IdRange(4, 5);
         IdRange r3 = new IdRange(7, 10);
         
-        List<IdRange> ranges = new ArrayList<IdRange>();
+        List<IdRange> ranges = new ArrayList<>();
         ranges.add(r);
         ranges.add(r2);
         ranges.add(r3);
@@ -55,7 +57,7 @@ public class IdRangeTest {
         IdRange r2 = new IdRange(1, 4);
         IdRange r3 = new IdRange(6, 7);
         
-        List<IdRange> ranges = new ArrayList<IdRange>();
+        List<IdRange> ranges = new ArrayList<>();
         ranges.add(r);
         ranges.add(r2);
         ranges.add(r3);
@@ -75,7 +77,7 @@ public class IdRangeTest {
         IdRange r2 = new IdRange(1, 4);
         IdRange r3 = new IdRange(5, 7);
         
-        List<IdRange> ranges = new ArrayList<IdRange>();
+        List<IdRange> ranges = new ArrayList<>();
         ranges.add(r);
         ranges.add(r2);
         ranges.add(r3);
@@ -93,7 +95,7 @@ public class IdRangeTest {
         IdRange r2 = new IdRange(1, 4);
         IdRange r3 = new IdRange(10, 15);
         
-        List<IdRange> ranges = new ArrayList<IdRange>();
+        List<IdRange> ranges = new ArrayList<>();
         ranges.add(r);
         ranges.add(r2);
         ranges.add(r3);
@@ -111,7 +113,7 @@ public class IdRangeTest {
         IdRange r2 = new IdRange(1, 1);
         IdRange r3 = new IdRange(2, 2);
         
-        List<IdRange> ranges = new ArrayList<IdRange>();
+        List<IdRange> ranges = new ArrayList<>();
         ranges.add(r);
         ranges.add(r2);
         ranges.add(r3);

@@ -22,7 +22,7 @@ package org.apache.james.transport.mailets;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
-
+import java.util.stream.Stream;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
@@ -38,11 +38,12 @@ import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -69,17 +70,7 @@ import com.google.common.collect.ImmutableList;
  */
 @Experimental
 public class UseHeaderRecipients extends GenericMailet {
-
-    public static final Function<Mailbox, MailAddress> TO_MAIL_ADDRESS = new Function<Mailbox, MailAddress>() {
-        @Override
-        public MailAddress apply(Mailbox input) {
-            try {
-                return new MailAddress(input.getAddress());
-            } catch (AddressException e) {
-                throw Throwables.propagate(e);
-            }
-        }
-    };
+    private static final Logger LOGGER = LoggerFactory.getLogger(UseHeaderRecipients.class);
 
     /**
      * Controls certain log messages
@@ -108,8 +99,8 @@ public class UseHeaderRecipients extends GenericMailet {
         mail.setRecipients(headersAddresses(message));
 
         if (isDebug) {
-            log("All recipients = " + mail.getRecipients());
-            log("Reprocessing mail using recipients in message headers");
+            LOGGER.debug("All recipients = " + mail.getRecipients());
+            LOGGER.debug("Reprocessing mail using recipients in message headers");
         }
 
         // Return email to the "root" process.
@@ -149,7 +140,7 @@ public class UseHeaderRecipients extends GenericMailet {
      */
     private Collection<MailAddress> getHeaderMailAddresses(MimeMessage message, String name) throws MessagingException {
         if (isDebug) {
-            log("Checking " + name + " headers");
+            LOGGER.debug("Checking " + name + " headers");
         }
         String[] headers = message.getHeader(name);
         ImmutableList.Builder<MailAddress> addresses = ImmutableList.builder();
@@ -172,7 +163,7 @@ public class UseHeaderRecipients extends GenericMailet {
         ImmutableList.Builder<MailAddress> result = ImmutableList.builder();
         for (String headerPart : headerParts) {
             if (isDebug) {
-                log("Address = " + headerPart);
+                LOGGER.debug("Address = " + headerPart);
             }
             result.addAll(readMailAddresses(headerPart));
         }
@@ -183,24 +174,27 @@ public class UseHeaderRecipients extends GenericMailet {
         AddressList addressList = LenientAddressParser.DEFAULT
             .parseAddressList(MimeUtil.unfold(headerPart));
 
-        ImmutableList.Builder<Mailbox> mailboxList = ImmutableList.builder();
-
-        for (Address address: addressList) {
-            mailboxList.addAll(convertAddressToMailboxCollection(address));
-        }
-
-        return FluentIterable.from(mailboxList.build())
-            .transform(TO_MAIL_ADDRESS)
-            .toList();
+        return addressList.stream()
+            .flatMap(address -> convertAddressToMailboxCollection(address))
+            .map(this::toMailAddress)
+            .collect(Guavate.toImmutableList());
     }
 
-    private Collection<Mailbox> convertAddressToMailboxCollection(Address address) {
-        if (address instanceof Mailbox) {
-            return ImmutableList.of((Mailbox) address);
-        } else if (address instanceof Group) {
-            return ImmutableList.copyOf(((Group) address).getMailboxes());
+    private MailAddress toMailAddress(Mailbox mailbox) {
+        try {
+            return new MailAddress(mailbox.getAddress());
+        } catch (AddressException e) {
+            throw Throwables.propagate(e);
         }
-        return ImmutableList.of();
+    }
+
+    private Stream<Mailbox> convertAddressToMailboxCollection(Address address) {
+        if (address instanceof Mailbox) {
+            return ImmutableList.of((Mailbox) address).stream();
+        } else if (address instanceof Group) {
+            return ImmutableList.copyOf(((Group) address).getMailboxes()).stream();
+        }
+        return Stream.of();
     }
 
     private String sanitizeHeaderString(String header) throws MessagingException {

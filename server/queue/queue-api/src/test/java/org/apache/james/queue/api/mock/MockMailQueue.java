@@ -27,7 +27,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
 import javax.mail.MessagingException;
+
+import org.apache.commons.io.IOUtils;
 import org.apache.james.core.MailImpl;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.mailet.Mail;
@@ -38,7 +41,7 @@ public class MockMailQueue implements MailQueue {
 
     private static final Logger log = LoggerFactory.getLogger(MockMailQueue.class.getName());
 
-    private final LinkedBlockingQueue<Mail> queue = new LinkedBlockingQueue<Mail>();
+    private final LinkedBlockingQueue<Mail> queue = new LinkedBlockingQueue<>();
     private boolean throwException;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
@@ -87,25 +90,12 @@ public class MockMailQueue implements MailQueue {
             bais = new ByteArrayInputStream(baos.toByteArray());
             return new MailImpl("MockMailCopy" + new Random().nextLong(),
                     mail.getSender(), mail.getRecipients(), bais);
-        } catch (MessagingException ex) {
-            log.error("", ex);
-            throw new RuntimeException(ex);
-        } catch (IOException ex) {
-            log.error("", ex);
+        } catch (MessagingException | IOException ex) {
+            log.error("Exception caught", ex);
             throw new RuntimeException(ex);
         } finally {
-            try {
-                if (bais != null) {
-                    bais.close();
-                }
-            } catch (IOException ex) {
-            }
-            try {
-                if (baos != null) {
-                    baos.close();
-                }
-            } catch (IOException ex) {
-            }
+            IOUtils.closeQuietly(bais);
+            IOUtils.closeQuietly(baos);
         }
     }
 
@@ -116,16 +106,12 @@ public class MockMailQueue implements MailQueue {
             throw new MailQueueException("Mock");
         }
 
-        scheduler.schedule(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    queue.put(MockMailQueue.this.cloneMail(mail));
-                } catch (InterruptedException e) {
-                    log.error("", e);
-                    throw new RuntimeException("Mock", e);
-                }
+        scheduler.schedule(() -> {
+            try {
+                queue.put(MockMailQueue.this.cloneMail(mail));
+            } catch (InterruptedException e) {
+                log.error("", e);
+                throw new RuntimeException("Mock", e);
             }
         }, delay, unit);
     }

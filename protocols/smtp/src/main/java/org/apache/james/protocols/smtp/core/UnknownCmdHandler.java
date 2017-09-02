@@ -21,9 +21,7 @@
 
 package org.apache.james.protocols.smtp.core;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 import javax.inject.Inject;
 
@@ -31,14 +29,16 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
-import org.apache.james.protocols.api.handler.UnknownCommandHandler;
 import org.apache.james.protocols.api.Response;
+import org.apache.james.protocols.api.handler.UnknownCommandHandler;
 import org.apache.james.protocols.smtp.SMTPResponse;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.UnknownHook;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
   * Default command handler for handling unknown commands
@@ -48,7 +48,7 @@ public class UnknownCmdHandler extends AbstractHookableCmdHandler<UnknownHook>{
     /**
      * The name of the command handled by the command handler
      */
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList(UnknownCommandHandler.COMMAND_IDENTIFIER));
+    private static final Collection<String> COMMANDS = ImmutableSet.of(UnknownCommandHandler.COMMAND_IDENTIFIER);
 
     @Inject
     public UnknownCmdHandler(MetricFactory metricFactory) {

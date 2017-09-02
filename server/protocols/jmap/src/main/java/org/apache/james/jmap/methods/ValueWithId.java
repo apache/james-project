@@ -24,6 +24,8 @@ import org.apache.james.jmap.model.CreationMessageId;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.SetError;
 
+import com.google.common.base.MoreObjects;
+
 public class ValueWithId<T> {
 
     private CreationMessageId creationId;
@@ -60,4 +62,11 @@ public class ValueWithId<T> {
         }
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("creationId", creationId)
+            .add("value", value)
+            .toString();
+    }
 }

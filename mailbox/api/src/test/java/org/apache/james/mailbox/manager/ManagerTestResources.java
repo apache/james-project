@@ -19,32 +19,29 @@
 
 package org.apache.james.mailbox.manager;
 
+import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.Calendar;
+
+import javax.mail.Flags;
+
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.mock.MockMail;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.mail.Flags;
-import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.Calendar;
 
 /**
  * Provide an initialized Mailbox environment where we can run managers tests
  */
 public class ManagerTestResources {
-
-    private static final Logger LOG = LoggerFactory.getLogger(ManagerTestResources.class);
 
     public static final String USER = "user@domain.org";
     public static final String USER_PASS = "pass";
@@ -72,7 +69,7 @@ public class ManagerTestResources {
         quotaRootResolver = integrationResources.createQuotaRootResolver(mailboxManager);
         quotaManager = integrationResources.createQuotaManager(maxQuotaManager, mailboxManager);
         integrationResources.init();
-        session = mailboxManager.login(USER, USER_PASS, LOG);
+        session = mailboxManager.login(USER, USER_PASS);
         inbox = MailboxPath.inbox(session);
         subFolder = new MailboxPath(inbox, "INBOX.SUB");
 

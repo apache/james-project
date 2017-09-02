@@ -25,6 +25,7 @@ import org.apache.james.mailbox.jcr.JCRImapConstants;
 import org.apache.james.mailbox.jcr.Persistent;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * JCR implementation of {@link Property}
@@ -32,8 +33,9 @@ import org.slf4j.Logger;
  */
 public class JCRProperty implements JCRImapConstants, Persistent, Property {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(JCRProperty.class);
+
     private Node node;
-    private final Logger logger;
     private String namespace;
     private String localName;
     private String value;
@@ -44,20 +46,18 @@ public class JCRProperty implements JCRImapConstants, Persistent, Property {
     public final static String VALUE_PROPERTY =  "jamesMailbox:propertyValue";
     public final static String ORDER_PROPERTY =  "jamesMailbox:propertyOrder";
 
-    public JCRProperty(Node node, Logger logger) {
+    public JCRProperty(Node node) {
         this.node = node;
-        this.logger = logger;
     }
 
-    public JCRProperty(String namespace, String localName, String value, Logger logger) {
+    public JCRProperty(String namespace, String localName, String value) {
         this.namespace = namespace;
         this.localName = localName;
         this.value = value;
-        this.logger = logger;
     }
 
-    public JCRProperty(Property property, Logger logger) {
-        this(property.getNamespace(), property.getLocalName(), property.getValue(), logger);
+    public JCRProperty(Property property) {
+        this(property.getNamespace(), property.getLocalName(), property.getValue());
     }
     /*
      * (non-Javadoc)
@@ -71,7 +71,7 @@ public class JCRProperty implements JCRImapConstants, Persistent, Property {
             try {
                 return (int)node.getProperty(ORDER_PROPERTY).getLong();
             } catch (RepositoryException e) {
-                logger.error("Unable to access Property " + ORDER_PROPERTY, e);
+                LOGGER.error("Unable to access Property " + ORDER_PROPERTY, e);
             }
             return 0;
         }
@@ -97,7 +97,7 @@ public class JCRProperty implements JCRImapConstants, Persistent, Property {
             try {
                 return node.getProperty(LOCALNAME_PROPERTY).getString();
             } catch (RepositoryException e) {
-                logger.error("Unable to access Property " + LOCALNAME_PROPERTY, e);
+                LOGGER.error("Unable to access Property " + LOCALNAME_PROPERTY, e);
             }
             return null;
         }
@@ -114,7 +114,7 @@ public class JCRProperty implements JCRImapConstants, Persistent, Property {
             try {
                 return node.getProperty(NAMESPACE_PROPERTY).getString();
             } catch (RepositoryException e) {
-                logger.error("Unable to access Property " + NAMESPACE_PROPERTY, e);
+                LOGGER.error("Unable to access Property " + NAMESPACE_PROPERTY, e);
             }
             return null;
         }
@@ -131,7 +131,7 @@ public class JCRProperty implements JCRImapConstants, Persistent, Property {
             try {
                 return node.getProperty(VALUE_PROPERTY).getString();
             } catch (RepositoryException e) {
-                logger.error("Unable to access Property " + VALUE_PROPERTY, e);
+                LOGGER.error("Unable to access Property " + VALUE_PROPERTY, e);
             }
             return null;
         }

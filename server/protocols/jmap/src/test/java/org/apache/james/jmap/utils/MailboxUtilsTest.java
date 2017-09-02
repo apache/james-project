@@ -28,12 +28,8 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class MailboxUtilsTest {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(MailboxUtilsTest.class);
 
     private MailboxManager mailboxManager;
     private MailboxSession mailboxSession;
@@ -45,7 +41,7 @@ public class MailboxUtilsTest {
         InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
         mailboxManager = inMemoryIntegrationResources.createMailboxManager(inMemoryIntegrationResources.createGroupMembershipResolver());
         user = "user@domain.org";
-        mailboxSession = mailboxManager.login(user, "pass", LOGGER);
+        mailboxSession = mailboxManager.login(user, "pass");
         sut = new MailboxUtils(mailboxManager);
     }
     @Test

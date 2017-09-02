@@ -37,10 +37,12 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 public class MailboxRegistrationTest {
@@ -49,15 +51,16 @@ public class MailboxRegistrationTest {
     public static final MessageUid UID = MessageUid.of(18);
     public static final int UID_VALIDITY = 45;
     public static final SimpleMailbox MAILBOX = new SimpleMailbox(INBOX, UID_VALIDITY);
-    public static final MockMailboxSession SESSION = new MockMailboxSession("test");
     public static final int MOD_SEQ = 21;
     public static final int SIZE = 41;
     public static final Flags NEW_FLAGS = new Flags(Flags.Flag.ANSWERED);
     private MailboxRegistration mailboxRegistration;
     private EventFactory eventFactory;
+    private MockMailboxSession session;
 
     @Before
     public void setUp() {
+        session = new MockMailboxSession("test");
         eventFactory = new EventFactory();
         mailboxRegistration = new MailboxRegistration(INBOX);
     }
@@ -70,25 +73,25 @@ public class MailboxRegistrationTest {
 
     @Test
     public void AddedEventsShouldNotBeReported() {
-        TreeMap<MessageUid, MessageMetaData> treeMap = new TreeMap<MessageUid, MessageMetaData>();
+        TreeMap<MessageUid, MessageMetaData> treeMap = new TreeMap<>();
         treeMap.put(UID, new SimpleMessageMetaData(UID, MOD_SEQ, new Flags(), SIZE, new Date(), new DefaultMessageId()));
-        MailboxListener.Event event = eventFactory.added(SESSION, treeMap, MAILBOX);
+        MailboxListener.Event event = eventFactory.added(session, treeMap, MAILBOX, ImmutableMap.<MessageUid, MailboxMessage> of());
         mailboxRegistration.event(event);
         assertThat(mailboxRegistration.getImpactingEvents(UID)).isEmpty();
     }
 
     @Test
     public void ExpungedEventsShouldBeReported() {
-        TreeMap<MessageUid, MessageMetaData> treeMap = new TreeMap<MessageUid, MessageMetaData>();
+        TreeMap<MessageUid, MessageMetaData> treeMap = new TreeMap<>();
         treeMap.put(UID, new SimpleMessageMetaData(UID, MOD_SEQ, new Flags(), SIZE, new Date(), new DefaultMessageId()));
-        MailboxListener.Event event = eventFactory.expunged(SESSION, treeMap, MAILBOX);
+        MailboxListener.Event event = eventFactory.expunged(session, treeMap, MAILBOX);
         mailboxRegistration.event(event);
         assertThat(mailboxRegistration.getImpactingEvents(UID)).containsExactly(new MessageDeletedEvent(INBOX, UID));
     }
 
     @Test
     public void FlagsEventsShouldBeReported() {
-        MailboxListener.Event event = eventFactory.flagsUpdated(SESSION,
+        MailboxListener.Event event = eventFactory.flagsUpdated(session,
             Lists.newArrayList(UID),
             MAILBOX,
             Lists.newArrayList(UpdatedFlags.builder()

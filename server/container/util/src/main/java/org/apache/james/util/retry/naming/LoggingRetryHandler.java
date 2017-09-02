@@ -25,13 +25,13 @@ import javax.naming.NamingException;
 import org.apache.james.util.retry.api.ExceptionRetryingProxy;
 import org.apache.james.util.retry.api.RetrySchedule;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Abstract class <code>LoggingRetryHandler</code> implements logging of failures 
  */
 abstract public class LoggingRetryHandler extends NamingExceptionRetryHandler {
-    
-    private Logger _logger = null;
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoggingRetryHandler.class);
 
     /**
      * Creates a new instance of LoggingRetryHandler.
@@ -39,12 +39,10 @@ abstract public class LoggingRetryHandler extends NamingExceptionRetryHandler {
      * @param exceptionClasses
      * @param proxy
      * @param maxRetries
-     * @param logger
      */
     public LoggingRetryHandler(Class<?>[] exceptionClasses, ExceptionRetryingProxy proxy,
-            RetrySchedule schedule, int maxRetries, Logger logger) {
+                               RetrySchedule schedule, int maxRetries) {
         super(exceptionClasses, proxy, schedule, maxRetries);
-        _logger = logger;
     }
 
     /**
@@ -52,7 +50,7 @@ abstract public class LoggingRetryHandler extends NamingExceptionRetryHandler {
     @Override
     public void postFailure(NamingException ex, int retryCount) {
         super.postFailure(ex, retryCount);
-        _logger.info(
+        LOGGER.info(
                 "Retry failure: " + ex.getLocalizedMessage() + "\n Retrying in " + getRetryInterval(retryCount) / 1000 + " seconds"
                 );
     }

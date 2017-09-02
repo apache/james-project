@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
+
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -34,8 +36,13 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeleteProcessor.class);
 
     public DeleteProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
@@ -61,20 +68,26 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
             unsolicitedResponses(session, responder, false);
             okComplete(command, tag, responder);
         } catch (MailboxNotFoundException e) {
-            if (session.getLog().isDebugEnabled()) {
-                session.getLog().debug("Delete failed for mailbox " + mailboxPath + " as it not exist", e);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Delete failed for mailbox " + mailboxPath + " as it not exist", e);
             }
             no(command, tag, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX);
         } catch (TooLongMailboxNameException e) {
-            if (session.getLog().isDebugEnabled()) {
-                session.getLog().debug("The mailbox name length is over limit: " + mailboxPath.getName(), e);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("The mailbox name length is over limit: " + mailboxPath.getName(), e);
             }
             taggedBad(command, tag, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Delete failed for mailbox " + mailboxPath, e);
-            }
+            LOGGER.error("Delete failed for mailbox " + mailboxPath, e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
+    }
+
+    @Override
+    protected Closeable addContextToMDC(DeleteRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "DELETE")
+            .addContext("mailbox", message.getMailboxName())
+            .build();
     }
 }

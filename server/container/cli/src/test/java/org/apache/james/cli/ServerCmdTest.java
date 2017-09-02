@@ -41,7 +41,6 @@ import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.mailbox.store.probe.QuotaProbe;
 import org.apache.james.mailbox.store.probe.SieveProbe;
 import org.apache.james.probe.DataProbe;
-import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.easymock.IMocksControl;
 import org.junit.Before;
@@ -172,7 +171,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTMAPPINGS.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(dataProbe.listMappings()).andReturn(new HashMap<String, Mappings>());
+        expect(dataProbe.listMappings()).andReturn(new HashMap<>());
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -332,14 +331,31 @@ public class ServerCmdTest {
         testee.executeCommandLine(commandLine);
         control.verify();
     }
+    
+    @Test
+    public void importEmlFileToMailboxCommandShouldWork() throws Exception {
+        String user = "user@domain";
+        String namespace = "#private";
+        String name = "INBOX.test";
+        String emlpath = "./src/test/resources/eml/frnog.eml";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.IMPORTEML.getCommand(), namespace, user, name, emlpath};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
+        mailboxProbe.importEmlFileToMailbox(namespace, user, name, emlpath);
+        expectLastCall();
+
+        control.replay();
+        testee.executeCommandLine(commandLine);
+        control.verify();
+    }
+	
     @Test
     public void listUserMailboxesMappingsCommandShouldWork() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERMAILBOXES.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(mailboxProbe.listUserMailboxes(user)).andReturn(new ArrayList<String>());
+        expect(mailboxProbe.listUserMailboxes(user)).andReturn(new ArrayList<>());
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -811,6 +827,23 @@ public class ServerCmdTest {
             control.verify();
         }
     }
+	
+	
+    @Test(expected = InvalidArgumentNumberException.class)
+    public void importEmlFileToMailboxCommandShouldThrowOnMissingArguments() throws Exception {
+        String user = "user@domain";
+        String namespace = "#private";
+        String name = "INBOX.test";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.IMPORTEML.getCommand(), namespace, user, name};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        control.replay();
+        try {
+            testee.executeCommandLine(commandLine);
+        } finally {
+            control.verify();
+        }
+    }
 
     @Test(expected = InvalidArgumentNumberException.class)
     public void listUserMailboxesMappingsCommandShouldThrowOnMissingArguments() throws Exception {
@@ -1091,6 +1124,23 @@ public class ServerCmdTest {
     }
 
     @Test(expected = InvalidArgumentNumberException.class)
+    public void importEmlFileToMailboxCommandShouldThrowOnAdditionalArguments() throws Exception {
+        String user = "user@domain";
+        String namespace = "#private";
+        String name = "INBOX.test";
+        String emlpath = "./src/test/resources/eml/frnog.eml";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.IMPORTEML.getCommand(), namespace, user, name, emlpath, ADDITIONAL_ARGUMENT};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        control.replay();
+        try {
+            testee.executeCommandLine(commandLine);
+        } finally {
+            control.verify();
+        }
+    }
+	
+    @Test(expected = InvalidArgumentNumberException.class)
     public void listUserMailboxesMappingsCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERMAILBOXES.getCommand(), user, ADDITIONAL_ARGUMENT };
@@ -1264,6 +1314,41 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "command", "arg1", "arg2", "arg3" };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
         assertThat(commandLine.getOptionValue(ServerCmd.HOST_OPT_LONG)).isEqualTo("127.0.0.1");
+    }
+
+    @Test
+    public void getHostShouldUseDefaultValueWhenNone() throws Exception {
+        String[] arguments = { "-p", "9999", "command", "arg1", "arg2", "arg3" };
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+        assertThat(ServerCmd.getHost(commandLine)).isEqualTo("127.0.0.1");
+    }
+
+    @Test
+    public void getHostShouldUseDefaultValueWhenEmpty() throws Exception {
+        String[] arguments = { "-h", "", "-p", "9999", "command", "arg1", "arg2", "arg3" };
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+        assertThat(ServerCmd.getHost(commandLine)).isEqualTo("127.0.0.1");
+    }
+
+    @Test
+    public void getHostShouldReturnValueWhenGiven() throws Exception {
+        String[] arguments = { "-h", "123.4.5.6", "-p", "9999", "command", "arg1", "arg2", "arg3" };
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+        assertThat(ServerCmd.getHost(commandLine)).isEqualTo("123.4.5.6");
+    }
+
+    @Test
+    public void getPortShouldUseDefaultValueWhenNone() throws Exception {
+        String[] arguments = { "-h", "127.0.0.1", "command", "arg1", "arg2", "arg3" };
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+        assertThat(ServerCmd.getPort(commandLine)).isEqualTo(9999);
+    }
+
+    @Test
+    public void getPortShouldUseDefaultValueWhenEmpty() throws Exception {
+        String[] arguments = { "-h", "127.0.0.1", "-p", "", "command", "arg1", "arg2", "arg3" };
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+        assertThat(ServerCmd.getPort(commandLine)).isEqualTo(9999);
     }
 
     @Test

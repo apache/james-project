@@ -22,9 +22,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>apache-james-mpt-imapmailbox</artifactId>
         <groupId>org.apache.james</groupId>
-        <version>3.0.0-RC2-SNAPSHOT</version>
+        <artifactId>apache-james-mpt-imapmailbox</artifactId>
+        <version>3.1.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>apache-james-mpt-imapmailbox-jpa</artifactId>
@@ -32,30 +32,30 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-backends-jpa</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>apache-james-mpt-imapmailbox-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-jpa</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-jpa</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-store</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>apache-james-mailbox-jpa</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mpt-imapmailbox-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
@@ -64,4 +64,3 @@
         </dependency>
     </dependencies>
 </project>
-

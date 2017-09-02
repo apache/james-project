@@ -19,9 +19,6 @@
 
 package org.apache.james.user.lib.util;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeUtility;
-
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -30,6 +27,9 @@ import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeUtility;
 
 /**
  * Computes and verifies digests of files and strings
@@ -148,10 +148,8 @@ public class DigestUtil {
             OutputStream encodedStream = MimeUtility.encode(bos, "base64");
             encodedStream.write(digest);
             return bos.toString("iso-8859-1");
-        } catch (IOException ioe) {
-            throw new RuntimeException("Fatal error: " + ioe);
-        } catch (MessagingException me) {
-            throw new RuntimeException("Fatal error: " + me);
+        } catch (IOException | MessagingException e) {
+            throw new RuntimeException("Fatal error: " + e);
         }
     }
 

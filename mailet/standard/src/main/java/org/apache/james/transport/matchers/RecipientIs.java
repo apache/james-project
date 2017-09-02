@@ -29,6 +29,18 @@ import org.apache.mailet.base.GenericRecipientMatcher;
 
 import com.google.common.base.Strings;
 
+
+/**
+ * This matcher matches a specific recipient (in the envelope of the mail), passed as a condition to this matcher.
+ *
+ *
+ * <p>The example below will match only the recipient user@domain</p>
+ *
+ * <pre><code>
+ * &lt;mailet match=&quot;RecipientIs=user@domain&quot; class=&quot;&lt;any-class&gt;&quot;&gt;
+ * &lt;/mailet&gt;
+ * </code></pre>
+ */
 public class RecipientIs extends GenericRecipientMatcher {
 
     private Collection<MailAddress> recipients;

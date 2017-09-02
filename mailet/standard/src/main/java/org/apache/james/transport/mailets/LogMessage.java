@@ -32,7 +32,10 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.io.IOUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 
 /**
@@ -43,16 +46,26 @@ import com.google.common.io.ByteStreams;
  * @version This is $Revision: 1.8.4.2 $
  */
 public class LogMessage extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(LogMessage.class);
 
     /**
      * Whether this mailet should allow mails to be processed by additional mailets
      * or mark it as finished.
      */
+    private final Logger logger;
     private boolean passThrough = true;
     private boolean headers = true;
     private boolean body = true;
     private int bodyMax = 0;
     private String comment = null;
+
+    public LogMessage(Logger logger) {
+        this.logger = logger;
+    }
+
+    public LogMessage() {
+        this(LOGGER);
+    }
 
     @Override
     public void init() {
@@ -63,6 +76,7 @@ public class LogMessage extends GenericMailet {
             bodyMax = (getInitParameter("maxBody") == null) ? 0 : Integer.parseInt(getInitParameter("maxBody"));
             comment = getInitParameter("comment");
         } catch (Exception e) {
+            logger.error("Caught exception while initializing LogMessage", e);
         }
     }
 
@@ -73,16 +87,14 @@ public class LogMessage extends GenericMailet {
 
     @Override
     public void service(Mail mail) {
-        log("Logging mail " + mail.getName());
+        logger.info("Logging mail " + mail.getName());
         logComment();
         try {
             MimeMessage message = mail.getMessage();
             logHeaders(message);
             logBody(message);
-        } catch (MessagingException e) {
-            log("Error logging message.", e);
-        } catch (java.io.IOException e) {
-            log("Error logging message.", e);
+        } catch (MessagingException | IOException e) {
+            logger.error("Error logging message.", e);
         }
         if (!passThrough) {
             mail.setState(Mail.GHOST);
@@ -91,16 +103,16 @@ public class LogMessage extends GenericMailet {
 
     private void logComment() {
         if (comment != null) {
-            log(comment);
+            logger.info(comment);
         }
     }
 
     @SuppressWarnings("unchecked")
     private void logHeaders(MimeMessage message) throws MessagingException {
         if (headers) {
-            log("\n");
+            logger.info("\n");
             for (String header : Collections.list((Enumeration<String>) message.getAllHeaderLines())) {
-                log(header + "\n");
+                logger.info(header + "\n");
             }
         }
     }
@@ -108,7 +120,7 @@ public class LogMessage extends GenericMailet {
     private void logBody(MimeMessage message) throws MessagingException, IOException {
         if (body) {
             InputStream inputStream = ByteStreams.limit(message.getRawInputStream(), lengthToLog(message));
-            log(IOUtils.toString(inputStream));
+            logger.info(IOUtils.toString(inputStream, Charsets.UTF_8));
         }
     }
 

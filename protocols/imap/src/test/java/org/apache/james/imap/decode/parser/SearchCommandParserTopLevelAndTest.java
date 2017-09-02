@@ -19,7 +19,7 @@
 
 package org.apache.james.imap.decode.parser;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -39,13 +39,10 @@ import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.protocols.imap.DecodingException;
 import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(JMock.class)
 public class SearchCommandParserTopLevelAndTest {
 
     Input[] one = { sequence() };
@@ -173,7 +170,7 @@ public class SearchCommandParserTopLevelAndTest {
     }
 
     private void permute(int mutations, Input[] inputs) throws Exception {
-        permute(mutations, new ArrayList<SearchKey>(), new StringBuffer(), inputs);
+        permute(mutations, new ArrayList<>(), new StringBuffer(), inputs);
     }
 
     private void permute(int mutations, List<SearchKey> keys, StringBuffer buffer,
@@ -188,7 +185,7 @@ public class SearchCommandParserTopLevelAndTest {
                     nextBuffer.append(' ');
                 }
                 nextBuffer.append(input.input);
-                List<SearchKey> nextKeys = new ArrayList<SearchKey>(keys);
+                List<SearchKey> nextKeys = new ArrayList<>(keys);
                 nextKeys.add(input.key);
                 permute(mutations, nextKeys, nextBuffer, inputs);
             }

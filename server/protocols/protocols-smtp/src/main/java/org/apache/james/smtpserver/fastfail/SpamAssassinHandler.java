@@ -33,6 +33,8 @@ import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.smtpserver.JamesMessageHook;
 import org.apache.james.util.scanner.SpamAssassinInvoker;
 import org.apache.mailet.Mail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -64,6 +66,7 @@ import org.apache.mailet.Mail;
  * </p>
  */
 public class SpamAssassinHandler implements JamesMessageHook, ProtocolHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SpamAssassinHandler.class);
 
     /** The port spamd is listen on */
     private int spamdPort = 783;
@@ -130,7 +133,7 @@ public class SpamAssassinHandler implements JamesMessageHook, ProtocolHandler {
                     // message
                     if (spamdRejectionHits <= hits) {
                         String buffer = "Rejected message from " + session.getAttachment(SMTPSession.SENDER, State.Transaction).toString() + " from host " + session.getRemoteAddress().getHostName() + " (" + session.getRemoteAddress().getAddress().getHostAddress() + ") This message reach the spam hits treshold. Required rejection hits: " + spamdRejectionHits + " hits: " + hits;
-                        session.getLogger().info(buffer);
+                        LOGGER.info(buffer);
 
                         // Message reject .. abort it!
                         return new HookResult(HookReturnCode.DENY, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_OTHER) + " This message reach the spam hits treshold. Please contact the Postmaster if the email is not SPAM. Message rejected");
@@ -140,7 +143,7 @@ public class SpamAssassinHandler implements JamesMessageHook, ProtocolHandler {
                 }
             }
         } catch (MessagingException e) {
-            session.getLogger().error(e.getMessage());
+            LOGGER.error(e.getMessage());
         }
         return new HookResult(HookReturnCode.DECLINED);
     }

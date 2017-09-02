@@ -22,15 +22,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>james-server</artifactId>
         <groupId>org.apache.james</groupId>
-        <version>3.0.0-RC2-SNAPSHOT</version>
+        <artifactId>james-server</artifactId>
+        <version>3.1.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>jmap-integration-testing</artifactId>
-    <name>Apache James :: Server :: JMAP :: Integration testing</name>
     <packaging>pom</packaging>
+    <name>Apache James :: Server :: JMAP :: Integration testing</name>
 
     <modules>
         <module>jmap-integration-testing-common</module>
@@ -51,4 +51,3 @@
         </profile>
     </profiles>
 </project>
-

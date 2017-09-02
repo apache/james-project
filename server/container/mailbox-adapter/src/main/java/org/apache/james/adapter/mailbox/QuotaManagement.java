@@ -19,6 +19,9 @@
 
 package org.apache.james.adapter.mailbox;
 
+import java.io.Closeable;
+import java.io.IOException;
+
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.exception.MailboxException;
@@ -27,6 +30,9 @@ import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.mail.model.SerializableQuota;
+import org.apache.james.util.MDCBuilder;
+
+import com.google.common.base.Throwables;
 
 public class QuotaManagement implements QuotaManagementMBean {
 
@@ -43,56 +49,144 @@ public class QuotaManagement implements QuotaManagementMBean {
 
     @Override
     public String getQuotaRoot(String namespace, String user, String name) throws MailboxException {
-        return quotaRootResolver.getQuotaRoot(new MailboxPath(namespace, user, name)).getValue();
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addContext(MDCBuilder.ACTION, "getQuotaRoot")
+                     .build()) {
+            return quotaRootResolver.getQuotaRoot(new MailboxPath(namespace, user, name)).getValue();
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     @Override
     public long getMaxMessageCount(String quotaRoot) throws MailboxException {
-        return maxQuotaManager.getMaxMessage(quotaRootResolver.createQuotaRoot(quotaRoot));
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addContext(MDCBuilder.ACTION, "getMaxMessageCount")
+                     .build()) {
+            return maxQuotaManager.getMaxMessage(quotaRootResolver.createQuotaRoot(quotaRoot));
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     @Override
     public long getMaxStorage(String quotaRoot) throws MailboxException {
-        return maxQuotaManager.getMaxStorage(quotaRootResolver.createQuotaRoot(quotaRoot));
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addContext(MDCBuilder.ACTION, "getMaxStorage")
+                     .build()) {
+            return maxQuotaManager.getMaxStorage(quotaRootResolver.createQuotaRoot(quotaRoot));
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     @Override
     public long getDefaultMaxMessageCount() throws MailboxException {
-        return maxQuotaManager.getDefaultMaxMessage();
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addContext(MDCBuilder.ACTION, "getDefaultMaxMessageCount")
+                     .build()) {
+            return maxQuotaManager.getDefaultMaxMessage();
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     @Override
     public long getDefaultMaxStorage() throws MailboxException {
-        return maxQuotaManager.getDefaultMaxStorage();
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addContext(MDCBuilder.ACTION, "getDefaultMaxStorage")
+                     .build()) {
+            return maxQuotaManager.getDefaultMaxStorage();
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     @Override
     public void setMaxMessageCount(String quotaRoot, long maxMessageCount) throws MailboxException {
-        maxQuotaManager.setMaxMessage(quotaRootResolver.createQuotaRoot(quotaRoot), maxMessageCount);
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addContext(MDCBuilder.ACTION, "setMaxMessageCount")
+                     .build()) {
+            maxQuotaManager.setMaxMessage(quotaRootResolver.createQuotaRoot(quotaRoot), maxMessageCount);
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     @Override
     public void setMaxStorage(String quotaRoot, long maxSize) throws MailboxException {
-        maxQuotaManager.setMaxStorage(quotaRootResolver.createQuotaRoot(quotaRoot), maxSize);
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addContext(MDCBuilder.ACTION, "setMaxStorage")
+                     .build()) {
+            maxQuotaManager.setMaxStorage(quotaRootResolver.createQuotaRoot(quotaRoot), maxSize);
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     @Override
     public void setDefaultMaxMessageCount(long maxDefaultMessageCount) throws MailboxException {
-        maxQuotaManager.setDefaultMaxMessage(maxDefaultMessageCount);
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addContext(MDCBuilder.ACTION, "setDefaultMaxMessageCount")
+                     .build()) {
+            maxQuotaManager.setDefaultMaxMessage(maxDefaultMessageCount);
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     @Override
     public void setDefaultMaxStorage(long maxDefaultSize) throws MailboxException {
-        maxQuotaManager.setDefaultMaxStorage(maxDefaultSize);
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addContext(MDCBuilder.ACTION, "setDefaultMaxStorage")
+                     .build()) {
+            maxQuotaManager.setDefaultMaxStorage(maxDefaultSize);
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     @Override
     public SerializableQuota getMessageCountQuota(String quotaRoot) throws MailboxException {
-        return new SerializableQuota(quotaManager.getMessageQuota(quotaRootResolver.createQuotaRoot(quotaRoot)));
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addContext(MDCBuilder.ACTION, "getMessageCountQuota")
+                     .build()) {
+            return new SerializableQuota(quotaManager.getMessageQuota(quotaRootResolver.createQuotaRoot(quotaRoot)));
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     @Override
     public SerializableQuota getStorageQuota(String quotaRoot) throws MailboxException {
-        return new SerializableQuota(quotaManager.getStorageQuota(quotaRootResolver.createQuotaRoot(quotaRoot)));
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addContext(MDCBuilder.ACTION, "getStorageQuota")
+                     .build()) {
+            return new SerializableQuota(quotaManager.getStorageQuota(quotaRootResolver.createQuotaRoot(quotaRoot)));
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
     }
 }

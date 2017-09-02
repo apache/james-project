@@ -26,7 +26,7 @@ import org.apache.james.queue.api.MailQueueFactory;
 
 public class MockMailQueueFactory implements MailQueueFactory {
 
-    private final Map<String, MailQueue> queues = new HashMap<String, MailQueue>();
+    private final Map<String, MailQueue> queues = new HashMap<>();
 
     @Override
     public synchronized MailQueue getQueue(String name) {

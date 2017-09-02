@@ -30,6 +30,8 @@ import org.apache.james.imap.api.message.request.ImapRequest;
  * This supports also the <code>CONDSTORE</code> and the <code>QRESYNC</code> extension
  */
 public abstract class AbstractMailboxSelectionRequest extends AbstractImapRequest {
+
+
     private final String mailboxName;
     private final boolean condstore;
     private final Long lastKnownUidValidity;

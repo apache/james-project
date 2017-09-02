@@ -20,7 +20,10 @@
 package org.apache.james.transport.mailets;
 
 import java.util.List;
-
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
@@ -32,85 +35,38 @@ import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
-import org.apache.mailet.MailetContext.LogLevel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 public class RecipientRewriteTableProcessor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RecipientRewriteTableProcessor.class);
+
     private final org.apache.james.rrt.api.RecipientRewriteTable virtualTableStore;
     private final DomainList domainList;
     private final MailetContext mailetContext;
 
-    private static final Predicate<RrtExecutionResult> recipientWithError = new Predicate<RrtExecutionResult>() {
-        @Override
-        public boolean apply(RrtExecutionResult mappingData) {
-            return mappingData.isError();
-        }
-    };
+    private static final Function<RrtExecutionResult, Stream<MailAddress>> mailAddressesFromMappingData =
+        mappingData -> mappingData.getNewRecipients()
+            .orElse(mappingData.getRecipientWithError()
+                .orElse(ImmutableList.of())).stream();
 
-    private static final Predicate<RrtExecutionResult> recipientWithoutError = new Predicate<RrtExecutionResult>() {
-        @Override
-        public boolean apply(RrtExecutionResult mappingData) {
-            return !mappingData.isError();
-        }
-    };
-
-    private static final Predicate<Mapping> noneDomain = new Predicate<Mapping>() {
-        @Override
-        public boolean apply(Mapping address) {
-            return !address.hasDomain();
-        }
-    };
-
-    private static final Predicate<Mapping> haveDomain = new Predicate<Mapping>() {
-        @Override
-        public boolean apply(Mapping address) {
-            return address.hasDomain();
-        }
-    };
-
-    private static final Function<RrtExecutionResult, List<MailAddress>> mailAddressesFromMappingData = new Function<RecipientRewriteTableProcessor.RrtExecutionResult, List<MailAddress>>() {
-        @Override
-        public List<MailAddress> apply(RrtExecutionResult mappingData) {
-            return mappingData.getNewRecipients()
-                .or(mappingData.getRecipientWithError()
-                    .or(ImmutableList.<MailAddress>of()));
-        }
-    };
-
-    private static final Function<Optional<MailAddress>, MailAddress> mailAddressFromOptional = new Function<Optional<MailAddress>, MailAddress>() {
-        @Override
-        public MailAddress apply(Optional<MailAddress> mailAddress) {
-            return mailAddress.get();
-        }
-    };
-
-    private static final Predicate<Optional<MailAddress>> mailAddressPresent = new Predicate<Optional<MailAddress>>() {
-        @Override
-        public boolean apply(Optional<MailAddress> mailAddress) {
-            return mailAddress.isPresent();
-        }
-    };
-
-    private static final Function<Mapping, Optional<MailAddress>> mailAddressFromMapping = new Function<Mapping, Optional<MailAddress>>() {
-        @Override
-        public Optional<MailAddress> apply(Mapping addressMapping) {
+    private static final Function<Mapping, Optional<MailAddress>> mailAddressFromMapping =
+        addressMapping -> {
             try {
                 return Optional.of(new MailAddress(addressMapping.asString()));
             } catch (AddressException e) {
-                return Optional.absent();
+                return Optional.empty();
             }
-        }
-    };
+        };
 
     public RecipientRewriteTableProcessor(RecipientRewriteTable virtualTableStore, DomainList domainList, MailetContext mailetContext) {
         this.virtualTableStore = virtualTableStore;
@@ -121,9 +77,9 @@ public class RecipientRewriteTableProcessor {
     public void processMail(Mail mail) throws MessagingException{
         ImmutableList<RrtExecutionResult> mappingDatas = toMappingDatas(mail);
 
-        ImmutableList<MailAddress> newRecipients = getRecipientsByCondition(mappingDatas, recipientWithoutError);
+        ImmutableList<MailAddress> newRecipients = getRecipientsByCondition(mappingDatas, mappingData -> !mappingData.isError());
 
-        ImmutableList<MailAddress> errorMailAddresses = getRecipientsByCondition(mappingDatas, recipientWithError);
+        ImmutableList<MailAddress> errorMailAddresses = getRecipientsByCondition(mappingDatas, RrtExecutionResult::isError);
 
         if (!errorMailAddresses.isEmpty()) {
             mailetContext.sendMail(mail.getSender(), errorMailAddresses, mail.getMessage(), Mail.ERROR);
@@ -136,27 +92,25 @@ public class RecipientRewriteTableProcessor {
         mail.setRecipients(newRecipients);
     }
 
+
     private ImmutableList<MailAddress> getRecipientsByCondition(ImmutableList<RrtExecutionResult> mappingDatas, Predicate<RrtExecutionResult> filterCondition) {
-        return FluentIterable.from(mappingDatas)
+        return mappingDatas.stream()
             .filter(filterCondition)
-            .transformAndConcat(mailAddressesFromMappingData)
-            .toList();
+            .flatMap(mailAddressesFromMappingData)
+            .collect(Guavate.toImmutableList());
     }
 
     private ImmutableList<RrtExecutionResult> toMappingDatas(final Mail mail) {
-        Function<MailAddress, RrtExecutionResult> convertToMappingData = new Function<MailAddress, RrtExecutionResult>() {
-            @Override
-            public RrtExecutionResult apply(MailAddress recipient) {
-                Preconditions.checkNotNull(recipient);
+        Function<MailAddress, RrtExecutionResult> convertToMappingData = recipient -> {
+            Preconditions.checkNotNull(recipient);
 
-                return getRrtExecutionResult(mail, recipient);
-            }
-
+            return getRrtExecutionResult(mail, recipient);
         };
 
-        return FluentIterable.from(mail.getRecipients())
-            .transform(convertToMappingData)
-            .toList();
+        return mail.getRecipients()
+            .stream()
+            .map(convertToMappingData)
+            .collect(Guavate.toImmutableList());
     }
 
     private RrtExecutionResult getRrtExecutionResult(Mail mail, MailAddress recipient) {
@@ -165,17 +119,11 @@ public class RecipientRewriteTableProcessor {
 
             if (mappings != null) {
                 List<MailAddress> newMailAddresses = handleMappings(mappings, mail.getSender(), recipient, mail.getMessage());
-                return new RrtExecutionResult(Optional.of(newMailAddresses), Optional.<List<MailAddress>>absent());
+                return new RrtExecutionResult(Optional.of(newMailAddresses), Optional.empty());
             }
             return origin(recipient);
-        } catch (ErrorMappingException e) {
-            mailetContext.log(LogLevel.INFO, "Error while process mail.", e);
-            return error(recipient);
-        } catch (RecipientRewriteTableException e) {
-            mailetContext.log(LogLevel.INFO, "Error while process mail.", e);
-            return error(recipient);
-        } catch (MessagingException e) {
-            mailetContext.log(LogLevel.INFO, "Error while process mail.", e);
+        } catch (ErrorMappingException | RecipientRewriteTableException | MessagingException e) {
+            LOGGER.info("Error while process mail.", e);
             return error(recipient);
         }
     }
@@ -196,79 +144,52 @@ public class RecipientRewriteTableProcessor {
 
     private ImmutableList<Mapping> convertToNewMappings(final Mappings mappings,
             ImmutableList<Mapping> addressWithoutDomains) {
-        return FluentIterable.from(mappings)
-            .filter(haveDomain)
-            .append(addressWithoutDomains)
-            .toList();
+        return Stream.concat(Iterators.toStream(mappings.iterator())
+                    .filter(Mapping::hasDomain),
+                addressWithoutDomains.stream())
+            .collect(Guavate.toImmutableList());
     }
 
     private ImmutableList<MailAddress> getLocalAddresses(ImmutableList<MailAddress> mailAddresses) {
-        return FluentIterable.from(mailAddresses)
-            .filter(isLocalServer())
-            .toList();
+        return mailAddresses.stream()
+            .filter(mailAddress -> mailetContext.isLocalServer(mailAddress.getDomain()))
+            .collect(Guavate.toImmutableList());
     }
 
     private ImmutableList<MailAddress> buildMailAddressFromMappingAddress(ImmutableList<Mapping> newMappings) {
-        return FluentIterable.from(newMappings)
-            .transform(mailAddressFromMapping)
-            .filter(mailAddressPresent)
-            .transform(mailAddressFromOptional)
-            .toList();
+        return newMappings.stream()
+            .map(mailAddressFromMapping)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(Guavate.toImmutableList());
     }
 
     private ImmutableList<Mapping> getAddressWithNoDomain(Mappings mappings, DomainList domainList) throws MessagingException {
-        ImmutableList<Mapping> addressWithoutDomains = FluentIterable.from(mappings)
-            .filter(noneDomain)
-            .toList();
+        ImmutableList<Mapping> addressWithoutDomains = Iterators.toStream(mappings.iterator())
+            .filter(address -> !address.hasDomain())
+            .collect(Guavate.toImmutableList());
         
         if (!addressWithoutDomains.isEmpty()) {
             final String defaultDomain = getDefaultDomain(domainList);
 
-            return FluentIterable.from(addressWithoutDomains)
-                .transform(appendDefaultDomain(defaultDomain))
-                .toList();
+            return addressWithoutDomains.stream()
+                .map(address -> address.appendDomain(defaultDomain))
+                .collect(Guavate.toImmutableList());
         }
         return ImmutableList.of();
     }
 
-    private Function<Mapping, Mapping> appendDefaultDomain(final String defaultDomain) {
-        return new Function<Mapping, Mapping>() {
-            @Override
-            public Mapping apply(Mapping address) {
-                return address.appendDomain(defaultDomain);
-            }
-        };
-    }
-
-    private Predicate<MailAddress> isLocalServer() {
-        return new Predicate<MailAddress>() {
-            @Override
-            public boolean apply(MailAddress mailAddress) {
-                return mailetContext.isLocalServer(mailAddress.getDomain());
-            }
-        };
-    }
-
-    private Predicate<MailAddress> isNotLocalServer() {
-        return new Predicate<MailAddress>() {
-            @Override
-            public boolean apply(MailAddress mailAddress) {
-                return !mailetContext.isLocalServer(mailAddress.getDomain());
-            }
-        };
-    }
-
     private void forwardToRemoteAddress(MailAddress sender, MailAddress recipient, MimeMessage message, ImmutableList<MailAddress> mailAddresses) throws MessagingException {
-        ImmutableList<MailAddress> remoteAddress = FluentIterable.from(mailAddresses)
-            .filter(isNotLocalServer())
-            .toList();
+        ImmutableList<MailAddress> remoteAddress = mailAddresses.stream()
+            .filter(mailAddress -> !mailetContext.isLocalServer(mailAddress.getDomain()))
+            .collect(Guavate.toImmutableList());
 
         if (!remoteAddress.isEmpty()) {
             try {
                 mailetContext.sendMail(sender, remoteAddress, message);
-                mailetContext.log(LogLevel.INFO, "Mail for " + recipient + " forwarded to " + remoteAddress);
+                LOGGER.info("Mail for " + recipient + " forwarded to " + remoteAddress);
             } catch (MessagingException ex) {
-                mailetContext.log(LogLevel.WARN, "Error forwarding mail to " + remoteAddress);
+                LOGGER.warn("Error forwarding mail to " + remoteAddress);
             }
         }
     }
@@ -282,11 +203,11 @@ public class RecipientRewriteTableProcessor {
     }
     
     private RrtExecutionResult error(MailAddress mailAddress) {
-        return new RrtExecutionResult(Optional.<List<MailAddress>>absent(), Optional.<List<MailAddress>>of(ImmutableList.of(mailAddress)));
+        return new RrtExecutionResult(Optional.empty(), Optional.<List<MailAddress>>of(ImmutableList.of(mailAddress)));
     }
 
     private RrtExecutionResult origin(MailAddress mailAddress) {
-        return new RrtExecutionResult(Optional.<List<MailAddress>>of(ImmutableList.of(mailAddress)), Optional.<List<MailAddress>>absent());
+        return new RrtExecutionResult(Optional.<List<MailAddress>>of(ImmutableList.of(mailAddress)), Optional.empty());
     }
 
     class RrtExecutionResult {

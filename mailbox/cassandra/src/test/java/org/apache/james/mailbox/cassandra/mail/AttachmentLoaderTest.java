@@ -21,7 +21,6 @@ package org.apache.james.mailbox.cassandra.mail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -32,13 +31,12 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
-import org.apache.james.util.OptionalConverter;
-import org.assertj.core.data.MapEntry;
-import org.junit.Before;
-import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import org.assertj.core.data.MapEntry;
+import org.junit.Before;
+import org.junit.Test;
 
 public class AttachmentLoaderTest {
 
@@ -67,12 +65,12 @@ public class AttachmentLoaderTest {
         Optional<String> name = Optional.of("name1");
         Optional<Cid> cid = Optional.empty();
         boolean isInlined = false;
-        CassandraMessageDAO.MessageAttachmentRepresentation attachmentRepresentation = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId, name, cid, isInlined);
+        MessageAttachmentRepresentation attachmentRepresentation = new MessageAttachmentRepresentation(attachmentId, name, cid, isInlined);
 
         Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation, attachmentRepresentation))
             .join();
 
-        MessageAttachment expectedAttachment = new MessageAttachment(attachment, OptionalConverter.toGuava(name), OptionalConverter.toGuava(cid), isInlined);
+        MessageAttachment expectedAttachment = new MessageAttachment(attachment, name, cid, isInlined);
         assertThat(attachments).hasSize(2)
             .containsOnly(expectedAttachment, expectedAttachment);
     }
@@ -94,15 +92,15 @@ public class AttachmentLoaderTest {
         Optional<String> name2 = Optional.of("name2");
         Optional<Cid> cid = Optional.empty();
         boolean isInlined = false;
-        CassandraMessageDAO.MessageAttachmentRepresentation attachmentRepresentation1 = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId, name1, cid, isInlined);
-        CassandraMessageDAO.MessageAttachmentRepresentation attachmentRepresentation2 = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId, name2, cid, isInlined);
+        MessageAttachmentRepresentation attachmentRepresentation1 = new MessageAttachmentRepresentation(attachmentId, name1, cid, isInlined);
+        MessageAttachmentRepresentation attachmentRepresentation2 = new MessageAttachmentRepresentation(attachmentId, name2, cid, isInlined);
 
         Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation1, attachmentRepresentation2))
             .join();
 
         assertThat(attachments).hasSize(2)
-            .containsOnly(new MessageAttachment(attachment, OptionalConverter.toGuava(name1), OptionalConverter.toGuava(cid), isInlined),
-                new MessageAttachment(attachment, OptionalConverter.toGuava(name2), OptionalConverter.toGuava(cid), isInlined));
+            .containsOnly(new MessageAttachment(attachment, name1, cid, isInlined),
+                new MessageAttachment(attachment, name2, cid, isInlined));
     }
 
     @Test
@@ -128,15 +126,15 @@ public class AttachmentLoaderTest {
         Optional<String> name2 = Optional.of("name2");
         Optional<Cid> cid = Optional.empty();
         boolean isInlined = false;
-        CassandraMessageDAO.MessageAttachmentRepresentation attachmentRepresentation1 = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId1, name1, cid, isInlined);
-        CassandraMessageDAO.MessageAttachmentRepresentation attachmentRepresentation2 = new CassandraMessageDAO.MessageAttachmentRepresentation(attachmentId2, name2, cid, isInlined);
+        MessageAttachmentRepresentation attachmentRepresentation1 = new MessageAttachmentRepresentation(attachmentId1, name1, cid, isInlined);
+        MessageAttachmentRepresentation attachmentRepresentation2 = new MessageAttachmentRepresentation(attachmentId2, name2, cid, isInlined);
 
         Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation1, attachmentRepresentation2))
             .join();
 
         assertThat(attachments).hasSize(2)
-            .containsOnly(new MessageAttachment(attachment1, OptionalConverter.toGuava(name1), OptionalConverter.toGuava(cid), isInlined),
-                new MessageAttachment(attachment2, OptionalConverter.toGuava(name2), OptionalConverter.toGuava(cid), isInlined));
+            .containsOnly(new MessageAttachment(attachment1, name1, cid, isInlined),
+                new MessageAttachment(attachment2, name2, cid, isInlined));
     }
 
     @Test

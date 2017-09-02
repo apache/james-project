@@ -19,22 +19,24 @@
 
 package org.apache.james.protocols.pop3.core;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-
 
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Handles PASS commands.
  */
 public abstract class AbstractPassCmdHandler extends RsetCmdHandler {
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("PASS"));
+    private static final Collection<String> COMMANDS = ImmutableSet.of("PASS");
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractPassCmdHandler.class);
     private static final Response UNEXPECTED_ERROR = new POP3Response(POP3Response.ERR_RESPONSE, "Unexpected error accessing mailbox").immutable();
     protected static final Response AUTH_FAILED = new POP3Response(POP3Response.ERR_RESPONSE, "Authentication failed.").immutable();
 
@@ -79,7 +81,7 @@ public abstract class AbstractPassCmdHandler extends RsetCmdHandler {
                 return AUTH_FAILED;
             }
         } catch (Exception e) {
-            session.getLogger().error("Unexpected error accessing mailbox for " + session.getUser(), e);
+            LOGGER.error("Unexpected error accessing mailbox for " + session.getUser(), e);
             session.setHandlerState(POP3Session.AUTHENTICATION_READY);
             return UNEXPECTED_ERROR;
         }

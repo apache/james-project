@@ -27,7 +27,6 @@ import org.apache.derby.jdbc.EmbeddedDriver;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.mailrepository.AbstractMailRepositoryTest;
 import org.apache.james.mailrepository.api.MailRepository;
-import org.slf4j.LoggerFactory;
 
 public class JDBCMailRepositoryTest extends AbstractMailRepositoryTest {
 
@@ -49,7 +48,6 @@ public class JDBCMailRepositoryTest extends AbstractMailRepositoryTest {
         defaultConfiguration.addProperty("[@type]", "MAIL");
         mr.setFileSystem(fs);
         mr.setDatasource(datasource);
-        mr.setLog(LoggerFactory.getLogger("MockLog"));
         mr.configure(defaultConfiguration);
         mr.init();
         return mr;

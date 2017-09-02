@@ -70,7 +70,7 @@ public class JettyHttpServer implements Closeable {
         
         BiConsumer<String, ServletHolder> addServletMapping = (path, servletHolder) -> servletHandler.addServletWithMapping(servletHolder, path);
         BiConsumer<String, Collection<FilterHolder>> addFilterMappings = 
-                (path, filterHolders) -> filterHolders.stream().forEachOrdered(
+                (path, filterHolders) -> filterHolders.forEach(
                         filterHolder -> servletHandler.addFilterWithMapping(filterHolder, path, EnumSet.of(DispatcherType.REQUEST)));
                 
         Maps.transformEntries(configuration.getMappings(), this::toServletHolder).forEach(addServletMapping);

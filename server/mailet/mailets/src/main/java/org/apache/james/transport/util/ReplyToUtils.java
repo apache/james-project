@@ -18,13 +18,12 @@
  ****************************************************************/
 package org.apache.james.transport.util;
 
+import java.util.Optional;
 import javax.mail.MessagingException;
 
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
-
-import com.google.common.base.Optional;
 
 public class ReplyToUtils {
 
@@ -33,7 +32,7 @@ public class ReplyToUtils {
     }
 
     public static ReplyToUtils from(MailAddress replyTo) {
-        return new ReplyToUtils(Optional.fromNullable(replyTo));
+        return new ReplyToUtils(Optional.ofNullable(replyTo));
     }
 
     private final Optional<MailAddress> replyTo;
@@ -45,10 +44,10 @@ public class ReplyToUtils {
     public Optional<MailAddress> getReplyTo(Mail originalMail) throws MessagingException {
         if (replyTo.isPresent()) {
             if (replyTo.get().equals(SpecialAddress.UNALTERED)) {
-                return Optional.absent();
+                return Optional.empty();
             }
-            return Optional.fromNullable(originalMail.getSender());
+            return Optional.ofNullable(originalMail.getSender());
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 }

@@ -21,15 +21,12 @@ package org.apache.james.domainlist.memory;
 
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.AbstractDomainListTest;
-import org.slf4j.LoggerFactory;
 
 public class MemoryDomainListTest extends AbstractDomainListTest {
 
     @Override
     protected DomainList createDomainList() {
-        MemoryDomainList testee = new MemoryDomainList();
-        testee.setLog(LoggerFactory.getLogger(getClass()));
-        testee.setDNSService(getDNSServer("localhost"));
+        MemoryDomainList testee = new MemoryDomainList(getDNSServer("localhost"));
         testee.setAutoDetect(false);
         testee.setAutoDetectIP(false);
         return testee;

@@ -25,10 +25,9 @@ import org.apache.james.modules.mailbox.CassandraSessionConfiguration;
 import org.apache.james.util.streams.SwarmGenericContainer;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-import org.testcontainers.shaded.com.github.dockerjava.api.model.ExposedPort;
-import org.testcontainers.shaded.com.github.dockerjava.api.model.Ports;
-import org.testcontainers.shaded.com.github.dockerjava.api.model.Ports.Binding;
 
+import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.Ports;
 import com.google.inject.Module;
 
 
@@ -36,7 +35,7 @@ public class DockerCassandraRule implements GuiceModuleTestRule {
 
     private static final int CASSANDRA_PORT = 9042;
 
-    private static boolean isBindingToEveryThing(Binding binding) {
+    private static boolean isBindingToEveryThing(Ports.Binding binding) {
         String bindingIp = binding.getHostIp();
         return bindingIp == null || bindingIp.equals("0.0.0.0");
     }
@@ -53,7 +52,8 @@ public class DockerCassandraRule implements GuiceModuleTestRule {
         return configuration;
     }
 
-    private SwarmGenericContainer cassandraContainer = new SwarmGenericContainer("cassandra:2.2");
+    private SwarmGenericContainer cassandraContainer = new SwarmGenericContainer("cassandra:2.2")
+        .withExposedPorts(CASSANDRA_PORT);
 
     @Override
     public Statement apply(Statement base, Description description) {
@@ -84,7 +84,7 @@ public class DockerCassandraRule implements GuiceModuleTestRule {
         return Integer.valueOf(
                 Arrays.stream(bindings)
                     .filter(DockerCassandraRule::isBindingToEveryThing)
-                    .map(binding -> binding.getHostPortSpec())
+                    .map(Ports.Binding::getHostPortSpec)
                     .findFirst().get());
     }
 

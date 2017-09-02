@@ -36,10 +36,12 @@ import com.jayway.awaitility.Awaitility;
 public class ClientProviderImplConnectionTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProviderImplConnectionTest.class);
     private static final String DOCKER_ES_IMAGE = "elasticsearch:2.2.1";
+    private static final int ES_APPLICATIVE_PORT = 9300;
 
     @Rule
     public SwarmGenericContainer es1 = new SwarmGenericContainer(DOCKER_ES_IMAGE)
-        .withAffinityToContainer();
+        .withAffinityToContainer()
+        .withExposedPorts(ES_APPLICATIVE_PORT);
 
     @Rule
     public SwarmGenericContainer es2 = new SwarmGenericContainer(DOCKER_ES_IMAGE)
@@ -60,8 +62,8 @@ public class ClientProviderImplConnectionTest {
             .pollInterval(5, TimeUnit.SECONDS)
             .until(() ->isConnected(
                 ClientProviderImpl.fromHostsString(
-                    es1.getIp() + ":" + 9300 + ","
-                    + es2.getIp() + ":" + 9300)));
+                    es1.getIp() + ":" + ES_APPLICATIVE_PORT + ","
+                    + es2.getIp() + ":" + ES_APPLICATIVE_PORT)));
     }
 
     @Test
@@ -73,8 +75,8 @@ public class ClientProviderImplConnectionTest {
             .pollInterval(5, TimeUnit.SECONDS)
             .until(() -> isConnected(
                 ClientProviderImpl.fromHostsString(
-                    es1.getIp() + ":" + 9300 + ","
-                    + es2.getIp() + ":" + 9300)));
+                    es1.getIp() + ":" + ES_APPLICATIVE_PORT + ","
+                    + es2.getIp() + ":" + ES_APPLICATIVE_PORT)));
     }
 
     private boolean isConnected(ClientProvider clientProvider) {

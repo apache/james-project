@@ -25,7 +25,7 @@ import javax.inject.Inject;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.cassandra.CassandraId;
+import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;

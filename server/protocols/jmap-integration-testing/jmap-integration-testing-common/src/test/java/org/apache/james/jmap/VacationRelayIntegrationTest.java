@@ -55,9 +55,6 @@ import com.jayway.restassured.http.ContentType;
 
 public abstract class VacationRelayIntegrationTest {
 
-    @Rule
-    public final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer("weave/rest-smtp-sink:latest");
-
     private static final String DOMAIN = "mydomain.tld";
     private static final String USER = "benwa";
     private static final String USER_WITH_DOMAIN = USER + '@' + DOMAIN;
@@ -66,6 +63,12 @@ public abstract class VacationRelayIntegrationTest {
 
     private static final String LOCALHOST_IP = "127.0.0.1";
     private static final int SMTP_PORT = 1025;
+    private static final int REST_SMTP_SINK_PORT = 25;
+
+    @Rule
+    public final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer("weave/rest-smtp-sink:latest")
+        .withExposedPorts(VacationRelayIntegrationTest.REST_SMTP_SINK_PORT);
+
 
     private ConditionFactory calmlyAwait;
     private GuiceJamesServer guiceJamesServer;

@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -41,8 +42,12 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LSubProcessor extends AbstractSubscriptionProcessor<LsubRequest> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(LSubProcessor.class);
 
     public LSubProcessor(ImapProcessor next, MailboxManager mailboxManager, SubscriptionManager subscriptionManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
@@ -69,7 +74,7 @@ public class LSubProcessor extends AbstractSubscriptionProcessor<LsubRequest> {
         }
 
         final MailboxQuery expression = new MailboxQuery(basePath, CharsetUtil.decodeModifiedUTF7(mailboxName), mailboxSession.getPathDelimiter());
-        final Collection<String> mailboxResponses = new ArrayList<String>();
+        final Collection<String> mailboxResponses = new ArrayList<>();
         for (String mailbox : mailboxes) {
             respond(responder, expression, mailbox, true, mailboxes, mailboxResponses, mailboxSession.getPathDelimiter());
         }
@@ -126,11 +131,18 @@ public class LSubProcessor extends AbstractSubscriptionProcessor<LsubRequest> {
 
             okComplete(command, tag, responder);
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("LSub failed for reference " + referenceName + " and pattern " + mailboxPattern, e);
-            }
+            LOGGER.error("LSub failed for reference " + referenceName + " and pattern " + mailboxPattern, e);
             final HumanReadableText displayTextKey = HumanReadableText.GENERIC_LSUB_FAILURE;
             no(command, tag, responder, displayTextKey);
         }
+    }
+
+    @Override
+    protected Closeable addContextToMDC(LsubRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "LSUB")
+            .addContext("base", message.getBaseReferenceName())
+            .addContext("pattern", message.getMailboxPattern())
+            .build();
     }
 }

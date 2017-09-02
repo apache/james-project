@@ -313,9 +313,9 @@ public class HBaseMailboxMapperTest {
     }
 
     private static void fillMailboxList() {
-        mailboxList = new ArrayList<HBaseMailbox>();
-        pathsList = new ArrayList<MailboxPath>();
-        idsList = new ArrayList<HBaseId>();
+        mailboxList = new ArrayList<>();
+        pathsList = new ArrayList<>();
+        idsList = new ArrayList<>();
         MailboxPath path;
         String name;
         for (int i = 0; i < NAMESPACES; i++) {

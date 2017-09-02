@@ -21,9 +21,7 @@ package org.apache.james.protocols.pop3.core;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.configuration.Configuration;
@@ -37,12 +35,14 @@ import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.POP3StreamResponse;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 
+import com.google.common.collect.ImmutableSet;
+
 /**
  * Handles RETR command
  */
 public class RetrCmdHandler implements CommandHandler<POP3Session> {
 
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("RETR"));
+    private static final Collection<String> COMMANDS = ImmutableSet.of("RETR");
     private static final Response SYNTAX_ERROR = new POP3Response(POP3Response.ERR_RESPONSE, "Usage: RETR [mail number]").immutable();
     private static final Response ERROR_MESSAGE_RETRIEVE = new POP3Response(POP3Response.ERR_RESPONSE, "Error while retrieving message.").immutable();
 

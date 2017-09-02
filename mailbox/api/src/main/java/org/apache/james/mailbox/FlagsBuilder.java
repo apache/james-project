@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox;
 
+import java.util.Arrays;
+import java.util.List;
 import javax.mail.Flags;
 
 public class FlagsBuilder {
@@ -47,10 +49,15 @@ public class FlagsBuilder {
         return this;
     }
 
-    public FlagsBuilder add(Flags... flagsArray) {
-        for (Flags flags: flagsArray) {
-            internalFlags.add(flags);
+    public FlagsBuilder add(List<Flags> flags) {
+        for (Flags flag : flags) {
+            internalFlags.add(flag);
         }
+        return this;
+    }
+
+    public FlagsBuilder add(Flags... flagsArray) {
+        add(Arrays.asList(flagsArray));
         return this;
     }
 

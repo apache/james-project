@@ -22,8 +22,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
-
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -65,10 +65,11 @@ import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
-
-import com.google.common.base.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends AbstractChainedProcessor<M> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMailboxProcessor.class);
 
     public static final String IMAP_PREFIX = "IMAP-";
     private final MailboxManager mailboxManager;
@@ -141,8 +142,8 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     protected void unsolicitedResponses(ImapSession session, ImapProcessor.Responder responder, boolean omitExpunged, boolean useUid) {
         final SelectedMailbox selected = session.getSelected();
         if (selected == null) {
-            if (session.getLog().isDebugEnabled()) {
-                session.getLog().debug("No mailbox selected");
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("No mailbox selected");
             }
         } else {
             unsolicitedResponses(session, responder, selected, omitExpunged, useUid);
@@ -245,8 +246,8 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             final MessageUid uid = mr.getUid();
             int msn = selected.msn(uid);
             if (msn == SelectedMailbox.NO_SUCH_MESSAGE) {
-                if (session.getLog().isDebugEnabled()) {
-                    session.getLog().debug("No message found with uid " + uid + " in the uid<->msn mapping for mailbox " + selected.getPath().getFullName(mailboxSession.getPathDelimiter()) +" , this may be because it was deleted by a concurrent session. So skip it..");
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("No message found with uid " + uid + " in the uid<->msn mapping for mailbox " + selected.getPath().getFullName(mailboxSession.getPathDelimiter()) +" , this may be because it was deleted by a concurrent session. So skip it..");
                 }  
                     
 
@@ -320,8 +321,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     }
 
     private void handleResponseException(ImapProcessor.Responder responder, MailboxException e, HumanReadableText message, ImapSession session) {
-        session.getLog().info(message.toString());
-        session.getLog().debug(message.toString(), e);
+        LOGGER.error(message.toString(), e);
         // TODO: consider whether error message should be passed to the user
         final StatusResponse response = factory.untaggedNo(message);
         responder.respond(response);
@@ -433,7 +433,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             }
             // Take care of "*" and "*:*" values by return the last message in
             // the mailbox. See IMAP-289
-            MessageUid lastUid = selected.getLastUid().or(MessageUid.MIN_VALUE);
+            MessageUid lastUid = selected.getLastUid().orElse(MessageUid.MIN_VALUE);
             if (lowVal == Long.MAX_VALUE && highVal == Long.MAX_VALUE) {
                 return MessageRange.one(lastUid);
             } else if (highVal == Long.MAX_VALUE && lastUid.compareTo(MessageUid.of(lowVal)) < 0) {
@@ -515,26 +515,26 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
         case ONE:
             return range;
         case ALL:
-            start = selected.getFirstUid().or(MessageUid.MIN_VALUE);
-            end = selected.getLastUid().or(MessageUid.MAX_VALUE);
+            start = selected.getFirstUid().orElse(MessageUid.MIN_VALUE);
+            end = selected.getLastUid().orElse(MessageUid.MAX_VALUE);
             return MessageRange.range(start, end);
         case RANGE:
             start = range.getUidFrom();
-            if (start.equals(MessageUid.MAX_VALUE) || start.compareTo(selected.getFirstUid().or(MessageUid.MIN_VALUE)) < 0) {
-                start = selected.getFirstUid().or(MessageUid.MIN_VALUE);
+            if (start.equals(MessageUid.MAX_VALUE) || start.compareTo(selected.getFirstUid().orElse(MessageUid.MIN_VALUE)) < 0) {
+                start = selected.getFirstUid().orElse(MessageUid.MIN_VALUE);
             }
             end = range.getUidTo();
-            if (end.equals(MessageUid.MAX_VALUE) || end.compareTo(selected.getLastUid().or(MessageUid.MAX_VALUE)) > 0) {
-                end = selected.getLastUid().or(MessageUid.MAX_VALUE);
+            if (end.equals(MessageUid.MAX_VALUE) || end.compareTo(selected.getLastUid().orElse(MessageUid.MAX_VALUE)) > 0) {
+                end = selected.getLastUid().orElse(MessageUid.MAX_VALUE);
             }
             return MessageRange.range(start, end);
         case FROM:
             start = range.getUidFrom();
-            if (start.equals(MessageUid.MAX_VALUE) || start.compareTo(selected.getFirstUid().or(MessageUid.MIN_VALUE)) < 0) {
-                start = selected.getFirstUid().or(MessageUid.MIN_VALUE);
+            if (start.equals(MessageUid.MAX_VALUE) || start.compareTo(selected.getFirstUid().orElse(MessageUid.MIN_VALUE)) < 0) {
+                start = selected.getFirstUid().orElse(MessageUid.MIN_VALUE);
             }
             
-            end = selected.getLastUid().or(MessageUid.MAX_VALUE);
+            end = selected.getLastUid().orElse(MessageUid.MAX_VALUE);
             return MessageRange.range(start, end);
         default:
             throw new MessageRangeException("Unknown message range type: " + rangeType);
@@ -559,7 +559,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
         if (metaData.getHighestModSeq() > changedSince) {
             SearchQuery searchQuery = new SearchQuery();
             SearchQuery.UidRange[] nRanges = new SearchQuery.UidRange[ranges.size()];
-            Set<MessageUid> vanishedUids = new HashSet<MessageUid>();
+            Set<MessageUid> vanishedUids = new HashSet<>();
             for (int i = 0; i < ranges.size(); i++) {
                 MessageRange r = ranges.get(i);
                 SearchQuery.UidRange nr;

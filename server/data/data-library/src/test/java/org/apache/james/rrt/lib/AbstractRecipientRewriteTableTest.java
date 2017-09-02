@@ -29,7 +29,9 @@ import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 /**
  * The abstract test for the virtual user table. Contains tests related to
@@ -37,6 +39,8 @@ import org.junit.Test;
  * virtualUserTable implementation.
  */
 public abstract class AbstractRecipientRewriteTableTest {
+
+    @Rule public ExpectedException expectedException = ExpectedException.none();
 
     protected AbstractRecipientRewriteTable virtualUserTable;
     protected final static int REGEX_TYPE = 0;
@@ -92,11 +96,11 @@ public abstract class AbstractRecipientRewriteTableTest {
 
             assertThat(virtualUserTable.getMappings(user, domain)).describedAs("No mapping").isNull();
 
-            assertThat(addMapping(user, domain, regex, REGEX_TYPE)).describedAs("Added virtual mapping").isTrue();
-            assertThat(addMapping(user, domain, regex2, REGEX_TYPE)).describedAs("Added virtual mapping").isTrue();
+            addMapping(user, domain, regex, REGEX_TYPE);
+            addMapping(user, domain, regex2, REGEX_TYPE);
             assertThat(virtualUserTable.getMappings(user, domain)).describedAs("Two mappings").hasSize(2);
             assertThat(virtualUserTable.getAllMappings()).describedAs("One mappingline").hasSize(1);
-            assertThat(removeMapping(user, domain, regex, REGEX_TYPE)).describedAs("remove virtual mapping").isTrue();
+            removeMapping(user, domain, regex, REGEX_TYPE);
             
             try {
                 virtualUserTable.addRegexMapping(user, domain, invalidRegex);
@@ -105,7 +109,7 @@ public abstract class AbstractRecipientRewriteTableTest {
             }
             
             assertThat(catched).describedAs("Invalid Mapping throw exception").isTrue();
-            assertThat(removeMapping(user, domain, regex2, REGEX_TYPE)).describedAs("remove virtual mapping").isTrue();
+            removeMapping(user, domain, regex2, REGEX_TYPE);
 
             
             assertThat(virtualUserTable.getMappings(user, domain)).describedAs("No mapping").isNull();
@@ -130,13 +134,13 @@ public abstract class AbstractRecipientRewriteTableTest {
 
             assertThat(virtualUserTable.getMappings(user, domain)).describedAs("No mapping").isNull();
 
-            assertThat(addMapping(user, domain, address, ADDRESS_TYPE)).describedAs("Added virtual mapping").isTrue();
-            assertThat(addMapping(user, domain, address2, ADDRESS_TYPE)).describedAs("Added virtual mapping").isTrue();
+            addMapping(user, domain, address, ADDRESS_TYPE);
+            addMapping(user, domain, address2, ADDRESS_TYPE);
 
             assertThat(virtualUserTable.getMappings(user, domain)).describedAs("Two mappings").hasSize(2);
             assertThat(virtualUserTable.getAllMappings()).describedAs("One mappingline").hasSize(1);
 
-            assertThat(removeMapping(user, domain, address, ADDRESS_TYPE)).describedAs("remove virtual mapping").isTrue();
+            removeMapping(user, domain, address, ADDRESS_TYPE);
 
             /*
              * TEMPORARILY REMOVE JDBC specific test String invalidAddress=
@@ -149,7 +153,7 @@ public abstract class AbstractRecipientRewriteTableTest {
              */
 
             
-            assertThat(removeMapping(user, domain, address2, ADDRESS_TYPE)).describedAs("remove virtual mapping").isTrue();
+            removeMapping(user, domain, address2, ADDRESS_TYPE);
 
             assertThat(virtualUserTable.getMappings(user, domain)).describedAs("No mapping").isNull();
             assertThat(virtualUserTable.getAllMappings()).describedAs("No mapping").isNull();
@@ -171,7 +175,7 @@ public abstract class AbstractRecipientRewriteTableTest {
         try {
             assertThat(virtualUserTable.getMappings(user, domain)).describedAs("No mapping").isNull();
 
-            assertThat(addMapping(user, domain, error, ERROR_TYPE)).describedAs("Added virtual mapping").isTrue();
+            addMapping(user, domain, error, ERROR_TYPE);
             assertThat(virtualUserTable.getAllMappings()).describedAs("One mappingline").hasSize(1);
 
             try {
@@ -181,7 +185,7 @@ public abstract class AbstractRecipientRewriteTableTest {
             }
             assertThat(catched).describedAs("Error Mapping throw exception").isTrue();
 
-            assertThat(removeMapping(user, domain, error, ERROR_TYPE)).describedAs("remove virtual mapping").isTrue();
+            removeMapping(user, domain, error, ERROR_TYPE);
 
             assertThat(virtualUserTable.getMappings(user, domain)).describedAs("No mapping").isNull();
             assertThat(virtualUserTable.getAllMappings()).describedAs("No mapping").isNull();
@@ -205,14 +209,14 @@ public abstract class AbstractRecipientRewriteTableTest {
 
             assertThat(virtualUserTable.getMappings(user, domain)).describedAs("No mapping").isNull();
 
-            assertThat(addMapping(RecipientRewriteTable.WILDCARD, domain, address, ADDRESS_TYPE)).describedAs("Added virtual mapping").isTrue();
-            assertThat(addMapping(user, domain, address2, ADDRESS_TYPE)).describedAs("Added virtual mapping").isTrue();
+            addMapping(RecipientRewriteTable.WILDCARD, domain, address, ADDRESS_TYPE);
+            addMapping(user, domain, address2, ADDRESS_TYPE);
 
             assertThat(virtualUserTable.getMappings(user, domain)).describedAs("One mappings").hasSize(1);
             assertThat(virtualUserTable.getMappings(user2, domain)).describedAs("One mappings").hasSize(1);
 
-            assertThat(removeMapping(user, domain, address2, ADDRESS_TYPE)).describedAs("remove virtual mapping").isTrue();
-            assertThat(removeMapping(RecipientRewriteTable.WILDCARD, domain, address, ADDRESS_TYPE)).describedAs("remove virtual mapping").isTrue();
+            removeMapping(user, domain, address2, ADDRESS_TYPE);
+            removeMapping(RecipientRewriteTable.WILDCARD, domain, address, ADDRESS_TYPE);
             
             assertThat(virtualUserTable.getMappings(user, domain)).describedAs("No mapping").isNull();
             assertThat(virtualUserTable.getMappings(user2, domain)).describedAs("No mapping").isNull();
@@ -239,10 +243,10 @@ public abstract class AbstractRecipientRewriteTableTest {
         try {
             assertThat(virtualUserTable.getAllMappings()).describedAs("No mapping").isNull();
 
-            assertThat(addMapping(user1, domain1, user2 + "@" + domain2, ADDRESS_TYPE)).describedAs("Added mapping").isTrue();
-            assertThat(addMapping(user2, domain2, user3 + "@" + domain3, ADDRESS_TYPE)).describedAs("Added mapping").isTrue();
+            addMapping(user1, domain1, user2 + "@" + domain2, ADDRESS_TYPE);
+            addMapping(user2, domain2, user3 + "@" + domain3, ADDRESS_TYPE);
             assertThat(virtualUserTable.getMappings(user1, domain1)).containsOnly(MappingImpl.address(user3 + "@" + domain3));
-            assertThat(addMapping(user3, domain3, user1 + "@" + domain1, ADDRESS_TYPE)).describedAs("Added mapping").isTrue();
+            addMapping(user3, domain3, user1 + "@" + domain1, ADDRESS_TYPE);
             
             try {
                 virtualUserTable.getMappings(user1, domain1);
@@ -272,20 +276,16 @@ public abstract class AbstractRecipientRewriteTableTest {
 
         try {
 
-            assertThat(addMapping(RecipientRewriteTable.WILDCARD, aliasDomain, user2 + "@" + domain,
-                    ADDRESS_TYPE)).describedAs("Add mapping").isTrue();
-            assertThat(addMapping(RecipientRewriteTable.WILDCARD, aliasDomain, domain,
-                    ALIASDOMAIN_TYPE)).describedAs("Add aliasDomain mapping").isTrue();
+            addMapping(RecipientRewriteTable.WILDCARD, aliasDomain, user2 + "@" + domain, ADDRESS_TYPE);
+            addMapping(RecipientRewriteTable.WILDCARD, aliasDomain, domain, ALIASDOMAIN_TYPE);
 
             assertThat(virtualUserTable.getMappings(user, aliasDomain))
                 .describedAs("Domain mapped as first, Address mapped as second")
                 .containsExactly(MappingImpl.address(user + "@" + domain), MappingImpl.address(user2 + "@" + domain));
 
-            assertThat(removeMapping(RecipientRewriteTable.WILDCARD, aliasDomain, user2 + "@" + domain,
-                    ADDRESS_TYPE)).describedAs("Remove mapping").isTrue();
+            removeMapping(RecipientRewriteTable.WILDCARD, aliasDomain, user2 + "@" + domain, ADDRESS_TYPE);
 
-            assertThat(removeMapping(RecipientRewriteTable.WILDCARD, aliasDomain, domain,
-                    ALIASDOMAIN_TYPE)).describedAs("Remove aliasDomain mapping").isTrue();
+            removeMapping(RecipientRewriteTable.WILDCARD, aliasDomain, domain, ALIASDOMAIN_TYPE);
 
         } catch (IllegalArgumentException e) {
             fail("Storing failed");
@@ -328,13 +328,36 @@ public abstract class AbstractRecipientRewriteTableTest {
                         .build());
     }
 
+    @Test
+    public void addMappingShouldThrowWhenMappingAlreadyExists() throws Exception {
+        String user = "test";
+        String domain = "localhost";
+        String address = "test@localhost2";
+
+        expectedException.expect(RecipientRewriteTableException.class);
+
+        addMapping(user, domain, address, ADDRESS_TYPE);
+        addMapping(user, domain, address, ADDRESS_TYPE);
+    }
+
+    @Test
+    public void addMappingShouldNotThrowWhenMappingAlreadyExistsWithAnOtherType() throws Exception {
+        String user = "test";
+        String domain = "localhost";
+        String address = "test@localhost2";
+
+        addMapping(user, domain, address, ADDRESS_TYPE);
+        addMapping(user, domain, address, REGEX_TYPE);
+        
+        assertThat(virtualUserTable.getMappings(user, domain)).hasSize(2);
+    }
 
     protected abstract AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception;
 
-    protected abstract boolean addMapping(String user, String domain, String mapping, int type) throws
+    protected abstract void addMapping(String user, String domain, String mapping, int type) throws
             RecipientRewriteTableException;
 
-    protected abstract boolean removeMapping(String user, String domain, String mapping, int type) throws
+    protected abstract void removeMapping(String user, String domain, String mapping, int type) throws
             RecipientRewriteTableException;
 
     private void removeMapping(String user, String domain, String rawMapping) throws RecipientRewriteTableException {

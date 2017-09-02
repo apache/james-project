@@ -21,6 +21,7 @@ package org.apache.james.repository.file;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.Arrays;
 
 /**
  * This filters files based on the extension (what the filename ends with). This
@@ -51,11 +52,6 @@ public class ExtensionFileFilter implements FilenameFilter {
     }
 
     public boolean accept(File file, String name) {
-        for (String m_extension : m_extensions) {
-            if (name.endsWith(m_extension)) {
-                return true;
-            }
-        }
-        return false;
+        return Arrays.stream(m_extensions).anyMatch(name::endsWith);
     }
 }

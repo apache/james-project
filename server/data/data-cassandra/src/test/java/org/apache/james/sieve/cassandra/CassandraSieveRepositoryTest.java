@@ -37,5 +37,6 @@ public class CassandraSieveRepositoryTest extends AbstractSieveRepositoryTest {
     @Override
     protected void cleanUp() throws Exception {
         cassandra.clearAllTables();
+        cassandra.close();
     }
 }

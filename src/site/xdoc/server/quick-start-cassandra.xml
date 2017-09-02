@@ -27,18 +27,16 @@
 
 <section name="Quick Start for Cassandra backend">
 
-  <p>The goal of the document is to allow anyone to start with James on Docker as an operational mail server.</p>
-  <p>The method described bellow should not be used in production.</p>
+  <p>The goal of the document is to allow anyone to start a James instance as an operational mail server.</p>
+  <p>The two methods described bellow should not be used in production.</p>
 
-  <p>Alternatively a <a href="https://github.com/apache/james-project/blob/9502cfebfd9a4eaebbba7dda802d1fe0ad3589b7/dockerfiles/run/docker-compose.yml">
-    docker-compose</a> is available for Guice + Cassandra + ElasticSearch</p>
-
+  <p>First method, from James source code:</p>
 <source>
 Step 0: Requirements
 ####################
 
   * Java 8 SDK
-  * 512MB RAM (launches with -Xmx512M - can use less, can need more, depending on load)
+  * 2GB RAM
   * Docker 1.7.1+
   * Maven 3.3
 
@@ -54,7 +52,11 @@ Step 3: Compile
 
   * Compile the Guice Cassandra project
   
-<i>$ mvn package -DskipTests -am -pl server/container/guice/cassandra-guice</i>
+<i>$ mvn package -DskipTests --also-make --projects server/container/guice/cassandra-guice</i>
+
+  * Compile the James CLI project
+  
+<i>$ mvn package -DskipTests -am -pl server/container/cli</i>
 
 Step 3: Deploy
 ##############
@@ -62,12 +64,12 @@ Step 3: Deploy
 3.1. Deploy Cassandra (optional)
 You may skip this part if you already have a running Cassandra on your network.
 
-<i>$ docker run --name=cassandra cassandra:2.2.3</i>
+<i>$ docker run --detach=true --name=cassandra cassandra:2.2.3</i>
 
 3.2. Deploy ElasticSearch (optional)
 You may skip this part if you already have a running ElasticSearch on your network.
 
-<i>$ docker run --name=elasticsearch elasticsearch:2.2.1</i>
+<i>$ docker run --detach=true --name=elasticsearch elasticsearch:2.2.1</i>
 
 Step 4: Configure
 #################
@@ -75,44 +77,49 @@ Step 4: Configure
   * Follow the <a href="config-guice.html">Cassandra guice</a> configuration documentation.
   * We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
 
-Copy your TSL keys to ./conf/keystore or generate it using :
+Copy your TLS keys to ./conf/keystore or generate it using :
 
 <i>$ keytool -genkey -alias james -keyalg RSA -keystore ./conf/keystore</i>
 
 You will have to put the keystore password in the right xml files (imapserver.xml, pop3server.xml, smtpserver.xml)
+
+You are welcome to use the default configuration which can be found in the <i>$PWD/dockerfiles/run/guice/cassandra/destination/conf</i> folder.
 
 Step 5: Start
 #############
 
   * Run James
 
-<i>$ java -Dworking.directory=<b>WORKING_PATH</b> -jar server/container/cassandra-guice/target/james-server-cassandra-guice-beta5-SNAPSHOT.jar</i>
+<i>$ sudo java -Dworking.directory=<b>WORKING_PATH</b> -jar server/container/guice/cassandra-guice/target/james-server-cassandra-guice.jar</i>
 
 Where :
-- <b>WORKING_PATH</b> is the path where are located your configuration file folder.
+- <b>WORKING_PATH</b> is the path of the folder which contains your configuration files.
+
+You have to run this command with the superuser, has some default ports are lower than 1000 (default imap, smtp...).
+You may get rid of that by overriding the default configuration
 
 Step 6: Create Domains and Users
 ################################
 
 Time to add domains and users.
 
-<i>$ java -jar server/container/cli/target/james-server-cli-3.0.0-beta5-SNAPSHOT.jar -h 127.0.0.1 -p 9999  adddomain <b>DOMAIN</b></i>
+<i>$ java -jar server/container/cli/target/james-server-cli.jar -h 127.0.0.1 -p 9999  adddomain <b>DOMAIN</b></i>
 
-<i>$ java -jar server/container/cli/target/james-server-cli-3.0.0-beta5-SNAPSHOT.jar -h 127.0.0.1 -p 9999  adduser <b>USER_MAIL_ADDRESS</b> <b>PASSWORD</b></i>
+<i>$ java -jar server/container/cli/target/james-server-cli.jar -h 127.0.0.1 -p 9999  adduser <b>USER_MAIL_ADDRESS</b> <b>PASSWORD</b></i>
 
 Where :
-- <b>DOMAIN</b> is the domain you want to handle with this server.
-- <b>USER_MAIL_ADDRESS</b> is the mail address that will be used by this user.
-- <b>PASSWORD</b> is the password that will be used by this user.
+- <b>DOMAIN</b> is the domain you want to handle with this server
+- <b>USER_MAIL_ADDRESS</b> user's email
+- <b>PASSWORD</b> user's password
 
-Step 8: Test
+Step 7: Test
 ############
 
 $ telnet <b>HOSTNAME</b> 25
 Trying <b>HOSTNAME</b>...
 Connected to <b>HOSTNAME</b>.
 Escape character is '^]'.
-220 172.16.1.131 SMTP Server (JAMES SMTP Server 3.0-beta4) ready Sat, 6 Nov 2010 17:31:33 +0100 (CET)
+220 172.16.1.131 SMTP Server (JAMES SMTP Server 3.0.0) ready Wed, 20 Jul 2017 17:31:33 +0100 (CET)
 ehlo test
 250-172.16.1.131 Hello test (aoscommunity.com [127.0.0.1])
 250-PIPELINING
@@ -138,7 +145,7 @@ Step 8: Manage
 8.1. Manage via james-cli
 
   usage: 
-<i>$ java -jar server/container/cli/target/james-server-cli-3.0.0-beta5-SNAPSHOT.jar -h 127.0.0.1 -p 9999</i>
+<i>$ java -jar server/container/cli/target/james-server-cli.jar -h 127.0.0.1 -p 9999</i>
 
   Available commands:
     adduser &lt;/username&gt; &lt;/password&gt;
@@ -154,6 +161,123 @@ Step 8: Manage
   * Select the MBeans tab and open the org.apache.james node to view attributes and execute operations.
 
 Step 9: Monitor
+###############
+
+  * Monitor the ./log/james-server.log log file.
+
+  * Monitor via JMX (launch any JMX client and connect to URL=service:jmx:rmi:///jndi/rmi://<b>HOSTNAME</b>:9999/jmxrmi)
+
+  * Check ./var folder usage
+  
+    mail
+    +-error
+    +-address-error
+    +-relay-denied
+    +-spam
+
+    store
+    +-maildir
+    +-derby
+    +-jackrabbit
+    +-activemq
+      +-brokers
+        +-james
+      +-blob-transfer
+        +-outgoing
+        +-spool
+
+  * Check /tmp folder usage
+
+</source>
+
+  <p>Second method, with docker-compose:</p>
+  
+<source>
+Step 0: Requirements
+####################
+
+  * 2GB RAM
+  * Docker 1.7.1+
+  * wget
+
+Step 1: Download
+#################
+
+  * Get the James docker-compose file
+
+<i>$ wget https://raw.githubusercontent.com/apache/james-project/master/dockerfiles/run/docker-compose.yml</i>
+
+Step 2: Start
+#############
+
+  * Run James
+
+<i>$ docker-compose up</i>
+
+Step 3: Create Domains and Users
+################################
+
+Time to add domains and users.
+
+<i>$ docker exec james java -jar /root/james-cli.jar -h 127.0.0.1 -p 9999 adddomain <b>DOMAIN</b></i>
+
+<i>$ docker exec james java -jar /root/james-cli.jar -h 127.0.0.1 -p 9999  adduser <b>USER_MAIL_ADDRESS</b> <b>PASSWORD</b></i>
+
+Where :
+- <b>DOMAIN</b> is the domain you want to handle with this server
+- <b>USER_MAIL_ADDRESS</b> user's email
+- <b>PASSWORD</b> user's password
+
+
+Step 4: Test
+############
+
+$ telnet <b>HOSTNAME</b> 25
+Trying <b>HOSTNAME</b>...
+Connected to <b>HOSTNAME</b>.
+Escape character is '^]'.
+220 172.16.1.131 SMTP Server (JAMES SMTP Server 3.0.0) ready Wed, 20 Jul 2017 17:31:33 +0100 (CET)
+ehlo test
+250-172.16.1.131 Hello test (aoscommunity.com [127.0.0.1])
+250-PIPELINING
+250-ENHANCEDSTATUSCODES
+250 8BITMIME
+mail from:&lt;YOUR_NAME@YOUR_DOMAIN&gt;
+250 2.1.0 Sender &lt;YOUR_NAME@YOUR_DOMAIN&gt; OK
+rcpt to:&lt;YOUR_NAME@YOUR_DOMAIN>
+250 2.1.5 Recipient &lt;YOUR_NAME@YOUR_DOMAIN&gt; OK
+data
+354 Ok Send data ending with &lt;CRLF&gt;.&lt;CRLF&gt;
+subject: test
+
+this is a test
+.
+250 2.6.0 Message received
+quit
+Connection closed by foreign host.
+
+Step 5: Manage
+##############
+
+5.1. Manage via james-cli
+
+  usage: 
+<i>$ docker exec james java -jar /root/james-cli.jar -h 127.0.0.1 -p 9999</i>
+
+  Available commands:
+    adduser &lt;/username&gt; &lt;/password&gt;
+    removeuser &lt;/username&gt;
+    listusers
+    adddomain &lt;/domainname&gt;
+    removedomain &lt;/domainname&gt;
+    listdomains
+
+5.2. Manage via JMX
+
+  * Launch jconsole (or any other JMX client) and connect on URL=service:jmx:rmi:///jndi/rmi://localhost:<b>HOSTNAME</b>/jmxrmi
+  * Select the MBeans tab and open the org.apache.james node to view attributes and execute operations.
+
+Step 6: Monitor
 ###############
 
   * Monitor the ./log/james-server.log log file.

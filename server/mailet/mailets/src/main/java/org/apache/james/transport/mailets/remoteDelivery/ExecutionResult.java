@@ -19,8 +19,9 @@
 
 package org.apache.james.transport.mailets.remoteDelivery;
 
+import java.util.Optional;
+
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 
 public class ExecutionResult {
 
@@ -31,7 +32,7 @@ public class ExecutionResult {
     }
 
     public static ExecutionResult success() {
-        return new ExecutionResult(ExecutionState.SUCCESS, Optional.<Exception>absent());
+        return new ExecutionResult(ExecutionState.SUCCESS, Optional.empty());
     }
 
     public static ExecutionResult temporaryFailure(Exception e) {
@@ -43,7 +44,7 @@ public class ExecutionResult {
     }
 
     public static ExecutionResult temporaryFailure() {
-        return new ExecutionResult(ExecutionState.TEMPORARY_FAILURE, Optional.<Exception>absent());
+        return new ExecutionResult(ExecutionState.TEMPORARY_FAILURE, Optional.empty());
     }
 
     public static ExecutionResult onFailure(boolean permanent, Exception exeption) {

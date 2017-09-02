@@ -19,8 +19,8 @@
 package org.apache.james.mpt.imapmailbox.cyrus.host;
 
 import java.net.InetSocketAddress;
+import java.util.function.Supplier;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mpt.api.ImapFeatures;
@@ -30,10 +30,10 @@ import org.apache.james.mpt.api.UserAdder;
 import org.apache.james.mpt.host.ExternalHostSystem;
 import org.apache.james.mpt.monitor.NullMonitor;
 import org.apache.james.mpt.protocol.ProtocolSession;
+import org.apache.commons.lang.NotImplementedException;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Provider;

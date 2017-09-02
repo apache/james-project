@@ -19,7 +19,6 @@
 
 package org.apache.james.protocols.smtp.core.esmtp;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -35,6 +34,9 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.SMTPStartTlsResponse;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
 /**
  * Handles STARTTLS command
  */
@@ -43,8 +45,8 @@ public class StartTlsCmdHandler implements CommandHandler<SMTPSession>, EhloExte
      * The name of the command handled by the command handler
      */
     private final static String COMMAND_NAME = "STARTTLS";
-    private final static Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList(COMMAND_NAME));
-    private final static List<String> FEATURES = Collections.unmodifiableList(Arrays.asList(COMMAND_NAME));
+    private final static Collection<String> COMMANDS = ImmutableSet.of(COMMAND_NAME);
+    private final static List<String> FEATURES = ImmutableList.of(COMMAND_NAME);
 
     private static final Response TLS_ALREADY_ACTIVE = new SMTPResponse("500", DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_CMD) + " TLS already active RFC2487 5.2").immutable();
     private static final Response READY_FOR_STARTTLS = new SMTPStartTlsResponse("220", DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.UNDEFINED_STATUS) + " Ready to start TLS").immutable();

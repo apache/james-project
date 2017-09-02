@@ -29,8 +29,6 @@ import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.QuotaRootImpl;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 public class InMemoryCurrentQuotaManagerTest {
 
@@ -48,35 +46,27 @@ public class InMemoryCurrentQuotaManagerTest {
 
     @Test
     public void getCurrentMessageCountShouldReturnRecalculateMessageCountWhenEntryIsNotInitialized() throws Exception {
-        when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null)).thenAnswer(new Answer<CurrentQuotaCalculator.CurrentQuotas>() {
-            @Override
-            public CurrentQuotaCalculator.CurrentQuotas answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return new CurrentQuotaCalculator.CurrentQuotas(18, 512);
-            }
-        });
+        when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
+            .thenReturn(new CurrentQuotaCalculator.CurrentQuotas(18, 512));
+
         assertThat(testee.getCurrentMessageCount(QUOTA_ROOT)).isEqualTo(18);
     }
 
     @Test
     public void getCurrentStorageShouldReturnRecalculateSizeWhenEntryIsNotInitialized() throws Exception {
-        when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null)).thenAnswer(new Answer<CurrentQuotaCalculator.CurrentQuotas>() {
-            @Override
-            public CurrentQuotaCalculator.CurrentQuotas answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return new CurrentQuotaCalculator.CurrentQuotas(18, 512);
-            }
-        });
+        when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
+            .thenReturn(new CurrentQuotaCalculator.CurrentQuotas(18, 512));
+
         assertThat(testee.getCurrentStorage(QUOTA_ROOT)).isEqualTo(512);
     }
 
     @Test
     public void getCurrentStorageShouldReRetrieveStoredQuotasWhenCalculateOnUnknownQuotaIsTrue() throws Exception {
-        when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null)).thenAnswer(new Answer<CurrentQuotaCalculator.CurrentQuotas>() {
-            @Override
-            public CurrentQuotaCalculator.CurrentQuotas answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return new CurrentQuotaCalculator.CurrentQuotas(18, 512);
-            }
-        });
+        when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
+            .thenReturn(new CurrentQuotaCalculator.CurrentQuotas(18, 512));
+
         testee.increase(QUOTA_ROOT, 10, 100);
+
         assertThat(testee.getCurrentMessageCount(QUOTA_ROOT)).isEqualTo(28);
         assertThat(testee.getCurrentStorage(QUOTA_ROOT)).isEqualTo(612);
     }

@@ -19,15 +19,14 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.TreeSet;
-
 import javax.mail.Flags.Flag;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -64,13 +63,17 @@ import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> implements CapabilityImplementingProcessor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SearchProcessor.class);
 
     protected final static String SEARCH_MODSEQ = "SEARCH_MODSEQ";
-    private final static List<String> CAPS = Collections.unmodifiableList(Arrays.asList("WITHIN", "ESEARCH", "SEARCHRES"));
+    private final static List<String> CAPS = ImmutableList.of("WITHIN", "ESEARCH", "SEARCHRES");
     
     public SearchProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
@@ -91,8 +94,8 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             MailboxSession msession = ImapSessionUtils.getMailboxSession(session);
             final Iterator<MessageUid> it = mailbox.search(query, msession);
             
-            final Collection<Long> results = new TreeSet<Long>();
-            final Collection<MessageUid> uids = new TreeSet<MessageUid>();
+            final Collection<Long> results = new TreeSet<>();
+            final Collection<MessageUid> uids = new TreeSet<>();
             
             while (it.hasNext()) {
                 final MessageUid uid = it.next();
@@ -130,18 +133,18 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             if (resultOptions == null || resultOptions.isEmpty()) {
                 response = new SearchResponse(ids, highestModSeq);
             } else {
-                List<Long> idList = new ArrayList<Long>(ids.length);
+                List<Long> idList = new ArrayList<>(ids.length);
                 for (long id : ids) {
                     idList.add(id);
                 }
-                
-                List<IdRange> idsAsRanges = new ArrayList<IdRange>();
+
+                List<IdRange> idsAsRanges = new ArrayList<>();
                 for (Long id: idList) {
                     idsAsRanges.add(new IdRange(id));
                 }
                 IdRange[] idRanges = IdRange.mergeRanges(idsAsRanges).toArray(new IdRange[0]);
                 
-                List<UidRange> uidsAsRanges = new ArrayList<UidRange>();
+                List<UidRange> uidsAsRanges = new ArrayList<>();
                 for (MessageUid uid: uids) {
                     uidsAsRanges.add(new UidRange(uid));
                 }
@@ -172,7 +175,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                             // if the options contain ALL or COUNT we need to save the complete sequence-set
                             SearchResUtil.saveSequenceSet(session, idRanges);
                         } else {
-                            List<IdRange> savedRanges = new ArrayList<IdRange>();
+                            List<IdRange> savedRanges = new ArrayList<>();
                             if (resultOptions.contains(SearchResultOption.MIN)) {
                                 // Store the MIN
                                 savedRanges.add(new IdRange(min));  
@@ -199,14 +202,12 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             unsolicitedResponses(session, responder, omitExpunged, useUids);
             okComplete(command, tag, responder);
         } catch (MessageRangeException e) {
-            if (session.getLog().isDebugEnabled()) {
-                session.getLog().debug("Search failed in mailbox " + session.getSelected().getPath() + " because of an invalid sequence-set ", e);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Search failed in mailbox " + session.getSelected().getPath() + " because of an invalid sequence-set ", e);
             }
             taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Search failed in mailbox " + session.getSelected().getPath(), e);
-            }
+            LOGGER.error("Search failed in mailbox " + session.getSelected().getPath(), e);
             no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
             
             if (resultOptions.contains(SearchResultOption.SAVE)) {
@@ -221,13 +222,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
     }
     
     private long[] toArray(Collection<Long> results) {
-        final Iterator<Long> it = results.iterator();
-        final int length = results.size();
-        long[] ids = new long[length];
-        for (int i = 0; i < length; i++) {
-            ids[i] = ((Long) it.next()).longValue();
-        }
-        return ids;
+        return results.stream().mapToLong(x -> x).toArray();
     }
 
     /**
@@ -372,7 +367,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             long modSeq = key.getModSeq();
             return SearchQuery.or(SearchQuery.modSeqEquals(modSeq), SearchQuery.modSeqGreaterThan(modSeq));
         default:
-            session.getLog().warn("Ignoring unknown search key.");
+            LOGGER.warn("Ignoring unknown search key {}", type);
             return SearchQuery.all();
         }
     }
@@ -393,7 +388,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
 
         // First of check if we have any messages in the mailbox
         // if not we don't need to go through all of this
-        final List<SearchQuery.UidRange> ranges = new ArrayList<SearchQuery.UidRange>();
+        final List<SearchQuery.UidRange> ranges = new ArrayList<>();
         if (selected.existsCount() > 0) {
             for (IdRange range : sequenceNumbers) {
                 long lowVal = range.getLowVal();
@@ -402,7 +397,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                 // message in
                 // the mailbox. See IMAP-289
                 if (lowVal == Long.MAX_VALUE && highVal == Long.MAX_VALUE) {
-                    MessageUid highUid = selected.getLastUid().or(MessageUid.MIN_VALUE);
+                    MessageUid highUid = selected.getLastUid().orElse(MessageUid.MIN_VALUE);
 
                     ranges.add(new SearchQuery.UidRange(highUid));
                 } else {
@@ -417,7 +412,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                     // SelectedMailbox.NO_SUCH_MESSAGE but we check for it
                     // just to be safe
                     if (lowUid.isPresent()) {
-                        Optional<MessageUid> highUid = Optional.absent();
+                        Optional<MessageUid> highUid = Optional.empty();
                         if (highVal != Long.MAX_VALUE) {
                             highUid = selected.uid((int) highVal);
                             if (!highUid.isPresent()) {
@@ -430,7 +425,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                         } else {
                             highUid = selected.getLastUid();
                         }
-                        ranges.add(new SearchQuery.UidRange(lowUid.or(MessageUid.MIN_VALUE), highUid.or(MessageUid.MAX_VALUE)));
+                        ranges.add(new SearchQuery.UidRange(lowUid.orElse(MessageUid.MIN_VALUE), highUid.orElse(MessageUid.MAX_VALUE)));
                     }
                 }
             }
@@ -450,7 +445,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
 
         // First of check if we have any messages in the mailbox
         // if not we don't need to go through all of this
-        final List<SearchQuery.UidRange> ranges = new ArrayList<SearchQuery.UidRange>();
+        final List<SearchQuery.UidRange> ranges = new ArrayList<>();
         if (selected.existsCount() > 0) {
             for (UidRange range : uids) {
                 MessageUid lowVal = range.getLowVal();
@@ -459,13 +454,13 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                 // message in
                 // the mailbox. See IMAP-289
                 if (lowVal.equals(MessageUid.MAX_VALUE) && highVal.equals(MessageUid.MAX_VALUE)) {
-                    ranges.add(new SearchQuery.UidRange(selected.getLastUid().or(MessageUid.MIN_VALUE)));
-                } else if (highVal.equals(MessageUid.MAX_VALUE) && selected.getLastUid().or(MessageUid.MIN_VALUE).compareTo(lowVal) < 0) {
+                    ranges.add(new SearchQuery.UidRange(selected.getLastUid().orElse(MessageUid.MIN_VALUE)));
+                } else if (highVal.equals(MessageUid.MAX_VALUE) && selected.getLastUid().orElse(MessageUid.MIN_VALUE).compareTo(lowVal) < 0) {
                     // Sequence uid ranges which use
                     // *:<uid-higher-then-last-uid>
                     // MUST return at least the highest uid in the mailbox
                     // See IMAP-291
-                    ranges.add(new SearchQuery.UidRange(selected.getLastUid().or(MessageUid.MIN_VALUE)));
+                    ranges.add(new SearchQuery.UidRange(selected.getLastUid().orElse(MessageUid.MIN_VALUE)));
                 } else {
                     ranges.add(new SearchQuery.UidRange(lowVal, highVal));
                 }
@@ -491,7 +486,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
 
     private Criterion and(List<SearchKey> keys, ImapSession session) throws MessageRangeException {
         final int size = keys.size();
-        final List<Criterion> criteria = new ArrayList<Criterion>(size);
+        final List<Criterion> criteria = new ArrayList<>(size);
         for (SearchKey key : keys) {
             final Criterion criterion = toCriterion(key, session);
             criteria.add(criterion);
@@ -505,5 +500,14 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
      */
     public List<String> getImplementedCapabilities(ImapSession session) {
         return CAPS;
+    }
+
+    @Override
+    protected Closeable addContextToMDC(SearchRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "SEARCH")
+            .addContext("useUid", message.isUseUids())
+            .addContext("searchOperation", message.getSearchOperation())
+            .build();
     }
 }

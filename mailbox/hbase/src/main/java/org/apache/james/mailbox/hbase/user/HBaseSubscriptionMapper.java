@@ -121,7 +121,7 @@ public class HBaseSubscriptionMapper extends HBaseNonTransactionalMapper impleme
         HTable subscriptions = null;
         try {
             subscriptions = new HTable(conf, SUBSCRIPTIONS_TABLE);
-            List<Subscription> subscriptionList = new ArrayList<Subscription>();
+            List<Subscription> subscriptionList = new ArrayList<>();
             Get get = new Get(Bytes.toBytes(user));
             get.addFamily(SUBSCRIPTION_CF);
             Result result = subscriptions.get(get);

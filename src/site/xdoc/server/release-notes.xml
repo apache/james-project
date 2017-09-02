@@ -35,6 +35,31 @@
             </div>
         </div>
 
+        <section name="Version 3.0.0">
+
+            <p>Released July 2017</p>
+
+            <p>The Apache James project is happy to announce the release
+                of version 3.0.0 of its modular mail server.</p>
+
+            <p>After a long work, the team is really proud to announce the new release, James 3.0.
+                This new version of the Apache James Server introduces many new features, 
+                like the IMAP protocol, 
+                experimental Sieve support, 
+                experimental JMAP support, 
+                and new email storage back-ends.</p>
+
+            <p>For the James 3.0 release, the team have been specifically committed to testing. 
+                We care about unit testing in a Test Driven Development way. 
+                We added many integration tests, using the Mail Protocol Tester suite, but also using various IMAP, SMTP and HTTP clients. 
+                We conducted load testing campaigns, and developed tools based on Gatling, a load testing framework, for the JMAP, IMAP and SMTP protocols. 
+                We introduced live metric collection and display in Grafana, as well as log collection in Kibana.</p>
+
+            <p>If you're interested in contributing to the James project, please subscribe to the James
+                <a href="http://james.apache.org/mail.html">mailing lists</a>.</p>
+
+        </section>
+
         <section name="Version 3.0-RC1">
 
             <p>Released May 2017</p>

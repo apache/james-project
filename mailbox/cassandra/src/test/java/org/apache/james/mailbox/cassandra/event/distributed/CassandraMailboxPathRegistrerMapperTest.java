@@ -20,10 +20,12 @@
 package org.apache.james.mailbox.cassandra.event.distributed;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraRegistrationModule;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.publisher.Topic;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,12 +46,20 @@ public class CassandraMailboxPathRegistrerMapperTest {
 
     @Before
     public void setUp() {
-        mapper = new CassandraMailboxPathRegisterMapper(cassandra.getConf(), cassandra.getTypesProvider(), CASSANDRA_TIME_OUT_IN_S);
+        mapper = new CassandraMailboxPathRegisterMapper(cassandra.getConf(),
+            cassandra.getTypesProvider(),
+            CassandraUtils.WITH_DEFAULT_CONFIGURATION,
+            CASSANDRA_TIME_OUT_IN_S);
     }
 
     @After
     public void tearDown() {
         cassandra.clearAllTables();
+    }
+
+    @AfterClass
+    public static void stop() {
+        cassandra.close();
     }
 
     @Test
@@ -100,7 +110,10 @@ public class CassandraMailboxPathRegistrerMapperTest {
     @Test
     public void entriesShouldExpire() throws Exception {
         int verySmallTimeoutInSecond = 1;
-        mapper = new CassandraMailboxPathRegisterMapper(cassandra.getConf(), cassandra.getTypesProvider(), verySmallTimeoutInSecond);
+        mapper = new CassandraMailboxPathRegisterMapper(cassandra.getConf(),
+            cassandra.getTypesProvider(),
+            CassandraUtils.WITH_DEFAULT_CONFIGURATION,
+            verySmallTimeoutInSecond);
         mapper.doRegister(MAILBOX_PATH, TOPIC);
         Thread.sleep(2 * TimeUnit.SECONDS.toMillis(verySmallTimeoutInSecond));
         assertThat(mapper.getTopics(MAILBOX_PATH)).isEmpty();

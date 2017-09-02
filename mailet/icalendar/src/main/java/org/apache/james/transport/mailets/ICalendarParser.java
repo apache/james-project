@@ -29,6 +29,8 @@ import javax.mail.MessagingException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
@@ -37,6 +39,7 @@ import com.google.common.base.Strings;
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
+import net.fortuna.ical4j.util.CompatibilityHints;
 
 /**
  * <p>
@@ -61,11 +64,22 @@ import net.fortuna.ical4j.model.Calendar;
  * </p>
  */
 public class ICalendarParser extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ICalendarParser.class);
+
     public static final String SOURCE_ATTRIBUTE_PARAMETER_NAME = "sourceAttribute";
     public static final String DESTINATION_ATTRIBUTE_PARAMETER_NAME = "destinationAttribute";
 
     public static final String SOURCE_ATTRIBUTE_PARAMETER_DEFAULT_VALUE = "icsAttachments";
     public static final String DESTINATION_ATTRIBUTE_PARAMETER_DEFAULT_VALUE = "calendars";
+
+    static {
+        CompatibilityHints.setHintEnabled(CompatibilityHints.KEY_RELAXED_PARSING, true);
+        CompatibilityHints.setHintEnabled(CompatibilityHints.KEY_RELAXED_UNFOLDING, true);
+        CompatibilityHints.setHintEnabled(CompatibilityHints.KEY_RELAXED_VALIDATION, true);
+        CompatibilityHints.setHintEnabled(CompatibilityHints.KEY_OUTLOOK_COMPATIBILITY, true);
+        CompatibilityHints.setHintEnabled(CompatibilityHints.KEY_NOTES_COMPATIBILITY, true);
+        CompatibilityHints.setHintEnabled(CompatibilityHints.KEY_VCARD_COMPATIBILITY, true);
+    }
 
     private String sourceAttributeName;
     private String destinationAttributeName;
@@ -120,10 +134,10 @@ public class ICalendarParser extends GenericMailet {
             ByteArrayInputStream inputStream = new ByteArrayInputStream(icsContent);
             return Stream.of(Pair.of(key, builder.build(inputStream)));
         } catch (IOException e) {
-            log("Error while reading input: " + icsContent, e);
+            LOGGER.error("Error while reading input: " + icsContent, e);
             return Stream.of();
         } catch (ParserException e) {
-            log("Error while parsing ICal object: " + icsContent, e);
+            LOGGER.error("Error while parsing ICal object: " + icsContent, e);
             return Stream.of();
         }
     }

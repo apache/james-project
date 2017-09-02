@@ -23,9 +23,9 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.AbstractSubscriptionManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
+import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAO;
@@ -39,19 +39,31 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 
 /**
  * Test Cassandra subscription against some general purpose written code.
  */
 public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManagerTest {
 
-    private static final CassandraCluster cassandra = CassandraCluster.create(
-        new CassandraModuleComposite(
-            new CassandraSubscriptionModule(),
-            new CassandraMailboxCounterModule(),
-            new CassandraUidModule(),
-            new CassandraModSeqModule()));
-    
+    private static CassandraCluster cassandra;
+
+    @BeforeClass
+    public static void init() {
+        cassandra = CassandraCluster.create(
+            new CassandraModuleComposite(
+                new CassandraSubscriptionModule(),
+                new CassandraMailboxCounterModule(),
+                new CassandraUidModule(),
+                new CassandraModSeqModule()));
+    }
+
+    @AfterClass
+    public static void close() {
+        cassandra.close();
+    }
+
     @Override
     public SubscriptionManager createSubscriptionManager() {
         CassandraMessageIdToImapUidDAO imapUidDAO = null;

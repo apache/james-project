@@ -73,16 +73,6 @@ public class ParsingWritingObjectsTest {
     }
 
     @Test
-    public void parsingJsonShouldWorkOnMessage() throws Exception {
-        Message expected = MESSAGE;
-
-        Message message = testee.forParsing()
-            .readValue(IOUtils.toString(ClassLoader.getSystemResource("json/message.json"), StandardCharsets.UTF_8), Message.class);
-
-        assertThat(message).isEqualToComparingFieldByField(expected);
-    }
-
-    @Test
     public void writingJsonShouldWorkOnMessage() throws Exception {
         String expected = IOUtils.toString(ClassLoader.getSystemResource("json/message.json"), StandardCharsets.UTF_8);
 

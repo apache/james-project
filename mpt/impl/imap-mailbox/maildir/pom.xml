@@ -22,9 +22,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>apache-james-mpt-imapmailbox</artifactId>
         <groupId>org.apache.james</groupId>
-        <version>3.0.0-RC2-SNAPSHOT</version>
+        <artifactId>apache-james-mpt-imapmailbox</artifactId>
+        <version>3.1.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>apache-james-mpt-imapmailbox-maildir</artifactId>
@@ -32,14 +32,13 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>apache-james-mpt-imapmailbox-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-maildir</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mpt-imapmailbox-core</artifactId>
+        </dependency>
     </dependencies>
 </project>
-

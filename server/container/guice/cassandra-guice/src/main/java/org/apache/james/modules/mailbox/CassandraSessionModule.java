@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
@@ -37,8 +38,15 @@ import org.apache.james.backends.cassandra.init.ClusterBuilder;
 import org.apache.james.backends.cassandra.init.ClusterWithKeyspaceCreatedFactory;
 import org.apache.james.backends.cassandra.init.QueryLoggerConfiguration;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager.SchemaState;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.util.Host;
+import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.PropertiesProvider;
 import org.apache.james.utils.RetryExecutorUtil;
 import org.slf4j.Logger;
@@ -52,8 +60,12 @@ import com.datastax.driver.core.QueryLogger;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.exceptions.NoHostAvailableException;
 import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
@@ -73,13 +85,30 @@ public class CassandraSessionModule extends AbstractModule {
     private static final int DEFAULT_READ_TIMEOUT_MILLIS = 5000;
     private static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 5000;
     private static final String BATCHSIZES_FILE_NAME = "batchsizes";
+    private static final String MAILBOX_MAX_RETRY_ACL = "mailbox.max.retry.acl";
+    private static final String MAILBOX_MAX_RETRY_MODSEQ = "mailbox.max.retry.modseq";
+    private static final String MAILBOX_MAX_RETRY_UID = "mailbox.max.retry.uid";
+    private static final String MAILBOX_MAX_RETRY_MESSAGE_FLAGS_UPDATE = "mailbox.max.retry.message.flags.update";
+    private static final String MAILBOX_MAX_RETRY_MESSAGE_ID_FLAGS_UPDATE = "mailbox.max.retry.message.id.flags.update";
+    private static final String FETCH_ADVANCE_ROW_COUNT = "fetch.advance.row.count";
+    private static final String CHUNK_SIZE_FLAGS_UPDATE = "chunk.size.flags.update";
+    private static final String CHUNK_SIZE_MESSAGE_READ = "chunk.size.message.read";
+    private static final String CHUNK_SIZE_EXPUNGE = "chunk.size.expunge";
+    private static final String BLOB_PART_SIZE = "mailbox.blob.part.size";
 
     @Override
     protected void configure() {
         bind(ScheduledExecutorService.class).toProvider(ScheduledExecutorServiceProvider.class);
+        bind(CassandraUtils.class).in(Scopes.SINGLETON);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().to(CassandraZonedDateTimeModule.class);
+        cassandraDataDefinitions.addBinding().to(CassandraSchemaVersionModule.class);
+
+        bind(CassandraSchemaVersionManager.class).in(Scopes.SINGLETON);
+        bind(CassandraSchemaVersionDAO.class).in(Scopes.SINGLETON);
+
+        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(CassandraSchemaChecker.class);
     }
 
     @Provides
@@ -125,7 +154,7 @@ public class CassandraSessionModule extends AbstractModule {
 
     @Provides
     @Singleton
-    Cluster provideCluster(CassandraSessionConfiguration cassandraSessionConfiguration, AsyncRetryExecutor executor) throws FileNotFoundException, ConfigurationException, ExecutionException, InterruptedException {
+    Cluster provideCluster(CassandraSessionConfiguration cassandraSessionConfiguration, AsyncRetryExecutor executor) throws ConfigurationException, ExecutionException, InterruptedException {
         PropertiesConfiguration configuration = cassandraSessionConfiguration.getConfiguration();
         List<Host> servers = listCassandraServers(configuration);
         QueryLoggerConfiguration queryLoggerConfiguration = getCassandraQueryLoggerConf(configuration);
@@ -224,7 +253,7 @@ public class CassandraSessionModule extends AbstractModule {
 
         percentileLatencyConf.ifPresent(slowQueryLatencyThresholdPercentile -> {
             PerHostPercentileTracker tracker = PerHostPercentileTracker
-                .builderWithHighestTrackableLatencyMillis(CASSANDRA_HIGHEST_TRACKABLE_LATENCY_MILLIS)
+                .builder(CASSANDRA_HIGHEST_TRACKABLE_LATENCY_MILLIS)
                 .build();
 
             builder.withDynamicThreshold(tracker, slowQueryLatencyThresholdPercentile);
@@ -238,6 +267,36 @@ public class CassandraSessionModule extends AbstractModule {
         return new AsyncRetryExecutor(scheduler);
     }
 
+    @VisibleForTesting
+    @Provides
+    @Singleton
+    CassandraConfiguration provideCassandraConfiguration(CassandraSessionConfiguration sessionConfiguration) throws ConfigurationException {
+        PropertiesConfiguration propertiesConfiguration = sessionConfiguration.getConfiguration();
+
+        return CassandraConfiguration.builder()
+            .aclMaxRetry(Optional.ofNullable(
+                propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_ACL, null)))
+            .modSeqMaxRetry(Optional.ofNullable(
+                propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_MODSEQ, null)))
+            .uidMaxRetry(Optional.ofNullable(
+                propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_UID, null)))
+            .flagsUpdateMessageMaxRetry(Optional.ofNullable(
+                propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_MESSAGE_FLAGS_UPDATE, null)))
+            .flagsUpdateMessageIdMaxRetry(Optional.ofNullable(
+                propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_MESSAGE_ID_FLAGS_UPDATE, null)))
+            .fetchNextPageInAdvanceRow(Optional.ofNullable(
+                propertiesConfiguration.getInteger(FETCH_ADVANCE_ROW_COUNT, null)))
+            .flagsUpdateChunkSize(Optional.ofNullable(
+                propertiesConfiguration.getInteger(CHUNK_SIZE_FLAGS_UPDATE, null)))
+            .messageReadChunkSize(Optional.ofNullable(
+                propertiesConfiguration.getInteger(CHUNK_SIZE_MESSAGE_READ, null)))
+            .expungeChunkSize(Optional.ofNullable(
+                propertiesConfiguration.getInteger(CHUNK_SIZE_EXPUNGE, null)))
+            .blobPartSize(Optional.ofNullable(
+                propertiesConfiguration.getInteger(BLOB_PART_SIZE, null)))
+            .build();
+    }
+
     private PropertiesConfiguration getConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
             return propertiesProvider.getConfiguration("cassandra");
@@ -246,6 +305,46 @@ public class CassandraSessionModule extends AbstractModule {
             PropertiesConfiguration propertiesConfiguration = new PropertiesConfiguration();
             propertiesConfiguration.addProperty(CASSANDRA_NODES, LOCALHOST);
             return propertiesConfiguration;
+        }
+    }
+
+    public static class CassandraSchemaChecker implements ConfigurationPerformer {
+        private final CassandraSchemaVersionManager versionManager;
+
+        @Inject
+        public CassandraSchemaChecker(CassandraSchemaVersionManager versionManager) {
+            this.versionManager = versionManager;
+        }
+
+        @Override
+        public void initModule() {
+            SchemaState schemaState = versionManager.computeSchemaState();
+            switch (schemaState) {
+                case TOO_OLD:
+                    throw new IllegalStateException(
+                        String.format("Current schema version is %d whereas minimum required version is %d. " +
+                            "Recommended version is %d", versionManager.computeVersion(), versionManager.getMinimumSupportedVersion(),
+                            versionManager.getMaximumSupportedVersion()));
+                case TOO_RECENT:
+                    throw new IllegalStateException(
+                        String.format("Current schema version is %d whereas the minimum supported version is %d. " +
+                            "Recommended version is %d.", versionManager.computeVersion(), versionManager.getMinimumSupportedVersion(),
+                            versionManager.getMaximumSupportedVersion()));
+                case UP_TO_DATE:
+                    LOGGER.info("Schema version is up-to-date");
+                    return;
+                case UPGRADABLE:
+                    LOGGER.warn("Current schema version is {}. Recommended version is {}", versionManager.computeVersion(),
+                        versionManager.getMaximumSupportedVersion());
+                    return;
+                default:
+                    throw new IllegalStateException("Unknown schema state " + schemaState);
+            }
+        }
+
+        @Override
+        public List<Class<? extends Configurable>> forClasses() {
+            return ImmutableList.of();
         }
     }
 }

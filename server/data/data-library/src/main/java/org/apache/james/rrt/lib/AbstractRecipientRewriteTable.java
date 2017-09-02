@@ -31,25 +31,25 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping.Type;
 import org.apache.mailet.MailAddress;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
 /**
  * 
  */
-public abstract class AbstractRecipientRewriteTable implements RecipientRewriteTable, LogEnabled, Configurable {
+public abstract class AbstractRecipientRewriteTable implements RecipientRewriteTable, Configurable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRecipientRewriteTable.class);
+
     // The maximum mappings which will process before throwing exception
     private int mappingLimit = 10;
 
     private boolean recursive = true;
-
-    private Logger logger;
 
     private DomainList domainList;
 
@@ -69,10 +69,6 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
             throw new ConfigurationException(e.getMessage());
         }
         doConfigure(config);
-    }
-
-    public void setLog(Logger logger) {
-        this.logger = logger;
     }
 
     /**
@@ -131,11 +127,8 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
                     if (target.startsWith(RecipientRewriteTable.REGEX_PREFIX)) {
                         try {
                             target = RecipientRewriteTableUtil.regexMap(new MailAddress(user, domain), target);
-                        } catch (PatternSyntaxException e) {
-                            getLogger().error("Exception during regexMap processing: ", e);
-                        } catch (ParseException e) {
-                            // should never happen
-                            getLogger().error("Exception during regexMap processing: ", e);
+                        } catch (PatternSyntaxException | ParseException e) {
+                            LOGGER.error("Exception during regexMap processing: ", e);
                         }
                     } else if (target.startsWith(RecipientRewriteTable.ALIASDOMAIN_PREFIX)) {
                         target = user + "@" + target.substring(RecipientRewriteTable.ALIASDOMAIN_PREFIX.length());
@@ -145,7 +138,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
                         continue;
 
                     String buf = "Valid virtual user mapping " + user + "@" + domain + " to " + target;
-                    getLogger().debug(buf);
+                    LOGGER.debug(buf);
 
                     if (recursive) {
 
@@ -200,9 +193,9 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
             throw new RecipientRewriteTableException("Invalid regex: " + regex, e);
         }
 
-        checkMapping(user, domain, regex);
-        getLogger().info("Add regex mapping => " + regex + " for user: " + user + " domain: " + domain);
-        addMappingInternal(user, domain, RecipientRewriteTable.REGEX_PREFIX + regex);
+        checkMapping(user, domain, MappingImpl.regex(regex));
+        LOGGER.info("Add regex mapping => " + regex + " for user: " + user + " domain: " + domain);
+        addMappingInternal(user, domain, MappingImpl.regex(regex));
 
     }
 
@@ -211,8 +204,8 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      *      java.lang.String, java.lang.String)
      */
     public void removeRegexMapping(String user, String domain, String regex) throws RecipientRewriteTableException {
-        getLogger().info("Remove regex mapping => " + regex + " for user: " + user + " domain: " + domain);
-        removeMappingInternal(user, domain, RecipientRewriteTable.REGEX_PREFIX + regex);
+        LOGGER.info("Remove regex mapping => " + regex + " for user: " + user + " domain: " + domain);
+        removeMappingInternal(user, domain, MappingImpl.regex(regex));
     }
 
     /**
@@ -232,9 +225,9 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         } catch (ParseException e) {
             throw new RecipientRewriteTableException("Invalid emailAddress: " + address, e);
         }
-        checkMapping(user, domain, address);
-        getLogger().info("Add address mapping => " + address + " for user: " + user + " domain: " + domain);
-        addMappingInternal(user, domain, address);
+        checkMapping(user, domain, MappingImpl.address(address));
+        LOGGER.info("Add address mapping => " + address + " for user: " + user + " domain: " + domain);
+        addMappingInternal(user, domain, MappingImpl.address(address));
 
     }
 
@@ -250,8 +243,8 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
                 throw new RecipientRewriteTableException("Unable to retrieve default domain", e);
             }
         }
-        getLogger().info("Remove address mapping => " + address + " for user: " + user + " domain: " + domain);
-        removeMappingInternal(user, domain, address);
+        LOGGER.info("Remove address mapping => " + address + " for user: " + user + " domain: " + domain);
+        removeMappingInternal(user, domain, MappingImpl.address(address));
     }
 
     /**
@@ -259,9 +252,9 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      *      java.lang.String, java.lang.String)
      */
     public void addErrorMapping(String user, String domain, String error) throws RecipientRewriteTableException {
-        checkMapping(user, domain, error);
-        getLogger().info("Add error mapping => " + error + " for user: " + user + " domain: " + domain);
-        addMappingInternal(user, domain, RecipientRewriteTable.ERROR_PREFIX + error);
+        checkMapping(user, domain, MappingImpl.error(error));
+        LOGGER.info("Add error mapping => " + error + " for user: " + user + " domain: " + domain);
+        addMappingInternal(user, domain, MappingImpl.error(error));
 
     }
 
@@ -270,8 +263,8 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      *      java.lang.String, java.lang.String)
      */
     public void removeErrorMapping(String user, String domain, String error) throws RecipientRewriteTableException {
-        getLogger().info("Remove error mapping => " + error + " for user: " + user + " domain: " + domain);
-        removeMappingInternal(user, domain, RecipientRewriteTable.ERROR_PREFIX + error);
+        LOGGER.info("Remove error mapping => " + error + " for user: " + user + " domain: " + domain);
+        removeMappingInternal(user, domain, MappingImpl.error(error));
     }
 
     /**
@@ -328,7 +321,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         if (mappings != null) {
             count = mappings.size();
         }
-        getLogger().debug("Retrieve all mappings. Mapping count: " + count);
+        LOGGER.debug("Retrieve all mappings. Mapping count: " + count);
         return mappings;
     }
 
@@ -345,8 +338,8 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      *      java.lang.String)
      */
     public void addAliasDomainMapping(String aliasDomain, String realDomain) throws RecipientRewriteTableException {
-        getLogger().info("Add domain mapping: " + aliasDomain + " => " + realDomain);
-        addMappingInternal(null, aliasDomain, RecipientRewriteTable.ALIASDOMAIN_PREFIX + realDomain);
+        LOGGER.info("Add domain mapping: " + aliasDomain + " => " + realDomain);
+        addMappingInternal(null, aliasDomain, MappingImpl.domain(realDomain));
     }
 
     /**
@@ -354,12 +347,8 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      *      java.lang.String)
      */
     public void removeAliasDomainMapping(String aliasDomain, String realDomain) throws RecipientRewriteTableException {
-        getLogger().info("Remove domain mapping: " + aliasDomain + " => " + realDomain);
-        removeMappingInternal(null, aliasDomain, RecipientRewriteTable.ALIASDOMAIN_PREFIX + realDomain);
-    }
-
-    protected Logger getLogger() {
-        return logger;
+        LOGGER.info("Remove domain mapping: " + aliasDomain + " => " + realDomain);
+        removeMappingInternal(null, aliasDomain, MappingImpl.domain(realDomain));
     }
 
     /**
@@ -373,7 +362,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      *            the mapping
      * @throws RecipientRewriteTableException
      */
-    protected abstract void addMappingInternal(String user, String domain, String mapping) throws RecipientRewriteTableException;
+    protected abstract void addMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException;
 
     /**
      * Remove mapping
@@ -386,7 +375,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      *            the mapping
      * @throws RecipientRewriteTableException
      */
-    protected abstract void removeMappingInternal(String user, String domain, String mapping) throws RecipientRewriteTableException;
+    protected abstract void removeMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException;
 
     /**
      * Return Collection of all mappings for the given username and domain
@@ -456,7 +445,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         }
     }
 
-    private void checkMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
+    private void checkMapping(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
         Mappings mappings = getUserDomainMappings(user, domain);
         if (mappings != null && mappings.contains(mapping)) {
             throw new RecipientRewriteTableException("Mapping " + mapping + " for user " + user + " domain " + domain + " already exist!");

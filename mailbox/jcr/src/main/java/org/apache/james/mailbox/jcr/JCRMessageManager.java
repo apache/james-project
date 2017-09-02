@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.BatchSizes;
+import org.apache.james.mailbox.store.ImmutableMailboxMessage;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
@@ -43,7 +44,6 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
-import org.slf4j.Logger;
 
 /**
  * JCR implementation of a {@link org.apache.james.mailbox.MessageManager}
@@ -51,16 +51,13 @@ import org.slf4j.Logger;
  */
 public class JCRMessageManager extends StoreMessageManager {
 
-    private final Logger log;
-
     public JCRMessageManager(MailboxSessionMapperFactory mapperFactory, MessageSearchIndex index, 
             final MailboxEventDispatcher dispatcher, MailboxPathLocker locker, JCRMailbox mailbox, 
-            MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, Logger log, 
-            QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory, BatchSizes batchSizes)
+            MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, 
+            QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory, BatchSizes batchSizes, ImmutableMailboxMessage.Factory immutableMailboxMessageFactory)
                     throws MailboxException {
         super(mapperFactory, index, dispatcher, locker, mailbox, aclResolver, groupMembershipResolver, quotaManager, 
-                quotaRootResolver, messageParser, messageIdFactory, batchSizes);
-        this.log = log;
+                quotaRootResolver, messageParser, messageIdFactory, batchSizes, immutableMailboxMessageFactory);
     }
 
 
@@ -68,7 +65,7 @@ public class JCRMessageManager extends StoreMessageManager {
     protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachment> attachments) throws MailboxException{
         JCRId mailboxId = (JCRId) getMailboxEntity().getMailboxId();
         return new JCRMailboxMessage(mailboxId, getMessageIdFactory().generate(), internalDate,
-                size, flags, content, bodyStartOctet, propertyBuilder, log);
+                size, flags, content, bodyStartOctet, propertyBuilder);
     }
 
     /**

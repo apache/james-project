@@ -31,7 +31,7 @@ import org.apache.james.protocols.smtp.hook.MessageHook;
 
 public class TestMessageHook implements MessageHook {
 
-    private final CopyOnWriteArrayList<MailEnvelope> queued = new CopyOnWriteArrayList<MailEnvelope>();
+    private final CopyOnWriteArrayList<MailEnvelope> queued = new CopyOnWriteArrayList<>();
     
     public HookResult onMessage(SMTPSession session, MailEnvelope mail) {
         queued.add(mail);

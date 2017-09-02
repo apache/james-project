@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -56,8 +57,14 @@ import org.apache.james.mailbox.model.MessageRange.Type;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StoreProcessor.class);
 
     /**
      * The {@link ImapCommand} which should be used for the response if some CONDSTORE option is used
@@ -110,8 +117,8 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                 }
               
             } 
-            final List<MessageUid> failed = new ArrayList<MessageUid>();
-            List<Long> failedMsns = new ArrayList<Long>();
+            final List<MessageUid> failed = new ArrayList<>();
+            List<Long> failedMsns = new ArrayList<>();
             final List<String> userFlags = Arrays.asList(flags.getUserFlags());
             for (IdRange range : idSet) {
                 final SelectedMailbox selected = session.getSelected();
@@ -122,7 +129,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                         // Ok we have a CONDSTORE option so use the CONDSTORE_COMMAND
                         imapCommand = CONDSTORE_COMMAND;
 
-                        List<MessageUid> uids = new ArrayList<MessageUid>();
+                        List<MessageUid> uids = new ArrayList<>();
 
                         MessageResultIterator results = mailbox.getMessages(messageSet, FetchGroupImpl.MINIMAL, mailboxSession);
                         while (results.hasNext()) {
@@ -197,7 +204,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                     final StatusResponse response = getStatusResponseFactory().taggedOk(tag, command, HumanReadableText.FAILED, ResponseCode.condStore(idRanges));
                     responder.respond(response);
                 } else {
-                    List<IdRange> ranges = new ArrayList<IdRange>();
+                    List<IdRange> ranges = new ArrayList<>();
                     for (long msn: failedMsns) {
                         ranges.add(new IdRange(msn));
                     }
@@ -209,14 +216,12 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                 }
             }
         } catch (MessageRangeException e) {
-            if (session.getLog().isDebugEnabled()) {
-                session.getLog().debug("Store failed for mailbox " + session.getSelected().getPath() + " because of an invalid sequence-set " + idSet.toString(), e); 
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Store failed for mailbox " + session.getSelected().getPath() + " because of an invalid sequence-set " + ImmutableList.copyOf(idSet), e);
             }
             taggedBad(imapCommand, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Store failed for mailbox " + session.getSelected().getPath(), e);
-            }
+            LOGGER.error("Store failed for mailbox " + session.getSelected().getPath() + " and sequence-set " + ImmutableList.copyOf(idSet), e);
             no(imapCommand, tag, responder, HumanReadableText.SAVE_FAILED);
         }
     }
@@ -267,7 +272,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
         boolean condstoreEnabled = enabled.contains(ImapConstants.SUPPORTS_CONDSTORE);
         
         if (!silent || unchangedSince != -1 || qresyncEnabled || condstoreEnabled) {
-            final Map<MessageUid, Long> modSeqs = new HashMap<MessageUid, Long>();
+            final Map<MessageUid, Long> modSeqs = new HashMap<>();
            
             // Check if we need to also send the the mod-sequences back to the client
             //
@@ -290,8 +295,8 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                 final int msn = selected.msn(uid);
 
                 if (msn == SelectedMailbox.NO_SUCH_MESSAGE) {
-                    if(session.getLog().isDebugEnabled()) {
-                        session.getLog().debug("No message found with uid " + uid + " in the uid<->msn mapping for mailbox " + selected.getPath().getFullName(mailboxSession.getPathDelimiter()) +" , this may be because it was deleted by a concurrent session. So skip it..");
+                    if(LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("No message found with uid " + uid + " in the uid<->msn mapping for mailbox " + selected.getPath().getFullName(mailboxSession.getPathDelimiter()) +" , this may be because it was deleted by a concurrent session. So skip it..");
                         
                     }
                     // skip this as it was not found in the mapping
@@ -343,5 +348,16 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
             }
         }
         
+    }
+
+    @Override
+    protected Closeable addContextToMDC(StoreRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "STORE")
+            .addContext("ranges", IdRange.toString(message.getIdSet()))
+            .addContext("useUids", message.isUseUids())
+            .addContext("unchangedSince", message.getUnchangedSince())
+            .addContext("isSilent", message.isSilent())
+            .build();
     }
 }

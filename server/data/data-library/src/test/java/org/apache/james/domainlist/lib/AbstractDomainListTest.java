@@ -32,10 +32,14 @@ import org.apache.james.domainlist.api.DomainListException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractDomainListTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDomainListTest.class);
 
     private final String DOMAIN_1 = "domain1.tld";
     private final String DOMAIN_2 = "domain2.tld";
@@ -110,7 +114,7 @@ public abstract class AbstractDomainListTest {
         try {
             domainList.removeDomain(DOMAIN_2);
         } catch (DomainListException e) {
-
+            LOGGER.info("Ignored error", e);
         }
         assertThat(domainList.getDomains()).containsOnly(DOMAIN_1);
     }
@@ -169,7 +173,7 @@ public abstract class AbstractDomainListTest {
         try {
             domainList.removeDomain(domain);
         } catch(DomainListException e) {
-
+            LOGGER.info("Ignored error", e);
         }
     }
 

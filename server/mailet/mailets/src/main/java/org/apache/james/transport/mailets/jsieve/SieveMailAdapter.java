@@ -18,10 +18,21 @@
  ****************************************************************/
 package org.apache.james.transport.mailets.jsieve;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
+import javax.mail.Header;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import org.apache.james.mime4j.dom.address.AddressList;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.address.MailboxList;
@@ -41,31 +52,20 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.mail.Header;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import com.google.common.collect.Lists;
+
 /**
  * <p>
  * Class <code>SieveMailAdapter</code> implements a <code>MailAdapter</code>
  * for use in a Mailet environment.
  * </p>
  */
-public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionContext
-{
-    private static final Log LOG = LogFactory.getLog(SieveMailAdapter.class);
-    
-    private Log log = LOG;
-    
+public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionContext {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SieveMailAdapter.class);
+
     /**
      * The Mail being adapted.
      */
@@ -116,10 +116,6 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         return recipient;
     }
 
-    public void setLog(Log log) {
-        this.log = log;
-    }
-
     /**
      * Returns the message.
      * 
@@ -151,7 +147,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
      */
     protected List<Action> computeActions()
     {
-        return new ArrayList<Action>();
+        return new ArrayList<>();
     }
     /**
      * Returns the List of actions.
@@ -178,7 +174,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
     {
         final List<Action> actions = getActions();
         for (final Action action: actions) {
-            getMailetContext().log(MailetContext.LogLevel.INFO, "Executing action: " + action.toString());
+            LOGGER.info("Executing action: " + action.toString());
             try
             {
                 dispatcher.execute(action, getMail(), this);
@@ -215,7 +211,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         try
         {
             String[] headers = getMessage().getHeader(name);
-            return (headers == null ? new ArrayList<String>(0) : Arrays.asList(headers));
+            return (headers == null ? new ArrayList<>(0) : Arrays.asList(headers));
         }
         catch (MessagingException ex)
         {
@@ -228,14 +224,14 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
      */
     public List<String> getHeaderNames() throws SieveMailException
     {
-        Set<String> headerNames = new HashSet<String>();
+        Set<String> headerNames = new HashSet<>();
         try
         {
             Enumeration<?> allHeaders = getMessage().getAllHeaders();
             while (allHeaders.hasMoreElements()) {
                 headerNames.add(((Header) allHeaders.nextElement()).getName());
             }
-            return new ArrayList<String>(headerNames);
+            return new ArrayList<>(headerNames);
         }
         catch (MessagingException ex)
         {
@@ -273,7 +269,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
      */
     protected Map<String, String> getEnvelopes()
     {
-        Map<String, String> envelopes = new HashMap<String, String>(2);
+        Map<String, String> envelopes = new HashMap<>(2);
         if (null != getEnvelopeFrom())
             envelopes.put("From", getEnvelopeFrom());
         if (null != getEnvelopeTo())
@@ -285,7 +281,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
      */
     public List<String> getEnvelope(String name) throws SieveMailException
     {
-        List<String> values = new ArrayList<String>(1);
+        List<String> values = new ArrayList<>(1);
         String value = getEnvelopes().get(name);
         if (null != value)
             values.add(value);
@@ -297,7 +293,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
      */
     public List<String> getEnvelopeNames() throws SieveMailException
     {
-        return new ArrayList<String>(getEnvelopes().keySet());
+        return new ArrayList<>(getEnvelopes().keySet());
     }
     
     /**
@@ -305,7 +301,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
      */
     public List<String> getMatchingEnvelope(String name) throws SieveMailException
     {
-        final List<String> matchedEnvelopeValues = new ArrayList<String>(32);
+        final List<String> matchedEnvelopeValues = new ArrayList<>(32);
         for (String envelopeName: getEnvelopeNames()) {
             if (envelopeName.trim().equalsIgnoreCase(name))
                 matchedEnvelopeValues.addAll(getEnvelope(envelopeName));
@@ -331,13 +327,12 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
      */
     public String getEnvelopeTo()
     {
-        for (MailAddress mailAddress : getMail().getRecipients()) {
-            String recipient = mailAddress.toInternetAddress().getAddress();
-            if (recipient != null) {
-                return recipient;
-            }
-        }
-        return null;
+        return getMail().getRecipients()
+            .stream()
+            .map(mailAddress -> mailAddress.toInternetAddress().getAddress())
+            .filter(Objects::nonNull)
+            .findFirst()
+            .orElse(null);
     }
     
     /**
@@ -412,7 +407,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
     public Address[] parseAddresses(String arg) throws SieveMailException, InternetAddressException {
         try {
             List<String> headerValues = getHeader(arg);
-            List<MailboxList> mailboxes = new ArrayList<MailboxList>();
+            List<MailboxList> mailboxes = new ArrayList<>();
             int size = 0;
             for(String headerValue : headerValues) {
                 MailboxList mailboxList = new AddressList(DefaultAddressParser.DEFAULT.parseAddressList(headerValue), true).flatten();
@@ -433,10 +428,6 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         }
     }
 
-    public Log getLog() {
-        return log;
-    }
-    
     public String getServerInfo() {
         return getMailetContext().getServerInfo();
     }
@@ -455,11 +446,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
                 .contentTypes(Lists.newArrayList("text/plain"))
                 .includeHeaders(false)
                 .caseInsensitive(false)
-                .searchContents(Lists.transform(phrasesCaseInsensitive, new Function<String, CharSequence>() {
-                    public CharSequence apply(String s) {
-                        return s;
-                    }
-                })).build()
+                .searchContents(Lists.transform(phrasesCaseInsensitive, s -> s)).build()
                 .messageMatches(getMail().getMessage().getInputStream());
         } catch (Exception e) {
             throw new SieveMailException("Error searching in the mail content", e);
@@ -472,11 +459,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
                 .includeHeaders(false)
                 .caseInsensitive(false)
                 .ignoringMime(true)
-                .searchContents(Lists.transform(phrasesCaseInsensitive, new Function<String, CharSequence>() {
-                    public CharSequence apply(String s) {
-                        return s;
-                    }
-                })).build()
+                .searchContents(Lists.transform(phrasesCaseInsensitive, s -> s)).build()
                 .messageMatches(getMail().getMessage().getInputStream());
         } catch (Exception e) {
             throw new SieveMailException("Error searching in the mail content", e);
@@ -489,11 +472,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
                 .contentTypes(contentTypes)
                 .includeHeaders(false)
                 .caseInsensitive(false)
-                .searchContents(Lists.transform(phrasesCaseInsensitive, new Function<String, CharSequence>() {
-                    public CharSequence apply(String s) {
-                        return s;
-                    }
-                })).build()
+                .searchContents(Lists.transform(phrasesCaseInsensitive, s -> s)).build()
                 .messageMatches(getMail().getMessage().getInputStream());
         } catch (Exception e) {
             throw new SieveMailException("Error searching in the mail content", e);

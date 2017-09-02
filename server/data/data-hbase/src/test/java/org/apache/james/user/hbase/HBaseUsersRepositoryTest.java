@@ -31,7 +31,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.slf4j.LoggerFactory;
 
 /**
  * Tests for the HBase UsersRepository implementation.
@@ -77,7 +76,6 @@ public class HBaseUsersRepositoryTest extends AbstractUsersRepositoryTest {
     @Override
     protected AbstractUsersRepository getUsersRepository() throws Exception {
         HBaseUsersRepository userRepository = new HBaseUsersRepository();
-        userRepository.setLog(LoggerFactory.getLogger("MockLog"));
         userRepository.configure(new DefaultConfigurationBuilder());
         return userRepository;
     }

@@ -30,7 +30,6 @@ import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.lib.AbstractUsersRepository;
-import org.slf4j.LoggerFactory;
 
 /**
  * Test basic behaviors of UsersFileRepository
@@ -62,7 +61,6 @@ public class DefaultUsersJdbcRepositoryTest extends AbstractUsersJdbcRepositoryT
         DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
         configuration.addProperty("[@destinationURL]", "db://maildb/" + tableString);
         configuration.addProperty("sqlFile", "file://conf/sqlResources.xml");
-        res.setLog(LoggerFactory.getLogger("MockLog"));
         res.configure(configuration);
         res.init();
     }

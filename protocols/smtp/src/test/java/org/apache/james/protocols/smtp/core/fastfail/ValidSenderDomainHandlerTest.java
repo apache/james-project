@@ -19,7 +19,7 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -61,7 +61,7 @@ public class ValidSenderDomainHandlerTest {
     
     private SMTPSession setupMockedSession(final MailAddress sender) {
         return new BaseFakeSMTPSession() {
-            HashMap<String,Object> map = new HashMap<String,Object>();
+            HashMap<String,Object> map = new HashMap<>();
 
             public Map<String,Object> getState() {
 

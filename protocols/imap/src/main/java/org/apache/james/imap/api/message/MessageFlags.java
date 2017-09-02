@@ -26,7 +26,7 @@ import java.util.Collections;
 import javax.mail.Flags;
 
 /**
- * The set of flags associated with a message. TODO - why not use
+ * The set of flags associated with a message.
  * javax.mail.Flags instead of having our own.
  * 
  * <p>
@@ -79,7 +79,7 @@ public class MessageFlags {
      *         flags.
      */
     public static Collection<String> names(Flags flags) {
-        final Collection<String> results = new ArrayList<String>();
+        final Collection<String> results = new ArrayList<>();
         if (flags.contains(Flags.Flag.ANSWERED)) {
             results.add(ANSWERED_OUTPUT_CAPITALISED);
         }

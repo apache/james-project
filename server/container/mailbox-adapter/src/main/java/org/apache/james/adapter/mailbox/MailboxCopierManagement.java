@@ -60,7 +60,7 @@ public class MailboxCopierManagement implements MailboxCopierManagementMBean {
      * #getMailboxManagerBeans()
      */
     public Map<String, String> getMailboxManagerBeans() {
-        Map<String, String> bMap = new HashMap<String, String>();
+        Map<String, String> bMap = new HashMap<>();
         Map<String, MailboxManager> beans = resolver.getMailboxManagerBeans();
 
         for (Map.Entry<String, MailboxManager> entry : beans.entrySet()) {
@@ -81,13 +81,7 @@ public class MailboxCopierManagement implements MailboxCopierManagementMBean {
             throw new IllegalArgumentException("srcBean and dstBean can not have the same name!");
         try {
             copier.copyMailboxes(resolver.resolveMailboxManager(srcBean), resolver.resolveMailboxManager(dstBean));
-        } catch (MailboxManagerResolverException e) {
-            log.error("An exception occured during the copy process", e);
-            throw new Exception(e.getMessage());
-        } catch (MailboxException e) {
-            log.error("An exception occured during the copy process", e);
-            throw new Exception(e.getMessage());
-        } catch (IOException e) {
+        } catch (MailboxManagerResolverException | MailboxException | IOException e) {
             log.error("An exception occured during the copy process", e);
             throw new Exception(e.getMessage());
         }

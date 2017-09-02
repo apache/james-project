@@ -27,10 +27,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.mailbox.cassandra.CassandraId;
+import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -42,31 +43,37 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.util.CompletableFutureUtil;
-import org.apache.james.util.OptionalConverter;
+import org.apache.james.util.FluentFutureStream;
+import org.apache.james.util.OptionalUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.exceptions.InvalidQueryException;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CassandraMailboxMapper implements MailboxMapper {
 
     public static final String WILDCARD = "%";
     public static final String VALUES_MAY_NOT_BE_LARGER_THAN_64_K = "Index expression values may not be larger than 64K";
     public static final String CLUSTERING_COLUMNS_IS_TOO_LONG = "The sum of all clustering columns is too long";
+    public static final Logger LOGGER = LoggerFactory.getLogger(CassandraMailboxMapper.class);
 
-    private final int maxRetry;
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final CassandraMailboxPathDAO mailboxPathDAO;
     private final CassandraMailboxDAO mailboxDAO;
     private final Session session;
+    private final CassandraConfiguration cassandraConfiguration;
 
-    public CassandraMailboxMapper(Session session, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathDAO mailboxPathDAO, int maxRetry) {
-        this.maxRetry = maxRetry;
+    @Inject
+    public CassandraMailboxMapper(Session session, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathDAO mailboxPathDAO, CassandraConfiguration cassandraConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.mailboxDAO = mailboxDAO;
         this.mailboxPathDAO = mailboxPathDAO;
         this.session = session;
+        this.cassandraConfiguration = cassandraConfiguration;
     }
 
     @Override
@@ -110,15 +117,18 @@ public class CassandraMailboxMapper implements MailboxMapper {
     @Override
     public List<Mailbox> findMailboxWithPathLike(MailboxPath path) throws MailboxException {
         Pattern regex = Pattern.compile(constructEscapedRegexForMailboxNameMatching(path));
-        return mailboxPathDAO.listUserMailboxes(path.getNamespace(), path.getUser())
-            .thenApply(stream -> stream.filter(idAndPath -> regex.matcher(idAndPath.getMailboxPath().getName()).matches()))
-            .thenApply(stream -> stream.map(CassandraMailboxPathDAO.CassandraIdAndPath::getCassandraId))
-            .thenApply(stream -> stream.map(mailboxDAO::retrieveMailbox))
-            .thenCompose(CompletableFutureUtil::allOf)
-            .thenApply(stream -> stream
-                .flatMap(OptionalConverter::toStream)
-                .collect(Guavate.<Mailbox>toImmutableList()))
-            .join();
+
+        return FluentFutureStream.of(mailboxPathDAO.listUserMailboxes(path.getNamespace(), path.getUser()))
+            .filter(idAndPath -> regex.matcher(idAndPath.getMailboxPath().getName()).matches())
+            .thenFlatComposeOnOptional(this::retrieveMailbox)
+            .join()
+            .collect(Guavate.toImmutableList());
+    }
+
+    private CompletableFuture<Optional<SimpleMailbox>> retrieveMailbox(CassandraMailboxPathDAO.CassandraIdAndPath idAndPath) {
+        return mailboxDAO.retrieveMailbox(idAndPath.getCassandraId())
+            .thenApply(optional -> OptionalUtils.ifEmpty(optional,
+                () -> LOGGER.warn("Could not retrieve mailbox {} with path {} in mailbox table.", idAndPath.getCassandraId(), idAndPath.getMailboxPath())));
     }
 
     @Override
@@ -193,7 +203,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     @Override
     public void updateACL(Mailbox mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
-        new CassandraACLMapper(cassandraId, session, cassandraAsyncExecutor, maxRetry).updateACL(mailboxACLCommand);
+        new CassandraACLMapper(cassandraId, session, cassandraAsyncExecutor, cassandraConfiguration).updateACL(mailboxACLCommand);
     }
 
     @Override

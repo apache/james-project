@@ -19,29 +19,20 @@
 
 package org.apache.james.transport.mailets;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
 import org.apache.commons.logging.Log;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.sieverepository.api.SieveRepository;
-import org.apache.james.transport.mailets.delivery.MailStore;
 import org.apache.james.transport.mailets.jsieve.CommonsLoggingAdapter;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
 import org.apache.james.transport.mailets.jsieve.delivery.SieveExecutor;
 import org.apache.james.transport.mailets.jsieve.delivery.SievePoster;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 
 /**
  * Execute Sieve scripts for incoming emails, and set the result of the execution as attributes of the mail

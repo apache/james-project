@@ -51,8 +51,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -67,7 +65,6 @@ public class StoreMailboxManagerAnnotationTest {
 
     private static final List<MailboxAnnotation> ANNOTATIONS = ImmutableList.of(PRIVATE_ANNOTATION, SHARED_ANNOTATION);
     private static final List<MailboxAnnotation> ANNOTATIONS_WITH_NIL_ENTRY = ImmutableList.of(PRIVATE_ANNOTATION, MailboxAnnotation.nil(SHARED_KEY));
-    private static final MockMailboxSession session = new MockMailboxSession("userName");
 
     @Mock private MailboxSessionMapperFactory mailboxSessionMapperFactory;
     @Mock private Authenticator authenticator;
@@ -81,6 +78,7 @@ public class StoreMailboxManagerAnnotationTest {
     @Mock private MessageParser messageParser;
     @Mock private MailboxId mailboxId;
     @Mock private MessageId.Factory messageIdFactory;
+    private MockMailboxSession session;
 
     private StoreMailboxManager storeMailboxManager;
 
@@ -90,17 +88,17 @@ public class StoreMailboxManagerAnnotationTest {
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
 
+        session = new MockMailboxSession("userName");
+
         when(mailboxSessionMapperFactory.getMailboxMapper(eq(session))).thenReturn(mailboxMapper);
         when(mailboxSessionMapperFactory.getAnnotationMapper(eq(session))).thenReturn(annotationMapper);
         when(mailbox.getMailboxId()).thenReturn(mailboxId);
         when(mailboxMapper.findMailboxByPath(eq(mailboxPath))).thenReturn(mailbox);
-        when(annotationMapper.execute(any(Mapper.Transaction.class))).thenAnswer(new Answer<Object>() {
-            @Override
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+        when(annotationMapper.execute(any(Mapper.Transaction.class)))
+            .thenAnswer(invocationOnMock -> {
                 Mapper.Transaction<?> transaction = (Mapper.Transaction<?>) invocationOnMock.getArguments()[0];
                 return transaction.run();
-            }
-        });
+            });
 
         storeMailboxManager = spy(new StoreMailboxManager(mailboxSessionMapperFactory, authenticator, authorizator, aclResolver, groupMembershipResolver, 
                 messageParser, messageIdFactory, MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE));

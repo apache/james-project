@@ -63,7 +63,7 @@ public class DependencyGraphTest {
     public void getBuildChainOnIsolatedVerticesShouldReturnSameOrder() {
         DependencyGraph<Commit> graph = new DependencyGraph<>(m -> Optional.empty());
         ImmutableList<Commit> isolatedMailboxes = ImmutableList.of(new Commit("A"), new Commit("B"), new Commit("C"));
-        isolatedMailboxes.stream().forEach(graph::registerItem);
+        isolatedMailboxes.forEach(graph::registerItem);
 
         List<Commit> orderedResultList = graph.getBuildChain().collect(Collectors.toList());
 

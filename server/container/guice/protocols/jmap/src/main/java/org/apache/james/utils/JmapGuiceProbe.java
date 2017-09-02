@@ -35,12 +35,8 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class JmapGuiceProbe implements GuiceProbe {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(JmapGuiceProbe.class);
 
     private final VacationRepository vacationRepository;
     private final JMAPServer jmapServer;
@@ -60,7 +56,7 @@ public class JmapGuiceProbe implements GuiceProbe {
     }
 
     public void addMailboxListener(MailboxListener listener) throws MailboxException {
-        mailboxManager.addGlobalListener(listener, mailboxManager.createSystemSession("jmap", LOGGER));
+        mailboxManager.addGlobalListener(listener, mailboxManager.createSystemSession("jmap"));
     }
 
     public void modifyVacation(AccountId accountId, VacationPatch vacationPatch) {
@@ -72,7 +68,7 @@ public class JmapGuiceProbe implements GuiceProbe {
     }
 
     public void setInMailboxes(MessageId messageId, String username, MailboxId... mailboxIds) throws MailboxException {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession(username, LOGGER);
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         messageIdManager.setInMailboxes(messageId, Arrays.asList(mailboxIds), mailboxSession);
     }
 }

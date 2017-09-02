@@ -20,15 +20,14 @@
 package org.apache.james.mailbox.jpa.mail;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
-
+import java.util.function.Function;
+import java.util.function.Predicate;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.JPATransactionalMapper;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailboxAnnotation;
@@ -40,23 +39,19 @@ import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
+import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 public class JPAAnnotationMapper extends JPATransactionalMapper implements AnnotationMapper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JPAAnnotationMapper.class);
 
-    public static final Function<JPAMailboxAnnotation, MailboxAnnotation> READ_ROW = new Function<JPAMailboxAnnotation, MailboxAnnotation>() {
-        @Override
-        public MailboxAnnotation apply(JPAMailboxAnnotation input) {
-            return MailboxAnnotation.newInstance(new MailboxAnnotationKey(input.getKey()), input.getValue());
-        }
-    };
+    public static final Function<JPAMailboxAnnotation, MailboxAnnotation> READ_ROW =
+        input -> MailboxAnnotation.newInstance(new MailboxAnnotationKey(input.getKey()), input.getValue());
 
     public JPAAnnotationMapper(EntityManagerFactory entityManagerFactory) {
         super(entityManagerFactory);
@@ -65,26 +60,25 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
     @Override
     public List<MailboxAnnotation> getAllAnnotations(MailboxId mailboxId) {
         JPAId jpaId = (JPAId) mailboxId;
-        return Lists.transform(getEntityManager().createNamedQuery("retrieveAllAnnotations", JPAMailboxAnnotation.class)
-                .setParameter("idParam", jpaId.getRawId()).getResultList(),
-            READ_ROW);
+        return getEntityManager().createNamedQuery("retrieveAllAnnotations", JPAMailboxAnnotation.class)
+            .setParameter("idParam", jpaId.getRawId())
+            .getResultList()
+            .stream()
+            .map(READ_ROW)
+            .collect(Guavate.toImmutableList());
     }
 
     @Override
     public List<MailboxAnnotation> getAnnotationsByKeys(MailboxId mailboxId, Set<MailboxAnnotationKey> keys) {
         try {
             final JPAId jpaId = (JPAId) mailboxId;
-            return ImmutableList.copyOf(Iterables.transform(keys, new Function<MailboxAnnotationKey, MailboxAnnotation>() {
-                @Override
-                public MailboxAnnotation apply(MailboxAnnotationKey input) {
-                    return READ_ROW.apply(
-                        getEntityManager()
-                            .createNamedQuery("retrieveByKey", JPAMailboxAnnotation.class)
-                            .setParameter("idParam", jpaId.getRawId())
-                            .setParameter("keyParam", input.asString())
-                            .getSingleResult());
-                }
-            }));
+            return ImmutableList.copyOf(Iterables.transform(keys,
+                input -> READ_ROW.apply(
+                    getEntityManager()
+                        .createNamedQuery("retrieveByKey", JPAMailboxAnnotation.class)
+                        .setParameter("idParam", jpaId.getRawId())
+                        .setParameter("keyParam", input.asString())
+                        .getSingleResult())));
         } catch (NoResultException e) {
             return ImmutableList.of();
         }
@@ -94,65 +88,34 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
     public List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(MailboxId mailboxId, Set<MailboxAnnotationKey> keys) {
         return getFilteredLikes((JPAId) mailboxId,
             keys,
-            new Function<MailboxAnnotationKey, Predicate<MailboxAnnotation>>() {
-                @Override
-                public Predicate<MailboxAnnotation> apply(final MailboxAnnotationKey key) {
-                    return new Predicate<MailboxAnnotation>() {
-                        @Override
-                        public boolean apply(MailboxAnnotation input) {
-                            return key.isParentOrIsEqual(input.getKey());
-                        }
-                    };
-                }
-            });
+            key ->
+                annotation ->
+                    key.isParentOrIsEqual(annotation.getKey()));
     }
 
     @Override
     public List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(MailboxId mailboxId, Set<MailboxAnnotationKey> keys) {
         return getFilteredLikes((JPAId) mailboxId,
             keys,
-            new Function<MailboxAnnotationKey, Predicate<MailboxAnnotation>>() {
-                @Override
-                public Predicate<MailboxAnnotation> apply(final MailboxAnnotationKey key) {
-                    return new Predicate<MailboxAnnotation>() {
-                        @Override
-                        public boolean apply(MailboxAnnotation input) {
-                            return key.isAncestorOrIsEqual(input.getKey());
-                        }
-                    };
-                }
-            });
+            key ->
+                annotation -> key.isAncestorOrIsEqual(annotation.getKey()));
     }
 
     private List<MailboxAnnotation> getFilteredLikes(final JPAId jpaId, Set<MailboxAnnotationKey> keys, final Function<MailboxAnnotationKey, Predicate<MailboxAnnotation>> predicateFunction) {
         try {
-            return flatMapToList(Iterables.transform(keys,
-                new Function<MailboxAnnotationKey, List<MailboxAnnotation>>() {
-                    @Override
-                    public List<MailboxAnnotation> apply(final MailboxAnnotationKey key) {
-                        return ImmutableList.copyOf(
-                            Iterables.filter(
-                                Iterables.transform(
-                                    getEntityManager()
-                                        .createNamedQuery("retrieveByKeyLike", JPAMailboxAnnotation.class)
-                                        .setParameter("idParam", jpaId.getRawId())
-                                        .setParameter("keyParam", key.asString() + '%')
-                                        .getResultList(),
-                                    READ_ROW),
-                                predicateFunction.apply(key)));
-                    }
-                }));
+            return keys.stream()
+                .flatMap(key -> getEntityManager()
+                    .createNamedQuery("retrieveByKeyLike", JPAMailboxAnnotation.class)
+                    .setParameter("idParam", jpaId.getRawId())
+                    .setParameter("keyParam", key.asString() + '%')
+                    .getResultList()
+                    .stream()
+                    .map(READ_ROW)
+                    .filter(predicateFunction.apply(key)))
+                .collect(Guavate.toImmutableList());
         } catch (NoResultException e) {
             return ImmutableList.of();
         }
-    }
-
-    private List<MailboxAnnotation> flatMapToList(Iterable<List<MailboxAnnotation>> likes) {
-        ImmutableList.Builder<MailboxAnnotation> resultBuilder = ImmutableList.builder();
-        for (List<MailboxAnnotation> mailboxAnnotations: likes) {
-            resultBuilder.addAll(mailboxAnnotations);
-        }
-        return resultBuilder.build();
     }
 
     @Override
@@ -177,18 +140,18 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
             getEntityManager().persist(
                 new JPAMailboxAnnotation(jpaId.getRawId(),
                     mailboxAnnotation.getKey().asString(),
-                    mailboxAnnotation.getValue().orNull()));
+                    mailboxAnnotation.getValue().orElse(null)));
         } else {
             getEntityManager().find(JPAMailboxAnnotation.class,
                 new JPAMailboxAnnotationId(jpaId.getRawId(), mailboxAnnotation.getKey().asString()))
-                .setValue(mailboxAnnotation.getValue().orNull());
+                .setValue(mailboxAnnotation.getValue().orElse(null));
         }
     }
 
     @Override
     public boolean exist(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation) {
         JPAId jpaId = (JPAId) mailboxId;
-        Optional<JPAMailboxAnnotation> row = Optional.fromNullable(getEntityManager().find(JPAMailboxAnnotation.class,
+        Optional<JPAMailboxAnnotation> row = Optional.ofNullable(getEntityManager().find(JPAMailboxAnnotation.class,
             new JPAMailboxAnnotationId(jpaId.getRawId(), mailboxAnnotation.getKey().asString())));
         return row.isPresent();
     }

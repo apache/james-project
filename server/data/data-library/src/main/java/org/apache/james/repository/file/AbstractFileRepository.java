@@ -27,9 +27,8 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -39,14 +38,15 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.repository.api.Repository;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This an abstract class implementing functionality for creating a file-store.
  */
-public abstract class AbstractFileRepository implements Repository, Configurable, LogEnabled {
+public abstract class AbstractFileRepository implements Repository, Configurable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractFileRepository.class);
 
     protected static final boolean DEBUG = false;
 
@@ -64,8 +64,6 @@ public abstract class AbstractFileRepository implements Repository, Configurable
 
     private FileSystem fileSystem;
 
-    private Logger logger;
-
     private String destination;
 
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
@@ -77,20 +75,11 @@ public abstract class AbstractFileRepository implements Repository, Configurable
         this.fileSystem = fileSystem;
     }
 
-    public void setLog(Logger logger) {
-        this.logger = logger;
-    }
-
-    protected Logger getLogger() {
-        return logger;
-    }
-
     protected abstract String getExtensionDecorator();
 
     @PostConstruct
     public void init() throws Exception {
-
-        getLogger().info("Init " + getClass().getName() + " Store");
+        LOGGER.info("Init " + getClass().getName() + " Store");
         setDestination(destination);
 
         File directory;
@@ -109,7 +98,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
 
         FileUtils.forceMkdir(directory);
 
-        getLogger().info(getClass().getName() + " opened in " + m_baseDirectory);
+        LOGGER.info(getClass().getName() + " opened in " + m_baseDirectory);
 
         // We will look for all numbered repository files in this
         // directory and rename them to non-numbered repositories,
@@ -118,29 +107,24 @@ public abstract class AbstractFileRepository implements Repository, Configurable
         FilenameFilter num_filter = new NumberedRepositoryFileFilter(getExtensionDecorator());
         final String[] names = directory.list(num_filter);
 
-        try {
-            for (String origFilename : names) {
-                // This needs to handle (skip over) the possible repository
-                // numbers
-                int pos = origFilename.length() - m_postfix.length();
-                while (pos >= 1 && Character.isDigit(origFilename.charAt(pos - 1))) {
-                    pos--;
-                }
-                pos -= ".".length() + m_name.length();
-                String newFilename = origFilename.substring(0, pos) + m_extension;
-
-                File origFile = new File(directory, origFilename);
-                File newFile = new File(directory, newFilename);
-
-                if (origFile.renameTo(newFile)) {
-                    getLogger().info("Renamed " + origFile + " to " + newFile);
-                } else {
-                    getLogger().info("Unable to rename " + origFile + " to " + newFile);
-                }
+        for (String origFilename : names) {
+            // This needs to handle (skip over) the possible repository
+            // numbers
+            int pos = origFilename.length() - m_postfix.length();
+            while (pos >= 1 && Character.isDigit(origFilename.charAt(pos - 1))) {
+                pos--;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
+            pos -= ".".length() + m_name.length();
+            String newFilename = origFilename.substring(0, pos) + m_extension;
+
+            File origFile = new File(directory, origFilename);
+            File newFile = new File(directory, newFilename);
+
+            if (origFile.renameTo(newFile)) {
+                LOGGER.info("Renamed {} to {}", origFile, newFile);
+            } else {
+                LOGGER.info("Unable to rename {} to {}", origFile, newFile);
+            }
         }
 
     }
@@ -191,7 +175,6 @@ public abstract class AbstractFileRepository implements Repository, Configurable
         }
 
         child.setFileSystem(fileSystem);
-        child.setLog(logger);
 
         try {
             child.setDestination(m_baseDirectory.getAbsolutePath() + File.pathSeparatorChar + childName + File.pathSeparator);
@@ -206,7 +189,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
         }
 
         if (DEBUG) {
-            getLogger().debug("Child repository of " + m_name + " created in " + m_baseDirectory + File.pathSeparatorChar + childName + File.pathSeparator);
+            LOGGER.debug("Child repository of " + m_name + " created in " + m_baseDirectory + File.pathSeparatorChar + childName + File.pathSeparator);
         }
 
         return child;
@@ -286,7 +269,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
         try {
             final File file = getFile(key);
             if (DEBUG)
-                getLogger().debug("checking key " + key);
+                LOGGER.debug("checking key " + key);
             return file.exists();
         } catch (Exception e) {
             throw new RuntimeException("Exception caught while searching " + "an object: " + e);
@@ -299,14 +282,10 @@ public abstract class AbstractFileRepository implements Repository, Configurable
     public Iterator<String> list() {
         final File storeDir = new File(m_baseDirectory.getAbsolutePath());
         final String[] names = storeDir.list(m_filter);
-        final List<String> list = new ArrayList<String>();
 
-        for (String name : names) {
-            String decoded = decode(name);
-            list.add(decoded);
-        }
-
-        return list.iterator();
+        return Arrays.stream(names)
+            .map(this::decode)
+            .iterator();
     }
 
     /**

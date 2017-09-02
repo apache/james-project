@@ -19,29 +19,42 @@
 
 package org.apache.james.mpt.testsuite;
 
-import com.google.inject.Inject;
+import java.util.Locale;
+
 import org.apache.james.mpt.host.ManageSieveHostSystem;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Locale;
+public abstract class AuthenticateTest {
 
-public class AuthenticateTest extends ManageSieveMPTTest {
-
-    @Inject
-    private static ManageSieveHostSystem hostSystem;
-
-    public AuthenticateTest() throws Exception {
-        super(hostSystem);
-    }
+    public static final String USER = "user";
+    public static final String PASSWORD = "password";
+    
+    protected abstract ManageSieveHostSystem createManageSieveHostSystem();
+    
+    private ManageSieveHostSystem hostSystem;
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
+        hostSystem = createManageSieveHostSystem();
+        hostSystem.beforeTest();
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/managesieve/scripts/", hostSystem)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        hostSystem.afterTest();
     }
 
     @Test
     public void authenticateShouldWork() throws Exception {
-        scriptTest("authenticate", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("authenticate");
     }
 }

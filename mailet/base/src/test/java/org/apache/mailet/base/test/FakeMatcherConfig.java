@@ -19,10 +19,11 @@
 
 package org.apache.mailet.base.test;
 
+import java.util.Optional;
+
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.MatcherConfig;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 /**
@@ -41,8 +42,8 @@ public class FakeMatcherConfig implements MatcherConfig {
         private Optional<String> condition;
 
         private Builder() {
-            condition = Optional.absent();
-            mailetContext = Optional.absent();
+            condition = Optional.empty();
+            mailetContext = Optional.empty();
         }
 
         public Builder matcherName(String matcherName) {
@@ -57,13 +58,13 @@ public class FakeMatcherConfig implements MatcherConfig {
         }
 
         public Builder condition(String condition) {
-            this.condition = Optional.fromNullable(condition);
+            this.condition = Optional.ofNullable(condition);
             return this;
         }
 
         public FakeMatcherConfig build() {
             Preconditions.checkNotNull(matcherName, "'matcherName' is mandatory");
-            return new FakeMatcherConfig(matcherName, mailetContext.or(FakeMailContext.defaultContext()), condition);
+            return new FakeMatcherConfig(matcherName, mailetContext.orElse(FakeMailContext.defaultContext()), condition);
         }
     }
 
@@ -89,6 +90,6 @@ public class FakeMatcherConfig implements MatcherConfig {
 
     @Override
     public String getCondition() {
-        return condition.orNull();
+        return condition.orElse(null);
     }
 }

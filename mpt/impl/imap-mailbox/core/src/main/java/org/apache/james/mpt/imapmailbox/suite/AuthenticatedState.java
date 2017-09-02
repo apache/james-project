@@ -21,346 +21,438 @@ package org.apache.james.mpt.imapmailbox.suite;
 
 import java.util.Locale;
 
-import javax.inject.Inject;
-
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseAuthenticatedState;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Test;
 
-public class AuthenticatedState extends BaseAuthenticatedState {
+public abstract class AuthenticatedState extends BasicImapCommands {
     
-    @Inject
-    private static ImapHostSystem system;
+    protected abstract ImapHostSystem createImapHostSystem();
+    
+    private ImapHostSystem system;
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
-    
-    public AuthenticatedState() throws Exception {
-        super(system);
+    @Before
+    public void setUp() throws Exception {
+        system = createImapHostSystem();
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
     }
-
+    
     @Test
     public void testNoopUS() throws Exception {
-        scriptTest("Noop", Locale.US);
+        simpleScriptedTestProtocol.run("Noop");
     }
 
     @Test
     public void testLogoutUS() throws Exception {
-        scriptTest("Logout", Locale.US);
+        simpleScriptedTestProtocol.run("Logout");
     }
 
     @Test
     public void testCapabilityUS() throws Exception {
-        scriptTest("Capability", Locale.US);
+        simpleScriptedTestProtocol.run("Capability");
     }
 
     @Test
     public void testAppendExamineInboxUS() throws Exception {
-        scriptTest("AppendExamineInbox", Locale.US);
+        simpleScriptedTestProtocol.run("AppendExamineInbox");
     }
 
     @Test
     public void testAppendSelectInboxUS() throws Exception {
-        scriptTest("AppendSelectInbox", Locale.US);
+        simpleScriptedTestProtocol.run("AppendSelectInbox");
     }
 
     @Test
     public void testCreateUS() throws Exception {
-        scriptTest("Create", Locale.US);
+        simpleScriptedTestProtocol.run("Create");
     }
 
     @Test
     public void testExamineEmptyUS() throws Exception {
-        scriptTest("ExamineEmpty", Locale.US);
+        simpleScriptedTestProtocol.run("ExamineEmpty");
     }
 
     @Test
     public void testSelectEmptyUS() throws Exception {
-        scriptTest("SelectEmpty", Locale.US);
+        simpleScriptedTestProtocol.run("SelectEmpty");
     }
 
     @Test
     public void testListNamespaceUS() throws Exception {
-        scriptTest("ListNamespace", Locale.US);
+        simpleScriptedTestProtocol.run("ListNamespace");
     }
 
     @Test
     public void testListMailboxesUS() throws Exception {
-        scriptTest("ListMailboxes", Locale.US);
+        simpleScriptedTestProtocol.run("ListMailboxes");
     }
 
     @Test
     public void testStatusUS() throws Exception {
-        scriptTest("Status", Locale.US);
+        simpleScriptedTestProtocol.run("Status");
     }
 
     @Test
     public void testSubscribeUS() throws Exception {
-        scriptTest("Subscribe", Locale.US);
+        simpleScriptedTestProtocol.run("Subscribe");
     }
 
     @Test
     public void testDeleteUS() throws Exception {
-        scriptTest("Delete", Locale.US);
+        simpleScriptedTestProtocol.run("Delete");
     }
 
     @Test
     public void testAppendUS() throws Exception {
-        scriptTest("Append", Locale.US);
+        simpleScriptedTestProtocol.run("Append");
     }
 
     @Test
     public void testAppendExpungeUS() throws Exception {
-        scriptTest("AppendExpunge", Locale.US);
+        simpleScriptedTestProtocol.run("AppendExpunge");
     }
 
     @Test
     public void testSelectAppendUS() throws Exception {
-        scriptTest("SelectAppend", Locale.US);
+        simpleScriptedTestProtocol.run("SelectAppend");
     }
     
     @Test
     public void testStringArgsUS() throws Exception {
-        scriptTest("StringArgs", Locale.US);
+        simpleScriptedTestProtocol.run("StringArgs");
     }
 
     @Test
     public void testValidNonAuthenticatedUS() throws Exception {
-        scriptTest("ValidNonAuthenticated", Locale.US);
+        simpleScriptedTestProtocol.run("ValidNonAuthenticated");
     }
 
     @Test
     public void testNoopITALY() throws Exception {
-        scriptTest("Noop", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("Noop");
     }
 
     @Test
     public void testLogoutITALY() throws Exception {
-        scriptTest("Logout", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY).run("Logout");
     }
 
     @Test
     public void testCapabilityITALY() throws Exception {
-        scriptTest("Capability", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("Capability");
     }
 
     @Test
     public void testAppendExamineInboxITALY() throws Exception {
-        scriptTest("AppendExamineInbox", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("AppendExamineInbox");
     }
 
     @Test
     public void testAppendSelectInboxITALY() throws Exception {
-        scriptTest("AppendSelectInbox", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("AppendSelectInbox");
     }
 
     @Test
     public void testCreateITALY() throws Exception {
-        scriptTest("Create", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("Create");
     }
 
     @Test
     public void testExamineEmptyITALY() throws Exception {
-        scriptTest("ExamineEmpty", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("ExamineEmpty");
     }
 
     @Test
     public void testSelectEmptyITALY() throws Exception {
-        scriptTest("SelectEmpty", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("SelectEmpty");
     }
 
     @Test
     public void testListNamespaceITALY() throws Exception {
-        scriptTest("ListNamespace", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("ListNamespace");
     }
 
     @Test
     public void testListMailboxesITALY() throws Exception {
-        scriptTest("ListMailboxes", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("ListMailboxes");
     }
 
     @Test
     public void testStatusITALY() throws Exception {
-        scriptTest("Status", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("Status");
     }
 
     @Test
     public void testSubscribeITALY() throws Exception {
-        scriptTest("Subscribe", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("Subscribe");
     }
 
     @Test
     public void testDeleteITALY() throws Exception {
-        scriptTest("Delete", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("Delete");
     }
 
     @Test
     public void testAppendITALY() throws Exception {
-        scriptTest("Append", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("Append");
     }
 
     @Test
     public void testAppendExpungeITALY() throws Exception {
-        scriptTest("AppendExpunge", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("AppendExpunge");
     }
 
     @Test
     public void testSelectAppendITALY() throws Exception {
-        scriptTest("SelectAppend", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("SelectAppend");
     }
     
     @Test
     public void testStringArgsITALY() throws Exception {
-        scriptTest("StringArgs", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("StringArgs");
     }
 
     @Test
     public void testValidNonAuthenticatedITALY() throws Exception {
-        scriptTest("ValidNonAuthenticated", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("ValidNonAuthenticated");
     }
 
     @Test
     public void testNoopKOREA() throws Exception {
-        scriptTest("Noop", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("Noop");
     }
 
     @Test
     public void testLogoutKOREA() throws Exception {
-        scriptTest("Logout", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("Logout");
     }
 
     @Test
     public void testCapabilityKOREA() throws Exception {
-        scriptTest("Capability", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("Capability");
     }
 
     @Test
     public void testAppendExamineInboxKOREA() throws Exception {
-        scriptTest("AppendExamineInbox", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("AppendExamineInbox");
     }
 
     @Test
     public void testAppendSelectInboxKOREA() throws Exception {
-        scriptTest("AppendSelectInbox", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("AppendSelectInbox");
     }
 
     @Test
     public void testCreateKOREA() throws Exception {
-        scriptTest("Create", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("Create");
     }
 
     @Test
     public void testExamineEmptyKOREA() throws Exception {
-        scriptTest("ExamineEmpty", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("ExamineEmpty");
     }
 
     @Test
     public void testSelectEmptyKOREA() throws Exception {
-        scriptTest("SelectEmpty", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("SelectEmpty");
     }
 
     @Test
     public void testListNamespaceKOREA() throws Exception {
-        scriptTest("ListNamespace", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("ListNamespace");
     }
 
     @Test
     public void testListMailboxesKOREA() throws Exception {
-        scriptTest("ListMailboxes", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("ListMailboxes");
     }
 
     @Test
     public void testStatusKOREA() throws Exception {
-        scriptTest("Status", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("Status");
     }
 
     @Test
     public void testSubscribeKOREA() throws Exception {
-        scriptTest("Subscribe", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("Subscribe");
     }
 
     @Test
     public void testDeleteKOREA() throws Exception {
-        scriptTest("Delete", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("Delete");
     }
 
     @Test
     public void testAppendKOREA() throws Exception {
-        scriptTest("Append", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("Append");
     }
 
     @Test
     public void testAppendExpungeKOREA() throws Exception {
-        scriptTest("AppendExpunge", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("AppendExpunge");
     }
 
     @Test
     public void testSelectAppendKOREA() throws Exception {
-        scriptTest("SelectAppend", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("SelectAppend");
     }
 
     @Test
     public void testStringArgsKOREA() throws Exception {
-        scriptTest("StringArgs", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("StringArgs");
     }
 
     @Test
     public void testValidNonAuthenticatedKOREA() throws Exception {
-        scriptTest("ValidNonAuthenticated", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("ValidNonAuthenticated");
     }
 
     @Test
     public void testNamespaceUS() throws Exception {
-        scriptTest("Namespace", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("Namespace");
     }
 
     @Test
     public void testNamespaceITALY() throws Exception {
-        scriptTest("Namespace", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("Namespace");
     }
 
     @Test
     public void testNamespaceKOREA() throws Exception {
-        scriptTest("Namespace", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("Namespace");
     }
 
     @Test
     public void listShouldNotListMailboxWithOtherNamspaceUS() throws Exception {
         Assume.assumeTrue(system.supports(Feature.NAMESPACE_SUPPORT));
         system.createMailbox(new MailboxPath("#namespace", USER, "Other"));
-        scriptTest("ListMailboxes", Locale.US);
+        simpleScriptedTestProtocol.run("ListMailboxes");
     }
 
     @Test
     public void listShouldNotListMailboxWithOtherNamspaceITALY() throws Exception {
         Assume.assumeTrue(system.supports(Feature.NAMESPACE_SUPPORT));
         system.createMailbox(new MailboxPath("#namespace", USER, "Other"));
-        scriptTest("ListMailboxes", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("ListMailboxes");
     }
 
     @Test
     public void listShouldNotListMailboxWithOtherNamspaceKOREA() throws Exception {
         Assume.assumeTrue(system.supports(Feature.NAMESPACE_SUPPORT));
         system.createMailbox(new MailboxPath("#namespace", USER, "Other"));
-        scriptTest("ListMailboxes", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("ListMailboxes");
     }
 
     @Test
     public void listShouldNotListMailboxWithOtherUserUS() throws Exception {
         system.createMailbox(new MailboxPath("#namespace", USER + "2", "Other"));
-        scriptTest("ListMailboxes", Locale.US);
+        simpleScriptedTestProtocol.run("ListMailboxes");
     }
 
     @Test
     public void listShouldNotListMailboxWithOtherUserITALY() throws Exception {
         system.createMailbox(new MailboxPath("#namespace", USER + "2", "Other"));
-        scriptTest("ListMailboxes", Locale.ITALY);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.ITALY)
+            .run("ListMailboxes");
     }
 
     @Test
     public void listShouldNotListMailboxWithOtherUserKOREA() throws Exception {
         system.createMailbox(new MailboxPath("#namespace", USER + "2", "Other"));
-        scriptTest("ListMailboxes", Locale.KOREA);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("ListMailboxes");
     }
 }

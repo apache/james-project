@@ -25,10 +25,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.javacrumbs.jsonunit.core.Option;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.junit.Test;
+
+import net.javacrumbs.jsonunit.core.Option;
 
 public class SimpleMailboxACLJsonConverterTest {
 
@@ -36,7 +37,7 @@ public class SimpleMailboxACLJsonConverterTest {
         private final Map<SimpleMailboxACL.MailboxACLEntryKey, MailboxACL.MailboxACLRights> map;
 
         public ACLMapBuilder() {
-            map = new HashMap<SimpleMailboxACL.MailboxACLEntryKey, MailboxACL.MailboxACLRights>();
+            map = new HashMap<>();
         }
 
         public ACLMapBuilder addSingleUserEntryToMap() {
@@ -61,7 +62,7 @@ public class SimpleMailboxACLJsonConverterTest {
         }
 
         public MailboxACL buildAsACL() {
-            return new SimpleMailboxACL(new HashMap<SimpleMailboxACL.MailboxACLEntryKey, MailboxACL.MailboxACLRights>(map));
+            return new SimpleMailboxACL(new HashMap<>(map));
         }
 
     }

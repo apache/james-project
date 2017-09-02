@@ -18,20 +18,24 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra.mail;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageAttachment;
-import org.apache.james.util.OptionalConverter;
+import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.util.FluentFutureStream;
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class AttachmentLoader {
@@ -42,10 +46,27 @@ public class AttachmentLoader {
         this.attachmentMapper = attachmentMapper;
     }
 
-    public CompletableFuture<Collection<MessageAttachment>> getAttachments(List<CassandraMessageDAO.MessageAttachmentRepresentation> attachmentRepresentations) {
+    public CompletableFuture<Stream<SimpleMailboxMessage>> addAttachmentToMessages(Stream<Pair<MessageWithoutAttachment,
+            Stream<MessageAttachmentRepresentation>>> messageRepresentations, MessageMapper.FetchType fetchType) {
+
+        if (fetchType == MessageMapper.FetchType.Body || fetchType == MessageMapper.FetchType.Full) {
+            return FluentFutureStream.<SimpleMailboxMessage> of(
+                messageRepresentations
+                    .map(pair -> getAttachments(pair.getRight().collect(Guavate.toImmutableList()))
+                        .thenApply(attachments -> pair.getLeft().toMailboxMessage(attachments))))
+                .completableFuture();
+        } else {
+            return CompletableFuture.completedFuture(messageRepresentations
+                .map(pair -> pair.getLeft()
+                    .toMailboxMessage(ImmutableList.of())));
+        }
+    }
+
+    @VisibleForTesting
+    CompletableFuture<List<MessageAttachment>> getAttachments(List<MessageAttachmentRepresentation> attachmentRepresentations) {
         CompletableFuture<Map<AttachmentId, Attachment>> attachmentsByIdFuture =
             attachmentsById(attachmentRepresentations.stream()
-                .map(CassandraMessageDAO.MessageAttachmentRepresentation::getAttachmentId)
+                .map(MessageAttachmentRepresentation::getAttachmentId)
                 .collect(Guavate.toImmutableSet()));
 
         return attachmentsByIdFuture.thenApply(attachmentsById ->
@@ -54,11 +75,11 @@ public class AttachmentLoader {
                 .collect(Guavate.toImmutableList()));
     }
 
-    private MessageAttachment constructMessageAttachment(Attachment attachment, CassandraMessageDAO.MessageAttachmentRepresentation messageAttachmentRepresentation) {
+    private MessageAttachment constructMessageAttachment(Attachment attachment, MessageAttachmentRepresentation messageAttachmentRepresentation) {
         return MessageAttachment.builder()
                 .attachment(attachment)
                 .name(messageAttachmentRepresentation.getName().orElse(null))
-                .cid(OptionalConverter.toGuava(messageAttachmentRepresentation.getCid()))
+                .cid(messageAttachmentRepresentation.getCid())
                 .isInline(messageAttachmentRepresentation.isInline())
                 .build();
     }

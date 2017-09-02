@@ -25,18 +25,10 @@ import java.util.Collection;
 
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
-import org.assertj.core.api.iterable.Extractor;
 import org.junit.Before;
 import org.junit.Test;
 
 public class RecipientToLowerCaseTest {
-
-    public static final Extractor<MailAddress, String> AS_STRING = new Extractor<MailAddress, String>() {
-        @Override
-        public String extract(MailAddress mailAddress) {
-            return mailAddress.asString();
-        }
-    };
 
     private RecipientToLowerCase testee;
 
@@ -56,7 +48,7 @@ public class RecipientToLowerCaseTest {
         Collection<MailAddress> recipients = fakeMail.getRecipients();
 
         assertThat(recipients)
-            .extracting(AS_STRING)
+            .extracting(MailAddress::asString)
             .containsOnly("thienan1234@gmail.com");
     }
 

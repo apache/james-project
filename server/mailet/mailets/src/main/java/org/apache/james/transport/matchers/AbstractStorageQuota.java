@@ -106,7 +106,7 @@ abstract public class AbstractStorageQuota extends AbstractQuotaMatcher {
      *            the recipient to check
      */
     @Override
-    protected long getUsed(MailAddress recipient, Mail _) throws MessagingException {
+    protected long getUsed(MailAddress recipient, Mail ignored) throws MessagingException {
         long size = 0;
         MailboxSession session;
         try {
@@ -119,7 +119,7 @@ abstract public class AbstractStorageQuota extends AbstractQuotaMatcher {
             catch (UsersRepositoryException e) {
                 throw new MessagingException("Unable to access UsersRepository", e);
             }
-            session = manager.createSystemSession(username, getMailetContext().getLogger());
+            session = manager.createSystemSession(username);
             manager.startProcessingRequest(session);
 
             // get all mailboxes for the user to calculate the size

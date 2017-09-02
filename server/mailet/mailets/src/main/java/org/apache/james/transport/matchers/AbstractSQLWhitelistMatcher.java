@@ -44,10 +44,16 @@ import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * No documentation is available for this deprecated, experimental matcher.
+ */
 @SuppressWarnings("deprecation")
 @Experimental
 public abstract class AbstractSQLWhitelistMatcher extends GenericMatcher {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSQLWhitelistMatcher.class);
 
     /**
      * The user repository for this mail server. Contains all the users with
@@ -59,7 +65,7 @@ public abstract class AbstractSQLWhitelistMatcher extends GenericMatcher {
     protected JDBCUtil jdbcUtil;
 
     /** Holds value of property sqlParameters. */
-    private final Map<String, String> sqlParameters = new HashMap<String, String>();
+    private final Map<String, String> sqlParameters = new HashMap<>();
 
 
     @Inject
@@ -89,11 +95,7 @@ public abstract class AbstractSQLWhitelistMatcher extends GenericMatcher {
     /**
      * The JDBCUtil helper class
      */
-    protected final JDBCUtil theJDBCUtil = new JDBCUtil() {
-        protected void delegatedLog(String logString) {
-            log(getMatcherName() + ": " + logString);
-        }
-    };
+    protected final JDBCUtil theJDBCUtil = new JDBCUtil();
 
     /**
      * Contains all of the sql strings for this component.
@@ -115,7 +117,7 @@ public abstract class AbstractSQLWhitelistMatcher extends GenericMatcher {
             repositoryPath = st.nextToken().trim();
         }
         if (repositoryPath != null) {
-            log("repositoryPath: " + repositoryPath);
+            LOGGER.info("repositoryPath: " + repositoryPath);
         } else {
             throw new MessagingException("repositoryPath is null");
         }
@@ -148,7 +150,7 @@ public abstract class AbstractSQLWhitelistMatcher extends GenericMatcher {
 
         Collection<MailAddress> recipients = mail.getRecipients();
 
-        Collection<MailAddress> inWhiteList = new java.util.HashSet<MailAddress>();
+        Collection<MailAddress> inWhiteList = new java.util.HashSet<>();
 
         for (MailAddress recipientMailAddress : recipients) {
             String recipientUser = recipientMailAddress.getLocalPart().toLowerCase(Locale.US);
@@ -261,7 +263,7 @@ public abstract class AbstractSQLWhitelistMatcher extends GenericMatcher {
 
             StringBuffer logBuffer;
             logBuffer = new StringBuffer(64).append("Created table '").append(tableName).append("' using sqlResources string '").append(createSqlStringName).append("'.");
-            log(logBuffer.toString());
+            LOGGER.info(logBuffer.toString());
 
         } finally {
             theJDBCUtil.closeJDBCStatement(createStatement);

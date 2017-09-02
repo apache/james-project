@@ -42,6 +42,8 @@ import org.apache.james.mailrepository.lib.AbstractMailRepository;
 import org.apache.james.repository.file.FilePersistentObjectRepository;
 import org.apache.james.repository.file.FilePersistentStreamRepository;
 import org.apache.mailet.Mail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -60,6 +62,7 @@ import org.apache.mailet.Mail;
  * </p>
  */
 public class FileMailRepository extends AbstractMailRepository {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileMailRepository.class);
 
     private FilePersistentStreamRepository streamRepository;
     private FilePersistentObjectRepository objectRepository;
@@ -80,8 +83,8 @@ public class FileMailRepository extends AbstractMailRepository {
     protected void doConfigure(HierarchicalConfiguration config) throws org.apache.commons.configuration.ConfigurationException {
         super.doConfigure(config);
         destination = config.getString("[@destinationURL]");
-        if (getLogger().isDebugEnabled()) {
-            getLogger().debug("FileMailRepository.destinationURL: " + destination);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("FileMailRepository.destinationURL: " + destination);
         }
         fifo = config.getBoolean("[@FIFO]", false);
         cacheKeys = config.getBoolean("[@CACHEKEYS]", true);
@@ -96,13 +99,11 @@ public class FileMailRepository extends AbstractMailRepository {
 
             reposConfiguration.addProperty("[@destinationURL]", destination);
             objectRepository = new FilePersistentObjectRepository();
-            objectRepository.setLog(getLogger());
             objectRepository.setFileSystem(fileSystem);
             objectRepository.configure(reposConfiguration);
             objectRepository.init();
 
             streamRepository = new FilePersistentStreamRepository();
-            streamRepository.setLog(getLogger());
             streamRepository.setFileSystem(fileSystem);
             streamRepository.configure(reposConfiguration);
             streamRepository.init();
@@ -111,11 +112,11 @@ public class FileMailRepository extends AbstractMailRepository {
                 keys = Collections.synchronizedSet(new HashSet<String>());
 
             // Finds non-matching pairs and deletes the extra files
-            HashSet<String> streamKeys = new HashSet<String>();
+            HashSet<String> streamKeys = new HashSet<>();
             for (Iterator<String> i = streamRepository.list(); i.hasNext(); ) {
                 streamKeys.add(i.next());
             }
-            HashSet<String> objectKeys = new HashSet<String>();
+            HashSet<String> objectKeys = new HashSet<>();
             for (Iterator<String> i = objectRepository.list(); i.hasNext(); ) {
                 objectKeys.add(i.next());
             }
@@ -144,13 +145,13 @@ public class FileMailRepository extends AbstractMailRepository {
                     keys.add(i.next());
                 }
             }
-            if (getLogger().isDebugEnabled()) {
+            if (LOGGER.isDebugEnabled()) {
                 String logBuffer = getClass().getName() + " created in " + destination;
-                getLogger().debug(logBuffer);
+                LOGGER.debug(logBuffer);
             }
         } catch (Exception e) {
             final String message = "Failed to retrieve Store component:" + e.getMessage();
-            getLogger().error(message, e);
+            LOGGER.error(message, e);
             throw e;
         }
     }
@@ -235,8 +236,7 @@ public class FileMailRepository extends AbstractMailRepository {
                     remove(key);
                 }
                 final String errorMessage = exceptionBuffer.toString();
-                getLogger().warn(errorMessage);
-                getLogger().debug(errorMessage, re);
+                LOGGER.warn(errorMessage, re);
                 return null;
             }
             MimeMessageStreamRepositorySource source = new MimeMessageStreamRepositorySource(streamRepository, destination, key);
@@ -244,7 +244,7 @@ public class FileMailRepository extends AbstractMailRepository {
 
             return mc;
         } catch (Exception me) {
-            getLogger().error("Exception retrieving mail: " + me);
+            LOGGER.error("Exception retrieving mail: " + me);
             throw new MessagingException("Exception while retrieving mail: " + me.getMessage(), me);
         }
     }
@@ -265,10 +265,10 @@ public class FileMailRepository extends AbstractMailRepository {
         final ArrayList<String> clone;
         if (keys != null)
             synchronized (lock) {
-                clone = new ArrayList<String>(keys);
+                clone = new ArrayList<>(keys);
             }
         else {
-            clone = new ArrayList<String>();
+            clone = new ArrayList<>();
             for (Iterator<String> i = objectRepository.list(); i.hasNext(); ) {
                 clone.add(i.next());
             }

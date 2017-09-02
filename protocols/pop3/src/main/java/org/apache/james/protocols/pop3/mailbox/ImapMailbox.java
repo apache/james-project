@@ -20,6 +20,7 @@ package org.apache.james.protocols.pop3.mailbox;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
 /**
  * An IMAP Mailbox adapter which is used in POP3 to retrieve messages
@@ -80,10 +81,9 @@ public abstract class ImapMailbox implements Mailbox {
     public abstract void remove(long... uids) throws IOException;
 
 	public void remove(String... uids) throws NumberFormatException, IOException {
-        long imapUids[] = new long[uids.length];
-        for (int i = 0; i < uids.length; i++) {
-            imapUids[i] = Long.parseLong(uids[i]);
-        }
+        long imapUids[] = Arrays.stream(uids)
+            .mapToLong(Long::parseLong)
+            .toArray();
         this.remove(imapUids);
 	}
 

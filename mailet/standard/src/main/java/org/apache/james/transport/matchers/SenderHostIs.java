@@ -27,6 +27,8 @@ import java.util.Locale;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -46,6 +48,7 @@ import com.google.common.collect.ImmutableSet;
  * @version 1.0.0, 2002-09-10
  */
 public class SenderHostIs extends GenericMatcher {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SenderHostIs.class);
 
     private Collection<String> senderHosts;
     
@@ -77,7 +80,7 @@ public class SenderHostIs extends GenericMatcher {
                 return mail.getRecipients();
             }
         } catch (Exception e) {
-            log(e.getMessage());
+            LOGGER.info(e.getMessage());
         }
 
         return null;    //No match.

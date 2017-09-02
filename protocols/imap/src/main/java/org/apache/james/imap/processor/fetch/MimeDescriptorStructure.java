@@ -79,7 +79,7 @@ final class MimeDescriptorStructure implements FetchResponse.Structure {
     }
 
     private static List<Structure> createParts(boolean allowExtensions, MimeDescriptor descriptor, EnvelopeBuilder builder) throws MailboxException {
-        final List<Structure> results = new ArrayList<Structure>();
+        final List<Structure> results = new ArrayList<>();
         for (Iterator<MimeDescriptor> it = descriptor.parts(); it.hasNext();) {
             final MimeDescriptor partDescriptor = it.next();
             results.add(new MimeDescriptorStructure(allowExtensions, partDescriptor, builder));
@@ -88,7 +88,7 @@ final class MimeDescriptorStructure implements FetchResponse.Structure {
     }
 
     private static List<String> createParameters(MimeDescriptor descriptor) throws MailboxException {
-        final List<String> results = new ArrayList<String>();
+        final List<String> results = new ArrayList<>();
         // TODO: consider revising this
         for (Map.Entry<String, String> entry : descriptor.contentTypeParameters().entrySet()) {
             results.add(entry.getKey());

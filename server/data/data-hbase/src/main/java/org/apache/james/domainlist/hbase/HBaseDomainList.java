@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import javax.inject.Inject;
+
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTableInterface;
@@ -31,6 +33,7 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.hbase.def.HDomainList;
 import org.apache.james.domainlist.lib.AbstractDomainList;
@@ -48,11 +51,16 @@ public class HBaseDomainList extends AbstractDomainList {
      */
     private static final Logger log = LoggerFactory.getLogger(HBaseDomainList.class.getName());
 
+    @Inject
+    public HBaseDomainList(DNSService dns) {
+        super(dns);
+    }
+
     /**
      * @see org.apache.james.domainlist.api.DomainList#containsDomain(String)
      */
     @Override
-    public boolean containsDomain(String domain) throws DomainListException {
+    protected boolean containsDomainInternal(String domain) throws DomainListException {
         HTableInterface table = null;
         try {
             table = TablePool.getInstance().getDomainlistTable();
@@ -133,7 +141,7 @@ public class HBaseDomainList extends AbstractDomainList {
      */
     @Override
     protected List<String> getDomainListInternal() throws DomainListException {
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
         HTableInterface table = null;
         ResultScanner resultScanner = null;
         try {

@@ -21,9 +21,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>james-project</artifactId>
         <groupId>org.apache.james</groupId>
-        <version>3.0.0-RC2-SNAPSHOT</version>
+        <artifactId>james-project</artifactId>
+        <version>3.1.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>protocols</artifactId>
@@ -45,134 +45,11 @@
     </modules>
 
     <properties>
-        <target.jdk>1.6</target.jdk>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <netty.version>3.10.6.Final</netty.version>
-        <apache-mime4j.version>0.8.1-SNAPSHOT</apache-mime4j.version>
-        <commons-net.version>3.2</commons-net.version>
-        <commons-lang.version>2.6</commons-lang.version>
-        <commons-codec.version>1.7</commons-codec.version>
-        <commons-collections.version>3.2.1</commons-collections.version>
-        <apache-commons-io.version>1.3.2</apache-commons-io.version>
-        <jmock.version>2.5.1</jmock.version>
-        <jutf7.version>1.0.0</jutf7.version>
-        <junit.version>4.10</junit.version>
-        <slf4j.version>1.6.3</slf4j.version>
-        <jsieve.version>0.6</jsieve.version>
-        <mockito-core.version>1.9.0</mockito-core.version>
-        <assertj-1.version>1.7.1</assertj-1.version>
-        <assertj-3.version>3.2.0</assertj-3.version>
     </properties>
 
     <dependencyManagement>
-            <dependencies>
-            <dependency>
-                <groupId>org.apache.james</groupId>
-                <artifactId>james-server-util</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james.protocols</groupId>
-                <artifactId>protocols-pop3</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james.protocols</groupId>
-                <artifactId>protocols-lmtp</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james.protocols</groupId>
-                <artifactId>protocols-smtp</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james.protocols</groupId>
-                <artifactId>protocols-smtp</artifactId>
-                <type>test-jar</type>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james.protocols</groupId>
-                <artifactId>protocols-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james.protocols</groupId>
-                <artifactId>protocols-api</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james.protocols</groupId>
-                <artifactId>protocols-netty</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james</groupId>
-                <artifactId>metrics-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>${slf4j.version}</version>
-                <scope>compile</scope>
-                <optional>true</optional>
-            </dependency>
-
-
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-simple</artifactId>
-                <version>${slf4j.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>commons-codec</groupId>
-                <artifactId>commons-codec</artifactId>
-                <version>${commons-codec.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-configuration</groupId>
-                <artifactId>commons-configuration</artifactId>
-                <version>1.9</version>
-                <exclusions>
-                    <exclusion>
-                        <artifactId>commons-digester</artifactId>
-                        <groupId>commons-digester</groupId>
-                    </exclusion>
-                    <exclusion>
-                        <artifactId>commons-beanutils-core</artifactId>
-                        <groupId>commons-beanutils</groupId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>commons-lang</groupId>
-                <artifactId>commons-lang</artifactId>
-                <version>${commons-lang.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-io</artifactId>
-                <version>${apache-commons-io.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>18.0</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>javax.inject</groupId>
-                <artifactId>javax.inject</artifactId>
-                <version>1</version>
-            </dependency>
+        <dependencies>
             <dependency>
                 <groupId>org.apache.james</groupId>
                 <artifactId>apache-james-mailbox-api</artifactId>
@@ -183,28 +60,17 @@
                 <artifactId>apache-james-mailbox-api</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
-                <artifactId>james-server-data-api</artifactId>
+                <artifactId>apache-james-mailbox-store</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
                 <artifactId>apache-jsieve-core</artifactId>
                 <version>${jsieve.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>commons-logging</groupId>
-                        <artifactId>commons-logging</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
-
-            <!--
-                START Mail
-            -->
             <dependency>
                 <groupId>org.apache.james</groupId>
                 <artifactId>apache-mime4j-core</artifactId>
@@ -215,68 +81,25 @@
                 <artifactId>apache-mime4j-dom</artifactId>
                 <version>${apache-mime4j.version}</version>
             </dependency>
-            <!--
-                END Mail
-            -->
-            <dependency>
-                <groupId>com.beetstra.jutf7</groupId>
-                <artifactId>jutf7</artifactId>
-                <version>${jutf7.version}</version>
-            </dependency>
-
-            <!--
-                START Testing
-            -->
-
-            <dependency>
-                <groupId>org.jmock</groupId>
-                <artifactId>jmock</artifactId>
-                <version>${jmock.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.jmock</groupId>
-                <artifactId>jmock-junit4</artifactId>
-                <version>${jmock.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${junit.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>commons-net</groupId>
-                <artifactId>commons-net</artifactId>
-                <version>${commons-net.version}</version>
-                <scope>test</scope>
-            </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
-                <artifactId>apache-james-mailbox-store</artifactId>
-                <scope>test</scope>
+                <artifactId>james-server-data-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.sun.mail</groupId>
-                <artifactId>javax.mail</artifactId>
-                <version>1.5.4</version>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-util</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.assertj</groupId>
-                <artifactId>assertj-guava</artifactId>
-                <version>1.3.1</version>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-util-java8</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.mockito</groupId>
-                <artifactId>mockito-core</artifactId>
-                <version>${mockito-core.version}</version>
-            </dependency>
-            <dependency>
-            <groupId>nl.jqno.equalsverifier</groupId>
-                <artifactId>equalsverifier</artifactId>
-                <version>1.7.6</version>
+                <groupId>org.apache.james</groupId>
+                <artifactId>metrics-api</artifactId>
+                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -26,9 +26,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.metrics.api.Metric;
@@ -42,21 +42,11 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Supplier;
 
 public class DeliveryRunnableTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeliveryRunnableTest.class);
     public static final Date FIXED_DATE = new Date(1159599194961L);
-    public static final Supplier<Date> FIXED_DATE_SUPPLIER = new Supplier<Date>() {
-        @Override
-        public Date get() {
-            return FIXED_DATE;
-        }
-    };
+    public static final Supplier<Date> FIXED_DATE_SUPPLIER = () -> FIXED_DATE;
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -83,7 +73,7 @@ public class DeliveryRunnableTest {
         bouncer = mock(Bouncer.class);
         mailDelivrer = mock(MailDelivrer.class);
         mailQueue = mock(MailQueue.class);
-        testee = new DeliveryRunnable(mailQueue, configuration, mockMetricFactory, LOGGER, bouncer, mailDelivrer, DeliveryRunnable.DEFAULT_NOT_STARTED, FIXED_DATE_SUPPLIER);
+        testee = new DeliveryRunnable(mailQueue, configuration, mockMetricFactory, bouncer, mailDelivrer, DeliveryRunnable.DEFAULT_NOT_STARTED, FIXED_DATE_SUPPLIER);
     }
 
     @Test

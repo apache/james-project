@@ -20,17 +20,15 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.guava.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Optional;
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.Part;
@@ -38,8 +36,8 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.transport.mailets.StripAttachment.OutputFileName;
+import org.apache.commons.io.IOUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetException;
@@ -53,14 +51,12 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
+import com.google.common.base.Charsets;
 
 public class StripAttachmentTest {
 
     private static final String EXPECTED_ATTACHMENT_CONTENT = "\u0023\u00A4\u00E3\u00E0\u00E9";
-    private static final Optional<String> ABSENT_MIME_TYPE = Optional.absent();
+    private static final Optional<String> ABSENT_MIME_TYPE = Optional.empty();
     private static final String CONTENT_TRANSFER_ENCODING_VALUE ="8bit";
 
     public static final String CONTENT_TRANSFER_ENCODING = "Content-Transfer-Encoding";
@@ -123,7 +119,7 @@ public class StripAttachmentTest {
 
         mailet.service(mail);
 
-        assertThat(mail).isEqualToComparingFieldByField(expectedMail);
+        assertThat(mail).isEqualToIgnoringGivenFields(expectedMail, "msg");
         assertThat(mail.getMessage().getContent()).isEqualTo("simple text");
     }
     
@@ -238,15 +234,9 @@ public class StripAttachmentTest {
     }
 
     private String retrieveFilenameStartingWith(Collection<String> savedAttachments, final String filename) {
-        return FluentIterable.from(savedAttachments)
-                .filter(new Predicate<String>() {
-
-                    @Override
-                    public boolean apply(String attachmentFilename) {
-                        return attachmentFilename.startsWith(filename);
-                    }
-                })
-                .first()
+        return savedAttachments.stream()
+                .filter(attachmentFilename -> attachmentFilename.startsWith(filename))
+                .findFirst()
                 .get();
     }
 
@@ -318,7 +308,7 @@ public class StripAttachmentTest {
         assertThat(saved).hasSize(1);
         assertThat(saved).containsKey(expectedKey);
         MimeBodyPart savedBodyPart = new MimeBodyPart(new ByteArrayInputStream(saved.get(expectedKey)));
-        String content = IOUtils.toString(savedBodyPart.getInputStream());
+        String content = IOUtils.toString(savedBodyPart.getInputStream(), Charsets.UTF_8);
         assertThat(content).isEqualTo(EXPECTED_ATTACHMENT_CONTENT);
     }
 
@@ -354,7 +344,7 @@ public class StripAttachmentTest {
         assertThat(saved).hasSize(1);
         assertThat(saved).containsKey(expectedKey);
         MimeBodyPart savedBodyPart = new MimeBodyPart(new ByteArrayInputStream(saved.get(expectedKey)));
-        String content = IOUtils.toString(savedBodyPart.getInputStream());
+        String content = IOUtils.toString(savedBodyPart.getInputStream(), Charsets.UTF_8);
         assertThat(content).isEqualTo(EXPECTED_ATTACHMENT_CONTENT);
     }
 
@@ -834,7 +824,7 @@ public class StripAttachmentTest {
         Part part = MimeMessageBuilder.bodyPartBuilder().build();
 
         Optional<String> maybeFilename = mailet.saveAttachmentToFile(part, ABSENT_MIME_TYPE);
-        assertThat(maybeFilename).isAbsent();
+        assertThat(maybeFilename).isEmpty();
     }
     
     @Test

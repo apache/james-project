@@ -19,9 +19,7 @@
 
 package org.apache.james.mailetcontainer.impl;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -50,7 +48,6 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.user.api.UsersRepository;
@@ -62,17 +59,19 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableSet;
 
 @SuppressWarnings("deprecation")
-public class JamesMailetContext implements MailetContext, LogEnabled, Configurable {
+public class JamesMailetContext implements MailetContext, Configurable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JamesMailetContext.class);
 
     /**
      * A hash table of server attributes These are the MailetContext attributes
      */
-    private final Hashtable<String, Object> attributes = new Hashtable<String, Object>();
+    private final Hashtable<String, Object> attributes = new Hashtable<>();
     protected DNSService dns;
-
-    protected Logger log;
 
     private UsersRepository localusers;
 
@@ -109,7 +108,7 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
         } catch (TemporaryResolutionException e) {
             // TODO: We only do this to not break backward compatiblity. Should
             // fixed later
-            return Collections.unmodifiableCollection(new ArrayList<String>(0));
+            return ImmutableSet.of();
         }
     }
 
@@ -130,7 +129,7 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
 
     @Override
     public Iterator<String> getAttributeNames() {
-        Vector<String> names = new Vector<String>();
+        Vector<String> names = new Vector<>();
         for (Enumeration<String> e = attributes.keys(); e.hasMoreElements(); ) {
             names.add(e.nextElement());
         }
@@ -183,14 +182,14 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
     @Override
     public void bounce(Mail mail, String message, MailAddress bouncer) throws MessagingException {
         if (mail.getSender() == null) {
-            if (log.isInfoEnabled())
-                log.info("Mail to be bounced contains a null (<>) reverse path.  No bounce will be sent.");
+            if (LOGGER.isInfoEnabled())
+                LOGGER.info("Mail to be bounced contains a null (<>) reverse path.  No bounce will be sent.");
             return;
         } else {
             // Bounce message goes to the reverse path, not to the Reply-To
             // address
-            if (log.isInfoEnabled())
-                log.info("Processing a bounce request for a message with a reverse path of " + mail.getSender().toString());
+            if (LOGGER.isInfoEnabled())
+                LOGGER.info("Processing a bounce request for a message with a reverse path of " + mail.getSender().toString());
         }
 
         MailImpl reply = rawBounce(mail, message);
@@ -223,7 +222,7 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
         MimeMessage reply = (MimeMessage) original.reply(false);
         reply.setSubject("Re: " + original.getSubject());
         reply.setSentDate(new Date());
-        Collection<MailAddress> recipients = new HashSet<MailAddress>();
+        Collection<MailAddress> recipients = new HashSet<>();
         recipients.add(mail.getSender());
         InternetAddress addr[] = {new InternetAddress(mail.getSender().toString())};
         reply.setRecipients(Message.RecipientType.TO, addr);
@@ -243,14 +242,14 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
                 try {
                     return isLocalEmail(new MailAddress(name.toLowerCase(Locale.US), domains.getDefaultDomain()));
                 } catch (DomainListException e) {
-                    log("Unable to access DomainList", e);
+                    LOGGER.error("Unable to access DomainList", e);
                     return false;
                 }
             } else {
                 return isLocalEmail(new MailAddress(name.toLowerCase(Locale.US)));
             }
         } catch (ParseException e) {
-            log("Error checking isLocalUser for user " + name);
+            LOGGER.info("Error checking isLocalUser for user " + name, e);
             return false;
         }
     }
@@ -264,7 +263,7 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
             try {
                 return localusers.contains(localusers.getUser(mailAddress));
             } catch (UsersRepositoryException e) {
-                log("Unable to access UsersRepository", e);
+                LOGGER.error("Unable to access UsersRepository", e);
             }
         }
         return false;
@@ -302,11 +301,11 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
     @Override
     public Iterator<HostAddress> getSMTPHostAddresses(String domainName) {
         try {
-            return new MXHostAddressIterator(dns.findMXRecords(domainName).iterator(), dns, false, log);
+            return new MXHostAddressIterator(dns.findMXRecords(domainName).iterator(), dns, false);
         } catch (TemporaryResolutionException e) {
             // TODO: We only do this to not break backward compatiblity. Should
             // fixed later
-            return Collections.unmodifiableCollection(new ArrayList<HostAddress>(0)).iterator();
+            return ImmutableSet.<HostAddress>of().iterator();
         }
     }
 
@@ -320,7 +319,7 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
         try {
             return domains.containsDomain(name);
         } catch (DomainListException e) {
-            log.error("Unable to retrieve domains", e);
+            LOGGER.error("Unable to retrieve domains", e);
             return false;
         }
     }
@@ -328,29 +327,29 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
     @Override
     @Deprecated
     public void log(String arg0) {
-        log.info(arg0);
+        LOGGER.info(arg0);
     }
 
     @Override
     @Deprecated
     public void log(String arg0, Throwable arg1) {
-        log.info(arg0, arg1);
+        LOGGER.info(arg0, arg1);
     }
 
     @Override
     public void log(LogLevel logLevel, String s) {
         switch (logLevel) {
             case INFO:
-                log.info(s);
+                LOGGER.info(s);
                 break;
             case WARN:
-                log.warn(s);
+                LOGGER.warn(s);
                 break;
             case ERROR:
-                log.error(s);
+                LOGGER.error(s);
                 break;
             default:
-                log.debug(s);
+                LOGGER.debug(s);
         }
     }
 
@@ -358,16 +357,16 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
     public void log(LogLevel logLevel, String s, Throwable throwable) {
         switch (logLevel) {
             case INFO:
-                log.info(s, throwable);
+                LOGGER.info(s, throwable);
                 break;
             case WARN:
-                log.warn(s, throwable);
+                LOGGER.warn(s, throwable);
                 break;
             case ERROR:
-                log.error(s, throwable);
+                LOGGER.error(s, throwable);
                 break;
             default:
-                log.debug(s, throwable);
+                LOGGER.debug(s, throwable);
         }
     }
 
@@ -380,7 +379,7 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
     @Override
     public void sendMail(MimeMessage message) throws MessagingException {
         MailAddress sender = new MailAddress((InternetAddress) message.getFrom()[0]);
-        Collection<MailAddress> recipients = new HashSet<MailAddress>();
+        Collection<MailAddress> recipients = new HashSet<>();
         Address addresses[] = message.getAllRecipients();
         if (addresses != null) {
             for (Address address : addresses) {
@@ -433,11 +432,6 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
     }
 
     @Override
-    public void setLog(Logger log) {
-        this.log = log;
-    }
-
-    @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
         try {
 
@@ -471,7 +465,7 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
                             "address.  This is not necessarily a problem, but it does mean that emails addressed to " +
                             "the postmaster will be routed to another server.  For some configurations this may " +
                             "cause problems.";
-                    log.warn(warnBuffer);
+                    LOGGER.warn(warnBuffer);
                 }
             } catch (AddressException e) {
                 throw new ConfigurationException("Postmaster address " + postMasterAddress + "is invalid", e);
@@ -483,6 +477,6 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
 
     @Override
     public Logger getLogger() {
-        return log;
+        return LOGGER;
     }
 }

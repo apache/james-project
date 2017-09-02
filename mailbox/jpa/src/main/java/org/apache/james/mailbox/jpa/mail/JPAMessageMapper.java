@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Optional;
 import javax.mail.Flags;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
@@ -55,8 +55,6 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
 import org.apache.openjpa.persistence.ArgumentException;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 
@@ -66,12 +64,6 @@ import com.google.common.collect.Iterators;
 public class JPAMessageMapper extends JPATransactionalMapper implements MessageMapper {
     private static final int UNLIMIT_MAX_SIZE = -1;
     private static final int UNLIMITED = -1;
-    private static final Function<MailboxMessage, MessageUid> TO_UID = new Function<MailboxMessage, MessageUid>() {
-        @Override
-        public MessageUid apply(MailboxMessage mailboxMessage) {
-            return mailboxMessage.getUid();
-        }
-    };
 
     private final MessageUtils messageMetadataMapper;
 
@@ -90,7 +82,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
 
     @Override
     public Iterator<MessageUid> listAllMessageUids(final Mailbox mailbox) throws MailboxException {
-        return Iterators.transform(findInMailbox(mailbox, MessageRange.all(), FetchType.Full, UNLIMITED), TO_UID);
+        return Iterators.transform(findInMailbox(mailbox, MessageRange.all(), FetchType.Full, UNLIMITED), MailboxMessage::getUid);
     }
 
     /**
@@ -348,9 +340,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
                 return new SimpleMessageMetaData(persistData);
             }
 
-        } catch (PersistenceException e) {
-            throw new MailboxException("Save of message " + message + " failed in mailbox " + mailbox, e);
-        } catch (ArgumentException e) {
+        } catch (PersistenceException | ArgumentException e) {
             throw new MailboxException("Save of message " + message + " failed in mailbox " + mailbox, e);
         }
     }
@@ -396,7 +386,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     }
 
     private Map<MessageUid, MessageMetaData> createMetaData(List<MailboxMessage> uids) {
-        final Map<MessageUid, MessageMetaData> data = new HashMap<MessageUid, MessageMetaData>();
+        final Map<MessageUid, MessageMetaData> data = new HashMap<>();
         for (MailboxMessage m : uids) {
             data.put(m.getUid(), new SimpleMessageMetaData(m));
         }

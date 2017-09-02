@@ -20,6 +20,7 @@
 package org.apache.james.imap.processor.fetch;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -42,7 +43,7 @@ public class MessageResultUtils {
      * @throws MessagingException
      */
     public static List<MessageResult.Header> getAll(Iterator<MessageResult.Header> iterator) {
-        final List<MessageResult.Header> results = new ArrayList<MessageResult.Header>();
+        final List<MessageResult.Header> results = new ArrayList<>();
         if (iterator != null) {
             while (iterator.hasNext()) {
                 results.add(iterator.next());
@@ -64,17 +65,15 @@ public class MessageResultUtils {
      * @throws MessagingException
      */
     public static List<MessageResult.Header> getMatching(String[] names, Iterator<MessageResult.Header> iterator) throws MailboxException {
-        final List<MessageResult.Header> results = new ArrayList<MessageResult.Header>(20);
+        final List<MessageResult.Header> results = new ArrayList<>(20);
         if (iterator != null) {
             while (iterator.hasNext()) {
                 MessageResult.Header header = iterator.next();
                 final String headerName = header.getName();
                 if (headerName != null) {
-                    for (String name : names) {
-                        if (headerName.equalsIgnoreCase(name)) {
-                            results.add(header);
-                            break;
-                        }
+                    if (Arrays.stream(names)
+                        .anyMatch(headerName::equalsIgnoreCase)) {
+                        results.add(header);
                     }
                 }
             }
@@ -99,7 +98,7 @@ public class MessageResultUtils {
     }
 
     private static List<MessageResult.Header> matching(Collection<String> names, Iterator<MessageResult.Header> iterator, boolean not) throws MailboxException {
-        final List<MessageResult.Header> results = new ArrayList<MessageResult.Header>(names.size());
+        final List<MessageResult.Header> results = new ArrayList<>(names.size());
         if (iterator != null) {
             while (iterator.hasNext()) {
                 final MessageResult.Header header = iterator.next();
@@ -114,17 +113,11 @@ public class MessageResultUtils {
     }
 
     private static boolean contains(Collection<String> names, MessageResult.Header header) throws MailboxException {
-        boolean match = false;
         final String headerName = header.getName();
         if (headerName != null) {
-            for (String name : names) {
-                if (name.equalsIgnoreCase(headerName)) {
-                    match = true;
-                    break;
-                }
-            }
+            return names.stream().anyMatch(name -> name.equalsIgnoreCase(headerName));
         }
-        return match;
+        return false;
     }
 
     /**
@@ -183,19 +176,14 @@ public class MessageResultUtils {
      * @throws MessagingException
      */
     public static List<MessageResult.Header> getNotMatching(String[] names, Iterator<MessageResult.Header> iterator) throws MailboxException {
-        final List<MessageResult.Header> results = new ArrayList<MessageResult.Header>(20);
+        final List<MessageResult.Header> results = new ArrayList<>(20);
         if (iterator != null) {
             while (iterator.hasNext()) {
                 MessageResult.Header header = iterator.next();
                 final String headerName = header.getName();
                 if (headerName != null) {
-                    boolean match = false;
-                    for (String name : names) {
-                        if (headerName.equalsIgnoreCase(name)) {
-                            match = true;
-                            break;
-                        }
-                    }
+                    boolean match = Arrays.stream(names)
+                        .anyMatch(headerName::equalsIgnoreCase);
                     if (!match) {
                         results.add(header);
                     }

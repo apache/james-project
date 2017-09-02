@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.jpa.quota;
 
+import java.util.Optional;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -29,7 +30,6 @@ import org.apache.james.mailbox.jpa.quota.model.JpaCurrentQuota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 public class JpaCurrentQuotaManager implements StoreCurrentQuotaManager {
@@ -74,8 +74,8 @@ public class JpaCurrentQuotaManager implements StoreCurrentQuotaManager {
         Preconditions.checkArgument(count > 0, "Counts should be positive");
         Preconditions.checkArgument(size > 0, "Size should be positive");
 
-        JpaCurrentQuota jpaCurrentQuota = Optional.fromNullable(retrieveUserQuota(quotaRoot))
-            .or(new JpaCurrentQuota(quotaRoot.getValue(), NO_MESSAGES, NO_STORED_BYTES));
+        JpaCurrentQuota jpaCurrentQuota = Optional.ofNullable(retrieveUserQuota(quotaRoot))
+            .orElse(new JpaCurrentQuota(quotaRoot.getValue(), NO_MESSAGES, NO_STORED_BYTES));
 
         entityManager.merge(new JpaCurrentQuota(quotaRoot.getValue(),
             jpaCurrentQuota.getMessageCount() + count,
@@ -87,8 +87,8 @@ public class JpaCurrentQuotaManager implements StoreCurrentQuotaManager {
         Preconditions.checkArgument(count > 0, "Counts should be positive");
         Preconditions.checkArgument(size > 0, "Counts should be positive");
 
-        JpaCurrentQuota jpaCurrentQuota = Optional.fromNullable(retrieveUserQuota(quotaRoot))
-            .or(new JpaCurrentQuota(quotaRoot.getValue(), NO_MESSAGES, NO_STORED_BYTES));
+        JpaCurrentQuota jpaCurrentQuota = Optional.ofNullable(retrieveUserQuota(quotaRoot))
+            .orElse(new JpaCurrentQuota(quotaRoot.getValue(), NO_MESSAGES, NO_STORED_BYTES));
 
         entityManager.merge(new JpaCurrentQuota(quotaRoot.getValue(),
             jpaCurrentQuota.getMessageCount() - count,

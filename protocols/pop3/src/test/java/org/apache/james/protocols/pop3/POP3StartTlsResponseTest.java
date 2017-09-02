@@ -19,10 +19,10 @@
 
 package org.apache.james.protocols.pop3;
 
+import static org.junit.Assert.assertTrue;
+
 import org.apache.james.protocols.api.StartTlsResponse;
 import org.junit.Test;
-
-import static junit.framework.Assert.*;
 
 public class POP3StartTlsResponseTest {
 

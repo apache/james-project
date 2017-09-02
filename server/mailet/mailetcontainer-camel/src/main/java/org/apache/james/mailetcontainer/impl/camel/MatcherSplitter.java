@@ -19,6 +19,8 @@
 
 package org.apache.james.mailetcontainer.impl.camel;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -27,18 +29,22 @@ import java.util.Locale;
 import javax.mail.MessagingException;
 
 import org.apache.camel.Body;
+import org.apache.camel.ExchangeProperty;
 import org.apache.camel.Handler;
 import org.apache.camel.InOnly;
-import org.apache.camel.Property;
 import org.apache.james.core.MailImpl;
 import org.apache.james.mailetcontainer.impl.ProcessorUtil;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.apache.james.util.MDCBuilder;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
 import org.slf4j.Logger;
+
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 
 /**
  * A Splitter for use with Camel to split the MailMessage into many pieces if
@@ -74,30 +80,41 @@ public class MatcherSplitter {
      * @throws MessagingException
      */
     @Handler
-    public List<Mail> split(@Property(MATCHER_PROPERTY) Matcher matcher,
-                            @Property(ON_MATCH_EXCEPTION_PROPERTY) String onMatchException,
-                            @Property(LOGGER_PROPERTY) Logger logger,
-                            @Property(MAILETCONTAINER_PROPERTY) CamelMailetProcessor container,
-                            @Property(METRIC_FACTORY) MetricFactory metricFactory,
+    public List<Mail> split(@ExchangeProperty(MATCHER_PROPERTY) Matcher matcher,
+                            @ExchangeProperty(ON_MATCH_EXCEPTION_PROPERTY) String onMatchException,
+                            @ExchangeProperty(LOGGER_PROPERTY) Logger logger,
+                            @ExchangeProperty(MAILETCONTAINER_PROPERTY) CamelMailetProcessor container,
+                            @ExchangeProperty(METRIC_FACTORY) MetricFactory metricFactory,
                             @Body Mail mail) throws MessagingException {
         Collection<MailAddress> matchedRcpts = null;
-        Collection<MailAddress> origRcpts = new ArrayList<MailAddress>(mail.getRecipients());
+        Collection<MailAddress> origRcpts = new ArrayList<>(mail.getRecipients());
         long start = System.currentTimeMillis();
         MessagingException ex = null;
         TimeMetric timeMetric = metricFactory.timer(matcher.getClass().getSimpleName());
 
         try {
-            List<Mail> mails = new ArrayList<Mail>();
+            List<Mail> mails = new ArrayList<>();
             boolean fullMatch = false;
 
-            try {
+            try (Closeable closeable =
+                     MDCBuilder.create()
+                         .addContext(MDCBuilder.PROTOCOL, "MAILET")
+                         .addContext(MDCBuilder.ACTION, "MATCHER")
+                         .addContext(MDCBuilder.IP, mail.getRemoteAddr())
+                         .addContext(MDCBuilder.HOST, mail.getRemoteHost())
+                         .addContext("matcher", matcher.getMatcherInfo())
+                         .addContext("state", mail.getState())
+                         .addContext("mail", mail.getName())
+                         .addContext("recipients", ImmutableList.copyOf(mail.getRecipients()))
+                         .addContext("sender", mail.getSender())
+                         .build()) {
                 // call the matcher
                 matchedRcpts = matcher.match(mail);
 
                 if (matchedRcpts == null) {
                     // In case the matcher returned null, create an empty
                     // Collection
-                    matchedRcpts = new ArrayList<MailAddress>(0);
+                    matchedRcpts = new ArrayList<>(0);
                 } else if (matchedRcpts != mail.getRecipients()) {
                     // Make sure all the objects are MailAddress objects
                     ProcessorUtil.verifyMailAddresses(matchedRcpts);
@@ -113,18 +130,20 @@ public class MatcherSplitter {
                 if (onMatchException.compareTo("nomatch") == 0) {
                     // In case the matcher returned null, create an empty
                     // Collection
-                    matchedRcpts = new ArrayList<MailAddress>(0);
+                    matchedRcpts = new ArrayList<>(0);
                 } else if (onMatchException.compareTo("matchall") == 0) {
                     matchedRcpts = mail.getRecipients();
                     // no need to verify addresses
                 } else {
                     ProcessorUtil.handleException(me, mail, matcher.getMatcherConfig().getMatcherName(), onMatchException, logger);
                 }
+            } catch (IOException e) {
+                throw Throwables.propagate(e);
             }
 
             // check if the matcher matched
             if (matchedRcpts != null && !matchedRcpts.isEmpty()) {
-                List<MailAddress> rcpts = new ArrayList<MailAddress>(mail.getRecipients());
+                List<MailAddress> rcpts = new ArrayList<>(mail.getRecipients());
 
                 for (MailAddress matchedRcpt : matchedRcpts) {
                     // loop through the recipients and remove the recipients

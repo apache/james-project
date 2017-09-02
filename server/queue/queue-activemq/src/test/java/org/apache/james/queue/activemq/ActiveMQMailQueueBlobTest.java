@@ -26,7 +26,6 @@ import java.io.InputStream;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.queue.jms.JMSMailQueue;
 
 import com.google.common.base.Throwables;
 
@@ -34,8 +33,6 @@ public class ActiveMQMailQueueBlobTest extends ActiveMQMailQueueTest {
 
     public final static String BASE_DIR = "file://target/james-test";
     private MyFileSystem fs;
-
-    private JMSMailQueue queue;
 
     @Override
     protected ActiveMQConnectionFactory createConnectionFactory() {
@@ -59,16 +56,6 @@ public class ActiveMQMailQueueBlobTest extends ActiveMQMailQueueTest {
         if (fs != null) {
             fs.destroy();
         }
-    }
-
-    @Override
-    public JMSMailQueue getQueue() {
-        return queue;
-    }
-
-    @Override
-    public void setQueue(JMSMailQueue queue) {
-        this.queue = queue;
     }
 
     @Override

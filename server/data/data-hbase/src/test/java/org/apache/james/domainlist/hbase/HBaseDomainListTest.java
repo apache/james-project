@@ -19,6 +19,7 @@
 package org.apache.james.domainlist.hbase;
 
 import java.io.IOException;
+
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.AbstractDomainListTest;
@@ -27,7 +28,6 @@ import org.apache.james.system.hbase.TablePool;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.slf4j.LoggerFactory;
 
 /**
  * Tests for the HBase DomainList implementation.
@@ -49,9 +49,7 @@ public class HBaseDomainListTest extends AbstractDomainListTest {
      */
     @Override
     protected DomainList createDomainList() {
-        HBaseDomainList domainList = new HBaseDomainList();
-        domainList.setLog(LoggerFactory.getLogger("MockLog"));
-        domainList.setDNSService(getDNSServer("localhost"));
+        HBaseDomainList domainList = new HBaseDomainList(getDNSServer("localhost"));
         domainList.setAutoDetect(false);
         domainList.setAutoDetectIP(false);
         return domainList;

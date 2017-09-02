@@ -31,7 +31,7 @@
 
       <p>Read <a href="feature-persistence.html">documentation about persistence</a> for a description of the Mail Repository Store functionality.</p>
     
-      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/mailrepositorystore-template.xml">mailrepositorystore-template.xml</a> in GIT to get some examples and hints.</p>
+      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/mailrepositorystore.xml">mailrepositorystore.xml</a> in GIT to get some examples and hints.</p>
 
       <p>Mail Repository Stores are distinguished by where they store data.  There are five types of 
         storage: File, Database, DBFile, MBox and JCR.</p>

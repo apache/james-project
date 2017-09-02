@@ -18,6 +18,12 @@
  ****************************************************************/
 package org.apache.james.lmtpserver;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.WiringException;
 import org.apache.james.protocols.lmtp.LMTPMultiResponse;
@@ -32,18 +38,12 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.smtpserver.DataLineJamesMessageHookHandler;
 import org.apache.mailet.Mail;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 /**
  * Handler which takes care of deliver the mail to the recipients INBOX
  */
 public class DataLineLMTPHandler extends DataLineJamesMessageHookHandler {
 
-    private final List<DeliverToRecipientHook> handlers = new ArrayList<DeliverToRecipientHook>();
+    private final List<DeliverToRecipientHook> handlers = new ArrayList<>();
 
 
     @Override
@@ -83,7 +83,7 @@ public class DataLineLMTPHandler extends DataLineJamesMessageHookHandler {
 
     @Override
     public List<Class<?>> getMarkerInterfaces() {
-        List<Class<?>> markers = new ArrayList<Class<?>>();
+        List<Class<?>> markers = new ArrayList<>();
         markers.add(DeliverToRecipientHook.class);
         return markers;
     }

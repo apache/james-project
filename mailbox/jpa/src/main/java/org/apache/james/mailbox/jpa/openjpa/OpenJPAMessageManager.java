@@ -38,6 +38,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.BatchSizes;
+import org.apache.james.mailbox.store.ImmutableMailboxMessage;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -64,9 +65,9 @@ public class OpenJPAMessageManager extends JPAMessageManager {
     		MailboxPathLocker locker, Mailbox mailbox, MailboxACLResolver aclResolver, 
     		GroupMembershipResolver groupMembershipResolver,
             QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser,
-            MessageId.Factory messageIdFactory, BatchSizes batchSizes) throws MailboxException {
+            MessageId.Factory messageIdFactory, BatchSizes batchSizes, ImmutableMailboxMessage.Factory immutableMailboxMessageFactory) throws MailboxException {
         this(mapperFactory, index, dispatcher, locker,  mailbox, AdvancedFeature.None, aclResolver, 
-                groupMembershipResolver, quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes);
+                groupMembershipResolver, quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, immutableMailboxMessageFactory);
     }
 
     public OpenJPAMessageManager(MailboxSessionMapperFactory mapperFactory, 
@@ -74,9 +75,9 @@ public class OpenJPAMessageManager extends JPAMessageManager {
     		MailboxPathLocker locker, Mailbox mailbox, AdvancedFeature f, 
     		MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver,
             QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser,
-            MessageId.Factory messageIdFactory, BatchSizes batchSizes) throws MailboxException {
+            MessageId.Factory messageIdFactory, BatchSizes batchSizes, ImmutableMailboxMessage.Factory immutableMailboxMessageFactory) throws MailboxException {
     	
-        super(mapperFactory,  index, dispatcher, locker, mailbox, aclResolver, groupMembershipResolver, quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes);
+        super(mapperFactory,  index, dispatcher, locker, mailbox, aclResolver, groupMembershipResolver, quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, immutableMailboxMessageFactory);
         this.feature = f;
     }
 

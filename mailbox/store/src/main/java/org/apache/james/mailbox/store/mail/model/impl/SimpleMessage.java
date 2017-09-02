@@ -93,6 +93,11 @@ public class SimpleMessage implements Message {
     }
 
     @Override
+    public long getHeaderOctets() {
+        return bodyStartOctet;
+    }
+
+    @Override
     public long getFullContentOctets() {
         return size;
     }

@@ -46,6 +46,7 @@ public class CassandraAnnotationModule implements CassandraModule {
                     .addClusteringColumn(CassandraAnnotationTable.KEY, text())
                     .addColumn(CassandraAnnotationTable.VALUE, text())
                     .withOptions()
+                    .comment("Holds Cassandra mailbox annotations")
                     .compactionOptions(SchemaBuilder.leveledStrategy())
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));

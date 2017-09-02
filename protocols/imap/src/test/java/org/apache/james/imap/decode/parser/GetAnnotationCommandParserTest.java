@@ -20,13 +20,10 @@
 package org.apache.james.imap.decode.parser;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.guava.api.Assertions.assertThat;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import com.google.common.base.Charsets;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
@@ -34,6 +31,8 @@ import org.apache.james.imap.message.request.GetAnnotationRequest;
 import org.apache.james.imap.message.request.GetAnnotationRequest.Depth;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.protocols.imap.DecodingException;
+
+import com.google.common.base.Charsets;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -74,7 +73,7 @@ public class GetAnnotationCommandParserTest {
         assertThat(request.getMailboxName()).isEqualTo(INBOX);
         assertThat(request.getKeys()).isEmpty();
         assertThat(request.getDepth()).isEqualTo(Depth.ZERO);
-        assertThat(request.getMaxsize()).isAbsent();
+        assertThat(request.getMaxsize()).isEmpty();
     }
 
     @Test(expected = DecodingException.class)
@@ -97,7 +96,7 @@ public class GetAnnotationCommandParserTest {
         assertThat(request.getMailboxName()).isEqualTo(INBOX);
         assertThat(request.getKeys()).containsOnly(PRIVATE_KEY);
         assertThat(request.getDepth()).isEqualTo(Depth.ZERO);
-        assertThat(request.getMaxsize()).isAbsent();
+        assertThat(request.getMaxsize()).isEmpty();
     }
 
     @Test(expected = DecodingException.class)
@@ -120,7 +119,7 @@ public class GetAnnotationCommandParserTest {
         assertThat(request.getMailboxName()).isEqualTo(INBOX);
         assertThat(request.getKeys()).contains(PRIVATE_KEY, SHARED_KEY);
         assertThat(request.getDepth()).isEqualTo(Depth.ZERO);
-        assertThat(request.getMaxsize()).isAbsent();
+        assertThat(request.getMaxsize()).isEmpty();
     }
 
     @Test(expected = DecodingException.class)
@@ -345,7 +344,7 @@ public class GetAnnotationCommandParserTest {
         assertThat(request.getCommand()).isEqualTo(command);
         assertThat(request.getMailboxName()).isEqualTo(INBOX);
         assertThat(request.getDepth()).isEqualTo(Depth.INFINITY);
-        assertThat(request.getMaxsize()).isAbsent();
+        assertThat(request.getMaxsize()).isEmpty();
         assertThat(request.getKeys()).contains(SHARED_KEY, PRIVATE_KEY);
     }
 

@@ -178,12 +178,10 @@ public class SieveFileRepository implements SieveRepository {
      */
     @Override
     public void haveSpace(String user, String name, long size) throws QuotaExceededException, StorageException {
-        long usedSpace = 0;
-        for (File file : getUserDirectory(user).listFiles()) {
-            if (!(file.getName().equals(name) || SYSTEM_FILES.contains(file.getName()))) {
-                usedSpace = usedSpace + file.length();
-            }
-        }
+        long usedSpace = Arrays.stream(getUserDirectory(user).listFiles())
+            .filter(file -> !(file.getName().equals(name) || SYSTEM_FILES.contains(file.getName())))
+            .mapToLong(File::length)
+            .sum();
 
         long quota = Long.MAX_VALUE;
         File file = getQuotaFile(user);
@@ -195,9 +193,7 @@ public class SieveFileRepository implements SieveRepository {
             try {
                 scanner = new Scanner(file, UTF_8);
                 quota = scanner.nextLong();
-            } catch (FileNotFoundException ex) {
-                // no op
-            } catch (NoSuchElementException ex) {
+            } catch (FileNotFoundException | NoSuchElementException ex) {
                 // no op
             } finally {
                 if (null != scanner) {
@@ -213,7 +209,7 @@ public class SieveFileRepository implements SieveRepository {
 
     public List<ScriptSummary> listScripts(String user) throws StorageException {
         File[] files = getUserDirectory(user).listFiles();
-        List<ScriptSummary> summaries = new ArrayList<ScriptSummary>(files.length);
+        List<ScriptSummary> summaries = new ArrayList<>(files.length);
         File activeFile = null;
         try {
             activeFile = getActiveFile(user);
@@ -400,9 +396,7 @@ public class SieveFileRepository implements SieveRepository {
             try {
                 scanner = new Scanner(file, UTF_8);
                 quota = scanner.nextLong();
-            } catch (FileNotFoundException ex) {
-                // no op
-            } catch (NoSuchElementException ex) {
+            } catch (FileNotFoundException | NoSuchElementException ex) {
                 // no op
             } finally {
                 if (null != scanner) {
@@ -420,7 +414,7 @@ public class SieveFileRepository implements SieveRepository {
     public synchronized void removeQuota() throws QuotaNotFoundException, StorageException {
         File file = getQuotaFile();
         if (!file.exists()) {
-            throw new QuotaNotFoundException("No default quota");
+            return;
         }
         try {
             FileUtils.forceDelete(file);
@@ -454,9 +448,7 @@ public class SieveFileRepository implements SieveRepository {
             try {
                 scanner = new Scanner(file, UTF_8);
                 quota = scanner.nextLong();
-            } catch (FileNotFoundException ex) {
-                // no op
-            } catch (NoSuchElementException ex) {
+            } catch (FileNotFoundException | NoSuchElementException ex) {
                 // no op
             } finally {
                 if (null != scanner) {
@@ -475,7 +467,7 @@ public class SieveFileRepository implements SieveRepository {
         synchronized (lock) {
             File file = getQuotaFile(user);
             if (!file.exists()) {
-                throw new QuotaNotFoundException("No quota for user: " + user);
+                return;
             }
             try {
                 FileUtils.forceDelete(file);

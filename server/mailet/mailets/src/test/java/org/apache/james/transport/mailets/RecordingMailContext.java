@@ -34,14 +34,16 @@ import org.apache.mailet.MailetContext;
 import org.apache.mailet.TemporaryLookupException;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @since 15.12.12 12:02
  */
 @SuppressWarnings("deprecation")
 public class RecordingMailContext implements MailetContext {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RecordingMailContext.class);
 
-    private final List<SendMailEvent> sendmails = new LinkedList<SendMailEvent>();
+    private final List<SendMailEvent> sendmails = new LinkedList<>();
     private final FakeMailContext context;
 
     public RecordingMailContext() {
@@ -168,12 +170,12 @@ public class RecordingMailContext implements MailetContext {
 
     @Override
     public void log(String message) {
-        context.log(message);
+        LOGGER.info(message);
     }
 
     @Override
     public void log(String message, Throwable t) {
-        context.log(message, t);
+        LOGGER.error(message, t);
     }
 
     @Override

@@ -19,15 +19,15 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.mailet.Experimental;
-import org.apache.mailet.base.FlowedMessageUtils;
-import org.apache.mailet.base.GenericMailet;
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailetException;
+import java.io.IOException;
 
 import javax.mail.MessagingException;
 
-import java.io.IOException;
+import org.apache.mailet.Experimental;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailetException;
+import org.apache.mailet.base.FlowedMessageUtils;
+import org.apache.mailet.base.GenericMailet;
 
 /**
  * Convert a message to format=flowed
@@ -56,16 +56,10 @@ public class WrapText extends GenericMailet {
 
     public void service(Mail mail) throws MailetException {
         // TODO We could even manage the flow when the message is quoted-printable
-        
         try {
             FlowedMessageUtils.flowMessage(mail.getMessage(), optionFlowedDelsp, optionWidth);
-            
-        } catch (MessagingException e) {
-            throw new MailetException("Could not wrap message", e);
-            
-        } catch (IOException e) {
+        } catch (MessagingException | IOException e) {
             throw new MailetException("Could not wrap message", e);
         }
-        
     }
 }

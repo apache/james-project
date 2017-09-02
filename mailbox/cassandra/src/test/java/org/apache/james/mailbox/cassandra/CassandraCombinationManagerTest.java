@@ -26,8 +26,21 @@ import org.apache.james.mailbox.store.AbstractCombinationManagerTest;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 
 public class CassandraCombinationManagerTest extends AbstractCombinationManagerTest {
+
+    @BeforeClass
+    public static void init() {
+        CassandraCombinationManagerTestSystem.init();
+    }
+
+    @AfterClass
+    public static void close() {
+        CassandraCombinationManagerTestSystem.stop();
+    }
+
     @Override
     public CombinationManagerTestSystem createTestingData() throws Exception {
         return CassandraCombinationManagerTestSystem.createTestingData(new NoQuotaManager(), MailboxEventDispatcher.ofListener(mock(MailboxListener.class)));

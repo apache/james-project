@@ -52,7 +52,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
  */
 public class JCRMailboxMapper extends AbstractJCRScalingMapper implements MailboxMapper {
 
-	@SuppressWarnings("deprecation")
+    @SuppressWarnings("deprecation")
     private static final String XPATH_LANGUAGE = Query.XPATH;
 
     public JCRMailboxMapper(MailboxSessionJCRRepository repos, MailboxSession session, int scaling) {
@@ -99,7 +99,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
             QueryResult result = manager.createQuery(queryString, XPATH_LANGUAGE).execute();
             NodeIterator it = result.getNodes();
             if (it.hasNext()) {
-                return new JCRMailbox(it.nextNode(), getLogger());
+                return new JCRMailbox(it.nextNode());
             }
             throw new MailboxNotFoundException(path);
         } catch (PathNotFoundException e) {
@@ -113,7 +113,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
     public Mailbox findMailboxById(MailboxId id) throws MailboxException, MailboxNotFoundException {
         try {
             Node node = getSession().getNodeByIdentifier(id.serialize());
-            return new JCRMailbox(node, getLogger());
+            return new JCRMailbox(node);
         } catch (PathNotFoundException e) {
             throw new MailboxNotFoundException(id.serialize());
         } catch (RepositoryException e) {
@@ -127,7 +127,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#findMailboxWithPathLike(org.apache.james.imap.api.MailboxPath)
      */
     public List<Mailbox> findMailboxWithPathLike(MailboxPath path) throws MailboxException {
-        List<Mailbox> mailboxList = new ArrayList<Mailbox>();
+        List<Mailbox> mailboxList = new ArrayList<>();
         try {
             String name = Text.escapeIllegalXpathSearchChars(path.getName());
             String user = path.getUser();
@@ -142,7 +142,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
             QueryResult result = manager.createQuery(queryString, XPATH_LANGUAGE).execute();
             NodeIterator it = result.getNodes();
             while (it.hasNext()) {
-                mailboxList.add(new JCRMailbox(it.nextNode(), getLogger()));
+                mailboxList.add(new JCRMailbox(it.nextNode()));
             }
         } catch (PathNotFoundException e) {
             // nothing todo
@@ -235,14 +235,14 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
      */
     public List<Mailbox> list() throws MailboxException {
         try {
-            List<Mailbox> mList = new ArrayList<Mailbox>();
+            List<Mailbox> mList = new ArrayList<>();
             QueryManager manager = getSession().getWorkspace().getQueryManager();
 
             String queryString = "/jcr:root/" + MAILBOXES_PATH + "//element(*,jamesMailbox:mailbox)";
             QueryResult result = manager.createQuery(queryString, XPATH_LANGUAGE).execute();
             NodeIterator it = result.getNodes();
             while (it.hasNext()) {
-                mList.add(new JCRMailbox(it.nextNode(), getLogger()));
+                mList.add(new JCRMailbox(it.nextNode()));
             }
             return mList;
         } catch (RepositoryException e) {

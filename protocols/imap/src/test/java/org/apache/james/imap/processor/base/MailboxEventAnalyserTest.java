@@ -23,7 +23,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
@@ -32,11 +31,10 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-
 import javax.mail.Flags;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.process.ImapLineHandler;
@@ -76,9 +74,8 @@ import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.junit.Test;
-import org.slf4j.Logger;
+import org.apache.commons.lang.NotImplementedException;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 public class MailboxEventAnalyserTest {
@@ -163,7 +160,7 @@ public class MailboxEventAnalyserTest {
         }
         
         
-        public MailboxSession login(String userid, String passwd, Logger log) throws MailboxException {
+        public MailboxSession login(String userid, String passwd) throws MailboxException {
             throw new UnsupportedOperationException("Not implemented");
 
         }
@@ -343,7 +340,7 @@ public class MailboxEventAnalyserTest {
             throw new UnsupportedOperationException("Not implemented");
         }
         
-        public MailboxSession createSystemSession(String userName, Logger log) throws MailboxException {
+        public MailboxSession createSystemSession(String userName) throws MailboxException {
             throw new UnsupportedOperationException("Not implemented");
         }
         
@@ -421,7 +418,7 @@ public class MailboxEventAnalyserTest {
         }
 
         @Override
-        public MailboxSession loginAsOtherUser(String adminUserId, String passwd, String realUserId, Logger log) throws BadCredentialsException, MailboxException {
+        public MailboxSession loginAsOtherUser(String adminUserId, String passwd, String realUserId) throws BadCredentialsException, MailboxException {
             throw new UnsupportedOperationException("Not implemented");
         }
     };
@@ -444,10 +441,6 @@ public class MailboxEventAnalyserTest {
         }
 
         public Map<Object, Object> getAttributes() {
-            return null;
-        }
-
-        public Logger getLog() {
             return null;
         }
 
@@ -531,11 +524,7 @@ public class MailboxEventAnalyserTest {
         public SelectedMailbox getSelected() {
             return null;
         }
-        
-        public Logger getLog() {
-            return null;
-        }
-        
+
         public Object getAttribute(String key) {
             if (key.equals(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)) {
                 return mSession;

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Delete;
@@ -35,13 +36,12 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.hbase.def.HRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
+import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.system.hbase.TablePool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Optional;
 
 /**
  * Implementation of the RecipientRewriteTable for a HBase persistence.
@@ -58,7 +58,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
      * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTable#addMappingInternal(String, String, String)
      */
     @Override
-    protected void addMappingInternal(String user, String domain, String mapping) throws RecipientRewriteTableException {
+    protected void addMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
         String fixedUser = getFixedUser(user);
         String fixedDomain = getFixedDomain(domain);
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
@@ -66,7 +66,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
             Mappings updatedMappings = MappingsImpl.from(map).add(mapping).build();
             doUpdateMapping(fixedUser, fixedDomain, updatedMappings.serialize());
         } else {
-            doAddMapping(fixedUser, fixedDomain, mapping);
+            doAddMapping(fixedUser, fixedDomain, mapping.asString());
         }
     }
 
@@ -130,13 +130,13 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
                     for (KeyValue keyValue : keyValues) {
                         String email = Bytes.toString(keyValue.getRow());
                         if (map == null) {
-                            map = new HashMap<String, Mappings>();
+                            map = new HashMap<>();
                         }
                         Mappings mappings = 
                                 MappingsImpl.from(
-                                    Optional.fromNullable(
+                                    Optional.ofNullable(
                                         map.get(email))
-                                        .or(MappingsImpl.empty()))
+                                        .orElse(MappingsImpl.empty()))
                                 .add(Bytes.toString(keyValue.getRow()))
                                 .build();
                         map.put(email, mappings);
@@ -207,7 +207,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
      * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTable#removeMappingInternal(String, String, String)
      */
     @Override
-    protected void removeMappingInternal(String user, String domain, String mapping) throws
+    protected void removeMappingInternal(String user, String domain, Mapping mapping) throws
             RecipientRewriteTableException {
         String fixedUser = getFixedUser(user);
         String fixedDomain = getFixedDomain(domain);
@@ -216,7 +216,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
             Mappings updatedMappings = map.remove(mapping);
             doUpdateMapping(fixedUser, fixedDomain, updatedMappings.serialize());
         } else {
-            doRemoveMapping(fixedUser, fixedDomain, mapping);
+            doRemoveMapping(fixedUser, fixedDomain, mapping.asString());
         }
     }
 

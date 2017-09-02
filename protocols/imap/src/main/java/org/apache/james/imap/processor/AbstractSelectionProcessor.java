@@ -20,8 +20,6 @@
 package org.apache.james.imap.processor;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -56,13 +54,18 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.metrics.api.MetricFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequest> extends AbstractMailboxProcessor<M> implements PermitEnableCapabilityProcessor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSelectionProcessor.class);
 
     final StatusResponseFactory statusResponseFactory;
 
     private final boolean openReadOnly;
-    private final static List<String> CAPS = Collections.unmodifiableList(Arrays.asList(ImapConstants.SUPPORTS_QRESYNC, ImapConstants.SUPPORTS_CONDSTORE));
+    private final static List<String> CAPS = ImmutableList.of(ImapConstants.SUPPORTS_QRESYNC, ImapConstants.SUPPORTS_CONDSTORE);
 
     
     public AbstractSelectionProcessor(Class<M> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory, boolean openReadOnly,
@@ -89,10 +92,10 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
            
             
         } catch (MailboxNotFoundException e) {
-            session.getLog().debug("Select failed as mailbox does not exist " + mailboxName, e);
+            LOGGER.debug("Select failed as mailbox does not exist " + mailboxName, e);
             responder.respond(statusResponseFactory.taggedNo(tag, command, HumanReadableText.FAILURE_NO_SUCH_MAILBOX));
         } catch (MailboxException e) {
-            session.getLog().info("Select failed for mailbox " + mailboxName , e);
+            LOGGER.error("Select failed for mailbox " + mailboxName , e);
             no(command, tag, responder, HumanReadableText.SELECT);
         } 
     }
@@ -137,8 +140,8 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
         while(unseen(responder, firstUnseen, selected, ImapSessionUtils.getMailboxSession(session)) == false) {
             // if we not was able to get find the unseen within 5 retries we should just not send it
             if (retryCount == 5) {
-                if (session.getLog().isInfoEnabled()) {
-                    session.getLog().info("Unable to uid for unseen message " + firstUnseen + " in mailbox " + selected.getPath());
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info("Unable to uid for unseen message " + firstUnseen + " in mailbox " + selected.getPath());
                 }
                 break;
             }
@@ -217,7 +220,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
                     if (knownSequences != null && knownUids != null) {
                         
                         // Add all uids which are contained in the knownuidsset to a List so we can later access them via the index
-                        List<MessageUid> knownUidsList = new ArrayList<MessageUid>();
+                        List<MessageUid> knownUidsList = new ArrayList<>();
                         for (UidRange range : knownUids) {
                             for (MessageUid uid : range) {
                                 knownUidsList.add(uid);
@@ -239,8 +242,10 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
                                     MessageUid knownUid = knownUidsList.get(index);
 
                                     // Check if the uid mathc if not we are done here
-                                    if (selected.uid(msn).asSet().contains(knownUid)) {
-                                        done = true;
+                                    done = selected.uid(msn)
+                                        .filter(selectedUid -> selectedUid.equals(knownUid))
+                                        .isPresent();
+                                    if (done) {
                                         break;
                                     } else {
                                         firstUid = knownUid;
@@ -258,7 +263,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
                                 firstUid = firstUid.next();
 
                                 // Ok now its time to filter out the IdRanges which we are not interested in
-                                List<UidRange> filteredUidSet = new ArrayList<UidRange>();
+                                List<UidRange> filteredUidSet = new ArrayList<>();
                                 for (UidRange r : uidSet) {
                                     if (r.getLowVal().compareTo(firstUid) < 0) {
                                         if (r.getHighVal().compareTo(firstUid) > 0) {
@@ -277,7 +282,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
                         
                     }
                     
-                    List<MessageRange> ranges = new ArrayList<MessageRange>();
+                    List<MessageRange> ranges = new ArrayList<>();
                     for (UidRange range : uidSet) {
                         MessageRange messageSet = range.toMessageRange();
                         if (messageSet != null) {
@@ -363,8 +368,8 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
             int msn = selected.msn(unseenUid);
 
             if (msn == SelectedMailbox.NO_SUCH_MESSAGE) {
-                if (session.getLog().isDebugEnabled()) {
-                    session.getLog().debug("No message found with uid " + unseenUid + " in mailbox " + selected.getPath().getFullName(session.getPathDelimiter()));
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("No message found with uid " + unseenUid + " in mailbox " + selected.getPath().getFullName(session.getPathDelimiter()));
                 }
                 return false;
             } 

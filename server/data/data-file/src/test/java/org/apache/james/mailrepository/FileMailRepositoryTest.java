@@ -23,7 +23,6 @@ import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.file.FileMailRepository;
-import org.slf4j.LoggerFactory;
 
 public class FileMailRepositoryTest extends AbstractMailRepositoryTest {
 
@@ -38,7 +37,6 @@ public class FileMailRepositoryTest extends AbstractMailRepositoryTest {
         MockFileSystem fs = new MockFileSystem();
         FileMailRepository mr = new FileMailRepository();
         mr.setFileSystem(fs);
-        mr.setLog(LoggerFactory.getLogger("MockLog"));
         DefaultConfigurationBuilder defaultConfiguration = new DefaultConfigurationBuilder();
         defaultConfiguration.addProperty("[@destinationURL]", "file://target/var/mr");
         defaultConfiguration.addProperty("[@type]", "MAIL");

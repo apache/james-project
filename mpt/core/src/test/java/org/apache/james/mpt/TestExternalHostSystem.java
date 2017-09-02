@@ -39,8 +39,6 @@ public class TestExternalHostSystem extends MockObjectTestCase {
 
     private static final String SHABANG = "This Is The Shabang";
 
-    private static final int PORT = 10001;
-
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
 
     
@@ -57,7 +55,7 @@ public class TestExternalHostSystem extends MockObjectTestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        protocol = new DiscardProtocol(PORT);
+        protocol = new DiscardProtocol();
         protocol.start();
         record = protocol.recordNext();
         continuation = (Continuation) mock(Continuation.class).proxy();
@@ -91,7 +89,7 @@ public class TestExternalHostSystem extends MockObjectTestCase {
     }
 
     private ExternalHostSystem buildSystem(String shabang) {
-        return new ExternalHostSystem(SUPPORTED_FEATURES, "localhost", PORT ,
+        return new ExternalHostSystem(SUPPORTED_FEATURES, "localhost", protocol.getPort(),
                 new NullMonitor(), shabang, userAdder);
     }
 }

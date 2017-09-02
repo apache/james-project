@@ -20,11 +20,10 @@
 package org.apache.james.mailbox.store;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.ByteArrayInputStream;
 import java.util.Date;
 import java.util.List;
-
+import java.util.function.Predicate;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
@@ -52,8 +51,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractCombinationManagerTest {
@@ -287,9 +284,10 @@ public abstract class AbstractCombinationManagerTest {
 
         List<MessageResult> listMessages = messageIdManager.getMessages(ImmutableList.of(messageId.getMessageId()), FetchGroupImpl.MINIMAL, session);
 
-        long uid2 = FluentIterable.from(listMessages)
+        long uid2 = listMessages.stream()
             .filter(messageInMailbox2())
-            .get(0)
+            .findFirst()
+            .get()
             .getUid()
             .asLong();
 
@@ -450,10 +448,11 @@ public abstract class AbstractCombinationManagerTest {
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        List<MessageResult> listMessages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session);
-        MessageUid uid2 = FluentIterable.from(listMessages)
+        MessageUid uid2 = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session)
+            .stream()
             .filter(messageInMailbox2())
-            .get(0)
+            .findFirst()
+            .get()
             .getUid();
 
         SearchQuery searchQuery = new SearchQuery(SearchQuery.all());
@@ -474,12 +473,7 @@ public abstract class AbstractCombinationManagerTest {
     }
 
     private Predicate<MessageResult> messageInMailbox2() {
-        return new Predicate<MessageResult>() {
-            @Override
-            public boolean apply(MessageResult input) {
-                return input.getMailboxId().equals(mailbox2.getMailboxId());
-            }
-        };
+        return messageResult -> messageResult.getMailboxId().equals(mailbox2.getMailboxId());
     }
 
 }

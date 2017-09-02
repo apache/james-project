@@ -23,7 +23,6 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lmtpserver.CoreCmdHandlerLoader;
 import org.apache.james.lmtpserver.jmx.JMXHandlersLoader;
-import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
 import org.apache.james.protocols.lib.handler.HandlersPackage;
 import org.apache.james.protocols.lib.netty.AbstractProtocolAsyncServer;
 import org.apache.james.protocols.lmtp.LMTPConfiguration;
@@ -33,8 +32,11 @@ import org.apache.james.protocols.netty.LineDelimiterBasedChannelHandlerFactory;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.smtpserver.netty.SMTPChannelUpstreamHandler;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServerMBean {
+    private static final Logger LOGGER = LoggerFactory.getLogger(LMTPServer.class);
 
     /**
      * The maximum message size allowed by this SMTP server. The default value,
@@ -72,9 +74,9 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
             // by 1024, to put it in bytes
             maxMessageSize = configuration.getLong("maxmessagesize", maxMessageSize) * 1024;
             if (maxMessageSize > 0) {
-                getLogger().info("The maximum allowed message size is " + maxMessageSize + " bytes.");
+                LOGGER.info("The maximum allowed message size is " + maxMessageSize + " bytes.");
             } else {
-                getLogger().info("No maximum message size is enforced for this server.");
+                LOGGER.info("No maximum message size is enforced for this server.");
             }
 
             // get the lmtpGreeting
@@ -144,8 +146,8 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
 
     @Override
     protected ChannelUpstreamHandler createCoreHandler() {
-        SMTPProtocol protocol = new SMTPProtocol(getProtocolHandlerChain(), lmtpConfig, new ProtocolLoggerAdapter(getLogger()));
-        return new SMTPChannelUpstreamHandler(protocol, getLogger(), lmtpMetrics);
+        SMTPProtocol protocol = new SMTPProtocol(getProtocolHandlerChain(), lmtpConfig);
+        return new SMTPChannelUpstreamHandler(protocol, lmtpMetrics);
     }
 
     @Override

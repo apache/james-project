@@ -20,18 +20,16 @@
 package org.apache.james.imap.processor.base;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.guava.api.Assertions.assertThat;
-
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
-import org.junit.Before;
-import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.junit.Before;
+import org.junit.Test;
 
 public class UidMsnConverterTest {
     private UidMsnConverter testee;
@@ -42,7 +40,7 @@ public class UidMsnConverterTest {
 
     @Before
     public void setUp() {
-        testee = new UidMsnConverter(ImmutableList.<MessageUid>of().iterator());
+        testee = new UidMsnConverter();
         messageUid1 = MessageUid.of(1);
         messageUid2 = MessageUid.of(2);
         messageUid3 = MessageUid.of(3);
@@ -52,13 +50,13 @@ public class UidMsnConverterTest {
     @Test
     public void getUidShouldReturnEmptyIfNoMessageWithTheGivenMessageNumber() {
         assertThat(testee.getUid(1))
-            .isAbsent();
+            .isEmpty();
     }
 
     @Test
     public void getUidShouldReturnEmptyIfZero() {
         assertThat(testee.getUid(0))
-            .isAbsent();
+            .isEmpty();
     }
 
     @Test
@@ -71,12 +69,12 @@ public class UidMsnConverterTest {
 
     @Test
     public void getFirstUidShouldReturnEmptyIfNoMessage() {
-        assertThat(testee.getFirstUid()).isAbsent();
+        assertThat(testee.getFirstUid()).isEmpty();
     }
 
     @Test
     public void getLastUidShouldReturnEmptyIfNoMessage() {
-        assertThat(testee.getLastUid()).isAbsent();
+        assertThat(testee.getLastUid()).isEmpty();
     }
 
     @Test
@@ -99,7 +97,7 @@ public class UidMsnConverterTest {
     public void getMsnShouldReturnAbsentIfNoCorrespondingMessage() {
         testee.addUid(messageUid1);
 
-        assertThat(testee.getMsn(messageUid2)).isAbsent();
+        assertThat(testee.getMsn(messageUid2)).isEmpty();
     }
 
     @Test
@@ -178,7 +176,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void removeShouldKeepAValidMappingWhenDeletingBeginning() {
+    public void removeShouldKeepAMonoticMSNToUIDConversionMappingWhenDeletingBeginning() {
         testee.addUid(messageUid1);
         testee.addUid(messageUid2);
         testee.addUid(messageUid3);
@@ -194,7 +192,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void removeShouldKeepAValidMappingWhenDeletingEnd() {
+    public void removeShouldKeepAMonoticMSNToUIDConversionMappingWhenDeletingEnd() {
         testee.addUid(messageUid1);
         testee.addUid(messageUid2);
         testee.addUid(messageUid3);
@@ -210,7 +208,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void removeShouldKeepAValidMappingWhenDeletingMiddle() {
+    public void removeShouldKeepAMonoticMSNToUIDConversionMappingWhenDeletingMiddle() {
         testee.addUid(messageUid1);
         testee.addUid(messageUid2);
         testee.addUid(messageUid3);
@@ -233,7 +231,7 @@ public class UidMsnConverterTest {
         testee.addUid(messageUid4);
 
         assertThat(mapTesteeInternalDataToMsnByUid().entrySet())
-            .containsOnlyElementsOf(ImmutableMap.of(
+            .containsExactlyElementsOf(ImmutableMap.of(
                 1, messageUid1,
                 2, messageUid2,
                 3, messageUid3,
@@ -241,14 +239,14 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void addUidShouldLeadToValidConversionWhenInsertInFirstPosition() {
+    public void addUidShouldLeadToMonoticMSNToUIDConversionWhenInsertInFirstPosition() {
         testee.addUid(messageUid2);
         testee.addUid(messageUid3);
         testee.addUid(messageUid4);
         testee.addUid(messageUid1);
 
         assertThat(mapTesteeInternalDataToMsnByUid().entrySet())
-            .containsOnlyElementsOf(ImmutableMap.of(
+            .containsExactlyElementsOf(ImmutableMap.of(
                 1, messageUid1,
                 2, messageUid2,
                 3, messageUid3,
@@ -256,15 +254,99 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void constructorWithOutOfOrderIteratorShouldLeadToValidConversion() {
-        testee = new UidMsnConverter(ImmutableList.of(messageUid2,
+    public void addAllShouldLeadToMonoticMSNToUIDConversion() {
+        testee.addAll(ImmutableList.of(
+            messageUid1,
+            messageUid2,
             messageUid3,
-            messageUid4,
-            messageUid1)
-            .iterator());
+            messageUid4));
 
         assertThat(mapTesteeInternalDataToMsnByUid().entrySet())
-            .containsOnlyElementsOf(ImmutableMap.of(
+            .containsExactlyElementsOf(ImmutableMap.of(
+                1, messageUid1,
+                2, messageUid2,
+                3, messageUid3,
+                4, messageUid4).entrySet());
+    }
+
+    @Test
+    public void addAllShouldRemoveDuplicates() {
+        testee.addAll(ImmutableList.of(
+            messageUid1,
+            messageUid2,
+            messageUid2,
+            messageUid3,
+            messageUid4));
+
+        assertThat(mapTesteeInternalDataToMsnByUid().entrySet())
+            .containsExactlyElementsOf(ImmutableMap.of(
+                1, messageUid1,
+                2, messageUid2,
+                3, messageUid3,
+                4, messageUid4).entrySet());
+    }
+
+    @Test
+    public void addAllShouldDeduplicateElements() {
+        testee.addUid(messageUid1);
+
+        testee.addAll(ImmutableList.of(
+            messageUid1,
+            messageUid2,
+            messageUid3,
+            messageUid4));
+
+        assertThat(mapTesteeInternalDataToMsnByUid().entrySet())
+            .containsExactlyElementsOf(ImmutableMap.of(
+                1, messageUid1,
+                2, messageUid2,
+                3, messageUid3,
+                4, messageUid4).entrySet());
+    }
+
+    @Test
+    public void addAllShouldMergeWithPreviousData() {
+        testee.addUid(messageUid1);
+
+        testee.addAll(ImmutableList.of(messageUid2,
+            messageUid3,
+            messageUid4));
+
+        assertThat(mapTesteeInternalDataToMsnByUid().entrySet())
+            .containsExactlyElementsOf(ImmutableMap.of(
+                1, messageUid1,
+                2, messageUid2,
+                3, messageUid3,
+                4, messageUid4).entrySet());
+    }
+
+    @Test
+    public void addAllShouldMergeAndDeduplicatePreviousData() {
+        testee.addUid(messageUid1);
+        testee.addUid(messageUid3);
+
+        testee.addAll(ImmutableList.of(messageUid2,
+            messageUid3,
+            messageUid4));
+
+        assertThat(mapTesteeInternalDataToMsnByUid().entrySet())
+            .containsExactlyElementsOf(ImmutableMap.of(
+                1, messageUid1,
+                2, messageUid2,
+                3, messageUid3,
+                4, messageUid4).entrySet());
+    }
+
+    @Test
+    public void addAllWithOutOfOrderIteratorShouldLeadToMonoticMSNToUIDConversion() {
+        testee.addAll(ImmutableList.of(
+            messageUid2,
+            messageUid3,
+            messageUid4,
+            messageUid1));
+
+        assertThat(mapTesteeInternalDataToMsnByUid().entrySet())
+            .containsExactlyElementsOf(ImmutableMap.of(
                 1, messageUid1,
                 2, messageUid2,
                 3, messageUid3,
@@ -281,7 +363,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void addAndRemoveShouldLeadToValidConversionWhenMixed() throws Exception {
+    public void addAndRemoveShouldLeadToMonoticMSNToUIDConversionWhenMixed() throws Exception {
         final int initialCount = 1000;
         for (int i = 1; i <= initialCount; i++) {
             testee.addUid(MessageUid.of(i));
@@ -289,14 +371,11 @@ public class UidMsnConverterTest {
 
         int threadCount = 2;
         ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, initialCount,
-            new ConcurrentTestRunner.BiConsumer() {
-                @Override
-                public void consume(int threadNumber, int step) throws Exception {
-                    if (threadNumber == 0) {
-                        testee.remove(MessageUid.of(step + 1));
-                    } else {
-                        testee.addUid(MessageUid.of(initialCount + step + 1));
-                    }
+            (threadNumber, step) -> {
+                if (threadNumber == 0) {
+                    testee.remove(MessageUid.of(step + 1));
+                } else {
+                    testee.addUid(MessageUid.of(initialCount + step + 1));
                 }
             });
         concurrentTestRunner.run();
@@ -307,21 +386,16 @@ public class UidMsnConverterTest {
             resultBuilder.put(i, MessageUid.of(initialCount + i));
         }
         assertThat(mapTesteeInternalDataToMsnByUid().entrySet())
-            .containsOnlyElementsOf(resultBuilder.build().entrySet());
+            .containsExactlyElementsOf(resultBuilder.build().entrySet());
     }
 
     @Test
-    public void addShouldLeadToValidConversionWhenConcurrent() throws Exception {
+    public void addShouldLeadToMonoticMSNToUIDConversionWhenConcurrent() throws Exception {
         final int operationCount = 1000;
         int threadCount = 2;
 
         ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            new ConcurrentTestRunner.BiConsumer() {
-                @Override
-                public void consume(int threadNumber, int step) throws Exception {
-                    testee.addUid(MessageUid.of((threadNumber * operationCount) + (step + 1)));
-                }
-            });
+            (threadNumber, step) -> testee.addUid(MessageUid.of((threadNumber * operationCount) + (step + 1))));
         concurrentTestRunner.run();
         concurrentTestRunner.awaitTermination(10, TimeUnit.SECONDS);
 
@@ -330,11 +404,11 @@ public class UidMsnConverterTest {
             resultBuilder.put(i, MessageUid.of(i));
         }
         assertThat(mapTesteeInternalDataToMsnByUid().entrySet())
-            .containsOnlyElementsOf(resultBuilder.build().entrySet());
+            .containsExactlyElementsOf(resultBuilder.build().entrySet());
     }
 
     @Test
-    public void removeShouldLeadToValidConversionWhenConcurrent() throws Exception {
+    public void removeShouldLeadToMonoticMSNToUIDConversionWhenConcurrent() throws Exception {
         final int operationCount = 1000;
         int threadCount = 2;
         for (int i = 1; i <= operationCount * (threadCount + 1); i++) {
@@ -342,12 +416,7 @@ public class UidMsnConverterTest {
         }
 
         ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            new ConcurrentTestRunner.BiConsumer() {
-                @Override
-                public void consume(int threadNumber, int step) throws Exception {
-                    testee.remove(MessageUid.of((threadNumber * operationCount) + (step + 1)));
-                }
-            });
+            (threadNumber, step) -> testee.remove(MessageUid.of((threadNumber * operationCount) + (step + 1))));
         concurrentTestRunner.run();
         concurrentTestRunner.awaitTermination(10, TimeUnit.SECONDS);
 
@@ -356,7 +425,7 @@ public class UidMsnConverterTest {
             resultBuilder.put(i, MessageUid.of((threadCount * operationCount) + i));
         }
         assertThat(mapTesteeInternalDataToMsnByUid().entrySet())
-            .containsOnlyElementsOf(resultBuilder.build().entrySet());
+            .containsExactlyElementsOf(resultBuilder.build().entrySet());
     }
 
     private Map<Integer, MessageUid> mapTesteeInternalDataToMsnByUid() {

@@ -19,7 +19,6 @@
 
 package org.apache.james.mailet;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -148,13 +147,7 @@ public abstract class AbstractMailetdocsReport extends AbstractMavenReport {
         
         final List<MailetMatcherDescriptor> descriptors = buildDescriptors(this.project);
         
-        Collections.sort(descriptors, new Comparator<MailetMatcherDescriptor>() {
-
-            public int compare(MailetMatcherDescriptor one, MailetMatcherDescriptor two) {
-                return one.getName().compareTo(two.getName());
-            }
-
-        });
+        descriptors.sort(Comparator.comparing(MailetMatcherDescriptor::getName));
         logDescriptors(descriptors);
         return descriptors;
     }

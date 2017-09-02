@@ -53,7 +53,7 @@ public class ProtocolSession implements ProtocolInteractor {
 
     private int maxSessionNumber;
 
-    protected List<ProtocolElement> testElements = new ArrayList<ProtocolElement>();
+    protected List<ProtocolElement> testElements = new ArrayList<>();
 
     private Iterator<ProtocolElement> elementsIterator;
 
@@ -63,7 +63,7 @@ public class ProtocolSession implements ProtocolInteractor {
 
     private boolean continueAfterFailure = false;
 
-    private Map<String, Stopwatch> timers = new HashMap<String, Stopwatch>();
+    private Map<String, Stopwatch> timers = new HashMap<>();
 
     public final boolean isContinueAfterFailure() {
         return continueAfterFailure;
@@ -264,6 +264,7 @@ public class ProtocolSession implements ProtocolInteractor {
         }
 
         private void writeMessage(Session session) throws Exception {
+            LOGGER.debug("C: {}", message);
             session.writeLine(message);
         }
 
@@ -345,15 +346,11 @@ public class ProtocolSession implements ProtocolInteractor {
 
         protected void checkResponse(Session session, boolean continueAfterFailure) throws Exception {
             String testLine = readLine(session);
+            LOGGER.debug("S: {}", testLine);
             if (!match(expectedLine, testLine)) {
                 String errMsg = "\nLocation: " + location + "\nLastClientMsg: " + lastClientMessage + "\nExpected: '"
                         + expectedLine + "'\nActual   : '" + testLine + "'";
-                if (continueAfterFailure) {
-                    System.out.println(errMsg);
-                }
-                else {
-                    throw new InvalidServerResponseException(errMsg);
-                }
+                handleFailure(continueAfterFailure, errMsg);
             }
         }
 
@@ -397,7 +394,7 @@ public class ProtocolSession implements ProtocolInteractor {
      * non-specified order.
      */
     private class ServerUnorderedBlockResponse extends ServerResponse {
-        private List<String> expectedLines = new ArrayList<String>();
+        private List<String> expectedLines = new ArrayList<>();
 
         /**
          * Sets up a ServerUnorderedBlockResponse with the list of expected
@@ -444,7 +441,7 @@ public class ProtocolSession implements ProtocolInteractor {
          *             expected lines.
          */
         protected void checkResponse(Session session, boolean continueAfterFailure) throws Exception {
-            List<String> testLines = new ArrayList<String>(expectedLines);
+            List<String> testLines = new ArrayList<>(expectedLines);
             while (testLines.size() > 0) {
                 String actualLine = readLine(session);
 
@@ -467,12 +464,7 @@ public class ProtocolSession implements ProtocolInteractor {
                         errMsg.append(iter.next());
                     }
                     errMsg.append("\nActual: ").append(actualLine);
-                    if (continueAfterFailure) {
-                        System.out.println(errMsg.toString());
-                    }
-                    else {
-                        throw new InvalidServerResponseException(errMsg.toString());
-                    }
+                    handleFailure(continueAfterFailure, errMsg.toString());
                 }
             }
         }
@@ -493,12 +485,7 @@ public class ProtocolSession implements ProtocolInteractor {
             String testLine = session.readLine();
             if (!"+".equals(testLine) || !continued) {
                 final String message = "Expected continuation";
-                if (continueAfterFailure) {
-                    System.out.print(message);
-                }
-                else {
-                    throw new InvalidServerResponseException(message);
-                }
+                handleFailure(continueAfterFailure, message);
             }
             continuationExpected = false;
             continued = false;
@@ -510,6 +497,14 @@ public class ProtocolSession implements ProtocolInteractor {
 
         public boolean isClient() {
             return false;
+        }
+    }
+
+    private void handleFailure(boolean continueAfterFailure, String message) throws InvalidServerResponseException {
+        if (continueAfterFailure) {
+            LOGGER.warn(message);
+        } else {
+            throw new InvalidServerResponseException(message);
         }
     }
 
@@ -684,7 +679,6 @@ public class ProtocolSession implements ProtocolInteractor {
      * An exception which is thrown when the actual response from a server is
      * different from that expected.
      */
-    @SuppressWarnings("serial")
     public static class InvalidServerResponseException extends Exception {
         public InvalidServerResponseException(String message) {
             super(message);

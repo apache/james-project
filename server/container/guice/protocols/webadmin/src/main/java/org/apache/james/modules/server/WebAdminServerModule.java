@@ -86,6 +86,7 @@ public class WebAdminServerModule extends AbstractModule {
                 .tls(readHttpsConfiguration(configurationFile))
                 .enableCORS(configurationFile.getBoolean("cors.enable", DEFAULT_CORS_DISABLED))
                 .urlCORSOrigin(configurationFile.getString("cors.origin", DEFAULT_NO_CORS_ORIGIN))
+                .host(configurationFile.getString("host", WebAdminConfiguration.DEFAULT_HOST))
                 .build();
         } catch (FileNotFoundException e) {
             LOGGER.info("No webadmin.properties file. Disabling WebAdmin interface.");

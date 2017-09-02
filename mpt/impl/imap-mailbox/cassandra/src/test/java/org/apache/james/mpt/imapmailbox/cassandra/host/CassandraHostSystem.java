@@ -28,10 +28,11 @@ import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
-import org.apache.james.mailbox.cassandra.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraBlobsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAO;
@@ -45,6 +46,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraBlobModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraDeletedMessageModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
@@ -79,10 +81,9 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         Feature.USER_FLAGS_SUPPORT,
         Feature.QUOTA_SUPPORT,
         Feature.ANNOTATION_SUPPORT);
-    public static final int MAX_ACL_RETRY = 10;
 
     private final CassandraMailboxManager mailboxManager;
-    private final CassandraCluster cassandraClusterSingleton;
+    private final CassandraCluster cassandra;
     private final CassandraPerUserMaxQuotaManager perUserMaxQuotaManager;
 
     public CassandraHostSystem() throws Exception {
@@ -90,6 +91,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
             new CassandraAclModule(),
             new CassandraMailboxModule(),
             new CassandraMessageModule(),
+            new CassandraBlobModule(),
             new CassandraMailboxCounterModule(),
             new CassandraMailboxRecentsModule(),
             new CassandraFirstUnseenModule(),
@@ -101,18 +103,19 @@ public class CassandraHostSystem extends JamesImapHostSystem {
             new CassandraAttachmentModule(),
             new CassandraAnnotationModule(),
             new CassandraApplicableFlagsModule());
-        cassandraClusterSingleton = CassandraCluster.create(mailboxModule);
-        com.datastax.driver.core.Session session = cassandraClusterSingleton.getConf();
+        cassandra = CassandraCluster.create(mailboxModule);
+        com.datastax.driver.core.Session session = cassandra.getConf();
         CassandraModSeqProvider modSeqProvider = new CassandraModSeqProvider(session);
         CassandraUidProvider uidProvider = new CassandraUidProvider(session);
         CassandraTypesProvider typesProvider = new CassandraTypesProvider(mailboxModule, session);
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
-        CassandraMessageDAO messageDAO = new CassandraMessageDAO(session, typesProvider);
+        CassandraBlobsDAO cassandraBlobsDAO = new CassandraBlobsDAO(session);
+        CassandraMessageDAO messageDAO = new CassandraMessageDAO(session, typesProvider, cassandraBlobsDAO);
         CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(session, messageIdFactory);
         CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(session, messageIdFactory);
         CassandraMailboxCounterDAO mailboxCounterDAO = new CassandraMailboxCounterDAO(session);
         CassandraMailboxRecentsDAO mailboxRecentsDAO = new CassandraMailboxRecentsDAO(session);
-        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(session, typesProvider, MAX_ACL_RETRY);
+        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(session, typesProvider);
         CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(session, typesProvider);
         CassandraFirstUnseenDAO firstUnseenDAO = new CassandraFirstUnseenDAO(session);
         CassandraApplicableFlagDAO applicableFlagDAO = new CassandraApplicableFlagDAO(session);
@@ -140,13 +143,9 @@ public class CassandraHostSystem extends JamesImapHostSystem {
 
         CassandraCurrentQuotaManager currentQuotaManager = new CassandraCurrentQuotaManager(session);
 
-        StoreQuotaManager quotaManager = new StoreQuotaManager();
-        quotaManager.setMaxQuotaManager(perUserMaxQuotaManager);
-        quotaManager.setCurrentQuotaManager(currentQuotaManager);
+        StoreQuotaManager quotaManager = new StoreQuotaManager(currentQuotaManager, perUserMaxQuotaManager);
 
-        ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater();
-        quotaUpdater.setCurrentQuotaManager(currentQuotaManager);
-        quotaUpdater.setQuotaRootResolver(quotaRootResolver);
+        ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver);
 
         mailboxManager.setQuotaRootResolver(quotaRootResolver);
         mailboxManager.setQuotaManager(quotaManager);
@@ -159,12 +158,18 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
                 new DefaultImapEncoderFactory().buildImapEncoder(),
                 DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager, subscriptionManager, quotaManager, quotaRootResolver, new DefaultMetricFactory()));
-        cassandraClusterSingleton.ensureAllTables();
+        cassandra.ensureAllTables();
     }
 
     @Override
+    public void afterTest() throws Exception {
+        super.afterTest();
+        cassandra.close();
+    }
+    
+    @Override
     protected void resetData() throws Exception {
-        cassandraClusterSingleton.clearAllTables();
+        cassandra.clearAllTables();
     }
 
     @Override

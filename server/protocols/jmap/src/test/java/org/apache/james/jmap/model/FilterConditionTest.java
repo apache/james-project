@@ -23,14 +23,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.ZonedDateTime;
 import java.util.Optional;
+import java.util.Set;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
+import org.junit.rules.ExpectedException;
 
 public class FilterConditionTest {
+
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
 
     @Test
     public void buildShouldWorkWhenNoInMailboxes() {
@@ -89,9 +96,13 @@ public class FilterConditionTest {
         String subject = "subject";
         String body = "body";
         Header header = Header.from(ImmutableList.of("name", "value"));
-        FilterCondition expectedFilterCondition = new FilterCondition(Optional.of(ImmutableList.of("1")), Optional.of(ImmutableList.of("2")), Optional.of(before), Optional.of(after), Optional.of(minSize), Optional.of(maxSize), 
+        Optional<String> hasKeyword = Optional.of("$Draft");
+        Optional<String> notKeyword = Optional.of("$Flagged");
+
+        FilterCondition expectedFilterCondition = new FilterCondition(Optional.of(ImmutableList.of("1")), Optional.of(ImmutableList.of("2")), Optional.of(before), Optional.of(after), Optional.of(minSize), Optional.of(maxSize),
                 Optional.of(isFlagged), Optional.of(isUnread), Optional.of(isAnswered), Optional.of(isDraft), Optional.of(hasAttachment), Optional.of(text), Optional.of(from), 
-                Optional.of(to), Optional.of(cc), Optional.of(bcc), Optional.of(subject), Optional.of(body), Optional.of(header));
+                Optional.of(to), Optional.of(cc), Optional.of(bcc), Optional.of(subject), Optional.of(body), Optional.of(header),
+                hasKeyword, notKeyword);
 
         FilterCondition filterCondition = FilterCondition.builder()
                 .inMailboxes(Optional.of(ImmutableList.of("1")))
@@ -113,6 +124,8 @@ public class FilterConditionTest {
                 .subject(subject)
                 .body(body)
                 .header(header)
+                .hasKeyword(hasKeyword)
+                .notKeyword(notKeyword)
                 .build();
 
         assertThat(filterCondition).isEqualToComparingFieldByField(expectedFilterCondition);
@@ -121,5 +134,65 @@ public class FilterConditionTest {
     @Test
     public void shouldRespectJavaBeanContract() {
         EqualsVerifier.forClass(FilterCondition.class).verify();
+    }
+
+    @Test
+    public void buildShouldBuildFilterConditionWithHasKeywordWhenGivenHasKeyword() {
+        String hasKeyword = "$Draft";
+
+        FilterCondition filterCondition = FilterCondition.builder()
+            .hasKeyword(Optional.of(hasKeyword))
+            .build();
+
+        assertThat(filterCondition.getHasKeyword().get())
+            .isEqualTo(hasKeyword);
+    }
+
+    @Test
+    public void buildShouldBuildFilterConditionWithoutHasKeywordWhenDoNotGivenHasKeyword() {
+        FilterCondition filterCondition = FilterCondition.builder()
+            .hasKeyword(Optional.empty())
+            .build();
+
+        assertThat(filterCondition.getHasKeyword().isPresent())
+            .isFalse();
+    }
+
+    @Test
+    public void buildShouldThrowWhenGivenInvalidKeywordAsHasKeyword() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        FilterCondition.builder()
+            .hasKeyword(Optional.of("$Draft%"))
+            .build();
+    }
+
+    @Test
+    public void buildShouldBuildFilterConditionWithNotKeywordWhenGivenNotKeyword() {
+        String notKeyword = "$Draft";
+
+        FilterCondition filterCondition = FilterCondition.builder()
+            .notKeyword(Optional.of(notKeyword))
+            .build();
+        assertThat(filterCondition.getNotKeyword().get()).isEqualTo(notKeyword);
+    }
+
+    @Test
+    public void buildShouldBuildFilterConditionWithoutNotKeywordWhenDoNotGivenNotKeyword() {
+        FilterCondition filterCondition = FilterCondition.builder()
+            .notKeyword(Optional.empty())
+            .build();
+
+        assertThat(filterCondition.getNotKeyword().isPresent())
+            .isFalse();
+    }
+
+    @Test
+    public void buildShouldThrowWhenGivenInvalidKeywordAsNotKeyword() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        FilterCondition.builder()
+            .notKeyword(Optional.of("$Draft%"))
+            .build();
     }
 }

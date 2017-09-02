@@ -34,11 +34,14 @@ import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Handler which reject invalid recipients
  */
 public class ValidRcptHandler extends AbstractValidRcptHandler implements ProtocolHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ValidRcptHandler.class);
 
     private UsersRepository users;
 
@@ -105,7 +108,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
             } else {
 
                 if (useVut) {
-                    session.getLogger().debug("Unknown user " + username + " check if its an alias");
+                    LOGGER.debug("Unknown user " + username + " check if its an alias");
 
                     try {
                         Mappings targetString = vut.getMappings(recipient.getLocalPart(), recipient.getDomain());
@@ -116,7 +119,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
                     } catch (ErrorMappingException e) {
                         return false;
                     } catch (RecipientRewriteTableException e) {
-                        session.getLogger().info("Unable to access RecipientRewriteTable", e);
+                        LOGGER.info("Unable to access RecipientRewriteTable", e);
                         return false;
                     }
                 }
@@ -124,7 +127,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
                 return false;
             }
         } catch (UsersRepositoryException e) {
-            session.getLogger().info("Unable to access UsersRepository", e);
+            LOGGER.info("Unable to access UsersRepository", e);
             return false;
 
         }
@@ -140,7 +143,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
         try {
             return domains.containsDomain(domain);
         } catch (DomainListException e) {
-            session.getLogger().error("Unable to get domains", e);
+            LOGGER.error("Unable to get domains", e);
             return false;
         }
     }

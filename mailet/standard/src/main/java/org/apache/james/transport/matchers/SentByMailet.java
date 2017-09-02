@@ -17,8 +17,6 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
 package org.apache.james.transport.matchers;
 
 import java.util.Collection;
@@ -28,6 +26,15 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
 
+/**
+ * This matcher matches email sent automatically by mailets.
+ *
+ * <pre><code>
+ * &lt;mailet match=&quot;SentByMailetAny&quot; class=&quot;&lt;any-class&gt;&quot;/&gt;
+ * </code></pre>
+ *
+ * This matcher allows you, for instance, to enable/disable routing automatically generated emails out of your server.
+ */
 public class SentByMailet extends GenericMatcher {
 
     public Collection<MailAddress> match(Mail mail) {

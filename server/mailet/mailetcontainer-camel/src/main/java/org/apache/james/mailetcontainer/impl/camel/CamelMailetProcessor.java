@@ -42,6 +42,7 @@ import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.Matcher;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -50,6 +51,7 @@ import com.google.common.collect.ImmutableList;
  * the {@link Matcher} / {@link Mailet} routing
  */
 public class CamelMailetProcessor extends AbstractStateMailetProcessor implements CamelContextAware {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CamelMailetProcessor.class);
 
     private CamelContext context;
 
@@ -149,11 +151,10 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
             Processor stateChangedProcessor = new StateChangedProcessor();
 
             String state = getState();
-            Logger logger = getLogger();
 
             RouteDefinition processorDef = from(getEndpoint()).routeId(state).setExchangePattern(ExchangePattern.InOnly)
             // store the logger in properties
-                    .setProperty(MatcherSplitter.LOGGER_PROPERTY, constant(getLogger()))
+                    .setProperty(MatcherSplitter.LOGGER_PROPERTY, constant(LOGGER))
                     .setProperty(MatcherSplitter.METRIC_FACTORY, constant(metricFactory));
 
             for (MatcherMailetPair pair : pairs) {
@@ -167,7 +168,7 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
                     onMatchException = ((MailetConfigImpl) mailetConfig).getInitAttribute("onMatchException");
                 }
 
-                CamelProcessor mailetProccessor = new CamelProcessor(metricFactory, mailet, logger, CamelMailetProcessor.this);
+                CamelProcessor mailetProccessor = new CamelProcessor(metricFactory, mailet, CamelMailetProcessor.this);
                 // Store the matcher to use for splitter in properties
                 processorDef.setProperty(MatcherSplitter.MATCHER_PROPERTY, constant(matcher)).setProperty(MatcherSplitter.ON_MATCH_EXCEPTION_PROPERTY, constant(onMatchException)).setProperty(MatcherSplitter.MAILETCONTAINER_PROPERTY, constant(CamelMailetProcessor.this))
 
@@ -181,7 +182,7 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
                         .choice().when(new MailStateNotEquals(state)).process(stateChangedProcessor).process(completeProcessor).stop().end();
             }
 
-            Processor terminatingMailetProcessor = new CamelProcessor(metricFactory, new TerminatingMailet(), getLogger(), CamelMailetProcessor.this);
+            Processor terminatingMailetProcessor = new CamelProcessor(metricFactory, new TerminatingMailet(), CamelMailetProcessor.this);
 
             processorDef
             // start choice
@@ -211,7 +212,7 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
         private final class CompleteProcessor implements Processor {
 
             public void process(Exchange ex) throws Exception {
-                getLogger().debug("End of mailetprocessor for state " + getState() + " reached");
+                LOGGER.debug("End of mailetprocessor for state " + getState() + " reached");
                 ex.setProperty(Exchange.ROUTE_STOP, true);
             }
         }

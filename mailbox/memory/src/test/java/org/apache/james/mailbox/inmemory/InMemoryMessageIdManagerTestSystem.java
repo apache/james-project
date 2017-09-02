@@ -20,7 +20,7 @@ package org.apache.james.mailbox.inmemory;
 
 import java.io.ByteArrayInputStream;
 import java.util.Date;
-
+import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxManager;
@@ -37,16 +37,15 @@ import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
+import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
 
 public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSystem {
 
     private static final MessageId FIRST_MESSAGE_ID = InMemoryMessageId.of(1);
     private static final long ONE_HUNDRED = 100;
     private static final int UID_VALIDITY = 1024;
+    public static final byte[] CONTENT = "Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8);
 
     private final MailboxManager mailboxManager;
     private Optional<MessageId> lastMessageIdUsed;
@@ -54,7 +53,7 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
     public InMemoryMessageIdManagerTestSystem(MailboxManager mailboxManager) {
         super(new InMemoryMessageIdManager(mailboxManager));
         this.mailboxManager = mailboxManager;
-        this.lastMessageIdUsed = Optional.absent();
+        this.lastMessageIdUsed = Optional.empty();
     }
 
     @Override
@@ -68,7 +67,7 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
     public MessageId persist(MailboxId mailboxId, MessageUid uid, Flags flags, MailboxSession session) {
         try {
             MessageManager messageManager = mailboxManager.getMailbox(mailboxId, session);
-            MessageId messageId = messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), session, false, flags)
+            MessageId messageId = messageManager.appendMessage(new ByteArrayInputStream(CONTENT), new Date(), session, false, flags)
                     .getMessageId();
             lastMessageIdUsed = Optional.of(messageId);
             return messageId;
@@ -79,7 +78,7 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
 
     @Override
     public MessageId createNotUsedMessageId() {
-        return InMemoryMessageId.of(Long.valueOf(lastMessageIdUsed.or(FIRST_MESSAGE_ID).serialize()) + ONE_HUNDRED);
+        return InMemoryMessageId.of(Long.valueOf(lastMessageIdUsed.orElse(FIRST_MESSAGE_ID).serialize()) + ONE_HUNDRED);
     }
 
     @Override
@@ -96,15 +95,10 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
 
     private Optional<MailboxMetaData> retrieveMailbox(final MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
         MailboxQuery userMailboxesQuery = MailboxQuery.builder(mailboxSession).expression("*").build();
-        return FluentIterable.from(mailboxManager.search(userMailboxesQuery, mailboxSession))
-            .filter(new Predicate<MailboxMetaData>() {
-
-                @Override
-                public boolean apply(MailboxMetaData mailboxMetaData) {
-                    return mailboxMetaData.getId().equals(mailboxId);
-                }
-            })
-            .first();
+        return mailboxManager.search(userMailboxesQuery, mailboxSession)
+            .stream()
+            .filter(mailboxMetaData -> mailboxMetaData.getId().equals(mailboxId))
+            .findFirst();
     }
 
     @Override
@@ -112,4 +106,8 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
 
     }
 
+    @Override
+    public int getConstantMessageSize() {
+        return CONTENT.length;
+    }
 }

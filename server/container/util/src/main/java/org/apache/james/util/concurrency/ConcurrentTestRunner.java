@@ -75,7 +75,7 @@ public class ConcurrentTestRunner {
     private final CountDownLatch countDownLatch;
     private final BiConsumer biConsumer;
     private final ExecutorService executorService;
-    private final List<Future> futures;
+    private final List<Future<?>> futures;
 
     public ConcurrentTestRunner(int threadCount, int operationCount, BiConsumer biConsumer) {
         Preconditions.checkArgument(threadCount > 0, "Thread count should be strictly positive");
@@ -86,7 +86,7 @@ public class ConcurrentTestRunner {
         this.countDownLatch = new CountDownLatch(threadCount);
         this.biConsumer = biConsumer;
         this.executorService = Executors.newFixedThreadPool(threadCount);
-        this.futures = new ArrayList<Future>();
+        this.futures = new ArrayList<>();
     }
 
     public ConcurrentTestRunner run() {
@@ -97,7 +97,7 @@ public class ConcurrentTestRunner {
     }
 
     public ConcurrentTestRunner assertNoException() throws ExecutionException, InterruptedException {
-        for (Future future: futures) {
+        for (Future<?> future: futures) {
             future.get();
         }
         return this;

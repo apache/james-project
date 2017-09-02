@@ -18,6 +18,15 @@
  ****************************************************************/
 package org.apache.james.modules.data;
 
+import java.util.List;
+
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.rrt.api.RecipientRewriteTable;
+import org.apache.james.rrt.jpa.JPARecipientRewriteTable;
+import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.ConfigurationProvider;
+
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
@@ -25,20 +34,8 @@ import com.google.inject.Inject;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.rrt.api.RecipientRewriteTable;
-import org.apache.james.rrt.jpa.JPARecipientRewriteTable;
-import org.apache.james.utils.ConfigurationPerformer;
-import org.apache.james.utils.ConfigurationProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 public class JPARecipientRewriteTableModule extends AbstractModule {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(RecipientRewriteTable.class);
 
     @Override
     public void configure() {
@@ -62,7 +59,6 @@ public class JPARecipientRewriteTableModule extends AbstractModule {
         @Override
         public void initModule() {
             try {
-                recipientRewriteTable.setLog(LOGGER);
                 recipientRewriteTable.configure(configurationProvider.getConfiguration("recipientrewritetable"));
             } catch (ConfigurationException e) {
                 Throwables.propagate(e);

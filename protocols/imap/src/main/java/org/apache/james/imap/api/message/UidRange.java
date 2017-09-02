@@ -22,16 +22,24 @@ package org.apache.james.imap.api.message;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MessageRange;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
 import com.google.common.collect.TreeRangeSet;
 
 public final class UidRange implements Iterable<MessageUid> {
+    public static String toString(UidRange[] ranges) {
+        return Optional.ofNullable(ranges)
+            .map(ImmutableList::copyOf)
+            .toString();
+    }
 
     public static List<UidRange> mergeRanges(List<UidRange> ranges) {
         if (ranges.isEmpty()) {
@@ -52,7 +60,7 @@ public final class UidRange implements Iterable<MessageUid> {
     }
 
     private static LinkedList<Range<MessageUid>> mergeContiguousRanges(RangeSet<MessageUid> rangeSet) {
-        LinkedList<Range<MessageUid>> mergedRanges = new LinkedList<Range<MessageUid>>();
+        LinkedList<Range<MessageUid>> mergedRanges = new LinkedList<>();
         
         for (Range<MessageUid> range: rangeSet.asRanges()) {
             Range<MessageUid> previous = mergedRanges.peekLast();
@@ -80,11 +88,9 @@ public final class UidRange implements Iterable<MessageUid> {
 
 
     private static LinkedList<UidRange> toUidRanges(List<Range<MessageUid>> mergedRanges) {
-        LinkedList<UidRange> result = new LinkedList<UidRange>();
-        for (Range<MessageUid> range: mergedRanges) {
-            result.add(new UidRange(range.lowerEndpoint(), range.upperEndpoint()));
-        }
-        return result;
+        return mergedRanges.stream()
+            .map(range -> new UidRange(range.lowerEndpoint(), range.upperEndpoint()))
+            .collect(Collectors.toCollection(LinkedList::new));
     }
     
     private final MessageRange range;

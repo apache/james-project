@@ -37,7 +37,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.slf4j.LoggerFactory;
 
 /**
  * Test basic behaviors of UsersFileRepository
@@ -90,7 +89,6 @@ public class UsersFileRepositoryTest extends AbstractUsersRepositoryTest {
         UsersFileRepository res = new UsersFileRepository();
 
         res.setFileSystem(fs);
-        res.setLog(LoggerFactory.getLogger("MockLog"));
         res.configure(configuration);
         res.init();
         return res;

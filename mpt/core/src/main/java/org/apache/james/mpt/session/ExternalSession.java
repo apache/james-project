@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.NotImplementedException;
@@ -130,13 +129,10 @@ public final class ExternalSession implements Session {
         Awaitility
             .waitAtMost(Duration.ONE_MINUTE)
             .pollDelay(new Duration(10, TimeUnit.MILLISECONDS))
-            .until(new Callable<Boolean>() {
-                @Override
-                public Boolean call() throws Exception {
-                    int read = socket.read(readBuffer);
-                    status.setValue(read);
-                    return read != 0;
-                }
+            .until(() -> {
+                int read = socket.read(readBuffer);
+                status.setValue(read);
+                return read != 0;
             });
         if (status.intValue() == -1) {
             monitor.debug("Error reading, got -1");

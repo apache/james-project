@@ -105,6 +105,7 @@ public class HBaseMailboxManager extends StoreMailboxManager {
             getQuotaRootResolver(),
             getMessageParser(),
             getMessageIdFactory(),
-            getBatchSizes());
+            getBatchSizes(),
+            getImmutableMailboxMessageFactory());
     }
 }

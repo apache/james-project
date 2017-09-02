@@ -32,7 +32,7 @@ import com.google.inject.TypeLiteral;
  */
 public class PreDestroyModule extends LifeCycleStageModule {
 
-    private final DisposingStager<PreDestroy> stager = new DefaultStager<PreDestroy>(PreDestroy.class, DefaultStager.Order.FIRST_IN_LAST_OUT);
+    private final DisposingStager<PreDestroy> stager = new DefaultStager<>(PreDestroy.class, DefaultStager.Order.FIRST_IN_LAST_OUT);
 
     @Override
     protected void configureBindings() {

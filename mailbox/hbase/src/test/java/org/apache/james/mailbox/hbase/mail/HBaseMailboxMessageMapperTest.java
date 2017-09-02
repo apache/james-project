@@ -70,9 +70,9 @@ public class HBaseMailboxMessageMapperTest {
     private static HBaseUidProvider uidProvider;
     private static HBaseModSeqProvider modSeqProvider;
     private static HBaseMessageMapper messageMapper;
-    private static final List<MailboxPath> MBOX_PATHS = new ArrayList<MailboxPath>();
-    private static final List<Mailbox> MBOXES = new ArrayList<Mailbox>();
-    private static final List<MailboxMessage> MESSAGE_NO = new ArrayList<MailboxMessage>();
+    private static final List<MailboxPath> MBOX_PATHS = new ArrayList<>();
+    private static final List<Mailbox> MBOXES = new ArrayList<>();
+    private static final List<MailboxMessage> MESSAGE_NO = new ArrayList<>();
     private static final int COUNT = 5;
     private static Configuration conf;
     private DefaultMessageId.Factory messageIdFactory;

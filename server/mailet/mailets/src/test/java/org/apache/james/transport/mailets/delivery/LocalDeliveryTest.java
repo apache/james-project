@@ -77,7 +77,7 @@ public class LocalDeliveryTest {
         MailboxSession session = mock(MailboxSession.class);
         when(session.getPathDelimiter()).thenReturn('.');
         try {
-            when(mailboxManager.createSystemSession(any(String.class), any(Logger.class))).thenReturn(session);
+            when(mailboxManager.createSystemSession(any(String.class))).thenReturn(session);
         } catch (MailboxException e) {
             throw Throwables.propagate(e);
         }

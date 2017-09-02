@@ -20,35 +20,23 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>apache-james-mpt</artifactId>
         <groupId>org.apache.james</groupId>
-        <version>3.0.0-RC2-SNAPSHOT</version>
+        <artifactId>apache-james-mpt</artifactId>
+        <version>3.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>apache-james-mpt-core</artifactId>
     <name>Apache James MPT Core</name>
-    <description>
-      Apache James Mail Protocol Tester (MPT) is a library providing a framework for the 
-      scriptable functional testing of ASCII based line protocols.
-    </description>
+    <description>Apache James Mail Protocol Tester (MPT) is a library providing a framework for the 
+      scriptable functional testing of ASCII based line protocols.</description>
     <url>http://james.apache.org/mpt/main</url>
     <dependencies>
         <dependency>
-            <groupId>org.apache.james.protocols</groupId>
-            <artifactId>protocols-imap</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james.protocols</groupId>
-            <artifactId>protocols-imap</artifactId>
-            <type>test-jar</type>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-store</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -56,7 +44,6 @@
         <dependency>
             <groupId>com.jayway.awaitility</groupId>
             <artifactId>awaitility</artifactId>
-            <version>1.6.5</version>
         </dependency>
         <dependency>
             <groupId>com.sun.mail</groupId>
@@ -85,9 +72,18 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.james.protocols</groupId>
+            <artifactId>protocols-imap</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james.protocols</groupId>
+            <artifactId>protocols-imap</artifactId>
+            <type>test-jar</type>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>${assertj-1.version}</version><!--$NO-MVN-MAN-VER$-->
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -126,15 +122,6 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>bundle-manifest</id>
-                        <phase>process-classes</phase>
-                        <goals>
-                            <goal>manifest</goal>
-                        </goals>
-                    </execution>
-                </executions>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -142,6 +129,15 @@
                         <Embed-Dependency>*;scope=runtime</Embed-Dependency>
                     </instructions>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>bundle-manifest</id>
+                        <goals>
+                            <goal>manifest</goal>
+                        </goals>
+                        <phase>process-classes</phase>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -149,11 +145,11 @@
                 <executions>
                     <execution>
                         <id>create-javadocs</id>
-                        <phase>package</phase>
                         <goals>
                             <goal>javadoc</goal>
                             <goal>jar</goal>
                         </goals>
+                        <phase>package</phase>
                     </execution>
                 </executions>
             </plugin>
@@ -161,7 +157,7 @@
     </build>
 
     <profiles>
-       <profile>
+        <profile>
             <id>doclint-java8-disable</id>
             <activation>
                 <jdk>[1.8,)</jdk>

@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.IntStream;
 
 /**
  * <p>
@@ -110,12 +111,12 @@ public class BayesianAnalyzer {
     /**
      * Map of ham tokens and their occurrences.
      */
-    private Map<String, Integer> hamTokenCounts = new HashMap<String, Integer>();
+    private Map<String, Integer> hamTokenCounts = new HashMap<>();
 
     /**
      * Map of spam tokens and their occurrences.
      */
-    private Map<String, Integer> spamTokenCounts = new HashMap<String, Integer>();
+    private Map<String, Integer> spamTokenCounts = new HashMap<>();
 
     /**
      * Number of ham messages analyzed.
@@ -130,7 +131,7 @@ public class BayesianAnalyzer {
     /**
      * Final token/probability corpus.
      */
-    private Map<String, Double> corpus = new HashMap<String, Double>();
+    private Map<String, Double> corpus = new HashMap<>();
 
     /**
      * Inner class for managing Token Probability Strengths during the
@@ -294,10 +295,10 @@ public class BayesianAnalyzer {
      */
     public void buildCorpus() {
         // Combine the known ham & spam tokens.
-        Set<String> set = new HashSet<String>(hamTokenCounts.size() + spamTokenCounts.size());
+        Set<String> set = new HashSet<>(hamTokenCounts.size() + spamTokenCounts.size());
         set.addAll(hamTokenCounts.keySet());
         set.addAll(spamTokenCounts.keySet());
-        Map<String, Double> tempCorpus = new HashMap<String, Double>(set.size());
+        Map<String, Double> tempCorpus = new HashMap<>(set.size());
 
         // Iterate through all the tokens and compute their new
         // individual probabilities.
@@ -407,7 +408,7 @@ public class BayesianAnalyzer {
      * @return Set
      */
     private Set<String> parse(Reader stream) throws java.io.IOException {
-        Set<String> tokens = new HashSet<String>();
+        Set<String> tokens = new HashSet<>();
         String token;
         String header = "";
 
@@ -572,7 +573,7 @@ public class BayesianAnalyzer {
      */
     private SortedSet<TokenProbabilityStrength> getTokenProbabilityStrengths(Set<String> tokens, Map<String, Double> workCorpus) {
         // Convert to a SortedSet of token probability strengths.
-        SortedSet<TokenProbabilityStrength> tokenProbabilityStrengths = new TreeSet<TokenProbabilityStrength>();
+        SortedSet<TokenProbabilityStrength> tokenProbabilityStrengths = new TreeSet<>();
 
         for (String token : tokens) {
             TokenProbabilityStrength tps = new TokenProbabilityStrength();
@@ -620,7 +621,7 @@ public class BayesianAnalyzer {
     }
 
     private Collection<String> buildDegenerated(String fullToken) {
-        ArrayList<String> tokens = new ArrayList<String>();
+        ArrayList<String> tokens = new ArrayList<>();
         String header;
         String token;
         String tokenLower;
@@ -707,11 +708,7 @@ public class BayesianAnalyzer {
     }
 
     private boolean allDigits(String s) {
-        for (int i = 0; i < s.length(); i++) {
-            if (!Character.isDigit(s.charAt(i))) {
-                return false;
-            }
-        }
-        return true;
+        return IntStream.range(0, s.length())
+            .allMatch(i -> Character.isDigit(s.charAt(i)));
     }
 }

@@ -48,7 +48,7 @@ import org.apache.james.protocols.smtp.core.log.HookResultLogger;
  */
 public class CoreCmdHandlerLoader implements HandlersPackage {
 
-    private final List<String> commands = new LinkedList<String>();
+    private final List<String> commands = new LinkedList<>();
 
     public CoreCmdHandlerLoader() {
         // Insert the base commands in the Map

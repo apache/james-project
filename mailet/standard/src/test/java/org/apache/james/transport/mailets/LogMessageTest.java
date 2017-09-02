@@ -20,8 +20,8 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -64,7 +64,7 @@ public class LogMessageTest {
         mailContext = FakeMailContext.builder()
                 .logger(logger)
                 .build();
-        mailet = new LogMessage();
+        mailet = new LogMessage(logger);
     }
 
     @Test

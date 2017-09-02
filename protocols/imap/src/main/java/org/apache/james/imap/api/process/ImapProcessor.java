@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.api.process;
 
+import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 
@@ -43,6 +44,8 @@ public interface ImapProcessor {
      * @param session the imap session
      */
     void process(ImapMessage message, Responder responder, ImapSession session);
+
+    void configure(ImapConfiguration imapConfiguration);
 
     /**
      * Response message sink.

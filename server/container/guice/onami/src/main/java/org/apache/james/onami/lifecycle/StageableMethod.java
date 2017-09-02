@@ -52,12 +52,9 @@ final class StageableMethod extends AbstractBasicStageable<Object> {
     @Override
     public final void stage(StageHandler stageHandler) {
         try {
-            AccessController.doPrivileged(new PrivilegedAction<Void>() {
-                @Override
-                public Void run() {
-                    stageMethod.setAccessible(true);
-                    return null;
-                }
+            AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
+                stageMethod.setAccessible(true);
+                return null;
             });
             stageMethod.invoke(object);
         } catch (InvocationTargetException e) {

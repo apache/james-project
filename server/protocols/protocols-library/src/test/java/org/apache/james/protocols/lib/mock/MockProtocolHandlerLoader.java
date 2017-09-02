@@ -37,8 +37,8 @@ public class MockProtocolHandlerLoader implements ProtocolHandlerLoader{
         }
     }
 
-    private final Map<String, Object> servicesByName = new HashMap<String, Object>();
-    private final Map<Class<?>, Object> servicesByType = new HashMap<Class<?>, Object>();
+    private final Map<String, Object> servicesByName = new HashMap<>();
+    private final Map<Class<?>, Object> servicesByType = new HashMap<>();
     
     public Object get(String name) {
         return servicesByName.get(name);
@@ -53,7 +53,7 @@ public class MockProtocolHandlerLoader implements ProtocolHandlerLoader{
         servicesByType.put(serviceType, instance);
     }
 
-    private final List<Object> loaderRegistry = new ArrayList<Object>();
+    private final List<Object> loaderRegistry = new ArrayList<>();
 
     protected ProtocolHandler create(String className) throws InstantiationException, IllegalAccessException, ClassNotFoundException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
         try {
@@ -71,9 +71,7 @@ public class MockProtocolHandlerLoader implements ProtocolHandlerLoader{
         for (Object aLoaderRegistry : loaderRegistry) {
             try {
                 preDestroy(aLoaderRegistry);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
+            } catch (IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
             }
         }
@@ -131,11 +129,7 @@ public class MockProtocolHandlerLoader implements ProtocolHandlerLoader{
                     try {
                         Object[] args = { service };
                         method.invoke(resource, args);
-                    } catch (IllegalAccessException e) {
-                        throw new RuntimeException("Injection failed for object " + resource + " on method " + method + " with resource " + service, e);
-                    } catch (IllegalArgumentException e) {
-                        throw new RuntimeException("Injection failed for object " + resource + " on method " + method + " with resource " + service, e);
-                    } catch (InvocationTargetException e) {
+                    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
                         throw new RuntimeException("Injection failed for object " + resource + " on method " + method + " with resource " + service, e);
                     }
                 } else {

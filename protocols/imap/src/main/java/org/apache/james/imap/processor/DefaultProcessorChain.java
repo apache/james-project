@@ -19,10 +19,6 @@
 
 package org.apache.james.imap.processor;
 
-import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.MailboxTyper;
@@ -41,12 +37,12 @@ public class DefaultProcessorChain {
     public static ImapProcessor createDefaultChain(ImapProcessor chainEndProcessor,
                   final MailboxManager mailboxManager, SubscriptionManager subscriptionManager,
                   final StatusResponseFactory statusResponseFactory, MailboxTyper mailboxTyper, QuotaManager quotaManager,
-                  final QuotaRootResolver quotaRootResolver, long idleKeepAlive, TimeUnit milliseconds, Set<String> disabledCaps,
+                  final QuotaRootResolver quotaRootResolver,
                   MetricFactory metricFactory) {
         final SystemMessageProcessor systemProcessor = new SystemMessageProcessor(chainEndProcessor, mailboxManager);
         final LogoutProcessor logoutProcessor = new LogoutProcessor(systemProcessor, mailboxManager, statusResponseFactory, metricFactory);
 
-        final CapabilityProcessor capabilityProcessor = new CapabilityProcessor(logoutProcessor, mailboxManager, statusResponseFactory, disabledCaps, metricFactory);
+        final CapabilityProcessor capabilityProcessor = new CapabilityProcessor(logoutProcessor, mailboxManager, statusResponseFactory, metricFactory);
         final CheckProcessor checkProcessor = new CheckProcessor(capabilityProcessor, mailboxManager, statusResponseFactory, metricFactory);
         final LoginProcessor loginProcessor = new LoginProcessor(checkProcessor, mailboxManager, statusResponseFactory, metricFactory);
         // so it can announce the LOGINDISABLED if needed
@@ -81,13 +77,7 @@ public class DefaultProcessorChain {
         final AppendProcessor appendProcessor = new AppendProcessor(examineProcessor, mailboxManager, statusResponseFactory, metricFactory);
         final StoreProcessor storeProcessor = new StoreProcessor(appendProcessor, mailboxManager, statusResponseFactory, metricFactory);
         final NoopProcessor noopProcessor = new NoopProcessor(storeProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final IdleProcessor idleProcessor;
-        if (idleKeepAlive > 0) {
-            idleProcessor = new IdleProcessor(noopProcessor, mailboxManager, statusResponseFactory, idleKeepAlive, milliseconds, Executors.newScheduledThreadPool(IdleProcessor.DEFAULT_SCHEDULED_POOL_CORE_SIZE), metricFactory);
-        } else {
-            // We don't want to send keep alives so now scheduled executur needed
-            idleProcessor = new IdleProcessor(noopProcessor, mailboxManager, statusResponseFactory, idleKeepAlive, milliseconds, null, metricFactory);
-        }
+        final IdleProcessor idleProcessor = new IdleProcessor(noopProcessor, mailboxManager, statusResponseFactory, metricFactory);
         final StatusProcessor statusProcessor = new StatusProcessor(idleProcessor, mailboxManager, statusResponseFactory, metricFactory);
         final LSubProcessor lsubProcessor = new LSubProcessor(statusProcessor, mailboxManager, subscriptionManager, statusResponseFactory, metricFactory);
         final XListProcessor xlistProcessor = new XListProcessor(lsubProcessor, mailboxManager, statusResponseFactory, mailboxTyper, metricFactory);
@@ -114,7 +104,7 @@ public class DefaultProcessorChain {
         final ListRightsProcessor listRightsProcessor = new ListRightsProcessor(deleteACLProcessor, mailboxManager, statusResponseFactory, metricFactory);
         final MyRightsProcessor myRightsProcessor = new MyRightsProcessor(listRightsProcessor, mailboxManager, statusResponseFactory, metricFactory);
         
-        final EnableProcessor enableProcessor = new EnableProcessor(myRightsProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        final EnableProcessor enableProcessor = new EnableProcessor(myRightsProcessor, mailboxManager, statusResponseFactory, metricFactory, capabilityProcessor);
 
         final GetQuotaProcessor getQuotaProcessor = new GetQuotaProcessor(enableProcessor, mailboxManager, statusResponseFactory, quotaManager, quotaRootResolver, metricFactory);
         final SetQuotaProcessor setQuotaProcessor = new SetQuotaProcessor(getQuotaProcessor, mailboxManager, statusResponseFactory, metricFactory);

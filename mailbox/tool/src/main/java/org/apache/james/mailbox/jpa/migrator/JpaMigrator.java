@@ -26,12 +26,16 @@ import javax.persistence.Persistence;
 
 import org.apache.james.mailbox.jpa.migrator.command.JpaMigrateCommand;
 import org.apache.james.mailbox.jpa.migrator.exception.JpaMigrateException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The class that will manage the migration commands for the James JPA database.
  * All SQL commands should be moved from JAVA code to a separate file.
  */
 public class JpaMigrator {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JpaMigrator.class);
     
     /**
      * The package name where all commands reside.
@@ -44,30 +48,25 @@ public class JpaMigrator {
      * You can also invoke with many JIRA at once. They will be all serially executed.</p>
      * 
      * TODO Extract the SQL in JAVA classes to XML file.
-     * TODO Log with slf4j.
      * 
      * @param jiras the JIRAs numbers
      * @throws JpaMigrateException 
      */
     public static void main(String[] jiras) throws JpaMigrateException {
-        
+
         try {
-            
             EntityManagerFactory factory = Persistence.createEntityManagerFactory("JamesMigrator");
             EntityManager em = factory.createEntityManager();
 
             for (String jira: jiras) {
                 JpaMigrateCommand jiraJpaMigratable = (JpaMigrateCommand) Class.forName(JPA_MIGRATION_COMMAND_PACKAGE + "." + jira.toUpperCase(Locale.US) + JpaMigrateCommand.class.getSimpleName()).newInstance();
-                System.out.println("Now executing " + jira + " migration.");
+                LOGGER.info("Now executing {} migration", jira);
                 em.getTransaction().begin();
                 jiraJpaMigratable.migrate(em);
                 em.getTransaction().commit();
-                System.out.println(jira + " migration is successfully achieved.");
+                LOGGER.info("{} migration is successfully achieved", jira);
             }
-            
-        }
-        
-        catch (Throwable t) {
+        } catch (Throwable t) {
             throw new JpaMigrateException(t);
         }
         

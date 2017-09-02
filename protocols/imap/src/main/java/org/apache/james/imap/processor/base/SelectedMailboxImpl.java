@@ -24,9 +24,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
-
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
@@ -42,15 +42,18 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Default implementation of {@link SelectedMailbox}
  */
 public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
+    private static final Logger LOGGER = LoggerFactory.getLogger(SelectedMailboxImpl.class);
 
-    private final Set<MessageUid> recentUids = new TreeSet<MessageUid>();
+    private final Set<MessageUid> recentUids = new TreeSet<>();
 
     private boolean recentUidRemoved = false;
 
@@ -61,9 +64,9 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
     private final ImapSession session;
 
     private final long sessionId;
-    private final Set<MessageUid> flagUpdateUids = new TreeSet<MessageUid>();
+    private final Set<MessageUid> flagUpdateUids = new TreeSet<>();
     private final Flags.Flag uninterestingFlag = Flags.Flag.RECENT;
-    private final Set<MessageUid> expungedUids = new TreeSet<MessageUid>();
+    private final Set<MessageUid> expungedUids = new TreeSet<>();
     private final UidMsnConverter uidMsnConverter;
 
     private boolean isDeletedByOtherSession = false;
@@ -84,17 +87,14 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
 
         MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
 
+        uidMsnConverter = new UidMsnConverter();
+
         mailboxManager.addListener(path, this, mailboxSession);
 
         MessageManager messageManager = mailboxManager.getMailbox(path, mailboxSession);
         applicableFlags = messageManager.getApplicableFlags(mailboxSession);
-        uidMsnConverter = getUidMsnConverter(mailboxSession, messageManager);
-    }
-    
-    private UidMsnConverter getUidMsnConverter(MailboxSession mailboxSession , MessageManager messageManager) throws MailboxException {
-        return new UidMsnConverter(
-                messageManager.search(
-                        new SearchQuery(SearchQuery.all()), mailboxSession));
+        uidMsnConverter.addAll(ImmutableList.copyOf(
+            messageManager.search(new SearchQuery(SearchQuery.all()), mailboxSession)));
     }
 
     @Override
@@ -123,9 +123,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
         try {
             mailboxManager.removeListener(path, this, mailboxSession);
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Unable to remove listener " + this + " from mailbox while closing it", e);
-            }
+            LOGGER.error("Unable to remove listener " + this + " from mailbox while closing it", e);
         }
         
         uidMsnConverter.clear();
@@ -152,7 +150,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
     @Override
     public synchronized Collection<MessageUid> getRecent() {
         checkExpungedRecents();
-        return new ArrayList<MessageUid>(recentUids);
+        return new ArrayList<>(recentUids);
     }
 
     @Override
@@ -279,7 +277,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
         // copy the TreeSet to fix possible
         // java.util.ConcurrentModificationException
         // See IMAP-278
-        return Collections.unmodifiableSet(new TreeSet<MessageUid>(flagUpdateUids));
+        return Collections.unmodifiableSet(new TreeSet<>(flagUpdateUids));
         
     }
 
@@ -288,7 +286,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
         // copy the TreeSet to fix possible
         // java.util.ConcurrentModificationException
         // See IMAP-278
-        return Collections.unmodifiableSet(new TreeSet<MessageUid>(expungedUids));
+        return Collections.unmodifiableSet(new TreeSet<>(expungedUids));
         
     }
 
@@ -394,13 +392,13 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
 
     @Override
     public synchronized int msn(MessageUid uid) {
-        return uidMsnConverter.getMsn(uid).or(NO_SUCH_MESSAGE);
+        return uidMsnConverter.getMsn(uid).orElse(NO_SUCH_MESSAGE);
     }
 
     @Override
     public synchronized Optional<MessageUid> uid(int msn) {
         if (msn == NO_SUCH_MESSAGE) {
-            return Optional.absent();
+            return Optional.empty();
         }
 
         return uidMsnConverter.getUid(msn);

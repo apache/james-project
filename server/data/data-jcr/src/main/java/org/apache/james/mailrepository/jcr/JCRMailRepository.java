@@ -54,6 +54,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.util.Text;
@@ -63,11 +64,13 @@ import org.apache.james.mailrepository.lib.AbstractMailRepository;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Mail repository that is backed by a JCR content repository.
  */
 public class JCRMailRepository extends AbstractMailRepository implements MailRepository {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JCRMailRepository.class);
 
     private final static String MAIL_PATH = "mailrepository";
 
@@ -75,7 +78,6 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
     private SimpleCredentials creds;
     private String workspace;
 
-    private Logger logger;
 
     @Inject
     public void setRepository(Repository repository) {
@@ -117,7 +119,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
         try {
             Session session = login();
             try {
-                Collection<String> keys = new ArrayList<String>();
+                Collection<String> keys = new ArrayList<>();
                 QueryManager manager = session.getWorkspace().getQueryManager();
                 @SuppressWarnings("deprecation")
                 Query query = manager.createQuery("/jcr:root/" + MAIL_PATH + "//element(*,james:mail)", Query.XPATH);
@@ -152,9 +154,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
             } finally {
                 session.logout();
             }
-        } catch (IOException e) {
-            throw new MessagingException("Unable to retrieve message: " + key, e);
-        } catch (RepositoryException e) {
+        } catch (IOException | RepositoryException e) {
             throw new MessagingException("Unable to retrieve message: " + key, e);
         }
     }
@@ -433,7 +433,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
     private Collection<MailAddress> getRecipients(Node node) throws MessagingException, RepositoryException {
         try {
             Value[] values = node.getProperty("james:recipients").getValues();
-            Collection<MailAddress> recipients = new ArrayList<MailAddress>(values.length);
+            Collection<MailAddress> recipients = new ArrayList<>(values.length);
             for (Value value : values) {
                 recipients.add(new MailAddress(value.getString()));
             }
@@ -486,13 +486,9 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
             node = node.getProperty("jcr:content").getNode();
         }
 
-        @SuppressWarnings("deprecation")
-        InputStream stream = node.getProperty("jcr:data").getStream();
-        try {
+        try (@SuppressWarnings("deprecation") InputStream stream = node.getProperty("jcr:data").getStream()) {
             Properties properties = System.getProperties();
             return new MimeMessage(javax.mail.Session.getDefaultInstance(properties), stream);
-        } finally {
-            stream.close();
         }
     }
 
@@ -521,19 +517,15 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
 
         PipedInputStream input = new PipedInputStream();
         final PipedOutputStream output = new PipedOutputStream(input);
-        new Thread() {
-            public void run() {
-                try {
-                    message.writeTo(output);
-                } catch (Exception e) {
-                } finally {
-                    try {
-                        output.close();
-                    } catch (IOException e) {
-                    }
-                }
+        new Thread(() -> {
+            try {
+                message.writeTo(output);
+            } catch (Exception e) {
+                LOGGER.info("Exception ignored", e);
+            } finally {
+                IOUtils.closeQuietly(output);
             }
-        }.start();
+        }).start();
         node.setProperty("jcr:data", input);
     }
 
@@ -555,15 +547,11 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
             Property property = iterator.nextProperty();
             String name = Text.unescapeIllegalJcrChars(property.getName().substring("jamesattr:".length()));
             if (property.getType() == PropertyType.BINARY) {
-                @SuppressWarnings("deprecation")
-                InputStream input = property.getStream();
-                try {
+                try (@SuppressWarnings("deprecation") InputStream input = property.getStream()) {
                     ObjectInputStream stream = new ObjectInputStream(input);
                     mail.setAttribute(name, (Serializable) stream.readObject());
                 } catch (ClassNotFoundException e) {
                     throw new IOException(e.getMessage());
-                } finally {
-                    input.close();
                 }
             } else {
                 mail.setAttribute(name, property.getString());
@@ -617,9 +605,9 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
                         nodes.nextNode().remove();
                     }
                     session.save();
-                    logger.info("Mail " + key + " removed from repository");
+                    LOGGER.info("Mail {} removed from repository", key);
                 } else {
-                    logger.warn("Mail " + key + " not found");
+                    LOGGER.warn("Mail {} not found", key);
                 }
             } finally {
                 session.logout();
@@ -654,13 +642,11 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
                     setMail(node, mail);
                 }
                 session.save();
-                logger.info("Mail " + mail.getName() + " stored in repository");
+                LOGGER.info("Mail {} stored in repository", mail.getName());
             } finally {
                 session.logout();
             }
-        } catch (IOException e) {
-            throw new MessagingException("Unable to store message: " + mail.getName(), e);
-        } catch (RepositoryException e) {
+        } catch (IOException | RepositoryException e) {
             throw new MessagingException("Unable to store message: " + mail.getName(), e);
         }
     }

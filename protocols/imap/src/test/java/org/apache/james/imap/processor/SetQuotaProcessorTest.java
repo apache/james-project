@@ -19,10 +19,16 @@
 
 package org.apache.james.imap.processor;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.ImapSessionUtils;
-import org.apache.james.imap.api.message.response.StatusResponse;
+import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.SetQuotaRequest;
@@ -31,19 +37,12 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.metrics.api.NoopMetricFactory;
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 
-@RunWith(JMock.class)
 public class SetQuotaProcessorTest {
-
     private SetQuotaProcessor testee;
-    private Mockery mockery;
     private ImapSession mockedImapSession;
     private ImapProcessor.Responder mockedResponder;
     private MailboxManager mockedMailboxManager;
@@ -52,39 +51,30 @@ public class SetQuotaProcessorTest {
     @Before
     public void setUp() {
         mailboxSession = new MockMailboxSession("plop");
-        mockery = new JUnit4Mockery();
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
-        mockedImapSession = mockery.mock(ImapSession.class);
-        mockedResponder = mockery.mock(ImapProcessor.Responder.class);
-        mockedMailboxManager = mockery.mock(MailboxManager.class);
-        testee = new SetQuotaProcessor(mockery.mock(ImapProcessor.class), mockedMailboxManager,
+        mockedImapSession = mock(ImapSession.class);
+        mockedResponder = mock(ImapProcessor.Responder.class);
+        mockedMailboxManager = mock(MailboxManager.class);
+        testee = new SetQuotaProcessor(mock(ImapProcessor.class), mockedMailboxManager,
             statusResponseFactory, new NoopMetricFactory());
     }
 
     @Test
     public void processorShouldWorkOnNoRights() throws Exception {
         SetQuotaRequest setQuotaRequest = new SetQuotaRequest("A004", ImapCommand.anyStateCommand("Name"), "quotaRoot");
-        Expectations expectations = new Expectations();
 
-        expectations.allowing(mockedImapSession).getState();
-        expectations.will(Expectations.returnValue(ImapSessionState.AUTHENTICATED));
-
-        expectations.allowing(mockedImapSession).getAttribute(expectations.with(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY));
-        expectations.will(Expectations.returnValue(mailboxSession));
-
-        expectations.allowing(mockedMailboxManager).startProcessingRequest(expectations.with(mailboxSession));
-
-        expectations.allowing(mockedMailboxManager).endProcessingRequest(expectations.with(mailboxSession));
-
-        mockery.checking(expectations);
-
-        mockery.checking(new Expectations() {
-            {
-                oneOf(mockedResponder).respond(with(new StatusResponseTypeMatcher(StatusResponse.Type.NO)));
-            }
-        });
+        when(mockedImapSession.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
+        when(mockedImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY))
+            .thenReturn(mailboxSession);
 
         testee.doProcess(setQuotaRequest, mockedResponder, mockedImapSession);
+
+        ArgumentCaptor<ImapResponseMessage> imapResponseMessageArgumentCaptor = ArgumentCaptor.forClass(ImapResponseMessage.class);
+        verify(mockedResponder).respond(imapResponseMessageArgumentCaptor.capture());
+        assertThat(imapResponseMessageArgumentCaptor.getAllValues())
+            .hasSize(1)
+            .allMatch(StatusResponseTypeMatcher.NO_RESPONSE_MATCHER::matches);
+        verifyNoMoreInteractions(mockedResponder);
     }
 
 }

@@ -27,6 +27,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthenticator;
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthorizator;
+import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.decode.main.ImapRequestStreamHandler;
@@ -41,7 +42,6 @@ import org.apache.james.mpt.helper.ByteBufferInputStream;
 import org.apache.james.mpt.helper.ByteBufferOutputStream;
 import org.apache.james.mpt.session.ImapSessionImpl;
 import org.apache.james.user.memory.MemoryUsersRepository;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 
@@ -58,7 +58,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem {
 
     public JamesImapHostSystem() {
         super();
-        users = new HashSet<User>();
+        users = new HashSet<>();
         memoryUsersRepository = MemoryUsersRepository.withoutVirtualHosting();
         try {
             memoryUsersRepository.configure(userRepositoryConfiguration());
@@ -115,7 +115,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem {
             out = new ByteBufferOutputStream(continuation);
             in = new ByteBufferInputStream();
             handler = new ImapRequestStreamHandler(decoder, processor, encoder);
-            session = new ImapSessionImpl(LoggerFactory.getLogger("sessionLog"));
+            session = new ImapSessionImpl();
         }
 
         public String readLine() throws Exception {
@@ -132,7 +132,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem {
         }
 
         public void restart() throws Exception {
-            session = new ImapSessionImpl(LoggerFactory.getLogger("sessionLog"));
+            session = new ImapSessionImpl();
         }
 
         public void stop() throws Exception {
@@ -159,5 +159,8 @@ public abstract class JamesImapHostSystem implements ImapHostSystem {
         configuration.addProperty("administratorId", "imapuser");
         return configuration;
     }
-    
+
+    public void configure(ImapConfiguration imapConfiguration) {
+        processor.configure(imapConfiguration);
+    }
 }

@@ -27,6 +27,8 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.MessagingImapCommandParser;
 import org.apache.james.protocols.imap.DecodingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -34,6 +36,8 @@ import org.apache.james.protocols.imap.DecodingException;
  * </p>
  */
 public abstract class AbstractImapCommandParser implements MessagingImapCommandParser {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractImapCommandParser.class);
 
     private final ImapCommand command;
 
@@ -79,8 +83,8 @@ public abstract class AbstractImapCommandParser implements MessagingImapCommandP
 
                 result = decode(command, request, tag, session);
             } catch (DecodingException e) {
-                if (session.getLog().isDebugEnabled()) {
-                    session.getLog().debug("Cannot parse protocol ", e);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Cannot parse protocol ", e);
                 }
                 result = statusResponseFactory.taggedBad(tag, command, e.getKey());
             }

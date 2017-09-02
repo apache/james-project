@@ -20,9 +20,9 @@ package org.apache.james.rrt.cassandra;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
-import org.slf4j.LoggerFactory;
 
 import cucumber.api.java.After;
 import cucumber.api.java.Before;
@@ -47,12 +47,11 @@ public class CassandraStepdefs {
     @After
     public void tearDown() {
         cassandra.clearAllTables();
+        cassandra.close();
     }
 
     private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
-        CassandraRecipientRewriteTable rrt = new CassandraRecipientRewriteTable();
-        rrt.setSession(cassandra.getConf());
-        rrt.setLog(LoggerFactory.getLogger("MockLog"));
+        CassandraRecipientRewriteTable rrt = new CassandraRecipientRewriteTable(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
         rrt.configure(new DefaultConfigurationBuilder());
         return rrt;
     }

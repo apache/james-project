@@ -84,7 +84,7 @@ public class POP3Response extends AbstractResponse {
      * @return all responseLines
      */
     public List<CharSequence> getLines() {
-        List<CharSequence> responseList = new ArrayList<CharSequence>();
+        List<CharSequence> responseList = new ArrayList<>();
         if (lines.isEmpty()) {
             responseList.add(getRetCode());
         } else {

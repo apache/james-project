@@ -44,11 +44,12 @@ public class CassandraMailboxPathRegisterMapper implements DistantMailboxPathReg
     private final Session session;
     private final CassandraTypesProvider typesProvider;
     private final int cassandraTimeOutInS;
+    private final CassandraUtils cassandraUtils;
     private final PreparedStatement insertStatement;
     private final PreparedStatement deleteStatement;
     private final PreparedStatement selectStatement;
 
-    public CassandraMailboxPathRegisterMapper(Session session, CassandraTypesProvider typesProvider, int cassandraTimeOutInS) {
+    public CassandraMailboxPathRegisterMapper(Session session, CassandraTypesProvider typesProvider, CassandraUtils cassandraUtils, int cassandraTimeOutInS) {
         this.session = session;
         this.typesProvider = typesProvider;
         this.cassandraTimeOutInS = cassandraTimeOutInS;
@@ -61,11 +62,12 @@ public class CassandraMailboxPathRegisterMapper implements DistantMailboxPathReg
             .and(eq(CassandraMailboxPathRegisterTable.TOPIC, bindMarker())));
         this.selectStatement = session.prepare(select().from(CassandraMailboxPathRegisterTable.TABLE_NAME)
             .where(eq(CassandraMailboxPathRegisterTable.MAILBOX_PATH, bindMarker())));
+        this.cassandraUtils = cassandraUtils;
     }
 
     @Override
     public Set<Topic> getTopics(MailboxPath mailboxPath) {
-        return CassandraUtils.convertToStream(session.execute(selectStatement.bind(buildUDTFromMailboxPath(mailboxPath))))
+        return cassandraUtils.convertToStream(session.execute(selectStatement.bind(buildUDTFromMailboxPath(mailboxPath))))
             .map(row -> new Topic(row.getString(CassandraMailboxPathRegisterTable.TOPIC)))
             .collect(Collectors.toSet());
     }

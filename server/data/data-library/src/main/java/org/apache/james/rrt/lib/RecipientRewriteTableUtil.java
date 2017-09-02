@@ -64,18 +64,11 @@ public class RecipientRewriteTableUtil {
         if (msgPos < identifierLength + 1)
             throw new PatternSyntaxException("Regex should be formatted as regex:<regular-expression>:<parameterized-string>", targetString, 0);
 
-        // log("regex: targetString = " + targetString);
-        // log("regex: msgPos = " + msgPos);
-        // log("regex: compile " + targetString.substring("regex:".length(),
-        // msgPos));
-        // log("regex: address = " + address.toString());
-        // log("regex: replace = " + targetString.substring(msgPos + 1));
-
         Pattern pattern = Pattern.compile(targetString.substring(identifierLength, msgPos));
         Matcher match = pattern.matcher(address.toString());
 
         if (match.matches()) {
-            Map<String, String> parameters = new HashMap<String, String>(match.groupCount());
+            Map<String, String> parameters = new HashMap<>(match.groupCount());
             for (int i = 1; i < match.groupCount(); i++) {
                 parameters.put(Integer.toString(i), match.group(i));
             }
@@ -196,7 +189,7 @@ public class RecipientRewriteTableUtil {
      * @return Map which contains the mappings
      */
     public static Map<String, String> getXMLMappings(String mapping) {
-        Map<String, String> mappings = new HashMap<String, String>();
+        Map<String, String> mappings = new HashMap<>();
         StringTokenizer tokenizer = new StringTokenizer(mapping, ",");
         while (tokenizer.hasMoreTokens()) {
             String mappingItem = tokenizer.nextToken();

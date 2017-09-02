@@ -49,7 +49,7 @@ public abstract class GenericRecipientMatcher extends GenericMatcher {
      * @return Collection the Collection of MailAddress objects that have been matched
      */
     public final Collection<MailAddress> match(Mail mail) throws MessagingException {
-        Collection<MailAddress> matching = new ArrayList<MailAddress>();
+        Collection<MailAddress> matching = new ArrayList<>();
         for (MailAddress recipient : mail.getRecipients()) {
             if (matchRecipient(recipient)) {
                 matching.add(recipient);

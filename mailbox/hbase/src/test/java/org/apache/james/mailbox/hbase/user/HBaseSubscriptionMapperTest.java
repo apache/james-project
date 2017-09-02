@@ -18,6 +18,22 @@
  ****************************************************************/
 package org.apache.james.mailbox.hbase.user;
 
+import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOXES;
+import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOXES_TABLE;
+import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOX_CF;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGES;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGES_META_CF;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGES_TABLE;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGE_DATA_BODY_CF;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGE_DATA_HEADERS_CF;
+import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS;
+import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS_TABLE;
+import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTION_CF;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,15 +49,9 @@ import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.hbase.HBaseClusterSingleton;
 import org.apache.james.mailbox.hbase.HBaseMailboxSessionMapperFactory;
 import org.apache.james.mailbox.model.MessageId;
-
-import static org.apache.james.mailbox.hbase.HBaseNames.*;
-
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.user.model.Subscription;
 import org.apache.james.mailbox.store.user.model.impl.SimpleSubscription;
-
-import static org.junit.Assert.*;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -90,10 +100,10 @@ public class HBaseSubscriptionMapperTest {
         LOG.info("Creating subscription list");
         SimpleSubscription subscription;
         String user, mailbox;
-        subscriptionList = new HashMap<String, List<SimpleSubscription>>();
+        subscriptionList = new HashMap<>();
         for (int i = 0; i < USERS; i++) {
             user = "user" + i;
-            final List<SimpleSubscription> mailboxes = new ArrayList<SimpleSubscription>();
+            final List<SimpleSubscription> mailboxes = new ArrayList<>();
             subscriptionList.put(user, mailboxes);
 
             for (int j = 0; j < MAILBOX_NO; j++) {

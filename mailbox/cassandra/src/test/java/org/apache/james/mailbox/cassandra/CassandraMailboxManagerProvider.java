@@ -24,7 +24,9 @@ import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraBlobsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
@@ -48,7 +50,6 @@ import com.google.common.base.Throwables;
 public class CassandraMailboxManagerProvider {
     private static final int LIMIT_ANNOTATIONS = 3;
     private static final int LIMIT_ANNOTATION_SIZE = 30;
-    public static final int MAX_ACL_RETRY = 10;
 
     public static CassandraMailboxManager provideMailboxManager(Session session, CassandraTypesProvider cassandraTypesProvider) {
         CassandraUidProvider uidProvider = new CassandraUidProvider(session);
@@ -56,10 +57,11 @@ public class CassandraMailboxManagerProvider {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
         CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(session, messageIdFactory);
         CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(session, messageIdFactory);
-        CassandraMessageDAO messageDAO = new CassandraMessageDAO(session, cassandraTypesProvider);
+        CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(session);
+        CassandraMessageDAO messageDAO = new CassandraMessageDAO(session, cassandraTypesProvider, blobsDAO);
         CassandraMailboxCounterDAO mailboxCounterDAO = new CassandraMailboxCounterDAO(session);
         CassandraMailboxRecentsDAO mailboxRecentsDAO = new CassandraMailboxRecentsDAO(session);
-        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(session, cassandraTypesProvider, MAX_ACL_RETRY);
+        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(session, cassandraTypesProvider);
         CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(session, cassandraTypesProvider);
         CassandraFirstUnseenDAO firstUnseenDAO = new CassandraFirstUnseenDAO(session);
         CassandraApplicableFlagDAO applicableFlagDAO = new CassandraApplicableFlagDAO(session);

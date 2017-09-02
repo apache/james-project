@@ -27,13 +27,15 @@
 
   <section name="Guice configure Apache James Server">
 
-    <p>Such configuration is only developed for Cassandra backend.</p>
+    <p>Such configuration only applies to Guice wiring.</p>
+
     <p>You are encouraged to contribute by developing a new backend guice module.
-       Have a look to the <i>james-server-cassandra-guice</i> artifact.
+       Have a look to the <i>james-server-cassandra-guice</i> artifact. This can easily be done
+      as a third party application.
     </p>
 
-    <p>We provide a sample-configuration folder with needed files to run James. 
-      You can start by copying it and modify these files according to your needs.</p>
+    <p>We provide a tested configuration for docker environment, for each Guice artifact, which can be a good base for your own configuration.
+       Have a look on <a href="https://github.com/apache/james-project/tree/master/dockerfiles/run/guice">GitHub</a>. </p>
 
     <p>You can/must configure James for the following:</p>
 
@@ -46,42 +48,42 @@
       </tr>
 
       <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/cassandra-template.properties">cassandra-template.properties</a></td>
+        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/cassandra.properties">cassandra.properties</a></td>
         <td><a href="config-cassandra.html">Cassandra Configuration</a></td>
         <td></td>
       </tr>
       <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/dnsservice-template.xml">dnsservice.xml</a></td>
+        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/dnsservice.xml">dnsservice.xml</a></td>
         <td><a href="config-dnsservice.html">DNS Service Configuration</a></td>
         <td></td>
       </tr>
       <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/elasticsearch-template.properties">elasticsearch-template.properties</a></td>
+        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/elasticsearch.properties">elasticsearch.properties</a></td>
         <td><a href="config-elasticsearch.html">ElasticSearch Configuration</a></td>
         <td></td>
       </tr>
       <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/imapserver-template.xml">imapserver.xml</a></td>
+        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/imapserver.xml">imapserver.xml</a></td>
         <td><a href="config-imap4.html">IMAP4 Configuration</a></td>
         <td></td>
       </tr>
       <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/lmtpserver-template.xml">lmtpserver.xml</a></td>
+        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/lmtpserver.xml">lmtpserver.xml</a></td>
         <td><a href="config-smtp-lmtp.html">LMTP Configuration</a></td>
         <td></td>
       </tr>
       <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/mailetcontainer-template.xml">mailetcontainer.xml</a></td>
+        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/mailetcontainer.xml">mailetcontainer.xml</a></td>
         <td><a href="config-mailetcontainer.html">Mailet Container Configuration</a></td>
         <td></td>
       </tr>
       <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/pop3server-template.xml">pop3server.xml</a></td>
+        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/pop3server.xml">pop3server.xml</a></td>
         <td><a href="config-pop3.html">POP3 Configuration</a></td>
         <td></td>
       </tr>
       <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/smtpserver-template.xml">smtpserver.xml</a></td>
+        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/smtpserver.xml">smtpserver.xml</a></td>
         <td><a href="config-smtp-lmtp.html">SMTP Configuration</a></td>
         <td></td>
       </tr>

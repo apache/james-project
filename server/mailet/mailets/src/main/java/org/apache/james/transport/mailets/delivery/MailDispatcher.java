@@ -21,8 +21,8 @@ package org.apache.james.transport.mailets.delivery;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Vector;
-
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
@@ -34,7 +34,6 @@ import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -50,7 +49,7 @@ public class MailDispatcher {
     public static class Builder {
         public static final boolean CONSUME = true;
         private MailStore mailStore;
-        private Optional<Boolean> consume = Optional.absent();
+        private Optional<Boolean> consume = Optional.empty();
         private MailetContext mailetContext;
 
         public Builder consume(boolean consume) {
@@ -71,7 +70,7 @@ public class MailDispatcher {
         public MailDispatcher build() throws MessagingException {
             Preconditions.checkNotNull(mailStore);
             Preconditions.checkNotNull(mailetContext);
-            return new MailDispatcher(mailStore, consume.or(CONSUME), mailetContext);
+            return new MailDispatcher(mailStore, consume.orElse(CONSUME), mailetContext);
         }
 
     }
@@ -116,7 +115,7 @@ public class MailDispatcher {
     }
 
     private Collection<MailAddress> deliver(Mail mail, MimeMessage message) {
-        Collection<MailAddress> errors = new Vector<MailAddress>();
+        Collection<MailAddress> errors = new Vector<>();
         for (MailAddress recipient : mail.getRecipients()) {
             try {
                 Map<String, List<String>> savedHeaders = saveHeaders(mail, recipient);
@@ -138,8 +137,8 @@ public class MailDispatcher {
         Collection<String> headersToSave = mail.getPerRecipientSpecificHeaders().getHeaderNamesForRecipient(recipient);
         for (String headerName: headersToSave) {
             List<String> values = ImmutableList.copyOf(
-                        Optional.fromNullable(mail.getMessage().getHeader(headerName))
-                            .or(NO_HEADERS));
+                        Optional.ofNullable(mail.getMessage().getHeader(headerName))
+                            .orElse(NO_HEADERS));
             backup.put(headerName, values);
         }
         return backup.build();

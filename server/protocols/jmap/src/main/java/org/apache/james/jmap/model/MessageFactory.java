@@ -21,7 +21,6 @@ package org.apache.james.jmap.model;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -31,7 +30,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 import javax.mail.Flags;
 import javax.mail.internet.SharedInputStream;
@@ -95,10 +93,7 @@ public class MessageFactory {
                 .threadId(message.getMessageId().serialize())
                 .mailboxIds(message.getMailboxIds())
                 .inReplyToMessageId(getHeader(mimeMessage, "in-reply-to"))
-                .isUnread(! message.getFlags().contains(Flags.Flag.SEEN))
-                .isFlagged(message.getFlags().contains(Flags.Flag.FLAGGED))
-                .isAnswered(message.getFlags().contains(Flags.Flag.ANSWERED))
-                .isDraft(message.getFlags().contains(Flags.Flag.DRAFT))
+                .flags(message.getFlags())
                 .subject(Strings.nullToEmpty(mimeMessage.getSubject()).trim())
                 .headers(toMap(mimeMessage.getHeader().getFields()))
                 .from(firstFromMailboxList(mimeMessage.getFrom()))
@@ -224,8 +219,8 @@ public class MessageFactory {
                     .blobId(BlobId.of(attachment.getAttachmentId().getId()))
                     .type(attachment.getAttachment().getType())
                     .size(attachment.getAttachment().getSize())
-                    .name(attachment.getName().orNull())
-                    .cid(attachment.getCid().transform(Cid::getValue).orNull())
+                    .name(attachment.getName())
+                    .cid(attachment.getCid().map(Cid::getValue))
                     .isInline(attachment.isInline())
                     .build();
     }

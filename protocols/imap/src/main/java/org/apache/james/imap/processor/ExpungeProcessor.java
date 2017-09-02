@@ -19,8 +19,7 @@
 
 package org.apache.james.imap.processor;
 
-import java.util.Arrays;
-import java.util.Collections;
+import java.io.Closeable;
 import java.util.Iterator;
 import java.util.List;
 
@@ -45,10 +44,16 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> implements CapabilityImplementingProcessor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExpungeProcessor.class);
 
-    private final static List<String> UIDPLUS = Collections.unmodifiableList(Arrays.asList("UIDPLUS"));
+    private final static List<String> UIDPLUS = ImmutableList.of("UIDPLUS");
 
     public ExpungeProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
@@ -94,14 +99,12 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
                 }
             }
         } catch (MessageRangeException e) {
-            if (session.getLog().isDebugEnabled()) {
-                session.getLog().debug("Expunge failed", e);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Expunge failed", e);
             }
             taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Expunge failed for mailbox " + session.getSelected().getPath(), e);
-            }
+            LOGGER.error("Expunge failed for mailbox " + session.getSelected().getPath(), e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }
@@ -126,5 +129,13 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
      */
     public List<String> getImplementedCapabilities(ImapSession session) {
         return UIDPLUS;
+    }
+
+    @Override
+    protected Closeable addContextToMDC(ExpungeRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "EXPUNGE")
+            .addContext("uidSet", IdRange.toString(message.getUidSet()))
+            .build();
     }
 }

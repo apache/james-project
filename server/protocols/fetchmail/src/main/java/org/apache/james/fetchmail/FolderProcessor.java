@@ -24,6 +24,9 @@ import javax.mail.Folder;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * <p>
  * Class <code>FolderProcessor</code> opens a Folder and iterates over all of
@@ -35,6 +38,8 @@ import javax.mail.internet.MimeMessage;
  * </p>
  */
 public class FolderProcessor extends ProcessorAbstract {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FolderProcessor.class);
+
     /**
      * The fetched folder
      */
@@ -70,7 +75,7 @@ public class FolderProcessor extends ProcessorAbstract {
             try {
                 open();
             } catch (MessagingException ex) {
-                getLogger().error(getFetchTaskName() + " Failed to open folder!");
+                LOGGER.error(getFetchTaskName() + " Failed to open folder!");
                 throw ex;
             }
 
@@ -89,13 +94,13 @@ public class FolderProcessor extends ProcessorAbstract {
                         catch (Exception ex) {
                             StringBuilder logMessageBuffer = new StringBuilder("Exception processing message ID: ");
                             logMessageBuffer.append(message.getMessageID());
-                            getLogger().error(logMessageBuffer.toString(), ex);
+                            LOGGER.error(logMessageBuffer.toString(), ex);
                         }
                     }
                 }
             }
         } catch (MessagingException mex) {
-            getLogger().error("A MessagingException has terminated fetching messages for this folder", mex);
+            LOGGER.error("A MessagingException has terminated fetching messages for this folder", mex);
         } finally {
             // Close the folder
             try {
@@ -110,7 +115,7 @@ public class FolderProcessor extends ProcessorAbstract {
             logMessageBuffer.append(" in folder '");
             logMessageBuffer.append(getFolder().getName());
             logMessageBuffer.append("'");
-            getLogger().info(logMessageBuffer.toString());
+            LOGGER.info(logMessageBuffer.toString());
         }
 
         // Recurse through sub-folders if required
@@ -118,7 +123,7 @@ public class FolderProcessor extends ProcessorAbstract {
             if (isRecurse())
                 recurse();
         } catch (MessagingException mex) {
-            getLogger().error("A MessagingException has terminated recursing through sub-folders", mex);
+            LOGGER.error("A MessagingException has terminated recursing through sub-folders", mex);
         }
     }
 

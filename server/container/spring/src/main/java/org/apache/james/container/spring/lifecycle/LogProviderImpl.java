@@ -31,10 +31,13 @@ import org.springframework.beans.factory.InitializingBean;
 
 /**
  * Provide a Log object for components
+ *
+ * @deprecated Prefer using SLF4J LoggingFactory to get a Logger in each class
  */
+@Deprecated
 public class LogProviderImpl implements LogProvider, InitializingBean, LogProviderManagementMBean {
 
-    private final ConcurrentHashMap<String, Logger> logMap = new ConcurrentHashMap<String, Logger>();
+    private final ConcurrentHashMap<String, Logger> logMap = new ConcurrentHashMap<>();
     private Map<String, String> logs;
     private final static String PREFIX = "james.";
 
@@ -93,7 +96,7 @@ public class LogProviderImpl implements LogProvider, InitializingBean, LogProvid
      * @see LogProviderManagementMBean#getLogLevels()
      */
     public Map<String, String> getLogLevels() {
-        TreeMap<String, String> levels = new TreeMap<String, String>();
+        TreeMap<String, String> levels = new TreeMap<>();
         for (String name : logMap.keySet()) {
             String level = getLogLevel(name);
             if (level != null)

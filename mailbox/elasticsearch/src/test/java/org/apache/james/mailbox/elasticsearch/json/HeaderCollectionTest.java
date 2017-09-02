@@ -223,6 +223,16 @@ public class HeaderCollectionTest {
     }
 
     @Test
+    public void partialYearShouldBeCompleted() {
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("Date", "Thu, 4 Jun 15 06:08:41 +0200"))
+            .build();
+
+        assertThat(DATE_TIME_FORMATTER.format(headerCollection.getSentDate().get()))
+            .isEqualTo("2015/06/04 06:08:41");
+    }
+
+    @Test
     public void nonStandardDatesShouldBeRetreived() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("Date", "Thu, 4 Jun 2015 06:08:41 +0200 (UTC)"))
@@ -255,34 +265,6 @@ public class HeaderCollectionTest {
     @Test(expected = NullPointerException.class)
     public void nullFieldShouldThrow() {
         HeaderCollection.builder().add(null).build();
-    }
-
-    @Test
-    public void sanitizeDateStringHeaderValueShouldRemoveCESTPart() {
-        assertThat(HeaderCollection.builder()
-            .sanitizeDateStringHeaderValue("Thu, 18 Jun 2015 04:09:35 +0200 (CEST)"))
-            .isEqualTo("Thu, 18 Jun 2015 04:09:35 +0200");
-    }
-
-    @Test
-    public void sanitizeDateStringHeaderValueShouldRemoveUTCPart() {
-        assertThat(HeaderCollection.builder()
-            .sanitizeDateStringHeaderValue("Thu, 18 Jun 2015 04:09:35 +0200  (UTC)  "))
-            .isEqualTo("Thu, 18 Jun 2015 04:09:35 +0200");
-    }
-
-    @Test
-    public void sanitizeDateStringHeaderValueShouldNotChangeAcceptableString() {
-        assertThat(HeaderCollection.builder()
-            .sanitizeDateStringHeaderValue("Thu, 18 Jun 2015 04:09:35 +0200"))
-            .isEqualTo("Thu, 18 Jun 2015 04:09:35 +0200");
-    }
-
-    @Test
-    public void sanitizeDateStringHeaderValueShouldNotChangeEmptyString() {
-        assertThat(HeaderCollection.builder()
-            .sanitizeDateStringHeaderValue(""))
-            .isEqualTo("");
     }
 
 }

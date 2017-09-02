@@ -18,16 +18,17 @@
  ****************************************************************/
 package org.apache.james.mailetcontainer.impl;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import static org.junit.Assert.assertEquals;
-import org.junit.Before;
-import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.junit.Before;
+import org.junit.Test;
 
 public class MailetConfigImplTest {
 
@@ -86,7 +87,7 @@ public class MailetConfigImplTest {
         assertEquals("whatever", param);
         assertEquals(" some text ", config.getInitParameter(param));
 
-        List<String> params = new ArrayList<String>();
+        List<String> params = new ArrayList<>();
         Iterator<String> iter = config.getInitParameterNames();
         while (iter.hasNext()) {
             params.add(iter.next());

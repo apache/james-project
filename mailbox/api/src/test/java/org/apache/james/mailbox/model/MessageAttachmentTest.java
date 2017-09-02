@@ -20,10 +20,9 @@
 package org.apache.james.mailbox.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import java.util.Optional;
 
 import org.junit.Test;
-
-import com.google.common.base.Optional;
 
 public class MessageAttachmentTest {
 
@@ -45,7 +44,7 @@ public class MessageAttachmentTest {
                 .bytes("content".getBytes())
                 .type("type")
                 .build();
-        MessageAttachment expectedMessageAttachment = new MessageAttachment(attachment, Optional.<String> absent(), Optional.<Cid> absent(), false);
+        MessageAttachment expectedMessageAttachment = new MessageAttachment(attachment, Optional.empty(), Optional.empty(), false);
 
         MessageAttachment messageAttachment = MessageAttachment.builder()
             .attachment(attachment)

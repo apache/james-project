@@ -34,11 +34,14 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Queue the message
  */
 public class SendMailHandler implements JamesMessageHook {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SendMailHandler.class);
 
     private MailQueue queue;
     private MailQueueFactory queueFactory;
@@ -64,7 +67,7 @@ public class SendMailHandler implements JamesMessageHook {
      */
     public HookResult onMessage(SMTPSession session, Mail mail) {
        
-        session.getLogger().debug("sending mail");
+        LOGGER.debug("sending mail");
 
         try {
             queue.enQueue(mail);
@@ -73,12 +76,12 @@ public class SendMailHandler implements JamesMessageHook {
             if (theRecipients != null) {
                 recipientString = theRecipients.toString();
             }
-            if (session.getLogger().isInfoEnabled()) {
+            if (LOGGER.isInfoEnabled()) {
                 String infoBuffer = "Successfully spooled mail " + mail.getName() + " from " + mail.getSender() + " on " + session.getRemoteAddress().getAddress().toString() + " for " + recipientString;
-                session.getLogger().info(infoBuffer.toString());
+                LOGGER.info(infoBuffer.toString());
             }
         } catch (MessagingException me) {
-            session.getLogger().error("Unknown error occurred while processing DATA.", me);
+            LOGGER.error("Unknown error occurred while processing DATA.", me);
             return new HookResult(HookReturnCode.DENYSOFT, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.UNDEFINED_STATUS) + " Error processing message.");
         }
         

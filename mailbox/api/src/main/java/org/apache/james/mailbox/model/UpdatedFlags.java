@@ -21,14 +21,13 @@ package org.apache.james.mailbox.model;
 
 import java.util.Arrays;
 import java.util.Iterator;
-
+import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 /**
@@ -46,7 +45,7 @@ public class UpdatedFlags {
         private MessageUid uid;
         private Flags oldFlags;
         private Flags newFlags;
-        private Optional<Long> modSeq = Optional.absent();
+        private Optional<Long> modSeq = Optional.empty();
 
         private Builder() {
         }

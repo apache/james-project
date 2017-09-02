@@ -21,10 +21,14 @@
 
 package org.apache.james.transport.mailets;
 
+import javax.mail.MessagingException;
+
 import org.apache.james.transport.matchers.HasHabeasWarrantMark;
 import org.apache.mailet.Experimental;
-import org.apache.mailet.base.GenericMailet ;
-import org.apache.mailet.Mail ;
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>This matcher adds the Hebeas Warrant Mark to a message.
@@ -83,8 +87,9 @@ import org.apache.mailet.Mail ;
  * </pre>
  */
 @Experimental
-public class AddHabeasWarrantMark extends GenericMailet
-{
+public class AddHabeasWarrantMark extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AddHabeasWarrantMark.class);
+
     /**
      * Called by the mailet container to allow the mailet to process to
      * a message message.
@@ -97,22 +102,18 @@ public class AddHabeasWarrantMark extends GenericMailet
      * @throws javax.mail.MessagingException - if an message or address parsing exception occurs or
      *      an exception that interferes with the mailet's normal operation
      */
-    public void service(Mail mail) throws javax.mail.MessagingException
-    {
-        try
-        {
+    public void service(Mail mail) throws MessagingException {
+        try {
             javax.mail.internet.MimeMessage message = mail.getMessage();
 
-            for(int i = 0 ; i < HasHabeasWarrantMark.warrantMark.length ; i++)
-            {
+            for(int i = 0 ; i < HasHabeasWarrantMark.warrantMark.length ; i++) {
                 message.setHeader(HasHabeasWarrantMark.warrantMark[i][0], HasHabeasWarrantMark.warrantMark[i][1]);
             }
 
             message.saveChanges();
         }
-        catch (javax.mail.MessagingException me)
-        {
-            log(me.getMessage());
+        catch (MessagingException me) {
+            LOGGER.error("Error while adding habeas", me);
         }
     }
 
@@ -121,8 +122,7 @@ public class AddHabeasWarrantMark extends GenericMailet
      *
      * @return a string describing this mailet
      */
-    public String getMailetInfo()
-    {
+    public String getMailetInfo() {
         return "Add Habeas Warrant Mark.  Must be used in accordance with a license from Habeas (see http://www.habeas.com for details).";
     }
 }

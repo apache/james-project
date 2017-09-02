@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.store.event.distributed;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -37,8 +36,6 @@ import org.apache.james.mailbox.store.publisher.Topic;
 import org.apache.james.mailbox.util.EventCollector;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 public class BroadcastDelegatingMailboxListenerTest {
 
@@ -46,9 +43,6 @@ public class BroadcastDelegatingMailboxListenerTest {
     private static final MailboxPath MAILBOX_PATH_NEW = new MailboxPath("namespace_new", "user_new", "name_new");
     private static final Topic TOPIC = new Topic("topic");
     private static final byte[] BYTES = new byte[0];
-    private static final MailboxSession mailboxSession = new MockMailboxSession("benwa");
-
-    public static final MailboxListener.Event EVENT = new MailboxListener.Event(mailboxSession, MAILBOX_PATH) {};
 
     private BroadcastDelegatingMailboxListener broadcastDelegatingMailboxListener;
     private Publisher mockedPublisher;
@@ -56,9 +50,14 @@ public class BroadcastDelegatingMailboxListenerTest {
     private EventCollector mailboxEventCollector;
     private EventCollector eachEventCollector;
     private EventCollector onceEventCollector;
+    private MailboxSession mailboxSession;
+    private MailboxListener.Event event;
 
     @Before
     public void setUp() throws Exception {
+        mailboxSession = new MockMailboxSession("benwa");
+        event = new MailboxListener.Event(mailboxSession, MAILBOX_PATH) {};
+
         mockedEventSerializer = mock(EventSerializer.class);
         mockedPublisher = mock(Publisher.class);
         MessageConsumer messageConsumer = mock(MessageConsumer.class);
@@ -70,14 +69,12 @@ public class BroadcastDelegatingMailboxListenerTest {
 
     @Test
     public void eventWithNoRegisteredListenersShouldWork() throws Exception {
-        when(mockedEventSerializer.serializeEvent(EVENT)).thenAnswer(new Answer<byte[]>() {
-            @Override
-            public byte[] answer(InvocationOnMock invocation) throws Throwable {
-                return BYTES;
-            }
-        });
-        broadcastDelegatingMailboxListener.event(EVENT);
-        verify(mockedEventSerializer).serializeEvent(EVENT);
+        when(mockedEventSerializer.serializeEvent(event))
+            .thenReturn(BYTES);
+
+        broadcastDelegatingMailboxListener.event(event);
+
+        verify(mockedEventSerializer).serializeEvent(event);
         verify(mockedPublisher).publish(TOPIC, BYTES);
         verifyNoMoreInteractions(mockedEventSerializer, mockedPublisher);
     }
@@ -85,15 +82,12 @@ public class BroadcastDelegatingMailboxListenerTest {
     @Test
     public void eventWithMailboxRegisteredListenerShouldWork() throws Exception {
         broadcastDelegatingMailboxListener.addListener(MAILBOX_PATH, mailboxEventCollector, mailboxSession);
-        when(mockedEventSerializer.serializeEvent(EVENT)).thenAnswer(new Answer<byte[]>() {
-            @Override
-            public byte[] answer(InvocationOnMock invocation) throws Throwable {
-                return BYTES;
-            }
-        });
-        broadcastDelegatingMailboxListener.event(EVENT);
+        when(mockedEventSerializer.serializeEvent(event)).thenReturn(BYTES);
+
+        broadcastDelegatingMailboxListener.event(event);
+
         assertThat(mailboxEventCollector.getEvents()).isEmpty();
-        verify(mockedEventSerializer).serializeEvent(EVENT);
+        verify(mockedEventSerializer).serializeEvent(event);
         verify(mockedPublisher).publish(TOPIC, BYTES);
         verifyNoMoreInteractions(mockedEventSerializer, mockedPublisher);
     }
@@ -101,15 +95,12 @@ public class BroadcastDelegatingMailboxListenerTest {
     @Test
     public void eventWithEachRegisteredListenerShouldWork() throws Exception {
         broadcastDelegatingMailboxListener.addGlobalListener(eachEventCollector, mailboxSession);
-        when(mockedEventSerializer.serializeEvent(EVENT)).thenAnswer(new Answer<byte[]>() {
-            @Override
-            public byte[] answer(InvocationOnMock invocation) throws Throwable {
-                return BYTES;
-            }
-        });
-        broadcastDelegatingMailboxListener.event(EVENT);
+        when(mockedEventSerializer.serializeEvent(event)).thenReturn(BYTES);
+
+        broadcastDelegatingMailboxListener.event(event);
         assertThat(eachEventCollector.getEvents()).isEmpty();
-        verify(mockedEventSerializer).serializeEvent(EVENT);
+
+        verify(mockedEventSerializer).serializeEvent(event);
         verify(mockedPublisher).publish(TOPIC, BYTES);
         verifyNoMoreInteractions(mockedEventSerializer, mockedPublisher);
     }
@@ -117,28 +108,22 @@ public class BroadcastDelegatingMailboxListenerTest {
     @Test
     public void eventWithOnceRegisteredListenerShouldWork() throws Exception {
         broadcastDelegatingMailboxListener.addGlobalListener(onceEventCollector, mailboxSession);
-        when(mockedEventSerializer.serializeEvent(EVENT)).thenAnswer(new Answer<byte[]>() {
-            @Override
-            public byte[] answer(InvocationOnMock invocation) throws Throwable {
-                return BYTES;
-            }
-        });
-        broadcastDelegatingMailboxListener.event(EVENT);
-        assertThat(onceEventCollector.getEvents()).containsOnly(EVENT);
-        verify(mockedEventSerializer).serializeEvent(EVENT);
+        when(mockedEventSerializer.serializeEvent(event)).thenReturn(BYTES);
+
+        broadcastDelegatingMailboxListener.event(event);
+
+        assertThat(onceEventCollector.getEvents()).containsOnly(event);
+        verify(mockedEventSerializer).serializeEvent(event);
         verify(mockedPublisher).publish(TOPIC, BYTES);
         verifyNoMoreInteractions(mockedEventSerializer, mockedPublisher);
     }
 
     @Test
     public void receiveSerializedEventShouldWorkWithNoRegisteredListeners() throws Exception {
-        when(mockedEventSerializer.deSerializeEvent(BYTES)).thenAnswer(new Answer<MailboxListener.Event>() {
-            @Override
-            public MailboxListener.Event answer(InvocationOnMock invocation) throws Throwable {
-                return EVENT;
-            }
-        });
+        when(mockedEventSerializer.deSerializeEvent(BYTES)).thenReturn(event);
+
         broadcastDelegatingMailboxListener.receiveSerializedEvent(BYTES);
+
         verify(mockedEventSerializer).deSerializeEvent(BYTES);
         verifyNoMoreInteractions(mockedEventSerializer, mockedPublisher);
     }
@@ -146,43 +131,34 @@ public class BroadcastDelegatingMailboxListenerTest {
     @Test
     public void receiveSerializedEventShouldWorkWithMailboxRegisteredListeners() throws Exception {
         broadcastDelegatingMailboxListener.addListener(MAILBOX_PATH, mailboxEventCollector, mailboxSession);
-        when(mockedEventSerializer.deSerializeEvent(BYTES)).thenAnswer(new Answer<MailboxListener.Event>() {
-            @Override
-            public MailboxListener.Event answer(InvocationOnMock invocation) throws Throwable {
-                return EVENT;
-            }
-        });
+        when(mockedEventSerializer.deSerializeEvent(BYTES)).thenReturn(event);
+
         broadcastDelegatingMailboxListener.receiveSerializedEvent(BYTES);
+
         verify(mockedEventSerializer).deSerializeEvent(BYTES);
         verifyNoMoreInteractions(mockedEventSerializer, mockedPublisher);
-        assertThat(mailboxEventCollector.getEvents()).containsOnly(EVENT);
+        assertThat(mailboxEventCollector.getEvents()).containsOnly(event);
     }
 
     @Test
     public void receiveSerializedEventShouldWorkWithEachRegisteredListeners() throws Exception {
         broadcastDelegatingMailboxListener.addGlobalListener(eachEventCollector, mailboxSession);
-        when(mockedEventSerializer.deSerializeEvent(BYTES)).thenAnswer(new Answer<MailboxListener.Event>() {
-            @Override
-            public MailboxListener.Event answer(InvocationOnMock invocation) throws Throwable {
-                return EVENT;
-            }
-        });
+        when(mockedEventSerializer.deSerializeEvent(BYTES)).thenReturn(event);
+
         broadcastDelegatingMailboxListener.receiveSerializedEvent(BYTES);
+
         verify(mockedEventSerializer).deSerializeEvent(BYTES);
         verifyNoMoreInteractions(mockedEventSerializer, mockedPublisher);
-        assertThat(eachEventCollector.getEvents()).containsOnly(EVENT);
+        assertThat(eachEventCollector.getEvents()).containsOnly(event);
     }
 
     @Test
     public void receiveSerializedEventShouldWorkWithOnceRegisteredListeners() throws Exception {
         broadcastDelegatingMailboxListener.addGlobalListener(onceEventCollector, mailboxSession);
-        when(mockedEventSerializer.deSerializeEvent(BYTES)).thenAnswer(new Answer<MailboxListener.Event>() {
-            @Override
-            public MailboxListener.Event answer(InvocationOnMock invocation) throws Throwable {
-                return EVENT;
-            }
-        });
+        when(mockedEventSerializer.deSerializeEvent(BYTES)).thenReturn(event);
+
         broadcastDelegatingMailboxListener.receiveSerializedEvent(BYTES);
+
         verify(mockedEventSerializer).deSerializeEvent(BYTES);
         verifyNoMoreInteractions(mockedEventSerializer, mockedPublisher);
         assertThat(onceEventCollector.getEvents()).isEmpty();
@@ -192,13 +168,10 @@ public class BroadcastDelegatingMailboxListenerTest {
     public void deletionDistantEventsShouldBeWellHandled() throws Exception {
         final MailboxListener.Event event = new MailboxListener.MailboxDeletion(mailboxSession, MAILBOX_PATH);
         broadcastDelegatingMailboxListener.addListener(MAILBOX_PATH, mailboxEventCollector, mailboxSession);
-        when(mockedEventSerializer.deSerializeEvent(BYTES)).thenAnswer(new Answer<MailboxListener.Event>() {
-            @Override
-            public MailboxListener.Event answer(InvocationOnMock invocation) throws Throwable {
-                return event;
-            }
-        });
+        when(mockedEventSerializer.deSerializeEvent(BYTES)).thenReturn(event);
+
         broadcastDelegatingMailboxListener.receiveSerializedEvent(BYTES);
+
         verify(mockedEventSerializer).deSerializeEvent(BYTES);
         verifyNoMoreInteractions(mockedEventSerializer, mockedPublisher);
         assertThat(mailboxEventCollector.getEvents()).containsOnly(event);
@@ -212,14 +185,11 @@ public class BroadcastDelegatingMailboxListenerTest {
                 return MAILBOX_PATH_NEW;
             }
         };
-        when(mockedEventSerializer.deSerializeEvent(BYTES)).thenAnswer(new Answer<MailboxListener.Event>() {
-            @Override
-            public MailboxListener.Event answer(InvocationOnMock invocation) throws Throwable {
-                return event;
-            }
-        });
+        when(mockedEventSerializer.deSerializeEvent(BYTES)).thenReturn(event);
+
         broadcastDelegatingMailboxListener.addListener(MAILBOX_PATH, mailboxEventCollector, mailboxSession);
         broadcastDelegatingMailboxListener.receiveSerializedEvent(BYTES);
+
         verify(mockedEventSerializer).deSerializeEvent(BYTES);
         verifyNoMoreInteractions(mockedEventSerializer, mockedPublisher);
         assertThat(mailboxEventCollector.getEvents()).containsOnly(event);

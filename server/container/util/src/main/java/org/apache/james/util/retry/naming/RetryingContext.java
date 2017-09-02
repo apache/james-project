@@ -30,11 +30,11 @@ import javax.naming.NameClassPair;
 import javax.naming.NameParser;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
+import javax.naming.NoInitialContextException;
 import javax.naming.ServiceUnavailableException;
 
 import org.apache.james.util.retry.api.ExceptionRetryingProxy;
 import org.apache.james.util.retry.api.RetrySchedule;
-import org.slf4j.Logger;
 
 /**
  * <code>RetryingContext</code> retries the methods defined by <code>javax.naming.Context</code>
@@ -48,12 +48,12 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
 
     static public final Class<?>[] DEFAULT_EXCEPTION_CLASSES = new Class<?>[] {
             CommunicationException.class,
-            ServiceUnavailableException.class };
+            ServiceUnavailableException.class,
+            NoInitialContextException.class };
 
     private Context _delegate = null;
     private RetrySchedule _schedule = null;
     private int _maxRetries = 0;
-    private Logger _logger = null;
 
     /**
      * Creates a new instance of RetryingContext.
@@ -72,12 +72,11 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      * 
      * @param schedule
      * @param maxRetries
-     * @param logger
      * @throws NamingException
      */
-    public RetryingContext(RetrySchedule schedule, int maxRetries, Logger logger)
+    public RetryingContext(RetrySchedule schedule, int maxRetries)
             throws NamingException {
-        this(DEFAULT_EXCEPTION_CLASSES, schedule, maxRetries, logger);
+        this(DEFAULT_EXCEPTION_CLASSES, schedule, maxRetries);
     }
 
     /**
@@ -86,17 +85,15 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      * @param exceptionClasses
      * @param schedule
      * @param maxRetries
-     * @param logger
      * @throws NamingException
      */
-    public RetryingContext(Class<?>[] exceptionClasses, RetrySchedule schedule, int maxRetries, Logger logger)
+    public RetryingContext(Class<?>[] exceptionClasses, RetrySchedule schedule, int maxRetries)
             throws NamingException {
         this();
         _schedule = schedule;
         _maxRetries = maxRetries;
-        _logger = logger;
         _delegate = (Context) new LoggingRetryHandler(exceptionClasses, this,
-                _schedule, _maxRetries,  _logger) {
+                _schedule, _maxRetries) {
 
             @Override
             public Object operation() throws Exception {
@@ -112,8 +109,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
     @Override
     public Object addToEnvironment(final String propName, final Object propVal)
             throws NamingException {
-        return new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries,
-                 _logger) {
+        return new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries
+        ) {
 
             @Override
             public Object operation() throws NamingException {
@@ -127,8 +124,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     @Override
     public void bind(final Name name, final Object obj) throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries, 
-                _logger) {
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries
+        ) {
 
             @Override
             public Object operation() throws NamingException {
@@ -143,8 +140,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     @Override
     public void bind(final String name, final Object obj) throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries, 
-                _logger) {
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries
+        ) {
 
             @Override
             public Object operation() throws NamingException {
@@ -159,8 +156,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     @Override
     public void close() throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries, 
-                _logger) {
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries
+        ) {
 
             @Override
             public Object operation() throws NamingException {
@@ -176,8 +173,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     @Override
     public Name composeName(final Name name, final Name prefix) throws NamingException {
-        return (Name) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries,
-                 _logger) {
+        return (Name) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries
+        ) {
 
             @Override
             public Object operation() throws NamingException {
@@ -191,8 +188,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     @Override
     public String composeName(final String name, final String prefix) throws NamingException {
-        return (String) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries,
-                 _logger) {
+        return (String) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries
+        ) {
 
             @Override
             public Object operation() throws NamingException {
@@ -207,7 +204,7 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
     @Override
     public Context createSubcontext(final Name name) throws NamingException {
         final Context context = getDelegate();
-        return new RetryingContext(getSchedule(), getMaxRetries(), getLogger()) {
+        return new RetryingContext(getSchedule(), getMaxRetries()) {
 
             @Override
             public Context newDelegate() throws NamingException {
@@ -222,7 +219,7 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
     @Override
     public Context createSubcontext(final String name) throws NamingException {
         final Context context = getDelegate();
-        return new RetryingContext( getSchedule(), getMaxRetries(), getLogger()) {
+        return new RetryingContext( getSchedule(), getMaxRetries()) {
 
             @Override
             public Context newDelegate() throws NamingException {
@@ -237,8 +234,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     @Override
     public void destroySubcontext(final Name name) throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries, 
-                _logger) {
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries
+        ) {
 
             @Override
             public Object operation() throws NamingException {
@@ -253,8 +250,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     @Override
     public void destroySubcontext(final String name) throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries, 
-                _logger) {
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries
+        ) {
 
             @Override
             public Object operation() throws NamingException {
@@ -270,7 +267,7 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
     @Override
     public Hashtable<?, ?> getEnvironment() throws NamingException {
         return (Hashtable<?, ?>) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this,
-                _schedule, _maxRetries,  _logger) {
+                _schedule, _maxRetries) {
 
             @Override
             public Object operation() throws NamingException {
@@ -284,8 +281,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     @Override
     public String getNameInNamespace() throws NamingException {
-        return (String) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries,
-                 _logger) {
+        return (String) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries
+        ) {
 
             @Override
             public Object operation() throws NamingException {
@@ -299,8 +296,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     @Override
     public NameParser getNameParser(final Name name) throws NamingException {
-        return (NameParser) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries,
-                 _logger) {
+        return (NameParser) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries
+        ) {
 
             @Override
             public Object operation() throws NamingException {
@@ -314,8 +311,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     @Override
     public NameParser getNameParser(final String name) throws NamingException {
-        return (NameParser) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries,
-                 _logger) {
+        return (NameParser) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries
+        ) {
 
             @Override
             public Object operation() throws NamingException {
@@ -331,7 +328,7 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
     @Override
     public NamingEnumeration<NameClassPair> list(final Name name) throws NamingException {
         return (NamingEnumeration<NameClassPair>) new LoggingRetryHandler(
-                DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries,  _logger) {
+                DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries) {
 
             @Override
             public Object operation() throws NamingException {
@@ -347,7 +344,7 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
     @Override
     public NamingEnumeration<NameClassPair> list(final String name) throws NamingException {
         return (NamingEnumeration<NameClassPair>) new LoggingRetryHandler(
-                DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries,  _logger) {
+                DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries) {
 
             @Override
             public Object operation() throws NamingException {
@@ -363,7 +360,7 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
     @Override
     public NamingEnumeration<Binding> listBindings(final Name name) throws NamingException {
         return (NamingEnumeration<Binding>) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES,
-                this, _schedule, _maxRetries,  _logger) {
+                this, _schedule, _maxRetries) {
 
             @Override
             public Object operation() throws NamingException {
@@ -379,7 +376,7 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
     @Override
     public NamingEnumeration<Binding> listBindings(final String name) throws NamingException {
         return (NamingEnumeration<Binding>) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES,
-                this, _schedule, _maxRetries,  _logger) {
+                this, _schedule, _maxRetries) {
 
             @Override
             public Object operation() throws NamingException {
@@ -393,8 +390,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     @Override
     public Object lookup(final Name name) throws NamingException {
-        return new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries,
-                 _logger) {
+        return new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries
+        ) {
 
             @Override
             public Object operation() throws NamingException {
@@ -408,8 +405,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     @Override
     public Object lookup(final String name) throws NamingException {
-        return new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries,
-                 _logger) {
+        return new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries
+        ) {
 
             @Override
             public Object operation() throws NamingException {
@@ -423,8 +420,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     @Override
     public Object lookupLink(final Name name) throws NamingException {
-        return new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries,
-                 _logger) {
+        return new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries
+        ) {
 
             @Override
             public Object operation() throws NamingException {
@@ -438,8 +435,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     @Override
     public Object lookupLink(final String name) throws NamingException {
-        return new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries,
-                 _logger) {
+        return new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries
+        ) {
 
             @Override
             public Object operation() throws NamingException {
@@ -453,8 +450,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     @Override
     public void rebind(final Name name, final Object obj) throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries, 
-                _logger) {
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries
+        ) {
 
             @Override
             public Object operation() throws NamingException {
@@ -469,8 +466,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     @Override
     public void rebind(final String name, final Object obj) throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries, 
-                _logger) {
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries
+        ) {
 
             @Override
             public Object operation() throws NamingException {
@@ -485,8 +482,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     @Override
     public Object removeFromEnvironment(final String propName) throws NamingException {
-        return new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries,
-                 _logger) {
+        return new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries
+        ) {
 
             @Override
             public Object operation() throws NamingException {
@@ -500,8 +497,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     @Override
     public void rename(final Name oldName, final Name newName) throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries, 
-                _logger) {
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries
+        ) {
 
             @Override
             public Object operation() throws NamingException {
@@ -516,8 +513,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     @Override
     public void rename(final String oldName, final String newName) throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries, 
-                _logger) {
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries
+        ) {
 
             @Override
             public Object operation() throws NamingException {
@@ -532,8 +529,8 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     @Override
     public void unbind(final Name name) throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries, 
-                _logger) {
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries
+        ) {
 
             @Override
             public Object operation() throws NamingException {
@@ -548,8 +545,7 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     @Override
     public void unbind(final String name) throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries, 
-                _logger) {
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, _schedule, _maxRetries) {
 
             @Override
             public Object operation() throws NamingException {
@@ -588,13 +584,6 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      */
     public int getMaxRetries() {
         return _maxRetries;
-    }
-
-    /**
-     * @return the logger
-     */
-    public Logger getLogger() {
-        return _logger;
     }
 
 }

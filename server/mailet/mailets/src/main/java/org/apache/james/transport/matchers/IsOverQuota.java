@@ -19,6 +19,13 @@
 
 package org.apache.james.transport.matchers;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.mail.MessagingException;
+
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -31,18 +38,23 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.mail.MessagingException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
+/**
+ * This matcher will check if the incoming email will make recipients exceed their quotas.
+ *
+ * Quota are managed directly by the mailbox. Performance will depend on your implementation (Cassandra and JPA maintains counts, thus it is a fast operation).
+ *
+ * Here is a configuration example:
+ *
+ * <pre><code>
+ * &lt;mailet match=&quot;IsOverQuota&quot; class=&quot;&lt;any-class&gt;&quot;/&gt;
+ * </code></pre>
+ *
+ * Read the <a href="http://james.apache.org/server/manage-cli.html">CLI documentation on how to configure quota</a>. Note:
+ * managing quotas can also be done through <a href="http://james.apache.org/server/manage-webadmin.html">WebAdmin</a>.
+ */
 public class IsOverQuota extends GenericMatcher {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(IsOverQuota.class);
     private static final int SINGLE_EMAIL = 1;
 
     private final QuotaRootResolver quotaRootResolver;
@@ -61,10 +73,10 @@ public class IsOverQuota extends GenericMatcher {
     @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         try {
-            List<MailAddress> result = new ArrayList<MailAddress>();
+            List<MailAddress> result = new ArrayList<>();
             for (MailAddress mailAddress : mail.getRecipients()) {
                 String userName = usersRepository.getUser(mailAddress);
-                MailboxSession mailboxSession = mailboxManager.createSystemSession(userName, LOGGER);
+                MailboxSession mailboxSession = mailboxManager.createSystemSession(userName);
                 MailboxPath mailboxPath = MailboxPath.inbox(mailboxSession);
                 QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxPath);
 

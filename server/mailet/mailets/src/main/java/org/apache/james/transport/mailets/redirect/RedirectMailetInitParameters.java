@@ -19,15 +19,16 @@
 
 package org.apache.james.transport.mailets.redirect;
 
+import java.util.Optional;
+
 import org.apache.mailet.base.GenericMailet;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 
 public class RedirectMailetInitParameters implements InitParameters {
 
     public static InitParameters from(GenericMailet mailet) {
-        RedirectMailetInitParameters initParameters = new RedirectMailetInitParameters(mailet, Optional.<TypeCode> absent(), Optional.<TypeCode> absent());
+        RedirectMailetInitParameters initParameters = new RedirectMailetInitParameters(mailet, Optional.empty(), Optional.empty());
         if (initParameters.isStatic()) {
             return LoadedOnceInitParameters.from(initParameters);
         }
@@ -64,12 +65,12 @@ public class RedirectMailetInitParameters implements InitParameters {
 
     @Override
     public TypeCode getInLineType() {
-        return defaultInLineType.or(TypeCode.from(mailet.getInitParameter("inline", "unaltered")));
+        return defaultInLineType.orElse(TypeCode.from(mailet.getInitParameter("inline", "unaltered")));
     }
 
     @Override
     public TypeCode getAttachmentType() {
-        return defaultAttachmentType.or(TypeCode.from(mailet.getInitParameter("attachment", "none")));
+        return defaultAttachmentType.orElse(TypeCode.from(mailet.getInitParameter("attachment", "none")));
     }
 
     @Override
@@ -123,7 +124,7 @@ public class RedirectMailetInitParameters implements InitParameters {
     public Optional<String> getReplyTo() {
         String recipients = mailet.getInitParameter("replyTo", mailet.getInitParameter("replyto"));
         if (Strings.isNullOrEmpty(recipients)) {
-            return Optional.absent();
+            return Optional.empty();
         }
         return Optional.of(recipients);
     }

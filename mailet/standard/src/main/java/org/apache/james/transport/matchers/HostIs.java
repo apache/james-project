@@ -21,13 +21,13 @@
 
 package org.apache.james.transport.matchers;
 
-import org.apache.mailet.base.GenericRecipientMatcher;
-import org.apache.mailet.MailAddress;
-
 import java.util.Collection;
 import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.Vector;
+
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.GenericRecipientMatcher;
 
 /**
  * Matches mail to given hosts.
@@ -42,7 +42,7 @@ public class HostIs extends GenericRecipientMatcher {
      */
     public void init() {
         StringTokenizer st = new StringTokenizer(getCondition(), ", ", false);
-        hosts = new Vector<String>();
+        hosts = new Vector<>();
         while (st.hasMoreTokens()) {
             hosts.add(st.nextToken().toLowerCase(Locale.US));
         }

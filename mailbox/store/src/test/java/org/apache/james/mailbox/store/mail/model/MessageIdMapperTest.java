@@ -103,8 +103,9 @@ public abstract class MessageIdMapperTest {
     }
 
     @After
-    public void tearDown() throws MailboxException {
+    public void tearDown() throws Exception {
         mapperProvider.clearMapper();
+        mapperProvider.close();
     }
 
     @Test
@@ -206,6 +207,54 @@ public abstract class MessageIdMapperTest {
 
         List<MailboxId> mailboxes = sut.findMailboxes(message1.getMessageId());
         assertThat(mailboxes).containsOnly(benwaInboxMailbox.getMailboxId(), benwaInboxMailbox.getMailboxId());
+    }
+
+    @Test
+    public void copyInMailboxShouldThrowWhenMailboxDoesntExist() throws Exception {
+        message1.setUid(mapperProvider.generateMessageUid());
+        message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+        sut.save(message1);
+
+        SimpleMailbox notPersistedMailbox = new SimpleMailbox(new MailboxPath("#private", "benwa", "mybox"), UID_VALIDITY);
+        notPersistedMailbox.setMailboxId(mapperProvider.generateId());
+
+        SimpleMailboxMessage message1InOtherMailbox = SimpleMailboxMessage.copy(notPersistedMailbox.getMailboxId(), message1);
+        message1InOtherMailbox.setUid(mapperProvider.generateMessageUid());
+        message1InOtherMailbox.setModSeq(mapperProvider.generateModSeq(benwaWorkMailbox));
+
+        expectedException.expect(MailboxNotFoundException.class);
+        sut.copyInMailbox(message1InOtherMailbox);
+    }
+
+    @Test
+    public void copyInMailboxShouldSaveMessageInAnotherMailbox() throws Exception {
+        message1.setUid(mapperProvider.generateMessageUid());
+        message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+        sut.save(message1);
+
+        SimpleMailboxMessage message1InOtherMailbox = SimpleMailboxMessage.copy(benwaWorkMailbox.getMailboxId(), message1);
+        message1InOtherMailbox.setUid(mapperProvider.generateMessageUid());
+        message1InOtherMailbox.setModSeq(mapperProvider.generateModSeq(benwaWorkMailbox));
+        sut.copyInMailbox(message1InOtherMailbox);
+
+        List<MailboxId> mailboxes = sut.findMailboxes(message1.getMessageId());
+        assertThat(mailboxes).containsOnly(benwaInboxMailbox.getMailboxId(), benwaWorkMailbox.getMailboxId());
+    }
+
+    @Test
+    public void copyInMailboxShouldWorkWhenSavingTwoTimesWithSameMessageIdAndSameMailboxId() throws Exception {
+        message1.setUid(mapperProvider.generateMessageUid());
+        message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+        sut.save(message1);
+        SimpleMailboxMessage copiedMessage = SimpleMailboxMessage.copy(message1.getMailboxId(), message1);
+        copiedMessage.setUid(mapperProvider.generateMessageUid());
+        copiedMessage.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+
+        sut.copyInMailbox(copiedMessage);
+        sut.copyInMailbox(copiedMessage);
+
+        List<MailboxId> mailboxes = sut.findMailboxes(message1.getMessageId());
+        assertThat(mailboxes).isEqualTo(ImmutableList.of(benwaInboxMailbox.getMailboxId(), benwaInboxMailbox.getMailboxId()));
     }
 
     @Test
@@ -631,15 +680,11 @@ public abstract class MessageIdMapperTest {
 
         int threadCount = 2;
         int updateCount = 10;
-        assertThat(new ConcurrentTestRunner(threadCount, updateCount, new ConcurrentTestRunner.BiConsumer() {
-            @Override
-            public void consume(int threadNumber, int step) throws Exception {
-                sut.setFlags(message1.getMessageId(),
-                    ImmutableList.of(message1.getMailboxId()),
-                    new Flags("custom-" + threadNumber + "-" + step),
-                    FlagsUpdateMode.ADD);
-            }
-        }).run()
+        assertThat(new ConcurrentTestRunner(threadCount, updateCount,
+            (threadNumber, step) -> sut.setFlags(message1.getMessageId(),
+                ImmutableList.of(message1.getMailboxId()),
+                new Flags("custom-" + threadNumber + "-" + step),
+                FlagsUpdateMode.ADD)).run()
             .awaitTermination(1, TimeUnit.MINUTES))
             .isTrue();
 
@@ -656,9 +701,8 @@ public abstract class MessageIdMapperTest {
 
         final int threadCount = 4;
         final int updateCount = 20;
-        assertThat(new ConcurrentTestRunner(threadCount, updateCount, new ConcurrentTestRunner.BiConsumer() {
-            @Override
-            public void consume(int threadNumber, int step) throws Exception {
+        assertThat(new ConcurrentTestRunner(threadCount, updateCount,
+            (threadNumber, step) -> {
                 if (step  < updateCount / 2) {
                     sut.setFlags(message1.getMessageId(),
                         ImmutableList.of(message1.getMailboxId()),
@@ -670,8 +714,7 @@ public abstract class MessageIdMapperTest {
                         new Flags("custom-" + threadNumber + "-" + (updateCount - step - 1)),
                         FlagsUpdateMode.REMOVE);
                 }
-            }
-        }).run()
+            }).run()
             .awaitTermination(1, TimeUnit.MINUTES))
             .isTrue();
 

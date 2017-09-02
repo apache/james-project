@@ -21,9 +21,7 @@
 
 package org.apache.james.protocols.smtp.core;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -35,12 +33,14 @@ import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 
+import com.google.common.collect.ImmutableSet;
+
 /**
   * Command handler for handling VRFY command
   */
 public class VrfyCmdHandler implements CommandHandler<SMTPSession> {
     
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("VRFY"));
+    private static final Collection<String> COMMANDS = ImmutableSet.of("VRFY");
     private static final Response NOT_SUPPORTED = new SMTPResponse(SMTPRetCode.UNIMPLEMENTED_COMMAND, 
             DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.SYSTEM_NOT_CAPABLE)+" VRFY is not supported").immutable();
 

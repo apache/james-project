@@ -42,7 +42,6 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.commons.net.ProtocolCommandEvent;
 import org.apache.commons.net.ProtocolCommandListener;
 import org.apache.commons.net.smtp.SMTPClient;
@@ -78,6 +77,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
+
 @SuppressWarnings("deprecation")
 public class SMTPServerTest {
 
@@ -87,7 +88,7 @@ public class SMTPServerTest {
 
         @Override
         public Collection<String> findMXRecords(String hostname) {
-            List<String> res = new ArrayList<String>();
+            List<String> res = new ArrayList<>();
             if (hostname == null) {
                 return res;
             }
@@ -136,7 +137,7 @@ public class SMTPServerTest {
 
         @Override
         public Collection<String> findTXTRecords(String hostname) {
-            List<String> res = new ArrayList<String>();
+            List<String> res = new ArrayList<>();
             if (hostname == null) {
                 return res;
             }
@@ -168,7 +169,7 @@ public class SMTPServerTest {
 
     private static final long HALF_SECOND = 500;
     private static final int MAX_ITERATIONS = 10;
-    private static final Logger log = LoggerFactory.getLogger(SMTPServerTest.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(SMTPServerTest.class);
 
     protected SMTPTestConfiguration smtpConfiguration;
     protected final InMemoryUsersRepository usersRepository = new InMemoryUsersRepository();
@@ -196,9 +197,6 @@ public class SMTPServerTest {
     }
 
     protected void setUpSMTPServer() {
-        Logger log = LoggerFactory.getLogger("SMTP");
-        // slf4j can't set programmatically any log level. It's just a facade
-        // log.setLevel(SimpleLog.LOG_LEVEL_ALL);
         SmtpMetricsImpl smtpMetrics = mock(SmtpMetricsImpl.class);
         when(smtpMetrics.getCommandsMetric()).thenReturn(mock(Metric.class));
         when(smtpMetrics.getConnectionMetric()).thenReturn(mock(Metric.class));
@@ -206,8 +204,6 @@ public class SMTPServerTest {
         smtpServer.setDnsService(dnsServer);
         smtpServer.setFileSystem(fileSystem);
         smtpServer.setProtocolHandlerLoader(chain);
-        smtpServer.setLog(log);
-
     }
 
     protected void init(SMTPTestConfiguration testConfiguration) throws Exception {
@@ -370,6 +366,7 @@ public class SMTPServerTest {
             Thread.sleep(3000);
             fail("Shold disconnect connection 3");
         } catch (Exception e) {
+            LOGGER.info("Ignored error", e);
         }
 
         ensureIsDisconnected(smtpProtocol);
@@ -448,7 +445,7 @@ public class SMTPServerTest {
         smtpProtocol.sendCommand("EHLO " + InetAddress.getLocalHost());
         String[] capabilityRes = smtpProtocol.getReplyStrings();
 
-        List<String> capabilitieslist = new ArrayList<String>();
+        List<String> capabilitieslist = new ArrayList<>();
         for (int i = 1; i < capabilityRes.length; i++) {
             capabilitieslist.add(capabilityRes[i].substring(4));
         }
@@ -564,7 +561,7 @@ public class SMTPServerTest {
         smtpProtocol.sendCommand("EHLO " + InetAddress.getLocalHost());
         String[] capabilityRes = smtpProtocol.getReplyStrings();
 
-        List<String> capabilitieslist = new ArrayList<String>();
+        List<String> capabilitieslist = new ArrayList<>();
         for (int i = 1; i < capabilityRes.length; i++) {
             capabilitieslist.add(capabilityRes[i].substring(4));
         }
@@ -627,17 +624,17 @@ public class SMTPServerTest {
         SMTPClient smtp = new SMTPClient();
         InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
         smtp.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-        if (log.isDebugEnabled()) {
+        if (LOGGER.isDebugEnabled()) {
             smtp.addProtocolCommandListener(new ProtocolCommandListener() {
 
                 @Override
                 public void protocolCommandSent(ProtocolCommandEvent event) {
-                    log.debug("> " + event.getMessage().trim());
+                    LOGGER.debug("> " + event.getMessage().trim());
                 }
 
                 @Override
                 public void protocolReplyReceived(ProtocolCommandEvent event) {
-                    log.debug("< " + event.getMessage().trim());
+                    LOGGER.debug("< " + event.getMessage().trim());
                 }
             });
         }
@@ -1312,7 +1309,7 @@ public class SMTPServerTest {
         smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
         String[] capabilityRes = smtpProtocol.getReplyStrings();
 
-        List<String> capabilitieslist = new ArrayList<String>();
+        List<String> capabilitieslist = new ArrayList<>();
         for (int i = 1; i < capabilityRes.length; i++) {
             capabilitieslist.add(capabilityRes[i].substring(4));
         }
@@ -1597,7 +1594,7 @@ public class SMTPServerTest {
         smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
         String[] capabilityRes = smtpProtocol.getReplyStrings();
 
-        List<String> capabilitieslist = new ArrayList<String>();
+        List<String> capabilitieslist = new ArrayList<>();
         for (int i = 1; i < capabilityRes.length; i++) {
             capabilitieslist.add(capabilityRes[i].substring(4));
         }

@@ -23,13 +23,12 @@ import static org.apache.james.mailbox.store.mail.model.ListMessageAssert.assert
 import static org.apache.james.mailbox.store.mail.model.ListMessagePropertiesAssert.assertProperties;
 import static org.apache.james.mailbox.store.mail.model.MessageAssert.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.IOException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 import javax.mail.util.SharedByteArrayInputStream;
@@ -59,7 +58,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 
 public abstract class MessageMapperTest {
@@ -117,8 +115,9 @@ public abstract class MessageMapperTest {
     }
 
     @After
-    public void tearDown() throws MailboxException {
+    public void tearDown() throws Exception {
         mapperProvider.clearMapper();
+        mapperProvider.close();
     }
 
     @Test
@@ -279,6 +278,15 @@ public abstract class MessageMapperTest {
     public void messagesRetrievedUsingFetchTypeBodyShouldHaveBodyDataLoaded() throws MailboxException, IOException{
         saveMessages();
         MessageMapper.FetchType fetchType = MessageMapper.FetchType.Body;
+        Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), fetchType, LIMIT);
+        assertThat(retrievedMessageIterator.next()).isEqualToWithoutAttachment(message1, fetchType);
+        assertThat(retrievedMessageIterator).isEmpty();
+    }
+
+    @Test
+    public void messagesRetrievedUsingFetchTypeFullShouldHaveBodyDataLoaded() throws MailboxException, IOException{
+        saveMessages();
+        MessageMapper.FetchType fetchType = FetchType.Full;
         Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), fetchType, LIMIT);
         assertThat(retrievedMessageIterator.next()).isEqualToWithoutAttachment(message1, fetchType);
         assertThat(retrievedMessageIterator).isEmpty();
@@ -468,14 +476,14 @@ public abstract class MessageMapperTest {
 
     @Test
     public void getLastUidShouldReturnEmptyOnEmptyMailbox() throws MailboxException {
-        assertThat(messageMapper.getLastUid(benwaInboxMailbox)).isEqualTo(Optional.absent());
+        assertThat(messageMapper.getLastUid(benwaInboxMailbox)).isEqualTo(Optional.empty());
     }
 
     @Test
     public void insertingAMessageShouldIncrementLastUid() throws MailboxException {
         messageMapper.add(benwaInboxMailbox, message1);
         Optional<MessageUid> uid = messageMapper.getLastUid(benwaInboxMailbox);
-        assertThat(uid).isNotEqualTo(Optional.absent());
+        assertThat(uid).isNotEqualTo(Optional.empty());
         messageMapper.add(benwaInboxMailbox, message2);
         assertThat(messageMapper.getLastUid(benwaInboxMailbox).get()).isGreaterThan(uid.get());
     }
@@ -796,14 +804,10 @@ public abstract class MessageMapperTest {
 
         int threadCount = 2;
         int updateCount = 10;
-        assertThat(new ConcurrentTestRunner(threadCount, updateCount, new ConcurrentTestRunner.BiConsumer() {
-            @Override
-            public void consume(int threadNumber, int step) throws Exception {
-                messageMapper.updateFlags(benwaInboxMailbox,
-                    new FlagsUpdateCalculator(new Flags("custom-" + threadNumber + "-" + step), FlagsUpdateMode.ADD),
-                    MessageRange.one(message1.getUid()));
-            }
-        }).run()
+        assertThat(new ConcurrentTestRunner(threadCount, updateCount,
+            (threadNumber, step) -> messageMapper.updateFlags(benwaInboxMailbox,
+                new FlagsUpdateCalculator(new Flags("custom-" + threadNumber + "-" + step), FlagsUpdateMode.ADD),
+                MessageRange.one(message1.getUid()))).run()
             .awaitTermination(1, TimeUnit.MINUTES))
             .isTrue();
 
@@ -820,9 +824,8 @@ public abstract class MessageMapperTest {
 
         final int threadCount = 4;
         final int updateCount = 20;
-        assertThat(new ConcurrentTestRunner(threadCount, updateCount, new ConcurrentTestRunner.BiConsumer() {
-            @Override
-            public void consume(int threadNumber, int step) throws Exception {
+        assertThat(new ConcurrentTestRunner(threadCount, updateCount,
+            (threadNumber, step) -> {
                 if (step  < updateCount / 2) {
                     messageMapper.updateFlags(benwaInboxMailbox,
                         new FlagsUpdateCalculator(new Flags("custom-" + threadNumber + "-" + step), FlagsUpdateMode.ADD),
@@ -833,8 +836,7 @@ public abstract class MessageMapperTest {
                             FlagsUpdateMode.REMOVE),
                         MessageRange.one(message1.getUid()));
                 }
-            }
-        }).run()
+            }).run()
             .awaitTermination(1, TimeUnit.MINUTES))
             .isTrue();
 

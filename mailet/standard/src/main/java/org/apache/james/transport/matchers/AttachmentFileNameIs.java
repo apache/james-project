@@ -21,23 +21,26 @@
  
 package org.apache.james.transport.matchers;
 
-import org.apache.mailet.Experimental;
-import org.apache.mailet.base.GenericMatcher;
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Locale;
+import java.util.StringTokenizer;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.internet.MimeMessage;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.StringTokenizer;
-import java.util.Locale;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipEntry;
-import java.io.UnsupportedEncodingException;
+
+import org.apache.mailet.Experimental;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.GenericMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -56,6 +59,7 @@ import java.io.UnsupportedEncodingException;
  */
 @Experimental
 public class AttachmentFileNameIs extends GenericMatcher {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AttachmentFileNameIs.class);
     
     /** Unzip request parameter. */
     protected static final String UNZIP_REQUEST_PARAMETER = "-z";
@@ -97,19 +101,19 @@ public class AttachmentFileNameIs extends GenericMatcher {
         /* sets up fileNameMasks variable by parsing the condition */
         
         StringTokenizer st = new StringTokenizer(getCondition(), ", ", false);
-        ArrayList<Mask> theMasks = new ArrayList<Mask>(20);
+        ArrayList<Mask> theMasks = new ArrayList<>(20);
         while (st.hasMoreTokens()) {
             String fileName = st.nextToken();
             
             // check possible parameters at the beginning of the condition
             if (theMasks.size() == 0 && fileName.equalsIgnoreCase(UNZIP_REQUEST_PARAMETER)) {
                 unzipIsRequested = true;
-                log("zip file analysis requested");
+                LOGGER.info("zip file analysis requested");
                 continue;
             }
             if (theMasks.size() == 0 && fileName.equalsIgnoreCase(DEBUG_REQUEST_PARAMETER)) {
                 isDebug = true;
-                log("debug requested");
+                LOGGER.info("debug requested");
                 continue;
             }
             Mask mask = new Mask(); 
@@ -144,7 +148,7 @@ public class AttachmentFileNameIs extends GenericMatcher {
             
         } catch (Exception e) {
             if (isDebug) {
-                log("Malformed message", e);
+                LOGGER.debug("Malformed message", e);
             }
             throw new MessagingException("Malformed message", e);
         }
@@ -197,7 +201,7 @@ public class AttachmentFileNameIs extends GenericMatcher {
                 // check the file name
                 if (matchFound(fileName)) {
                     if (isDebug) {
-                        log("matched " + fileName);
+                        LOGGER.debug("matched " + fileName);
                     }
                     return true;
                 }
@@ -243,9 +247,8 @@ public class AttachmentFileNameIs extends GenericMatcher {
      *@param part
      */
     protected boolean matchFoundInZip(Part part) throws MessagingException, IOException {
-        ZipInputStream zis = new ZipInputStream(part.getInputStream());
-        
-        try {
+
+        try (ZipInputStream zis = new ZipInputStream(part.getInputStream())) {
             while (true) {
                 ZipEntry zipEntry = zis.getNextEntry();
                 if (zipEntry == null) {
@@ -254,14 +257,12 @@ public class AttachmentFileNameIs extends GenericMatcher {
                 String fileName = zipEntry.getName();
                 if (matchFound(fileName)) {
                     if (isDebug) {
-                        log("matched " + part.getFileName() + "(" + fileName + ")");
+                        LOGGER.debug("matched " + part.getFileName() + "(" + fileName + ")");
                     }
                     return true;
                 }
             }
             return false;
-        } finally {
-            zis.close();
         }
     }
 

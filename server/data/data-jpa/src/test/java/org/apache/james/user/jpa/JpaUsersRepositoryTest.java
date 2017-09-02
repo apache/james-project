@@ -24,7 +24,6 @@ import org.apache.james.user.jpa.model.JPAUser;
 import org.apache.james.user.lib.AbstractUsersRepository;
 import org.apache.james.user.lib.AbstractUsersRepositoryTest;
 import org.junit.After;
-import org.slf4j.LoggerFactory;
 
 public class JpaUsersRepositoryTest extends AbstractUsersRepositoryTest {
 
@@ -39,7 +38,6 @@ public class JpaUsersRepositoryTest extends AbstractUsersRepositoryTest {
     @Override
     protected AbstractUsersRepository getUsersRepository() throws Exception {
         JPAUsersRepository repos = new JPAUsersRepository();
-        repos.setLog(LoggerFactory.getLogger("JPA"));
         repos.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
         repos.configure(new DefaultConfigurationBuilder());
         return repos;

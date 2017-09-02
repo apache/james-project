@@ -20,7 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import java.util.List;
-
+import java.util.Optional;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
@@ -42,9 +42,9 @@ import org.apache.james.transport.util.TosUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -295,6 +295,7 @@ import com.google.common.collect.ImmutableList;
  */
 
 public class Resend extends GenericMailet implements RedirectNotify {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Resend.class);
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[] {
             "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "recipients", "to", "replyTo", "replyto", "reversePath", "sender", "subject", "prefix", "attachError", "isReply" };
@@ -328,7 +329,7 @@ public class Resend extends GenericMailet implements RedirectNotify {
     @Override
     public void init() throws MessagingException {
         if (getInitParameters().isDebug()) {
-            log("Initializing");
+            LOGGER.debug("Initializing");
         }
 
         // check that all init parameters have been declared in
@@ -337,7 +338,7 @@ public class Resend extends GenericMailet implements RedirectNotify {
 
         if (getInitParameters().isStatic()) {
             if (getInitParameters().isDebug()) {
-                log(getInitParameters().asString());
+                LOGGER.debug(getInitParameters().asString());
             }
         }
     }
@@ -364,13 +365,14 @@ public class Resend extends GenericMailet implements RedirectNotify {
     public Optional<MailAddress> getReplyTo() throws MessagingException {
         Optional<String> replyTo = getInitParameters().getReplyTo();
         if (!replyTo.isPresent()) {
-            return Optional.absent();
+            return Optional.empty();
         }
 
-        return FluentIterable.from(AddressExtractor.withContext(getMailetContext())
-                .allowedSpecials(ImmutableList.of("postmaster", "sender", "null", "unaltered"))
-                .extract(replyTo))
-            .first();
+        return AddressExtractor.withContext(getMailetContext())
+            .allowedSpecials(ImmutableList.of("postmaster", "sender", "null", "unaltered"))
+            .extract(replyTo)
+            .stream()
+            .findFirst();
     }
 
     @Override
@@ -382,8 +384,8 @@ public class Resend extends GenericMailet implements RedirectNotify {
     public List<MailAddress> getRecipients() throws MessagingException {
           ImmutableList.Builder<MailAddress> builder = ImmutableList.builder();
           List<MailAddress> mailAddresses = AddressExtractor.withContext(getMailetContext())
-                  .allowedSpecials(ImmutableList.of("postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null"))
-                  .extract(getInitParameters().getRecipients());
+              .allowedSpecials(ImmutableList.of("postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null"))
+              .extract(getInitParameters().getRecipients());
           for (MailAddress address : mailAddresses) {
               builder.add(address);
           }
@@ -406,7 +408,7 @@ public class Resend extends GenericMailet implements RedirectNotify {
         Optional<MailAddress> reversePath = getReversePath();
         if (reversePath.isPresent()) {
             if (MailAddressUtils.isUnalteredOrReversePathOrSender(reversePath.get())) {
-                return Optional.absent();
+                return Optional.empty();
             }
         }
         return reversePath;

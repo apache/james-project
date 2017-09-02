@@ -109,7 +109,7 @@ public class MailboxAnnotationKey {
     public boolean equals(Object obj) {
         if (obj instanceof MailboxAnnotationKey) {
             MailboxAnnotationKey anotherKey = (MailboxAnnotationKey)obj;
-            return Objects.equal(anotherKey.asString(), key);
+            return Objects.equal(anotherKey.asString(), asString());
         } else {
             return false;
         }
@@ -117,6 +117,6 @@ public class MailboxAnnotationKey {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(key);
+        return Objects.hashCode(asString());
     }
 }

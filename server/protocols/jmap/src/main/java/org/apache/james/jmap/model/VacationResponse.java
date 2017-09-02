@@ -34,6 +34,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 @JsonDeserialize(builder = VacationResponse.Builder.class)
@@ -220,5 +221,15 @@ public class VacationResponse {
     @Override
     public int hashCode() {
         return Objects.hash(id, isEnabled, fromDate, toDate, textBody, subject, htmlBody, isActivated);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("id", id)
+            .add("fromDate", fromDate)
+            .add("toDate", toDate)
+            .add("isActivated", isActivated)
+            .toString();
     }
 }

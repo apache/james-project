@@ -28,19 +28,11 @@ public class DefaultStagerTestCase {
 
     @Test
     public void stagerShouldStageObjectsRegisteredWhileStaging() {
-        final Stager<TestAnnotationA> stager = new DefaultStager<TestAnnotationA>(TestAnnotationA.class);
+        final Stager<TestAnnotationA> stager = new DefaultStager<>(TestAnnotationA.class);
         final AtomicBoolean staged = new AtomicBoolean();
-        stager.register(new Stageable() {
-            @Override
-            public void stage(StageHandler stageHandler) {
-                stager.register(new Stageable() {
-                    @Override
-                    public void stage(StageHandler stageHandler) {
-                        staged.set(true);
-                    }
-                });
-            }
-        });
+        stager.register(stageHandler1 -> stager
+            .register(stageHandler2 ->
+                staged.set(true)));
 
         stager.stage();
 
@@ -56,27 +48,15 @@ public class DefaultStagerTestCase {
     @Test
     public void stagerShouldNotDeadlockWhileStagingObjectChains() {
         final AtomicBoolean staged = new AtomicBoolean();
-        final Stager<TestAnnotationA> stager = new DefaultStager<TestAnnotationA>(TestAnnotationA.class);
-        stager.register(new Stageable() {
-            @Override
-            public void stage(StageHandler stageHandler) {
-                Thread thread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        stager.register(new Stageable() {
-                            @Override
-                            public void stage(StageHandler stageHandler) {
-                                staged.set(true);
-                            }
-                        });
-                    }
-                });
-                thread.start();
-                try {
-                    thread.join();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
+        final Stager<TestAnnotationA> stager = new DefaultStager<>(TestAnnotationA.class);
+        stager.register(stageHandler1 -> {
+            Thread thread = new Thread(
+                () -> stager.register(stageHandler2 -> staged.set(true)));
+            thread.start();
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         });
 

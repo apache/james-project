@@ -73,7 +73,7 @@ public class SearchUtilsTest {
     }
     @Before
     public void setUp() throws Exception {
-        recent = new ArrayList<MessageUid>();
+        recent = new ArrayList<>();
         builder = new MessageBuilder();
         builder.uid = MessageUid.of(1009);
     }

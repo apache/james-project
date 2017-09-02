@@ -21,10 +21,11 @@ package org.apache.james.protocols.api.handler;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * {@link AbstractProtocolHandlerChain} which is mutable till the
@@ -36,7 +37,7 @@ import java.util.ListIterator;
  */
 public class ProtocolHandlerChainImpl extends AbstractProtocolHandlerChain implements List<ProtocolHandler> {
 
-    private final List<ProtocolHandler> handlers = new ArrayList<ProtocolHandler>();
+    private final List<ProtocolHandler> handlers = new ArrayList<>();
     private volatile boolean readyOnly = false;
 
     /**
@@ -65,7 +66,7 @@ public class ProtocolHandlerChainImpl extends AbstractProtocolHandlerChain imple
 
     @Override
     protected List<ProtocolHandler> getHandlers() {
-        return Collections.unmodifiableList(handlers);
+        return ImmutableList.copyOf(handlers);
     }
 
     /*
@@ -259,12 +260,9 @@ public class ProtocolHandlerChainImpl extends AbstractProtocolHandlerChain imple
      * @see java.util.List#subList(int, int)
      */
     public List<ProtocolHandler> subList(int fromIndex, int toIndex) {
-        List<ProtocolHandler> sList = new ArrayList<ProtocolHandler>();
-        for (Object handler : handlers.subList(fromIndex, toIndex)) {
-            sList.add((ProtocolHandler) handler);
-        }
+        List<ProtocolHandler> sList = new ArrayList<>(handlers.subList(fromIndex, toIndex));
         if (readyOnly) {
-            return Collections.unmodifiableList(sList);
+            return ImmutableList.copyOf(sList);
         }
         return sList;
     }

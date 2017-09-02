@@ -1,0 +1,31 @@
+Return-Path: <any@linagora.com>
+MIME-Version: 1.0
+Delivered-To: ddo@linagora.com
+Date: Mon, 21 Aug 2017 00:17:47 +0200
+From: any@linagora.com
+To: any@linagora.com
+Subject: Inventaire des VMs
+Message-ID: <599a0a8b.MepmS5MLy1x/pobR%any@linagora.com>
+Content-Type: multipart/mixed;
+ boundary="=_599a0a8b.iCfd4209N6lpM3fjUmImU2D6HH6PWpQZh/HT8dK7qTYz0tRA"
+
+This is a multi-part message in MIME format.
+
+--=_599a0a8b.iCfd4209N6lpM3fjUmImU2D6HH6PWpQZh/HT8dK7qTYz0tRA
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+Bonjour
+En pièce jointe l'inventaire à jour des VMs et les erreurs
+Cordialement.
+
+
+--=_599a0a8b.iCfd4209N6lpM3fjUmImU2D6HH6PWpQZh/HT8dK7qTYz0tRA
+Content-Type: text/csv;
+ charset=utf-8
+Content-Transfer-Encoding: 8bit
+Content-Disposition: attachment;
+ filename="inventory.csv"
+
+DATA
+--=_599a0a8b.iCfd4209N6lpM3fjUmImU2D6HH6PWpQZh/HT8dK7qTYz0tRA

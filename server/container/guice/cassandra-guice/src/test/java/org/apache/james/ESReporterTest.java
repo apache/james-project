@@ -34,8 +34,8 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.modules.TestESMetricReporterModule;
-import org.apache.james.utils.JmapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.JmapGuiceProbe;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.After;
@@ -127,7 +127,7 @@ public class ESReporterTest {
         timer.schedule(timerTask, DELAY_IN_MS, PERIOD_IN_MS);
 
         await().atMost(Duration.TEN_MINUTES)
-            .until(() -> checkMetricRecordedInElasticSearch());
+            .until(this::checkMetricRecordedInElasticSearch);
     }
 
     @Test
@@ -149,7 +149,7 @@ public class ESReporterTest {
         timer.schedule(timerTask, DELAY_IN_MS, PERIOD_IN_MS);
 
         await().atMost(Duration.TEN_MINUTES)
-            .until(() -> checkMetricRecordedInElasticSearch());
+            .until(this::checkMetricRecordedInElasticSearch);
     }
 
     private boolean checkMetricRecordedInElasticSearch() {

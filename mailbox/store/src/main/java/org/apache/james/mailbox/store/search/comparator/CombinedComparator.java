@@ -20,14 +20,15 @@ package org.apache.james.mailbox.store.search.comparator;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.model.SearchQuery.Sort;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.commons.lang.NotImplementedException;
 
-import com.google.common.base.Function;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
+
 
 /**
  * {@link Comparator} which takes a Array of other {@link Comparator}'s and use them to compare two {@link MailboxMessage} instances till one of them
@@ -38,18 +39,13 @@ public class CombinedComparator implements Comparator<MailboxMessage>{
     public static CombinedComparator create(List<Sort> sorts) {
         Preconditions.checkNotNull(sorts);
         Preconditions.checkArgument(!sorts.isEmpty());
-        return new CombinedComparator(FluentIterable.from(sorts)
-            .transform(toComparator())
-            .toList());
+        return new CombinedComparator(sorts.stream()
+            .map(toComparator())
+            .collect(Guavate.toImmutableList()));
     }
 
     private static Function<Sort, Comparator<MailboxMessage>> toComparator() {
-        return new Function<Sort, Comparator<MailboxMessage>>() {
-            @Override
-            public Comparator<MailboxMessage> apply(Sort input) {
-                return optionalResverse(toComparator(input), input.isReverse());
-            }
-        };
+        return sort -> optionalResverse(toComparator(sort), sort.isReverse());
     }
 
     private static Comparator<MailboxMessage> toComparator(Sort sort) {
@@ -100,14 +96,11 @@ public class CombinedComparator implements Comparator<MailboxMessage>{
 
     @Override
     public int compare(MailboxMessage o1, MailboxMessage o2) {
-        int i = 0;
-        for (Comparator<MailboxMessage> comparator : comparators) {
-            i = comparator.compare(o1, o2);
-            if (i != 0) {
-                break;
-            }
-        }
-        return i;
+        return comparators.stream()
+            .map(comparator -> comparator.compare(o1, o2))
+            .filter(result -> result != 0)
+            .findFirst()
+            .orElse(0);
     }
 
 }

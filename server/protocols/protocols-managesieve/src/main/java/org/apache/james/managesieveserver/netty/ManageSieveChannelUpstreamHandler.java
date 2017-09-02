@@ -19,13 +19,15 @@
 
 package org.apache.james.managesieveserver.netty;
 
+import java.io.Closeable;
+import java.net.InetSocketAddress;
+
+import javax.net.ssl.SSLContext;
+
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.managesieve.util.SettableSession;
-import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
-import org.apache.james.protocols.api.logger.ProtocolSessionLogger;
-import org.apache.james.protocols.lib.Slf4jLoggerAdapter;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFutureListener;
@@ -39,10 +41,6 @@ import org.jboss.netty.handler.codec.frame.TooLongFrameException;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.slf4j.Logger;
 
-import javax.net.ssl.SSLContext;
-import java.net.InetSocketAddress;
-
-@SuppressWarnings("deprecation")
 public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
 
     final static String SSL_HANDLER = "sslHandler";
@@ -57,7 +55,7 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
     public ManageSieveChannelUpstreamHandler(ManageSieveProcessor manageSieveProcessor, SSLContext sslContext,
                                              String[] enabledCipherSuites, boolean sslServer, Logger logger) {
         this.logger = logger;
-        this.attributes = new ChannelLocal<Session>();
+        this.attributes = new ChannelLocal<>();
         this.manageSieveProcessor = manageSieveProcessor;
         this.sslContext = sslContext;
         this.enabledCipherSuites = enabledCipherSuites;
@@ -66,29 +64,32 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
 
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-        String request = (String) e.getMessage();
-        Session manageSieveSession = attributes.get(ctx.getChannel());
-        String responseString = manageSieveProcessor.handleRequest(manageSieveSession, request);
-        ((ChannelManageSieveResponseWriter)ctx.getAttachment()).write(responseString);
-        if (manageSieveSession.getState() == Session.State.SSL_NEGOCIATION) {
-            turnSSLon(ctx.getChannel());
-            manageSieveSession.setSslEnabled(true);
-            manageSieveSession.setState(Session.State.UNAUTHENTICATED);
+        try (Closeable closeable = ManageSieveMDCContext.from(ctx, attributes)) {
+            String request = (String) e.getMessage();
+            Session manageSieveSession = attributes.get(ctx.getChannel());
+            String responseString = manageSieveProcessor.handleRequest(manageSieveSession, request);
+            ((ChannelManageSieveResponseWriter) ctx.getAttachment()).write(responseString);
+            if (manageSieveSession.getState() == Session.State.SSL_NEGOCIATION) {
+                turnSSLon(ctx.getChannel());
+                manageSieveSession.setSslEnabled(true);
+                manageSieveSession.setState(Session.State.UNAUTHENTICATED);
+            }
         }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-        getLogger(ctx.getChannel()).warn("Error while processing ManageSieve request: " + e.getCause().getClass().getName() + " - " + e.getCause().getMessage());
-        getLogger(ctx.getChannel()).debug("Error while processing ManageSieve request", e.getCause());
+        try (Closeable closeable = ManageSieveMDCContext.from(ctx, attributes)) {
+            logger.warn("Error while processing ManageSieve request", e.getCause());
 
-        if (e.getCause() instanceof TooLongFrameException) {
-            // Max line length exceeded
-            // See also JAMES-1190
-            ((ChannelManageSieveResponseWriter)ctx.getAttachment()).write("NO Maximum command line length exceeded");
-        } else if (e.getCause() instanceof SessionTerminatedException) {
-            ((ChannelManageSieveResponseWriter)ctx.getAttachment()).write("OK channel is closing");
-            logout(ctx);
+            if (e.getCause() instanceof TooLongFrameException) {
+                // Max line length exceeded
+                // See also JAMES-1190
+                ((ChannelManageSieveResponseWriter) ctx.getAttachment()).write("NO Maximum command line length exceeded");
+            } else if (e.getCause() instanceof SessionTerminatedException) {
+                ((ChannelManageSieveResponseWriter) ctx.getAttachment()).write("OK channel is closing");
+                logout(ctx);
+            }
         }
     }
 
@@ -104,30 +105,29 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
 
     @Override
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
-        getLogger(ctx.getChannel()).info("Connection established from " + address.getAddress().getHostAddress());
+        try (Closeable closeable = ManageSieveMDCContext.from(ctx, attributes)) {
+            InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
+            logger.info("Connection established from " + address.getAddress().getHostAddress());
 
-        Session session = new SettableSession();
-        if (sslServer) {
-            session.setSslEnabled(true);
+            Session session = new SettableSession();
+            if (sslServer) {
+                session.setSslEnabled(true);
+            }
+            attributes.set(ctx.getChannel(), session);
+            ctx.setAttachment(new ChannelManageSieveResponseWriter(ctx.getChannel()));
+            super.channelBound(ctx, e);
+            ((ChannelManageSieveResponseWriter) ctx.getAttachment()).write(manageSieveProcessor.getAdvertisedCapabilities());
         }
-        attributes.set(ctx.getChannel(), session);
-        ctx.setAttachment(new ChannelManageSieveResponseWriter(ctx.getChannel()));
-        super.channelBound(ctx, e);
-        ((ChannelManageSieveResponseWriter)ctx.getAttachment()).write(manageSieveProcessor.getAdvertisedCapabilities());
     }
 
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
-        getLogger(ctx.getChannel()).info("Connection closed for " + address.getAddress().getHostAddress());
-
-        attributes.remove(ctx.getChannel());
-        super.channelClosed(ctx, e);
-    }
-
-    private Logger getLogger(Channel channel) {
-        return new Slf4jLoggerAdapter(new ProtocolSessionLogger("" + channel.getId(), new ProtocolLoggerAdapter(logger)));
+        try (Closeable closeable = ManageSieveMDCContext.from(ctx, attributes)) {
+            InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
+            logger.info("Connection closed for " + address.getAddress().getHostAddress());
+            attributes.remove(ctx.getChannel());
+            super.channelClosed(ctx, e);
+        }
     }
 
     private void turnSSLon(Channel channel) {

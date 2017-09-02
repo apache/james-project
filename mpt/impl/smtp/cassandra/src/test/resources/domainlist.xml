@@ -23,6 +23,6 @@
         <domainname>mydomain.tld</domainname>
     </domainnames>
     <autodetect>false</autodetect>
-    <autodetectIP>true</autodetectIP>
+    <autodetectIP>false</autodetectIP>
     <defaultDomain>localhost</defaultDomain>
 </domainlist>

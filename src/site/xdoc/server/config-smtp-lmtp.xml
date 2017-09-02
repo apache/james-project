@@ -37,7 +37,7 @@
 
   <section name="SMTP Configuration">
   
-    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/smtpserver-template.xml">smtpserver-template.xml</a> in GIT to get some examples and hints.</p>
+    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/smtpserver.xml">smtpserver.xml</a> in GIT to get some examples and hints.</p>
 
     <p>The SMTP service is controlled by a configuration block in the smptserver.xml.
        The smtpserver tag defines the boundaries of the configuration block.  It encloses 
@@ -197,7 +197,7 @@ Correct this.
   
   <section name="LMTP Configuration">
     
-    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/lmtpserver-template.xml">lmtpserver-template.xml</a> in GIT to get some examples and hints.</p>
+    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/lmtpserver.xml">lmtpserver.xml</a> in GIT to get some examples and hints.</p>
     
     <p>The configuration is the same of for SMTP.</p>
     

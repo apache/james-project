@@ -28,6 +28,7 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.assertj.core.api.AbstractAssert;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
 
 public class MessageAssert extends AbstractAssert<MessageAssert, MailboxMessage> {
@@ -87,18 +88,18 @@ public class MessageAssert extends AbstractAssert<MessageAssert, MailboxMessage>
             if (!Objects.equal(actual.getFullContentOctets(), expected.getFullContentOctets())) {
                 failWithMessage("Expected MailboxMessage size to be <%s> but was <%s>", expected.getFullContentOctets(), actual.getFullContentOctets());
             }
-            if (!Objects.equal(IOUtils.toString(actual.getFullContent()), IOUtils.toString(expected.getFullContent()))) {
-                failWithMessage("Expected Full content to be <%s> but was <%s>", IOUtils.toString(expected.getFullContent()), IOUtils.toString(actual.getFullContent()));
+            if (!Objects.equal(IOUtils.toString(actual.getFullContent(), Charsets.UTF_8), IOUtils.toString(expected.getFullContent(), Charsets.UTF_8))) {
+                failWithMessage("Expected Full content to be <%s> but was <%s>", IOUtils.toString(expected.getFullContent(), Charsets.UTF_8), IOUtils.toString(actual.getFullContent(), Charsets.UTF_8));
             }
         }
         if (usedFetchType == MessageMapper.FetchType.Full || usedFetchType == MessageMapper.FetchType.Headers) {
-            if (!Objects.equal(IOUtils.toString(actual.getHeaderContent()), IOUtils.toString(expected.getHeaderContent()))) {
-                failWithMessage("Expected Header content to be <%s> but was <%s>", IOUtils.toString(expected.getHeaderContent()), IOUtils.toString(actual.getHeaderContent()));
+            if (!Objects.equal(IOUtils.toString(actual.getHeaderContent(), Charsets.UTF_8), IOUtils.toString(expected.getHeaderContent(), Charsets.UTF_8))) {
+                failWithMessage("Expected Header content to be <%s> but was <%s>", IOUtils.toString(expected.getHeaderContent(), Charsets.UTF_8), IOUtils.toString(actual.getHeaderContent(), Charsets.UTF_8));
             }
         }
         if (usedFetchType == MessageMapper.FetchType.Full || usedFetchType == MessageMapper.FetchType.Body) {
-            if (!Objects.equal(IOUtils.toString(actual.getBodyContent()), IOUtils.toString(expected.getBodyContent()))) {
-                failWithMessage("Expected Body content to be <%s> but was <%s>", IOUtils.toString(expected.getBodyContent()), IOUtils.toString(actual.getBodyContent()));
+            if (!Objects.equal(IOUtils.toString(actual.getBodyContent(), Charsets.UTF_8), IOUtils.toString(expected.getBodyContent(), Charsets.UTF_8))) {
+                failWithMessage("Expected Body content to be <%s> but was <%s>", IOUtils.toString(expected.getBodyContent(), Charsets.UTF_8), IOUtils.toString(actual.getBodyContent(), Charsets.UTF_8));
             }
         }
         return this;

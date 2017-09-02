@@ -28,17 +28,17 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTable.MAILBOX_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTable.NEXT_MODSEQ;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTable.TABLE_NAME;
-
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-
+import java.util.function.Supplier;
 import javax.inject.Inject;
 
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.FunctionRunnerWithRetry;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.cassandra.CassandraId;
+import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
@@ -46,7 +46,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
-import com.google.common.base.Supplier;
+import com.google.common.annotations.VisibleForTesting;
 
 public class CassandraModSeqProvider implements ModSeqProvider {
 
@@ -76,7 +76,6 @@ public class CassandraModSeqProvider implements ModSeqProvider {
         }
     }
 
-    private static final int DEFAULT_MAX_RETRY = 100000;
     private static final ModSeq FIRST_MODSEQ = new ModSeq(0);
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
@@ -85,12 +84,18 @@ public class CassandraModSeqProvider implements ModSeqProvider {
     private final PreparedStatement update;
     private final PreparedStatement insert;
 
-    public CassandraModSeqProvider(Session session, int maxRetry) {
+    @Inject
+    public CassandraModSeqProvider(Session session, CassandraConfiguration cassandraConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
-        this.runner = new FunctionRunnerWithRetry(maxRetry);
+        this.runner = new FunctionRunnerWithRetry(cassandraConfiguration.getModSeqMaxRetry());
         this.insert = prepareInsert(session);
         this.update = prepareUpdate(session);
         this.select = prepareSelect(session);
+    }
+
+    @VisibleForTesting
+    public CassandraModSeqProvider(Session session) {
+        this(session, CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     private PreparedStatement prepareInsert(Session session) {
@@ -113,10 +118,7 @@ public class CassandraModSeqProvider implements ModSeqProvider {
             .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
     }
 
-    @Inject
-    public CassandraModSeqProvider(Session session) {
-        this(session, DEFAULT_MAX_RETRY);
-    }
+
 
     @Override
     public long nextModSeq(MailboxSession mailboxSession, Mailbox mailbox) throws MailboxException {

@@ -34,6 +34,8 @@ import javax.sql.DataSource;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -125,16 +127,18 @@ import org.apache.mailet.base.GenericMailet;
  * @since 2.3.0
  */
 @Experimental
-public class BayesianAnalysisFeeder extends GenericMailet implements Log {
+public class BayesianAnalysisFeeder extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BayesianAnalysisFeeder.class);
+
     /**
      * The JDBCUtil helper class
      */
-    private final JDBCUtil theJDBCUtil = new JDBCUtil(this);
+    private final JDBCUtil theJDBCUtil = new JDBCUtil();
 
     /**
      * The JDBCBayesianAnalyzer class that does all the work.
      */
-    private final JDBCBayesianAnalyzer analyzer = new JDBCBayesianAnalyzer(this);
+    private final JDBCBayesianAnalyzer analyzer = new JDBCBayesianAnalyzer();
  
     private DataSource datasource;
 
@@ -209,7 +213,7 @@ public class BayesianAnalysisFeeder extends GenericMailet implements Log {
         if (maxSizeParam != null) {
             setMaxSize(Integer.parseInt(maxSizeParam));
         }
-        log("maxSize: " + getMaxSize());
+        LOGGER.debug("maxSize: " + getMaxSize());
 
         initDb();
 
@@ -250,7 +254,7 @@ public class BayesianAnalysisFeeder extends GenericMailet implements Log {
             String messageId = message.getMessageID();
 
             if (message.getSize() > getMaxSize()) {
-                log(messageId + " Feeding HAM/SPAM ignored because message size > " + getMaxSize() + ": " + message.getSize());
+                LOGGER.debug(messageId + " Feeding HAM/SPAM ignored because message size > " + getMaxSize() + ": " + message.getSize());
                 return;
             }
 
@@ -275,14 +279,14 @@ public class BayesianAnalysisFeeder extends GenericMailet implements Log {
                 analyzer.clear();
 
                 if ("ham".equalsIgnoreCase(feedType)) {
-                    log(messageId + " Feeding HAM");
+                    LOGGER.debug(messageId + " Feeding HAM");
                     // Process the stream as ham (not spam).
                     analyzer.addHam(br);
 
                     // Update storage statistics.
                     analyzer.updateHamTokens(conn);
                 } else {
-                    log(messageId + " Feeding SPAM");
+                    LOGGER.debug(messageId + " Feeding SPAM");
                     // Process the stream as spam.
                     analyzer.addSpam(br);
 
@@ -294,18 +298,18 @@ public class BayesianAnalysisFeeder extends GenericMailet implements Log {
                 if (conn != null && dbUpdated && !conn.getAutoCommit()) {
                     conn.commit();
                     dbUpdated = false;
-                    log(messageId + " Training ended successfully");
+                    LOGGER.debug(messageId + " Training ended successfully");
                     JDBCBayesianAnalyzer.touchLastDatabaseUpdateTime();
                 }
 
             }
 
         } catch (java.sql.SQLException se) {
-            log("SQLException: " + se.getMessage());
+            LOGGER.error("SQLException: ", se);
         } catch (java.io.IOException ioe) {
-            log("IOException: " + ioe.getMessage());
+            LOGGER.error("IOException: ", ioe);
         } catch (javax.mail.MessagingException me) {
-            log("MessagingException: " + me.getMessage());
+            LOGGER.error("MessagingException: ", me);
         } finally {
             // Rollback our changes if necessary.
             try {
@@ -314,7 +318,7 @@ public class BayesianAnalysisFeeder extends GenericMailet implements Log {
                     dbUpdated = false;
                 }
             } catch (Exception e) {
-                log("Failed to rollback after last error.", e);
+                LOGGER.error("Failed to rollback after last error.", e);
             }
             theJDBCUtil.closeJDBCConnection(conn);
         }
@@ -329,7 +333,7 @@ public class BayesianAnalysisFeeder extends GenericMailet implements Log {
             try {
                 message.removeHeader(header.getName());
             } catch (javax.mail.MessagingException me) {
-                log("Cannot remove header.", me);
+                LOGGER.error("Cannot remove header.", me);
             }
         }
         message.saveChanges();

@@ -31,8 +31,8 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.WaitStrategy;
 import org.testcontainers.images.builder.ImageFromDockerfile;
-import org.testcontainers.shaded.com.github.dockerjava.api.command.InspectContainerResponse;
 
+import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.google.common.base.Strings;
 
 public class SwarmGenericContainer implements TestRule {
@@ -105,14 +105,6 @@ public class SwarmGenericContainer implements TestRule {
         container.stop();
     }
 
-    public String getContainerIpAddress() {
-        return container.getContainerIpAddress();
-    }
-
-    public Integer getMappedPort(int originalPort) {
-        return container.getMappedPort(originalPort);
-    }
-
     @SuppressWarnings("deprecation")
     public String getIp() {
         return getContainerInfo().getNetworkSettings().getIpAddress();
@@ -121,6 +113,7 @@ public class SwarmGenericContainer implements TestRule {
     public InspectContainerResponse getContainerInfo() {
         return container.getContainerInfo();
     }
+
     @Override
     public Statement apply(Statement statement, Description description) {
         return container.apply(statement, description);

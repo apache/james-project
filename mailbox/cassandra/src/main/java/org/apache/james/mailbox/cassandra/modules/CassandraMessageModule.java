@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.cassandra.modules;
 
 import static com.datastax.driver.core.DataType.bigint;
-import static com.datastax.driver.core.DataType.blob;
 import static com.datastax.driver.core.DataType.cboolean;
 import static com.datastax.driver.core.DataType.cint;
 import static com.datastax.driver.core.DataType.set;
@@ -35,7 +34,7 @@ import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageIds;
-import org.apache.james.mailbox.cassandra.table.CassandraMessageTable;
+import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table;
 import org.apache.james.mailbox.cassandra.table.Flag;
 import org.apache.james.mailbox.cassandra.table.MessageIdToImapUid;
 
@@ -67,6 +66,7 @@ public class CassandraMessageModule implements CassandraModule {
                     .addColumn(Flag.USER, cboolean())
                     .addColumn(Flag.USER_FLAGS, set(text()))
                     .withOptions()
+                    .comment("Holds mailbox and flags for each message, lookup by message ID")
                     .compactionOptions(SchemaBuilder.leveledStrategy())
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CACHED_IMAP_UID_ROWS))),
@@ -86,36 +86,40 @@ public class CassandraMessageModule implements CassandraModule {
                     .addColumn(Flag.USER, cboolean())
                     .addColumn(Flag.USER_FLAGS, set(text()))
                     .withOptions()
+                    .comment("Holds mailbox and flags for each message, lookup by mailbox ID + UID")
                     .compactionOptions(SchemaBuilder.leveledStrategy())
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CACHED_MESSAGE_ID_ROWS))),
-            new CassandraTable(CassandraMessageTable.TABLE_NAME,
-                SchemaBuilder.createTable(CassandraMessageTable.TABLE_NAME)
+            new CassandraTable(CassandraMessageV2Table.TABLE_NAME,
+                SchemaBuilder.createTable(CassandraMessageV2Table.TABLE_NAME)
                     .ifNotExists()
                     .addPartitionKey(CassandraMessageIds.MESSAGE_ID, timeuuid())
-                    .addColumn(CassandraMessageTable.INTERNAL_DATE, timestamp())
-                    .addColumn(CassandraMessageTable.BODY_START_OCTET, cint())
-                    .addColumn(CassandraMessageTable.BODY_OCTECTS, bigint())
-                    .addColumn(CassandraMessageTable.TEXTUAL_LINE_COUNT, bigint())
-                    .addColumn(CassandraMessageTable.FULL_CONTENT_OCTETS, bigint())
-                    .addColumn(CassandraMessageTable.BODY_CONTENT, blob())
-                    .addColumn(CassandraMessageTable.HEADER_CONTENT, blob())
-                    .addUDTListColumn(CassandraMessageTable.ATTACHMENTS, SchemaBuilder.frozen(CassandraMessageTable.ATTACHMENTS))
-                    .addUDTListColumn(CassandraMessageTable.PROPERTIES, SchemaBuilder.frozen(CassandraMessageTable.PROPERTIES))));
+                    .addColumn(CassandraMessageV2Table.INTERNAL_DATE, timestamp())
+                    .addColumn(CassandraMessageV2Table.BODY_START_OCTET, cint())
+                    .addColumn(CassandraMessageV2Table.BODY_OCTECTS, bigint())
+                    .addColumn(CassandraMessageV2Table.TEXTUAL_LINE_COUNT, bigint())
+                    .addColumn(CassandraMessageV2Table.FULL_CONTENT_OCTETS, bigint())
+                    .addColumn(CassandraMessageV2Table.BODY_CONTENT, text())
+                    .addColumn(CassandraMessageV2Table.HEADER_CONTENT, text())
+                    .addUDTListColumn(CassandraMessageV2Table.ATTACHMENTS, SchemaBuilder.frozen(CassandraMessageV2Table.ATTACHMENTS))
+                    .addUDTListColumn(CassandraMessageV2Table.PROPERTIES, SchemaBuilder.frozen(CassandraMessageV2Table.PROPERTIES))
+                    .withOptions()
+                    .comment("Holds message metadata, independently of any mailboxes. Content of messages is stored " +
+                        "in `blobs` and `blobparts` tables.")));
         types = ImmutableList.of(
-            new CassandraType(CassandraMessageTable.PROPERTIES,
-                SchemaBuilder.createType(CassandraMessageTable.PROPERTIES)
+            new CassandraType(CassandraMessageV2Table.PROPERTIES,
+                SchemaBuilder.createType(CassandraMessageV2Table.PROPERTIES)
                     .ifNotExists()
-                    .addColumn(CassandraMessageTable.Properties.NAMESPACE, text())
-                    .addColumn(CassandraMessageTable.Properties.NAME, text())
-                    .addColumn(CassandraMessageTable.Properties.VALUE, text())),
-            new CassandraType(CassandraMessageTable.ATTACHMENTS,
-                SchemaBuilder.createType(CassandraMessageTable.ATTACHMENTS)
+                    .addColumn(CassandraMessageV2Table.Properties.NAMESPACE, text())
+                    .addColumn(CassandraMessageV2Table.Properties.NAME, text())
+                    .addColumn(CassandraMessageV2Table.Properties.VALUE, text())),
+            new CassandraType(CassandraMessageV2Table.ATTACHMENTS,
+                SchemaBuilder.createType(CassandraMessageV2Table.ATTACHMENTS)
                     .ifNotExists()
-                    .addColumn(CassandraMessageTable.Attachments.ID, text())
-                    .addColumn(CassandraMessageTable.Attachments.NAME, text())
-                    .addColumn(CassandraMessageTable.Attachments.CID, text())
-                    .addColumn(CassandraMessageTable.Attachments.IS_INLINE, cboolean())));
+                    .addColumn(CassandraMessageV2Table.Attachments.ID, text())
+                    .addColumn(CassandraMessageV2Table.Attachments.NAME, text())
+                    .addColumn(CassandraMessageV2Table.Attachments.CID, text())
+                    .addColumn(CassandraMessageV2Table.Attachments.IS_INLINE, cboolean())));
     }
 
     @Override

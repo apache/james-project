@@ -29,6 +29,8 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.RcptHook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -36,8 +38,8 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
  *
  */
 public abstract class AbstractValidRcptHandler implements RcptHook {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractValidRcptHandler.class);
 
-    
     /**
      * @see org.apache.james.protocols.smtp.hook.RcptHook#doRcpt(org.apache.james.protocols.smtp.SMTPSession, org.apache.mailet.MailAddress, org.apache.mailet.MailAddress)
      */
@@ -53,7 +55,7 @@ public abstract class AbstractValidRcptHandler implements RcptHook {
             }
         } else {
             if (isLocalDomain(session, rcpt.getDomain()) == false) {
-                session.getLogger().debug("Unknown domain " + rcpt.getDomain() + " so reject it");
+                LOGGER.debug("Unknown domain " + rcpt.getDomain() + " so reject it");
 
             } else {
                 if (isValidRecipient(session, rcpt) == false) {
@@ -64,7 +66,7 @@ public abstract class AbstractValidRcptHandler implements RcptHook {
        
         if (reject) {
           //user not exist
-            session.getLogger().info("Rejected message. Unknown user: " + rcpt.toString());
+            LOGGER.info("Rejected message. Unknown user: " + rcpt.toString());
             return new HookResult(HookReturnCode.DENY,SMTPRetCode.MAILBOX_PERM_UNAVAILABLE, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.ADDRESS_MAILBOX) + " Unknown user: " + rcpt.toString());
         } else {
             return HookResult.declined();

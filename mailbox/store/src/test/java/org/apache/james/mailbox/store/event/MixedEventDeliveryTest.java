@@ -19,21 +19,19 @@
 
 package org.apache.james.mailbox.store.event;
 
-import org.apache.james.mailbox.MailboxListener;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.james.mailbox.MailboxListener;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 
 public class MixedEventDeliveryTest {
@@ -75,12 +73,9 @@ public class MixedEventDeliveryTest {
         MailboxListener.Event event = new MailboxListener.Event(null, null) {};
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
         final CountDownLatch latch = new CountDownLatch(1);
-        doAnswer(new Answer<Void>() {
-            @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
-                latch.await();
-                return null;
-            }
+        doAnswer(invocation -> {
+            latch.await();
+            return null;
         }).when(listener).event(event);
         mixedEventDelivery.deliver(listener, event);
         latch.countDown();

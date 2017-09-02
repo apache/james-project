@@ -49,6 +49,8 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
@@ -58,6 +60,7 @@ import com.google.common.collect.Iterables;
 
 public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SetMailboxesUpdateProcessor.class);
     private final MailboxUtils mailboxUtils;
     private final MailboxManager mailboxManager;
     private final MailboxFactory mailboxFactory;
@@ -132,6 +135,7 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
                     .description("Cannot rename a mailbox to an already existing mailbox.")
                     .build());
         } catch (MailboxException e) {
+            LOGGER.error("Error while updating mailbox", e);
             responseBuilder.notUpdated(mailboxId, SetError.builder()
                     .type( "anErrorOccurred")
                     .description("An error occurred when updating the mailbox")

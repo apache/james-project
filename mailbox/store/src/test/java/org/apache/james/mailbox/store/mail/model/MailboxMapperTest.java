@@ -97,8 +97,9 @@ public abstract class MailboxMapperTest {
     }
 
     @After
-    public void tearDown() throws MailboxException {
+    public void tearDown() throws Exception {
         mapperProvider.clearMapper();
+        mapperProvider.close();
     }
 
     @Test

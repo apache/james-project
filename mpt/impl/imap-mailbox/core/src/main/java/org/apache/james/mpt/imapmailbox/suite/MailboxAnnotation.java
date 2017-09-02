@@ -22,40 +22,52 @@ package org.apache.james.mpt.imapmailbox.suite;
 
 import java.util.Locale;
 
-import javax.inject.Inject;
-
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.imapmailbox.suite.base.BaseSelectedInbox;
+import org.apache.james.mpt.imapmailbox.ImapTestConstants;
+import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
-public class MailboxAnnotation extends BaseSelectedInbox {
-    @Inject
-    private static ImapHostSystem system;
+public abstract class MailboxAnnotation implements ImapTestConstants {
 
-    public MailboxAnnotation() throws Exception {
-        super(system);
-    }
+    protected abstract ImapHostSystem createImapHostSystem();
+    
+    private ImapHostSystem system;
+    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        system = createImapHostSystem();
         Assume.assumeTrue(system.supports(ImapFeatures.Feature.ANNOTATION_SUPPORT));
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
+        BasicImapCommands.welcome(simpleScriptedTestProtocol);
+        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
+        BasicImapCommands.prepareMailbox(simpleScriptedTestProtocol);
     }
-
+    
     @Test
     public void testAnnotationUS() throws Exception {
-        scriptTest("Annotation", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("Annotation");
     }
 
     @Test
     public void testAnnotationWithLimitationUS() throws Exception {
-        scriptTest("AnnotationWithLimitation", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("AnnotationWithLimitation");
     }
 
     @Test
     public void testAnnotationWithBinaryValue() throws Exception {
-        scriptTest("AnnotationWithBinaryData", Locale.US);
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("AnnotationWithBinaryData");
     }
 }

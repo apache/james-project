@@ -61,7 +61,7 @@ public class ListingEncodingUtils {
     private static List<String> getNameAttributes(AbstractListingResponse response) {
         final List<String> attributes;
         if (response.isNameAttributed()) {
-            attributes = new ArrayList<String>();
+            attributes = new ArrayList<>();
             if (response.isNoInferiors()) {
                 attributes.add(ImapConstants.NAME_ATTRIBUTE_NOINFERIORS);
             }

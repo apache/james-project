@@ -24,11 +24,12 @@ import java.util.Collection;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 
-import org.apache.commons.logging.Log;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionRedirect;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Performs the redirection of a mail. 
@@ -36,6 +37,7 @@ import org.apache.mailet.MailAddress;
  * <p>An instance maybe safe accessed concurrently by multiple threads.</p>
  */
 public class RedirectAction implements MailAction {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RedirectAction.class.getName());
 
     public void execute(Action action, Mail mail, ActionContext context)
             throws MessagingException {
@@ -57,13 +59,12 @@ public class RedirectAction implements MailAction {
     public void execute(ActionRedirect anAction, Mail aMail, ActionContext context) throws MessagingException
     {
         ActionUtils.detectAndHandleLocalLooping(aMail, context, "redirect");
-        Collection<MailAddress> recipients = new ArrayList<MailAddress>(1);
+        Collection<MailAddress> recipients = new ArrayList<>(1);
         recipients.add(new MailAddress(new InternetAddress(anAction.getAddress())));
         MailAddress sender = aMail.getSender();
         context.post(sender, recipients, aMail.getMessage());
-        Log log = context.getLog();
-        if (log.isDebugEnabled()) {
-            log.debug("Redirected Message ID: "
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Redirected Message ID: "
                 + aMail.getMessage().getMessageID() + " to \""
                 + anAction.getAddress() + "\"");
         }

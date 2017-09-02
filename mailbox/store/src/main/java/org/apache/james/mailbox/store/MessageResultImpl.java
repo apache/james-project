@@ -51,7 +51,7 @@ import com.google.common.base.Objects;
  */
 public class MessageResultImpl implements MessageResult {
 
-    private final Map<MimePath, PartContent> partsByPath = new HashMap<MimePath, PartContent>();
+    private final Map<MimePath, PartContent> partsByPath = new HashMap<>();
 
     private MimeDescriptor mimeDescriptor;
 
@@ -337,9 +337,7 @@ public class MessageResultImpl implements MessageResult {
                 } else {
                     mimeDescriptor = new LazyMimeDescriptor(this, message);
                 }
-            } catch (IOException e) {
-                throw new MailboxException("Unable to create the MimeDescriptor", e);
-            } catch (MimeException e) {
+            } catch (IOException | MimeException e) {
                 throw new MailboxException("Unable to create the MimeDescriptor", e);
             }
         }
@@ -398,7 +396,7 @@ public class MessageResultImpl implements MessageResult {
 
         @Override
         public long size() {
-            return msg.getFullContentOctets() - msg.getBodyOctets();
+            return msg.getHeaderOctets();
         }
 
         @Override

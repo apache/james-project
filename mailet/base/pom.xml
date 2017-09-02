@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>apache-mailet</artifactId>
-        <version>3.0.0-RC2-SNAPSHOT</version>
+        <version>3.1.0-SNAPSHOT</version>
         <relativePath>../</relativePath>
     </parent>
 
@@ -31,27 +31,24 @@
     <packaging>bundle</packaging>
 
     <name>Apache James :: Basic Mailet Toolkit</name>
-    <description>
-        Apache James Basic Mailet Toolkit is a collection of utilities and lightweight framework
+    <description>Apache James Basic Mailet Toolkit is a collection of utilities and lightweight framework
         aimed at developers and testers of mailets. This toolkit is extensively used elsewhere in
-        James.
-    </description>
+        James.</description>
     <url>http://james.apache.org/mailet/base/</url>
     <inceptionYear>2008</inceptionYear>
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-mailet-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-mime4j-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-            <version>${commons-lang.version}</version>
+            <groupId>com.github.steveash.guavate</groupId>
+            <artifactId>guavate</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -60,6 +57,15 @@
         <dependency>
             <groupId>com.sun.mail</groupId>
             <artifactId>javax.mail</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.activation</groupId>
@@ -71,14 +77,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>nl.jqno.equalsverifier</groupId>
             <artifactId>equalsverifier</artifactId>
-            <version>1.7.5</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -92,13 +92,13 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <scope>test</scope>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
 
@@ -115,7 +115,7 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.james</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>maven-mailetdocs-plugin</artifactId>
             </plugin>
             <plugin>

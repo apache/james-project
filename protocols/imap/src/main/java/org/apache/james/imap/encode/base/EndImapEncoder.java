@@ -26,6 +26,7 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.ImapEncoder;
 import org.apache.james.imap.encode.ImapResponseComposer;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link ImapEncoder} which should get added to the end of the encoder chain.
@@ -33,6 +34,7 @@ import org.slf4j.Logger;
  * {@link ImapMessage}
  */
 public class EndImapEncoder implements ImapEncoder {
+    private static final Logger LOGGER = LoggerFactory.getLogger(EndImapEncoder.class);
 
     /**
      * @see
@@ -40,12 +42,11 @@ public class EndImapEncoder implements ImapEncoder {
      * org.apache.james.imap.api.process.ImapSession)
      */
     public void encode(ImapMessage message, ImapResponseComposer composer, ImapSession session) throws IOException {
-        final Logger logger = session.getLog();
-        if (logger.isWarnEnabled()) {
-            logger.warn("Unknown message " + message);
+        if (LOGGER.isWarnEnabled()) {
+            LOGGER.warn("Unknown message " + message);
         }
-        if (logger.isDebugEnabled()) {
-            logger.debug("Chain end reached for " + message);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Chain end reached for " + message);
         }
         composer.untaggedNoResponse("Unknown message in pipeline", null);
     }

@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>apache-mailet</artifactId>
-        <version>3.0.0-RC2-SNAPSHOT</version>
+        <version>3.1.0-SNAPSHOT</version>
         <relativePath>../</relativePath>
     </parent>
 
@@ -31,28 +31,30 @@
     <packaging>bundle</packaging>
 
     <name>Apache James :: Standard Mailets</name>
-    <description>
-        Apache James Standard Mailets is a rich collection of general purpose mailets
-        with limited dependencies. These mailets can be used in any mailet container.
-    </description>
+    <description>Apache James Standard Mailets is a rich collection of general purpose mailets
+        with limited dependencies. These mailets can be used in any mailet container.</description>
     <url>http://james.apache.org/mailet/standard/</url>
     <inceptionYear>2008</inceptionYear>
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-mailet-base</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-mailet-base</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-mime4j-dom</artifactId>
-            <version>${mime4j.version}</version>
+            <version>${apache-mime4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-util-java8</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -76,6 +78,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient-osgi</artifactId>
         </dependency>
@@ -97,14 +103,13 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.james</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>maven-mailetdocs-plugin</artifactId>
             </plugin>
         </plugins>

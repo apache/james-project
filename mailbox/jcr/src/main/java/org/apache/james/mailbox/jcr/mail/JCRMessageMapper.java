@@ -56,6 +56,8 @@ import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * JCR implementation of a {@link MessageMapper}. The implementation store each
@@ -63,6 +65,8 @@ import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
  * 
  */
 public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapConstants {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JCRMessageMapper.class);
 
     @SuppressWarnings("deprecation")
     private static final String XPATH_LANGUAGE = Query.XPATH;
@@ -339,7 +343,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
         try {
 
-            List<MessageUid> list = new ArrayList<MessageUid>();
+            List<MessageUid> list = new ArrayList<>();
             String queryString = "/jcr:root" + getMailboxPath(mailbox) + "//element(*,jamesMailbox:message)[@"
                     + JCRMailboxMessage.RECENT_PROPERTY + "='true'] order by @" + JCRMailboxMessage.UID_PROPERTY;
 
@@ -349,7 +353,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
             NodeIterator iterator = result.getNodes();
             while (iterator.hasNext()) {
-                list.add(new JCRMailboxMessage(iterator.nextNode(), mailboxSession.getLog()).getUid());
+                list.add(new JCRMailboxMessage(iterator.nextNode(), LOGGER).getUid());
             }
             return list;
 
@@ -372,7 +376,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
             NodeIterator iterator = result.getNodes();
             if (iterator.hasNext()) {
-                return new JCRMailboxMessage(iterator.nextNode(), mailboxSession.getLog()).getUid();
+                return new JCRMailboxMessage(iterator.nextNode(), LOGGER).getUid();
             } else {
                 return null;
             }
@@ -404,7 +408,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
                 results = findDeletedMessagesInMailboxBetweenUIDs(mailbox, from, to);
                 break;
             }
-            Map<MessageUid, MessageMetaData> uids = new HashMap<MessageUid, MessageMetaData>();
+            Map<MessageUid, MessageMetaData> uids = new HashMap<>();
             for (MailboxMessage m : results) {
                 MessageUid uid = m.getUid();
                 uids.put(uid, new SimpleMessageMetaData(m));
@@ -444,7 +448,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
             // A copy of a message is recent
             // See MAILBOX-85
             node.setProperty(JCRMailboxMessage.RECENT_PROPERTY, true);
-            return new SimpleMessageMetaData(new JCRMailboxMessage(node, mailboxSession.getLog()));
+            return new SimpleMessageMetaData(new JCRMailboxMessage(node, LOGGER));
         } catch (RepositoryException e) {
             throw new MailboxException("Unable to copy message " + original + " in mailbox " + mailbox, e);
         }
@@ -520,9 +524,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
                 membership.merge(messageNode);
             }
             return new SimpleMessageMetaData(membership);
-        } catch (RepositoryException e) {
-            throw new MailboxException("Unable to save message " + message + " in mailbox " + mailbox, e);
-        } catch (IOException e) {
+        } catch (RepositoryException | IOException e) {
             throw new MailboxException("Unable to save message " + message + " in mailbox " + mailbox, e);
         }
     }
@@ -555,7 +557,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
     private List<MailboxMessage> findMessagesInMailboxAfterUID(Mailbox mailbox, MessageUid from, int batchSize)
             throws RepositoryException {
-        List<MailboxMessage> list = new ArrayList<MailboxMessage>();
+        List<MailboxMessage> list = new ArrayList<>();
         String queryString = "/jcr:root" + getMailboxPath(mailbox) + "//element(*,jamesMailbox:message)[@"
                 + JCRMailboxMessage.UID_PROPERTY + ">=" + from + "] order by @" + JCRMailboxMessage.UID_PROPERTY;
 
@@ -567,14 +569,14 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
         NodeIterator iterator = result.getNodes();
         while (iterator.hasNext()) {
-            list.add(new JCRMailboxMessage(iterator.nextNode(), mailboxSession.getLog()));
+            list.add(new JCRMailboxMessage(iterator.nextNode(), LOGGER));
         }
         return list;
     }
 
     private List<MailboxMessage> findMessageInMailboxWithUID(Mailbox mailbox, MessageUid from)
             throws RepositoryException {
-        List<MailboxMessage> list = new ArrayList<MailboxMessage>();
+        List<MailboxMessage> list = new ArrayList<>();
         String queryString = "/jcr:root" + getMailboxPath(mailbox) + "//element(*,jamesMailbox:message)[@"
                 + JCRMailboxMessage.UID_PROPERTY + "=" + from + "]";
 
@@ -584,14 +586,14 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
         QueryResult result = query.execute();
         NodeIterator iterator = result.getNodes();
         while (iterator.hasNext()) {
-            list.add(new JCRMailboxMessage(iterator.nextNode(), mailboxSession.getLog()));
+            list.add(new JCRMailboxMessage(iterator.nextNode(), LOGGER));
         }
         return list;
     }
 
     private List<MailboxMessage> findMessagesInMailboxBetweenUIDs(Mailbox mailbox, MessageUid from, MessageUid to,
                                                                          int batchSize) throws RepositoryException {
-        List<MailboxMessage> list = new ArrayList<MailboxMessage>();
+        List<MailboxMessage> list = new ArrayList<>();
         String queryString = "/jcr:root" + getMailboxPath(mailbox) + "//element(*,jamesMailbox:message)[@"
                 + JCRMailboxMessage.UID_PROPERTY + ">=" + from + " and @" + JCRMailboxMessage.UID_PROPERTY + "<=" + to
                 + "] order by @" + JCRMailboxMessage.UID_PROPERTY;
@@ -604,14 +606,14 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
         NodeIterator iterator = result.getNodes();
         while (iterator.hasNext()) {
-            list.add(new JCRMailboxMessage(iterator.nextNode(), mailboxSession.getLog()));
+            list.add(new JCRMailboxMessage(iterator.nextNode(), LOGGER));
         }
         return list;
     }
 
     private List<MailboxMessage> findMessagesInMailbox(Mailbox mailbox, int batchSize)
             throws RepositoryException {
-        List<MailboxMessage> list = new ArrayList<MailboxMessage>();
+        List<MailboxMessage> list = new ArrayList<>();
 
         String queryString = "/jcr:root" + getMailboxPath(mailbox) + "//element(*,jamesMailbox:message) order by @"
                 + JCRMailboxMessage.UID_PROPERTY;
@@ -623,14 +625,14 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
         NodeIterator iterator = result.getNodes();
         while (iterator.hasNext()) {
-            list.add(new JCRMailboxMessage(iterator.nextNode(), mailboxSession.getLog()));
+            list.add(new JCRMailboxMessage(iterator.nextNode(), LOGGER));
         }
         return list;
     }
 
     private List<MailboxMessage> findDeletedMessagesInMailboxAfterUID(Mailbox mailbox, MessageUid from)
             throws RepositoryException {
-        List<MailboxMessage> list = new ArrayList<MailboxMessage>();
+        List<MailboxMessage> list = new ArrayList<>();
         String queryString = "/jcr:root" + getMailboxPath(mailbox) + "//element(*,jamesMailbox:message)[@"
                 + JCRMailboxMessage.UID_PROPERTY + ">=" + from + " and @" + JCRMailboxMessage.DELETED_PROPERTY + "='true'] order by @"
                 + JCRMailboxMessage.UID_PROPERTY;
@@ -640,14 +642,14 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
         NodeIterator iterator = result.getNodes();
         while (iterator.hasNext()) {
-            list.add(new JCRMailboxMessage(iterator.nextNode(), mailboxSession.getLog()));
+            list.add(new JCRMailboxMessage(iterator.nextNode(), LOGGER));
         }
         return list;
     }
 
     private List<MailboxMessage> findDeletedMessageInMailboxWithUID(Mailbox mailbox, MessageUid from)
             throws RepositoryException {
-        List<MailboxMessage> list = new ArrayList<MailboxMessage>();
+        List<MailboxMessage> list = new ArrayList<>();
         String queryString = "/jcr:root" + getMailboxPath(mailbox) + "//element(*,jamesMailbox:message)[@"
                 + JCRMailboxMessage.UID_PROPERTY + "=" + from + " and @" + JCRMailboxMessage.DELETED_PROPERTY + "='true']";
         QueryManager manager = getSession().getWorkspace().getQueryManager();
@@ -657,7 +659,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
         NodeIterator iterator = result.getNodes();
         while (iterator.hasNext()) {
-            JCRMailboxMessage member = new JCRMailboxMessage(iterator.nextNode(), mailboxSession.getLog());
+            JCRMailboxMessage member = new JCRMailboxMessage(iterator.nextNode(), LOGGER);
             list.add(member);
         }
         return list;
@@ -665,7 +667,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
     private List<MailboxMessage> findDeletedMessagesInMailboxBetweenUIDs(Mailbox mailbox, MessageUid from, MessageUid to)
             throws RepositoryException {
-        List<MailboxMessage> list = new ArrayList<MailboxMessage>();
+        List<MailboxMessage> list = new ArrayList<>();
         String queryString = "/jcr:root" + getMailboxPath(mailbox) + "//element(*,jamesMailbox:message)[@"
                 + JCRMailboxMessage.UID_PROPERTY + ">=" + from + " and @" + JCRMailboxMessage.UID_PROPERTY + "<=" + to + " and @"
                 + JCRMailboxMessage.DELETED_PROPERTY + "='true'] order by @" + JCRMailboxMessage.UID_PROPERTY;
@@ -675,14 +677,14 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
         NodeIterator iterator = result.getNodes();
         while (iterator.hasNext()) {
-            list.add(new JCRMailboxMessage(iterator.nextNode(), mailboxSession.getLog()));
+            list.add(new JCRMailboxMessage(iterator.nextNode(), LOGGER));
         }
         return list;
     }
 
     private List<MailboxMessage> findDeletedMessagesInMailbox(Mailbox mailbox) throws RepositoryException {
 
-        List<MailboxMessage> list = new ArrayList<MailboxMessage>();
+        List<MailboxMessage> list = new ArrayList<>();
         String queryString = "/jcr:root" + getMailboxPath(mailbox) + "//element(*,jamesMailbox:message)[@"
                 + JCRMailboxMessage.DELETED_PROPERTY + "='true'] order by @" + JCRMailboxMessage.UID_PROPERTY;
 
@@ -691,7 +693,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
         NodeIterator iterator = result.getNodes();
         while (iterator.hasNext()) {
-            JCRMailboxMessage member = new JCRMailboxMessage(iterator.nextNode(), mailboxSession.getLog());
+            JCRMailboxMessage member = new JCRMailboxMessage(iterator.nextNode(), LOGGER);
             list.add(member);
         }
         return list;

@@ -18,12 +18,12 @@
  ****************************************************************/
 package org.apache.james.core.filesystem;
 
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Optional;
 import com.google.common.io.Files;
 
 public class SimpleUrl {
@@ -50,8 +50,8 @@ public class SimpleUrl {
     private static void extractComponents(String urlWithUnixSeparators) {
         Matcher m = URL_REGEXP.matcher(urlWithUnixSeparators);
         m.matches();
-        protocol = Optional.fromNullable(m.group(1)).or("");
-        path = Optional.fromNullable(m.group(2)).or("");
+        protocol = Optional.ofNullable(m.group(1)).orElse("");
+        path = Optional.ofNullable(m.group(2)).orElse("");
     }
 
     @VisibleForTesting

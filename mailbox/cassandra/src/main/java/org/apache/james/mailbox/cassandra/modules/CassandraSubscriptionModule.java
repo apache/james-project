@@ -45,6 +45,7 @@ public class CassandraSubscriptionModule implements CassandraModule {
                     .addPartitionKey(CassandraSubscriptionTable.USER, text())
                     .addClusteringColumn(CassandraSubscriptionTable.MAILBOX, text())
                     .withOptions()
+                    .comment("Holds per user list of IMAP subscriptions")
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(PER_USER_CACHED_SUBSCRIPTIONS))));
         types = ImmutableList.of();

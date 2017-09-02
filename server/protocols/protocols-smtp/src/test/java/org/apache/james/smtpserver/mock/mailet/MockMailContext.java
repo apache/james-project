@@ -36,7 +36,7 @@ import org.slf4j.Logger;
 @SuppressWarnings("deprecation")
 public class MockMailContext implements MailetContext {
 
-    final HashMap<String, Object> attributes = new HashMap<String, Object>();
+    final HashMap<String, Object> attributes = new HashMap<>();
 
     @Override
     public void bounce(Mail mail, String message) throws MessagingException {

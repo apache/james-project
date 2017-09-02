@@ -19,6 +19,7 @@
 
 package org.apache.james.user.cassandra;
 
+import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
@@ -35,17 +36,19 @@ import java.util.Iterator;
 import java.util.Locale;
 import java.util.Optional;
 
-import javax.annotation.Resource;
 import javax.inject.Inject;
 
-import org.apache.james.backends.cassandra.utils.CassandraConstants;
+import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.AbstractUsersRepository;
 import org.apache.james.user.lib.model.DefaultUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.google.common.base.Preconditions;
@@ -54,21 +57,70 @@ import com.google.common.primitives.Ints;
 public class CassandraUsersRepository extends AbstractUsersRepository {
 
     private static final String DEFAULT_ALGO_VALUE = "SHA1";
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraUsersRepository.class);
 
-    private Session session;
+    private final CassandraAsyncExecutor executor;
+    private final CassandraUtils cassandraUtils;
+    private final PreparedStatement getUserStatement;
+    private final PreparedStatement updateUserStatement;
+    private final PreparedStatement removeUserStatement;
+    private final PreparedStatement countUserStatement;
+    private final PreparedStatement listStatement;
+    private final PreparedStatement insertStatement;
 
     @Inject
-    @Resource
-    public void setSession(Session session) {
-        this.session = session;
+    public CassandraUsersRepository(Session session, CassandraUtils cassandraUtils) {
+        this.executor = new CassandraAsyncExecutor(session);
+        this.cassandraUtils = cassandraUtils;
+        this.getUserStatement = prepareGetUserStatement(session);
+        this.updateUserStatement = prepareUpdateUserStatement(session);
+        this.removeUserStatement = prepareRemoveUserStatement(session);
+        this.countUserStatement = prepareCountStatement(session);
+        this.listStatement = prepareListStatement(session);
+        this.insertStatement = session.prepare(insertInto(TABLE_NAME)
+            .value(NAME, bindMarker(NAME))
+            .value(REALNAME, bindMarker(REALNAME))
+            .value(PASSWORD, bindMarker(PASSWORD))
+            .value(ALGORITHM, bindMarker(ALGORITHM))
+            .ifNotExists());
     }
-    
+
+    private PreparedStatement prepareListStatement(Session session) {
+        return session.prepare(select(REALNAME)
+            .from(TABLE_NAME));
+    }
+
+    private PreparedStatement prepareCountStatement(Session session) {
+        return session.prepare(select().countAll().from(TABLE_NAME));
+    }
+
+    private PreparedStatement prepareRemoveUserStatement(Session session) {
+        return session.prepare( delete()
+            .from(TABLE_NAME)
+            .where(eq(NAME, bindMarker(NAME)))
+            .ifExists());
+    }
+
+    private PreparedStatement prepareUpdateUserStatement(Session session) {
+        return session.prepare(update(TABLE_NAME)
+            .with(set(REALNAME, bindMarker(REALNAME)))
+            .and(set(PASSWORD, bindMarker(PASSWORD)))
+            .and(set(ALGORITHM, bindMarker(ALGORITHM)))
+            .where(eq(NAME, bindMarker(NAME)))
+            .ifExists());
+    }
+
+    private PreparedStatement prepareGetUserStatement(Session session) {
+        return session.prepare(select(REALNAME, PASSWORD, ALGORITHM)
+            .from(TABLE_NAME)
+            .where(eq(NAME, bindMarker(NAME))));
+    }
+
     @Override
     public User getUserByName(String name){
-        ResultSet result = session.execute(
-                select(REALNAME, PASSWORD, ALGORITHM)
-                .from(TABLE_NAME)
-                .where(eq(NAME, name.toLowerCase(Locale.US))));
+        ResultSet result = executor.execute(getUserStatement.bind()
+            .setString(NAME, name.toLowerCase(Locale.US)))
+            .join();
         return Optional.ofNullable(result.one())
             .map(row -> new DefaultUser(row.getString(REALNAME), row.getString(PASSWORD), row.getString(ALGORITHM)))
             .filter(user -> user.getUserName().equals(name))
@@ -79,15 +131,13 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     public void updateUser(User user) throws UsersRepositoryException {
         Preconditions.checkArgument(user instanceof DefaultUser);
         DefaultUser defaultUser = (DefaultUser) user;
-        boolean executed = session.execute(
-                update(TABLE_NAME)
-                    .with(set(REALNAME, defaultUser.getUserName()))
-                    .and(set(PASSWORD, defaultUser.getHashedPassword()))
-                    .and(set(ALGORITHM, defaultUser.getHashAlgorithm()))
-                    .where(eq(NAME, defaultUser.getUserName().toLowerCase(Locale.US)))
-                    .ifExists())
-                .one()
-                .getBool(CassandraConstants.LIGHTWEIGHT_TRANSACTION_APPLIED);
+        boolean executed = executor.executeReturnApplied(
+                updateUserStatement.bind()
+                    .setString(REALNAME, defaultUser.getUserName())
+                    .setString(PASSWORD, defaultUser.getHashedPassword())
+                    .setString(ALGORITHM, defaultUser.getHashAlgorithm())
+                    .setString(NAME, defaultUser.getUserName().toLowerCase(Locale.US)))
+            .join();
 
         if (!executed) {
             throw new UsersRepositoryException("Unable to update user");
@@ -96,13 +146,10 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
 
     @Override
     public void removeUser(String name) throws UsersRepositoryException {
-        boolean executed = session.execute(
-            delete()
-                .from(TABLE_NAME)
-                .where(eq(NAME, name))
-                .ifExists())
-            .one()
-            .getBool(CassandraConstants.LIGHTWEIGHT_TRANSACTION_APPLIED);
+        boolean executed = executor.executeReturnApplied(
+            removeUserStatement.bind()
+                .setString(NAME, name))
+            .join();
 
         if (!executed) {
             throw new UsersRepositoryException("unable to remove unknown user " + name);
@@ -118,21 +165,23 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     public boolean test(String name, String password) throws UsersRepositoryException {
         return Optional.ofNullable(getUserByName(name))
                 .map(x -> x.verifyPassword(password))
-                .orElse(false);
+            .orElseGet(() -> {
+                LOGGER.info("Could not retrieve user {}. Password is unverified.");
+                return false;
+            });
     }
 
     @Override
     public int countUsers() throws UsersRepositoryException {
-        ResultSet result = session.execute(select().countAll().from(TABLE_NAME));
+        ResultSet result = executor.execute(countUserStatement.bind()).join();
         return Ints.checkedCast(result.one().getLong(0));
     }
 
     @Override
     public Iterator<String> list() throws UsersRepositoryException {
-        ResultSet result = session.execute(
-                select(REALNAME)
-                .from(TABLE_NAME));
-        return CassandraUtils.convertToStream(result)
+        ResultSet result = executor.execute(listStatement.bind())
+            .join();
+        return cassandraUtils.convertToStream(result)
             .map(row -> row.getString(REALNAME))
             .iterator();
     }
@@ -147,15 +196,13 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     protected void doAddUser(String username, String password) throws UsersRepositoryException {
         DefaultUser user = new DefaultUser(username, DEFAULT_ALGO_VALUE);
         user.setPassword(password);
-        boolean executed = session.execute(
-            insertInto(TABLE_NAME)
-                .value(NAME, user.getUserName().toLowerCase(Locale.US))
-                .value(REALNAME, user.getUserName())
-                .value(PASSWORD, user.getHashedPassword())
-                .value(ALGORITHM, user.getHashAlgorithm())
-                .ifNotExists())
-            .one()
-            .getBool(CassandraConstants.LIGHTWEIGHT_TRANSACTION_APPLIED);
+        boolean executed = executor.executeReturnApplied(
+            insertStatement.bind()
+                .setString(NAME, user.getUserName().toLowerCase(Locale.US))
+                .setString(REALNAME, user.getUserName())
+                .setString(PASSWORD, user.getHashedPassword())
+                .setString(ALGORITHM, user.getHashAlgorithm()))
+            .join();
 
         if (!executed) {
             throw new AlreadyExistInUsersRepositoryException("User with username " + username + " already exist!");

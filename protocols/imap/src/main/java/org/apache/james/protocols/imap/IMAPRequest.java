@@ -26,8 +26,12 @@ import java.util.Iterator;
 import java.util.Locale;
 
 import org.apache.james.protocols.api.Request;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class IMAPRequest implements Request {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(IMAPRequest.class);
 
     private static final String US_ASCII = "US_ASCII";
     
@@ -90,7 +94,7 @@ public class IMAPRequest implements Request {
                 sb.append(new String(buf, US_ASCII));
             } catch (UnsupportedEncodingException e) {
                 // Should never happend
-                e.printStackTrace();
+                LOGGER.error("Unupported encoding", e);
             }
             if (linesIt.hasNext()) {
                 sb.append(CRLF);

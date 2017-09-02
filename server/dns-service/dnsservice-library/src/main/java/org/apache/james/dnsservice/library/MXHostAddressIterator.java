@@ -27,11 +27,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.mailet.HostAddress;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -42,14 +43,15 @@ import com.google.common.collect.Maps;
  */
 @SuppressWarnings("deprecation")
 public class MXHostAddressIterator implements Iterator<HostAddress> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MXHostAddressIterator.class);
 
     private final Iterator<HostAddress> addresses;
 
-    public MXHostAddressIterator(Iterator<String> hosts, DNSService dns, boolean useSingleIP, Logger logger) {
-        this(hosts, 25, dns, useSingleIP, logger);
+    public MXHostAddressIterator(Iterator<String> hosts, DNSService dns, boolean useSingleIP) {
+        this(hosts, 25, dns, useSingleIP);
     }
 
-    public MXHostAddressIterator(Iterator<String> hosts, int defaultPort, DNSService dns, boolean useSingleIP, Logger logger) {
+    public MXHostAddressIterator(Iterator<String> hosts, int defaultPort, DNSService dns, boolean useSingleIP) {
         checkNotNull(hosts, "Hosts is null");
         checkNotNull(dns, "Dns is null");
         final List<HostAddress> hAddresses = Lists.newArrayList();
@@ -74,7 +76,7 @@ public class MXHostAddressIterator implements Iterator<HostAddress> {
                 // this host from mxHosts, which should have
                 // already done this check.
                 String logBuffer = "Couldn't resolve IP address for discovered host " + hostAndPort.getKey() + ".";
-                logger.error(logBuffer);
+                LOGGER.error(logBuffer);
             }
         }
         addresses = hAddresses.iterator();

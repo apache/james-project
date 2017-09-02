@@ -18,12 +18,12 @@
     under the License.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>apache-james-mpt-managesieve</artifactId>
-        <groupId>org.apache.james</groupId>
-        <version>3.0.0-RC2-SNAPSHOT</version>
-    </parent>
     <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.james</groupId>
+        <artifactId>apache-james-mpt-managesieve</artifactId>
+        <version>3.1.0-SNAPSHOT</version>
+    </parent>
 
     <artifactId>apache-james-mpt-managesieve-core</artifactId>
 
@@ -31,18 +31,13 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mpt-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-data-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.james.protocols</groupId>
-            <artifactId>protocols-managesieve</artifactId>
-        </dependency>
-
 
         <dependency>
             <groupId>com.google.inject</groupId>
@@ -53,8 +48,8 @@
             <artifactId>junit</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>apache-james-mpt-onami-test</artifactId>
+            <groupId>org.apache.james.protocols</groupId>
+            <artifactId>protocols-managesieve</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -76,6 +71,5 @@
             </plugin>
         </plugins>
     </build>
-
 
 </project>

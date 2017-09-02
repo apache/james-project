@@ -5,11 +5,10 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-server</artifactId>
-        <version>3.0.0-RC2-SNAPSHOT</version>
+        <version>3.1.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <groupId>org.apache.james.karaf</groupId>
     <artifactId>james-karaf-features</artifactId>
     <packaging>pom</packaging>
     <name>Apache James :: Karaf :: Features</name>
@@ -25,9 +24,9 @@
     <build>
         <resources>
             <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
                 <targetPath>${project.build.directory}</targetPath>
+                <filtering>true</filtering>
+                <directory>src/main/resources</directory>
             </resource>
         </resources>
 
@@ -38,10 +37,10 @@
                 <executions>
                     <execution>
                         <id>filter</id>
-                        <phase>generate-resources</phase>
                         <goals>
                             <goal>resources</goal>
                         </goals>
+                        <phase>generate-resources</phase>
                     </execution>
                 </executions>
             </plugin>
@@ -72,10 +71,10 @@
                 <executions>
                     <execution>
                         <id>attach-artifacts</id>
-                        <phase>package</phase>
                         <goals>
                             <goal>attach-artifact</goal>
                         </goals>
+                        <phase>package</phase>
                         <configuration>
                             <artifacts>
                                 <artifact>

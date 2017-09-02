@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.rrt.cassandra;
 
+import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
@@ -26,78 +27,115 @@ import static org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTab
 import static org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTableTable.MAPPING;
 import static org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTableTable.TABLE_NAME;
 import static org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTableTable.USER;
-
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
-import javax.annotation.Resource;
+import java.util.Optional;
 import javax.inject.Inject;
 
+import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
+import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 
+import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
-import com.google.common.base.Optional;
+import com.github.steveash.guavate.Guavate;
 
 public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTable {
 
-    private Session session;
+    private final CassandraAsyncExecutor executor;
+    private final CassandraUtils cassandraUtils;
+    private final PreparedStatement insertStatement;
+    private final PreparedStatement deleteStatement;
+    private final PreparedStatement retrieveMappingStatement;
+    private final PreparedStatement retrieveAllMappingsStatement;
 
     @Inject
-    @Resource
-    public void setSession(Session session) {
-        this.session = session;
+    public CassandraRecipientRewriteTable(Session session, CassandraUtils cassandraUtils) {
+        this.executor = new CassandraAsyncExecutor(session);
+        this.cassandraUtils = cassandraUtils;
+        this.insertStatement = prepareInsertStatement(session);
+        this.deleteStatement = prepareDelete(session);
+        this.retrieveMappingStatement = prepareRetrieveMappingStatement(session);
+        this.retrieveAllMappingsStatement = prepareRetrieveAllMappingStatement(session);
     }
 
-    @Override
-    protected void addMappingInternal(String user, String domain, String mapping) throws RecipientRewriteTableException {
-        session.execute(insertInto(TABLE_NAME)
-            .value(USER, getFixedUser(user))
-            .value(DOMAIN, getFixedDomain(domain))
-            .value(MAPPING, mapping));
+    private PreparedStatement prepareRetrieveAllMappingStatement(Session session) {
+        return session.prepare(select(USER, DOMAIN, MAPPING)
+            .from(TABLE_NAME));
     }
 
-    @Override
-    protected void removeMappingInternal(String user, String domain, String mapping) throws RecipientRewriteTableException {
-        session.execute(delete()
+    private PreparedStatement prepareRetrieveMappingStatement(Session session) {
+        return session.prepare(select(MAPPING)
             .from(TABLE_NAME)
-            .where(eq(USER, getFixedUser(user)))
-            .and(eq(DOMAIN, getFixedDomain(domain)))
-            .and(eq(MAPPING, mapping)));
+            .where(eq(USER, bindMarker(USER)))
+            .and(eq(DOMAIN, bindMarker(DOMAIN))));
+    }
+
+    private PreparedStatement prepareDelete(Session session) {
+        return session.prepare(delete()
+            .from(TABLE_NAME)
+            .where(eq(USER, bindMarker(USER)))
+            .and(eq(DOMAIN, bindMarker(DOMAIN)))
+            .and(eq(MAPPING, bindMarker(MAPPING))));
+    }
+
+    private PreparedStatement prepareInsertStatement(Session session) {
+        return session.prepare(insertInto(TABLE_NAME)
+            .value(USER, bindMarker(USER))
+            .value(DOMAIN, bindMarker(DOMAIN))
+            .value(MAPPING, bindMarker(MAPPING)));
+    }
+
+    @Override
+    protected void addMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
+        executor.executeVoid(insertStatement.bind()
+            .setString(USER, getFixedUser(user))
+            .setString(DOMAIN, getFixedDomain(domain))
+            .setString(MAPPING, mapping.asString()))
+            .join();
+    }
+
+    @Override
+    protected void removeMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
+        executor.executeVoid(deleteStatement.bind()
+                .setString(USER, getFixedUser(user))
+                .setString(DOMAIN, getFixedDomain(domain))
+                .setString(MAPPING, mapping.asString()))
+            .join();
     }
 
     @Override
     protected Mappings getUserDomainMappingsInternal(String user, String domain) throws RecipientRewriteTableException {
         return retrieveMappings(user, domain)
-            .orNull();
+            .orElse(null);
     }
 
     private Optional<Mappings> retrieveMappings(String user, String domain) {
-        List<String> mappings = session.execute(select(MAPPING)
-                .from(TABLE_NAME)
-                .where(eq(USER, getFixedUser(user)))
-                .and(eq(DOMAIN, getFixedDomain(domain))))
-            .all()
-            .stream()
-            .map(row -> row.getString(MAPPING))
-            .collect(Collectors.toList());
+        List<String> mappings = executor.execute(retrieveMappingStatement.bind()
+            .setString(USER, getFixedUser(user))
+            .setString(DOMAIN, getFixedDomain(domain)))
+            .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
+                .map(row -> row.getString(MAPPING))
+                .collect(Guavate.toImmutableList()))
+            .join();
 
         return MappingsImpl.fromCollection(mappings).toOptional();
     }
 
     @Override
     protected Map<String, Mappings> getAllMappingsInternal() throws RecipientRewriteTableException {
-        Map<String, Mappings> map = session.execute(select(USER, DOMAIN, MAPPING)
-            .from(TABLE_NAME))
-            .all()
-            .stream()
-            .map(row -> new UserMapping(row.getString(USER), row.getString(DOMAIN), row.getString(MAPPING)))
-            .collect(Collectors.toMap(UserMapping::asKey, 
-                    userMapping -> MappingsImpl.fromRawString(userMapping.getMapping()),
-                    (first, second) -> first.union(second)));
+        Map<String, Mappings> map = executor.execute(retrieveAllMappingsStatement.bind())
+            .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
+                .map(row -> new UserMapping(row.getString(USER), row.getString(DOMAIN), row.getString(MAPPING)))
+                .collect(Guavate.toImmutableMap(
+                    UserMapping::asKey,
+                    UserMapping::toMapping,
+                    Mappings::union)))
+            .join();
         return map.isEmpty() ? null : map;
     }
 
@@ -125,6 +163,10 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
             return mapping;
         }
 
+        public Mappings toMapping() {
+            return MappingsImpl.fromRawString(getMapping());
+        }
+
         public String asKey() {
             return getUser() + "@" + getDomain();
         }
@@ -133,9 +175,10 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     @Override
     protected String mapAddressInternal(String user, String domain) throws RecipientRewriteTableException {
         Mappings mappings = retrieveMappings(user, domain)
-            .or(() -> retrieveMappings(WILDCARD, domain)
-                    .or(() -> retrieveMappings(user, WILDCARD)
-                            .or(MappingsImpl.empty())));
+            .orElseGet(() -> retrieveMappings(WILDCARD, domain)
+                .orElseGet(() -> retrieveMappings(user, WILDCARD)
+                    .orElseGet(() -> MappingsImpl.empty())));
+
         return !mappings.isEmpty() ? mappings.serialize() : null;
     }
 

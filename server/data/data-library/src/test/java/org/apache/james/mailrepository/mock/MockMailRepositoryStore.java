@@ -29,7 +29,7 @@ import org.apache.james.mailrepository.api.MailRepositoryStore;
 
 public class MockMailRepositoryStore implements MailRepositoryStore {
 
-    final Map<String, MailRepository> m_storedObjectMap = new HashMap<String, MailRepository>();
+    final Map<String, MailRepository> m_storedObjectMap = new HashMap<>();
 
     public void add(String url, MailRepository obj) {
         m_storedObjectMap.put(url, obj);
@@ -47,7 +47,7 @@ public class MockMailRepositoryStore implements MailRepositoryStore {
 
     @Override
     public List<String> getUrls() {
-        return new ArrayList<String>(m_storedObjectMap.keySet());
+        return new ArrayList<>(m_storedObjectMap.keySet());
     }
 
 }

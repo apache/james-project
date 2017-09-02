@@ -43,18 +43,19 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import com.google.common.base.Throwables;
 
 public class StoreMessageIdManagerTestSystem extends MessageIdManagerTestSystem {
-    private static final MailboxSession DEFAULT_MAILBOX_SESSION = new MockMailboxSession("user", SessionType.System);
     private static final long MOD_SEQ = 18;
     private static final ByteArrayInputStream ARRAY_INPUT_STREAM = new ByteArrayInputStream("".getBytes());
 
     private final MessageId.Factory messageIdFactory;
     private final TestMailboxSessionMapperFactory mapperFactory;
+    private final MailboxSession defaultMailboxSession;
 
     public StoreMessageIdManagerTestSystem(MessageIdManager messageIdManager, MessageId.Factory messageIdFactory, TestMailboxSessionMapperFactory mapperFactory) {
         super(messageIdManager);
 
         this.messageIdFactory = messageIdFactory;
         this.mapperFactory = mapperFactory;
+        this.defaultMailboxSession = new MockMailboxSession("user", SessionType.System);
     }
 
     @Override
@@ -66,7 +67,7 @@ public class StoreMessageIdManagerTestSystem extends MessageIdManagerTestSystem 
     public MessageId persist(MailboxId mailboxId, MessageUid uid, Flags flags, MailboxSession session) {
         MessageId messageId = messageIdFactory.generate();
         try {
-            mapperFactory.createMessageIdMapper(DEFAULT_MAILBOX_SESSION)
+            mapperFactory.createMessageIdMapper(defaultMailboxSession)
                 .save(createMessage(mailboxId, flags, messageId, uid));
             return messageId;
         } catch (MailboxException e) {
@@ -102,5 +103,10 @@ public class StoreMessageIdManagerTestSystem extends MessageIdManagerTestSystem 
         }
         when(mailboxMessage.createFlags()).thenReturn(flags);
         return mailboxMessage;
+    }
+
+    @Override
+    public int getConstantMessageSize() {
+        throw new NotImplementedException();
     }
 }

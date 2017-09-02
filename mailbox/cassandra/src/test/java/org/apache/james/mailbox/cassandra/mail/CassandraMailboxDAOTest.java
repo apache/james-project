@@ -26,7 +26,7 @@ import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
-import org.apache.james.mailbox.cassandra.CassandraId;
+import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -40,7 +40,6 @@ import com.github.steveash.guavate.Guavate;
 
 public class CassandraMailboxDAOTest {
 
-    public static final int MAX_ACL_RETRY = 10;
     public static final int UID_VALIDITY_1 = 145;
     public static final int UID_VALIDITY_2 = 147;
     public static final MailboxPath NEW_MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "xyz");
@@ -56,7 +55,7 @@ public class CassandraMailboxDAOTest {
         cassandra = CassandraCluster.create(new CassandraModuleComposite(new CassandraMailboxModule(), new CassandraAclModule()));
         cassandra.ensureAllTables();
 
-        testee = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider(), MAX_ACL_RETRY);
+        testee = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
         mailbox1 = new SimpleMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "abcd"),
             UID_VALIDITY_1,
             CASSANDRA_ID_1);
@@ -68,12 +67,13 @@ public class CassandraMailboxDAOTest {
     @After
     public void tearDown() {
         cassandra.clearAllTables();
+        cassandra.close();
     }
 
     @Test
     public void retrieveMailboxShouldReturnEmptyWhenNone() {
-        Optional<SimpleMailbox> mailboxOptional = testee.retrieveMailbox(CASSANDRA_ID_1).join();
-        assertThat(mailboxOptional.isPresent()).isFalse();
+        assertThat(testee.retrieveMailbox(CASSANDRA_ID_1).join())
+            .isEmpty();
     }
 
     @Test
@@ -143,8 +143,8 @@ public class CassandraMailboxDAOTest {
 
         testee.delete(CASSANDRA_ID_1).join();
 
-        Optional<SimpleMailbox> mailboxOptional = testee.retrieveMailbox(CASSANDRA_ID_1).join();
-        assertThat(mailboxOptional.isPresent()).isFalse();
+        assertThat(testee.retrieveMailbox(CASSANDRA_ID_1).join())
+            .isEmpty();
     }
 
     @Test
@@ -161,8 +161,7 @@ public class CassandraMailboxDAOTest {
         mailbox1.setNamespace(NEW_MAILBOX_PATH.getNamespace());
         mailbox1.setUser(NEW_MAILBOX_PATH.getUser());
         mailbox1.setName(NEW_MAILBOX_PATH.getName());
-        Optional<SimpleMailbox> readMailbox = testee.retrieveMailbox(CASSANDRA_ID_1)
-            .join();
+        Optional<SimpleMailbox> readMailbox = testee.retrieveMailbox(CASSANDRA_ID_1).join();
         assertThat(readMailbox.isPresent()).isTrue();
         assertThat(readMailbox.get()).isEqualToComparingFieldByField(mailbox1);
     }

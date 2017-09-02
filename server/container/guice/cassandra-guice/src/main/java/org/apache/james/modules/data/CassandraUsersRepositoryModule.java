@@ -27,8 +27,6 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.cassandra.CassandraUsersRepository;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -39,9 +37,6 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
 public class CassandraUsersRepositoryModule extends AbstractModule {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraUsersRepositoryModule.class);
-
     @Override
     public void configure() {
         bind(CassandraUsersRepository.class).in(Scopes.SINGLETON);
@@ -67,7 +62,6 @@ public class CassandraUsersRepositoryModule extends AbstractModule {
         @Override
         public void initModule() {
             try {
-                usersRepository.setLog(LOGGER);
                 usersRepository.configure(configurationProvider.getConfiguration("usersrepository"));
             } catch (ConfigurationException e) {
                 Throwables.propagate(e);

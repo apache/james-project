@@ -39,6 +39,7 @@ public class CassandraPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerT
     @After
     public void cleanUp() {
         cassandra.clearAllTables();
+        cassandra.close();
     }
 
 }

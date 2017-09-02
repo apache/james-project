@@ -26,6 +26,7 @@ import javax.net.ssl.SSLEngine;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.decode.ImapDecoder;
@@ -46,13 +47,22 @@ import org.jboss.netty.handler.ssl.SslHandler;
 import org.jboss.netty.handler.stream.ChunkedWriteHandler;
 import org.jboss.netty.handler.timeout.IdleStateHandler;
 import org.jboss.netty.util.HashedWheelTimer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * NIO IMAP Server which use Netty.
  */
 public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapConstants, IMAPServerMBean, NettyConstants {
+    private static final Logger LOG = LoggerFactory.getLogger(IMAPServer.class);
 
     private static final String softwaretype = "JAMES " + VERSION + " Server ";
+    private static final String DEFAULT_TIME_UNIT = "SECONDS";
+    private static final String CAPABILITY_SEPARATOR = "|";
 
     private final ImapProcessor processor;
     private final ImapEncoder encoder;
@@ -99,7 +109,28 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         if (timeout < 0) {
             timeout = 0;
         }
-        
+
+        processor.configure(getImapConfiguration(configuration));
+    }
+
+    @VisibleForTesting static ImapConfiguration getImapConfiguration(HierarchicalConfiguration configuration) {
+        ImmutableSet<String> disabledCaps = ImmutableSet.copyOf(Splitter.on(CAPABILITY_SEPARATOR).split(configuration.getString("disabledCaps", "")));
+
+        return ImapConfiguration.builder()
+                .enableIdle(configuration.getBoolean("enableIdle", ImapConfiguration.DEFAULT_ENABLE_IDLE))
+                .idleTimeInterval(configuration.getLong("idleTimeInterval", ImapConfiguration.DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS))
+                .idleTimeIntervalUnit(getTimeIntervalUnit(configuration.getString("idleTimeIntervalUnit", DEFAULT_TIME_UNIT)))
+                .disabledCaps(disabledCaps)
+                .build();
+    }
+
+    private static TimeUnit getTimeIntervalUnit(String timeIntervalUnit) {
+        try {
+            return TimeUnit.valueOf(timeIntervalUnit);
+        } catch (IllegalArgumentException e) {
+            LOG.info("Time interval unit is not valid {}, the default {} value should be used", timeIntervalUnit, ImapConfiguration.DEFAULT_HEARTBEAT_INTERVAL_UNIT);
+            return ImapConfiguration.DEFAULT_HEARTBEAT_INTERVAL_UNIT;
+        }
     }
 
     /**
@@ -178,9 +209,9 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         ImapChannelUpstreamHandler coreHandler;
         Encryption secure = getEncryption();
         if (secure!= null && secure.isStartTLS()) {
-           coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, getLogger(), compress, plainAuthDisallowed, secure.getContext(), getEnabledCipherSuites(), imapMetrics);
+           coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, compress, plainAuthDisallowed, secure.getContext(), getEnabledCipherSuites(), imapMetrics);
         } else {
-           coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, getLogger(), compress, plainAuthDisallowed, imapMetrics);
+           coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, compress, plainAuthDisallowed, imapMetrics);
         }
         return coreHandler;
     }

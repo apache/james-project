@@ -19,19 +19,17 @@
 package org.apache.james.protocols.smtp.netty;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Properties;
-
 import javax.mail.Message;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.net.smtp.SMTPReply;
-import org.apache.commons.net.smtp.SMTPSClient;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
@@ -41,7 +39,6 @@ import org.apache.james.protocols.api.handler.WiringException;
 import org.apache.james.protocols.api.utils.BogusSSLSocketFactory;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
-import org.apache.james.protocols.api.utils.MockLogger;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.NettyServer;
@@ -50,12 +47,13 @@ import org.apache.james.protocols.smtp.SMTPConfigurationImpl;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.protocols.smtp.SMTPProtocolHandlerChain;
 import org.apache.james.protocols.smtp.utils.TestMessageHook;
+import org.apache.commons.net.smtp.SMTPReply;
+import org.apache.commons.net.smtp.SMTPSClient;
+
+import com.sun.mail.smtp.SMTPTransport;
 import org.assertj.core.api.AssertDelegateTarget;
 import org.junit.After;
 import org.junit.Test;
-
-import com.google.common.base.Optional;
-import com.sun.mail.smtp.SMTPTransport;
 
 public class NettyStartTlsSMTPServerTest {
 
@@ -98,12 +96,12 @@ public class NettyStartTlsSMTPServerTest {
             chain.add(handler.get());
         }
         chain.wireExtensibleHandlers();
-        return new SMTPProtocol(chain, new SMTPConfigurationImpl(), new MockLogger());
+        return new SMTPProtocol(chain, new SMTPConfigurationImpl());
     }
 
     @Test
     public void connectShouldReturnTrueWhenConnecting() throws Exception {
-        server = createServer(createProtocol(Optional.<ProtocolHandler> absent()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
+        server = createServer(createProtocol(Optional.empty()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         smtpsClient = createClient();
 
         server.bind();
@@ -114,7 +112,7 @@ public class NettyStartTlsSMTPServerTest {
 
     @Test
     public void ehloShouldReturnTrueWhenSendingTheCommand() throws Exception {
-        server = createServer(createProtocol(Optional.<ProtocolHandler> absent()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
+        server = createServer(createProtocol(Optional.empty()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         smtpsClient = createClient();
 
         server.bind();
@@ -127,7 +125,7 @@ public class NettyStartTlsSMTPServerTest {
 
     @Test
     public void startTlsShouldBeAnnouncedWhenServerSupportsIt() throws Exception {
-        server = createServer(createProtocol(Optional.<ProtocolHandler> absent()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
+        server = createServer(createProtocol(Optional.empty()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         smtpsClient = createClient();
 
         server.bind();
@@ -148,18 +146,15 @@ public class NettyStartTlsSMTPServerTest {
         }
 
         public boolean isStartTLSAnnounced() {
-            for (String reply: client.getReplyStrings()) {
-                if (reply.toUpperCase(Locale.US).endsWith("STARTTLS")) {
-                    return true;
-                }
-            }
-            return false;
+            return Arrays.stream(client.getReplyStrings())
+                .anyMatch(reply -> reply.toUpperCase(Locale.US)
+                    .endsWith("STARTTLS"));
         }
     }
 
     @Test
     public void startTlsShouldReturnTrueWhenServerSupportsIt() throws Exception {
-        server = createServer(createProtocol(Optional.<ProtocolHandler> absent()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
+        server = createServer(createProtocol(Optional.empty()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         smtpsClient = createClient();
 
         server.bind();
@@ -173,7 +168,7 @@ public class NettyStartTlsSMTPServerTest {
 
     @Test
     public void startTlsShouldFailWhenFollowedByInjectedCommand() throws Exception {
-        server = createServer(createProtocol(Optional.<ProtocolHandler> absent()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
+        server = createServer(createProtocol(Optional.empty()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         smtpsClient = createClient();
 
         server.bind();
@@ -187,7 +182,7 @@ public class NettyStartTlsSMTPServerTest {
 
     @Test
     public void startTlsShouldFailWhenFollowedByInjectedCommandAndNotAtBeginningOfLine() throws Exception {
-        server = createServer(createProtocol(Optional.<ProtocolHandler> absent()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
+        server = createServer(createProtocol(Optional.empty()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         smtpsClient = createClient();
 
         server.bind();

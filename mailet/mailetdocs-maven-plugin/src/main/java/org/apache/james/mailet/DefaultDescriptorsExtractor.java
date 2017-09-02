@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.james.mailet.MailetMatcherDescriptor.Type;
 import org.apache.mailet.Experimental;
@@ -39,10 +40,7 @@ import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
 import com.thoughtworks.qdox.JavaDocBuilder;
-import com.thoughtworks.qdox.model.Annotation;
 import com.thoughtworks.qdox.model.JavaClass;
 
 /**
@@ -57,7 +55,7 @@ public class DefaultDescriptorsExtractor {
     private final List<MailetMatcherDescriptor> descriptors;
     
     public DefaultDescriptorsExtractor() {
-        descriptors = new ArrayList<MailetMatcherDescriptor> ();
+        descriptors = new ArrayList<>();
     }
 
     /**
@@ -120,9 +118,7 @@ public class DefaultDescriptorsExtractor {
                 logInterfaces(log, klass, allInterfaces);
             }
 
-        } catch (NoClassDefFoundError e) {
-            log.error("NotFound: " + e.getMessage());
-        } catch (ClassNotFoundException e) {
+        } catch (NoClassDefFoundError | ClassNotFoundException e) {
             log.error("NotFound: " + e.getMessage());
         } catch (SecurityException e) {
             log.error("SE: " + e.getMessage());
@@ -177,17 +173,8 @@ public class DefaultDescriptorsExtractor {
             if (info != null && info.length() > 0) {
                 result.setInfo(info);
             }
-        } catch (InstantiationException e) {
-            handleInfoLoadFailure(log, nameOfClass, type, e);
-        } catch (IllegalAccessException e) {
-            handleInfoLoadFailure(log, nameOfClass, type, e);
-        } catch (IllegalArgumentException e) {
-            handleInfoLoadFailure(log, nameOfClass, type, e);
-        } catch (SecurityException e) {
-            handleInfoLoadFailure(log, nameOfClass, type, e);
-        } catch (InvocationTargetException e) {
-            handleInfoLoadFailure(log, nameOfClass, type, e);
-        } catch (NoSuchMethodException e) {
+        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+                | InvocationTargetException | SecurityException | NoSuchMethodException e) {
             handleInfoLoadFailure(log, nameOfClass, type, e);
         }
         return result;
@@ -195,15 +182,9 @@ public class DefaultDescriptorsExtractor {
 
 
     private boolean isExperimental(JavaClass javaClass) {
-        return FluentIterable.of(javaClass.getAnnotations())
-            .anyMatch(new Predicate<Annotation>() {
-
-                @Override
-                public boolean apply(Annotation annotation) {
-                    return annotation.getType().getValue()
-                            .equals(Experimental.class.getName());
-                }
-            });
+        return Stream.of(javaClass.getAnnotations())
+            .anyMatch(annotation -> annotation.getType().getValue()
+                    .equals(Experimental.class.getName()));
     }
 
     private void handleInfoLoadFailure(Log log, String nameOfClass,
@@ -239,9 +220,7 @@ public class DefaultDescriptorsExtractor {
         if (log.isDebugEnabled()) {
             try {
                 log.debug("Constructor(empty): " + klass.getConstructor((Class<?>)null));
-            } catch (SecurityException e) { 
-                log.debug("Cannot introspect empty constructor", e);
-            } catch (NoSuchMethodException e) {
+            } catch (SecurityException | NoSuchMethodException e) {
                 log.debug("Cannot introspect empty constructor", e);
             }
         }
@@ -306,7 +285,7 @@ public class DefaultDescriptorsExtractor {
 
 
     private List<JavaClass> getAllInterfacesQdox(JavaClass javaClass) {
-        List<JavaClass> res = new LinkedList<JavaClass>();
+        List<JavaClass> res = new LinkedList<>();
         if (javaClass.getImplementedInterfaces() != null) {
             JavaClass[] interfaces = javaClass.getImplementedInterfaces();
             Collections.addAll(res, interfaces);
@@ -318,7 +297,7 @@ public class DefaultDescriptorsExtractor {
     }
 
     private List<Class<?>> getAllInterfaces(Class<?> klass) {
-        List<Class<?>> res = new LinkedList<Class<?>>();
+        List<Class<?>> res = new LinkedList<>();
         if (klass.getInterfaces() != null) {
             Class<?>[] interfaces = klass.getInterfaces();
             for (Class<?> anInterface : interfaces) {

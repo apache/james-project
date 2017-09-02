@@ -55,7 +55,7 @@ public class DefaultStager<A extends Annotation> implements DisposingStager<A> {
         Queue<Stageable> localStageables;
         switch (mode) {
             case FIRST_IN_FIRST_OUT: {
-                localStageables = new ArrayDeque<Stageable>();
+                localStageables = new ArrayDeque<>();
                 break;
             }
 

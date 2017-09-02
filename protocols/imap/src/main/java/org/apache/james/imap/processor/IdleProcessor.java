@@ -21,8 +21,7 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_IDLE;
 
-import java.util.Arrays;
-import java.util.Collections;
+import java.io.Closeable;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Executors;
@@ -31,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -47,32 +47,38 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> implements CapabilityImplementingProcessor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(IdleProcessor.class);
 
-    private final ScheduledExecutorService heartbeatExecutor;
-    private final static List<String> CAPS = Collections.unmodifiableList(Arrays.asList(SUPPORTS_IDLE));
-    // 2 minutes
-    public final static long DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS = 2 * 60;
-    public final static TimeUnit DEFAULT_HEARTBEAT_INTERVAL_UNIT = TimeUnit.SECONDS;
+    private final static List<String> CAPS = ImmutableList.of(SUPPORTS_IDLE);
     public final static int DEFAULT_SCHEDULED_POOL_CORE_SIZE = 5;
     private final static String DONE = "DONE";
-    private final TimeUnit heartbeatIntervalUnit;
-    private final long heartbeatInterval;
+    private TimeUnit heartbeatIntervalUnit;
+    private long heartbeatInterval;
+    private boolean enableIdle;
+    private ScheduledExecutorService heartbeatExecutor;
 
     public IdleProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
-        this(next, mailboxManager, factory, DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS, DEFAULT_HEARTBEAT_INTERVAL_UNIT, Executors.newScheduledThreadPool(DEFAULT_SCHEDULED_POOL_CORE_SIZE), metricFactory);
-
+        super(IdleRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
-    public IdleProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, long heartbeatInterval, TimeUnit heartbeatIntervalUnit, ScheduledExecutorService heartbeatExecutor,
-            MetricFactory metricFactory) {
-        super(IdleRequest.class, next, mailboxManager, factory, metricFactory);
-        this.heartbeatInterval = heartbeatInterval;
-        this.heartbeatIntervalUnit = heartbeatIntervalUnit;
-        this.heartbeatExecutor = heartbeatExecutor;
+    @Override
+    public void configure(ImapConfiguration imapConfiguration) {
+        super.configure(imapConfiguration);
 
+        this.heartbeatInterval = imapConfiguration.getIdleTimeInterval();
+        this.heartbeatIntervalUnit = imapConfiguration.getIdleTimeIntervalUnit();
+        this.enableIdle = imapConfiguration.isEnableIdle();
+        if (enableIdle) {
+            this.heartbeatExecutor = Executors.newScheduledThreadPool(DEFAULT_SCHEDULED_POOL_CORE_SIZE);
+        }
     }
 
     protected void doProcess(IdleRequest message, final ImapSession session, final String tag, final ImapCommand command, final Responder responder) {
@@ -82,7 +88,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             final MailboxManager mailboxManager = getMailboxManager();
             final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
             final SelectedMailbox sm = session.getSelected();
-            final MailboxListener idleListener;
+            final IdleMailboxListener idleListener;
             if (sm != null) {
                 idleListener = new IdleMailboxListener(session, responder);
                 mailboxManager.addListener(sm.getPath(), idleListener , mailboxSession);
@@ -111,9 +117,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                         try {
                             mailboxManager.removeListener(sm.getPath(), idleListener, mailboxSession);
                         } catch (MailboxException e) {
-                            if (session.getLog().isInfoEnabled()) {
-                                session.getLog().info("Unable to remove idle listener from mailbox", e);
-                            }
+                                LOGGER.error("Unable to remove idle listener for mailbox {0}", sm.getPath(), e);
                         }
                     }
                     session.popLineHandler();
@@ -129,7 +133,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             });
 
             // Check if we should send heartbeats
-            if (heartbeatInterval > 0) {
+            if (enableIdle) {
                 heartbeatExecutor.schedule(new Runnable() {
 
                     public void run() {
@@ -161,10 +165,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
 
         } catch (MailboxException e) {
-            if (session.getLog().isInfoEnabled()) {
-                session.getLog().info("Enable idle for " + session.getSelected().getPath() + " failed", e);
-            }
-            // TODO: What should we do here?
+            LOGGER.error("Enable idle for " + session.getSelected().getPath() + " failed", e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }
@@ -202,5 +203,12 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         public ExecutionMode getExecutionMode() {
             return ExecutionMode.ASYNCHRONOUS;
         }
+    }
+
+    @Override
+    protected Closeable addContextToMDC(IdleRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "IDLE")
+            .build();
     }
 }

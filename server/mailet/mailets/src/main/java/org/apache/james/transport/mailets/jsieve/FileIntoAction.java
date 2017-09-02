@@ -20,11 +20,12 @@ package org.apache.james.transport.mailets.jsieve;
 
 import javax.mail.MessagingException;
 
-import org.apache.commons.logging.Log;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionFileInto;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Performs the filing of a mail into a specified destination. 
@@ -32,7 +33,8 @@ import org.apache.mailet.MailAddress;
  * <p>An instance maybe safe accessed concurrently by multiple threads.</p>
  */
 public class FileIntoAction implements MailAction {
-    
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileIntoAction.class);
+
     private static final char HIERARCHY_DELIMITER = '.';
 
     public void execute(Action action, Mail mail, ActionContext context) throws MessagingException {
@@ -67,13 +69,11 @@ public class FileIntoAction implements MailAction {
      * @param context not null
      * @throws MessagingException
      */
-    public void execute(ActionFileInto anAction, Mail aMail, final ActionContext context) throws MessagingException
-    {
+    public void execute(ActionFileInto anAction, Mail aMail, final ActionContext context) throws MessagingException {
         String destinationMailbox = anAction.getDestination();
         MailAddress recipient;
         boolean delivered = false;
-        try
-        {
+        try {
             recipient = ActionUtils.getSoleRecipient(aMail);
             
             if (!(destinationMailbox.length() > 0 
@@ -87,19 +87,15 @@ public class FileIntoAction implements MailAction {
             context.post(url, aMail);
             delivered = true;
         }
-        catch (MessagingException ex)
-        {
-            final Log log = context.getLog();
-            if (log.isDebugEnabled()) {
-                log.debug("Error while storing mail into. "+destinationMailbox, ex);
+        catch (MessagingException ex) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Error while storing mail into. "+destinationMailbox, ex);
             }
             throw ex;
         }
-        if (delivered)
-        {
-            final Log log = context.getLog();
-            if (log.isDebugEnabled()) {
-                log.debug("Filed Message ID: "
+        if (delivered) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Filed Message ID: "
                     + aMail.getMessage().getMessageID()
                     + " into destination: \""
                     + destinationMailbox + "\"");

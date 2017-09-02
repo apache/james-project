@@ -47,6 +47,8 @@ public class CassandraApplicableFlagsModule implements CassandraModule {
                     .addPartitionKey(CassandraApplicableFlagTable.MAILBOX_ID, timeuuid())
                     .addColumn(Flag.USER_FLAGS, set(text()))
                     .withOptions()
+                    .comment("Holds flags being used on specific mailboxes. As system flags are implicit, this table " +
+                        "stores user flags.")
                     .compactionOptions(SchemaBuilder.leveledStrategy())
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));

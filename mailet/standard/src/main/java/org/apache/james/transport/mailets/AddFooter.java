@@ -23,9 +23,9 @@ package org.apache.james.transport.mailets;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
@@ -35,15 +35,16 @@ import javax.mail.internet.MimePart;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
-
-/*
+/**
  * Takes the message and attaches a footer message to it.  Right now, it only
  * supports simple messages.  Needs to have additions to make it support
  * messages with alternate content types or with attachments.
  */
 public class AddFooter extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AddFooter.class);
 
     private static final String HTML_BR_TAG = "<br />";
     private static final String CARRIAGE_RETURN = "\r\n";
@@ -68,11 +69,11 @@ public class AddFooter extends GenericMailet {
             if (attachFooter(message)) {
                 message.saveChanges();
             } else {
-                log("Unable to add footer to mail " + mail.getName());
+                LOGGER.info("Unable to add footer to mail " + mail.getName());
             }
         } catch (UnsupportedEncodingException e) {
-            log("UnsupportedEncoding Unable to add footer to mail "
-                    + mail.getName());
+            LOGGER.warn("UnsupportedEncoding Unable to add footer to mail "
+                    + mail.getName(), e);
         } catch (IOException ioe) {
             throw new MessagingException("Could not read message", ioe);
         }
@@ -151,7 +152,7 @@ public class AddFooter extends GenericMailet {
         } else if (part.isMimeType("text/html")) {
             return Optional.of(attachFooterToHTML(content));
         }
-        return Optional.absent();
+        return Optional.empty();
     }
     
     private boolean attachFooterToFirstPart(MimeMultipart multipart) throws MessagingException, IOException {

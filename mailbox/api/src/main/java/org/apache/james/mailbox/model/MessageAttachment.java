@@ -19,9 +19,10 @@
 
 package org.apache.james.mailbox.model;
 
+import java.util.Optional;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 public class MessageAttachment {
@@ -35,11 +36,11 @@ public class MessageAttachment {
         private Attachment attachment;
         private Optional<String> name;
         private Optional<Cid> cid;
-        private Optional<Boolean> isInline = Optional.absent();
+        private Optional<Boolean> isInline = Optional.empty();
 
         private Builder() {
-            name = Optional.absent();
-            cid = Optional.absent();
+            name = Optional.empty();
+            cid = Optional.empty();
         }
 
         public Builder attachment(Attachment attachment) {
@@ -49,7 +50,7 @@ public class MessageAttachment {
         }
 
         public Builder name(String name) {
-            this.name = Optional.fromNullable(name);
+            this.name = Optional.ofNullable(name);
             return this;
         }
 
@@ -61,18 +62,18 @@ public class MessageAttachment {
 
         
         public Builder cid(Cid cid) {
-            this.cid = Optional.fromNullable(cid);
+            this.cid = Optional.ofNullable(cid);
             return this;
         }
 
         public Builder isInline(Boolean isInline) {
-            this.isInline = Optional.fromNullable(isInline);
+            this.isInline = Optional.ofNullable(isInline);
             return this;
         }
 
         public MessageAttachment build() {
             Preconditions.checkState(attachment != null, "'attachment' is mandatory");
-            return new MessageAttachment(attachment, name, cid, isInline.or(false));
+            return new MessageAttachment(attachment, name, cid, isInline.orElse(false));
         }
     }
 

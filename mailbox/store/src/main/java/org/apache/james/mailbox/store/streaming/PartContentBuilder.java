@@ -238,7 +238,7 @@ public class PartContentBuilder {
         if (empty) {
             results = Collections.EMPTY_LIST;
         } else {
-            results = new ArrayList<MessageResult.Header>();
+            results = new ArrayList<>();
             for (EntityState state = parser.getState(); state != EntityState.T_END_HEADER; state = parser
                     .next()) {
                 switch (state) {
@@ -276,7 +276,7 @@ public class PartContentBuilder {
         if (empty) {
             results = Collections.EMPTY_LIST;
         } else {
-            results = new ArrayList<MessageResult.Header>();
+            results = new ArrayList<>();
             try {
                 advancedToMessage();
 

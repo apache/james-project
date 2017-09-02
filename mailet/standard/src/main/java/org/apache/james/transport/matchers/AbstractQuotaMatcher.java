@@ -21,14 +21,17 @@
 
 package org.apache.james.transport.matchers;
 
-import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Collection;
+
 import javax.mail.MessagingException;
 
 import org.apache.mailet.Experimental;
-import org.apache.mailet.base.GenericMatcher;
-import org.apache.mailet.MailAddress;
 import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.GenericMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <P>Abstract matcher checking whether a recipient has exceeded a maximum allowed quota.</P>
@@ -40,7 +43,8 @@ import org.apache.mailet.Mail;
  * @since 2.2.0
  */
 @Experimental
-abstract public class AbstractQuotaMatcher extends GenericMatcher { 
+abstract public class AbstractQuotaMatcher extends GenericMatcher {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractQuotaMatcher.class);
 
     /**
      * Standard matcher entrypoint.
@@ -53,7 +57,7 @@ abstract public class AbstractQuotaMatcher extends GenericMatcher {
     public final Collection<MailAddress> match(Mail mail) throws MessagingException {
         Collection<MailAddress> matching = null;
         if (isSenderChecked(mail.getSender())) {
-            matching = new ArrayList<MailAddress>();
+            matching = new ArrayList<>();
             for (MailAddress recipient : mail.getRecipients()) {
                 if (isRecipientChecked(recipient) && isOverQuota(recipient, mail)) {
                     matching.add(recipient);
@@ -75,10 +79,10 @@ abstract public class AbstractQuotaMatcher extends GenericMatcher {
     protected boolean isOverQuota(MailAddress address, Mail mail) {
         try {
             boolean over = getQuota(address, mail) < getUsed(address, mail);
-            if (over) log(address + " is over quota.");
+            if (over) LOGGER.info(address + " is over quota.");
             return over;
         } catch (Throwable e) {
-            log("Exception checking quota for: " + address, e);
+            LOGGER.error("Exception checking quota for: " + address, e);
             return false;
         }
     }

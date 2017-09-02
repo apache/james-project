@@ -25,13 +25,13 @@ import java.util.Map;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.protocols.api.ProtocolSession;
+import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.ConnectHandler;
 import org.apache.james.protocols.api.handler.ExtensibleHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandlerResultHandler;
 import org.apache.james.protocols.api.handler.WiringException;
-import org.apache.james.protocols.api.ProtocolSession;
-import org.apache.james.protocols.api.Response;
 
 /**
  * Handler which will gather statistics for {@link ConnectHandler}'s
@@ -40,7 +40,7 @@ import org.apache.james.protocols.api.Response;
  */
 public abstract class AbstractConnectHandlerResultJMXMonitor<R extends Response, S extends ProtocolSession> implements ProtocolHandlerResultHandler<R,S>, ExtensibleHandler, ProtocolHandler {
 
-    private final Map<String, ConnectHandlerStats> cStats = new HashMap<String, ConnectHandlerStats>();
+    private final Map<String, ConnectHandlerStats> cStats = new HashMap<>();
     private String jmxName;
 
     @Override
@@ -75,7 +75,7 @@ public abstract class AbstractConnectHandlerResultJMXMonitor<R extends Response,
      * org.apache.james.protocols.api.handler.ExtensibleHandler#getMarkerInterfaces()
      */
     public List<Class<?>> getMarkerInterfaces() {
-        List<Class<?>> marker = new ArrayList<Class<?>>();
+        List<Class<?>> marker = new ArrayList<>();
         marker.add(ConnectHandler.class);
 
         return marker;
@@ -85,6 +85,7 @@ public abstract class AbstractConnectHandlerResultJMXMonitor<R extends Response,
      * @see
      * org.apache.james.protocols.api.handler.ExtensibleHandler#wireExtensions(java.lang.Class, java.util.List)
      */
+    @SuppressWarnings("unlikely-arg-type")
     public void wireExtensions(Class<?> interfaceName, List<?> extension) throws WiringException {
         if (interfaceName.equals(ConnectHandler.class)) {
             // add stats for all hooks

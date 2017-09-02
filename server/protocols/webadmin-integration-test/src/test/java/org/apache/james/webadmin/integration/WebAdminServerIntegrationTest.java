@@ -24,10 +24,12 @@ import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
 import org.apache.james.CassandraJmapTestRule;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
@@ -35,6 +37,7 @@ import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.routes.DomainRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
+import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -53,6 +56,10 @@ public class WebAdminServerIntegrationTest {
     public static final String SPECIFIC_USER = UserRoutes.USERS + SEPARATOR + USERNAME;
     public static final String MAILBOX = "mailbox";
     public static final String SPECIFIC_MAILBOX = SPECIFIC_USER + SEPARATOR + UserMailboxesRoutes.MAILBOXES + SEPARATOR + MAILBOX;
+    public static final String VERSION = "/cassandra/version";
+    public static final String VERSION_LATEST = VERSION + "/latest";
+    public static final String UPGRADE_VERSION = VERSION + "/upgrade";
+    public static final String UPGRADE_TO_LATEST_VERSION = UPGRADE_VERSION + "/latest";
 
     @Rule
     public CassandraJmapTestRule cassandraJmapTestRule = CassandraJmapTestRule.defaultTestRule();
@@ -181,6 +188,82 @@ public class WebAdminServerIntegrationTest {
             .statusCode(204);
 
         assertThat(guiceJamesServer.getProbe(MailboxProbeImpl.class).listUserMailboxes(USERNAME)).isEmpty();
+    }
+
+    @Test
+    public void getCurrentVersionShouldReturnNullForCurrentVersionAsBeginning() throws Exception {
+        given()
+            .port(webAdminGuiceProbe.getWebAdminPort())
+        .when()
+            .get(VERSION)
+        .then()
+            .statusCode(200)
+            .body(is("{\"version\":null}"));
+    }
+
+    @Test
+    public void getLatestVersionShouldReturnTheConfiguredLatestVersion() throws Exception {
+        given()
+            .port(webAdminGuiceProbe.getWebAdminPort())
+        .when()
+            .get(VERSION_LATEST)
+        .then()
+            .statusCode(200)
+            .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION + "}"));
+    }
+
+    @Test
+    public void postShouldDoMigrationAndUpdateCurrentVersion() throws Exception {
+        given()
+            .port(webAdminGuiceProbe.getWebAdminPort())
+            .body(String.valueOf(CassandraSchemaVersionManager.MAX_VERSION))
+        .when()
+            .post(UPGRADE_VERSION)
+        .then()
+            .statusCode(204);
+
+        given()
+            .port(webAdminGuiceProbe.getWebAdminPort())
+        .when()
+            .get(VERSION)
+        .then()
+            .statusCode(200)
+            .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION + "}"));
+    }
+
+    @Test
+    public void postShouldDoMigrationAndUpdateToTheLatestVersion() throws Exception {
+        given()
+            .port(webAdminGuiceProbe.getWebAdminPort())
+        .when()
+            .post(UPGRADE_TO_LATEST_VERSION)
+        .then()
+            .statusCode(200);
+
+        given()
+            .port(webAdminGuiceProbe.getWebAdminPort())
+        .when()
+            .get(VERSION)
+        .then()
+            .statusCode(200)
+            .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION + "}"));
+    }
+
+    @Test
+    public void getSwaggerShouldReturnJsonDataForSwagger() throws Exception {
+        given()
+            .port(webAdminGuiceProbe.getWebAdminPort())
+        .when()
+            .get(SwaggerRoutes.SWAGGER_ENDPOINT)
+        .then()
+            .statusCode(200)
+            .body(containsString("\"swagger\":\"2.0\""))
+            .body(containsString("\"info\":{\"description\":\"All the web administration API for JAMES\",\"version\":\"V1.0\",\"title\":\"JAMES Web Admin API\"}"))
+            .body(containsString("\"tags\":[\"User's Mailbox\"]"))
+            .body(containsString("\"tags\":[\"GlobalQuota\"]"))
+            .body(containsString("\"tags\":[\"Domains\"]"))
+            .body(containsString("\"tags\":[\"Users\"]"))
+        ;
     }
 
 }

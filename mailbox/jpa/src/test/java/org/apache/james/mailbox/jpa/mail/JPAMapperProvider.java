@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.jpa.mail;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 
@@ -129,5 +130,10 @@ public class JPAMapperProvider implements MapperProvider {
     @Override
     public long highestModSeq(Mailbox mailbox) throws MailboxException {
         throw new NotImplementedException();
+    }
+
+    @Override
+    public void close() throws IOException {
+
     }
 }

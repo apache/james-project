@@ -21,8 +21,10 @@
 
 package org.apache.james.transport.mailets.debug;
 
-import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A simple in memory counter.  Designed to count messages sent to this recipient
@@ -30,6 +32,7 @@ import org.apache.mailet.Mail;
  *
  */
 public class Counter extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Counter.class);
 
     /**
      * The number of mails processed by this mailet
@@ -43,7 +46,7 @@ public class Counter extends GenericMailet {
      */
     public void service(Mail mail) {
         counter++;
-        log(counter + "");
+        LOGGER.info(Integer.toString(counter));
         mail.setState(Mail.GHOST);
     }
 

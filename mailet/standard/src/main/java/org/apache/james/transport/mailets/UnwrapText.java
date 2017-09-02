@@ -19,17 +19,17 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.mailet.Experimental;
-import org.apache.mailet.base.FlowedMessageUtils;
-import org.apache.mailet.base.GenericMailet;
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailetException;
-
-import javax.mail.MessagingException;
-
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.mail.MessagingException;
+
+import org.apache.mailet.Experimental;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailetException;
+import org.apache.mailet.base.FlowedMessageUtils;
+import org.apache.mailet.base.GenericMailet;
 
 /**
  * <p>Remove (best effort to) the hardcoded wrapping from a message.<br>
@@ -87,14 +87,9 @@ public class UnwrapText extends GenericMailet {
                     mail.getMessage().saveChanges();
                 }
             }
-            
-        } catch (MessagingException e) {
-            throw new MailetException("Could not unwrap message", e);
-            
-        } catch (IOException e) {
+        } catch (MessagingException | IOException e) {
             throw new MailetException("Could not unwrap message", e);
         }
-        
     }
     
     public static String unwrap(String text) {

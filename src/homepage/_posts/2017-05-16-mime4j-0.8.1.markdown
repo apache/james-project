@@ -1,0 +1,23 @@
+---
+layout: post
+title:  "Apache James Mime4J 0.8.1"
+date:   2017-06-16 11:30:00 +0700
+categories: james update
+---
+
+James Mime4J 0.8.1 has been released.
+
+The library is available as a maven artifact, for instance for mime4j core:
+
+```
+<dependency>
+    <groupId>org.apache.james</groupId>
+    <artifactId>apache-mime4j-core</artifactId>
+    <version>0.8.1</version>
+</dependency>
+```
+
+This release solves issues with header Date handling in the dom project:
+
+ - It was not possible to know if the Date header was set as a default value was always provided
+ - Valid dates missing century was badly parsed.

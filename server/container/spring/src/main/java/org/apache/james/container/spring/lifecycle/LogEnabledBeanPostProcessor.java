@@ -22,7 +22,10 @@ import org.apache.james.lifecycle.api.LogEnabled;
 
 /**
  * Inject Commons Log to beans which implement LogEnabled.
+ *
+ * @deprecated Prefer using SLF4J LoggingFactory to get a Logger in each class
  */
+@Deprecated
 public class LogEnabledBeanPostProcessor extends AbstractLifecycleBeanPostProcessor<LogEnabled> {
 
     private LogProvider provider;

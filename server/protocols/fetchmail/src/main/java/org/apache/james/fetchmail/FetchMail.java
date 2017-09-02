@@ -19,21 +19,6 @@
 
 package org.apache.james.fetchmail;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.configuration.tree.ConfigurationNode;
-import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.lifecycle.api.LogEnabled;
-import org.apache.james.queue.api.MailQueue;
-import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
-import org.slf4j.Logger;
-
-import javax.mail.MessagingException;
-import javax.mail.Session;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -42,6 +27,22 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
+import javax.mail.MessagingException;
+import javax.mail.Session;
+
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration.tree.ConfigurationNode;
+import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.queue.api.MailQueue;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -78,7 +79,9 @@ import java.util.Properties;
  * delegate, <code>StoreProcessor</code>.
  * </p>
  */
-public class FetchMail implements Runnable, LogEnabled, Configurable {
+public class FetchMail implements Runnable, Configurable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FetchMail.class);
+
     /**
      * Key fields for DynamicAccounts.
      */
@@ -383,8 +386,6 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
      */
     private DNSService dnsServer;
 
-    private Logger logger;
-
     private MailQueue queue;
 
     private DomainList domainList;
@@ -409,7 +410,7 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
         setSessionParameters(configuration);
 
         // Create the ParsedConfiguration used in the delegation chain
-        ParsedConfiguration parsedConfiguration = new ParsedConfiguration(configuration, logger, getLocalUsers(), getDNSService(), getDomainList(), getMailQueue());
+        ParsedConfiguration parsedConfiguration = new ParsedConfiguration(configuration, getLocalUsers(), getDNSService(), getDomainList(), getMailQueue());
 
         setParsedConfiguration(parsedConfiguration);
 
@@ -458,14 +459,14 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
     public void run() {
         // if we are already fetching then just return
         if (isFetching()) {
-            logger.info("Triggered fetch cancelled. A fetch is already in progress.");
+            LOGGER.info("Triggered fetch cancelled. A fetch is already in progress.");
             return;
         }
 
         // Enter Fetching State
         try {
             setFetching(true);
-            logger.info("Fetcher starting fetches");
+            LOGGER.info("Fetcher starting fetches");
 
             logJavaMailProperties();
 
@@ -474,7 +475,7 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
             // sort the accounts so they are in the order
             // they were entered in config.xml
             updateDynamicAccounts();
-            ArrayList<Account> mergedAccounts = new ArrayList<Account>(getDynamicAccounts().size() + getStaticAccounts().size());
+            ArrayList<Account> mergedAccounts = new ArrayList<>(getDynamicAccounts().size() + getStaticAccounts().size());
             mergedAccounts.addAll(getDynamicAccounts().values());
             mergedAccounts.addAll(getStaticAccounts());
             Collections.sort(mergedAccounts);
@@ -485,20 +486,20 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
             logMessage.append(" static accounts and ");
             logMessage.append(getDynamicAccounts().size());
             logMessage.append(" dynamic accounts.");
-            logger.info(logMessage.toString());
+            LOGGER.info(logMessage.toString());
 
             // Fetch each account
             for (Account mergedAccount : mergedAccounts) {
                 try {
                     new StoreProcessor(mergedAccount).process();
                 } catch (MessagingException ex) {
-                    logger.error("A MessagingException has terminated processing of this Account", ex);
+                    LOGGER.error("A MessagingException has terminated processing of this Account", ex);
                 }
             }
         } catch (Exception ex) {
-            logger.error("An Exception has terminated this fetch.", ex);
+            LOGGER.error("An Exception has terminated this fetch.", ex);
         } finally {
-            logger.info("Fetcher completed fetches");
+            LOGGER.info("Fetcher completed fetches");
 
             // Exit Fetching State
             setFetching(false);
@@ -508,8 +509,8 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
     private void logJavaMailProperties() {
         // if debugging, list the JavaMail property key/value pairs
         // for this Session
-        if (logger.isDebugEnabled()) {
-            logger.debug("Session properties:");
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Session properties:");
             Properties properties = getSession().getProperties();
             Enumeration<Object> e = properties.keys();
             while (e.hasMoreElements()) {
@@ -518,7 +519,7 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
                 if (val.length() > 40) {
                     val = val.substring(0, 37) + "...";
                 }
-                logger.debug(key + "=" + val);
+                LOGGER.debug(key + "=" + val);
 
             }
         }
@@ -586,10 +587,6 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
         this.fieldLocalUsers = urepos;
     }
 
-    public final void setLog(Logger logger) {
-        this.logger = logger;
-    }
-
     /**
      * Returns the accounts. Initializes if required.
      *
@@ -646,14 +643,14 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
      * Computes the staticAccounts.
      */
     protected List<Account> computeStaticAccounts() {
-        return new ArrayList<Account>();
+        return new ArrayList<>();
     }
 
     /**
      * Computes the ParsedDynamicAccountParameters.
      */
     protected List<ParsedDynamicAccountParameters> computeParsedDynamicAccountParameters() {
-        return new ArrayList<ParsedDynamicAccountParameters>();
+        return new ArrayList<>();
     }
 
     /**
@@ -662,13 +659,13 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
     protected Map<DynamicAccountKey, DynamicAccount> computeDynamicAccounts() throws ConfigurationException {
         Map<DynamicAccountKey, DynamicAccount> newAccounts;
         try {
-            newAccounts = new HashMap<DynamicAccountKey, DynamicAccount>(getLocalUsers().countUsers() * getParsedDynamicAccountParameters().size());
+            newAccounts = new HashMap<>(getLocalUsers().countUsers() * getParsedDynamicAccountParameters().size());
         } catch (UsersRepositoryException e) {
             throw new ConfigurationException("Unable to acces UsersRepository", e);
         }
         Map<DynamicAccountKey, DynamicAccount> oldAccounts = getDynamicAccountsBasic();
         if (null == oldAccounts)
-            oldAccounts = new HashMap<DynamicAccountKey, DynamicAccount>(0);
+            oldAccounts = new HashMap<>(0);
 
         // Process each ParsedDynamicParameters
         for (ParsedDynamicAccountParameters parsedDynamicAccountParameters : getParsedDynamicAccountParameters()) {
@@ -732,7 +729,7 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
         Map<DynamicAccountKey, DynamicAccount> accounts;
         Iterator<String> usersIterator;
         try {
-            accounts = new HashMap<DynamicAccountKey, DynamicAccount>(getLocalUsers().countUsers());
+            accounts = new HashMap<>(getLocalUsers().countUsers());
             usersIterator = getLocalUsers().list();
 
         } catch (UsersRepositoryException e) {
@@ -854,12 +851,12 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
             List<HierarchicalConfiguration> allProperties = configuration.configurationsAt("javaMailProperties.property");
             for (HierarchicalConfiguration propConf : allProperties) {
                 properties.setProperty(propConf.getString("[@name]"), propConf.getString("[@value]"));
-                if (logger.isDebugEnabled()) {
+                if (LOGGER.isDebugEnabled()) {
                     StringBuilder messageBuffer = new StringBuilder("Set property name: ");
                     messageBuffer.append(propConf.getString("[@name]"));
                     messageBuffer.append(" to: ");
                     messageBuffer.append(propConf.getString("[@value]"));
-                    logger.debug(messageBuffer.toString());
+                    LOGGER.debug(messageBuffer.toString());
                 }
             }
         }

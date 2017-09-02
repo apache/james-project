@@ -24,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.stream.LongStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
@@ -38,12 +39,7 @@ import com.github.fge.lambdas.Throwing;
 
 public class CassandraModSeqProviderTest {
 
-    private static final CassandraCluster CASSANDRA = CassandraCluster.create(new CassandraModuleComposite(
-        new CassandraAclModule(),
-        new CassandraMailboxModule(),
-        new CassandraModSeqModule()));
-    
-    private static final int MAX_RETRY = 100;
+    private CassandraCluster cassandra;
     
     private CassandraModSeqProvider modSeqProvider;
     private CassandraMailboxMapper mapper;
@@ -51,11 +47,16 @@ public class CassandraModSeqProviderTest {
 
     @Before
     public void setUpClass() throws Exception {
-        CASSANDRA.ensureAllTables();
-        modSeqProvider = new CassandraModSeqProvider(CASSANDRA.getConf());
-        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(CASSANDRA.getConf(), CASSANDRA.getTypesProvider(), MAX_RETRY);
-        CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(CASSANDRA.getConf(), CASSANDRA.getTypesProvider());
-        mapper = new CassandraMailboxMapper(CASSANDRA.getConf(), mailboxDAO, mailboxPathDAO, MAX_RETRY);
+        cassandra = CassandraCluster.create(
+                new CassandraModuleComposite(
+                    new CassandraAclModule(),
+                    new CassandraMailboxModule(),
+                    new CassandraModSeqModule()));
+        cassandra.ensureAllTables();
+        modSeqProvider = new CassandraModSeqProvider(cassandra.getConf());
+        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
+        CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(cassandra.getConf(), cassandra.getTypesProvider());
+        mapper = new CassandraMailboxMapper(cassandra.getConf(), mailboxDAO, mailboxPathDAO, CassandraConfiguration.DEFAULT_CONFIGURATION);
         MailboxPath path = new MailboxPath("gsoc", "ieugen", "Trash");
         mailbox = new SimpleMailbox(path, 1234);
         mapper.save(mailbox);
@@ -63,7 +64,8 @@ public class CassandraModSeqProviderTest {
     
     @After
     public void cleanUp() {
-        CASSANDRA.clearAllTables();
+        cassandra.clearAllTables();
+        cassandra.close();
     }
 
     @Test

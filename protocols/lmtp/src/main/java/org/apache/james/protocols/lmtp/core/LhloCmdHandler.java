@@ -19,21 +19,21 @@
 
 package org.apache.james.protocols.lmtp.core;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 import javax.inject.Inject;
 
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.smtp.core.esmtp.EhloCmdHandler;
 
+import com.google.common.collect.ImmutableSet;
+
 /**
  * Handles the LHLO command
  */
 public class LhloCmdHandler extends EhloCmdHandler {
 
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("LHLO"));
+    private static final Collection<String> COMMANDS = ImmutableSet.of("LHLO");
 
     @Inject
     public LhloCmdHandler(MetricFactory metricFactory) {

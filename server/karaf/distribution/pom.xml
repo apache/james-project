@@ -5,17 +5,21 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-server</artifactId>
-        <version>3.0.0-RC2-SNAPSHOT</version>
+        <version>3.1.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <groupId>org.apache.james.karaf</groupId>
     <artifactId>james-karaf-distribution</artifactId>
     <packaging>pom</packaging>
 
     <name>Apache James :: Karaf :: James Server</name>
 
     <dependencies>
+        <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>james-karaf-features</artifactId>
+            <type>pom</type>
+        </dependency>
         <dependency>
             <groupId>org.apache.karaf</groupId>
             <artifactId>apache-karaf</artifactId>
@@ -26,22 +30,16 @@
             <groupId>org.apache.karaf.assemblies.features</groupId>
             <artifactId>standard</artifactId>
             <version>${karaf.version}</version>
-            <type>xml</type>
             <classifier>features</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james.karaf</groupId>
-            <artifactId>james-karaf-features</artifactId>
-            <type>pom</type>
+            <type>xml</type>
         </dependency>
     </dependencies>
-
 
     <build>
         <resources>
             <resource>
-                <directory>src/main/filtered-resources</directory>
                 <filtering>true</filtering>
+                <directory>src/main/filtered-resources</directory>
                 <includes>
                     <include>**/*</include>
                 </includes>
@@ -60,10 +58,10 @@
                 <executions>
                     <execution>
                         <id>filter</id>
-                        <phase>generate-resources</phase>
                         <goals>
                             <goal>resources</goal>
                         </goals>
+                        <phase>generate-resources</phase>
                     </execution>
                 </executions>
             </plugin>
@@ -74,10 +72,10 @@
                     <execution>
                         <!-- Uncompress the standard Karaf distribution -->
                         <id>unpack</id>
-                        <phase>generate-resources</phase>
                         <goals>
                             <goal>unpack</goal>
                         </goals>
+                        <phase>generate-resources</phase>
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
@@ -98,10 +96,10 @@
                 <executions>
                     <execution>
                         <id>bin</id>
-                        <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
+                        <phase>package</phase>
                         <configuration>
                             <descriptors>
                                 <descriptor>src/main/assembly/unix.xml</descriptor>
@@ -119,21 +117,16 @@
                 <executions>
                     <execution>
                         <id>add-features-to-repo</id>
-                        <phase>install</phase>
                         <goals>
                             <goal>add-features-to-repo</goal>
                         </goals>
+                        <phase>install</phase>
+                        <inherited>false</inherited>
                         <configuration>
                             <descriptors>
-                                <descriptor>
-                                    mvn:org.apache.karaf.assemblies.features/standard/${karaf.version}/xml/features
-                                </descriptor>
-                                <descriptor>
-                                    mvn:org.apache.karaf.assemblies.features/enterprise/${karaf.version}/xml/features
-                                </descriptor>
-                                <descriptor>
-                                    mvn:org.apache.james.karaf/james-karaf-features/${project.version}/xml/features
-                                </descriptor>
+                                <descriptor>mvn:org.apache.karaf.assemblies.features/standard/${karaf.version}/xml/features</descriptor>
+                                <descriptor>mvn:org.apache.karaf.assemblies.features/enterprise/${karaf.version}/xml/features</descriptor>
+                                <descriptor>mvn:org.apache.james.karaf/james-karaf-features/${project.version}/xml/features</descriptor>
                             </descriptors>
                             <features>
                                 <feature>config</feature>
@@ -143,7 +136,6 @@
                             <includeMvnBasedDescriptors>true</includeMvnBasedDescriptors>
                             <repository>target/features-repo</repository>
                         </configuration>
-                        <inherited>false</inherited>
                     </execution>
                 </executions>
             </plugin>

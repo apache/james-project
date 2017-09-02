@@ -19,8 +19,10 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
 import java.util.List;
 
+import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.SelectedMailbox;
@@ -31,6 +33,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 public class CopyProcessor extends AbstractMessageRangeProcessor<CopyRequest> {
 
@@ -50,5 +53,15 @@ public class CopyProcessor extends AbstractMessageRangeProcessor<CopyRequest> {
                                          MailboxSession mailboxSession,
                                          MailboxManager mailboxManager, MessageRange messageSet) throws MailboxException {
         return mailboxManager.copyMessages(messageSet, currentMailbox.getPath(), targetMailbox, mailboxSession);
+    }
+
+    @Override
+    protected Closeable addContextToMDC(CopyRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "COPY")
+            .addContext("targetMailbox", message.getMailboxName())
+            .addContext("uidEnabled", message.isUseUids())
+            .addContext("idSet", IdRange.toString(message.getIdSet()))
+            .build();
     }
 }

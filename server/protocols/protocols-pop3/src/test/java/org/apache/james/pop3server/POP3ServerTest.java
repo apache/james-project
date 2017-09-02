@@ -50,7 +50,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
@@ -66,8 +65,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class POP3ServerTest {
 
@@ -217,7 +214,7 @@ public class POP3ServerTest {
 
         pop3Client.disconnect();
         MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, "foo", "INBOX");
-        MailboxSession session = mailboxManager.login("foo", "bar", LoggerFactory.getLogger("Test"));
+        MailboxSession session = mailboxManager.login("foo", "bar");
         if (!mailboxManager.mailboxExists(mailboxPath, session)) {
             mailboxManager.createMailbox(mailboxPath, session);
         }
@@ -302,7 +299,7 @@ public class POP3ServerTest {
         usersRepository.addUser("foo2", "bar2");
 
         MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, "foo2", "INBOX");
-        MailboxSession session = mailboxManager.login("foo2", "bar2", LoggerFactory.getLogger("Test"));
+        MailboxSession session = mailboxManager.login("foo2", "bar2");
 
         if (!mailboxManager.mailboxExists(mailboxPath, session)) {
             mailboxManager.createMailbox(mailboxPath, session);
@@ -391,7 +388,7 @@ public class POP3ServerTest {
         usersRepository.addUser("foo2", "bar2");
 
         MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, "foo2", "INBOX");
-        MailboxSession session = mailboxManager.login("foo2", "bar2", LoggerFactory.getLogger("Test"));
+        MailboxSession session = mailboxManager.login("foo2", "bar2");
 
         if (!mailboxManager.mailboxExists(mailboxPath, session)) {
             mailboxManager.createMailbox(mailboxPath, session);
@@ -441,7 +438,7 @@ public class POP3ServerTest {
         usersRepository.addUser("foo2", "bar2");
 
         MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, "foo2", "INBOX");
-        MailboxSession session = mailboxManager.login("foo2", "bar2", LoggerFactory.getLogger("Test"));
+        MailboxSession session = mailboxManager.login("foo2", "bar2");
 
         if (!mailboxManager.mailboxExists(mailboxPath, session)) {
             mailboxManager.createMailbox(mailboxPath, session);
@@ -647,7 +644,7 @@ public class POP3ServerTest {
         pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         usersRepository.addUser("foo6", "bar6");
-        MailboxSession session = mailboxManager.login("foo6", "bar6", LoggerFactory.getLogger("Test"));
+        MailboxSession session = mailboxManager.login("foo6", "bar6");
 
         MailboxPath mailboxPath = MailboxPath.inbox(session);
 
@@ -708,11 +705,6 @@ public class POP3ServerTest {
         pop3Server = createPOP3Server();
         pop3Server.setFileSystem(fileSystem);
         pop3Server.setProtocolHandlerLoader(protocolHandlerChain);
-    
-        Logger log = LoggerFactory.getLogger("Mock");
-        // slf4j can't set programmatically any log level. It's just a facade
-        // log.setLevel(SimpleLog.LOG_LEVEL_DEBUG);
-        pop3Server.setLog(log);
     }
 
     protected void finishSetUp(POP3TestConfiguration testConfiguration) throws Exception {
@@ -728,23 +720,20 @@ public class POP3ServerTest {
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
-        mailboxManager = new StoreMailboxManager(factory, new Authenticator() {
-    
-            @Override
-            public boolean isAuthentic(String userid, CharSequence passwd) {
-                try {
-                    return usersRepository.test(userid, passwd.toString());
-                } catch (UsersRepositoryException e) {
-                    e.printStackTrace();
-                    return false;
-                }
+        mailboxManager = new StoreMailboxManager(factory, (userid, passwd) -> {
+            try {
+                return usersRepository.test(userid, passwd.toString());
+            } catch (UsersRepositoryException e) {
+                e.printStackTrace();
+                return false;
             }
-        }, new Authorizator() {
-            @Override
-            public AuthorizationState canLoginAsOtherUser(String userId, String otherUserId) {
-                return AuthorizationState.NOT_ADMIN;
-            }
-        }, aclResolver, groupMembershipResolver, messageParser, new DefaultMessageId.Factory(), MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
+        }, (userId, otherUserId) -> Authorizator.AuthorizationState.NOT_ADMIN,
+            aclResolver,
+            groupMembershipResolver,
+            messageParser,
+            new DefaultMessageId.Factory(),
+            MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX,
+            MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
         mailboxManager.init();
 
         protocolHandlerChain.put("mailboxmanager", MailboxManager.class, mailboxManager);

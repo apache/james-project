@@ -27,7 +27,9 @@
 
   <section name="Mailbox Configuration">
 
-    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/mailbox-template.xml">mailbox-template.xml</a> in GIT to get some examples and hints.</p>
+      This configuration applies only to Spring wiring.
+
+    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/mailbox.xml">mailbox.xml</a> in GIT to get some examples and hints.</p>
     
     <p>Use this configuration to define the type of mailbox storage used to persist the user's mails.</p>
     
@@ -35,7 +37,7 @@
 
       <dl>
         <dt><strong>provider</strong></dt>
-        <dd>Supported providers are: jpa (default), jcr, maildir, cassandra, memory. Be aware that maildir will only work on unix like operation systems!
+        <dd>Supported providers are: jpa (default), jcr, maildir, memory. Be aware that maildir will only work on unix like operation systems!
         Cassandra mailbox need to be compiled and run using java 8.</dd>
       </dl>
 

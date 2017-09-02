@@ -45,6 +45,8 @@ import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.AbstractJamesUsersRepository;
 import org.apache.james.util.sql.JDBCUtil;
 import org.apache.james.util.sql.SqlResources;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An abstract base class for creating UserRepository implementations which use
@@ -92,6 +94,7 @@ import org.apache.james.util.sql.SqlResources;
  */
 @Deprecated
 public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepository {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractJdbcUsersRepository.class);
 
     protected Map<String, String> m_sqlParameters;
 
@@ -245,16 +248,12 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
     @PostConstruct
     public void init() throws Exception {
         StringBuffer logBuffer;
-        if (getLogger().isDebugEnabled()) {
+        if (LOGGER.isDebugEnabled()) {
             logBuffer = new StringBuffer(128).append(this.getClass().getName()).append(".initialize()");
-            getLogger().debug(logBuffer.toString());
+            LOGGER.debug(logBuffer.toString());
         }
 
-        theJDBCUtil = new JDBCUtil() {
-            protected void delegatedLog(String logString) {
-                AbstractJdbcUsersRepository.this.getLogger().warn("AbstractJdbcUsersRepository: " + logString);
-            }
-        };
+        theJDBCUtil = new JDBCUtil();
 
         // Test the connection to the database, by getting the DatabaseMetaData.
         Connection conn = openConnection();
@@ -266,13 +265,13 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
             try {
                 sqlFile = fileSystem.getResource(m_sqlFileName);
             } catch (Exception e) {
-                getLogger().error(e.getMessage(), e);
+                LOGGER.error(e.getMessage(), e);
                 throw e;
             }
 
-            if (getLogger().isDebugEnabled()) {
+            if (LOGGER.isDebugEnabled()) {
                 logBuffer = new StringBuffer(256).append("Reading SQL resources from: ").append(m_sqlFileName).append(", section ").append(this.getClass().getName()).append(".");
-                getLogger().debug(logBuffer.toString());
+                LOGGER.debug(logBuffer.toString());
             }
 
             SqlResources sqlStatements = new SqlResources();
@@ -324,10 +323,10 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
                 }
 
                 logBuffer = new StringBuffer(128).append(this.getClass().getName()).append(": Created table \'").append(tableName).append("\'.");
-                getLogger().info(logBuffer.toString());
+                LOGGER.info(logBuffer.toString());
             } else {
-                if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("Using table: " + tableName);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Using table: " + tableName);
                 }
             }
 
@@ -360,9 +359,9 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      */
     protected void doConfigure(HierarchicalConfiguration configuration) throws ConfigurationException {
         StringBuffer logBuffer;
-        if (getLogger().isDebugEnabled()) {
+        if (LOGGER.isDebugEnabled()) {
             logBuffer = new StringBuffer(64).append(this.getClass().getName()).append(".configure()");
-            getLogger().debug(logBuffer.toString());
+            LOGGER.debug(logBuffer.toString());
         }
 
         // Parse the DestinationURL for the name of the datasource,
@@ -377,7 +376,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
             destUrl += "/";
         }
         // Split on "/", starting after "db://"
-        List<String> urlParams = new ArrayList<String>();
+        List<String> urlParams = new ArrayList<>();
         int start = 5;
         int end = destUrl.indexOf('/', start);
         while (end > -1) {
@@ -387,7 +386,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
         }
 
         // Build SqlParameters and get datasource name from URL parameters
-        m_sqlParameters = new HashMap<String, String>();
+        m_sqlParameters = new HashMap<>();
         switch (urlParams.size()) {
         case 3:
             m_sqlParameters.put("key", urlParams.get(2));
@@ -400,9 +399,9 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
             throw new ConfigurationException("Malformed destinationURL - " + "Must be of the format \"db://<data-source>[/<table>[/<key>]]\".");
         }
 
-        if (getLogger().isDebugEnabled()) {
+        if (LOGGER.isDebugEnabled()) {
             logBuffer = new StringBuffer(128).append("Parsed URL: table = '").append(m_sqlParameters.get("table")).append("', key = '").append(m_sqlParameters.get("key")).append("'");
-            getLogger().debug(logBuffer.toString());
+            LOGGER.debug(logBuffer.toString());
         }
 
         // Get the SQL file location
@@ -427,7 +426,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      */
     protected List<String> listUserNames() throws UsersRepositoryException {
         Collection<User> users = getAllUsers();
-        List<String> userNames = new ArrayList<String>(users.size());
+        List<String> userNames = new ArrayList<>(users.size());
         for (User user : users) {
             userNames.add(user.getUserName());
         }
@@ -451,7 +450,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      * @throws UsersRepositoryException
      */
     private Collection<User> getAllUsers() throws UsersRepositoryException {
-        List<User> userList = new ArrayList<User>(); // Build the users into
+        List<User> userList = new ArrayList<>(); // Build the users into
                                                      // this list.
 
         Connection conn = null;
@@ -469,7 +468,6 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
                 userList.add(user);
             }
         } catch (SQLException sqlExc) {
-            sqlExc.printStackTrace();
             throw new UsersRepositoryException("Error accessing database", sqlExc);
         } finally {
             theJDBCUtil.closeJDBCResultSet(rsUsers);
@@ -502,7 +500,6 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
 
             addUserStatement.execute();
         } catch (SQLException sqlExc) {
-            sqlExc.printStackTrace();
             throw new UsersRepositoryException("Error accessing database", sqlExc);
         } finally {
             theJDBCUtil.closeJDBCStatement(addUserStatement);
@@ -531,7 +528,6 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
             removeUserStatement.setString(1, username);
             removeUserStatement.execute();
         } catch (SQLException sqlExc) {
-            sqlExc.printStackTrace();
             throw new UsersRepositoryException("Error accessing database", sqlExc);
         } finally {
             theJDBCUtil.closeJDBCStatement(removeUserStatement);
@@ -557,7 +553,6 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
             setUserForUpdateStatement(user, updateUserStatement);
             updateUserStatement.execute();
         } catch (SQLException sqlExc) {
-            sqlExc.printStackTrace();
             throw new UsersRepositoryException("Error accessing database", sqlExc);
         } finally {
             theJDBCUtil.closeJDBCStatement(updateUserStatement);
@@ -642,7 +637,6 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
             }
             return user;
         } catch (SQLException sqlExc) {
-            sqlExc.printStackTrace();
             throw new UsersRepositoryException("Error accessing database", sqlExc);
         } finally {
             theJDBCUtil.closeJDBCResultSet(rsUsers);

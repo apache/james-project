@@ -42,13 +42,13 @@ public class MimeMessageInputStreamSourceTest {
     @Test
     public void streamWith1MBytesShouldBeReadable() throws MessagingException, IOException {
         testee = new MimeMessageInputStreamSource("myKey", new ZeroedInputStream(_1M));
-        assertThat(testee.getInputStream()).hasContentEqualTo(new ZeroedInputStream(_1M));
+        assertThat(testee.getInputStream()).hasSameContentAs(new ZeroedInputStream(_1M));
     }
     
     @Test
     public void streamWith10KBytesShouldBeReadable() throws MessagingException, IOException {
         testee = new MimeMessageInputStreamSource("myKey", new ZeroedInputStream(_10KB));
-        assertThat(testee.getInputStream()).hasContentEqualTo(new ZeroedInputStream(_10KB));
+        assertThat(testee.getInputStream()).hasSameContentAs(new ZeroedInputStream(_10KB));
     }
 
     @Test

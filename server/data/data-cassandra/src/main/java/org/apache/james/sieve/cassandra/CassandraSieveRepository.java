@@ -40,7 +40,6 @@ import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.StorageException;
 import org.apache.james.util.CompletableFutureUtil;
-import org.apache.james.util.FluentFutureStream;
 import org.joda.time.DateTime;
 
 public class CassandraSieveRepository implements SieveRepository {
@@ -131,12 +130,12 @@ public class CassandraSieveRepository implements SieveRepository {
 
     @Override
     public void setActive(String user, String name) throws ScriptNotFoundException {
-        CompletableFuture<Void> unactivateOldScriptFuture = unactivateOldScript(user);
-        CompletableFuture<Boolean> activateNewScript = updateScriptActivation(user, name, true)
-            .thenCompose(CompletableFutureUtil.composeIfTrue(
-                () -> cassandraActiveScriptDAO.activate(user, name)));
+        CompletableFuture<Boolean> activateNewScript =
+            unactivateOldScript(user)
+                .thenCompose( any -> updateScriptActivation(user, name, true)
+                    .thenCompose(CompletableFutureUtil.composeIfTrue(
+                        () -> cassandraActiveScriptDAO.activate(user, name))));
 
-        unactivateOldScriptFuture.join();
         if (!activateNewScript.join()) {
             throw new ScriptNotFoundException();
         }
@@ -237,18 +236,15 @@ public class CassandraSieveRepository implements SieveRepository {
 
     @Override
     public void removeQuota() throws QuotaNotFoundException {
-        if (!cassandraSieveQuotaDAO.removeQuota().join()) {
-            throw new QuotaNotFoundException();
-        }
+        cassandraSieveQuotaDAO.removeQuota().join();
     }
 
     @Override
     public boolean hasQuota(String user) {
-        return FluentFutureStream.ofFutures(
-                cassandraSieveQuotaDAO.getQuota(user).thenApply(Optional::isPresent),
-                cassandraSieveQuotaDAO.getQuota().thenApply(Optional::isPresent))
-            .reduce((b1, b2) -> b1 || b2)
-            .thenApply(Optional::get)
+        return CompletableFutureUtil.combine(
+            cassandraSieveQuotaDAO.getQuota(user).thenApply(Optional::isPresent),
+            cassandraSieveQuotaDAO.getQuota().thenApply(Optional::isPresent),
+            (b1, b2) -> b1 || b2)
             .join();
     }
 
@@ -266,9 +262,7 @@ public class CassandraSieveRepository implements SieveRepository {
 
     @Override
     public void removeQuota(String user) throws QuotaNotFoundException {
-        if (!cassandraSieveQuotaDAO.removeQuota(user).join()) {
-            throw new QuotaNotFoundException();
-        }
+        cassandraSieveQuotaDAO.removeQuota(user).join();
     }
 
 }

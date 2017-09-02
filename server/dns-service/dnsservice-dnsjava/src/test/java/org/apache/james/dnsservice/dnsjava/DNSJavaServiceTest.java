@@ -18,20 +18,27 @@
  ****************************************************************/
 package org.apache.james.dnsservice.dnsjava;
 
-import com.google.common.io.Resources;
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
-import org.apache.james.metrics.api.NoopMetricFactory;
-import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import org.junit.Before;
-import org.junit.Test;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+
+import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.james.metrics.api.NoopMetricFactory;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xbill.DNS.Cache;
 import org.xbill.DNS.DClass;
@@ -40,13 +47,10 @@ import org.xbill.DNS.Name;
 import org.xbill.DNS.Resolver;
 import org.xbill.DNS.Zone;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
+import com.google.common.io.Resources;
 
 public class DNSJavaServiceTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DNSJavaServiceTest.class);
 
     private TestableDNSServer dnsServer;
     private static final byte[] DNS_SERVER_CONFIG = ("<dnsserver>" +
@@ -67,7 +71,6 @@ public class DNSJavaServiceTest {
 
         db.load(new ByteArrayInputStream(DNS_SERVER_CONFIG));
 
-        dnsServer.setLog(LoggerFactory.getLogger(DNSJavaServiceTest.class));
         dnsServer.configure(db);
         dnsServer.init();
 
@@ -142,6 +145,7 @@ public class DNSJavaServiceTest {
             res.add("");
             fail("MX Collection should not be modifiable");
         } catch (UnsupportedOperationException e) {
+            LOGGER.info("Ignored error", e);
         }
         assertEquals(1, res.size());
         assertEquals("mail.test-zone.com.", res.iterator().next());
@@ -170,7 +174,7 @@ public class DNSJavaServiceTest {
         dnsServer.setCache(mockedCache);
 
         // a.setSearchPath(new String[] { "searchdomain.com." });
-        ArrayList<String> records = new ArrayList<String>(dnsServer.findMXRecords("three-mx.bar."));
+        ArrayList<String> records = new ArrayList<>(dnsServer.findMXRecords("three-mx.bar."));
         assertEquals(3, records.size());
         assertTrue(records.contains("mx1.three-mx.bar."));
         assertTrue(records.contains("mx2.three-mx.bar."));

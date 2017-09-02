@@ -20,7 +20,6 @@
 package org.apache.james.transport.mailets.remoteDelivery;
 
 import java.util.List;
-
 import javax.mail.MessagingException;
 
 import org.slf4j.Logger;
@@ -29,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
@@ -80,10 +78,11 @@ public class DelaysAndMaxRetry {
             // Use default delayTime.
             return ImmutableList.of(new Delay());
         }
-        ImmutableList<String> delayStrings = FluentIterable.from(Splitter.on(',')
+
+        List<String> delayStrings = Splitter.on(',')
             .omitEmptyStrings()
-            .split(delaysAsString))
-            .toList();
+            .splitToList(delaysAsString);
+
         ImmutableList.Builder<Delay> builder = ImmutableList.builder();
         try {
             for (String s : delayStrings) {
@@ -97,11 +96,9 @@ public class DelaysAndMaxRetry {
     }
 
     private static int computeTotalAttempts(List<Delay> delayList) {
-        int sum = 0;
-        for (Delay delay : delayList) {
-            sum += delay.getAttempts();
-        }
-        return sum;
+        return delayList.stream()
+            .mapToInt(Delay::getAttempts)
+            .sum();
     }
 
     private final int maxRetries;

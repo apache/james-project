@@ -23,6 +23,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Instant;
 import java.util.Optional;
 
+import javax.mail.Flags;
+
+import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.Test;
@@ -101,8 +104,9 @@ public class MessageTest {
     @Test
     public void buildShouldWorkWhenMandatoryFieldsArePresent() {
         Instant currentDate = Instant.now();
-        Message expected = new Message(TestMessageId.of(1), BlobId.of("blobId"), "threadId", ImmutableList.of(InMemoryId.of(456)), Optional.empty(), false, false, false, false, false, ImmutableMap.of("key", "value"), Optional.empty(),
-                ImmutableList.of(), ImmutableList.of(), ImmutableList.of(), ImmutableList.of(), "subject", currentDate, 123, "preview", Optional.empty(), Optional.empty(), ImmutableList.of(), ImmutableMap.of());
+        Message expected = new Message(TestMessageId.of(1), BlobId.of("blobId"), "threadId", ImmutableList.of(InMemoryId.of(456)), Optional.empty(), false, ImmutableMap.of("key", "value"), Optional.empty(),
+                ImmutableList.of(), ImmutableList.of(), ImmutableList.of(), ImmutableList.of(), "subject", currentDate, 123, "preview", Optional.empty(), Optional.empty(),
+                ImmutableList.of(), ImmutableMap.of(), Keywords.DEFAULT_VALUE);
         Message tested = Message.builder()
                 .id(TestMessageId.of(1))
                 .blobId(BlobId.of("blobId"))
@@ -158,41 +162,42 @@ public class MessageTest {
                 .date(currentDate)
                 .build();
         ImmutableMap<BlobId, SubMessage> attachedMessages = ImmutableMap.of(BlobId.of("blobId"), simpleMessage);
+        Flags flags = FlagsBuilder.builder()
+            .add(Flags.Flag.DRAFT, Flags.Flag.ANSWERED, Flags.Flag.FLAGGED)
+            .build();
+
+        Keywords keywords = Keywords.factory()
+            .fromFlags(flags);
+
         Message expected = new Message(
-                TestMessageId.of(1),
-                BlobId.of("blobId"),
-                "threadId",
-                ImmutableList.of(InMemoryId.of(456)),
-                Optional.of("inReplyToMessageId"), 
-                true,
-                true,
-                true,
-                true,
-                true,
-                ImmutableMap.of("key", "value"),
-                Optional.of(from),
-                to,
-                cc,
-                bcc,
-                replyTo,
-                "subject",
-                currentDate,
-                123,
-                "preview",
-                Optional.of("textBody"), 
-                Optional.of("htmlBody"),
-                attachments,
-                attachedMessages);
+            TestMessageId.of(1),
+            BlobId.of("blobId"),
+            "threadId",
+            ImmutableList.of(InMemoryId.of(456)),
+            Optional.of("inReplyToMessageId"),
+            true,
+            ImmutableMap.of("key", "value"),
+            Optional.of(from),
+            to,
+            cc,
+            bcc,
+            replyTo,
+            "subject",
+            currentDate,
+            123,
+            "preview",
+            Optional.of("textBody"),
+            Optional.of("htmlBody"),
+            attachments,
+            attachedMessages,
+            keywords);
         Message tested = Message.builder()
             .id(TestMessageId.of(1))
             .blobId(BlobId.of("blobId"))
             .threadId("threadId")
             .mailboxId(InMemoryId.of(456))
             .inReplyToMessageId("inReplyToMessageId")
-            .isUnread(true)
-            .isFlagged(true)
-            .isAnswered(true)
-            .isDraft(true)
+            .flags(flags)
             .headers(ImmutableMap.of("key", "value"))
             .from(from)
             .to(to)

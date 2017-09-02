@@ -30,9 +30,8 @@ import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
-import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
-import com.google.common.collect.FluentIterable;
+
 
 public class AllButStartTlsDelimiterChannelHandler extends DelimiterBasedFrameDecoder {
 
@@ -69,20 +68,12 @@ public class AllButStartTlsDelimiterChannelHandler extends DelimiterBasedFrameDe
     }
 
     private boolean multiPartsAndOneStartTls(List<String> parts) {
-        return FluentIterable.from(parts).anyMatch(new Predicate<String>() {
-            @Override
-            public boolean apply(String line) {
-                return line.startsWith(STARTTLS);
-            }
-        }) && parts.size() > 1;
+        return parts.stream()
+            .anyMatch(line -> line.startsWith(STARTTLS)) && parts.size() > 1;
     }
 
     private boolean hasInvalidStartTlsPart(List<String> parts) {
-        return FluentIterable.from(parts).anyMatch(new Predicate<String>() {
-            @Override
-            public boolean apply(String line) {
-                return line.startsWith(STARTTLS) && !line.endsWith(STARTTLS);
-            }
-        });
+        return parts.stream()
+            .anyMatch(line -> line.startsWith(STARTTLS) && !line.endsWith(STARTTLS));
     }
 }

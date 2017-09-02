@@ -22,6 +22,7 @@ package org.apache.james.jmap.model;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.google.common.base.MoreObjects;
 
 public class MailboxCreationId {
 
@@ -51,5 +52,12 @@ public class MailboxCreationId {
     @Override
     public int hashCode() {
         return Objects.hashCode(creationId);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("creationId", creationId)
+            .toString();
     }
 }

@@ -20,28 +20,131 @@
 package org.apache.james.mailbox.store.mail.model.impl;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-
+import java.util.Optional;
 import javax.mail.Flags;
 import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.commons.io.IOUtils;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 
 public class SimpleMailboxMessage extends DelegatingMailboxMessage {
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private MessageId messageId;
+        private Date internalDate;
+        private Long size;
+        private Integer bodyStartOctet;
+        private SharedInputStream content;
+        private Flags flags;
+        private PropertyBuilder propertyBuilder;
+        private MailboxId mailboxId;
+        private Optional<MessageUid> uid = Optional.empty();
+        private Optional<Long> modseq = Optional.empty();
+        private ImmutableList.Builder<MessageAttachment> attachments = ImmutableList.builder();
+
+        public Builder messageId(MessageId messageId) {
+            this.messageId = messageId;
+            return this;
+        }
+
+        public Builder uid(MessageUid messageUid) {
+            this.uid = Optional.of(messageUid);
+            return this;
+        }
+
+        public Builder modseq(long modseq) {
+            Preconditions.checkArgument(modseq >= 0, "modseq can not be negative");
+            this.modseq = Optional.of(modseq);
+            return this;
+        }
+
+        public Builder internalDate(Date internalDate) {
+            this.internalDate = internalDate;
+            return this;
+        }
+
+        public Builder size(long size) {
+            Preconditions.checkArgument(size >= 0, "size can not be negative");
+            this.size = size;
+            return this;
+        }
+
+        public Builder bodyStartOctet(int bodyStartOctet) {
+            Preconditions.checkArgument(bodyStartOctet >= 0, "bodyStartOctet can not be negative");
+            this.bodyStartOctet = bodyStartOctet;
+            return this;
+        }
+
+        public Builder content(SharedInputStream content) {
+            this.content = content;
+            return this;
+        }
+
+        public Builder flags(Flags flags) {
+            this.flags = flags;
+            return this;
+        }
+
+        public Builder propertyBuilder(PropertyBuilder propertyBuilder) {
+            this.propertyBuilder = propertyBuilder;
+            return this;
+        }
+
+        public Builder mailboxId(MailboxId mailboxId) {
+            this.mailboxId = mailboxId;
+            return this;
+        }
+
+        public Builder addAttachments(Collection<MessageAttachment> attachments) {
+            this.attachments.addAll(attachments);
+            return this;
+        }
+
+        public SimpleMailboxMessage build() {
+            Preconditions.checkNotNull(messageId, "messageId is required");
+            Preconditions.checkNotNull(internalDate, "internalDate is required");
+            Preconditions.checkNotNull(size, "size is required");
+            Preconditions.checkNotNull(bodyStartOctet, "bodyStartOctet is required");
+            Preconditions.checkNotNull(content, "content is required");
+            Preconditions.checkNotNull(flags, "flags is required");
+            Preconditions.checkNotNull(propertyBuilder, "propertyBuilder is required");
+            Preconditions.checkNotNull(mailboxId, "mailboxId is required");
+
+            SimpleMailboxMessage simpleMailboxMessage = new SimpleMailboxMessage(messageId, internalDate, size,
+                bodyStartOctet, content, flags, propertyBuilder, mailboxId, attachments.build());
+
+            if (uid.isPresent()) {
+                simpleMailboxMessage.setUid(uid.get());
+            }
+
+            if (modseq.isPresent()) {
+                simpleMailboxMessage.setModSeq(modseq.get());
+            }
+            return simpleMailboxMessage;
+        }
+    }
 
     public static SimpleMailboxMessage copy(MailboxId mailboxId, MailboxMessage original) throws MailboxException {
         return copy(mailboxId, original, original.getAttachments());
@@ -101,6 +204,15 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
         this(messageId, internalDate, size, bodyStartOctet,
                 content, flags,
                 propertyBuilder, mailboxId, ImmutableList.<MessageAttachment>of());
+    }
+
+    @Override
+    public ComposedMessageIdWithMetaData getComposedMessageIdWithMetaData() {
+        return ComposedMessageIdWithMetaData.builder()
+            .modSeq(modSeq)
+            .flags(createFlags())
+            .composedMessageId(new ComposedMessageId(mailboxId, getMessageId(), uid))
+            .build();
     }
 
     @Override

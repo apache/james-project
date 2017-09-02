@@ -20,6 +20,7 @@ package org.apache.james.user.ldap;
 
 import org.apache.james.util.streams.SwarmGenericContainer;
 import org.junit.rules.ExternalResource;
+import org.testcontainers.containers.wait.HostPortWaitStrategy;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import com.google.common.base.Preconditions;
@@ -65,7 +66,9 @@ public class LdapGenericContainer extends ExternalResource {
                 .withAffinityToContainer()
                 .withEnv("SLAPD_DOMAIN", domain)
                 .withEnv("SLAPD_PASSWORD", password)
-                .withEnv("SLAPD_CONFIG_PASSWORD", password);
+                .withEnv("SLAPD_CONFIG_PASSWORD", password)
+                .withExposedPorts(LdapGenericContainer.DEFAULT_LDAP_PORT)
+                .waitingFor(new HostPortWaitStrategy());
         }
     }
 
@@ -85,8 +88,8 @@ public class LdapGenericContainer extends ExternalResource {
 
     public String getLdapHost() {
         return "ldap://" +
-                container.getContainerIpAddress() +
+                container.getIp() +
                 ":" +
-                container.getMappedPort(LdapGenericContainer.DEFAULT_LDAP_PORT);
+                LdapGenericContainer.DEFAULT_LDAP_PORT;
     }
 }

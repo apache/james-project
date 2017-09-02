@@ -30,6 +30,8 @@ import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachment;
@@ -82,6 +84,15 @@ public class ListMessageAssertTest {
     private MailboxMessage createMailboxMessage(final MailboxId mailboxId, final MessageId messageId, final MessageUid uid,
             final Date internalDate, final String content, final int bodyStart, final PropertyBuilder propertyBuilder) {
         return new MailboxMessage() {
+            @Override
+            public ComposedMessageIdWithMetaData getComposedMessageIdWithMetaData() {
+                return ComposedMessageIdWithMetaData.builder()
+                    .modSeq(getModSeq())
+                    .flags(createFlags())
+                    .composedMessageId(new ComposedMessageId(mailboxId, getMessageId(), uid))
+                    .build();
+            }
+
             @Override
             public MailboxId getMailboxId() {
                 return mailboxId;
@@ -150,6 +161,11 @@ public class ListMessageAssertTest {
             @Override
             public int compareTo(MailboxMessage o) {
                 return 0;
+            }
+
+            @Override
+            public long getHeaderOctets() {
+                return bodyStart;
             }
 
             @Override

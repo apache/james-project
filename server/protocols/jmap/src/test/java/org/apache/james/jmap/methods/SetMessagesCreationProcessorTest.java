@@ -26,13 +26,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
 import java.io.InputStream;
 import java.sql.Date;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-
 import javax.mail.Flags;
 
 import org.apache.james.jmap.exceptions.AttachmentsNotFoundException;
@@ -67,13 +65,17 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.mailet.Mail;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 public class SetMessagesCreationProcessorTest {
@@ -114,7 +116,8 @@ public class SetMessagesCreationProcessorTest {
     private Optional<MessageManager> optionalOutbox;
     private Optional<MessageManager> optionalDrafts;
 
-
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
     @Before
     public void setUp() throws MailboxException {
         HtmlTextExtractor htmlTextExtractor = mock(HtmlTextExtractor.class);
@@ -152,6 +155,56 @@ public class SetMessagesCreationProcessorTest {
         SetMessagesResponse result = sut.process(requestWithEmptyCreate, session);
 
         assertThat(result.getCreated()).isEmpty();
+        assertThat(result.getNotCreated()).isEmpty();
+    }
+
+    @Test
+    public void processShouldThrowWhenBothIsFlagAndKeywords() {
+        expectedException.expect(IllegalArgumentException.class);
+        SetMessagesRequest createMessageWithError = SetMessagesRequest.builder()
+            .create(
+                creationMessageId,
+                creationMessageBuilder
+                    .mailboxId(OUTBOX_ID.serialize())
+                    .isAnswered(Optional.of(true))
+                    .keywords(ImmutableMap.of("$Answered", true))
+                    .build())
+            .build();
+
+        sut.process(createMessageWithError, session);
+    }
+
+    @Test
+    public void processShouldCreateWhenKeywords() {
+        SetMessagesRequest createMessageWithKeywords = SetMessagesRequest.builder()
+            .create(
+                creationMessageId,
+                creationMessageBuilder
+                    .mailboxId(OUTBOX_ID.serialize())
+                    .keywords(ImmutableMap.of("$Answered", true))
+                    .build())
+            .build();
+
+        SetMessagesResponse result = sut.process(createMessageWithKeywords, session);
+
+        assertThat(result.getCreated()).isNotEmpty();
+        assertThat(result.getNotCreated()).isEmpty();
+    }
+
+    @Test
+    public void processShouldCreateWhenIsFlag() {
+        SetMessagesRequest createMessageWithKeywords = SetMessagesRequest.builder()
+            .create(
+                creationMessageId,
+                creationMessageBuilder
+                    .mailboxId(OUTBOX_ID.serialize())
+                    .isAnswered(Optional.of(true))
+                    .build())
+            .build();
+
+        SetMessagesResponse result = sut.process(createMessageWithKeywords, session);
+
+        assertThat(result.getCreated()).isNotEmpty();
         assertThat(result.getNotCreated()).isEmpty();
     }
 
@@ -304,9 +357,9 @@ public class SetMessagesCreationProcessorTest {
         @Override
         public Stream<MessageManager> getMailboxByRole(Role aRole, MailboxSession session) {
             if (aRole.equals(Role.OUTBOX)) {
-                return outboxSupplier.get().map(o -> Stream.of(o)).orElse(Stream.empty());
+                return OptionalUtils.toStream(outboxSupplier.get());
             } else if (aRole.equals(Role.DRAFTS)) {
-                return draftsSupplier.get().map(d -> Stream.of(d)).orElse(Stream.empty());
+                return OptionalUtils.toStream(draftsSupplier.get());
             }
             return Stream.empty();
         }

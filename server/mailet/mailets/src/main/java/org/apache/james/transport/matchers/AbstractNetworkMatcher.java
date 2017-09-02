@@ -24,6 +24,8 @@ import javax.mail.MessagingException;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.library.netmatcher.NetMatcher;
 import org.apache.mailet.base.GenericMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -44,6 +46,7 @@ import org.apache.mailet.base.GenericMatcher;
  * @see org.apache.james.dnsservice.library.netmatcher.NetMatcher
  */
 public abstract class AbstractNetworkMatcher extends GenericMatcher {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractNetworkMatcher.class);
 
     private NetMatcher authorizedNetworks;
 
@@ -52,12 +55,8 @@ public abstract class AbstractNetworkMatcher extends GenericMatcher {
     @Override
     public void init() throws MessagingException {
         if (getCondition() != null) {
-            authorizedNetworks = new NetMatcher(getCondition(), dnsServer) {
-                protected void log(String s) {
-                    AbstractNetworkMatcher.this.log(s);
-                }
-            };
-            log("Authorized addresses: " + authorizedNetworks.toString());
+            authorizedNetworks = new NetMatcher(getCondition(), dnsServer);
+            LOGGER.info("Authorized addresses: " + authorizedNetworks);
         }
     }
 

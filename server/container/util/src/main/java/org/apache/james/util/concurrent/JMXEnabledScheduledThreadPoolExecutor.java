@@ -36,7 +36,7 @@ public class JMXEnabledScheduledThreadPoolExecutor extends ScheduledThreadPoolEx
 
     private final String jmxPath;
     private final List<Runnable> inProgress = Collections.synchronizedList(new ArrayList<Runnable>());
-    private final ThreadLocal<Long> startTime = new ThreadLocal<Long>();
+    private final ThreadLocal<Long> startTime = new ThreadLocal<>();
     private long totalTime;
     private int totalTasks;
     private MBeanServer mbeanServer;

@@ -19,8 +19,6 @@
 package org.apache.james.jmap;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -34,7 +32,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
 
 public class QueryParameterAccessTokenAuthenticationStrategyTest {
 
@@ -77,7 +74,7 @@ public class QueryParameterAccessTokenAuthenticationStrategyTest {
 
     @Test
     public void createMailboxSessionShouldThrowWhenMailboxExceptionHasOccurred() throws Exception {
-        when(mockedMailboxManager.createSystemSession(eq(USERNAME), any(Logger.class)))
+        when(mockedMailboxManager.createSystemSession(USERNAME))
                 .thenThrow(new MailboxException());
 
         when(request.getParameter("access_token"))

@@ -21,6 +21,7 @@ package org.apache.james.ai.classic;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.stream.IntStream;
 
 /**
  * Tokenizes streaming mail input.
@@ -70,12 +71,8 @@ public abstract class Tokenizer {
     protected abstract void next(String token);
 
     private boolean allDigits(String s) {
-        for (int i = 0; i < s.length(); i++) {
-            if (!Character.isDigit(s.charAt(i))) {
-                return false;
-            }
-        }
-        return true;
+        return IntStream.range(0, s.length())
+            .allMatch(i -> Character.isDigit(s.charAt(i)));
     }
     
     private String nextToken(Reader reader) throws java.io.IOException {

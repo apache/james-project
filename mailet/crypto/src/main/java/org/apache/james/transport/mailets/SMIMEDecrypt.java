@@ -45,6 +45,8 @@ import org.bouncycastle.cms.RecipientInformationStore;
 import org.bouncycastle.cms.jcajce.JceKeyTransEnvelopedRecipient;
 import org.bouncycastle.mail.smime.SMIMEEnveloped;
 import org.bouncycastle.mail.smime.SMIMEUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 
@@ -74,6 +76,7 @@ import com.google.common.base.Charsets;
  * 
  */
 public class SMIMEDecrypt extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SMIMEDecrypt.class);
 
     private SMIMEKeyHolder keyHolder;
     private X509CertificateHolder certificateHolder;
@@ -99,9 +102,7 @@ public class SMIMEDecrypt extends GenericMailet {
         
         try {
             keyHolder = new SMIMEKeyHolder(privateStoreFile, privateStorePass, keyAlias, keyPass, privateStoreType);
-        } catch (IOException e) {
-            throw new MessagingException("Error loading keystore", e);
-        } catch (GeneralSecurityException e) {
+        } catch (IOException | GeneralSecurityException e) {
             throw new MessagingException("Error loading keystore", e);
         }
 
@@ -111,9 +112,7 @@ public class SMIMEDecrypt extends GenericMailet {
     private X509CertificateHolder from(X509Certificate certificate) throws MessagingException {
         try {
             return new X509CertificateHolder(certificate.getEncoded());
-        } catch (CertificateEncodingException e) {
-            throw new MessagingException("Error during the parsing of the certificate", e);
-        } catch (IOException e) {
+        } catch (CertificateEncodingException | IOException e) {
             throw new MessagingException("Error during the parsing of the certificate", e);
         }
     }
@@ -125,7 +124,7 @@ public class SMIMEDecrypt extends GenericMailet {
     public void service(Mail mail) throws MessagingException {
         MimeMessage message = mail.getMessage();
         Part strippedMessage = null;
-        log("Starting message decryption..");
+        LOGGER.info("Starting message decryption..");
         if (message.isMimeType("application/x-pkcs7-mime") || message.isMimeType("application/pkcs7-mime")) {
             try {
                 SMIMEEnveloped env = new SMIMEEnveloped(message);
@@ -138,12 +137,12 @@ public class SMIMEDecrypt extends GenericMailet {
                             JceKeyTransEnvelopedRecipient recipient = new JceKeyTransEnvelopedRecipient(keyHolder.getPrivateKey());
                             // strippedMessage contains the decrypted message.
                             strippedMessage = SMIMEUtil.toMimeBodyPart(info.getContent(recipient));
-                            log("Encrypted message decrypted");
+                            LOGGER.info("Encrypted message decrypted");
                         } catch (Exception e) {
                             throw new MessagingException("Error during the decryption of the message", e);
                         }
                     } else {
-                        log("Found an encrypted message but it isn't encrypted for the supplied key");
+                        LOGGER.info("Found an encrypted message but it isn't encrypted for the supplied key");
                     }
                 }
             } catch (CMSException e) {
@@ -158,7 +157,7 @@ public class SMIMEDecrypt extends GenericMailet {
             // behavior of the SMIMEVerifySignature mailet. In that way
             // it is possible to reuse the same matchers to analyze
             // the result of the operation.
-            ArrayList<X509Certificate> list = new ArrayList<X509Certificate>(1);
+            ArrayList<X509Certificate> list = new ArrayList<>(1);
             list.add(keyHolder.getCertificate());
             mail.setAttribute(mailAttribute, list);
 
@@ -171,8 +170,8 @@ public class SMIMEDecrypt extends GenericMailet {
                 }
                 newMessage.saveChanges();
                 mail.setMessage(newMessage);
-            } catch (IOException e) { 
-                log("Error during the strip of the encrypted message");
+            } catch (IOException e) {
+                LOGGER.error("Error during the strip of the encrypted message", e);
                 throw new MessagingException("Error during the stripping of the encrypted message",e);
             }
         }

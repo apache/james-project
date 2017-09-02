@@ -19,11 +19,11 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.guava.api.Assertions.assertThat;
-
+import java.util.Optional;
 import java.util.stream.LongStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
@@ -36,16 +36,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.base.Optional;
 
 public class CassandraUidProviderTest {
 
-    private static final CassandraCluster CASSANDRA = CassandraCluster.create(new CassandraModuleComposite(
+    private final CassandraCluster cassandra = CassandraCluster.create(new CassandraModuleComposite(
         new CassandraAclModule(),
         new CassandraMailboxModule(),
         new CassandraUidModule()));
-    
-    private static final int MAX_RETRY = 100;
     
     private CassandraUidProvider uidProvider;
     private CassandraMailboxMapper mapper;
@@ -53,11 +50,11 @@ public class CassandraUidProviderTest {
 
     @Before
     public void setUpClass() throws Exception {
-        CASSANDRA.ensureAllTables();
-        uidProvider = new CassandraUidProvider(CASSANDRA.getConf());
-        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(CASSANDRA.getConf(), CASSANDRA.getTypesProvider(), MAX_RETRY);
-        CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(CASSANDRA.getConf(), CASSANDRA.getTypesProvider());
-        mapper = new CassandraMailboxMapper(CASSANDRA.getConf(), mailboxDAO, mailboxPathDAO, MAX_RETRY);
+        cassandra.ensureAllTables();
+        uidProvider = new CassandraUidProvider(cassandra.getConf());
+        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
+        CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(cassandra.getConf(), cassandra.getTypesProvider());
+        mapper = new CassandraMailboxMapper(cassandra.getConf(), mailboxDAO, mailboxPathDAO, CassandraConfiguration.DEFAULT_CONFIGURATION);
         MailboxPath path = new MailboxPath("gsoc", "ieugen", "Trash");
         mailbox = new SimpleMailbox(path, 1234);
         mapper.save(mailbox);
@@ -65,14 +62,15 @@ public class CassandraUidProviderTest {
     
     @After
     public void cleanUp() {
-        CASSANDRA.clearAllTables();
+        cassandra.clearAllTables();
+        cassandra.close();
     }
 
     @Test
     public void lastUidShouldRetrieveValueStoredByNextUid() throws Exception {
         int nbEntries = 100;
         Optional<MessageUid> result = uidProvider.lastUid(null, mailbox);
-        assertThat(result).isAbsent();
+        assertThat(result).isEmpty();
         LongStream.range(0, nbEntries)
             .forEach(Throwing.longConsumer(value -> {
                         MessageUid uid = uidProvider.nextUid(null, mailbox);
@@ -97,7 +95,7 @@ public class CassandraUidProviderTest {
         int nbEntries = 100;
         long nbValues = LongStream.range(0, nbEntries)
             .parallel()
-            .mapToObj(x -> x)
+            .boxed()
             .map(Throwing.function(x -> uidProvider.nextUid(null, mailbox)))
             .distinct()
             .count();

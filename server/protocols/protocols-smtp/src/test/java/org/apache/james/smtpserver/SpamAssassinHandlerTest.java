@@ -18,10 +18,15 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.io.IOException;
 import java.util.HashMap;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+
 import org.apache.james.protocols.lib.PortUtil;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -33,7 +38,6 @@ import org.apache.james.smtpserver.mock.mailet.MockMail;
 import org.apache.james.smtpserver.mock.util.MockSpamd;
 import org.apache.james.util.scanner.SpamAssassinInvoker;
 import org.apache.mailet.Mail;
-import static org.junit.Assert.*;
 import org.junit.Test;
 
 public class SpamAssassinHandlerTest {
@@ -46,8 +50,8 @@ public class SpamAssassinHandlerTest {
 
         return new BaseFakeSMTPSession() {
 
-            private final HashMap<String, Object> sstate = new HashMap<String, Object>();
-            private final HashMap<String, Object> connectionState = new HashMap<String, Object>();
+            private final HashMap<String, Object> sstate = new HashMap<>();
+            private final HashMap<String, Object> connectionState = new HashMap<>();
             private boolean relayingAllowed;
 
             @Override

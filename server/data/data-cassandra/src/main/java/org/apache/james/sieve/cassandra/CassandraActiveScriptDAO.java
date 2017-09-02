@@ -69,7 +69,7 @@ public class CassandraActiveScriptDAO {
                 .setString(USER_NAME, username))
             .thenApply(rowOptional -> rowOptional.map(row -> new ActiveScriptInfo(
                 row.getString(SCRIPT_NAME),
-                row.getDate(DATE))));
+                row.getTimestamp(DATE))));
     }
 
     public CompletableFuture<Void> unactivate(String username) {
@@ -83,6 +83,6 @@ public class CassandraActiveScriptDAO {
             insertActive.bind()
                 .setString(USER_NAME, username)
                 .setString(SCRIPT_NAME, scriptName)
-                .setDate(DATE, new Date()));
+                .setTimestamp(DATE, new Date()));
     }
 }

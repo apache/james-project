@@ -20,17 +20,17 @@
 
 package org.apache.james.rrt.lib;
 
-import org.apache.james.rrt.lib.Mapping.Type;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
+import org.apache.james.rrt.lib.Mapping.Type;
 
 public interface Mappings extends Iterable<Mapping> {
 
-    boolean contains(String mapping);
+    boolean contains(Mapping mapping);
 
     int size();
 
-    Mappings remove(String mapping);
+    Mappings remove(Mapping mapping);
 
     boolean isEmpty();
 

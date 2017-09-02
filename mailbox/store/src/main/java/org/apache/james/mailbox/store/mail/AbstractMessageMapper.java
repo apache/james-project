@@ -21,7 +21,7 @@ package org.apache.james.mailbox.store.mail;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
+import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxSession;
@@ -36,8 +36,6 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.transaction.TransactionalMapper;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.Iterators;
 
 /**
@@ -46,12 +44,6 @@ import com.google.common.collect.Iterators;
  *
  */
 public abstract class AbstractMessageMapper extends TransactionalMapper implements MessageMapper {
-    private static final Function<MailboxMessage, MessageUid> TO_UID = new Function<MailboxMessage, MessageUid>() {
-        @Override
-        public MessageUid apply(MailboxMessage input) {
-            return input.getUid();
-        }
-    };
 
     private static final int UNLIMITED = -1;
 
@@ -85,7 +77,7 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
 
     @Override
     public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator, MessageRange set) throws MailboxException {
-        final List<UpdatedFlags> updatedFlags = new ArrayList<UpdatedFlags>();
+        final List<UpdatedFlags> updatedFlags = new ArrayList<>();
         Iterator<MailboxMessage> messages = findInMailbox(mailbox, set, FetchType.Metadata, -1);
         
         long modSeq = -1;
@@ -159,6 +151,7 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
 
     @Override
     public Iterator<MessageUid> listAllMessageUids(Mailbox mailbox) throws MailboxException {
-        return Iterators.transform(findInMailbox(mailbox, MessageRange.all(), FetchType.Metadata, UNLIMITED), TO_UID);
+        return Iterators.transform(findInMailbox(mailbox, MessageRange.all(), FetchType.Metadata, UNLIMITED),
+            MailboxMessage::getUid);
     }
 }

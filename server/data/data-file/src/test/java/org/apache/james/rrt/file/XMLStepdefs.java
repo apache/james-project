@@ -20,7 +20,6 @@ package org.apache.james.rrt.file;
 
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
-import org.slf4j.LoggerFactory;
 
 import cucumber.api.java.Before;
 
@@ -38,8 +37,6 @@ public class XMLStepdefs {
     }
 
     private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
-        XMLRecipientRewriteTable localVirtualUserTable = new XMLRecipientRewriteTable();
-        localVirtualUserTable.setLog(LoggerFactory.getLogger("MockLog"));
-        return localVirtualUserTable;
+        return new XMLRecipientRewriteTable();
     }
 }

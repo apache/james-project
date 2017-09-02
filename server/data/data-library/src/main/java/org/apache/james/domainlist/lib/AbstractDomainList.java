@@ -22,11 +22,9 @@ package org.apache.james.domainlist.lib;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-
-import javax.inject.Inject;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -34,54 +32,86 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 /**
  * All implementations of the DomainList interface should extends this abstract
  * class
  */
-public abstract class AbstractDomainList implements DomainList, LogEnabled, Configurable {
+public abstract class AbstractDomainList implements DomainList, Configurable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDomainList.class);
 
     protected static final String LOCALHOST = "localhost";
+    public static final String CONFIGURE_AUTODETECT = "autodetect";
+    public static final String CONFIGURE_AUTODETECT_IP = "autodetectIP";
+    public static final String CONFIGURE_DEFAULT_DOMAIN = "defaultDomain";
+    public static final String CONFIGURE_DOMAIN_NAMES = "domainnames.domainname";
+    public static final String ENV_DOMAIN = "DOMAIN";
 
-    private DNSService dns;
+    private final DNSService dns;
+    private final EnvDetector envDetector;
     private boolean autoDetect = true;
     private boolean autoDetectIP = true;
-    private Logger logger;
     private String defaultDomain;
 
-    @Inject
-    public void setDNSService(DNSService dns) {
+    public AbstractDomainList(DNSService dns, EnvDetector envDetector) {
         this.dns = dns;
+        this.envDetector = envDetector;
     }
 
-    public void setLog(Logger logger) {
-        this.logger = logger;
-    }
-
-    protected Logger getLogger() {
-        return logger;
+    public AbstractDomainList(DNSService dns) {
+        this(dns, new EnvDetector());
     }
 
     @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
+        setAutoDetect(config.getBoolean(CONFIGURE_AUTODETECT, true));
+        setAutoDetectIP(config.getBoolean(CONFIGURE_AUTODETECT_IP, true));
+
         configureDefaultDomain(config);
 
-        setAutoDetect(config.getBoolean("autodetect", true));
-        setAutoDetectIP(config.getBoolean("autodetectIP", true));
+        addEnvDomain();
+        addConfiguredDomains(config);
+    }
+
+    protected void addConfiguredDomains(HierarchicalConfiguration config) {
+        String[] configuredDomainNames = config.getStringArray(CONFIGURE_DOMAIN_NAMES);
+        try {
+            if (configuredDomainNames != null) {
+                for (String domain : Arrays.asList(configuredDomainNames)) {
+                    if (!containsDomainInternal(domain)) {
+                        addDomain(domain.toLowerCase(Locale.US));
+                    }
+                }
+            }
+        } catch (DomainListException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    private void addEnvDomain() {
+        String envDomain = envDetector.getEnv(ENV_DOMAIN);
+        if (!Strings.isNullOrEmpty(envDomain)) {
+            try {
+                LOGGER.info("Adding environment defined domain {}", envDomain);
+                addDomain(envDomain);
+            } catch (DomainListException e) {
+                throw Throwables.propagate(e);
+            }
+        }
     }
 
     @VisibleForTesting void configureDefaultDomain(HierarchicalConfiguration config) throws ConfigurationException {
-        
         try {
-            defaultDomain = config.getString("defaultDomain", LOCALHOST);
+            setDefaultDomain(config.getString(CONFIGURE_DEFAULT_DOMAIN, LOCALHOST));
 
             String hostName = InetAddress.getLocalHost().getHostName();
             if (mayChangeDefaultDomain()) {
@@ -99,7 +129,7 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
     }
 
     private void setDefaultDomain(String defaultDomain) throws DomainListException {
-        if (!containsDomain(defaultDomain)) {
+        if (defaultDomain != null && !containsDomain(defaultDomain)) {
             addDomain(defaultDomain);
         }
         this.defaultDomain = defaultDomain;
@@ -115,13 +145,39 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
     }
 
     @Override
+    public boolean containsDomain(String domain) throws DomainListException {
+        boolean internalAnswer = containsDomainInternal(domain);
+        return internalAnswer || getDomains().contains(domain);
+    }
+
+    @Override
     public List<String> getDomains() throws DomainListException {
         List<String> domains = getDomainListInternal();
-        if (domains != null) {
 
-            // create mutable copy, some subclasses return ImmutableList
-            ArrayList<String> mutableDomains = new ArrayList<String>(domains);
+        // create mutable copy, some subclasses return ImmutableList
+        ArrayList<String> mutableDomains = new ArrayList<>(domains);
+        List<String> detectedDomains = detectDomains();
+        mutableDomains.addAll(detectedDomains);
+        mutableDomains.addAll(detectIps(mutableDomains));
 
+        if (LOGGER.isDebugEnabled()) {
+            for (String domain : mutableDomains) {
+                LOGGER.debug("Handling mail for: " + domain);
+            }
+        }
+
+        return ImmutableList.copyOf(mutableDomains);
+    }
+
+    private List<String> detectIps(ArrayList<String> mutableDomains) {
+        if (autoDetectIP) {
+            return getDomainsIP(mutableDomains, dns, LOGGER);
+        }
+        return ImmutableList.of();
+    }
+
+    private List<String> detectDomains() {
+        if (autoDetect) {
             String hostName;
             try {
                 hostName = getDNSServer().getHostName(getDNSServer().getLocalHost());
@@ -129,25 +185,12 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
                 hostName = "localhost";
             }
 
-            getLogger().info("Local host is: " + hostName);
-
-            if (autoDetect && (!hostName.equals("localhost"))) {
-                mutableDomains.add(hostName.toLowerCase(Locale.US));
+            LOGGER.info("Local host is: " + hostName);
+            if (hostName != null && !hostName.equals("localhost")) {
+                return ImmutableList.of(hostName.toLowerCase(Locale.US));
             }
-
-            if (autoDetectIP) {
-                mutableDomains.addAll(getDomainsIP(mutableDomains, dns, getLogger()));
-            }
-
-            if (getLogger().isInfoEnabled()) {
-                for (String domain : mutableDomains) {
-                    getLogger().debug("Handling mail for: " + domain);
-                }
-            }
-
-            return ImmutableList.copyOf(mutableDomains);
         }
-        return ImmutableList.of();// empty list
+        return ImmutableList.of();
     }
 
     /**
@@ -158,38 +201,25 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
      * @return domainIP List of ipaddress for domains
      */
     private static List<String> getDomainsIP(List<String> domains, DNSService dns, Logger log) {
-        List<String> domainIP = new ArrayList<String>();
-        if (domains.size() > 0) {
-            for (String domain : domains) {
-                List<String> domList = getDomainIP(domain, dns, log);
-
-                for (String aDomList : domList) {
-                    if (!domainIP.contains(aDomList)) {
-                        domainIP.add(aDomList);
-                    }
-                }
-            }
-        }
-        return domainIP;
+        return domains.stream()
+            .flatMap(domain -> getDomainIP(domain, dns, log).stream())
+            .distinct()
+            .collect(Guavate.toImmutableList());
     }
 
     /**
      * @see #getDomainsIP(List, DNSService, Logger)
      */
     private static List<String> getDomainIP(String domain, DNSService dns, Logger log) {
-        List<String> domainIP = new ArrayList<String>();
         try {
-            Collection<InetAddress> addrs = dns.getAllByName(domain);
-            for (InetAddress addr : addrs) {
-                String ip = addr.getHostAddress();
-                if (!domainIP.contains(ip)) {
-                    domainIP.add(ip);
-                }
-            }
+            return dns.getAllByName(domain).stream()
+                .map(InetAddress::getHostAddress)
+                .distinct()
+                .collect(Guavate.toImmutableList());
         } catch (UnknownHostException e) {
             log.error("Cannot get IP address(es) for " + domain);
+            return ImmutableList.of();
         }
-        return domainIP;
     }
 
     /**
@@ -200,7 +230,7 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
      *            set to <code>false</code> for disable
      */
     public synchronized void setAutoDetect(boolean autoDetect) {
-        getLogger().info("Set autodetect to: " + autoDetect);
+        LOGGER.info("Set autodetect to: " + autoDetect);
         this.autoDetect = autoDetect;
     }
 
@@ -212,7 +242,7 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
      *            set to <code>false</code> for disable
      */
     public synchronized void setAutoDetectIP(boolean autoDetectIP) {
-        getLogger().info("Set autodetectIP to: " + autoDetectIP);
+        LOGGER.info("Set autodetectIP to: " + autoDetectIP);
         this.autoDetectIP = autoDetectIP;
     }
 
@@ -231,5 +261,7 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
      * @return List
      */
     protected abstract List<String> getDomainListInternal() throws DomainListException;
+
+    protected abstract boolean containsDomainInternal(String domain) throws DomainListException;
 
 }

@@ -27,7 +27,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
@@ -59,10 +58,10 @@ public class CreationMessage {
     public static class Builder {
         private ImmutableList<String> mailboxIds;
         private String inReplyToMessageId;
-        private boolean isUnread;
-        private boolean isFlagged;
-        private boolean isAnswered;
-        private boolean isDraft;
+        private Optional<Boolean> isUnread = Optional.empty();
+        private Optional<Boolean> isFlagged = Optional.empty();
+        private Optional<Boolean> isAnswered = Optional.empty();
+        private Optional<Boolean> isDraft = Optional.empty();
         private final ImmutableMap.Builder<String, String> headers;
         private Optional<DraftEmailer> from = Optional.empty();
         private final ImmutableList.Builder<DraftEmailer> to;
@@ -75,6 +74,7 @@ public class CreationMessage {
         private String htmlBody;
         private final ImmutableList.Builder<Attachment> attachments;
         private final ImmutableMap.Builder<BlobId, SubMessage> attachedMessages;
+        private Optional<Map<String, Boolean>> keywords = Optional.empty();
 
         private Builder() {
             to = ImmutableList.builder();
@@ -101,22 +101,22 @@ public class CreationMessage {
             return this;
         }
 
-        public Builder isUnread(boolean isUnread) {
+        public Builder isUnread(Optional<Boolean> isUnread) {
             this.isUnread = isUnread;
             return this;
         }
 
-        public Builder isFlagged(boolean isFlagged) {
+        public Builder isFlagged(Optional<Boolean> isFlagged) {
             this.isFlagged = isFlagged;
             return this;
         }
 
-        public Builder isAnswered(boolean isAnswered) {
+        public Builder isAnswered(Optional<Boolean> isAnswered) {
             this.isAnswered = isAnswered;
             return this;
         }
 
-        public Builder isDraft(boolean isDraft) {
+        public Builder isDraft(Optional<Boolean> isDraft) {
             this.isDraft = isDraft;
             return this;
         }
@@ -186,6 +186,11 @@ public class CreationMessage {
             return this;
         }
 
+        public Builder keywords(Map<String, Boolean> keywords) {
+            this.keywords = Optional.of(ImmutableMap.copyOf(keywords));
+            return this;
+        }
+
         private static boolean areAttachedMessagesKeysInAttachments(ImmutableList<Attachment> attachments, ImmutableMap<BlobId, SubMessage> attachedMessages) {
             return attachedMessages.isEmpty() || attachedMessages.keySet().stream()
                     .anyMatch(inAttachments(attachments));
@@ -206,21 +211,29 @@ public class CreationMessage {
             ImmutableMap<BlobId, SubMessage> attachedMessages = this.attachedMessages.build();
             Preconditions.checkState(areAttachedMessagesKeysInAttachments(attachments, attachedMessages), "'attachedMessages' keys must be in 'attachments'");
 
+            Optional<Keywords> creationKeywords = Keywords.factory()
+                .throwOnImapNonExposedKeywords()
+                .fromMapOrOldKeyword(keywords, getOldKeywords());
+
             if (date == null) {
                 date = ZonedDateTime.now();
             }
 
-            return new CreationMessage(mailboxIds, Optional.ofNullable(inReplyToMessageId), isUnread, isFlagged, isAnswered, isDraft, headers.build(), from,
-                    to.build(), cc.build(), bcc.build(), replyTo.build(), subject, date, Optional.ofNullable(textBody), Optional.ofNullable(htmlBody), attachments, attachedMessages);
+            return new CreationMessage(mailboxIds, Optional.ofNullable(inReplyToMessageId), headers.build(), from,
+                    to.build(), cc.build(), bcc.build(), replyTo.build(), subject, date, Optional.ofNullable(textBody), Optional.ofNullable(htmlBody),
+                    attachments, attachedMessages, creationKeywords);
+        }
+
+        private Optional<OldKeyword> getOldKeywords() {
+            if (isAnswered.isPresent() || isFlagged.isPresent() || isUnread.isPresent() || isDraft.isPresent()) {
+                return Optional.of(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft));
+            }
+            return Optional.empty();
         }
     }
 
     private final ImmutableList<String> mailboxIds;
     private final Optional<String> inReplyToMessageId;
-    private final boolean isUnread;
-    private final boolean isFlagged;
-    private final boolean isAnswered;
-    private final boolean isDraft;
     private final ImmutableMap<String, String> headers;
     private final Optional<DraftEmailer> from;
     private final ImmutableList<DraftEmailer> to;
@@ -233,17 +246,14 @@ public class CreationMessage {
     private final Optional<String> htmlBody;
     private final ImmutableList<Attachment> attachments;
     private final ImmutableMap<BlobId, SubMessage> attachedMessages;
+    private final Optional<Keywords> keywords;
 
     @VisibleForTesting
-    CreationMessage(ImmutableList<String> mailboxIds, Optional<String> inReplyToMessageId, boolean isUnread, boolean isFlagged, boolean isAnswered, boolean isDraft, ImmutableMap<String, String> headers, Optional<DraftEmailer> from,
+    CreationMessage(ImmutableList<String> mailboxIds, Optional<String> inReplyToMessageId, ImmutableMap<String, String> headers, Optional<DraftEmailer> from,
                     ImmutableList<DraftEmailer> to, ImmutableList<DraftEmailer> cc, ImmutableList<DraftEmailer> bcc, ImmutableList<DraftEmailer> replyTo, String subject, ZonedDateTime date, Optional<String> textBody, Optional<String> htmlBody, ImmutableList<Attachment> attachments,
-                    ImmutableMap<BlobId, SubMessage> attachedMessages) {
+                    ImmutableMap<BlobId, SubMessage> attachedMessages, Optional<Keywords> keywords) {
         this.mailboxIds = mailboxIds;
         this.inReplyToMessageId = inReplyToMessageId;
-        this.isUnread = isUnread;
-        this.isFlagged = isFlagged;
-        this.isAnswered = isAnswered;
-        this.isDraft = isDraft;
         this.headers = headers;
         this.from = from;
         this.to = to;
@@ -256,6 +266,7 @@ public class CreationMessage {
         this.htmlBody = htmlBody;
         this.attachments = attachments;
         this.attachedMessages = attachedMessages;
+        this.keywords = keywords;
     }
 
     public ImmutableList<String> getMailboxIds() {
@@ -264,22 +275,6 @@ public class CreationMessage {
 
     public Optional<String> getInReplyToMessageId() {
         return inReplyToMessageId;
-    }
-
-    public boolean isIsUnread() {
-        return isUnread;
-    }
-
-    public boolean isIsFlagged() {
-        return isFlagged;
-    }
-
-    public boolean isIsAnswered() {
-        return isAnswered;
-    }
-
-    public boolean isIsDraft() {
-        return isDraft;
     }
 
     public ImmutableMap<String, String> getHeaders() {
@@ -332,6 +327,10 @@ public class CreationMessage {
 
     public boolean isValid() {
         return validate().isEmpty();
+    }
+
+    public Optional<Keywords> getKeywords() {
+        return keywords;
     }
 
     public List<ValidationResult> validate() {
@@ -475,5 +474,12 @@ public class CreationMessage {
             }
             return result;
         }
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("mailboxIds", mailboxIds)
+            .toString();
     }
 }

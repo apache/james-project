@@ -89,7 +89,7 @@ public class SMTPProtocolHandlerChain extends ProtocolHandlerChainImpl {
     }
     
     protected List<ProtocolHandler> initDefaultHandlers() {
-        List<ProtocolHandler> defaultHandlers = new ArrayList<ProtocolHandler>();
+        List<ProtocolHandler> defaultHandlers = new ArrayList<>();
         defaultHandlers.add(new CommandDispatcher<SMTPSession>());
         defaultHandlers.add(new ExpnCmdHandler());
         defaultHandlers.add(new EhloCmdHandler(metricFactory));
@@ -138,22 +138,12 @@ public class SMTPProtocolHandlerChain extends ProtocolHandlerChainImpl {
 
     @Override
     public boolean addAll(Collection<? extends ProtocolHandler> c) {
-        for (ProtocolHandler handler: c) {
-            if (!checkForAuth(handler)) {
-                return false;
-            }
-        }
-        return super.addAll(c);
+        return c.stream().allMatch(this::checkForAuth) && super.addAll(c);
     }
 
     @Override
     public boolean addAll(int index, Collection<? extends ProtocolHandler> c) {
-        for (ProtocolHandler handler: c) {
-            if (!checkForAuth(handler)) {
-                return false;
-            }
-        }
-        return super.addAll(index, c);
+        return c.stream().allMatch(this::checkForAuth) && super.addAll(index, c);
     }
 
     @Override

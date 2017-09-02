@@ -155,23 +155,21 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
 
     /* private version of the injector can use */
     private void injectServices(final Object bean, final String beanName) {
-        ReflectionUtils.doWithMethods(bean.getClass(), new ReflectionUtils.MethodCallback() {
-
-            public void doWith(Method method) {
+        ReflectionUtils.doWithMethods(bean.getClass(),
+            method -> {
                 A s = AnnotationUtils.getAnnotation(method, getAnnotation());
                 if (s != null && method.getParameterTypes().length == 1) {
                     try {
                         if (logger.isDebugEnabled())
                             logger.debug("Processing annotation [" + s + "] for [" + bean.getClass().getName() + "."
-                                    + method.getName() + "()] on bean [" + beanName + "]");
+                                + method.getName() + "()] on bean [" + beanName + "]");
                         method.invoke(bean, getServiceImporter(s, method, beanName).getObject());
                     }
                     catch (Exception e) {
                         throw new IllegalArgumentException("Error processing annotation " +s , e);
                     }
                 }
-            }
-        });
+            });
     }
 
     @Override

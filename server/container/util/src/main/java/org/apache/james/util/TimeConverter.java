@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 
 public class TimeConverter {
 
-    private static final HashMap<String, Integer> multipliers = new HashMap<String, Integer>(10);
+    private static final HashMap<String, Integer> multipliers = new HashMap<>(10);
 
     private static final String PATTERN_STRING = "\\s*([0-9]+)\\s*([a-z,A-Z]*)\\s*";
 

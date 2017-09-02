@@ -2,7 +2,7 @@
 #
 # VERSION	1.0
 
-FROM java:openjdk-8-jdk
+FROM openjdk:8u141-jdk
 
 # Ports that are used
 #
@@ -27,4 +27,4 @@ ADD destination/conf /root/conf
 
 VOLUME /logs
 
-ENTRYPOINT java -classpath '/root/james-server.jar:/root/james-server-jpa-guice.lib/*' -javaagent:/root/james-server-cli.lib/openjpa-2.2.1.jar -Dlogback.configurationFile=/root/conf/logback.xml -Dworking.directory=/root/ org.apache.james.JPAJamesServerMain
+ENTRYPOINT java -classpath '/root/james-server.jar:/root/james-server-jpa-guice.lib/*' -javaagent:/root/james-server-cli.lib/openjpa-2.4.2.jar -Dlogback.configurationFile=/root/conf/logback.xml -Dworking.directory=/root/ org.apache.james.JPAJamesServerMain

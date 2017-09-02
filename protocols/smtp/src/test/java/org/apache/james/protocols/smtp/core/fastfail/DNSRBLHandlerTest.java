@@ -20,9 +20,9 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -95,7 +95,7 @@ public class DNSRBLHandlerTest {
 
             @Override
             protected Collection<String> resolveTXTRecords(String hostname) {
-                List<String> res = new ArrayList<String>();
+                List<String> res = new ArrayList<>();
                 if (hostname == null) {
                     return res;
                 }
@@ -115,8 +115,8 @@ public class DNSRBLHandlerTest {
      */
     private void setupMockedSMTPSession(MailAddress rcpt) {
         mockedSMTPSession = new BaseFakeSMTPSession() {
-            HashMap<String,Object> sessionState = new HashMap<String,Object>();
-            HashMap<String,Object> connectionState = new HashMap<String,Object>();
+            HashMap<String,Object> sessionState = new HashMap<>();
+            HashMap<String,Object> connectionState = new HashMap<>();
             
             @Override
             public InetSocketAddress getRemoteAddress() {

@@ -22,13 +22,14 @@
 package org.apache.james.transport.mailets;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage ;
+import javax.mail.internet.MimeMessage;
 
-import org.apache.mailet.base.GenericMailet ;
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
-
-import org.apache.mailet.Mail ;
 
 /**
  * <p>Adds a specified header and value to the message.</p>
@@ -45,6 +46,7 @@ import org.apache.mailet.Mail ;
  * @version 1.0.0, 2002-09-11
  */
 public class SetMimeHeader extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SetMimeHeader.class);
 
     private String headerName;
     private String headerValue;
@@ -67,7 +69,7 @@ public class SetMimeHeader extends GenericMailet {
             message.addHeader(headerName, headerValue);
             message.saveChanges();
         } catch (javax.mail.MessagingException me) {
-            log(me.getMessage());
+            LOGGER.error("Encountered exception", me);
         }
     }
 

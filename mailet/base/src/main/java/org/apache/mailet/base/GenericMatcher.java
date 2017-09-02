@@ -20,6 +20,8 @@
 
 package org.apache.mailet.base;
 
+import java.util.Collection;
+
 import javax.mail.MessagingException;
 
 import org.apache.mailet.Mail;
@@ -27,9 +29,8 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.MatcherConfig;
-import org.apache.mailet.MailetContext.LogLevel;
-
-import java.util.Collection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>GenericMatcher implements the Matcher and MatcherConfig interfaces.</p>
@@ -43,7 +44,8 @@ import java.util.Collection;
  * @version 1.0.0, 24/04/1999
  */
 public abstract class GenericMatcher implements Matcher, MatcherConfig {
-    MatcherConfig config = null;
+    private static final Logger LOGGER = LoggerFactory.getLogger(GenericMatcher.class);
+    private MatcherConfig config = null;
 
     /**
      * Called by the mailet container to indicate to a matcher that the
@@ -143,9 +145,11 @@ public abstract class GenericMatcher implements Matcher, MatcherConfig {
      * Writes the specified message to a matcher log file.
      *
      * @param message - a String specifying the message to be written to the log file
+     * @deprecated Prefer using SLF4J LoggingFactory to get a Logger in each class
      */
+    @Deprecated
     public void log(String message) {
-        getMailetContext().log(LogLevel.INFO, message);
+        LOGGER.info(message);
     }
 
     /**
@@ -154,9 +158,11 @@ public abstract class GenericMatcher implements Matcher, MatcherConfig {
      *
      * @param message - a String that describes the error or exception
      * @param t - the java.lang.Throwable error or exception
+     * @deprecated Prefer using SLF4J LoggingFactory to get a Logger in each class
      */
+    @Deprecated
     public void log(String message, Throwable t) {
-        getMailetContext().log(LogLevel.ERROR, message, t);
+        LOGGER.error(message, t);
     }
 
     /**

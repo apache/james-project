@@ -31,7 +31,7 @@ import com.google.common.collect.ImmutableList;
  */
 public class SimpleDomainList implements DomainList {
 
-    private final List<String> domains = new LinkedList<String>();
+    private final List<String> domains = new LinkedList<>();
 
     @Override
     public boolean containsDomain(String domain) throws DomainListException {

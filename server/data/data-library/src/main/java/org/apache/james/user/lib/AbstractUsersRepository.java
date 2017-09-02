@@ -19,40 +19,26 @@
 
 package org.apache.james.user.lib;
 
+import java.util.Optional;
 import javax.inject.Inject;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.mailet.MailAddress;
-import org.slf4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 
-public abstract class AbstractUsersRepository implements UsersRepository, LogEnabled, Configurable {
+public abstract class AbstractUsersRepository implements UsersRepository, Configurable {
 
     private DomainList domainList;
     private boolean virtualHosting;
-    private Logger logger;
     private Optional<String> administratorId;
-
-    protected Logger getLogger() {
-        return logger;
-    }
-
-    /**
-     * @see org.apache.james.lifecycle.api.LogEnabled#setLog(org.slf4j.Logger)
-     */
-    public void setLog(Logger logger) {
-        this.logger = logger;
-    }
 
     /**
      * @see
@@ -61,7 +47,7 @@ public abstract class AbstractUsersRepository implements UsersRepository, LogEna
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
 
         virtualHosting = configuration.getBoolean("enableVirtualHosting", getDefaultVirtualHostingValue());
-        administratorId = Optional.fromNullable(configuration.getString("administratorId"));
+        administratorId = Optional.ofNullable(configuration.getString("administratorId"));
 
         doConfigure(configuration);
     }

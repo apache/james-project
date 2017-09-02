@@ -43,7 +43,7 @@ public class MessageBatcher {
 
     public List<MessageRange> batchMessages(MessageRange set, BatchedOperation batchedOperation) throws MailboxException {
         if (moveBatchSize > 0) {
-            List<MessageRange> movedRanges = new ArrayList<MessageRange>();
+            List<MessageRange> movedRanges = new ArrayList<>();
             for (MessageRange messageRange : set.split(moveBatchSize)) {
                 movedRanges.addAll(batchedOperation.execute(messageRange));
             }

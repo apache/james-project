@@ -257,7 +257,7 @@ public class HBaseUtils {
     public static MailboxMessage messageMetaFromResult(Configuration conf, Result result, MessageId.Factory messageIdFactory) {
         HBaseMailboxMessage message = null;
         Flags flags = new Flags();
-        List<Property> propList = new ArrayList<Property>();
+        List<Property> propList = new ArrayList<>();
         KeyValue[] keys = result.raw();
         String mediaType = null, subType = null;
         MessageUid uid;

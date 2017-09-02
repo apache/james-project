@@ -31,7 +31,7 @@
   
       <p>User repositories are required to store James user information and authentication data</p>
   
-      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/usersrepository-template.xml">usersrepository.xml</a> in GIT to get some examples and hints.</p>
+      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/usersrepository.xml">usersrepository.xml</a> in GIT to get some examples and hints.</p>
       
     </subsection>
     
@@ -39,7 +39,9 @@
   
      <p>JPA (database via OpenJPA) based user repository. This is the default implementation.</p>
      
-     <p>The usersrepository tag as 2 attributes: name="LocalUsers" and class="org.apache.james.user.file.UsersFileRepository"></p>
+     <p>The usersrepository tag as 2 attributes: name="LocalUsers" and class="org.apache.james.user.file.UsersFileRepository">
+     The class tag should be specified for Spring, but is not taken into acount by Guice.</p>
+
 
       <dl>
         <dt><strong>algorithm</strong></dt>

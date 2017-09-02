@@ -21,9 +21,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>james-server</artifactId>
         <groupId>org.apache.james</groupId>
-        <version>3.0.0-RC2-SNAPSHOT</version>
+        <artifactId>james-server</artifactId>
+        <version>3.1.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -33,9 +33,9 @@
     <name>Apache James :: Server :: Data  :: API</name>
 
     <dependencies>
-        <!-- only used by JamesUser (for MailAddress) -->
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <!-- only used by JamesUser (for MailAddress) -->
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-mailet-api</artifactId>
         </dependency>
         <dependency>
@@ -58,7 +58,6 @@
         <dependency>
             <groupId>nl.jqno.equalsverifier</groupId>
             <artifactId>equalsverifier</artifactId>
-            <version>1.7.6</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

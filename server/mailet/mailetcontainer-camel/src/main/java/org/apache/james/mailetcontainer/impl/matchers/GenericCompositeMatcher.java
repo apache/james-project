@@ -52,6 +52,6 @@ public abstract class GenericCompositeMatcher extends GenericMatcher implements 
     }
 
     // the collection used to store the child-matchers
-    private final Collection<Matcher> matchers = new ArrayList<Matcher>();
+    private final Collection<Matcher> matchers = new ArrayList<>();
 
 }

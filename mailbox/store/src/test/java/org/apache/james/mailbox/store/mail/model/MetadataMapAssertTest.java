@@ -58,21 +58,21 @@ public class MetadataMapAssertTest {
 
     @Test
     public void metadataMapAssertShouldSucceedWhenContainingRightMetadata() {
-        Map<MessageUid, MessageMetaData> metaDataMap = new HashMap<MessageUid, MessageMetaData>();
+        Map<MessageUid, MessageMetaData> metaDataMap = new HashMap<>();
         metaDataMap.put(UID, new SimpleMessageMetaData(UID, MODSEQ, new Flags(), HEADER_STRING.length() + BODY_STRING.length(), DATE, MESSAGE_ID));
         MetadataMapAssert.assertThat(metaDataMap).containsMetadataForMessages(message1);
     }
 
     @Test(expected = AssertionError.class)
     public void metadataMapAssertShouldFailWhenUidMismatch() {
-        Map<MessageUid, MessageMetaData> metaDataMap = new HashMap<MessageUid, MessageMetaData>();
+        Map<MessageUid, MessageMetaData> metaDataMap = new HashMap<>();
         metaDataMap.put(UID, new SimpleMessageMetaData(UID.next(), MODSEQ, new Flags(), HEADER_STRING.length() + BODY_STRING.length(), DATE, MESSAGE_ID));
         MetadataMapAssert.assertThat(metaDataMap).containsMetadataForMessages(message1);
     }
 
     @Test(expected = AssertionError.class)
     public void metadataMapAssertShouldFailWhenDateMismatch() {
-        Map<MessageUid, MessageMetaData> metaDataMap = new HashMap<MessageUid, MessageMetaData>();
+        Map<MessageUid, MessageMetaData> metaDataMap = new HashMap<>();
         Date date = new Date();
         date.setTime(DATE.getTime() + 100L);
         metaDataMap.put(UID, new SimpleMessageMetaData(UID, MODSEQ, new Flags(), HEADER_STRING.length() + BODY_STRING.length(), date, MESSAGE_ID));
@@ -81,7 +81,7 @@ public class MetadataMapAssertTest {
 
     @Test(expected = AssertionError.class)
     public void metadataMapAssertShouldFailWhenSizeMismatch() {
-        Map<MessageUid, MessageMetaData> metaDataMap = new HashMap<MessageUid, MessageMetaData>();
+        Map<MessageUid, MessageMetaData> metaDataMap = new HashMap<>();
         metaDataMap.put(UID, new SimpleMessageMetaData(UID , MODSEQ, new Flags(), HEADER_STRING.length() + BODY_STRING.length() + 1, DATE, MESSAGE_ID));
         MetadataMapAssert.assertThat(metaDataMap).containsMetadataForMessages(message1);
     }

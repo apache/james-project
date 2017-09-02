@@ -36,12 +36,9 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.modules.Names;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
@@ -51,15 +48,12 @@ import com.google.inject.name.Named;
 
 public class IMAPServerModule extends AbstractModule {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(IMAPServerModule.class);
-
     @Override
     protected void configure() {
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(IMAPModuleConfigurationPerformer.class);
     }
 
     @Provides
-    @Singleton
     ImapProcessor provideImapProcessor(
             @Named(Names.MAILBOXMANAGER_NAME)MailboxManager mailboxManager,
             SubscriptionManager subscriptionManager,
@@ -72,8 +66,6 @@ public class IMAPServerModule extends AbstractModule {
                 null,
                 quotaManager,
                 quotaRootResolver,
-                120,
-                ImmutableSet.of("ACL", "MOVE"),
                 metricFactory);
     }
 
@@ -104,7 +96,6 @@ public class IMAPServerModule extends AbstractModule {
         @Override
         public void initModule()  {
             try {
-                imapServerFactory.setLog(LOGGER);
                 imapServerFactory.configure(configurationProvider.getConfiguration("imapserver"));
                 imapServerFactory.init();
             } catch (Exception e) {

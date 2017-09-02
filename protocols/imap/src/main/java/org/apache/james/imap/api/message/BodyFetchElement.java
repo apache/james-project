@@ -20,8 +20,12 @@ package org.apache.james.imap.api.message;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Optional;
 
 import org.apache.james.imap.api.ImapConstants;
+
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
 
 public class BodyFetchElement {
 
@@ -174,4 +178,14 @@ public class BodyFetchElement {
         return true;
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("firstOctet", firstOctet)
+            .add("numberOfOctets", numberOfOctets)
+            .add("name", name)
+            .add("sectionType", sectionType)
+            .add("fieldNames", Optional.ofNullable(fieldNames).map(ImmutableList::copyOf))
+            .toString();
+    }
 }

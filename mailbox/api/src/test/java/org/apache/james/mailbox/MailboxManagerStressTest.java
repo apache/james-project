@@ -39,7 +39,6 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -61,9 +60,9 @@ public abstract class MailboxManagerStressTest {
 
         final CountDownLatch latch = new CountDownLatch(APPEND_OPERATIONS);
         final ExecutorService pool = Executors.newFixedThreadPool(APPEND_OPERATIONS / 2);
-        final List<MessageUid> uList = new ArrayList<MessageUid>();
+        final List<MessageUid> uList = new ArrayList<>();
         final String username = "username";
-        MailboxSession session = mailboxManager.createSystemSession(username, LoggerFactory.getLogger("Test"));
+        MailboxSession session = mailboxManager.createSystemSession(username);
         mailboxManager.startProcessingRequest(session);
         final MailboxPath path = new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "INBOX");
         mailboxManager.createMailbox(path, session);
@@ -89,41 +88,38 @@ public abstract class MailboxManagerStressTest {
         mailboxManager.logout(session, false);
 
         final AtomicBoolean fail = new AtomicBoolean(false);
-        final ConcurrentHashMap<MessageUid, Object> uids = new ConcurrentHashMap<MessageUid, Object>();
+        final ConcurrentHashMap<MessageUid, Object> uids = new ConcurrentHashMap<>();
 
         // fire of 1000 append operations
         for (int i = 0; i < APPEND_OPERATIONS; i++) {
-            pool.execute(new Runnable() {
-
-                public void run() {
-                    if (fail.get()) {
-                        latch.countDown();
-                        return;
-                    }
-
-
-                    try {
-                        MailboxSession session = mailboxManager.createSystemSession(username, LoggerFactory.getLogger("Test"));
-
-                        mailboxManager.startProcessingRequest(session);
-                        MessageManager m = mailboxManager.getMailbox(path, session);
-                        ComposedMessageId messageId = m.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), session, false, new Flags());
-
-                        System.out.println("Append message with uid=" + messageId.getUid());
-                        if (uids.put(messageId.getUid(), new Object()) != null) {
-                            fail.set(true);
-                        }
-                        mailboxManager.endProcessingRequest(session);
-                        mailboxManager.logout(session, false);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        fail.set(true);
-                    } finally {
-                        latch.countDown();
-                    }
-
-
+            pool.execute(() -> {
+                if (fail.get()) {
+                    latch.countDown();
+                    return;
                 }
+
+
+                try {
+                    MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
+
+                    mailboxManager.startProcessingRequest(mailboxSession);
+                    MessageManager m = mailboxManager.getMailbox(path, mailboxSession);
+                    ComposedMessageId messageId = m.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, new Flags());
+
+                    System.out.println("Append message with uid=" + messageId.getUid());
+                    if (uids.put(messageId.getUid(), new Object()) != null) {
+                        fail.set(true);
+                    }
+                    mailboxManager.endProcessingRequest(mailboxSession);
+                    mailboxManager.logout(mailboxSession, false);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    fail.set(true);
+                } finally {
+                    latch.countDown();
+                }
+
+
             });
         }
 

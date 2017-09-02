@@ -53,7 +53,8 @@ public class ESReporterTest {
 
     @Rule
     public SwarmGenericContainer esContainer = new SwarmGenericContainer("elasticsearch:2.2.2")
-        .withAffinityToContainer();
+        .withAffinityToContainer()
+        .withExposedPorts(ES_HTTP_PORT, ES_APPLICATIVE_PORT);
 
     private ClientProvider clientProvider;
     private ESMetricReporter esMetricReporter;

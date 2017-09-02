@@ -22,15 +22,11 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.jcr.user.model.JCRSubscription;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.user.model.Subscription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * JCR implementation of a SubscriptionManager
  */
 public class JCRSubscriptionManager extends StoreSubscriptionManager implements JCRImapConstants {
-    
-    private final Logger logger = LoggerFactory.getLogger(JCRSubscriptionManager.class);
 
     public JCRSubscriptionManager(JCRMailboxSessionMapperFactory mapperFactory) {
         super(mapperFactory);
@@ -38,6 +34,6 @@ public class JCRSubscriptionManager extends StoreSubscriptionManager implements 
 
     @Override
     protected Subscription createSubscription(MailboxSession session, String mailbox) {
-        return new JCRSubscription(session.getUser().getUserName(), mailbox, logger);
+        return new JCRSubscription(session.getUser().getUserName(), mailbox);
     }
 }

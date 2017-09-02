@@ -20,6 +20,7 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_NAMESPACES;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -36,6 +37,7 @@ import org.apache.james.imap.message.response.NamespaceResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
 
 /**
  * Processes a NAMESPACE command into a suitable set of responses.
@@ -69,7 +71,7 @@ public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceReques
      * @return personal namespaces, not null
      */
     private List<NamespaceResponse.Namespace> buildPersonalNamespaces(MailboxSession mailboxSession, ImapSession session) {
-        final List<NamespaceResponse.Namespace> personalSpaces = new ArrayList<NamespaceResponse.Namespace>();
+        final List<NamespaceResponse.Namespace> personalSpaces = new ArrayList<>();
         String personal = "";
         if (session.supportMultipleNamespaces()) {
             personal = mailboxSession.getPersonalSpace();
@@ -84,7 +86,7 @@ public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceReques
         if (session.supportMultipleNamespaces() == false || otherUsersSpace == null) {
             otherUsersSpaces = null;
         } else {
-            otherUsersSpaces = new ArrayList<NamespaceResponse.Namespace>(1);
+            otherUsersSpaces = new ArrayList<>(1);
             otherUsersSpaces.add(new NamespaceResponse.Namespace(otherUsersSpace, mailboxSession.getPathDelimiter()));
         }
         return otherUsersSpaces;
@@ -94,7 +96,7 @@ public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceReques
         List<NamespaceResponse.Namespace> sharedNamespaces = null;
         final Collection<String> sharedSpaces = mailboxSession.getSharedSpaces();
         if (session.supportMultipleNamespaces() && !sharedSpaces.isEmpty()) {
-            sharedNamespaces = new ArrayList<NamespaceResponse.Namespace>(sharedSpaces.size());
+            sharedNamespaces = new ArrayList<>(sharedSpaces.size());
             for (String space : sharedSpaces) {
                 sharedNamespaces.add(new NamespaceResponse.Namespace(space, mailboxSession.getPathDelimiter()));
             }
@@ -110,4 +112,10 @@ public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceReques
         return CAPS;
     }
 
+    @Override
+    protected Closeable addContextToMDC(NamespaceRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "NAMESPACE")
+            .build();
+    }
 }

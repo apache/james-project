@@ -23,13 +23,14 @@ import javax.mail.MessagingException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetConfig;
-import org.apache.mailet.MailetContext;
-import org.apache.mailet.MailetContext.LogLevel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Simply logs a message.
  */
 public class HelloWorldMailet implements Mailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HelloWorldMailet.class);
 
     private MailetConfig config;
 
@@ -54,8 +55,7 @@ public class HelloWorldMailet implements Mailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        MailetContext context = config.getMailetContext();
-        context.log(LogLevel.INFO, "Hello, World!");
-        context.log(LogLevel.INFO, "You have mail from " + mail.getSender().getLocalPart());
+        LOGGER.info("Hello, World!");
+        LOGGER.info( "You have mail from " + mail.getSender().getLocalPart());
     }
 }

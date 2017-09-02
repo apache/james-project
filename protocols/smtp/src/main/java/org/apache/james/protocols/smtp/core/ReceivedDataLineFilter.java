@@ -41,13 +41,10 @@ public class ReceivedDataLineFilter extends AbstractAddHeadersFilter {
     private static final String ESMTPA = "ESMTPA";
     private static final String ESMTP = "ESMTP";
     
-    private static final ThreadLocal<DateFormat> DATEFORMAT = new ThreadLocal<DateFormat>() {
-        @Override
-        protected DateFormat initialValue() {
-            // See RFC822 for the format
-            return new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z (zzz)", Locale.US);
-        }
-    };
+    private static final ThreadLocal<DateFormat> DATEFORMAT = ThreadLocal.withInitial(() -> {
+        // See RFC822 for the format
+        return new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z (zzz)", Locale.US);
+    });
 
     @Override
     public void init(Configuration config) throws ConfigurationException {

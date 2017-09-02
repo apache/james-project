@@ -123,7 +123,7 @@ public class SearchUtilsMultipartMixedTest {
         builder.header("Content-Type", "multipart/mixed;boundary=1729");
         builder.body = Charset.forName("us-ascii").encode(BODY).array();
         row = builder.build();
-        recent = new ArrayList<MessageUid>();
+        recent = new ArrayList<>();
     }
     
 

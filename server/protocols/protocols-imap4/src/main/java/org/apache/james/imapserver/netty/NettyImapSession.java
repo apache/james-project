@@ -27,33 +27,25 @@ import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
-import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
-import org.apache.james.protocols.api.logger.ProtocolSessionLogger;
-import org.apache.james.protocols.lib.Slf4jLoggerAdapter;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.codec.compression.ZlibDecoder;
 import org.jboss.netty.handler.codec.compression.ZlibEncoder;
 import org.jboss.netty.handler.codec.compression.ZlibWrapper;
 import org.jboss.netty.handler.ssl.SslHandler;
-import org.slf4j.Logger;
 
-@SuppressWarnings("deprecation")
 public class NettyImapSession implements ImapSession, NettyConstants {
-
     private ImapSessionState state = ImapSessionState.NON_AUTHENTICATED;
     private SelectedMailbox selectedMailbox;
-    private final Map<String, Object> attributesByKey = new HashMap<String, Object>();
+    private final Map<String, Object> attributesByKey = new HashMap<>();
     private final SSLContext sslContext;
     private final String[] enabledCipherSuites;
     private final boolean compress;
-    private final ProtocolSessionLogger log;
     private final Channel channel;
     private int handlerCount;
     private final boolean plainAuthDisallowed;
 
-    public NettyImapSession(Channel channel, Logger log, SSLContext sslContext, String[] enabledCipherSuites, boolean compress, boolean plainAuthDisallowed) {
+    public NettyImapSession(Channel channel, SSLContext sslContext, String[] enabledCipherSuites, boolean compress, boolean plainAuthDisallowed) {
         this.channel = channel;
-        this.log = new ProtocolSessionLogger(channel.getId() + "", new ProtocolLoggerAdapter(log));
         this.sslContext = sslContext;
         this.enabledCipherSuites = enabledCipherSuites;
         this.compress = compress;
@@ -224,13 +216,6 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         channel.setReadable(false);
         channel.getPipeline().remove("lineHandler" + --handlerCount);
         channel.setReadable(true);
-    }
-
-    /**
-     * @see org.apache.james.imap.api.process.ImapSession#getLog()
-     */
-    public Logger getLog() {
-        return new Slf4jLoggerAdapter(log);
     }
 
     /**

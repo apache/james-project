@@ -19,12 +19,13 @@
 package org.apache.james.mailbox;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 import javax.mail.Flags;
 
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Rule;
 import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
 
 public class ApplicableFlagBuilderTest {
 
@@ -105,5 +106,15 @@ public class ApplicableFlagBuilderTest {
         softly.assertThat(result.contains("butters")).isTrue();
         softly.assertThat(result.contains("chef")).isTrue();
         softly.assertThat(result.contains("randy")).isTrue();
+    }
+
+    @Test
+    public void shouldAcceptListOfFlags() throws Exception {
+        Flags result = ApplicableFlagBuilder.builder()
+            .add(ImmutableList.of(new Flags("cartman"), new Flags("chef")))
+            .build();
+
+        softly.assertThat(result.contains("cartman")).isTrue();
+        softly.assertThat(result.contains("chef")).isTrue();
     }
 }

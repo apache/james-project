@@ -19,9 +19,9 @@
 
 package org.apache.james.imap.processor;
 
+import java.io.Closeable;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -29,7 +29,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.AuthenticateRequest;
@@ -37,6 +36,11 @@ import org.apache.james.imap.message.request.IRAuthenticateRequest;
 import org.apache.james.imap.message.response.AuthenticateResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Processor which handles the AUTHENTICATE command. Only authtype of PLAIN is supported ATM.
@@ -44,6 +48,7 @@ import org.apache.james.metrics.api.MetricFactory;
  *
  */
 public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateRequest> implements CapabilityImplementingProcessor{
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticateProcessor.class);
     private final static String PLAIN = "PLAIN";
     
     public AuthenticateProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
@@ -70,24 +75,20 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                     doPlainAuth(irRequest.getInitialClientResponse(), session, tag, command, responder);
                 } else {
                     responder.respond(new AuthenticateResponse());
-                    session.pushLineHandler(new ImapLineHandler() {
-                
-                        public void onLine(ImapSession session, byte[] data) {
-                            // cut of the CRLF
-                            String initialClientResponse = new String(data, 0, data.length - 2, Charset.forName("US-ASCII"));
+                    session.pushLineHandler((requestSession, data) -> {
+                        // cut of the CRLF
+                        String initialClientResponse = new String(data, 0, data.length - 2, Charset.forName("US-ASCII"));
 
-                            doPlainAuth(initialClientResponse, session, tag, command, responder);
-                            
-                            // remove the handler now
-                            session.popLineHandler();
-                    
-                        }
+                        doPlainAuth(initialClientResponse, requestSession, tag, command, responder);
+
+                        // remove the handler now
+                        requestSession.popLineHandler();
                     });
                 }
             }
         } else {
-            if (session.getLog().isDebugEnabled()) {
-                session.getLog().debug  ("Unsupported authentication mechanism '" + authType + "'");
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug  ("Unsupported authentication mechanism '" + authType + "'");
             }
             no(command, tag, responder, HumanReadableText.UNSUPPORTED_AUTHENTICATION_MECHANISM);
         }
@@ -121,7 +122,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
             token2 = authTokenizer.nextToken();                 // Authentication Identity
             try {
                 return delegation(token1, token2, authTokenizer.nextToken());
-            } catch (java.util.NoSuchElementException _) {
+            } catch (java.util.NoSuchElementException ignored) {
                 // If we got here, this is what happened.  RFC 2595
                 // says that "the client may leave the authorization
                 // identity empty to indicate that it is the same as
@@ -153,7 +154,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
      * #getImplementedCapabilities(org.apache.james.imap.api.process.ImapSession)
      */
     public List<String> getImplementedCapabilities(ImapSession session) {
-        List<String> caps = new ArrayList<String>();
+        List<String> caps = new ArrayList<>();
         // Only ounce AUTH=PLAIN if the session does allow plain auth or TLS is active.
         // See IMAP-304
         if (session.isPlainAuthDisallowed()  == false || session.isTLSActive()) {
@@ -161,7 +162,14 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         }
         // Support for SASL-IR. See RFC4959
         caps.add("SASL-IR");
-        return Collections.unmodifiableList(caps);
+        return ImmutableList.copyOf(caps);
     }
 
+    @Override
+    protected Closeable addContextToMDC(AuthenticateRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "AUTHENTICATE")
+            .addContext("authType", message.getAuthType())
+            .build();
+    }
 }

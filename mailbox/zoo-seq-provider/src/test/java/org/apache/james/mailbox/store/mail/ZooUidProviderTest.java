@@ -19,7 +19,7 @@
 package org.apache.james.mailbox.store.mail;
 
 import static org.junit.Assert.assertEquals;
-
+import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.james.mailbox.MessageUid;
@@ -30,7 +30,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.base.Optional;
 import com.netflix.curator.RetryPolicy;
 import com.netflix.curator.framework.CuratorFramework;
 import com.netflix.curator.framework.CuratorFrameworkFactory;
@@ -178,7 +177,7 @@ public class ZooUidProviderTest {
 	    public void testLastUid() throws Exception {
 	        System.out.println("Testing lastUid");
 	        Optional<MessageUid> result = uuidProvider.lastUid(null, mailboxUUID);
-	        assertEquals("Next UID is empty", Optional.absent(), result);
+	        assertEquals("Next UID is empty", Optional.empty(), result);
 	        MessageUid nextResult = uuidProvider.nextUid(null, mailboxUUID);
 	        assertEquals("Next UID is 1", 1, nextResult.asLong());
 	    }
@@ -190,7 +189,7 @@ public class ZooUidProviderTest {
 	    public void testLongLastUid() throws Exception {
 	        System.out.println("Testing long lastUid");
 	        Optional<MessageUid> result = longProvider.lastUid(null, mailboxLong);
-	        assertEquals("Next UID is empty", Optional.absent(), result);
+	        assertEquals("Next UID is empty", Optional.empty(), result);
 	        MessageUid nextResult = longProvider.nextUid(null, mailboxLong);
 	        assertEquals("Next UID is 1", 1, nextResult.asLong());
 	    }

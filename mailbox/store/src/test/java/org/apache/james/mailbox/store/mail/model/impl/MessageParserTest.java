@@ -20,17 +20,14 @@
 package org.apache.james.mailbox.store.mail.model.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.guava.api.Assertions.assertThat;
-
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.base.Optional;
 
 public class MessageParserTest {
 
@@ -76,7 +73,7 @@ public class MessageParserTest {
         List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithoutName.eml"));
 
         assertThat(attachments).hasSize(1);
-        assertThat(attachments.get(0).getName()).isEqualTo(Optional.absent());
+        assertThat(attachments.get(0).getName()).isEqualTo(Optional.empty());
     }
 
     @Test
@@ -138,7 +135,7 @@ public class MessageParserTest {
         List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml"));
 
         Attachment attachment = attachments.get(0).getAttachment();
-        assertThat(attachment.getStream()).hasContentEqualTo(ClassLoader.getSystemResourceAsStream("eml/gimp.png"));
+        assertThat(attachment.getStream()).hasSameContentAs(ClassLoader.getSystemResourceAsStream("eml/gimp.png"));
     }
 
     @Test
@@ -146,6 +143,28 @@ public class MessageParserTest {
         List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"));
 
         assertThat(attachments).hasSize(2);
+    }
+
+    @Test
+    public void retrieveAttachmentShouldUseFilenameAsNameWhenNoName() throws Exception {
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/filenameOnly.eml"));
+
+        assertThat(attachments).hasSize(1)
+            .extracting(MessageAttachment::getName)
+            .allMatch(Optional::isPresent)
+            .extracting(Optional::get)
+            .containsExactly("inventory.csv");
+    }
+
+    @Test
+    public void retrieveAttachmentShouldUseNameWhenBothNameAndFilename() throws Exception {
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/filenameAndName.eml"));
+
+        assertThat(attachments).hasSize(1)
+            .extracting(MessageAttachment::getName)
+            .allMatch(Optional::isPresent)
+            .extracting(Optional::get)
+            .containsExactly("good.csv");
     }
 
     @Test

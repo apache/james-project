@@ -27,15 +27,12 @@ import java.util.Map;
 import java.util.Random;
 
 import org.apache.james.mailbox.MailboxSession;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class MockMailboxSession implements MailboxSession{
 
     private final User user;
     private boolean close;
-    private final Map<Object, Object> attrs = new HashMap<Object, Object>();
-    private final Logger log = LoggerFactory.getLogger("MockLog");
+    private final Map<Object, Object> attrs = new HashMap<>();
     private final static Random RANDOM = new Random();
 
     private final long sessionId = RANDOM.nextLong();
@@ -53,7 +50,7 @@ public class MockMailboxSession implements MailboxSession{
             }
             
             public List<Locale> getLocalePreferences() {
-                return new ArrayList<Locale>();
+                return new ArrayList<>();
             }
 
             @Override
@@ -78,10 +75,6 @@ public class MockMailboxSession implements MailboxSession{
         return attrs;
     }
 
-    public Logger getLog() {
-        return log;
-    }
-
     public String getOtherUsersSpace() {
         return null;
     }
@@ -95,7 +88,7 @@ public class MockMailboxSession implements MailboxSession{
     }
 
     public Collection<String> getSharedSpaces() {
-        return new ArrayList<String>();
+        return new ArrayList<>();
     }
 
     public User getUser() {

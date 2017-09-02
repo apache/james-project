@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets.remoteDelivery;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.lifecycle.api.LifecycleUtil;
@@ -33,18 +34,14 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Supplier;
 
 public class DeliveryRunnable implements Runnable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeliveryRunnable.class);
 
-    public static final Supplier<Date> CURRENT_DATE_SUPPLIER = new Supplier<Date>() {
-        @Override
-        public Date get() {
-            return new Date();
-        }
-    };
+    public static final Supplier<Date> CURRENT_DATE_SUPPLIER = Date::new;
     public static final AtomicBoolean DEFAULT_NOT_STARTED = new AtomicBoolean(false);
     private static final String OUTGOING_MAILS = "outgoingMails";
     public static final String REMOTE_DELIVERY_TRIAL = "RemoteDeliveryTrial";
@@ -53,26 +50,24 @@ public class DeliveryRunnable implements Runnable {
     private final RemoteDeliveryConfiguration configuration;
     private final Metric outgoingMailsMetric;
     private final MetricFactory metricFactory;
-    private final Logger logger;
     private final Bouncer bouncer;
     private final MailDelivrer mailDelivrer;
     private final AtomicBoolean isDestroyed;
     private final Supplier<Date> dateSupplier;
 
     public DeliveryRunnable(MailQueue queue, RemoteDeliveryConfiguration configuration, DNSService dnsServer, MetricFactory metricFactory,
-                            Logger logger, MailetContext mailetContext, Bouncer bouncer, AtomicBoolean isDestroyed) {
-        this(queue, configuration, metricFactory, logger, bouncer,
-            new MailDelivrer(configuration, new MailDelivrerToHost(configuration, mailetContext, logger), dnsServer, bouncer, logger),
+                            MailetContext mailetContext, Bouncer bouncer, AtomicBoolean isDestroyed) {
+        this(queue, configuration, metricFactory, bouncer,
+            new MailDelivrer(configuration, new MailDelivrerToHost(configuration, mailetContext), dnsServer, bouncer),
             isDestroyed, CURRENT_DATE_SUPPLIER);
     }
 
     @VisibleForTesting
-    DeliveryRunnable(MailQueue queue, RemoteDeliveryConfiguration configuration, MetricFactory metricFactory, Logger logger, Bouncer bouncer,
+    DeliveryRunnable(MailQueue queue, RemoteDeliveryConfiguration configuration, MetricFactory metricFactory, Bouncer bouncer,
                      MailDelivrer mailDelivrer, AtomicBoolean isDestroyeds, Supplier<Date> dateSupplier) {
         this.queue = queue;
         this.configuration = configuration;
         this.outgoingMailsMetric = metricFactory.generate(OUTGOING_MAILS);
-        this.logger = logger;
         this.bouncer = bouncer;
         this.mailDelivrer = mailDelivrer;
         this.isDestroyed = isDestroyeds;
@@ -104,7 +99,7 @@ public class DeliveryRunnable implements Runnable {
 
             try {
                 if (configuration.isDebug()) {
-                    logger.debug("{} will process mail {}", Thread.currentThread().getName(), mail.getName());
+                    LOGGER.debug("{} will process mail {}", Thread.currentThread().getName(), mail.getName());
                 }
                 attemptDelivery(mail);
                 LifecycleUtil.dispose(mail);
@@ -115,14 +110,14 @@ public class DeliveryRunnable implements Runnable {
                 // DO NOT CHANGE THIS to catch Error!
                 // For example, if there were an OutOfMemory condition caused because
                 // something else in the server was abusing memory, we would not want to start purging the retrying spool!
-                logger.error("Exception caught in RemoteDelivery.run()", e);
+                LOGGER.error("Exception caught in RemoteDelivery.run()", e);
                 LifecycleUtil.dispose(mail);
                 queueItem.done(false);
             }
 
         } catch (Throwable e) {
             if (!isDestroyed.get()) {
-                logger.error("Exception caught in RemoteDelivery.run()", e);
+                LOGGER.error("Exception caught in RemoteDelivery.run()", e);
             }
         } finally {
             if (timeMetric != null) {
@@ -142,7 +137,7 @@ public class DeliveryRunnable implements Runnable {
                 handleTemporaryFailure(mail, executionResult);
                 break;
             case PERMANENT_FAILURE:
-                bouncer.bounce(mail, executionResult.getException().orNull());
+                bouncer.bounce(mail, executionResult.getException().orElse(null));
                 break;
         }
     }
@@ -158,13 +153,13 @@ public class DeliveryRunnable implements Runnable {
         if (retries < configuration.getMaxRetries()) {
             reAttemptDelivery(mail, retries);
         } else {
-            logger.debug("Bouncing message {} after {} retries", mail.getName(), retries);
-            bouncer.bounce(mail, new Exception("Too many retries failure. Bouncing after " + retries + " retries.", executionResult.getException().orNull()));
+            LOGGER.debug("Bouncing message {} after {} retries", mail.getName(), retries);
+            bouncer.bounce(mail, new Exception("Too many retries failure. Bouncing after " + retries + " retries.", executionResult.getException().orElse(null)));
         }
     }
 
     private void reAttemptDelivery(Mail mail, int retries) throws MailQueue.MailQueueException {
-        logger.debug("Storing message {} into outgoing after {} retries", mail.getName(), retries);
+        LOGGER.debug("Storing message {} into outgoing after {} retries", mail.getName(), retries);
         DeliveryRetriesHelper.incrementRetries(mail);
         mail.setLastUpdated(dateSupplier.get());
         // Something happened that will delay delivery. Store it back in the retry repository.

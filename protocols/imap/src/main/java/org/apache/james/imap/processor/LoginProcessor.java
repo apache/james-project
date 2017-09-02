@@ -19,7 +19,7 @@
 
 package org.apache.james.imap.processor;
 
-import java.util.Arrays;
+import java.io.Closeable;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,13 +31,16 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.LoginRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.MDCBuilder;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Processes a <code>LOGIN</code> command.
  */
 public class LoginProcessor extends AbstractAuthProcessor<LoginRequest> implements CapabilityImplementingProcessor{
 
-    private final static List<String> LOGINDISABLED_CAPS = Collections.unmodifiableList(Arrays.asList("LOGINDISABLED"));
+    private final static List<String> LOGINDISABLED_CAPS = ImmutableList.of("LOGINDISABLED");
     public LoginProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
         super(LoginRequest.class, next, mailboxManager, factory, metricFactory);
@@ -70,5 +73,13 @@ public class LoginProcessor extends AbstractAuthProcessor<LoginRequest> implemen
             return LOGINDISABLED_CAPS;
         }
         return Collections.emptyList();
+    }
+
+    @Override
+    protected Closeable addContextToMDC(LoginRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "LOGIN")
+            .addContext(MDCBuilder.USER, message.getUserid())
+            .build();
     }
 }

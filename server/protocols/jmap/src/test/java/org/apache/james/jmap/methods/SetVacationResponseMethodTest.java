@@ -198,6 +198,8 @@ public class SetVacationResponseMethodTest {
 
         when(mailboxSession.getUser()).thenReturn(USER);
         when(vacationRepository.modifyVacation(eq(accountId), any())).thenReturn(CompletableFuture.completedFuture(null));
+        when(notificationRegistry.flush(any()))
+            .thenReturn(CompletableFuture.completedFuture(null));
 
         Stream<JmapResponse> result = testee.process(setVacationRequest, clientId, mailboxSession);
 

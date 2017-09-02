@@ -51,9 +51,9 @@ import javax.mail.Flags.Flag;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.cassandra.CassandraId;
-import org.apache.james.mailbox.cassandra.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.CassandraMessageId.Factory;
+import org.apache.james.mailbox.cassandra.ids.CassandraId;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId.Factory;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 
@@ -62,6 +62,7 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 
 public class CassandraMessageIdToImapUidDAO {
@@ -75,9 +76,10 @@ public class CassandraMessageIdToImapUidDAO {
     private final PreparedStatement update;
     private final PreparedStatement selectAll;
     private final PreparedStatement select;
+    private CassandraUtils cassandraUtils;
 
     @Inject
-    public CassandraMessageIdToImapUidDAO(Session session, CassandraMessageId.Factory messageIdFactory) {
+    public CassandraMessageIdToImapUidDAO(Session session, CassandraMessageId.Factory messageIdFactory, CassandraUtils cassandraUtils) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.messageIdFactory = messageIdFactory;
         this.delete = prepareDelete(session);
@@ -85,6 +87,12 @@ public class CassandraMessageIdToImapUidDAO {
         this.update = prepareUpdate(session);
         this.selectAll = prepareSelectAll(session);
         this.select = prepareSelect(session);
+        this.cassandraUtils = cassandraUtils;
+    }
+
+    @VisibleForTesting
+    public CassandraMessageIdToImapUidDAO(Session session, CassandraMessageId.Factory messageIdFactory) {
+        this(session, messageIdFactory, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
     private PreparedStatement prepareDelete(Session session) {
@@ -185,7 +193,7 @@ public class CassandraMessageIdToImapUidDAO {
 
     public CompletableFuture<Stream<ComposedMessageIdWithMetaData>> retrieve(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
         return selectStatement(messageId, mailboxId)
-                .thenApply(resultSet -> CassandraUtils.convertToStream(resultSet)
+                .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
                         .map(this::toComposedMessageIdWithMetadata));
     }
 
@@ -201,12 +209,11 @@ public class CassandraMessageIdToImapUidDAO {
     }
 
     private CompletableFuture<ResultSet> selectStatement(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
-        if (mailboxId.isPresent()) {
-            return cassandraAsyncExecutor.execute(select.bind()
+        return mailboxId
+            .map(cassandraId -> cassandraAsyncExecutor.execute(select.bind()
                 .setUUID(MESSAGE_ID, messageId.get())
-                .setUUID(MAILBOX_ID, mailboxId.get().asUuid()));
-        }
-        return cassandraAsyncExecutor.execute(selectAll.bind()
-                .setUUID(MESSAGE_ID, messageId.get()));
+                .setUUID(MAILBOX_ID, cassandraId.asUuid())))
+            .orElseGet(() -> cassandraAsyncExecutor.execute(selectAll.bind()
+                .setUUID(MESSAGE_ID, messageId.get())));
     }
 }

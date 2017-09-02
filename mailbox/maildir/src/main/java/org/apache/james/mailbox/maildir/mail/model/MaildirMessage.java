@@ -139,10 +139,7 @@ public class MaildirMessage implements Message {
                 }
                 propertyBuilder.setTextualLineCount(lines);
             }
-        } catch (IOException e) {
-            // has successfully been parsen when appending, shouldn't give any
-            // problems
-        } catch (MimeException e) {
+        } catch (IOException | MimeException e) {
             // has successfully been parsen when appending, shouldn't give any
             // problems
         } finally {
@@ -221,6 +218,11 @@ public class MaildirMessage implements Message {
                 return -1;
             }
         }
+    }
+
+    @Override
+    public long getHeaderOctets() {
+        return getBodyStartOctet();
     }
 
     @Override

@@ -37,16 +37,7 @@
         <constructor-arg index="2" value="#{null}"/>
         <constructor-arg index="3" ref="quotaManager"/>
         <constructor-arg index="4" ref="quotaRootResolver"/>
-        <!-- The idleKeepAlive -->
-        <constructor-arg index="5" value="120"/>
-        <!-- The list of disabled capabilities -->
-        <constructor-arg index="6">
-            <set>
-                <value>ACL</value>
-                <value>MOVE</value>
-            </set>
-        </constructor-arg>
-        <constructor-arg index="7" ref="timeMetricFactory"/>
+        <constructor-arg index="5" ref="timeMetricFactory"/>
     </bean>
 
     <bean id="imapDecoderFactory" class="org.apache.james.imap.main.DefaultImapDecoderFactory"/>

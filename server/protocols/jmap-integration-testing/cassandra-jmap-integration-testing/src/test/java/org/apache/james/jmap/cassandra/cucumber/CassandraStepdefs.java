@@ -30,7 +30,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.jmap.methods.integration.cucumber.MainStepdefs;
-import org.apache.james.mailbox.cassandra.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticsearchConstants;
 import org.apache.james.modules.CassandraJmapServerModule;
 import org.junit.rules.TemporaryFolder;
@@ -69,7 +69,7 @@ public class CassandraStepdefs {
 
     @After
     public void tearDown() {
-        ignoreFailures(() -> mainStepdefs.tearDown(),
+        ignoreFailures(mainStepdefs::tearDown,
                 () -> embeddedElasticSearch.after(),
                 () -> temporaryFolder.delete());
     }

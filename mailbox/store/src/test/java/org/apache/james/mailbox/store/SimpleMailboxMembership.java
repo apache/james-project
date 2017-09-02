@@ -36,6 +36,8 @@ import javax.mail.Flags;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
@@ -71,13 +73,22 @@ public class SimpleMailboxMembership implements MailboxMessage {
         this.size = size;
         this.body = body;
         if (headers == null) {
-            this.headers = new HashMap<String,String>();
+            this.headers = new HashMap<>();
         } else {
             this.headers = headers;
         }
         
         this.body =  body;
         setFlags(flags);
+    }
+
+    @Override
+    public ComposedMessageIdWithMetaData getComposedMessageIdWithMetaData() {
+        return ComposedMessageIdWithMetaData.builder()
+            .modSeq(modSeq)
+            .flags(createFlags())
+            .composedMessageId(new ComposedMessageId(mailboxId, getMessageId(), uid))
+            .build();
     }
 
     public Date getInternalDate() {
@@ -119,7 +130,12 @@ public class SimpleMailboxMembership implements MailboxMessage {
     public void unsetRecent() {
         recent = false;
     }
-    
+
+    @Override
+    public long getHeaderOctets() {
+        return size - body.length;
+    }
+
     public void setFlags(Flags flags) {
         answered = flags.contains(Flags.Flag.ANSWERED);
         deleted = flags.contains(Flags.Flag.DELETED);

@@ -21,6 +21,7 @@ package org.apache.james.util;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -31,6 +32,11 @@ public class CompletableFutureUtil {
     @SafeVarargs
     public static <T> CompletableFuture<Stream<T>> allOfArray(CompletableFuture<T>... futures) {
         return allOf(Stream.of(futures));
+    }
+
+    public static <T, U, V> CompletableFuture<V> combine(CompletableFuture<T> t, CompletableFuture<U> u, BiFunction<T,U,V> combiner) {
+        return t.thenCompose(valueT ->
+            u.thenApply(valueU -> combiner.apply(valueT, valueU)));
     }
 
     public static <T> CompletableFuture<Stream<T>> allOf(Stream<CompletableFuture<T>> futureStream) {

@@ -25,9 +25,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Predicate;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.net.InetAddresses;
@@ -85,12 +84,7 @@ public class InMemoryDNSService implements DNSService {
     }
 
     private DNSRecord hostRecord(final String host) {
-        Predicate<? super Entry<String, DNSRecord>> filterByKey = new Predicate<Entry<String, DNSRecord>>() {
-            @Override
-            public boolean apply(Entry<String, DNSRecord> entry) {
-                return entry.getKey().equals(host);
-            }
-        };
+        Predicate<? super Entry<String, DNSRecord>> filterByKey = entry -> entry.getKey().equals(host);
         return getDNSEntry(filterByKey).getValue();
     }
 
@@ -101,21 +95,16 @@ public class InMemoryDNSService implements DNSService {
 
     @Override
     public String getHostName(final InetAddress addr) {
-        Predicate<? super Entry<String, DNSRecord>> filterByValue = new Predicate<Entry<String, DNSRecord>>() {
-            @Override
-            public boolean apply(Entry<String, DNSRecord> entry) {
-                return entry.getValue().contains(addr);
-            }
-        };
+        Predicate<? super Entry<String, DNSRecord>> filterByValue = entry -> entry.getValue().contains(addr);
 
         return getDNSEntry(filterByValue).getKey();
     }
 
     private Entry<String, DNSRecord> getDNSEntry(Predicate<? super Entry<String, DNSRecord>> filter) {
-        return FluentIterable.from(records.entrySet())
-                    .filter(filter)
-                    .first()
-                    .get();
+        return records.entrySet().stream()
+            .filter(filter)
+            .findFirst()
+            .get();
     }
 
     private static class DNSRecord {

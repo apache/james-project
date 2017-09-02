@@ -52,6 +52,9 @@ public class JwtFilter implements AuthenticationFilter {
             checkHeaderPresent(bearer);
             checkValidSignature(bearer);
             checkIsAdmin(bearer);
+
+            String login = jwtTokenVerifier.extractLogin(bearer.get());
+            request.attribute(LOGIN, login);
         }
     }
 

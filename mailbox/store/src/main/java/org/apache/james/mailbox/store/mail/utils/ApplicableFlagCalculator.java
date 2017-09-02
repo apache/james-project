@@ -23,22 +23,13 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.util.streams.Iterators;
 
-import com.google.common.base.Function;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
+
 
 public class ApplicableFlagCalculator {
-
-    private static Function<MailboxMessage, Flags> toFlags() {
-        return new Function<MailboxMessage, Flags>() {
-            @Override
-            public Flags apply(MailboxMessage mailboxMessage) {
-                return mailboxMessage.createFlags();
-            }
-        };
-    }
-
     private final Iterable<MailboxMessage> mailboxMessages;
 
     public ApplicableFlagCalculator(Iterable<MailboxMessage> mailboxMessages) {
@@ -48,9 +39,9 @@ public class ApplicableFlagCalculator {
 
     public Flags computeApplicableFlags() {
         return ApplicableFlagBuilder.builder()
-                .add(FluentIterable.from(mailboxMessages)
-                    .transform(toFlags())
-                    .toArray(Flags.class))
-                .build();
+            .add(Iterators.toStream(mailboxMessages.iterator())
+                .map(MailboxMessage::createFlags)
+                .collect(Guavate.toImmutableList()))
+            .build();
     }
 }

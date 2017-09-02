@@ -19,15 +19,14 @@
 package org.apache.james.transport.util;
 
 import java.util.List;
-
+import java.util.stream.Stream;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.MailAddress;
 
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class MailAddressUtils {
@@ -45,24 +44,18 @@ public class MailAddressUtils {
     }
 
     public static List<InternetAddress> toInternetAddresses(List<MailAddress> mailAddresses) {
-        return iterableOfInternetAddress(mailAddresses)
-            .toList();
+        return streamOfInternetAddress(mailAddresses)
+            .collect(Guavate.toImmutableList());
     }
 
     public static InternetAddress[] toInternetAddressArray(List<MailAddress> mailAddresses) {
-        return iterableOfInternetAddress(mailAddresses)
-            .toArray(InternetAddress.class);
+        return streamOfInternetAddress(mailAddresses)
+            .toArray(InternetAddress[]::new);
     }
 
-    private static FluentIterable<InternetAddress> iterableOfInternetAddress(List<MailAddress> mailAddresses) {
-        return FluentIterable.from(mailAddresses)
-            .transform(new Function<MailAddress, InternetAddress>() {
-
-                @Override
-                public InternetAddress apply(MailAddress mailAddress) {
-                    return mailAddress.toInternetAddress();
-                }
-            });
+    private static Stream<InternetAddress> streamOfInternetAddress(List<MailAddress> mailAddresses) {
+        return mailAddresses.stream()
+            .map(MailAddress::toInternetAddress);
     }
 
     public static boolean isUnalteredOrReversePathOrSender(MailAddress mailAddress) {

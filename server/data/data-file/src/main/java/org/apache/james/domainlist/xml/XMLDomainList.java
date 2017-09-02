@@ -23,10 +23,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.AbstractDomainList;
 import org.apache.james.lifecycle.api.Configurable;
@@ -37,29 +39,27 @@ import org.apache.james.lifecycle.api.Configurable;
 @Singleton
 public class XMLDomainList extends AbstractDomainList implements Configurable {
 
-    private final List<String> domainNames = new ArrayList<String>();
+    private final List<String> domainNames = new ArrayList<>();
     private boolean isConfigured = false;
+
+    @Inject
+    public XMLDomainList(DNSService dns) {
+        super(dns);
+    }
 
     @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
         super.configure(config);
-        for (String serverNameConf : config.getStringArray("domainnames.domainname")) {
-            try {
-                addToServedDomains(serverNameConf);
-            } catch (DomainListException e) {
-                throw new ConfigurationException("Unable to add domain to memory", e);
-            }
-        }
         isConfigured = true;
     }
 
     @Override
     protected List<String> getDomainListInternal() {
-        return new ArrayList<String>(domainNames);
+        return new ArrayList<>(domainNames);
     }
 
     @Override
-    public boolean containsDomain(String domains) throws DomainListException {
+    protected boolean containsDomainInternal(String domains) throws DomainListException {
         return domainNames.contains(domains.toLowerCase(Locale.US));
     }
 
@@ -79,10 +79,4 @@ public class XMLDomainList extends AbstractDomainList implements Configurable {
         domainNames.remove(domain);
     }
 
-    private void addToServedDomains(String domain) throws DomainListException {
-        String newDomain = domain.toLowerCase(Locale.US);
-        if (!containsDomain(newDomain)) {
-            domainNames.add(newDomain);
-        }
-    }
 }

@@ -24,7 +24,6 @@ import org.apache.james.protocols.api.ProtocolImpl;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
-import org.apache.james.protocols.api.logger.Logger;
 
 /**
  * {@link ProtocolImpl} which implements the POP3 Protocol
@@ -32,14 +31,18 @@ import org.apache.james.protocols.api.logger.Logger;
  */
 public class POP3Protocol extends ProtocolImpl{
     
-    public POP3Protocol(ProtocolHandlerChain chain, ProtocolConfiguration config, Logger logger) {
-        super(chain, config, logger);
+    public POP3Protocol(ProtocolHandlerChain chain, ProtocolConfiguration config) {
+        super(chain, config);
     }
 
-    
+    @Override
+    public String getName() {
+        return "POP3";
+    }
+
     @Override
     public ProtocolSession newSession(ProtocolTransport transport) {
-        return new POP3SessionImpl(logger, transport, getConfiguration());
+        return new POP3SessionImpl(transport, getConfiguration());
     }
 
 }

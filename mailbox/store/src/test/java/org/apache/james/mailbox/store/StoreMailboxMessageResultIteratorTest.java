@@ -20,25 +20,22 @@
 package org.apache.james.mailbox.store;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Set;
-
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -48,10 +45,9 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
-import org.assertj.core.api.iterable.Extractor;
+import org.apache.commons.lang.NotImplementedException;
 import org.junit.Test;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 
 public class StoreMailboxMessageResultIteratorTest {
@@ -59,7 +55,7 @@ public class StoreMailboxMessageResultIteratorTest {
     private final class TestFetchGroup implements FetchGroup {
         @Override
         public Set<PartContentDescriptor> getPartContentDescriptors() {
-            return new HashSet<PartContentDescriptor>();
+            return new HashSet<>();
         }
 
         @Override
@@ -105,7 +101,7 @@ public class StoreMailboxMessageResultIteratorTest {
                                                               org.apache.james.mailbox.store.mail.MessageMapper.FetchType type, int limit)
                 throws MailboxException {
             
-            List<MailboxMessage> messages = new ArrayList<MailboxMessage>();
+            List<MailboxMessage> messages = new ArrayList<>();
             for (MessageUid uid: Iterables.limit(set, limit)) {
                 if (messageRange.includes(uid)) {
                     messages.add(createMessage(uid));
@@ -199,12 +195,8 @@ public class StoreMailboxMessageResultIteratorTest {
         BatchSizes batchSize = BatchSizes.uniqueBatchSize(3);
         StoreMessageResultIterator it = new StoreMessageResultIterator(new TestMessageMapper(MessageRange.all()), null, range, batchSize, new TestFetchGroup());
 
-        assertThat(it).extracting(new Extractor<MessageResult, Long>(){
-            @Override
-            public Long extract(MessageResult input) {
-                return input.getUid().asLong();
-            }
-        }).containsExactly(1l, 2l, 3l, 4l, 5l, 6l, 7l, 8l, 9l, 10l);
+        assertThat(it).extracting(input -> input.getUid().asLong())
+            .containsExactly(1l, 2l, 3l, 4l, 5l, 6l, 7l, 8l, 9l, 10l);
     }
 
     @Test

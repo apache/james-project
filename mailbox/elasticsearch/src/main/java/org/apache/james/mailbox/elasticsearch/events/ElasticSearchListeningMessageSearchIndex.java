@@ -19,13 +19,11 @@
 package org.apache.james.mailbox.elasticsearch.events;
 
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
-
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.es.ElasticSearchIndexer;
@@ -100,7 +98,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
         return searcher.search(ImmutableList.of(session.getUser()), searchQuery, Optional.empty())
             .peek(this::logIfNoMessageId)
             .map(SearchResult::getMessageId)
-            .map(com.google.common.base.Optional::get)
+            .map(Optional::get)
             .distinct()
             .limit(limit)
             .collect(Guavate.toImmutableList());
@@ -117,18 +115,19 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
             indexer.indexMessage(indexIdFor(mailbox, message.getUid()), messageToElasticSearchJson.convertToJson(message, ImmutableList.of(session.getUser())));
         } catch (Exception e) {
             try {
-                LOGGER.warn("Indexing mailbox {}-{} of user {} on message {} without attachments ",
+                LOGGER.warn(String.format("Indexing mailbox %s-%s of user %s on message %s without attachments ",
                         mailbox.getName(),
-                        mailbox.getMailboxId(),
+                        mailbox.getMailboxId().serialize(),
                         session.getUser().getUserName(),
-                        message.getUid());
+                        message.getUid().toString()),
+                    e);
                 indexer.indexMessage(indexIdFor(mailbox, message.getUid()), messageToElasticSearchJson.convertToJsonWithoutAttachment(message, ImmutableList.of(session.getUser())));
             } catch (JsonProcessingException e1) {
-                LOGGER.error("Error when indexing mailbox {}-{} of user {} on message {} without its attachment",
+                LOGGER.error(String.format("Error when indexing mailbox %s-%s of user %s on message %s without its attachment",
                         mailbox.getName(),
-                        mailbox.getMailboxId(),
+                        mailbox.getMailboxId().serialize(),
                         session.getUser().getUserName(),
-                        message.getUid(),
+                        message.getUid().toString()),
                         e1);
             }
         }
@@ -141,7 +140,10 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
                 .map(uid ->  indexIdFor(mailbox, uid))
                 .collect(Collectors.toList()));
         } catch (Exception e) {
-            LOGGER.error("Error when deleting messages {} in mailbox {} from index", mailbox.getMailboxId().serialize(), expungedUids, e);
+            LOGGER.error(String.format("Error when deleting messages %s in mailbox %s from index",
+                mailbox.getMailboxId().serialize(),
+                ImmutableList.copyOf(expungedUids).toString()),
+                e);
         }
     }
 
@@ -153,7 +155,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
                     JsonMessageConstants.MAILBOX_ID,
                     mailbox.getMailboxId().serialize()));
         } catch (Exception e) {
-            LOGGER.error("Error when deleting all messages in mailbox {}", mailbox.getMailboxId().serialize(), e);
+            LOGGER.error(String.format("Error when deleting all messages in mailbox %s", mailbox.getMailboxId().serialize()), e);
         }
     }
 
@@ -164,7 +166,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
                 .map(updatedFlags -> createUpdatedDocumentPartFromUpdatedFlags(mailbox, updatedFlags))
                 .collect(Collectors.toList()));
         } catch (Exception e) {
-            LOGGER.error("Error when updating index on mailbox {}", mailbox.getMailboxId().serialize(), e);
+            LOGGER.error(String.format("Error when updating index on mailbox %s", mailbox.getMailboxId().serialize()), e);
         }
     }
 

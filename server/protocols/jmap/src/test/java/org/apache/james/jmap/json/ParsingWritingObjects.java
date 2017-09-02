@@ -22,10 +22,14 @@ package org.apache.james.jmap.json;
 import java.time.Instant;
 import java.util.Optional;
 
+import javax.mail.Flags;
+
 import org.apache.james.jmap.model.BlobId;
 import org.apache.james.jmap.model.Emailer;
+import org.apache.james.jmap.model.Keyword;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.SubMessage;
+import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
@@ -33,6 +37,7 @@ import org.apache.james.mailbox.model.TestMessageId;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 public interface ParsingWritingObjects {
 
@@ -42,10 +47,10 @@ public interface ParsingWritingObjects {
         String THREAD_ID = "myThreadId";
         ImmutableList<MailboxId> MAILBOX_IDS = ImmutableList.of(InMemoryId.of(1), InMemoryId.of(2));
         String IN_REPLY_TO_MESSAGE_ID = "myInReplyToMessageId";
-        boolean IS_UNREAD = true;
-        boolean IS_FLAGGED = true;
-        boolean IS_ANSWERED = true;
-        boolean IS_DRAFT = true;
+        Flags FLAGS = FlagsBuilder.builder()
+                .add(Flags.Flag.FLAGGED, Flags.Flag.ANSWERED, Flags.Flag.DRAFT, Flags.Flag.SEEN)
+                .build();
+        ImmutableSet<Keyword> KEYWORDS = ImmutableSet.of(Keyword.DRAFT, Keyword.FLAGGED, Keyword.ANSWERED, Keyword.SEEN);
         boolean HAS_ATTACHMENT = true;
         ImmutableMap<String, String> HEADERS = ImmutableMap.of("h1", "h1Value", "h2", "h2Value");
         Emailer FROM = Emailer.builder().name("myName").email("myEmail@james.org").build();
@@ -71,10 +76,7 @@ public interface ParsingWritingObjects {
             .threadId(Common.THREAD_ID)
             .mailboxIds(Common.MAILBOX_IDS)
             .inReplyToMessageId(Common.IN_REPLY_TO_MESSAGE_ID)
-            .isUnread(Common.IS_UNREAD)
-            .isFlagged(Common.IS_FLAGGED)
-            .isAnswered(Common.IS_ANSWERED)
-            .isDraft(Common.IS_DRAFT)
+            .flags(Common.FLAGS)
             .headers(Common.HEADERS)
             .from(Common.FROM)
             .to(Common.TO)

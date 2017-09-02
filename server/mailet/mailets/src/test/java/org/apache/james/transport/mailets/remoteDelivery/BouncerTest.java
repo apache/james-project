@@ -22,30 +22,23 @@ package org.apache.james.transport.mailets.remoteDelivery;
 import static org.apache.james.transport.mailets.remoteDelivery.Bouncer.DELIVERY_ERROR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-
 import java.net.ConnectException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-
+import java.util.Optional;
 import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
 
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Optional;
 
 public class BouncerTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BouncerTest.class);
     public static final String HELLO_NAME = "hello_name";
     public static final String BOUNCE_PROCESSOR = "bounce_processor";
 
@@ -64,7 +57,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -77,7 +70,7 @@ public class BouncerTest {
                 "This is a permanent error; I've given up. Sorry it didn't work out. Below\n" +
                 "I include the list of recipients and the reason why I was unable to deliver\n" +
                 "your message.\n\n\n",
-            Optional.<MailAddress>absent());
+            Optional.empty());
         assertThat(mailetContext.getSentMails()).isEmpty();
         assertThat(mailetContext.getBouncedMails()).containsOnly(expected);
     }
@@ -90,7 +83,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -106,7 +99,7 @@ public class BouncerTest {
                 "your message.\n" +
                 "\n" +
                 exceptionMessage + "\n\n",
-            Optional.<MailAddress>absent());
+            Optional.empty());
         assertThat(mailetContext.getSentMails()).isEmpty();
         assertThat(mailetContext.getBouncedMails()).containsOnly(expected);
     }
@@ -119,7 +112,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -135,7 +128,7 @@ public class BouncerTest {
                 "your message.\n" +
                 "\n" +
                 "Remote mail server told me: " + exceptionMessage + "\n\n",
-            Optional.<MailAddress>absent());
+            Optional.empty());
         assertThat(mailetContext.getSentMails()).isEmpty();
         assertThat(mailetContext.getBouncedMails()).containsOnly(expected);
     }
@@ -148,7 +141,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -165,7 +158,7 @@ public class BouncerTest {
                 "\n" +
                 "Unknown host: " + exceptionMessage + "\n" +
                 "This could be a DNS server error, a typo, or a problem with the recipient's mail server.\n\n",
-            Optional.<MailAddress>absent());
+            Optional.empty());
         assertThat(mailetContext.getSentMails()).isEmpty();
         assertThat(mailetContext.getBouncedMails()).containsOnly(expected);
     }
@@ -178,7 +171,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -194,7 +187,7 @@ public class BouncerTest {
                 "your message.\n" +
                 "\n" +
                 exceptionMessage + "\n\n",
-            Optional.<MailAddress>absent());
+            Optional.empty());
         assertThat(mailetContext.getSentMails()).isEmpty();
         assertThat(mailetContext.getBouncedMails()).containsOnly(expected);
     }
@@ -207,7 +200,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -223,7 +216,7 @@ public class BouncerTest {
                 "your message.\n" +
                 "\n" +
                 "Socket exception: " + exceptionMessage + "\n\n",
-            Optional.<MailAddress>absent());
+            Optional.empty());
         assertThat(mailetContext.getSentMails()).isEmpty();
         assertThat(mailetContext.getBouncedMails()).containsOnly(expected);
     }
@@ -236,7 +229,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -252,7 +245,7 @@ public class BouncerTest {
                 "your message.\n" +
                 "\n" +
                 exceptionMessage + "\n\n",
-            Optional.<MailAddress>absent());
+            Optional.empty());
         assertThat(mailetContext.getSentMails()).isEmpty();
         assertThat(mailetContext.getBouncedMails()).containsOnly(expected);
     }
@@ -265,7 +258,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .build();
@@ -284,7 +277,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -297,7 +290,7 @@ public class BouncerTest {
                 "This is a permanent error; I've given up. Sorry it didn't work out. Below\n" +
                 "I include the list of recipients and the reason why I was unable to deliver\n" +
                 "your message.\n\n\n",
-            Optional.<MailAddress>absent());
+            Optional.empty());
         assertThat(mailetContext.getSentMails()).isEmpty();
         assertThat(mailetContext.getBouncedMails()).containsOnly(expected);
     }
@@ -310,7 +303,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -323,7 +316,7 @@ public class BouncerTest {
                 "This is a permanent error; I've given up. Sorry it didn't work out. Below\n" +
                 "I include the list of recipients and the reason why I was unable to deliver\n" +
                 "your message.\n\nnull\n\n",
-            Optional.<MailAddress>absent());
+            Optional.empty());
         assertThat(mailetContext.getSentMails()).isEmpty();
         assertThat(mailetContext.getBouncedMails()).containsOnly(expected);
     }
@@ -337,7 +330,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.BOUNCE_PROCESSOR, BOUNCE_PROCESSOR)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -364,7 +357,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.BOUNCE_PROCESSOR, BOUNCE_PROCESSOR)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .build();
@@ -382,7 +375,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -397,7 +390,7 @@ public class BouncerTest {
                 "I include the list of recipients and the reason why I was unable to deliver\n" +
                 "your message.\n\n" +
                 MailAddressFixture.ANY_AT_JAMES2.asString() + "\n\n",
-            Optional.<MailAddress>absent());
+            Optional.empty());
         assertThat(mailetContext.getSentMails()).isEmpty();
         assertThat(mailetContext.getBouncedMails()).containsOnly(expected);
     }
@@ -410,7 +403,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -426,7 +419,7 @@ public class BouncerTest {
                 "your message.\n\n" +
                 MailAddressFixture.ANY_AT_JAMES2.asString() + "\n" +
                 MailAddressFixture.OTHER_AT_JAMES2.asString() + "\n\n",
-            Optional.<MailAddress>absent());
+            Optional.empty());
         assertThat(mailetContext.getSentMails()).isEmpty();
         assertThat(mailetContext.getBouncedMails()).containsOnly(expected);
     }
@@ -440,7 +433,7 @@ public class BouncerTest {
                 .setProperty(RemoteDeliveryConfiguration.BOUNCE_PROCESSOR, BOUNCE_PROCESSOR)
                 .build(),
             mock(DomainList.class));
-        Bouncer testee = new Bouncer(configuration, mailetContext, LOGGER);
+        Bouncer testee = new Bouncer(configuration, mailetContext);
 
         Mail mail = FakeMail.builder().state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)

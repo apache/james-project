@@ -31,8 +31,6 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -43,8 +41,6 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
 public class MemoryDataModule extends AbstractModule {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(MemoryDataModule.class);
 
     @Override
     protected void configure() {
@@ -79,9 +75,7 @@ public class MemoryDataModule extends AbstractModule {
         @Override
         public void initModule() {
             try {
-                memoryDomainList.setLog(LOGGER);
                 memoryDomainList.configure(configurationProvider.getConfiguration("domainlist"));
-                memoryRecipientRewriteTable.setLog(LOGGER);
                 memoryRecipientRewriteTable.configure(configurationProvider.getConfiguration("recipientrewritetable"));
             } catch (ConfigurationException e) {
                 Throwables.propagate(e);

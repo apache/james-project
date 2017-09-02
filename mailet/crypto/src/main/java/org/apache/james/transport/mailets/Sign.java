@@ -21,14 +21,16 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.mailet.Mail;
+import java.io.IOException;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import java.io.IOException;
+import org.apache.mailet.Mail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>Puts a <I>server-side</I> signature on a message.
@@ -59,6 +61,7 @@ import java.io.IOException;
  * @since 2.2.1
  */
 public class Sign extends AbstractSign {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Sign.class);
     
     /**
      * Return a string describing this mailet.
@@ -143,9 +146,9 @@ public class Sign extends AbstractSign {
         setRebuildFrom((getInitParameter("rebuildFrom") == null) ? true : Boolean.valueOf(getInitParameter("rebuildFrom")));
         if (isDebug()) {
             if (isRebuildFrom()) {
-                log("Will modify the \"From:\" header.");
+                LOGGER.debug("Will modify the \"From:\" header.");
             } else {
-                log("Will leave the \"From:\" header unchanged.");
+                LOGGER.debug("Will leave the \"From:\" header unchanged.");
             }
         }
     }

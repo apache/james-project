@@ -32,7 +32,6 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.slf4j.Logger;
 
 import com.google.common.base.Strings;
 
@@ -41,11 +40,9 @@ public class MailboxAppender {
     private static final Flags FLAGS = null;
 
     private final MailboxManager mailboxManager;
-    private final Logger logger;
 
-    public MailboxAppender(MailboxManager mailboxManager, Logger logger) {
+    public MailboxAppender(MailboxManager mailboxManager) {
         this.mailboxManager = mailboxManager;
-        this.logger = logger;
     }
 
     public void append(MimeMessage mail, String user, String folder) throws MessagingException {
@@ -93,7 +90,7 @@ public class MailboxAppender {
 
     public MailboxSession createMailboxSession(String user) throws MessagingException {
         try {
-            return mailboxManager.createSystemSession(user, logger);
+            return mailboxManager.createSystemSession(user);
         } catch (BadCredentialsException e) {
             throw new MessagingException("Unable to authenticate to mailbox", e);
         } catch (MailboxException e) {

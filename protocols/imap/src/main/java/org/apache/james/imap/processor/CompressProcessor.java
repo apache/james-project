@@ -18,7 +18,9 @@
  ****************************************************************/
 package org.apache.james.imap.processor;
 
-import java.util.Arrays;
+
+import java.io.Closeable;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -29,10 +31,13 @@ import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.CompressRequest;
 import org.apache.james.imap.processor.base.AbstractChainedProcessor;
+import org.apache.james.util.MDCBuilder;
+
+import com.google.common.collect.ImmutableList;
 
 public class CompressProcessor extends AbstractChainedProcessor<CompressRequest> implements CapabilityImplementingProcessor {
     private final static String ALGO = "DEFLATE";
-    private final static List<String> CAPA = Collections.unmodifiableList(Arrays.asList(ImapConstants.COMPRESS_COMMAND_NAME + "=" + ALGO));
+    private final static List<String> CAPA = ImmutableList.of(ImapConstants.COMPRESS_COMMAND_NAME + "=" + ALGO);
     private final StatusResponseFactory factory;
     private final static String COMPRESSED = "COMPRESSED";
 
@@ -80,4 +85,11 @@ public class CompressProcessor extends AbstractChainedProcessor<CompressRequest>
         return Collections.EMPTY_LIST;
     }
 
+    @Override
+    protected Closeable addContextToMDC(CompressRequest message) {
+        return MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "COMPRESS")
+            .addContext("algorithm", message.getAlgorithm())
+            .build();
+    }
 }

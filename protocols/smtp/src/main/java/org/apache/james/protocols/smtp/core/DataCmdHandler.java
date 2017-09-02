@@ -18,11 +18,11 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp.core;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -46,6 +46,11 @@ import org.apache.james.protocols.smtp.SMTPResponse;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
+import org.apache.james.util.MDCBuilder;
+
+import com.google.common.base.Throwables;
+
+import com.google.common.collect.ImmutableSet;
 
 
 /**
@@ -57,7 +62,7 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
     private static final Response NO_SENDER = new SMTPResponse(SMTPRetCode.BAD_SEQUENCE, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.DELIVERY_OTHER)+" No sender specified").immutable();
     private static final Response UNEXPECTED_ARG = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_COMMAND_UNRECOGNIZED, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.DELIVERY_INVALID_ARG)+" Unexpected argument provided with DATA command").immutable();
     private static final Response DATA_READY = new SMTPResponse(SMTPRetCode.DATA_READY, "Ok Send data ending with <CRLF>.<CRLF>").immutable();
-    private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("DATA"));
+    private static final Collection<String> COMMANDS = ImmutableSet.of("DATA");
 
     public static final class DataConsumerLineHandler implements LineHandler<SMTPSession> {
 
@@ -139,7 +144,10 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
     public Response onCommand(SMTPSession session, Request request) {
         TimeMetric timeMetric = metricFactory.timer("SMTP-" + request.getCommand());
         session.stopDetectingCommandInjection();
-        try {
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.ACTION, request.getCommand())
+                     .build()) {
             String parameters = request.getArgument();
             Response response = doDATAFilter(session, parameters);
 
@@ -148,6 +156,8 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
             } else {
                 return response;
             }
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
         } finally {
             timeMetric.stopAndPublish();
             session.needsCommandInjectionDetection();
@@ -165,7 +175,7 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
      */
     @SuppressWarnings("unchecked")
     protected Response doDATA(SMTPSession session, String argument) {
-        MailEnvelope env = createEnvelope(session, (MailAddress) session.getAttachment(SMTPSession.SENDER,ProtocolSession.State.Transaction), new ArrayList<MailAddress>((Collection<MailAddress>)session.getAttachment(SMTPSession.RCPT_LIST,ProtocolSession.State.Transaction)));
+        MailEnvelope env = createEnvelope(session, (MailAddress) session.getAttachment(SMTPSession.SENDER,ProtocolSession.State.Transaction), new ArrayList<>((Collection<MailAddress>) session.getAttachment(SMTPSession.RCPT_LIST, ProtocolSession.State.Transaction)));
         session.setAttachment(MAILENV, env,ProtocolSession.State.Transaction);
         session.pushLineHandler(lineHandler);
         

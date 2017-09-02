@@ -81,7 +81,7 @@ public class DefaultMailboxesProvisioningFilter implements Filter {
     }
 
     private void createDefaultMailboxes(User user) throws MailboxException {
-        MailboxSession session = mailboxManager.createSystemSession(user.getUserName(), LOGGER);
+        MailboxSession session = mailboxManager.createSystemSession(user.getUserName());
         DefaultMailboxes.DEFAULT_MAILBOXES.stream()
             .map(toMailboxPath(session))
             .filter(mailboxPath -> mailboxDoesntExist(mailboxPath, session))

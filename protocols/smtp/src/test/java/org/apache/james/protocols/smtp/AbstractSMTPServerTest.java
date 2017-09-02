@@ -43,7 +43,6 @@ import org.apache.james.protocols.api.handler.ConnectHandler;
 import org.apache.james.protocols.api.handler.DisconnectHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.WiringException;
-import org.apache.james.protocols.api.utils.MockLogger;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.smtp.hook.HeloHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -59,13 +58,12 @@ import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 
 public abstract class AbstractSMTPServerTest {
-    
+
     protected final static String MSG1 = "Subject: Testmessage\r\n\r\nThis is a message\r\n";
     protected final static String SENDER = "me@sender";
     protected final static String RCPT1 ="rpct1@domain";
     protected final static String RCPT2 ="rpct2@domain";
 
-    
     @Test
     public void testSimpleDelivery() throws Exception {
         TestMessageHook hook = new TestMessageHook();
@@ -106,12 +104,8 @@ public abstract class AbstractSMTPServerTest {
             final String mailContent = CharStreams.toString(new InputStreamReader(ClassLoader.getSystemResourceAsStream("a50.eml"), Charsets.US_ASCII));
             int threadCount = 4;
             int updateCount = 1;
-            assertThat(new ConcurrentTestRunner(threadCount, updateCount, new ConcurrentTestRunner.BiConsumer() {
-                @Override
-                public void consume(int threadNumber, int step) throws Exception {
-                    send(finalServer, bindedAddress, mailContent);
-                }
-            }).run()
+            assertThat(new ConcurrentTestRunner(threadCount, updateCount,
+                (threadNumber, step) -> send(finalServer, bindedAddress, mailContent)).run()
                 .awaitTermination(1, TimeUnit.MINUTES))
                 .isTrue();
 
@@ -1106,7 +1100,7 @@ public abstract class AbstractSMTPServerTest {
         SMTPProtocolHandlerChain chain = new SMTPProtocolHandlerChain(new NoopMetricFactory());
         chain.addAll(0, Arrays.asList(handlers));
         chain.wireExtensibleHandlers();
-        return new SMTPProtocol(chain, new SMTPConfigurationImpl(), new MockLogger());
+        return new SMTPProtocol(chain, new SMTPConfigurationImpl());
     }
     
     protected static void checkEnvelope(MailEnvelope env, String sender, List<String> recipients, String msg) throws IOException {

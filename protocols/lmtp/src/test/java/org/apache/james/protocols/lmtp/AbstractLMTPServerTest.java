@@ -38,7 +38,6 @@ import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.WiringException;
-import org.apache.james.protocols.api.utils.MockLogger;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.lmtp.hook.DeliverToRecipientHook;
 import org.apache.james.protocols.smtp.AbstractSMTPServerTest;
@@ -58,7 +57,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest{
     @Override
     protected Protocol createProtocol(ProtocolHandler... handlers) throws WiringException {
         LMTPProtocolHandlerChain chain = new LMTPProtocolHandlerChain();
-        List<ProtocolHandler> hList = new ArrayList<ProtocolHandler>();
+        List<ProtocolHandler> hList = new ArrayList<>();
 
         for (ProtocolHandler handler : handlers) {
             if (handler instanceof MessageHook) {
@@ -68,7 +67,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest{
         }
         chain.addAll(0, hList);
         chain.wireExtensibleHandlers();
-        return new SMTPProtocol(chain, new LMTPConfigurationImpl(), new MockLogger());
+        return new SMTPProtocol(chain, new LMTPConfigurationImpl());
     }
     
 
@@ -256,7 +255,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest{
     
     private final class LMTPClientImpl extends SMTPClient implements LMTPClient {
 
-        private final List<Integer> replies = new ArrayList<Integer>();
+        private final List<Integer> replies = new ArrayList<>();
         private int rcptCount = 0;
         
         
@@ -301,13 +300,10 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest{
             for (int i = 0; i < rcptCount; i++) {
                 replies.add(getReply());
             }
-            
-            for (int code: replies) {
-                if (SMTPReply.isPositiveCompletion(code)) {
-                    return true;
-                }
-            }
-            return false;
+
+            return replies.stream()
+                .mapToInt(code -> code)
+                .anyMatch(SMTPReply::isPositiveCompletion);
         }
 
         
@@ -346,7 +342,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest{
     
     private final class TestDeliverHook implements DeliverToRecipientHook {
         
-        private final List<MailEnvelope> delivered = new ArrayList<MailEnvelope>();
+        private final List<MailEnvelope> delivered = new ArrayList<>();
         
         /*
          * (non-Javadoc)

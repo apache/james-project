@@ -21,11 +21,16 @@ package org.apache.james.smtpserver;
 
 import java.util.HashSet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * A utility class that caches sets of multi-part top level domains (TLDs) for
  * quick lookup.
  */
 public class TLDLookup {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TLDLookup.class);
 
     /**
      * Simple regular expression to match strings in the cache. Note: if the
@@ -48,9 +53,6 @@ public class TLDLookup {
 
     /** A set of all known three-part TLDs */
     static private final HashSet<String> threePartTLDs = initThreePartTLDs();
-
-    /** controls testing/debug output */
-    static private final boolean testing = false;
 
     /**
      * Determines if a two-part domain string (xxx.xxx) is contained in the
@@ -82,17 +84,17 @@ public class TLDLookup {
      * @return a HashSet containing all known two-part TLDs
      */
     static private HashSet<String> initTwoPartTLDs() {
-        HashSet<String> set = new HashSet<String>(900);
+        HashSet<String> set = new HashSet<>(900);
         for (String multiPartTLD : multiPartTLDs) {
             try {
                 if (multiPartTLD.matches("^" + tld2 + "$")) {
                     set.add(multiPartTLD);
                 }
             } catch (Exception ex) {
-                debugOut(ex);
+                LOGGER.error("Caught exception", ex);
             }
         }
-        debugOut("initTwoPartTLDs size=" + set.size());
+        LOGGER.debug("initTwoPartTLDs size=" + set.size());
         return set;
     }
 
@@ -102,18 +104,18 @@ public class TLDLookup {
      * @return a HashSet containing all known three-part TLDs
      */
     static private HashSet<String> initThreePartTLDs() {
-        HashSet<String> set = new HashSet<String>();
+        HashSet<String> set = new HashSet<>();
         for (String multiPartTLD : multiPartTLDs) {
             try {
                 if (multiPartTLD.matches("^" + tld3 + "$")) {
-                    debugOut("adding \"" + multiPartTLD + "\"");
+                    LOGGER.debug("adding \"" + multiPartTLD + "\"");
                     set.add(multiPartTLD);
                 }
             } catch (Exception ex) {
-                debugOut(ex);
+                LOGGER.error("Caught exception", ex);
             }
         }
-        debugOut("initThreePartTLDs size=" + set.size());
+        LOGGER.debug("initThreePartTLDs size=" + set.size());
         return set;
     }
 
@@ -159,25 +161,7 @@ public class TLDLookup {
                 "org.ws", "gov.ws", "edu.ws", "ac.yu", "co.yu", "edu.yu", "org.yu", "com.ye", "net.ye", "org.ye", "gov.ye", "edu.ye", "mil.ye", "ac.za", "alt.za", "bourse.za", "city.za", "co.za", "edu.za", "gov.za", "law.za", "mil.za", "net.za", "ngo.za", "nom.za", "org.za", "school.za", "tm.za",
                 "web.za", "co.zw", "ac.zw", "org.zw", "gov.zw", "eu.org", "au.com", "br.com", "cn.com", "de.com", "de.net", "eu.com", "gb.com", "gb.net", "hu.com", "no.com", "qc.com", "ru.com", "sa.com", "se.com", "uk.com", "uk.net", "us.com", "uy.com", "za.com", "dk.org", "tel.no", "fax.nr",
                 "mob.nr", "mobil.nr", "mobile.nr", "tel.nr", "tlf.nr", "e164.arpa" };
-        debugOut("array size=" + tmp.length);
+        LOGGER.debug("array size=" + tmp.length);
         return tmp;
-    }
-
-    /**
-     * Debugging output
-     */
-    private static void debugOut(String msg) {
-        if (testing) {
-            System.out.println(msg);
-        }
-    }
-
-    /**
-     * Debugging output
-     */
-    private static void debugOut(Throwable th) {
-        if (testing) {
-            System.out.println(th);
-        }
     }
 }

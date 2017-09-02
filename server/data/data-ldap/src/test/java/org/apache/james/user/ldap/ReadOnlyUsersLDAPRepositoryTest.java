@@ -28,12 +28,8 @@ import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ReadOnlyUsersLDAPRepositoryTest {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyUsersLDAPRepositoryTest.class);
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -41,7 +37,6 @@ public class ReadOnlyUsersLDAPRepositoryTest {
     @Test
     public void supportVirtualHostingShouldReturnFalseByDefault() throws Exception {
         ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository();
-        usersLDAPRepository.setLog(LOGGER);
         usersLDAPRepository.configure(ldapRepositoryConfiguration());
 
         assertThat(usersLDAPRepository.supportVirtualHosting()).isFalse();
@@ -53,7 +48,6 @@ public class ReadOnlyUsersLDAPRepositoryTest {
         configuration.addProperty(ReadOnlyUsersLDAPRepository.SUPPORTS_VIRTUAL_HOSTING, "true");
 
         ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository();
-        usersLDAPRepository.setLog(LOGGER);
         usersLDAPRepository.configure(configuration);
 
         assertThat(usersLDAPRepository.supportVirtualHosting()).isTrue();
@@ -65,7 +59,6 @@ public class ReadOnlyUsersLDAPRepositoryTest {
         configuration.addProperty(ReadOnlyUsersLDAPRepository.SUPPORTS_VIRTUAL_HOSTING, "false");
 
         ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository();
-        usersLDAPRepository.setLog(LOGGER);
         usersLDAPRepository.configure(configuration);
 
         assertThat(usersLDAPRepository.supportVirtualHosting()).isFalse();
@@ -77,7 +70,6 @@ public class ReadOnlyUsersLDAPRepositoryTest {
         configuration.addProperty(ReadOnlyUsersLDAPRepository.SUPPORTS_VIRTUAL_HOSTING, "bad");
 
         ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository();
-        usersLDAPRepository.setLog(LOGGER);
 
         expectedException.expect(ConversionException.class);
 

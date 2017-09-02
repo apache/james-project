@@ -21,9 +21,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>apache-james-mpt</artifactId>
         <groupId>org.apache.james</groupId>
-        <version>3.0.0-RC2-SNAPSHOT</version>
+        <artifactId>apache-james-mpt</artifactId>
+        <version>3.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -48,13 +48,12 @@ to the library requiring no extra coding.</description>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-plugin-api</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-plugin-api</artifactId>
         </dependency>
     </dependencies>
 
@@ -117,11 +116,11 @@ to the library requiring no extra coding.</description>
                 <executions>
                     <execution>
                         <id>create-javadocs</id>
-                        <phase>package</phase>
                         <goals>
                             <goal>javadoc</goal>
                             <goal>jar</goal>
                         </goals>
+                        <phase>package</phase>
                     </execution>
                 </executions>
             </plugin>
@@ -187,7 +186,7 @@ to the library requiring no extra coding.</description>
                                 <generateReports>false</generateReports>
                             </configuration>
                         </plugin>
-                     </plugins>
+                    </plugins>
                 </pluginManagement>
             </build>
         </profile>
@@ -207,6 +206,6 @@ to the library requiring no extra coding.</description>
                     </plugin>
                 </plugins>
             </build>
-         </profile>
+        </profile>
     </profiles>
 </project>

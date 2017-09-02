@@ -30,6 +30,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
@@ -38,6 +39,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.base.Throwables;
 
 public class MailboxFactory {
     private final MailboxManager mailboxManager;
@@ -73,9 +75,11 @@ public class MailboxFactory {
 
             try {
                 MessageManager mailbox = mailboxFactory.mailboxManager.getMailbox(id, session);
-                return mailboxFactory.fromMessageManager(mailbox, Optional.ofNullable(userMailboxesMetadata), session);
-            } catch (MailboxException e) {
+                return Optional.of(mailboxFactory.fromMessageManager(mailbox, Optional.ofNullable(userMailboxesMetadata), session));
+            } catch (MailboxNotFoundException e) {
                 return Optional.empty();
+            } catch (MailboxException e) {
+                throw Throwables.propagate(e);
             }
         }
     }
@@ -89,20 +93,20 @@ public class MailboxFactory {
         return new MailboxBuilder(this);
     }
 
-    private Optional<Mailbox> fromMessageManager(MessageManager messageManager, Optional<List<MailboxMetaData>> userMailboxesMetadata,
+    private Mailbox fromMessageManager(MessageManager messageManager, Optional<List<MailboxMetaData>> userMailboxesMetadata,
                                                  MailboxSession mailboxSession) throws MailboxException {
         MailboxPath mailboxPath = messageManager.getMailboxPath();
         Optional<Role> role = Role.from(mailboxPath.getName());
         MailboxCounters mailboxCounters = messageManager.getMailboxCounters(mailboxSession);
-        return Optional.ofNullable(Mailbox.builder()
-                .id(messageManager.getId())
-                .name(getName(mailboxPath, mailboxSession))
-                .parentId(getParentIdFromMailboxPath(mailboxPath, userMailboxesMetadata, mailboxSession).orElse(null))
-                .role(role)
-                .unreadMessages(mailboxCounters.getUnseen())
-                .totalMessages(mailboxCounters.getCount())
-                .sortOrder(SortOrder.getSortOrder(role))
-                .build());
+        return Mailbox.builder()
+            .id(messageManager.getId())
+            .name(getName(mailboxPath, mailboxSession))
+            .parentId(getParentIdFromMailboxPath(mailboxPath, userMailboxesMetadata, mailboxSession).orElse(null))
+            .role(role)
+            .unreadMessages(mailboxCounters.getUnseen())
+            .totalMessages(mailboxCounters.getCount())
+            .sortOrder(SortOrder.getSortOrder(role))
+            .build();
     }
 
     @VisibleForTesting String getName(MailboxPath mailboxPath, MailboxSession mailboxSession) {
