@@ -33,7 +33,7 @@ import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.DefaultProcessorsConfigurationProviderModule;
-import org.apache.james.modules.server.ESMetricReporterModule;
+import org.apache.james.modules.server.ElasticSearchMetricReporterModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.NoJwtModule;
@@ -65,7 +65,7 @@ public class JPAJamesServerMain {
         new MailboxModule(),
         new NoJwtModule(),
         new DefaultProcessorsConfigurationProviderModule(),
-        new ESMetricReporterModule());
+        new ElasticSearchMetricReporterModule());
 
     public static void main(String[] args) throws Exception {
         GuiceJamesServer server = new GuiceJamesServer()

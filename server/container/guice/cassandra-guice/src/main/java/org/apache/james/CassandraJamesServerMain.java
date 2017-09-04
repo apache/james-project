@@ -40,7 +40,7 @@ import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
 import org.apache.james.modules.server.CassandraRoutesModule;
 import org.apache.james.modules.server.DataRoutesModules;
-import org.apache.james.modules.server.ESMetricReporterModule;
+import org.apache.james.modules.server.ElasticSearchMetricReporterModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.SwaggerRoutesModules;
@@ -76,7 +76,7 @@ public class CassandraJamesServerMain {
         new ElasticSearchMailboxModule(),
         new TikaMailboxModule(),
         new ActiveMQQueueModule(),
-        new ESMetricReporterModule(),
+        new ElasticSearchMetricReporterModule(),
         new CassandraMetricsModule(),
         new MailboxModule());
 

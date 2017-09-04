@@ -41,11 +41,11 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
-public class ESMetricReporterModule extends AbstractModule {
+public class ElasticSearchMetricReporterModule extends AbstractModule {
     private static final String ELASTICSEARCH_CONFIGURATION_NAME = "elasticsearch";
     private static final String ELASTICSEARCH_MASTER_HOST = "elasticsearch.masterHost";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ESMetricReporterModule.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchMetricReporterModule.class);
 
     public static final boolean DEFAULT_DISABLE = false;
     public static final int DEFAULT_ES_HTTP_PORT = 9200;
