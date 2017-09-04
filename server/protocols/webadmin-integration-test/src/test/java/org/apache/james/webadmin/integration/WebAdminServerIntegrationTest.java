@@ -35,7 +35,7 @@ import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
-import org.apache.james.webadmin.routes.DomainRoutes;
+import org.apache.james.webadmin.routes.DomainsRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
 import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
@@ -54,7 +54,7 @@ public class WebAdminServerIntegrationTest {
 
     public static final String DOMAIN = "domain";
     public static final String USERNAME = "username@" + DOMAIN;
-    public static final String SPECIFIC_DOMAIN = DomainRoutes.DOMAINS + SEPARATOR + DOMAIN;
+    public static final String SPECIFIC_DOMAIN = DomainsRoutes.DOMAINS + SEPARATOR + DOMAIN;
     public static final String SPECIFIC_USER = UserRoutes.USERS + SEPARATOR + USERNAME;
     public static final String MAILBOX = "mailbox";
     public static final String SPECIFIC_MAILBOX = SPECIFIC_USER + SEPARATOR + UserMailboxesRoutes.MAILBOXES + SEPARATOR + MAILBOX;

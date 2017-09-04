@@ -52,12 +52,12 @@ import spark.Response;
 import spark.Service;
 
 @Api(tags = "Domains")
-@Path(DomainRoutes.DOMAINS)
+@Path(DomainsRoutes.DOMAINS)
 @Produces("application/json")
-public class DomainRoutes implements Routes {
+public class DomainsRoutes implements Routes {
 
     private static final String DOMAIN_NAME = ":domainName";
-    private static final Logger LOGGER = LoggerFactory.getLogger(DomainRoutes.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DomainsRoutes.class);
 
     public static final String DOMAINS = "/domains";
     public static final String SPECIFIC_DOMAIN = DOMAINS + SEPARATOR + DOMAIN_NAME;
@@ -69,7 +69,7 @@ public class DomainRoutes implements Routes {
     private Service service;
 
     @Inject
-    public DomainRoutes(DomainList domainList, JsonTransformer jsonTransformer) {
+    public DomainsRoutes(DomainList domainList, JsonTransformer jsonTransformer) {
         this.domainList = domainList;
         this.jsonTransformer = jsonTransformer;
     }

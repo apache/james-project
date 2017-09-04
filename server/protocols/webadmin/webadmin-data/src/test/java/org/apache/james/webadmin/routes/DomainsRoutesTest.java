@@ -54,7 +54,7 @@ import com.jayway.restassured.http.ContentType;
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 
 @RunWith(HierarchicalContextRunner.class)
-public class DomainRoutesTest {
+public class DomainsRoutesTest {
     public static final String DOMAIN = "domain";
 
     private WebAdminServer webAdminServer;
@@ -62,7 +62,7 @@ public class DomainRoutesTest {
     private void createServer(DomainList domainList) throws Exception {
         webAdminServer = new WebAdminServer(
             new DefaultMetricFactory(),
-            new DomainRoutes(domainList, new JsonTransformer()));
+            new DomainsRoutes(domainList, new JsonTransformer()));
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
 
@@ -71,7 +71,7 @@ public class DomainRoutesTest {
         		.setAccept(ContentType.JSON)
         		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
         		.setPort(webAdminServer.getPort().toInt())
-        		.setBasePath(DomainRoutes.DOMAINS)
+        		.setBasePath(DomainsRoutes.DOMAINS)
         		.build();
 
     }
