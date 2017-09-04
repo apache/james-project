@@ -52,34 +52,33 @@ import com.google.inject.util.Modules;
 public class CassandraJamesServerMain {
 
     public static final Module protocols = Modules.combine(
-            new IMAPServerModule(),
-            new ProtocolHandlerModule(),
-            new POP3ServerModule(),
-            new SMTPServerModule(),
-            new LMTPServerModule(),
-            new ManageSieveServerModule(),
-            new WebAdminServerModule(),
-            new DataRoutesModules(),
-            new MailboxRoutesModule(),
-            new CassandraRoutesModule(),
-            new SwaggerRoutesModules());
+        new CassandraRoutesModule(),
+        new DataRoutesModules(),
+        new IMAPServerModule(),
+        new LMTPServerModule(),
+        new MailboxRoutesModule(),
+        new ManageSieveServerModule(),
+        new POP3ServerModule(),
+        new ProtocolHandlerModule(),
+        new SMTPServerModule(),
+        new SwaggerRoutesModules(),
+        new WebAdminServerModule());
 
     public static final Module cassandraServerModule = Modules.combine(
-        new JMAPServerModule(),
-        new CassandraUsersRepositoryModule(),
+        new ActiveMQQueueModule(),
         new CassandraDomainListModule(),
-        new CassandraRecipientRewriteTableModule(),
-        new CassandraSieveRepositoryModule(),
         new CassandraJmapModule(),
         new CassandraMailboxModule(),
-        new CassandraSessionModule(),
-        new ElasticSearchMailboxModule(),
-        new TikaMailboxModule(),
-        new ActiveMQQueueModule(),
-        new ElasticSearchMetricReporterModule(),
         new CassandraMetricsModule(),
-        new MailboxModule());
-
+        new CassandraRecipientRewriteTableModule(),
+        new CassandraSessionModule(),
+        new CassandraSieveRepositoryModule(),
+        new CassandraUsersRepositoryModule(),
+        new ElasticSearchMailboxModule(),
+        new ElasticSearchMetricReporterModule(),
+        new JMAPServerModule(),
+        new MailboxModule(),
+        new TikaMailboxModule());
 
     public static void main(String[] args) throws Exception {
         GuiceJamesServer server = new GuiceJamesServer()
