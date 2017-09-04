@@ -28,7 +28,7 @@ import javax.mail.internet.AddressException;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.optional.ActionVacation;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.joda.time.Days;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

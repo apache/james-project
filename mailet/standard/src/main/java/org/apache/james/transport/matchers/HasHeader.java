@@ -33,7 +33,7 @@ import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
 
 /**

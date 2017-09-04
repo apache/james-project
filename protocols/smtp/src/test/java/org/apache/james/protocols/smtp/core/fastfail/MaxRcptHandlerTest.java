@@ -24,8 +24,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.james.protocols.smtp.MailAddress;
-import org.apache.james.protocols.smtp.MailAddressException;
+import org.apache.james.core.MailAddress;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
@@ -53,7 +52,7 @@ public class MaxRcptHandlerTest {
     }
     
     @Test
-    public void testRejectMaxRcpt() throws MailAddressException {
+    public void testRejectMaxRcpt() throws Exception {
         SMTPSession session = setupMockedSession(3);
         MaxRcptHandler handler = new MaxRcptHandler();
         
@@ -65,7 +64,7 @@ public class MaxRcptHandlerTest {
   
   
     @Test
-    public void testNotRejectMaxRcpt() throws MailAddressException {
+    public void testNotRejectMaxRcpt() throws Exception {
         SMTPSession session = setupMockedSession(3);
         MaxRcptHandler handler = new MaxRcptHandler();    
 

@@ -25,7 +25,7 @@ import org.apache.mailet.base.MailetUtil;
 import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.GenericMatcher;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 import javax.mail.Header;
 import javax.mail.MessagingException;

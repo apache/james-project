@@ -32,7 +32,7 @@ import javax.mail.internet.MimeMessage.RecipientType;
 
 import org.apache.james.transport.mailets.redirect.RedirectNotify;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
 import org.junit.Test;

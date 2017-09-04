@@ -24,7 +24,7 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;

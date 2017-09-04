@@ -21,7 +21,7 @@ package org.apache.james.jmap.api.vacation;
 
 import java.util.Objects;
 
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 import com.google.common.base.Preconditions;
 

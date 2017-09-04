@@ -32,18 +32,13 @@ import javax.mail.internet.AddressException;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.core.MailImpl;
-import org.apache.james.core.MimeMessageCopyOnWriteProxy;
-import org.apache.james.core.MimeMessageInputStream;
-import org.apache.james.core.MimeMessageInputStreamSource;
+import org.apache.james.core.MailAddress;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.ExtensibleHandler;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.api.handler.WiringException;
-import org.apache.james.protocols.smtp.MailAddress;
-import org.apache.james.protocols.smtp.MailAddressException;
 import org.apache.james.protocols.smtp.MailEnvelope;
 import org.apache.james.protocols.smtp.SMTPResponse;
 import org.apache.james.protocols.smtp.SMTPRetCode;
@@ -54,8 +49,11 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookResultHook;
 import org.apache.james.protocols.smtp.hook.MessageHook;
+import org.apache.james.server.core.MailImpl;
+import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
+import org.apache.james.server.core.MimeMessageInputStream;
+import org.apache.james.server.core.MimeMessageInputStreamSource;
 import org.apache.james.smtpserver.model.MailetMailAddressAdapter;
-import org.apache.james.smtpserver.model.ProtocolMailAddressAdapter;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,7 +100,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
                 List<MailAddress> recipientCollection = (List<MailAddress>) session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction);
                 MailAddress mailAddress = (MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction);
 
-                List<org.apache.mailet.MailAddress> rcpts = new ArrayList<>();
+                List<MailAddress> rcpts = new ArrayList<>();
                 for (MailAddress address : recipientCollection) {
                     rcpts.add(new MailetMailAddressAdapter(address));
                 }
@@ -275,10 +273,10 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
         public List<MailAddress> getRecipients() {
             //TODO: not sure this MailAddress transformation code does the right thing
             List<MailAddress> mailAddressList = new ArrayList<>();
-            for (org.apache.mailet.MailAddress address : mail.getRecipients()) {
+            for (MailAddress address : mail.getRecipients()) {
                 try {
                     mailAddressList.add(new MailAddress(address.getLocalPart(), address.getDomain()));
-                } catch (MailAddressException ex) {
+                } catch (AddressException ex) {
                     throw new RuntimeException(ex);
                 }
             }
@@ -287,12 +285,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
 
         @Override
         public MailAddress getSender() {
-            try {
-                return new ProtocolMailAddressAdapter(mail.getSender());
-            } catch (MailAddressException e) {
-                // should not occur here, cause it should have happened before
-                throw new RuntimeException(e);
-            }
+            return mail.getSender();
         }
 
         @Override

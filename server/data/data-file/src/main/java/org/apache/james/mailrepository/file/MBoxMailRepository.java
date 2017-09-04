@@ -72,7 +72,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.io.FileUtils;
-import org.apache.james.core.MailImpl;
+import org.apache.james.server.core.MailImpl;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.mailet.Mail;

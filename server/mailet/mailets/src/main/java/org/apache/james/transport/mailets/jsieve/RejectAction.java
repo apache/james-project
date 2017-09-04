@@ -39,7 +39,7 @@ import org.apache.james.mdn.type.DispositionType;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionReject;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

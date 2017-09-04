@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Optional;
 import javax.mail.MessagingException;
 
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.junit.Before;
 import org.junit.Rule;

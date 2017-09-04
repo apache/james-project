@@ -69,7 +69,7 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.lib.mock.InMemoryUsersRepository;
 import org.apache.mailet.HostAddress;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;

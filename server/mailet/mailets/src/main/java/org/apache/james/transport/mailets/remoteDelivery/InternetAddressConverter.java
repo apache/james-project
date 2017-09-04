@@ -22,7 +22,7 @@ package org.apache.james.transport.mailets.remoteDelivery;
 import java.util.Collection;
 import javax.mail.internet.InternetAddress;
 
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 import com.google.common.base.Preconditions;
 

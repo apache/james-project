@@ -26,9 +26,8 @@ import java.util.Map;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.core.MailAddress;
 import org.apache.james.protocols.api.ProtocolSession.State;
-import org.apache.james.protocols.smtp.MailAddress;
-import org.apache.james.protocols.smtp.MailAddressException;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
@@ -116,7 +115,7 @@ public class ValidSenderDomainHandlerTest {
     }
 
     @Test
-    public void testInvalidSenderDomainReject() throws MailAddressException {
+    public void testInvalidSenderDomainReject() throws Exception {
         ValidSenderDomainHandler handler = createHandler();
         SMTPSession session = setupMockedSession(new MailAddress("invalid@invalid"));
         int response = handler.doMail(session,(MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction)).getResult();

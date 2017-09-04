@@ -43,7 +43,7 @@ import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.mailetcontainer.impl.jmx.JMXStateMailetProcessorListener;
 import org.apache.james.mailetcontainer.impl.matchers.CompositeMatcher;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetContext;

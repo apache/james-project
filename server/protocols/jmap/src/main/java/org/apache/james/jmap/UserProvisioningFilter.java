@@ -38,7 +38,7 @@ import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;

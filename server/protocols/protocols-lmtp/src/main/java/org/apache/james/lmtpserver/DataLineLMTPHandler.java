@@ -24,12 +24,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.mail.internet.AddressException;
+
+import org.apache.james.core.MailAddress;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.WiringException;
 import org.apache.james.protocols.lmtp.LMTPMultiResponse;
 import org.apache.james.protocols.lmtp.hook.DeliverToRecipientHook;
-import org.apache.james.protocols.smtp.MailAddress;
-import org.apache.james.protocols.smtp.MailAddressException;
 import org.apache.james.protocols.smtp.SMTPResponse;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -53,12 +54,12 @@ public class DataLineLMTPHandler extends DataLineJamesMessageHookHandler {
         // build a wrapper around the Mail
         final ReadOnlyMailEnvelope env = new ReadOnlyMailEnvelope(mail);
 
-        for (org.apache.mailet.MailAddress recipient : mail.getRecipients()) {
+        for (MailAddress recipient : mail.getRecipients()) {
             // TODO: the transformation code between MailAddress is purely to compile. No idea if it does what it's supposed
             MailAddress recipientAddress;
             try {
                 recipientAddress = new MailAddress(recipient.getLocalPart(), recipient.getDomain());
-            } catch (MailAddressException e) {
+            } catch (AddressException e) {
                 throw new RuntimeException(e);
             }
             Response response = null;

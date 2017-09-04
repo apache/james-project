@@ -24,9 +24,8 @@ import java.util.Collection;
 
 import javax.mail.MessagingException;
 
-import org.apache.james.transport.matchers.SMTPAuthUserIs;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
 
 public class SMTPAuthUserIsTest extends AbstractHasMailAttributeTest {

@@ -31,9 +31,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.protocols.api.ProtocolSession.State;
-import org.apache.james.protocols.smtp.MailAddress;
-import org.apache.james.protocols.smtp.MailAddressException;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.junit.Before;
@@ -172,7 +171,7 @@ public class DNSRBLHandlerTest {
 
     // ip is blacklisted and has txt details
     @Test
-    public void testBlackListedTextPresent() throws MailAddressException {
+    public void testBlackListedTextPresent() throws Exception {
         DNSRBLHandler rbl = createHandler();
        
         setupMockedSMTPSession(new MailAddress("any@domain"));
@@ -187,7 +186,7 @@ public class DNSRBLHandlerTest {
 
     // ip is blacklisted and has txt details but we don'T want to retrieve the txt record
     @Test
-    public void testGetNoDetail() throws MailAddressException {
+    public void testGetNoDetail() throws Exception {
         DNSRBLHandler rbl = createHandler();
         setupMockedSMTPSession(new MailAddress("any@domain"));
 
@@ -200,7 +199,7 @@ public class DNSRBLHandlerTest {
 
     // ip is allowed to relay
     @Test
-    public void testRelayAllowed() throws MailAddressException {
+    public void testRelayAllowed() throws Exception {
         DNSRBLHandler rbl = createHandler();
         setRelayingAllowed(true);
         setupMockedSMTPSession(new MailAddress("any@domain"));
@@ -214,7 +213,7 @@ public class DNSRBLHandlerTest {
 
     // ip not on blacklist
     @Test
-    public void testNotBlackListed() throws MailAddressException {
+    public void testNotBlackListed() throws Exception {
         DNSRBLHandler rbl = createHandler();
 
         setRemoteIp("192.168.0.1");
@@ -229,7 +228,7 @@ public class DNSRBLHandlerTest {
 
     // ip on blacklist without txt details
     @Test
-    public void testBlackListedNoTxt() throws MailAddressException {
+    public void testBlackListedNoTxt() throws Exception {
         DNSRBLHandler rbl = createHandler();
 
         setRemoteIp("127.0.0.3");
@@ -244,7 +243,7 @@ public class DNSRBLHandlerTest {
 
     // ip on whitelist
     @Test
-    public void testWhiteListed() throws MailAddressException {
+    public void testWhiteListed() throws Exception {
         DNSRBLHandler rbl = createHandler();
 
         setRemoteIp("127.0.0.2");

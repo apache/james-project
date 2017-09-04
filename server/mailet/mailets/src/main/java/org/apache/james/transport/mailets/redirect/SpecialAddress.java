@@ -19,7 +19,7 @@
 
 package org.apache.james.transport.mailets.redirect;
 
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 import com.google.common.base.Throwables;
 

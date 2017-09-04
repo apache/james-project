@@ -20,7 +20,7 @@ package org.apache.james.container.spring.context;
 
 import org.apache.james.container.spring.resource.DefaultJamesResourceLoader;
 import org.apache.james.container.spring.resource.JamesResourceLoader;
-import org.apache.james.core.JamesServerResourceLoader;
+import org.apache.james.server.core.JamesServerResourceLoader;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.io.Resource;

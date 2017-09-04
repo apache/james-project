@@ -23,6 +23,8 @@ package org.apache.mailet;
 import java.util.Collection;
 import javax.mail.MessagingException;
 
+import org.apache.james.core.MailAddress;
+
 /**
  * This interface defines the behaviour of the message "routing" inside
  * the mailet container. At its heart is the {@link #match(Mail)} method,

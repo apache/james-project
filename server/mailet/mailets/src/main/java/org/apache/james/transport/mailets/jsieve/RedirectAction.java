@@ -27,7 +27,7 @@ import javax.mail.internet.InternetAddress;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionRedirect;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -19,7 +19,7 @@
 
 package org.apache.james.user.api.model;
 
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 /**
  * Interface for objects representing users of an email/ messaging system.

@@ -22,7 +22,7 @@ package org.apache.james.user.api;
 import java.util.Iterator;
 
 import org.apache.james.user.api.model.User;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 /**
  * Interface for a repository of users. A repository represents a logical

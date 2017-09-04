@@ -20,6 +20,7 @@ package org.apache.james.protocols.smtp;
 
 import java.util.Collection;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.protocols.api.ProtocolSessionImpl;
 import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.api.Response;

@@ -27,7 +27,7 @@ import javax.inject.Named;
 import javax.mail.Flags;
 import javax.mail.MessagingException;
 
-import org.apache.james.core.MimeMessageInputStream;
+import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.mailbox.MailboxManager;

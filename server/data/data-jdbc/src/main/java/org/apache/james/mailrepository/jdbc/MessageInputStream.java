@@ -30,9 +30,9 @@ import java.io.PipedOutputStream;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.core.MimeMessageCopyOnWriteProxy;
-import org.apache.james.core.MimeMessageUtil;
-import org.apache.james.core.MimeMessageWrapper;
+import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
+import org.apache.james.server.core.MimeMessageUtil;
+import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.james.repository.api.StreamRepository;
 import org.apache.mailet.Mail;
 

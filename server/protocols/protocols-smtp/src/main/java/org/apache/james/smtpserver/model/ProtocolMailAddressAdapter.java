@@ -18,13 +18,15 @@
  ****************************************************************/
 package org.apache.james.smtpserver.model;
 
-import org.apache.james.protocols.smtp.MailAddress;
-import org.apache.james.protocols.smtp.MailAddressException;
+import javax.mail.internet.AddressException;
 
+import org.apache.james.core.MailAddress;
+
+@Deprecated
 public class ProtocolMailAddressAdapter extends MailAddress {
     
-    public ProtocolMailAddressAdapter(org.apache.mailet.MailAddress mailAddress) throws MailAddressException {
-        super(mailAddress.toString());
+    public ProtocolMailAddressAdapter(MailAddress mailAddress) throws AddressException {
+        super(mailAddress.asString());
     }
 
 }

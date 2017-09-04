@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.james.core.JamesServerResourceLoader;
+import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.modules.CommonServicesModule;

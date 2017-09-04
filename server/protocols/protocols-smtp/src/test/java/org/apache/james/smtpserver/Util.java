@@ -26,7 +26,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.ParseException;
 import org.apache.james.smtpserver.mock.MockMimeMessage;
 import org.apache.james.smtpserver.mock.mailet.MockMail;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 /**
  * some utilities for James unit testing

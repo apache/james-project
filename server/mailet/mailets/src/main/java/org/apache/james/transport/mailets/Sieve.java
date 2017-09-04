@@ -31,7 +31,7 @@ import org.apache.james.transport.mailets.jsieve.delivery.SieveExecutor;
 import org.apache.james.transport.mailets.jsieve.delivery.SievePoster;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 
 /**

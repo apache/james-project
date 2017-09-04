@@ -25,7 +25,6 @@ import static org.junit.Assert.assertEquals;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.james.protocols.smtp.MailAddressException;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
@@ -35,7 +34,7 @@ public class MaxUnknownCmdHandlerTest {
 
     
     @Test
-    public void testRejectAndClose() throws MailAddressException {
+    public void testRejectAndClose() throws Exception {
         SMTPSession session = new BaseFakeSMTPSession() {
             private final HashMap<String,Object> map = new HashMap<>();
 

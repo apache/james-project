@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp.hook;
 
-import org.apache.james.protocols.smtp.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.apache.james.protocols.smtp.SMTPSession;
 
 /**

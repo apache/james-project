@@ -38,16 +38,15 @@ import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.james.core.MailImpl;
+import org.apache.james.core.MailAddress;
 import org.apache.james.metrics.api.NoopMetricFactory;
-import org.apache.james.protocols.smtp.MailAddressException;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.ManageableMailQueue.MailQueueIterator;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
+import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -76,7 +75,7 @@ public abstract class AbstractJMSMailQueueTest {
     }
 
     @Test
-    public void testFIFO() throws MessagingException, InterruptedException, IOException, MailAddressException {
+    public void testFIFO() throws Exception {
         // should be empty
         assertEquals(0, queue.getSize());
 
@@ -116,7 +115,7 @@ public abstract class AbstractJMSMailQueueTest {
     }
 
     @Test
-    public void testDelayedDeQueue() throws MessagingException, InterruptedException, IOException, MailAddressException {
+    public void testDelayedDeQueue() throws Exception {
         // should be empty
         assertEquals(0, queue.getSize());
 
@@ -151,7 +150,7 @@ public abstract class AbstractJMSMailQueueTest {
     }
 
     @Test
-    public void testFlush() throws MessagingException, InterruptedException, IOException, MailAddressException {
+    public void testFlush() throws Exception {
         // should be empty
         assertEquals(0, queue.getSize());
 
@@ -190,7 +189,7 @@ public abstract class AbstractJMSMailQueueTest {
     }
 
     @Test
-    public void testRemoveWithRecipient() throws MessagingException, InterruptedException, MailAddressException {
+    public void testRemoveWithRecipient() throws Exception {
         assertEquals(0, queue.getSize());
 
         Mail mail = createMail();
@@ -216,7 +215,7 @@ public abstract class AbstractJMSMailQueueTest {
     }
 
     @Test
-    public void testRemoveWithSender() throws MessagingException, InterruptedException, MailAddressException {
+    public void testRemoveWithSender() throws Exception {
         assertEquals(0, queue.getSize());
 
         MailImpl mail = createMail();
@@ -242,7 +241,7 @@ public abstract class AbstractJMSMailQueueTest {
     }
 
     @Test
-    public void testRemoveWithName() throws MessagingException, InterruptedException, MailAddressException {
+    public void testRemoveWithName() throws Exception {
         assertEquals(0, queue.getSize());
 
         MailImpl mail = createMail();
@@ -318,7 +317,7 @@ public abstract class AbstractJMSMailQueueTest {
     }
 
     @Test
-    public void testPrioritySupport() throws InterruptedException, MessagingException, IOException, MailAddressException {
+    public void testPrioritySupport() throws Exception {
         // should be empty
         assertEquals(0, queue.getSize());
 
@@ -353,7 +352,7 @@ public abstract class AbstractJMSMailQueueTest {
     }
 
     @Test
-    public void testBrowse() throws MessagingException, InterruptedException, IOException, MailAddressException {
+    public void testBrowse() throws Exception {
         // should be empty
         assertEquals(0, queue.getSize());
 

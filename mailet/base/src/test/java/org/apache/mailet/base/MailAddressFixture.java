@@ -21,7 +21,7 @@ package org.apache.mailet.base;
 
 import javax.mail.internet.AddressException;
 
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 import com.google.common.base.Throwables;
 

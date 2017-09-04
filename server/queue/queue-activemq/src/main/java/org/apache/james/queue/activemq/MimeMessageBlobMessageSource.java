@@ -24,7 +24,7 @@ import java.io.InputStream;
 import javax.jms.JMSException;
 
 import org.apache.activemq.BlobMessage;
-import org.apache.james.core.MimeMessageSource;
+import org.apache.james.server.core.MimeMessageSource;
 
 /**
  *
@@ -40,7 +40,7 @@ public class MimeMessageBlobMessageSource extends MimeMessageSource implements A
     }
 
     /**
-     * @see org.apache.james.core.MimeMessageSource#getInputStream()
+     * @see org.apache.james.server.core.MimeMessageSource#getInputStream()
      */
     public InputStream getInputStream() throws IOException {
         try {
@@ -51,7 +51,7 @@ public class MimeMessageBlobMessageSource extends MimeMessageSource implements A
     }
 
     /**
-     * @see org.apache.james.core.MimeMessageSource#getSourceId()
+     * @see org.apache.james.server.core.MimeMessageSource#getSourceId()
      */
     public String getSourceId() {
         return sourceId;

@@ -33,7 +33,7 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.queue.api.MailPrioritySupport;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 /**
  * Handler which set a configured {@link Mail} priority for the mail.

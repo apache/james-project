@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

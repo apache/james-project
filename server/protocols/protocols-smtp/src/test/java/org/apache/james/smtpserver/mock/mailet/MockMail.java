@@ -30,7 +30,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.PerRecipientHeaders.Header;
 

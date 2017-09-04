@@ -525,6 +525,7 @@
 
     <modules>
         <module>backends-common</module>
+        <module>core</module>
         <module>mailbox</module>
         <module>mailet</module>
         <module>mdn</module>
@@ -942,6 +943,11 @@
                 <groupId>${project.groupId}</groupId>
                 <artifactId>apache-mime4j-james-utils</artifactId>
                 <version>${apache-mime4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>james-core</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>

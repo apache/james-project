@@ -23,7 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.function.Supplier;
 
-import org.apache.james.core.JamesServerResourceLoader;
+import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.junit.rules.TemporaryFolder;

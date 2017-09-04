@@ -20,8 +20,8 @@ package org.apache.james.smtpserver;
 
 import javax.inject.Inject;
 
-import org.apache.james.core.MailImpl;
-import org.apache.james.core.MimeMessageInputStreamSource;
+import org.apache.james.server.core.MailImpl;
+import org.apache.james.server.core.MimeMessageInputStreamSource;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.SMTPResponse;

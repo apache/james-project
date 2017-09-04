@@ -21,6 +21,8 @@ package org.apache.mailet;
 
 import java.util.Collection;
 
+import org.apache.james.core.MailAddress;
+
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;

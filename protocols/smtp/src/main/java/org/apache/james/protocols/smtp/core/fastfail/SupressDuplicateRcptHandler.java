@@ -17,17 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
-
 package org.apache.james.protocols.smtp.core.fastfail;
 
 import java.util.Collection;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.core.MailAddress;
 import org.apache.james.protocols.api.ProtocolSession.State;
-import org.apache.james.protocols.smtp.MailAddress;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
@@ -38,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
  * This handler can be used to just ignore duplicated recipients. 
  */
 public class SupressDuplicateRcptHandler implements RcptHook {

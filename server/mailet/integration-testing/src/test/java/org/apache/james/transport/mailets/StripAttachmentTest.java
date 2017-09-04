@@ -35,7 +35,7 @@ import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.After;

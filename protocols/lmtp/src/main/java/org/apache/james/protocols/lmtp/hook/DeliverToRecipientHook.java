@@ -19,7 +19,7 @@
 
 package org.apache.james.protocols.lmtp.hook;
 
-import org.apache.james.protocols.smtp.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.apache.james.protocols.smtp.MailEnvelope;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.Hook;

@@ -23,7 +23,7 @@ import javax.mail.MessagingException;
 
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 public class ReplyToUtils {
 

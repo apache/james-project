@@ -29,7 +29,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.apache.james.core.MimeMessageSource;
+import org.apache.james.server.core.MimeMessageSource;
 import org.apache.james.repository.api.StreamRepository;
 import org.apache.james.util.sql.JDBCUtil;
 
@@ -117,7 +117,7 @@ public class MimeMessageJDBCSource extends MimeMessageSource {
      * is to support a repository with the entire message in the database, which
      * is how James 1.2 worked.
      * 
-     * @see org.apache.james.core.MimeMessageSource#getInputStream()
+     * @see org.apache.james.server.core.MimeMessageSource#getInputStream()
      */
     public synchronized InputStream getInputStream() throws IOException {
         Connection conn = null;
@@ -176,7 +176,7 @@ public class MimeMessageJDBCSource extends MimeMessageSource {
     /**
      * Runs a custom SQL statement to check the size of the message body
      * 
-     * @see org.apache.james.core.MimeMessageSource#getMessageSize()
+     * @see org.apache.james.server.core.MimeMessageSource#getMessageSize()
      */
     public synchronized long getMessageSize() throws IOException {
         if (size != -1)

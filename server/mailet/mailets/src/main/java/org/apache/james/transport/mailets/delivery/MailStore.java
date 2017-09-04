@@ -22,7 +22,7 @@ package org.apache.james.transport.mailets.delivery;
 import javax.mail.MessagingException;
 
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 public interface MailStore {
     String DELIVERY_PATH_PREFIX = "DeliveryPath_";

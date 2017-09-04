@@ -17,7 +17,6 @@
  * under the License.                                           *
  ****************************************************************/
 
-
 package org.apache.james.protocols.smtp.core.fastfail;
 
 import static org.junit.Assert.assertEquals;
@@ -26,8 +25,7 @@ import static org.junit.Assert.fail;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 
-import org.apache.james.protocols.smtp.MailAddress;
-import org.apache.james.protocols.smtp.MailAddressException;
+import org.apache.james.core.MailAddress;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
@@ -52,7 +50,7 @@ public class SpamTrapHandlerTest {
     }
     
     @Test
-    public void testSpamTrap() throws MailAddressException {
+    public void testSpamTrap() throws Exception {
         String ip = "192.168.100.1";
         String ip2 = "192.168.100.2";
         long blockTime = 2000;

@@ -19,7 +19,7 @@
 
 package org.apache.james.mailrepository.file;
 
-import org.apache.james.core.MimeMessageSource;
+import org.apache.james.server.core.MimeMessageSource;
 import org.apache.james.repository.api.StreamRepository;
 
 import java.io.IOException;
@@ -87,7 +87,7 @@ public class MimeMessageStreamRepositorySource extends MimeMessageSource {
     }
 
     /**
-     * @see org.apache.james.core.MimeMessageSource#getMessageSize()
+     * @see org.apache.james.server.core.MimeMessageSource#getMessageSize()
      */
     public long getMessageSize() throws IOException {
         if (size == -1) {

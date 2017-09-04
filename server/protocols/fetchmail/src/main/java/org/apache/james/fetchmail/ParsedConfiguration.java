@@ -33,7 +33,7 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

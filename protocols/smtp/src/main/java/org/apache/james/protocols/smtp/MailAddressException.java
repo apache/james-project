@@ -17,19 +17,16 @@
  * under the License.                                           *
  ****************************************************************/
 
-
 package org.apache.james.protocols.smtp;
 
+/**
+ * @Deprecated see {@link org.apache.james.protocols.smtp.MailAddress} for more details.
+ */
+@Deprecated
 public class MailAddressException extends Exception{
-
-    /**
-     * 
-     */
     private static final long serialVersionUID = -2845113080526615146L;
     private final String address;
     private final int pos;
-
-   
 
     public MailAddressException(String message, String address, int pos) {
         super(message);
@@ -44,6 +41,5 @@ public class MailAddressException extends Exception{
     public int getPos() {
         return pos;
     }
-
 
 }

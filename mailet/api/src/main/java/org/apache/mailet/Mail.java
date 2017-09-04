@@ -22,6 +22,7 @@ package org.apache.mailet;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.PerRecipientHeaders.Header;
 
 import java.io.Serializable;

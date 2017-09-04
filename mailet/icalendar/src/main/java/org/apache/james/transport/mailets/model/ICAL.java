@@ -22,7 +22,7 @@ package org.apache.james.transport.mailets.model;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Charsets;

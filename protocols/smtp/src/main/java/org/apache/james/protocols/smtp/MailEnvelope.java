@@ -24,6 +24,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 
+import org.apache.james.core.MailAddress;
+
 /**
  * The MailEnvelope of a SMTP-Transaction
  * 

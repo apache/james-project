@@ -32,14 +32,14 @@ import org.apache.camel.Body;
 import org.apache.camel.ExchangeProperty;
 import org.apache.camel.Handler;
 import org.apache.camel.InOnly;
-import org.apache.james.core.MailImpl;
+import org.apache.james.server.core.MailImpl;
 import org.apache.james.mailetcontainer.impl.ProcessorUtil;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.util.MDCBuilder;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.Matcher;
 import org.slf4j.Logger;
 

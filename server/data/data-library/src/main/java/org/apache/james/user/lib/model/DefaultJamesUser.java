@@ -20,7 +20,7 @@
 package org.apache.james.user.lib.model;
 
 import org.apache.james.user.api.model.JamesUser;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 /**
  * Implementation of User Interface.
@@ -87,7 +87,7 @@ public class DefaultJamesUser extends DefaultUser implements JamesUser {
     }
 
     /**
-     * @see org.apache.james.user.api.model.JamesUser#setForwardingDestination(org.apache.mailet.MailAddress)
+     * @see org.apache.james.user.api.model.JamesUser#setForwardingDestination(MailAddress)
      */
     public boolean setForwardingDestination(MailAddress address) {
         /* TODO: Some verification would be good */

@@ -22,7 +22,7 @@ package org.apache.james.user.jdbc;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.model.DefaultJamesUser;
 import org.apache.james.user.lib.model.DefaultUser;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

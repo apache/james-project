@@ -34,7 +34,7 @@ import javax.sql.DataSource;
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 import org.apache.james.util.sql.JDBCUtil;
 import org.apache.mailet.Experimental;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.MailetException;
 
 /**

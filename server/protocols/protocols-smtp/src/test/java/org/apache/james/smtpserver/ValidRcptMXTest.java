@@ -26,12 +26,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
-import javax.mail.internet.ParseException;
-
+import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.mock.MockDNSService;
-import org.apache.james.protocols.smtp.MailAddress;
-import org.apache.james.protocols.smtp.MailAddressException;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
@@ -103,7 +100,7 @@ public class ValidRcptMXTest {
     }
 
     @Test
-    public void testRejectLoopbackMX() throws ParseException, MailAddressException {
+    public void testRejectLoopbackMX() throws Exception {
         Collection<String> bNetworks = new ArrayList<>();
         bNetworks.add("127.0.0.1");
 

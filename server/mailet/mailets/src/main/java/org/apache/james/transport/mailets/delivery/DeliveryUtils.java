@@ -19,7 +19,7 @@
 
 package org.apache.james.transport.mailets.delivery;
 
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 public class DeliveryUtils {
 

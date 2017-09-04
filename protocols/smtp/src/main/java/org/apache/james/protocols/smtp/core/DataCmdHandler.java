@@ -30,6 +30,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.core.MailAddress;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.protocols.api.ProtocolSession;
@@ -39,7 +40,6 @@ import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.api.handler.ExtensibleHandler;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.api.handler.WiringException;
-import org.apache.james.protocols.smtp.MailAddress;
 import org.apache.james.protocols.smtp.MailEnvelope;
 import org.apache.james.protocols.smtp.MailEnvelopeImpl;
 import org.apache.james.protocols.smtp.SMTPResponse;
@@ -49,7 +49,6 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.util.MDCBuilder;
 
 import com.google.common.base.Throwables;
-
 import com.google.common.collect.ImmutableSet;
 
 

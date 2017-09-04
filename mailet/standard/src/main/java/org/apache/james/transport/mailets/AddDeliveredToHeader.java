@@ -22,7 +22,7 @@ package org.apache.james.transport.mailets;
 import javax.mail.MessagingException;
 
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.GenericMailet;
 

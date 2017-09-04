@@ -30,7 +30,7 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.AbstractDomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.user.memory.MemoryUsersRepository;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.junit.Before;
 import org.junit.Test;
 

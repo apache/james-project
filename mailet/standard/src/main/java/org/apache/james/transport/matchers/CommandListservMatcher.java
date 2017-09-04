@@ -23,7 +23,7 @@ package org.apache.james.transport.matchers;
 
 import org.apache.mailet.Experimental;
 import org.apache.mailet.base.GenericRecipientMatcher;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 import javax.mail.MessagingException;
 

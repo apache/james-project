@@ -29,7 +29,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.util.date.ZonedDateTimeProvider;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.junit.Before;
 import org.junit.Test;
 

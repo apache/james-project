@@ -22,7 +22,7 @@ package org.apache.james.transport.matchers.utils;
 import java.util.Set;
 import javax.mail.internet.AddressException;
 
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;

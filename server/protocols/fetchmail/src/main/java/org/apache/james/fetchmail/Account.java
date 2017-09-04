@@ -26,7 +26,7 @@ import javax.mail.Session;
 import javax.mail.internet.ParseException;
 
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 /**
  * <p>

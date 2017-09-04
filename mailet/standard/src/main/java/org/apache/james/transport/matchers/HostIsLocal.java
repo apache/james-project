@@ -22,7 +22,7 @@
 package org.apache.james.transport.matchers;
 
 import org.apache.mailet.base.GenericRecipientMatcher;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 /**
  * Matches mail to Domains which are local

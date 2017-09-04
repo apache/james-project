@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.apache.mailet.base.GenericRecipientMatcher;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 import javax.mail.MessagingException;
 

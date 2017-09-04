@@ -20,7 +20,7 @@ package org.apache.james.transport.mailets.redirect;
 
 import static org.mockito.Mockito.mock;
 
-import org.apache.james.core.MailImpl;
+import org.apache.james.server.core.MailImpl;
 import org.apache.james.dnsservice.api.DNSService;
 import org.junit.Rule;
 import org.junit.Test;

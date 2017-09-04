@@ -21,7 +21,7 @@ package org.apache.james.container.spring.filesystem;
 import org.apache.james.container.spring.context.JamesServerApplicationContext;
 import org.apache.james.container.spring.resource.DefaultJamesResourceLoader;
 import org.apache.james.container.spring.resource.JamesResourceLoader;
-import org.apache.james.core.JamesServerResourceLoader;
+import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.filesystem.api.AbstractFileSystemTest;
 import org.apache.james.filesystem.api.FileSystem;
 

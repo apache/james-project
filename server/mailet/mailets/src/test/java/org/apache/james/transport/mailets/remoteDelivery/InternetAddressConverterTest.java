@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.internet.InternetAddress;
 
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.MailAddressFixture;
 import org.junit.Rule;
 import org.junit.Test;

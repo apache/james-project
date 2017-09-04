@@ -36,7 +36,7 @@ import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.mailetcontainer.impl.matchers.CompositeMatcher;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener;
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.Matcher;
 

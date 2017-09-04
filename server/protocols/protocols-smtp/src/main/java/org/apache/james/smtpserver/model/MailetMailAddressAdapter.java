@@ -20,13 +20,13 @@ package org.apache.james.smtpserver.model;
 
 import javax.mail.internet.AddressException;
 
-import org.apache.mailet.MailAddress;
+import org.apache.james.core.MailAddress;
 
 public class MailetMailAddressAdapter extends MailAddress {
     
     private static final long serialVersionUID = 1L;
 
-    public MailetMailAddressAdapter(org.apache.james.protocols.smtp.MailAddress mailAddress) throws AddressException {
+    public MailetMailAddressAdapter(MailAddress mailAddress) throws AddressException {
         super(mailAddress.getLocalPart(), mailAddress.getDomain());
     }
 
