@@ -32,6 +32,8 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.nio.charset.StandardCharsets;
+
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.user.api.UsersRepository;
@@ -46,11 +48,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
-
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 
 @RunWith(HierarchicalContextRunner.class)
@@ -70,7 +70,7 @@ public class UsersRoutesTest {
         RestAssured.requestSpecification = new RequestSpecBuilder()
         		.setContentType(ContentType.JSON)
         		.setAccept(ContentType.JSON)
-        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
         		.setPort(webAdminServer.getPort().toInt())
         		.setBasePath(UserRoutes.USERS)
         		.build();

@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.routes;
 
+import java.util.Optional;
+
 import org.apache.james.webadmin.Routes;
 
 import spark.Service;
@@ -28,14 +30,13 @@ public class CORSRoute implements Routes {
     @Override
     public void define(Service service) {
         service.options("/*", (request, response) -> {
-            String accessControlRequestHeaders = request.headers("Access-Control-Request-Headers");
-            if (accessControlRequestHeaders != null) {
-                response.header("Access-Control-Allow-Headers", accessControlRequestHeaders);
-            }
-            String accessControlRequestMethod = request.headers("Access-Control-Request-Method");
-            if (accessControlRequestMethod != null) {
-                response.header("Access-Control-Allow-Methods", accessControlRequestMethod);
-            }
+
+            Optional.ofNullable(request.headers("Access-Control-Request-Headers"))
+                .ifPresent(header -> response.header("Access-Control-Allow-Headers", header));
+
+            Optional.ofNullable(request.headers("Access-Control-Request-Method"))
+                .ifPresent(header -> response.header("Access-Control-Allow-Methods", header));
+
             return "";
         });
     }
