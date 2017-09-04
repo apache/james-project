@@ -25,7 +25,7 @@ import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 
-public class SwaggerRoutesModules extends AbstractModule {
+public class SwaggerRoutesModule extends AbstractModule {
 
     @Override
     protected void configure() {

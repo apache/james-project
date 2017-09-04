@@ -38,6 +38,7 @@ import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
+import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 
 import com.google.inject.Module;
@@ -45,27 +46,31 @@ import com.google.inject.util.Modules;
 
 public class JPAJamesServerMain {
 
-    public static final Module protocols = Modules.combine(
-        new IMAPServerModule(),
-        new ProtocolHandlerModule(),
-        new POP3ServerModule(),
-        new SMTPServerModule(),
-        new LMTPServerModule(),
-        new ManageSieveServerModule(),
+    public static final Module webadmin = Modules.combine(
         new WebAdminServerModule(),
         new DataRoutesModules(),
-        new MailboxRoutesModule());
+        new MailboxRoutesModule(),
+        new SwaggerRoutesModule());
+
+    public static final Module protocols = Modules.combine(
+        new IMAPServerModule(),
+        new LMTPServerModule(),
+        new ManageSieveServerModule(),
+        new POP3ServerModule(),
+        new ProtocolHandlerModule(),
+        new SMTPServerModule(),
+        webadmin);
     
     public static final Module jpaServerModule = Modules.combine(
-        new JPAMailboxModule(),
-        new JPADataModule(),
-        new SieveFileRepositoryModule(),
         new ActiveMQQueueModule(),
-        new RawPostDequeueDecoratorModule(),
+        new DefaultProcessorsConfigurationProviderModule(),
+        new ElasticSearchMetricReporterModule(),
+        new JPADataModule(),
+        new JPAMailboxModule(),
         new MailboxModule(),
         new NoJwtModule(),
-        new DefaultProcessorsConfigurationProviderModule(),
-        new ElasticSearchMetricReporterModule());
+        new RawPostDequeueDecoratorModule(),
+        new SieveFileRepositoryModule());
 
     public static void main(String[] args) throws Exception {
         GuiceJamesServer server = new GuiceJamesServer()

@@ -100,9 +100,10 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
     public InMemoryDNSService getInMemoryDnsService() {
         return inMemoryDNSService;
     }
+
     protected GuiceJamesServer createJamesServer() {
         return new GuiceJamesServer()
-            .combineWith(CassandraJamesServerMain.cassandraServerModule, new SMTPServerModule(), new ProtocolHandlerModule())
+            .combineWith(CassandraJamesServerMain.cassandraServerModule, CassandraJamesServerMain.protocols, new ProtocolHandlerModule())
             .overrideWith(new CassandraJmapServerModule(folder::getRoot, embeddedElasticSearch, cassandraHost, cassandraPort),
                 (binder) -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));
     }

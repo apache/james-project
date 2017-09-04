@@ -34,6 +34,7 @@ import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.MemoryMailQueueModule;
+import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 
 import com.google.inject.Module;
@@ -41,22 +42,29 @@ import com.google.inject.util.Modules;
 
 public class MemoryJamesServerMain {
 
-    public static final Module inMemoryServerModule = Modules.combine(
-            new JMAPServerModule(),
-            new IMAPServerModule(),
-            new ProtocolHandlerModule(),
-            new POP3ServerModule(),
-            new SMTPServerModule(),
-            new LMTPServerModule(),
-            new ManageSieveServerModule(),
+    public static final Module webadmin = Modules.combine(
             new WebAdminServerModule(),
             new DataRoutesModules(),
             new MailboxRoutesModule(),
+            new SwaggerRoutesModule());
+
+    public static final Module protocols = Modules.combine(
+            new IMAPServerModule(),
+            new JMAPServerModule(),
+            new LMTPServerModule(),
+            new ManageSieveServerModule(),
+            new POP3ServerModule(),
+            new ProtocolHandlerModule(),
+            new SMTPServerModule(),
+            webadmin);
+
+    public static final Module inMemoryServerModule = Modules.combine(
             new MemoryDataModule(),
             new MemoryDataJmapModule(),
             new MemoryMailboxModule(),
             new MemoryMailQueueModule(),
-            new MailboxModule());
+            new MailboxModule(),
+            protocols);
 
     public static void main(String[] args) throws Exception {
         new GuiceJamesServer()
