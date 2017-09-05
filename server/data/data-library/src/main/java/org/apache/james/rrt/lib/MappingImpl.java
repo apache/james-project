@@ -92,10 +92,16 @@ public class MappingImpl implements Mapping, Serializable {
     
     @Override
     public String getErrorMessage() {
-        Preconditions.checkState(mapping.startsWith(RecipientRewriteTable.ERROR_PREFIX));
+        Preconditions.checkState(getType() == Type.Error);
         return mapping.substring(RecipientRewriteTable.ERROR_PREFIX.length());
     }
-    
+
+    @Override
+    public String getAddress() {
+        Preconditions.checkState(getType() == Type.Address);
+        return mapping;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other instanceof MappingImpl) {
@@ -104,15 +110,14 @@ public class MappingImpl implements Mapping, Serializable {
         }
         return false;
     }
-    
+
     @Override
     public int hashCode() {
         return Objects.hashCode(mapping);
     }
-    
+
     @Override
     public String toString() {
         return "MappingImpl{mapping=" + mapping + "}";
     }
-    
 }

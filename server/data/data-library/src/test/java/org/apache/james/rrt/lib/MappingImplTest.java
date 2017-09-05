@@ -21,6 +21,7 @@
 package org.apache.james.rrt.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.Test;
 
@@ -131,5 +132,25 @@ public class MappingImplTest {
     @Test
     public void toStringShouldReturnValuePrefixedAsByMoreObject() {
         assertThat(MappingImpl.of("value").toString()).isEqualTo("MappingImpl{mapping=value}");
+    }
+
+    @Test
+    public void getAddressShouldReturnMappingValueForAddress() {
+        assertThat(MappingImpl.address("value").getAddress()).isEqualTo("value");
+    }
+
+    @Test
+    public void getAddressShouldThrowForError() {
+        assertThatThrownBy(() -> MappingImpl.error("value").getAddress()).isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    public void getAddressShouldThrowForRegex() {
+        assertThatThrownBy(() -> MappingImpl.regex("value").getAddress()).isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    public void getAddressShouldThrowForDomain() {
+        assertThatThrownBy(() -> MappingImpl.domain("value").getAddress()).isInstanceOf(IllegalStateException.class);
     }
 }

@@ -268,9 +268,7 @@ public class WebAdminServerIntegrationTest {
             .body(containsString("\"tags\":[\"GlobalQuota\"]"))
             .body(containsString("\"tags\":[\"Domains\"]"))
             .body(containsString("\"tags\":[\"Users\"]"))
-        ;
+            .body(containsString("\"tags\":[\"Address Groups\"]"));
     }
-
-    //TODO: check Groups full path
 
 }

@@ -23,6 +23,8 @@ package org.apache.james.rrt.lib;
 
 public interface Mapping {
 
+    String getAddress();
+
     enum Type { Regex, Domain, Error, Address }
 
     Type getType();
