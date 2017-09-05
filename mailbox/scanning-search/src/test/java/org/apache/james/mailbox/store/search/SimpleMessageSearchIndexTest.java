@@ -42,7 +42,7 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
     @Override
     protected void initializeMailboxManager() throws Exception {
         MailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
-        messageSearchIndex = new SimpleMessageSearchIndex(mapperFactory, mapperFactory);
+        messageSearchIndex = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new PDFTextExtractor());
         storeMailboxManager = new InMemoryMailboxManager(
             mapperFactory,
             new FakeAuthenticator(),

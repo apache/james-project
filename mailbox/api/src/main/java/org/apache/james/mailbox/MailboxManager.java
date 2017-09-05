@@ -102,7 +102,8 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
          *  provide an index on the fields: 
          *  From, To, Cc, Bcc, Subjects, textBody & htmlBody
          */
-        Text
+        Text,
+        Attachment
     }
     
     EnumSet<SearchCapabilities> getSupportedSearchCapabilities();

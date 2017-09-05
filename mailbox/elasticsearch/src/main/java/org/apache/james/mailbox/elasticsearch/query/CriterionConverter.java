@@ -146,6 +146,10 @@ public class CriterionConverter {
                     .should(matchQuery(JsonMessageConstants.HTML_BODY, textCriterion.getOperator().getValue()))
                     .should(matchQuery(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT,
                         textCriterion.getOperator().getValue()));
+        case ATTACHMENTS:
+            return boolQuery()
+                    .should(matchQuery(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT,
+                        textCriterion.getOperator().getValue()));
         }
         throw new RuntimeException("Unknown SCOPE for text criterion");
     }

@@ -22,12 +22,14 @@ package org.apache.james.mailbox.store.search;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
 import javax.mail.Flags;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
@@ -47,10 +49,18 @@ import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.dom.MessageWriter;
+import org.apache.james.mime4j.dom.Multipart;
+import org.apache.james.mime4j.message.BodyPart;
+import org.apache.james.mime4j.message.BodyPartBuilder;
+import org.apache.james.mime4j.message.DefaultMessageWriter;
+import org.apache.james.mime4j.message.MultipartBuilder;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractMessageSearchIndexTest {
@@ -208,6 +218,7 @@ public abstract class AbstractMessageSearchIndexTest {
             otherSession,
             RECENT,
             new Flags());
+
         await();
     }
 
@@ -574,7 +585,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void flagIsUnSetShouldReturnUidOfMessageNotMarkedAsSeendWhenUsedWithFlagSeen() throws MailboxException {
+    public void flagIsUnSetShouldReturnUidOfMessageNotMarkedAsSeenWhenUsedWithFlagSeen() throws MailboxException {
         // Only message 6 is marked as read.
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsUnSet(Flags.Flag.SEEN));
 
@@ -1099,6 +1110,56 @@ public abstract class AbstractMessageSearchIndexTest {
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsExactly(m7.getUid());
+    }
+
+    @Test
+    public void searchWithTextAttachmentShouldReturnMailsWhenAttachmentContentMatches() throws Exception {
+        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Attachment));
+        ComposedMessageId messageWithBeautifulBananaAsTextAttachment = myFolderMessageManager.appendMessage(
+                ClassLoader.getSystemResourceAsStream("eml/emailWithTextAttachment.eml"),
+                new Date(1404252000000L),
+                session,
+                RECENT,
+                new Flags());
+        await();
+
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.attachmentContains("beautiful banana"));
+
+        assertThat(messageSearchIndex.search(session, mailbox2, searchQuery))
+            .containsExactly(messageWithBeautifulBananaAsTextAttachment.getUid());
+    }
+
+    @Test
+    public void searchWithPDFAttachmentShouldReturnMailsWhenAttachmentContentMatches() throws Exception {
+        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Attachment));
+        byte[] attachmentContent = IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/attachment.pdf"));
+        BodyPart attachment = BodyPartBuilder.create()
+                .setBody(attachmentContent, "application/pdf")
+                .setContentDisposition("attachment")
+                .build();
+        BodyPart textPart = BodyPartBuilder.create().setBody("The message has a PDF attachment.", "plain", Charsets.UTF_8).build();
+        Multipart multipart = MultipartBuilder.create("mixed")
+                .addBodyPart(attachment)
+                .addBodyPart(textPart)
+                .build();
+        Message message = Message.Builder.of()
+                .setBody(multipart)
+                .build();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        MessageWriter writer = new DefaultMessageWriter();
+        writer.writeMessage(message, outputStream);
+        ComposedMessageId messageWithBeautifulBananaAsPDFAttachment = myFolderMessageManager.appendMessage(
+                new ByteArrayInputStream(outputStream.toByteArray()),
+                new Date(1404252000000L),
+                session,
+                RECENT,
+                new Flags());
+        await();
+
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.attachmentContains("beautiful banana"));
+
+        assertThat(messageSearchIndex.search(session, mailbox2, searchQuery))
+            .containsExactly(messageWithBeautifulBananaAsPDFAttachment.getUid());
     }
 
     @Test

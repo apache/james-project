@@ -24,12 +24,14 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Stream;
+
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
@@ -64,16 +66,18 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
 
     private final MessageMapperFactory messageMapperFactory;
     private final MailboxMapperFactory mailboxMapperFactory;
+    private final TextExtractor textExtractor;
     
     @Inject
-    public SimpleMessageSearchIndex(MessageMapperFactory messageMapperFactory, MailboxMapperFactory mailboxMapperFactory) {
+    public SimpleMessageSearchIndex(MessageMapperFactory messageMapperFactory, MailboxMapperFactory mailboxMapperFactory, TextExtractor textExtractor) {
         this.messageMapperFactory = messageMapperFactory;
         this.mailboxMapperFactory = mailboxMapperFactory;
+        this.textExtractor = textExtractor;
     }
     
     @Override
     public EnumSet<SearchCapabilities> getSupportedCapabilities() {
-        return EnumSet.of(SearchCapabilities.MultimailboxSearch, SearchCapabilities.Text);
+        return EnumSet.of(SearchCapabilities.MultimailboxSearch, SearchCapabilities.Text, SearchCapabilities.Attachment);
     }
     
     /**
@@ -132,7 +136,7 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
             	hitSet.add(m);
             }
         }
-        return ImmutableList.copyOf(new MessageSearches(hitSet.iterator(), query).iterator());
+        return ImmutableList.copyOf(new MessageSearches(hitSet.iterator(), query, textExtractor).iterator());
     }
 
     private boolean isMatchingUser(MailboxSession session, Mailbox mailbox) {
