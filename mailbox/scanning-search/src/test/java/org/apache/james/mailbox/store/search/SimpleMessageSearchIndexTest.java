@@ -228,7 +228,7 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
 
     @Ignore
     @Override
-    public void searchWithFullTextShouldReturnMailsWhenTextBodyMatchesAndNonContinuousWords() throws Exception {
+    public void searchWithTextShouldReturnMailsWhenTextBodyMatchesAndNonContinuousWords() throws Exception {
     }
 
     @Ignore
@@ -238,17 +238,16 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
 
     @Ignore
     @Override
-    public void searchWithFullTextShouldReturnMailsWhenHtmlBodyMatchesAndNonContinuousWords() throws Exception {
+    public void searchWithTextShouldReturnMailsWhenHtmlBodyMatchesAndNonContinuousWords() throws Exception {
     }
 
     @Ignore
     @Override
-    public void searchWithFullTextShouldReturnMailsWhenTextBodyWithExtraUnindexedWords() throws Exception {
+    public void searchWithTextShouldReturnMailsWhenTextBodyWithExtraUnindexedWords() throws Exception {
     }
 
     @Ignore
     @Override
-    public void searchWithFullTextShouldReturnMailsWhenHtmlBodyMatchesWithStemming() throws Exception {
+    public void searchWithTextShouldReturnMailsWhenHtmlBodyMatchesWithStemming() throws Exception {
     }
-
 }

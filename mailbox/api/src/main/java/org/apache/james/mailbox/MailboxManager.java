@@ -103,6 +103,7 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
          *  From, To, Cc, Bcc, Subjects, textBody & htmlBody
          */
         Text,
+        FullText,
         Attachment
     }
     

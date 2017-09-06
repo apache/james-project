@@ -101,14 +101,14 @@ public class JamesCapabilitiesServerTest {
     }
     
     @Test
-    public void startShouldFailWhenNoTextCapability() throws Exception {
+    public void startShouldFailWhenNoFullTextCapability() throws Exception {
         MailboxManager mailboxManager = mock(MailboxManager.class);
         when(mailboxManager.getSupportedMailboxCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.MailboxCapabilities.class));
         when(mailboxManager.getSupportedMessageCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
         when(mailboxManager.getSupportedSearchCapabilities())
-            .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.SearchCapabilities.Text)));
+            .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.SearchCapabilities.FullText)));
 
         server = createCassandraJamesServer(mailboxManager);
 

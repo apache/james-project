@@ -999,7 +999,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithFullTextShouldReturnNoMailWhenNotMatching() throws Exception {
+    public void searchWithTextShouldReturnNoMailWhenNotMatching() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("unmatching"));
 
@@ -1008,7 +1008,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithFullTextShouldReturnMailsWhenFromMatches() throws Exception {
+    public void searchWithTextShouldReturnMailsWhenFromMatches() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("spam.minet.net"));
 
@@ -1017,7 +1017,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithFullTextShouldReturnMailsWhenToMatches() throws Exception {
+    public void searchWithTextShouldReturnMailsWhenToMatches() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("listes.minet.net"));
 
@@ -1026,7 +1026,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithFullTextShouldReturnMailsWhenCcMatches() throws Exception {
+    public void searchWithTextShouldReturnMailsWhenCcMatches() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("abc.org"));
 
@@ -1035,7 +1035,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithFullTextShouldReturnMailsWhenBccMatches() throws Exception {
+    public void searchWithTextShouldReturnMailsWhenBccMatches() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("any.com"));
 
@@ -1044,7 +1044,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithFullTextShouldReturnMailsWhenTextBodyMatches() throws Exception {
+    public void searchWithTextShouldReturnMailsWhenTextBodyMatches() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("reviewing work"));
 
@@ -1054,7 +1054,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithFullTextShouldReturnMailsWhenTextBodyMatchesAndNonContinuousWords() throws Exception {
+    public void searchWithTextShouldReturnMailsWhenTextBodyMatchesAndNonContinuousWords() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("reviewing feature"));
         // 2: text/plain contains: "Issue Type: New Feature"
@@ -1065,7 +1065,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithFullTextShouldReturnMailsWhenTextBodyMatchesInsensitiveWords() throws Exception {
+    public void searchWithTextShouldReturnMailsWhenTextBodyMatchesInsensitiveWords() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("reVieWing"));
         // text/plain contains: "We are reviewing work I did for this feature."
@@ -1075,7 +1075,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithFullTextShouldReturnMailsWhenTextBodyWithExtraUnindexedWords() throws Exception {
+    public void searchWithTextShouldReturnMailsWhenTextBodyWithExtraUnindexedWords() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("a reviewing of the work"));
         // text/plain contains: "We are reviewing work I did for this feature."
@@ -1085,7 +1085,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithFullTextShouldReturnMailsWhenHtmlBodyMatches() throws Exception {
+    public void searchWithTextShouldReturnMailsWhenHtmlBodyMatches() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("contains a banana"));
         // text/html contains: "This is a mail with beautifull html content which contains a banana."
@@ -1095,7 +1095,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithFullTextShouldReturnMailsWhenHtmlBodyMatchesWithStemming() throws Exception {
+    public void searchWithTextShouldReturnMailsWhenHtmlBodyMatchesWithStemming() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("contain banana"));
 
@@ -1104,12 +1104,29 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithFullTextShouldReturnMailsWhenHtmlBodyMatchesAndNonContinuousWords() throws Exception {
+    public void searchWithTextShouldReturnMailsWhenHtmlBodyMatchesAndNonContinuousWords() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("beautifull banana"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsExactly(m7.getUid());
+    }
+
+    @Test
+    public void searchWithFulTextShouldReturnMailsWhenToAndBodyAndAttachmentMatches() throws Exception {
+        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.FullText));
+        ComposedMessageId messageWithBeautifulBananaAsTextAttachment = myFolderMessageManager.appendMessage(
+                ClassLoader.getSystemResourceAsStream("eml/emailWithTextAttachment.eml"),
+                new Date(1404252000000L),
+                session,
+                RECENT,
+                new Flags());
+        await();
+
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.mailContains("User message banana"));
+
+        assertThat(messageSearchIndex.search(session, mailbox2, searchQuery))
+            .containsExactly(messageWithBeautifulBananaAsTextAttachment.getUid());
     }
 
     @Test
