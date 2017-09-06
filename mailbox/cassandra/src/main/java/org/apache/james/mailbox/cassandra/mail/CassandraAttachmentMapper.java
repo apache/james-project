@@ -28,6 +28,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.SIZE;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.TYPE;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collection;
@@ -35,6 +36,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
+
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
@@ -45,6 +47,8 @@ import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.util.FluentFutureStream;
 import org.apache.james.util.OptionalUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
@@ -52,8 +56,7 @@ import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.ThrownByLambdaException;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.google.common.collect.ImmutableList;
 
 public class CassandraAttachmentMapper implements AttachmentMapper {
 
@@ -99,7 +102,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
         return getAttachmentsAsFuture(attachmentIds).join();
     }
 
-    public CompletableFuture<List<Attachment>> getAttachmentsAsFuture(Collection<AttachmentId> attachmentIds) {
+    public CompletableFuture<ImmutableList<Attachment>> getAttachmentsAsFuture(Collection<AttachmentId> attachmentIds) {
         Preconditions.checkArgument(attachmentIds != null);
 
         Stream<CompletableFuture<Optional<Attachment>>> attachments = attachmentIds
@@ -110,9 +113,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
         return FluentFutureStream
             .of(attachments)
             .flatMap(OptionalUtils::toStream)
-            .completableFuture()
-            .thenApply(stream ->
-                stream.collect(Guavate.toImmutableList()));
+            .collect(Guavate.toImmutableList());
     }
 
     private CompletableFuture<Optional<Attachment>> getAttachmentAsFuture(AttachmentId attachmentId) {

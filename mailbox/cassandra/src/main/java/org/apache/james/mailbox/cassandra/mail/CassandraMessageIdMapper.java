@@ -97,8 +97,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         return FluentFutureStream.ofNestedStreams(
             messageIds.stream()
                 .map(messageId -> imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.empty())))
-            .completableFuture()
-            .thenApply(stream -> stream.collect(Guavate.toImmutableList()))
+            .collect(Guavate.toImmutableList())
             .thenCompose(composedMessageIds -> messageDAO.retrieveMessages(composedMessageIds, fetchType, Limit.unlimited()))
             .thenApply(stream -> stream
                 .filter(CassandraMessageDAO.MessageResult::isFound)
