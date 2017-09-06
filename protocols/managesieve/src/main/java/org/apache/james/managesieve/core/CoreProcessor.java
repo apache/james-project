@@ -21,6 +21,7 @@
 package org.apache.james.managesieve.core;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -133,11 +134,10 @@ public class CoreProcessor implements CoreCommands {
     }
 
     @Override
-
     public String getScript(final Session session, final String name) {
         return handleCommandExecution(() -> {
             authenticationCheck(session);
-            String scriptContent = IOUtils.toString(sieveRepository.getScript(session.getUser(), name));
+            String scriptContent = IOUtils.toString(sieveRepository.getScript(session.getUser(), name), StandardCharsets.UTF_8);
             return "{" + scriptContent.length() + "}" + "\r\n" + scriptContent + "\r\nOK";
         }, session);
     }

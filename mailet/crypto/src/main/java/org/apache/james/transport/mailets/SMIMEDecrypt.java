@@ -22,6 +22,7 @@
 package org.apache.james.transport.mailets;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
@@ -178,6 +179,6 @@ public class SMIMEDecrypt extends GenericMailet {
     }
 
     private String text(Part mimePart) throws IOException, MessagingException {
-        return IOUtils.toString(mimePart.getDataHandler().getInputStream());
+        return IOUtils.toString(mimePart.getDataHandler().getInputStream(), StandardCharsets.UTF_8);
     }
 }

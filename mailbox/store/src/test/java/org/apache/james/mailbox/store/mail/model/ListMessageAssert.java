@@ -20,14 +20,16 @@
 package org.apache.james.mailbox.store.mail.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.commons.io.IOUtils;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Objects;
@@ -46,7 +48,7 @@ public class ListMessageAssert {
     private InnerMessage getInnerMessage(MailboxMessage message) {
         try {
             return new InnerMessage(message.getMessageId(), message.getUid(), message.getMailboxId(), message.getInternalDate(), message.getBodyOctets(),
-                    message.getFullContentOctets(), message.getMediaType(), message.getSubType(), IOUtils.toString(message.getFullContent()));
+                    message.getFullContentOctets(), message.getMediaType(), message.getSubType(), IOUtils.toString(message.getFullContent(), StandardCharsets.UTF_8));
         } catch (IOException e) {
             Throwables.propagate(e);
             return null;
