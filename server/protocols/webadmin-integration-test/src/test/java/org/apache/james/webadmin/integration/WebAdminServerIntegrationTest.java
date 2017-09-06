@@ -28,6 +28,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
+import java.util.List;
+
 import org.apache.james.CassandraJmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
@@ -258,6 +260,24 @@ public class WebAdminServerIntegrationTest {
             .statusCode(200)
             .contentType(JSON_CONTENT_TYPE)
             .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION + "}"));
+    }
+
+    @Test
+    public void addressGroupsEndpointShouldHandleRequests() throws Exception {
+        dataProbe.addAddressMapping("group", "domain.com", "user1@domain.com");
+        dataProbe.addAddressMapping("group", "domain.com", "user2@domain.com");
+
+        List<String> members = given()
+            .port(webAdminGuiceProbe.getWebAdminPort())
+            .when()
+            .get("/address/groups/group@domain.com")
+            .then()
+            .statusCode(200)
+            .contentType(JSON_CONTENT_TYPE)
+            .extract()
+            .jsonPath()
+            .getList(".");
+        assertThat(members).containsOnly("user1@domain.com", "user2@domain.com");
     }
 
     @Test
