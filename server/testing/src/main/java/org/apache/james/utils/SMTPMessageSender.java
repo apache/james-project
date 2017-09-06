@@ -31,10 +31,10 @@ import javax.mail.MessagingException;
 
 import org.apache.commons.net.smtp.AuthenticatingSMTPClient;
 import org.apache.commons.net.smtp.SMTPClient;
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 
 public class SMTPMessageSender implements Closeable {
@@ -92,7 +92,9 @@ public class SMTPMessageSender implements Closeable {
             String from = mail.getSender().asString();
             smtpClient.helo(senderDomain);
             smtpClient.setSender(from);
-            smtpClient.rcpt("<" + Joiner.on(", ").join(mail.getRecipients()) + ">");
+            for (MailAddress mailAddress : mail.getRecipients()) {
+                smtpClient.addRecipient(mailAddress.asString());
+            }
             smtpClient.sendShortMessageData(asString(mail.getMessage()));
         } catch (IOException e) {
             throw Throwables.propagate(e);
@@ -108,6 +110,10 @@ public class SMTPMessageSender implements Closeable {
     public boolean messageHasBeenSent() throws IOException {
         return smtpClient.getReplyString()
             .contains("250 2.6.0 Message received");
+    }
+
+    public boolean messageHaveNotBeenSent() throws IOException {
+        return !messageHasBeenSent();
     }
 
     @Override

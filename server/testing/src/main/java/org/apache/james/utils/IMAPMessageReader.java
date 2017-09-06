@@ -43,6 +43,17 @@ public class IMAPMessageReader implements Closeable {
         imapClient.select(mailbox);
     }
 
+    public boolean countReceivedMessage(String user, String password, int numberOfMessages) throws IOException {
+        return countReceivedMessageInMailbox(user, password, INBOX, numberOfMessages);
+    }
+
+    public boolean countReceivedMessageInMailbox(String user, String password, String mailbox, int numberOfMessages) throws IOException {
+        connectAndSelect(user, password, mailbox);
+
+        return imapClient.getReplyString()
+            .contains(numberOfMessages + " EXISTS");
+    }
+
     public boolean userReceivedMessage(String user, String password) throws IOException {
         return userReceivedMessageInMailbox(user, password, INBOX);
     }

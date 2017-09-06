@@ -30,6 +30,10 @@ public class ProcessorConfiguration implements SerializableAsXml {
         return new Builder();
     }
 
+    public static Builder transport() {
+        return builder().state("transport");
+    }
+
     public static class Builder {
 
         private String state;

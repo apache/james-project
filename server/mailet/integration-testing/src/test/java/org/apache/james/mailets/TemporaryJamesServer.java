@@ -36,9 +36,11 @@ import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.utils.GuiceProbe;
+import org.apache.james.webadmin.WebAdminConfiguration;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.collect.ImmutableList;
+import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 
 public class TemporaryJamesServer {
@@ -56,11 +58,10 @@ public class TemporaryJamesServer {
         jamesServer = new GuiceJamesServer()
             .combineWith(MemoryJamesServerMain.inMemoryServerModule)
             .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
-            .overrideWith(ImmutableList.<Module>builder().addAll(Arrays.asList(additionalModules))
-                .add(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))
-                .add(new TemporaryFilesystemModule(temporaryFolder))
-                .build()
-                .toArray(new Module[additionalModules.length + 2]));
+            .overrideWith(additionalModules)
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))
+            .overrideWith(new TemporaryFilesystemModule(temporaryFolder))
+            .overrideWith((binder) -> binder.bind(WebAdminConfiguration.class).toProvider(WebAdminConfiguration::testingConfiguration));
 
         jamesServer.start();
     }
