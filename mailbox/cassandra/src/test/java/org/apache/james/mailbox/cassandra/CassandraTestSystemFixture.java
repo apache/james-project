@@ -23,19 +23,6 @@ import static org.mockito.Mockito.mock;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraBlobsDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
-import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManager;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
@@ -55,35 +42,12 @@ public class CassandraTestSystemFixture {
     public static final int MOD_SEQ = 452;
 
     public static CassandraMailboxSessionMapperFactory createMapperFactory(CassandraCluster cassandra) {
-        CassandraUidProvider uidProvider = new CassandraUidProvider(cassandra.getConf());
-        CassandraModSeqProvider modSeqProvider = new CassandraModSeqProvider(cassandra.getConf());
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
-        CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), messageIdFactory);
-        CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(cassandra.getConf(), messageIdFactory);
-        CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
-        CassandraMessageDAO messageDAO = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), blobsDAO);
-        CassandraMailboxCounterDAO mailboxCounterDAO = new CassandraMailboxCounterDAO(cassandra.getConf());
-        CassandraMailboxRecentsDAO mailboxRecentsDAO = new CassandraMailboxRecentsDAO(cassandra.getConf());
-        CassandraApplicableFlagDAO applicableFlagDAO = new CassandraApplicableFlagDAO(cassandra.getConf());
 
-        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
-        CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(cassandra.getConf(), cassandra.getTypesProvider());
-        CassandraFirstUnseenDAO firstUnseenDAO = new CassandraFirstUnseenDAO(cassandra.getConf());
-        CassandraDeletedMessageDAO deletedMessageDAO = new CassandraDeletedMessageDAO(cassandra.getConf());
-        
-        return new CassandraMailboxSessionMapperFactory(uidProvider,
-            modSeqProvider,
+        return new CassandraMailboxSessionMapperFactory(
             cassandra.getConf(),
-            messageDAO,
-            messageIdDAO,
-            imapUidDAO,
-            mailboxCounterDAO,
-            mailboxRecentsDAO,
-            mailboxDAO,
-            mailboxPathDAO,
-            firstUnseenDAO,
-            applicableFlagDAO,
-            deletedMessageDAO);
+            cassandra.getTypesProvider(),
+            messageIdFactory);
     }
 
     public static CassandraMailboxManager createMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory) throws Exception{

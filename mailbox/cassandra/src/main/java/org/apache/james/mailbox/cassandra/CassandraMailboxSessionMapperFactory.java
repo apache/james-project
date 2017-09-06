@@ -22,11 +22,15 @@ package org.apache.james.mailbox.cassandra;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.CassandraConfiguration;
+import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraAnnotationMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMapper;
+import org.apache.james.mailbox.cassandra.mail.CassandraBlobsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraIndexTableHandler;
@@ -73,6 +77,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     private final CassandraMailboxPathDAO mailboxPathDAO;
     private final CassandraFirstUnseenDAO firstUnseenDAO;
     private final CassandraApplicableFlagDAO applicableFlagDAO;
+    private final CassandraAttachmentDAO attachmentDAO;
     private CassandraUtils cassandraUtils;
     private CassandraConfiguration cassandraConfiguration;
     private final CassandraDeletedMessageDAO deletedMessageDAO;
@@ -83,7 +88,8 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
                                                 CassandraMessageIdDAO messageIdDAO, CassandraMessageIdToImapUidDAO imapUidDAO,
                                                 CassandraMailboxCounterDAO mailboxCounterDAO, CassandraMailboxRecentsDAO mailboxRecentsDAO, CassandraMailboxDAO mailboxDAO,
                                                 CassandraMailboxPathDAO mailboxPathDAO, CassandraFirstUnseenDAO firstUnseenDAO, CassandraApplicableFlagDAO applicableFlagDAO,
-                                                CassandraDeletedMessageDAO deletedMessageDAO, CassandraUtils cassandraUtils, CassandraConfiguration cassandraConfiguration) {
+                                                CassandraAttachmentDAO attachmentDAO, CassandraDeletedMessageDAO deletedMessageDAO, CassandraUtils cassandraUtils,
+                                                CassandraConfiguration cassandraConfiguration) {
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
         this.session = session;
@@ -95,6 +101,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
         this.mailboxDAO = mailboxDAO;
         this.mailboxPathDAO = mailboxPathDAO;
         this.firstUnseenDAO = firstUnseenDAO;
+        this.attachmentDAO = attachmentDAO;
         this.deletedMessageDAO = deletedMessageDAO;
         this.applicableFlagDAO = applicableFlagDAO;
         this.cassandraUtils = cassandraUtils;
@@ -107,24 +114,24 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
             deletedMessageDAO);
     }
 
-    public CassandraMailboxSessionMapperFactory(
-        CassandraUidProvider uidProvider,
-        CassandraModSeqProvider modSeqProvider,
-        Session session,
-        CassandraMessageDAO messageDAO,
-        CassandraMessageIdDAO messageIdDAO,
-        CassandraMessageIdToImapUidDAO imapUidDAO,
-        CassandraMailboxCounterDAO mailboxCounterDAO,
-        CassandraMailboxRecentsDAO mailboxRecentsDAO,
-        CassandraMailboxDAO mailboxDAO,
-        CassandraMailboxPathDAO mailboxPathDAO,
-        CassandraFirstUnseenDAO firstUnseenDAO,
-        CassandraApplicableFlagDAO applicableFlagDAO,
-        CassandraDeletedMessageDAO deletedMesageDAO) {
-
-        this(uidProvider, modSeqProvider, session, messageDAO, messageIdDAO, imapUidDAO, mailboxCounterDAO,
-            mailboxRecentsDAO, mailboxDAO, mailboxPathDAO, firstUnseenDAO, applicableFlagDAO, deletedMesageDAO,
-            CassandraUtils.WITH_DEFAULT_CONFIGURATION, CassandraConfiguration.DEFAULT_CONFIGURATION);
+    public CassandraMailboxSessionMapperFactory(Session session, CassandraTypesProvider typesProvider,
+                                                CassandraMessageId.Factory factory) {
+        this(new CassandraUidProvider(session),
+            new CassandraModSeqProvider(session),
+            session,
+            new CassandraMessageDAO(session, typesProvider, new CassandraBlobsDAO(session)),
+            new CassandraMessageIdDAO(session, factory),
+            new CassandraMessageIdToImapUidDAO(session, factory),
+            new CassandraMailboxCounterDAO(session),
+            new CassandraMailboxRecentsDAO(session),
+            new CassandraMailboxDAO(session, typesProvider),
+            new CassandraMailboxPathDAO(session, typesProvider),
+            new CassandraFirstUnseenDAO(session),
+            new CassandraApplicableFlagDAO(session),
+            new CassandraAttachmentDAO(session),
+            new CassandraDeletedMessageDAO(session),
+            CassandraUtils.WITH_DEFAULT_CONFIGURATION,
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     @Override
@@ -134,7 +141,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
                                           modSeqProvider,
                                           null,
                                           (CassandraAttachmentMapper) createAttachmentMapper(mailboxSession),
-            messageDAO,
+                                          messageDAO,
                                           messageIdDAO,
                                           imapUidDAO,
                                           mailboxCounterDAO,
@@ -161,7 +168,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
 
     @Override
     public AttachmentMapper createAttachmentMapper(MailboxSession mailboxSession) {
-        return new CassandraAttachmentMapper(session);
+        return new CassandraAttachmentMapper(attachmentDAO);
     }
 
     @Override

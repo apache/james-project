@@ -91,27 +91,10 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
     private void initSystemUnderTest() throws Exception {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
 
-        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
-        CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(cassandra.getConf(), cassandra.getTypesProvider());
-        CassandraFirstUnseenDAO firstUnseenDAO = new CassandraFirstUnseenDAO(cassandra.getConf());
-        CassandraDeletedMessageDAO deletedMessageDAO = new CassandraDeletedMessageDAO(cassandra.getConf());
-
-        CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
-        CassandraMessageDAO messageDAO = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), blobsDAO);
         mailboxSessionMapperFactory = new CassandraMailboxSessionMapperFactory(
-                new CassandraUidProvider(cassandra.getConf()),
-                new CassandraModSeqProvider(cassandra.getConf()),
-                cassandra.getConf(),
-            messageDAO,
-                new CassandraMessageIdDAO(cassandra.getConf(), messageIdFactory),
-                new CassandraMessageIdToImapUidDAO(cassandra.getConf(), messageIdFactory),
-                new CassandraMailboxCounterDAO(cassandra.getConf()),
-                new CassandraMailboxRecentsDAO(cassandra.getConf()),
-                mailboxDAO,
-                mailboxPathDAO,
-                firstUnseenDAO,
-                new CassandraApplicableFlagDAO(cassandra.getConf()),
-                deletedMessageDAO);
+            cassandra.getConf(),
+            cassandra.getTypesProvider(),
+            messageIdFactory);
         Authenticator noAuthenticator = null;
         Authorizator noAuthorizator = null;
         mailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory, noAuthenticator, noAuthorizator, new NoMailboxPathLocker(), new MessageParser(), messageIdFactory); 

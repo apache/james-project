@@ -21,10 +21,13 @@ package org.apache.james.mailbox.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.AbstractSubscriptionManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
@@ -82,6 +85,7 @@ public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManage
         CassandraMailboxPathDAO mailboxPathDAO = null;
         CassandraFirstUnseenDAO firstUnseenDAO = null;
         CassandraApplicableFlagDAO applicableFlagDAO = null;
+        CassandraAttachmentDAO attachmentDAO = null;
         CassandraDeletedMessageDAO deletedMessageDAO = null;
         return new CassandraSubscriptionManager(
             new CassandraMailboxSessionMapperFactory(
@@ -97,6 +101,9 @@ public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManage
                 mailboxPathDAO,
                 firstUnseenDAO,
                 applicableFlagDAO,
-                deletedMessageDAO));
+                attachmentDAO,
+                deletedMessageDAO,
+                CassandraUtils.WITH_DEFAULT_CONFIGURATION,
+                CassandraConfiguration.DEFAULT_CONFIGURATION));
     }
 }
