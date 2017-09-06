@@ -91,7 +91,7 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
     private void initSystemUnderTest() throws Exception {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
 
-        mailboxSessionMapperFactory = new CassandraMailboxSessionMapperFactory(
+        mailboxSessionMapperFactory = CassandraMailboxSessionMapperFactory.forTests(
             cassandra.getConf(),
             cassandra.getTypesProvider(),
             messageIdFactory);

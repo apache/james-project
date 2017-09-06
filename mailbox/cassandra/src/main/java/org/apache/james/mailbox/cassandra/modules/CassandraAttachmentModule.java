@@ -29,6 +29,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable;
+import org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.google.common.collect.ImmutableList;
@@ -48,7 +49,17 @@ public class CassandraAttachmentModule implements CassandraModule {
                     .addColumn(CassandraAttachmentTable.TYPE, text())
                     .addColumn(CassandraAttachmentTable.SIZE, bigint())
                     .withOptions()
-                    .comment("Holds attachment for fast attachment retrieval")));
+                    .comment("Holds attachment for fast attachment retrieval")),
+            new CassandraTable(CassandraAttachmentV2Table.TABLE_NAME,
+                SchemaBuilder.createTable(CassandraAttachmentV2Table.TABLE_NAME)
+                    .ifNotExists()
+                    .addPartitionKey(CassandraAttachmentV2Table.ID, text())
+                    .addColumn(CassandraAttachmentV2Table.BLOB_ID, text())
+                    .addColumn(CassandraAttachmentV2Table.TYPE, text())
+                    .addColumn(CassandraAttachmentV2Table.SIZE, bigint())
+                    .withOptions()
+                    .comment("Holds attachment for fast attachment retrieval. Content of messages is stored" +
+                        "in `blobs` and `blobparts` tables.")));
         types = ImmutableList.of();
     }
 

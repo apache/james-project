@@ -102,7 +102,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         cassandra = CassandraCluster.create(mailboxModule, cassandraHost, cassandraPort);
         com.datastax.driver.core.Session session = cassandra.getConf();
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
-        CassandraMailboxSessionMapperFactory mapperFactory = new CassandraMailboxSessionMapperFactory(
+        CassandraMailboxSessionMapperFactory mapperFactory = CassandraMailboxSessionMapperFactory.forTests(
             cassandra.getConf(),
             cassandra.getTypesProvider(),
             messageIdFactory);

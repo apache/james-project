@@ -1,0 +1,174 @@
+/****************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one   *
+ * or more contributor license agreements.  See the NOTICE file *
+ * distributed with this work for additional information        *
+ * regarding copyright ownership.  The ASF licenses this file   *
+ * to you under the Apache License, Version 2.0 (the            *
+ * "License"); you may not use this file except in compliance   *
+ * with the License.  You may obtain a copy of the License at   *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
+ * Unless required by applicable law or agreed to in writing,   *
+ * software distributed under the License is distributed on an  *
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
+ * KIND, either express or implied.  See the License for the    *
+ * specific language governing permissions and limitations      *
+ * under the License.                                           *
+ ****************************************************************/
+
+package org.apache.james.mailbox.cassandra.mail;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.nio.charset.StandardCharsets;
+
+import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraBlobModule;
+import org.apache.james.mailbox.exception.AttachmentNotFoundException;
+import org.apache.james.mailbox.model.Attachment;
+import org.apache.james.mailbox.model.AttachmentId;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
+
+public class CassandraAttachmentFallbackTestTest {
+    public static final AttachmentId ATTACHMENT_ID_1 = AttachmentId.from("id1");
+    public static final AttachmentId ATTACHMENT_ID_2 = AttachmentId.from("id2");
+
+    @ClassRule
+    public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+
+    private CassandraCluster cassandra;
+
+    private CassandraAttachmentDAOV2 attachmentDAOV2;
+    private CassandraAttachmentDAO attachmentDAO;
+    private CassandraAttachmentMapper attachmentMapper;
+
+    @Before
+    public void setUp() throws Exception {
+        CassandraModuleComposite compositeModule = new CassandraModuleComposite(
+            new CassandraAttachmentModule(),
+            new CassandraBlobModule());
+
+        cassandra = CassandraCluster.create(
+            compositeModule,
+            cassandraServer.getIp(),
+            cassandraServer.getBindingPort());
+
+        attachmentDAOV2 = new CassandraAttachmentDAOV2(cassandra.getConf(), new CassandraBlobsDAO(cassandra.getConf()));
+        attachmentDAO = new CassandraAttachmentDAO(cassandra.getConf());
+        attachmentMapper = new CassandraAttachmentMapper(attachmentDAO, attachmentDAOV2);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        cassandra.close();
+    }
+
+    @Test
+    public void getAttachmentShouldThrowWhenAbsentFromV1AndV2() throws Exception {
+        assertThatThrownBy(() -> attachmentMapper.getAttachment(ATTACHMENT_ID_1))
+            .isInstanceOf(AttachmentNotFoundException.class);
+    }
+
+    @Test
+    public void getAttachmentsShouldReturnEmptyWhenAbsentFromV1AndV2() throws Exception {
+        assertThat(attachmentMapper.getAttachments(ImmutableList.of(ATTACHMENT_ID_1)))
+            .isEmpty();
+    }
+
+    @Test
+    public void getAttachmentShouldReturnV2WhenPresentInV1AndV2() throws Exception {
+        Attachment attachment = Attachment.builder()
+            .attachmentId(ATTACHMENT_ID_1)
+            .type("application/json")
+            .bytes("{\"property\":`\"value\"}".getBytes(StandardCharsets.UTF_8))
+            .build();
+        Attachment otherAttachment = Attachment.builder()
+            .attachmentId(ATTACHMENT_ID_1)
+            .type("application/json")
+            .bytes("{\"property\":`\"different\"}".getBytes(StandardCharsets.UTF_8))
+            .build();
+
+        attachmentDAOV2.storeAttachment(attachment).join();
+        attachmentDAO.storeAttachment(otherAttachment).join();
+
+        assertThat(attachmentMapper.getAttachment(ATTACHMENT_ID_1))
+            .isEqualTo(attachment);
+    }
+
+    @Test
+    public void getAttachmentShouldReturnV1WhenV2Absent() throws Exception {
+        Attachment attachment = Attachment.builder()
+            .attachmentId(ATTACHMENT_ID_1)
+            .type("application/json")
+            .bytes("{\"property\":`\"value\"}".getBytes(StandardCharsets.UTF_8))
+            .build();
+
+        attachmentDAO.storeAttachment(attachment).join();
+
+        assertThat(attachmentMapper.getAttachment(ATTACHMENT_ID_1))
+            .isEqualTo(attachment);
+    }
+
+    @Test
+    public void getAttachmentsShouldReturnV2WhenV2AndV1() throws Exception {
+        Attachment attachment = Attachment.builder()
+            .attachmentId(ATTACHMENT_ID_1)
+            .type("application/json")
+            .bytes("{\"property\":`\"value\"}".getBytes(StandardCharsets.UTF_8))
+            .build();
+        Attachment otherAttachment = Attachment.builder()
+            .attachmentId(ATTACHMENT_ID_1)
+            .type("application/json")
+            .bytes("{\"property\":`\"different\"}".getBytes(StandardCharsets.UTF_8))
+            .build();
+
+        attachmentDAOV2.storeAttachment(attachment).join();
+        attachmentDAO.storeAttachment(otherAttachment).join();
+
+        assertThat(attachmentMapper.getAttachments(ImmutableList.of(ATTACHMENT_ID_1)))
+            .containsExactly(attachment);
+    }
+
+    @Test
+    public void getAttachmentsShouldReturnV1WhenV2Absent() throws Exception {
+        Attachment attachment = Attachment.builder()
+            .attachmentId(ATTACHMENT_ID_1)
+            .type("application/json")
+            .bytes("{\"property\":`\"value\"}".getBytes(StandardCharsets.UTF_8))
+            .build();
+
+        attachmentDAO.storeAttachment(attachment).join();
+
+        assertThat(attachmentMapper.getAttachments(ImmutableList.of(ATTACHMENT_ID_1)))
+            .containsExactly(attachment);
+    }
+
+    @Test
+    public void getAttachmentsShouldCombineElementsFromV1AndV2() throws Exception {
+        Attachment attachment = Attachment.builder()
+            .attachmentId(ATTACHMENT_ID_1)
+            .type("application/json")
+            .bytes("{\"property\":`\"value\"}".getBytes(StandardCharsets.UTF_8))
+            .build();
+        Attachment otherAttachment = Attachment.builder()
+            .attachmentId(ATTACHMENT_ID_2)
+            .type("application/json")
+            .bytes("{\"property\":`\"different\"}".getBytes(StandardCharsets.UTF_8))
+            .build();
+
+        attachmentDAOV2.storeAttachment(attachment).join();
+        attachmentDAO.storeAttachment(otherAttachment).join();
+
+        assertThat(attachmentMapper.getAttachments(ImmutableList.of(ATTACHMENT_ID_1, ATTACHMENT_ID_2)))
+            .containsExactly(attachment, otherAttachment);
+    }
+}

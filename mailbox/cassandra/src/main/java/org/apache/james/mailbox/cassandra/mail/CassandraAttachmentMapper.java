@@ -19,11 +19,11 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -36,8 +36,6 @@ import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.util.FluentFutureStream;
 import org.apache.james.util.OptionalUtils;
 
-import com.github.fge.lambdas.Throwing;
-import com.github.fge.lambdas.ThrownByLambdaException;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -45,12 +43,15 @@ import com.google.common.collect.ImmutableList;
 public class CassandraAttachmentMapper implements AttachmentMapper {
 
     private static final boolean LOG_IF_EMPTY = true;
+    private static final boolean NO_LOG_IF_EMPTY = !LOG_IF_EMPTY;
 
     private final CassandraAttachmentDAO attachmentDAO;
+    private final CassandraAttachmentDAOV2 attachmentDAOV2;
 
     @Inject
-    public CassandraAttachmentMapper(CassandraAttachmentDAO attachmentDAO) {
+    public CassandraAttachmentMapper(CassandraAttachmentDAO attachmentDAO, CassandraAttachmentDAOV2 attachmentDAOV2) {
         this.attachmentDAO = attachmentDAO;
+        this.attachmentDAOV2 = attachmentDAOV2;
     }
 
     @Override
@@ -65,7 +66,8 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     @Override
     public Attachment getAttachment(AttachmentId attachmentId) throws AttachmentNotFoundException {
         Preconditions.checkArgument(attachmentId != null);
-        return attachmentDAO.getAttachment(attachmentId)
+        return attachmentDAOV2.getAttachment(attachmentId)
+            .thenCompose(v2Value -> fallbackToV1(attachmentId, v2Value))
             .join()
             .orElseThrow(() -> new AttachmentNotFoundException(attachmentId.getId()));
     }
@@ -81,7 +83,8 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
         Stream<CompletableFuture<Optional<Attachment>>> attachments = attachmentIds
                 .stream()
                 .distinct()
-                .map(id -> attachmentDAO.getAttachment(id, LOG_IF_EMPTY));
+                .map(id -> attachmentDAOV2.getAttachment(id, LOG_IF_EMPTY)
+                    .thenCompose(v2Value -> fallbackToV1(id, v2Value, LOG_IF_EMPTY)));
 
         return FluentFutureStream
             .of(attachments)
@@ -89,24 +92,27 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
             .collect(Guavate.toImmutableList());
     }
 
+    private CompletionStage<Optional<Attachment>> fallbackToV1(AttachmentId attachmentId, Optional<Attachment> v2Value) {
+        return fallbackToV1(attachmentId, v2Value, NO_LOG_IF_EMPTY);
+    }
+
+    private CompletionStage<Optional<Attachment>> fallbackToV1(AttachmentId attachmentId, Optional<Attachment> v2Value, boolean logIfEmpty) {
+        if (v2Value.isPresent()) {
+            return CompletableFuture.completedFuture(v2Value);
+        }
+        return attachmentDAO.getAttachment(attachmentId, logIfEmpty);
+    }
+
     @Override
     public void storeAttachment(Attachment attachment) throws MailboxException {
-        try {
-            attachmentDAO.storeAttachment(attachment).join();
-        } catch (IOException e) {
-            throw new MailboxException(e.getMessage(), e);
-        }
+        attachmentDAOV2.storeAttachment(attachment).join();
     }
 
     @Override
     public void storeAttachments(Collection<Attachment> attachments) throws MailboxException {
-        try {
-            FluentFutureStream.of(
-                attachments.stream()
-                    .map(Throwing.function(attachmentDAO::storeAttachment)))
-                .join();
-        } catch (ThrownByLambdaException e) {
-            throw new MailboxException(e.getCause().getMessage(), e.getCause());
-        }
+        FluentFutureStream.of(
+            attachments.stream()
+                .map(attachmentDAOV2::storeAttachment))
+            .join();
     }
 }

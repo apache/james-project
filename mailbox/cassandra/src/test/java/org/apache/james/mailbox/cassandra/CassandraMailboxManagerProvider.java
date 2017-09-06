@@ -41,7 +41,7 @@ public class CassandraMailboxManagerProvider {
     public static CassandraMailboxManager provideMailboxManager(Session session, CassandraTypesProvider cassandraTypesProvider) {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
 
-        CassandraMailboxSessionMapperFactory mapperFactory = new CassandraMailboxSessionMapperFactory(
+        CassandraMailboxSessionMapperFactory mapperFactory = CassandraMailboxSessionMapperFactory.forTests(
             session,
             cassandraTypesProvider,
             messageIdFactory);
