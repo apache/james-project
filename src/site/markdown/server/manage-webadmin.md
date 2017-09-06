@@ -425,3 +425,78 @@ Note that several calls to this endpoint will be run in a sequential pattern.
 
 If the server restarts during the migration, the migration is silently aborted.
 
+## Creating address group
+
+You can use **webadmin** to define address groups.
+
+When a specific email is sent to the group mail address, every group member will receive it.
+
+This feature uses [Recipients rewrite table](/server/config-recipientrewritetable.html) and requires
+the [RecipientRewriteTable mailet](https://github.com/apache/james-project/blob/master/server/mailet/mailets/src/main/java/org/apache/james/transport/mailets/RecipientRewriteTable.java)
+to be configured.
+
+### Listing groups
+
+```
+curl -XGET http://ip:port/address/groups
+```
+
+Will return the groups as a list of JSON Strings representing mail addresses. For instance:
+
+```
+["group1@domain.com", "group2@domain.com"]
+```
+
+Response codes:
+
+ - 200: Success
+ - 500: Internal error
+
+### Listing members of a group
+
+```
+curl -XGET http://ip:port/address/groups/group@domain.com
+```
+
+Will return the group members as a list of JSON Strings representing mail addresses. For instance:
+
+```
+["member1@domain.com", "member2@domain.com"]
+```
+
+Response codes:
+
+ - 200: Success
+ - 400: Group structure is not valid
+ - 404: The group does not exist
+ - 500: Internal error
+
+### Adding a group member
+
+```
+curl -XPUT http://ip:port/address/groups/group@domain.com/member@domain.com
+```
+
+Will add member@domain.com to group@domain.com, creating the group if needed
+
+Response codes:
+
+ - 200: Success
+ - 400: Group structure or member is not valid
+ - 403: Server does not own the requested domain
+ - 409: Requested group address is already used for another purpose
+ - 500: Internal error
+
+### Removing a group member
+
+```
+curl -XDELETE http://ip:port/address/groups/group@domain.com/member@domain.com
+```
+
+Will remove member@domain.com from group@domain.com, removing the group if group is empty after deletion
+
+Response codes:
+
+ - 200: Success
+ - 400: Group structure or member is not valid
+ - 500: Internal error
