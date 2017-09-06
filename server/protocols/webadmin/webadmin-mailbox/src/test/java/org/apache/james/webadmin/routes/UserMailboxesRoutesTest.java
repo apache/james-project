@@ -26,11 +26,15 @@ import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.apache.james.webadmin.routes.UserMailboxesRoutes.USERS_BASE;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.util.List;
+import java.util.Map;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -63,6 +67,7 @@ import org.junit.runner.RunWith;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
@@ -291,11 +296,18 @@ public class UserMailboxesRoutesTest {
 
         @Test
         public void getMailboxesShouldReturnEmptyListByDefault() {
-            when()
-                .get()
-            .then()
-                .statusCode(200)
-                .body(is("[]"));
+            List<Object> list =
+                when()
+                    .get()
+                .then()
+                    .statusCode(200)
+                    .contentType(ContentType.JSON)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getList(".");
+
+            assertThat(list).isEmpty();
         }
 
         @Test
@@ -427,11 +439,18 @@ public class UserMailboxesRoutesTest {
             with()
                 .delete();
 
-            when()
-                .get()
-            .then()
-                .statusCode(200)
-                .body(is("[]"));
+            List<Object> list =
+                when()
+                    .get()
+                .then()
+                    .statusCode(200)
+                    .contentType(ContentType.JSON)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getList(".");
+
+            assertThat(list).isEmpty();
         }
 
         @Test
@@ -459,11 +478,18 @@ public class UserMailboxesRoutesTest {
             with()
                 .delete(MAILBOX_NAME);
 
-            when()
-                .get()
-            .then()
-                .statusCode(200)
-                .body(is("[]"));
+            List<Object> list =
+                when()
+                    .get()
+                .then()
+                    .statusCode(200)
+                    .contentType(ContentType.JSON)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getList(".");
+
+            assertThat(list).isEmpty();
         }
 
         @Test
@@ -478,11 +504,18 @@ public class UserMailboxesRoutesTest {
             with()
                 .delete(MAILBOX_NAME);
 
-            when()
-                .get()
-            .then()
-                .statusCode(200)
-                .body(is("[{\"mailboxName\":\"" + mailboxName + "\"}]"));
+            List<Map<String, String>> list =
+                when()
+                    .get()
+                .then()
+                    .statusCode(200)
+                    .contentType(ContentType.JSON)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getList(".");
+
+            assertThat(list).containsExactly(ImmutableMap.of("mailboxName", mailboxName));
         }
 
         @Test
@@ -510,11 +543,18 @@ public class UserMailboxesRoutesTest {
             with()
                 .delete(MAILBOX_NAME + ".child");
 
-            when()
-                .get()
-            .then()
-                .statusCode(200)
-                .body(is("[{\"mailboxName\":\"myMailboxName\"}]"));
+            List<Map<String, String>> list =
+                when()
+                    .get()
+                .then()
+                    .statusCode(200)
+                    .contentType(ContentType.JSON)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getList(".");
+
+            assertThat(list).containsExactly(ImmutableMap.of("mailboxName", MAILBOX_NAME));
         }
     }
 

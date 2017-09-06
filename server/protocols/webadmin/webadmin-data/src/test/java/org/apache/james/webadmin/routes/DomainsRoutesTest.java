@@ -26,8 +26,7 @@ import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -35,6 +34,7 @@ import static org.mockito.Mockito.when;
 
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
@@ -51,6 +51,7 @@ import org.junit.runner.RunWith;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
+
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 
 @RunWith(HierarchicalContextRunner.class)
@@ -96,11 +97,18 @@ public class DomainsRoutesTest {
 
         @Test
         public void getDomainsShouldBeEmptyByDefault() {
-            given()
-                .get()
-            .then()
-                .statusCode(200)
-                .body(is("[]"));
+            List<String> domains =
+                given()
+                    .get()
+                .then()
+                    .statusCode(200)
+                    .contentType(ContentType.JSON)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getList(".");
+
+            assertThat(domains).isEmpty();
         }
 
         @Test
@@ -132,11 +140,18 @@ public class DomainsRoutesTest {
             with()
                 .put(DOMAIN);
 
-            when()
-                .get()
-            .then()
-                .statusCode(200)
-                .body(containsString(DOMAIN));
+            List<String> domains =
+                when()
+                    .get()
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(200)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getList(".");
+
+            assertThat(domains).containsExactly(DOMAIN);
         }
 
         @Test
@@ -186,11 +201,18 @@ public class DomainsRoutesTest {
             .then()
                 .statusCode(204);
 
-            when()
-                .get()
-            .then()
-                .statusCode(200)
-                .body(is("[]"));
+            List<String> domains =
+                when()
+                    .get()
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(200)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getList(".");
+
+           assertThat(domains).isEmpty();
         }
 
         @Test

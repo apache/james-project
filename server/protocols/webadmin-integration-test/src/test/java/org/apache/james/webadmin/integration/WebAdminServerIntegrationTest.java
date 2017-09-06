@@ -22,6 +22,7 @@ package org.apache.james.webadmin.integration;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -161,6 +162,7 @@ public class WebAdminServerIntegrationTest {
             .get(UserRoutes.USERS)
         .then()
             .statusCode(200)
+            .contentType(JSON_CONTENT_TYPE)
             .body(is("[{\"username\":\"username@domain\"}]"));
     }
 
@@ -203,6 +205,7 @@ public class WebAdminServerIntegrationTest {
             .get(VERSION)
         .then()
             .statusCode(200)
+            .contentType(JSON_CONTENT_TYPE)
             .body(is("{\"version\":null}"));
     }
 
@@ -214,6 +217,7 @@ public class WebAdminServerIntegrationTest {
             .get(VERSION_LATEST)
         .then()
             .statusCode(200)
+            .contentType(JSON_CONTENT_TYPE)
             .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION + "}"));
     }
 
@@ -233,6 +237,7 @@ public class WebAdminServerIntegrationTest {
             .get(VERSION)
         .then()
             .statusCode(200)
+            .contentType(JSON_CONTENT_TYPE)
             .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION + "}"));
     }
 
@@ -251,6 +256,7 @@ public class WebAdminServerIntegrationTest {
             .get(VERSION)
         .then()
             .statusCode(200)
+            .contentType(JSON_CONTENT_TYPE)
             .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION + "}"));
     }
 

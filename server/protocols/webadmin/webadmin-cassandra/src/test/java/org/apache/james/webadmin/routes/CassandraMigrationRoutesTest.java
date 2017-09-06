@@ -24,13 +24,14 @@ import static com.jayway.restassured.RestAssured.when;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
-import static org.hamcrest.CoreMatchers.is;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -41,17 +42,16 @@ import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.service.CassandraMigrationService;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
 
 public class CassandraMigrationRoutesTest {
 
@@ -101,20 +101,33 @@ public class CassandraMigrationRoutesTest {
     public void getShouldReturnTheCurrentVersion() throws Exception {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(CURRENT_VERSION)));
 
-        when()
-            .get()
-        .then()
-            .statusCode(200)
-            .body(is("{\"version\":2}"));
+        Integer version =
+            when()
+                .get()
+            .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .extract()
+                .jsonPath()
+                .getInt("version");
+
+        assertThat(version).isEqualTo(CURRENT_VERSION);
     }
 
     @Test
     public void getShouldReturnTheLatestVersionWhenSetUpTheLatestVersion() throws Exception {
-        when()
-            .get("/latest")
-        .then()
-            .statusCode(200)
-            .body(is("{\"version\":" + LATEST_VERSION + "}"));
+
+        Integer version =
+            when()
+                .get("/latest")
+            .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .extract()
+                .jsonPath()
+                .getInt("version");
+
+        assertThat(version).isEqualTo(LATEST_VERSION);
     }
 
     @Ignore

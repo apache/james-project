@@ -24,7 +24,6 @@ import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.is;
 
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.model.Quota;
@@ -39,6 +38,7 @@ import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
+import com.jayway.restassured.path.json.JsonPath;
 
 public class GlobalQuotaRoutesTest {
 
@@ -69,11 +69,16 @@ public class GlobalQuotaRoutesTest {
 
     @Test
     public void getCountQuotaCountShouldReturnUnlimitedByDefault() {
-        given()
-            .get(GlobalQuotaRoutes.COUNT_ENDPOINT)
-        .then()
-            .statusCode(200)
-            .body(is(String.valueOf(Quota.UNLIMITED)));
+        long quota =
+            given()
+                .get(GlobalQuotaRoutes.COUNT_ENDPOINT)
+            .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .extract()
+                .as(Long.class);
+
+        assertThat(quota).isEqualTo(Quota.UNLIMITED);
     }
 
     @Test
@@ -81,11 +86,16 @@ public class GlobalQuotaRoutesTest {
         int value = 42;
         maxQuotaManager.setDefaultMaxMessage(value);
 
-        given()
-            .get(GlobalQuotaRoutes.COUNT_ENDPOINT)
-        .then()
-            .statusCode(200)
-            .body(is(String.valueOf(value)));
+        Long actual =
+            given()
+                .get(GlobalQuotaRoutes.COUNT_ENDPOINT)
+            .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .extract()
+                .as(Long.class);
+
+        assertThat(actual).isEqualTo(value);
     }
 
     @Test
@@ -131,23 +141,34 @@ public class GlobalQuotaRoutesTest {
 
     @Test
     public void getSizeQuotaCountShouldReturnUnlimitedByDefault() {
-        given()
-            .get(GlobalQuotaRoutes.SIZE_ENDPOINT)
-        .then()
-            .statusCode(200)
-            .body(is(String.valueOf(Quota.UNLIMITED)));
+        long quota =
+            given()
+                .get(GlobalQuotaRoutes.SIZE_ENDPOINT)
+            .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .extract()
+                .as(Long.class);
+
+        assertThat(quota).isEqualTo(Quota.UNLIMITED);
     }
 
     @Test
     public void getSizeShouldReturnStoredValue() throws Exception{
-        int value = 42;
+        long value = 42;
         maxQuotaManager.setDefaultMaxStorage(value);
 
-        given()
-            .get(GlobalQuotaRoutes.SIZE_ENDPOINT)
-        .then()
-            .statusCode(200)
-            .body(is(String.valueOf(value)));
+
+        long quota =
+            given()
+                .get(GlobalQuotaRoutes.SIZE_ENDPOINT)
+            .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .extract()
+                .as(Long.class);
+
+        assertThat(quota).isEqualTo(value);
     }
 
     @Test
@@ -193,45 +214,74 @@ public class GlobalQuotaRoutesTest {
 
     @Test
     public void getQuotaShouldReturnBothWhenValueSpecified() throws Exception {
-        maxQuotaManager.setDefaultMaxStorage(42);
-        maxQuotaManager.setDefaultMaxMessage(52);
+        int maxStorage = 42;
+        int maxMessage = 52;
+        maxQuotaManager.setDefaultMaxStorage(maxStorage);
+        maxQuotaManager.setDefaultMaxMessage(maxMessage);
 
-        given()
-            .get(GlobalQuotaRoutes.QUOTA_ENDPOINT)
-        .then()
-            .statusCode(200)
-            .body(is("{\"count\":52,\"size\":42}"));
+        JsonPath jsonPath =
+            given()
+                .get(GlobalQuotaRoutes.QUOTA_ENDPOINT)
+            .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .extract()
+                .jsonPath();
+
+        assertThat(jsonPath.getLong("size")).isEqualTo(maxStorage);
+        assertThat(jsonPath.getLong("count")).isEqualTo(maxMessage);
     }
 
     @Test
     public void getQuotaShouldReturnBothDefaultValues() throws Exception {
-        given()
-            .get(GlobalQuotaRoutes.QUOTA_ENDPOINT)
-        .then()
-            .statusCode(200)
-            .body(is("{\"count\":-1,\"size\":-1}"));
+        JsonPath jsonPath =
+            given()
+                .get(GlobalQuotaRoutes.QUOTA_ENDPOINT)
+            .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .extract()
+                .jsonPath();
+
+        assertThat(jsonPath.getLong("size")).isEqualTo(Quota.UNLIMITED);
+        assertThat(jsonPath.getLong("count")).isEqualTo(Quota.UNLIMITED);
     }
 
     @Test
     public void getQuotaShouldReturnBothWhenNoCount() throws Exception {
-        maxQuotaManager.setDefaultMaxStorage(42);
+        int maxStorage = 42;
+        maxQuotaManager.setDefaultMaxStorage(maxStorage);
 
-        given()
-            .get(GlobalQuotaRoutes.QUOTA_ENDPOINT)
-        .then()
-            .statusCode(200)
-            .body(is("{\"count\":-1,\"size\":42}"));
+        JsonPath jsonPath =
+            given()
+                .get(GlobalQuotaRoutes.QUOTA_ENDPOINT)
+            .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .extract()
+                .jsonPath();
+
+        assertThat(jsonPath.getLong("size")).isEqualTo(maxStorage);
+        assertThat(jsonPath.getLong("count")).isEqualTo(Quota.UNLIMITED);
     }
 
     @Test
     public void getQuotaShouldReturnBothWhenNoSize() throws Exception {
-        maxQuotaManager.setDefaultMaxMessage(42);
+        int maxMessage = 42;
+        maxQuotaManager.setDefaultMaxMessage(maxMessage);
 
-        given()
-            .get(GlobalQuotaRoutes.QUOTA_ENDPOINT)
-        .then()
-            .statusCode(200)
-            .body(is("{\"count\":42,\"size\":-1}"));
+
+        JsonPath jsonPath =
+            given()
+                .get(GlobalQuotaRoutes.QUOTA_ENDPOINT)
+                .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .extract()
+                .jsonPath();
+
+        assertThat(jsonPath.getLong("size")).isEqualTo(Quota.UNLIMITED);
+        assertThat(jsonPath.getLong("count")).isEqualTo(maxMessage);
     }
 
     @Test

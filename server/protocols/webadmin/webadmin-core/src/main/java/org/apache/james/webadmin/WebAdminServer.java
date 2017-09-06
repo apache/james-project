@@ -83,6 +83,7 @@ public class WebAdminServer implements Configurable {
             configureCORS();
             configureMetrics();
             service.before(authenticationFilter);
+            service.before((request, response) -> response.type(Constants.JSON_CONTENT_TYPE));
             configureMDC();
             routesList.forEach(routes -> routes.define(service));
             service.awaitInitialization();

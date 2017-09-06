@@ -25,14 +25,15 @@ import static com.jayway.restassured.RestAssured.with;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
@@ -48,9 +49,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import com.google.common.collect.ImmutableMap;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
+
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 
 @RunWith(HierarchicalContextRunner.class)
@@ -96,11 +99,18 @@ public class UsersRoutesTest {
 
         @Test
         public void getUsersShouldBeEmptyByDefault() {
-            when()
-                .get()
-            .then()
-                .statusCode(200)
-                .body(is("[]"));
+            List<Map<String, String>> users =
+                when()
+                    .get()
+                .then()
+                    .statusCode(200)
+                    .contentType(ContentType.JSON)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getList(".");
+
+            assertThat(users).isEmpty();
         }
 
         @Test
@@ -155,13 +165,20 @@ public class UsersRoutesTest {
         public void postShouldAddTheUser() {
             with()
                 .body("{\"password\":\"password\"}")
-            .put(USERNAME);
+                .put(USERNAME);
 
-            when()
-                .get()
-            .then()
-                .statusCode(200)
-                .body(equalTo("[{\"username\":\"" + USERNAME + "\"}]"));
+            List<Map<String, String>> users =
+                when()
+                    .get()
+                .then()
+                    .statusCode(200)
+                    .contentType(ContentType.JSON)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getList(".");
+
+            assertThat(users).containsExactly(ImmutableMap.of("username", USERNAME));
         }
 
         @Test
@@ -180,11 +197,18 @@ public class UsersRoutesTest {
                 .statusCode(204);
 
             // Then
-            when()
-                .get()
-            .then()
-                .statusCode(200)
-                .body(equalTo("[{\"username\":\"" + USERNAME + "\"}]"));
+            List<Map<String, String>> users =
+                when()
+                    .get()
+                .then()
+                    .statusCode(200)
+                    .contentType(ContentType.JSON)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getList(".");
+
+            assertThat(users).containsExactly(ImmutableMap.of("username", USERNAME));
         }
 
         @Test
@@ -269,11 +293,18 @@ public class UsersRoutesTest {
                 .statusCode(204);
 
             // Then
-            when()
-                .get()
-            .then()
-                .statusCode(200)
-                .body(equalTo("[]"));
+            List<Map<String, String>> users =
+                when()
+                    .get()
+                .then()
+                    .statusCode(200)
+                    .contentType(ContentType.JSON)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getList(".");
+
+            assertThat(users).isEmpty();
         }
 
         @Test

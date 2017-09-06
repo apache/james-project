@@ -34,7 +34,6 @@ import spark.Service;
 
 public class CassandraMigrationRoutes implements Routes {
 
-
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMigrationRoutes.class);
 
     public static final String VERSION_BASE = "/cassandra/version";
