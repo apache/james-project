@@ -26,6 +26,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table.BLOB_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table.FIELDS;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table.ID;
+import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table.ID_AS_UUID;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table.SIZE;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table.TYPE;
@@ -37,7 +38,6 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.ids.BlobId;
-import org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.slf4j.Logger;
@@ -69,6 +69,7 @@ public class CassandraAttachmentDAOV2 {
     private PreparedStatement prepareInsert(Session session) {
         return session.prepare(
             insertInto(TABLE_NAME)
+                .value(ID_AS_UUID, bindMarker(ID_AS_UUID))
                 .value(ID, bindMarker(ID))
                 .value(BLOB_ID, bindMarker(BLOB_ID))
                 .value(TYPE, bindMarker(TYPE))
@@ -78,7 +79,7 @@ public class CassandraAttachmentDAOV2 {
     private PreparedStatement prepareSelect(Session session) {
         return session.prepare(select(FIELDS)
             .from(TABLE_NAME)
-            .where(eq(ID, bindMarker(ID))));
+            .where(eq(ID_AS_UUID, bindMarker(ID_AS_UUID))));
     }
 
     public CompletableFuture<Optional<Attachment>> getAttachment(AttachmentId attachmentId) {
@@ -89,7 +90,7 @@ public class CassandraAttachmentDAOV2 {
         Preconditions.checkArgument(attachmentId != null);
         return cassandraAsyncExecutor.executeSingleRow(
             selectStatement.bind()
-                .setString(CassandraAttachmentTable.ID, attachmentId.getId()))
+                .setUUID(ID_AS_UUID, attachmentId.asUUID()))
             .thenCompose(this::attachment)
             .thenApply(optional -> logNotFound(attachmentId, logIfEmpty, optional));
     }
@@ -106,6 +107,7 @@ public class CassandraAttachmentDAOV2 {
             .thenApply(Optional::get) // attachment payload is never null
             .thenApply(blobId ->
                 insertStatement.bind()
+                    .setUUID(ID_AS_UUID, attachment.getAttachmentId().asUUID())
                     .setString(ID, attachment.getAttachmentId().getId())
                     .setLong(SIZE, attachment.getSize())
                     .setString(TYPE, attachment.getType())

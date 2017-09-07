@@ -22,6 +22,7 @@ package org.apache.james.mailbox.cassandra.table;
 public interface CassandraAttachmentV2Table {
 
     String TABLE_NAME = "attachmentV2";
+    String ID_AS_UUID = "idAsUUID";
     String ID = "id";
     String BLOB_ID = "blobId";
     String TYPE = "type";

@@ -22,6 +22,7 @@ package org.apache.james.mailbox.cassandra.modules;
 import static com.datastax.driver.core.DataType.bigint;
 import static com.datastax.driver.core.DataType.blob;
 import static com.datastax.driver.core.DataType.text;
+import static com.datastax.driver.core.DataType.uuid;
 
 import java.util.List;
 
@@ -53,7 +54,8 @@ public class CassandraAttachmentModule implements CassandraModule {
             new CassandraTable(CassandraAttachmentV2Table.TABLE_NAME,
                 SchemaBuilder.createTable(CassandraAttachmentV2Table.TABLE_NAME)
                     .ifNotExists()
-                    .addPartitionKey(CassandraAttachmentV2Table.ID, text())
+                    .addPartitionKey(CassandraAttachmentV2Table.ID_AS_UUID, uuid())
+                    .addColumn(CassandraAttachmentV2Table.ID, text())
                     .addColumn(CassandraAttachmentV2Table.BLOB_ID, text())
                     .addColumn(CassandraAttachmentV2Table.TYPE, text())
                     .addColumn(CassandraAttachmentV2Table.SIZE, bigint())

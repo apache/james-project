@@ -21,7 +21,8 @@ package org.apache.james.mailbox.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.mailbox.model.AttachmentId;
+import java.util.UUID;
+
 import org.junit.Test;
 
 public class AttachmentIdTest {
@@ -53,5 +54,13 @@ public class AttachmentIdTest {
         String expectedId = "f07e5a815613c5abeddc4b682247a4c42d8a95df";
         AttachmentId attachmentId = AttachmentId.from(expectedId);
         assertThat(attachmentId.getId()).isEqualTo(expectedId);
+    }
+
+    @Test
+    public void asUUIDShouldReturnAValidUUID() {
+        AttachmentId attachmentId = AttachmentId.from("magic");
+
+        assertThat(attachmentId.asUUID())
+            .isEqualTo(UUID.fromString("2f3a4fcc-ca64-36e3-9bcf-33e92dd93135"));
     }
 }

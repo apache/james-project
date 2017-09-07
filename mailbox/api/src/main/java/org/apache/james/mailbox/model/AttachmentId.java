@@ -19,6 +19,9 @@
 package org.apache.james.mailbox.model;
 
 
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
+
 import org.apache.commons.codec.digest.DigestUtils;
 
 import com.google.common.base.MoreObjects;
@@ -46,6 +49,10 @@ public class AttachmentId {
 
     public String getId() {
         return id;
+    }
+
+    public UUID asUUID() {
+        return UUID.nameUUIDFromBytes(id.getBytes(StandardCharsets.UTF_8));
     }
 
     @Override
