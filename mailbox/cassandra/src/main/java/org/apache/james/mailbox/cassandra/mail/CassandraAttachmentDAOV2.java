@@ -40,8 +40,6 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.ids.BlobId;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
@@ -49,9 +47,6 @@ import com.datastax.driver.core.Session;
 import com.google.common.base.Preconditions;
 
 public class CassandraAttachmentDAOV2 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraAttachmentMapper.class);
-    private static final boolean NO_LOG_IF_EMPTY = false;
-
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement insertStatement;
     private final CassandraBlobsDAO blobsDAO;
@@ -83,23 +78,11 @@ public class CassandraAttachmentDAOV2 {
     }
 
     public CompletableFuture<Optional<Attachment>> getAttachment(AttachmentId attachmentId) {
-        return getAttachment(attachmentId, NO_LOG_IF_EMPTY);
-    }
-
-    public CompletableFuture<Optional<Attachment>> getAttachment(AttachmentId attachmentId, boolean logIfEmpty) {
         Preconditions.checkArgument(attachmentId != null);
         return cassandraAsyncExecutor.executeSingleRow(
             selectStatement.bind()
                 .setUUID(ID_AS_UUID, attachmentId.asUUID()))
-            .thenCompose(this::attachment)
-            .thenApply(optional -> logNotFound(attachmentId, logIfEmpty, optional));
-    }
-
-    private Optional<Attachment> logNotFound(AttachmentId attachmentId, boolean logIfEmpty, Optional<Attachment> optional) {
-        if (!optional.isPresent() && logIfEmpty) {
-            LOGGER.warn("Failed retrieving attachment {}", attachmentId);
-        }
-        return optional;
+            .thenCompose(this::attachment);
     }
 
     public CompletableFuture<Void> storeAttachment(Attachment attachment) {

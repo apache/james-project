@@ -81,24 +81,13 @@ public class CassandraAttachmentDAO {
     }
 
     public CompletableFuture<Optional<Attachment>> getAttachment(AttachmentId attachmentId) {
-        return getAttachment(attachmentId, NO_LOG_IF_EMPTY);
-    }
-
-    public CompletableFuture<Optional<Attachment>> getAttachment(AttachmentId attachmentId, boolean logIfEmpty) {
         Preconditions.checkArgument(attachmentId != null);
         return cassandraAsyncExecutor.executeSingleRow(
             selectStatement.bind()
                 .setString(ID, attachmentId.getId()))
-            .thenApply(optional -> optional.map(this::attachment))
-            .thenApply(optional -> logNotFound(attachmentId, logIfEmpty, optional));
+            .thenApply(optional -> optional.map(this::attachment));
     }
 
-    private Optional<Attachment> logNotFound(AttachmentId attachmentId, boolean logIfEmpty, Optional<Attachment> optional) {
-        if (!optional.isPresent() && logIfEmpty) {
-            LOGGER.warn("Failed retrieving attachment {}", attachmentId);
-        }
-        return optional;
-    }
 
     public CompletableFuture<Void> storeAttachment(Attachment attachment) throws IOException {
         return cassandraAsyncExecutor.executeVoid(

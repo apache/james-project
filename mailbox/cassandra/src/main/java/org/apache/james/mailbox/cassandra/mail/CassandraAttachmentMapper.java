@@ -34,16 +34,15 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.util.FluentFutureStream;
-import org.apache.james.util.OptionalUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class CassandraAttachmentMapper implements AttachmentMapper {
-
-    private static final boolean LOG_IF_EMPTY = true;
-    private static final boolean NO_LOG_IF_EMPTY = !LOG_IF_EMPTY;
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraAttachmentMapper.class);
 
     private final CassandraAttachmentDAO attachmentDAO;
     private final CassandraAttachmentDAOV2 attachmentDAOV2;
@@ -83,24 +82,20 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
         Stream<CompletableFuture<Optional<Attachment>>> attachments = attachmentIds
                 .stream()
                 .distinct()
-                .map(id -> attachmentDAOV2.getAttachment(id, LOG_IF_EMPTY)
-                    .thenCompose(v2Value -> fallbackToV1(id, v2Value, LOG_IF_EMPTY)));
+                .map(id -> attachmentDAOV2.getAttachment(id)
+                    .thenCompose(v2Value -> fallbackToV1(id, v2Value))
+                    .thenApply(finalValue -> logNotFound(id, finalValue)));
 
         return FluentFutureStream
-            .of(attachments)
-            .flatMap(OptionalUtils::toStream)
+            .ofOptionals(attachments)
             .collect(Guavate.toImmutableList());
     }
 
     private CompletionStage<Optional<Attachment>> fallbackToV1(AttachmentId attachmentId, Optional<Attachment> v2Value) {
-        return fallbackToV1(attachmentId, v2Value, NO_LOG_IF_EMPTY);
-    }
-
-    private CompletionStage<Optional<Attachment>> fallbackToV1(AttachmentId attachmentId, Optional<Attachment> v2Value, boolean logIfEmpty) {
         if (v2Value.isPresent()) {
             return CompletableFuture.completedFuture(v2Value);
         }
-        return attachmentDAO.getAttachment(attachmentId, logIfEmpty);
+        return attachmentDAO.getAttachment(attachmentId);
     }
 
     @Override
@@ -114,5 +109,12 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
             attachments.stream()
                 .map(attachmentDAOV2::storeAttachment))
             .join();
+    }
+
+    private Optional<Attachment> logNotFound(AttachmentId attachmentId, Optional<Attachment> optional) {
+        if (!optional.isPresent()) {
+            LOGGER.warn("Failed retrieving attachment {}", attachmentId);
+        }
+        return optional;
     }
 }
