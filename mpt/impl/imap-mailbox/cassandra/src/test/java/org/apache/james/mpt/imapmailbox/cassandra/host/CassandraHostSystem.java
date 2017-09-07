@@ -27,6 +27,7 @@ import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
+import org.apache.james.mailbox.cassandra.TestCassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
@@ -102,7 +103,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         cassandra = CassandraCluster.create(mailboxModule, cassandraHost, cassandraPort);
         com.datastax.driver.core.Session session = cassandra.getConf();
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
-        CassandraMailboxSessionMapperFactory mapperFactory = CassandraMailboxSessionMapperFactory.forTests(
+        CassandraMailboxSessionMapperFactory mapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
             cassandra.getConf(),
             cassandra.getTypesProvider(),
             messageIdFactory);

@@ -22,16 +22,13 @@ package org.apache.james.mailbox.cassandra;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.CassandraConfiguration;
-import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraAnnotationMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMapper;
-import org.apache.james.mailbox.cassandra.mail.CassandraBlobsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraIndexTableHandler;
@@ -64,30 +61,6 @@ import com.datastax.driver.core.Session;
  * Cassandra implementation of {@link MailboxSessionMapperFactory}
  */
 public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFactory {
-
-    public static CassandraMailboxSessionMapperFactory forTests(Session session, CassandraTypesProvider typesProvider,
-                                                                CassandraMessageId.Factory factory) {
-        CassandraBlobsDAO cassandraBlobsDAO = new CassandraBlobsDAO(session);
-        return new CassandraMailboxSessionMapperFactory(
-            new CassandraUidProvider(session),
-            new CassandraModSeqProvider(session),
-            session,
-            new CassandraMessageDAO(session, typesProvider, cassandraBlobsDAO),
-            new CassandraMessageIdDAO(session, factory),
-            new CassandraMessageIdToImapUidDAO(session, factory),
-            new CassandraMailboxCounterDAO(session),
-            new CassandraMailboxRecentsDAO(session),
-            new CassandraMailboxDAO(session, typesProvider),
-            new CassandraMailboxPathDAO(session, typesProvider),
-            new CassandraFirstUnseenDAO(session),
-            new CassandraApplicableFlagDAO(session),
-            new CassandraAttachmentDAO(session),
-            new CassandraAttachmentDAOV2(session, cassandraBlobsDAO),
-            new CassandraDeletedMessageDAO(session),
-            CassandraUtils.WITH_DEFAULT_CONFIGURATION,
-            CassandraConfiguration.DEFAULT_CONFIGURATION);
-    }
-
     private final Session session;
     private final CassandraUidProvider uidProvider;
     private final CassandraModSeqProvider modSeqProvider;
