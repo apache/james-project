@@ -27,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.mailbox.cassandra.ids.BlobId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraBlobModule;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
@@ -50,6 +51,7 @@ public class CassandraAttachmentFallbackTestTest {
     private CassandraAttachmentDAOV2 attachmentDAOV2;
     private CassandraAttachmentDAO attachmentDAO;
     private CassandraAttachmentMapper attachmentMapper;
+    private CassandraBlobsDAO blobsDAO;
 
     @Before
     public void setUp() throws Exception {
@@ -62,9 +64,10 @@ public class CassandraAttachmentFallbackTestTest {
             cassandraServer.getIp(),
             cassandraServer.getBindingPort());
 
-        attachmentDAOV2 = new CassandraAttachmentDAOV2(cassandra.getConf(), new CassandraBlobsDAO(cassandra.getConf()));
+        attachmentDAOV2 = new CassandraAttachmentDAOV2(cassandra.getConf());
         attachmentDAO = new CassandraAttachmentDAO(cassandra.getConf());
-        attachmentMapper = new CassandraAttachmentMapper(attachmentDAO, attachmentDAOV2);
+        blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
+        attachmentMapper = new CassandraAttachmentMapper(attachmentDAO, attachmentDAOV2, blobsDAO);
     }
 
     @After
@@ -97,7 +100,8 @@ public class CassandraAttachmentFallbackTestTest {
             .bytes("{\"property\":`\"different\"}".getBytes(StandardCharsets.UTF_8))
             .build();
 
-        attachmentDAOV2.storeAttachment(attachment).join();
+        BlobId blobId = blobsDAO.save(attachment.getBytes()).join().get();
+        attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).join();
         attachmentDAO.storeAttachment(otherAttachment).join();
 
         assertThat(attachmentMapper.getAttachment(ATTACHMENT_ID_1))
@@ -131,7 +135,8 @@ public class CassandraAttachmentFallbackTestTest {
             .bytes("{\"property\":`\"different\"}".getBytes(StandardCharsets.UTF_8))
             .build();
 
-        attachmentDAOV2.storeAttachment(attachment).join();
+        BlobId blobId = blobsDAO.save(attachment.getBytes()).join().get();
+        attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).join();
         attachmentDAO.storeAttachment(otherAttachment).join();
 
         assertThat(attachmentMapper.getAttachments(ImmutableList.of(ATTACHMENT_ID_1)))
@@ -165,7 +170,8 @@ public class CassandraAttachmentFallbackTestTest {
             .bytes("{\"property\":`\"different\"}".getBytes(StandardCharsets.UTF_8))
             .build();
 
-        attachmentDAOV2.storeAttachment(attachment).join();
+        BlobId blobId = blobsDAO.save(attachment.getBytes()).join().get();
+        attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).join();
         attachmentDAO.storeAttachment(otherAttachment).join();
 
         assertThat(attachmentMapper.getAttachments(ImmutableList.of(ATTACHMENT_ID_1, ATTACHMENT_ID_2)))

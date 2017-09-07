@@ -31,6 +31,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Tabl
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table.TYPE;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -47,15 +48,85 @@ import com.datastax.driver.core.Session;
 import com.google.common.base.Preconditions;
 
 public class CassandraAttachmentDAOV2 {
+    public static class DAOAttachmentModel {
+        private final AttachmentId attachmentId;
+        private final BlobId blobId;
+        private final String type;
+        private final long size;
+
+        private DAOAttachmentModel(AttachmentId attachmentId, BlobId blobId, String type, long size) {
+            this.attachmentId = attachmentId;
+            this.blobId = blobId;
+            this.type = type;
+            this.size = size;
+        }
+
+        public AttachmentId getAttachmentId() {
+            return attachmentId;
+        }
+
+        public org.apache.james.mailbox.cassandra.ids.BlobId getBlobId() {
+            return blobId;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public long getSize() {
+            return size;
+        }
+
+        public Attachment toAttachment(byte[] data) {
+            return Attachment.builder()
+                .attachmentId(attachmentId)
+                .type(type)
+                .bytes(data)
+                .build();
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof DAOAttachmentModel) {
+                DAOAttachmentModel that = (DAOAttachmentModel) o;
+
+                return Objects.equals(this.size, that.size)
+                    && Objects.equals(this.attachmentId, that.attachmentId)
+                    && Objects.equals(this.blobId, that.blobId)
+                    && Objects.equals(this.type, that.type);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(attachmentId, blobId, type, size);
+        }
+    }
+
+    public static DAOAttachmentModel from(Attachment attachment, BlobId blobId) {
+        return new DAOAttachmentModel(
+            attachment.getAttachmentId(),
+            blobId,
+            attachment.getType(),
+            attachment.getSize());
+    }
+
+    private static DAOAttachmentModel fromRow(Row row) {
+        return new DAOAttachmentModel(
+            AttachmentId.from(row.getString(ID)),
+            BlobId.from(row.getString(BLOB_ID)),
+            row.getString(TYPE),
+            row.getLong(SIZE));
+    }
+
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement insertStatement;
-    private final CassandraBlobsDAO blobsDAO;
     private final PreparedStatement selectStatement;
 
     @Inject
-    public CassandraAttachmentDAOV2(Session session, CassandraBlobsDAO blobsDAO) {
+    public CassandraAttachmentDAOV2(Session session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
-        this.blobsDAO = blobsDAO;
 
         this.selectStatement = prepareSelect(session);
         this.insertStatement = prepareInsert(session);
@@ -77,42 +148,22 @@ public class CassandraAttachmentDAOV2 {
             .where(eq(ID_AS_UUID, bindMarker(ID_AS_UUID))));
     }
 
-    public CompletableFuture<Optional<Attachment>> getAttachment(AttachmentId attachmentId) {
+    public CompletableFuture<Optional<DAOAttachmentModel>> getAttachment(AttachmentId attachmentId) {
         Preconditions.checkArgument(attachmentId != null);
         return cassandraAsyncExecutor.executeSingleRow(
             selectStatement.bind()
                 .setUUID(ID_AS_UUID, attachmentId.asUUID()))
-            .thenCompose(this::attachment);
+            .thenApply(row -> row.map(CassandraAttachmentDAOV2::fromRow));
     }
 
-    public CompletableFuture<Void> storeAttachment(Attachment attachment) {
-        return blobsDAO.save(attachment.getBytes())
-            // BlobDAO supports saving null blobs. But attachments ensure there blobs are never null. Hence optional unboxing is safe here.
-            .thenApply(Optional::get)
-            .thenApply(blobId ->
-                insertStatement.bind()
-                    .setUUID(ID_AS_UUID, attachment.getAttachmentId().asUUID())
-                    .setString(ID, attachment.getAttachmentId().getId())
-                    .setLong(SIZE, attachment.getSize())
-                    .setString(TYPE, attachment.getType())
-                    .setString(BLOB_ID, blobId.getId()))
-            .thenCompose(cassandraAsyncExecutor::executeVoid);
+    public CompletableFuture<Void> storeAttachment(DAOAttachmentModel attachment) {
+        return cassandraAsyncExecutor.executeVoid(
+            insertStatement.bind()
+                .setUUID(ID_AS_UUID, attachment.getAttachmentId().asUUID())
+                .setString(ID, attachment.getAttachmentId().getId())
+                .setLong(SIZE, attachment.getSize())
+                .setString(TYPE, attachment.getType())
+                .setString(BLOB_ID, attachment.getBlobId().getId()));
     }
 
-    private CompletableFuture<Optional<Attachment>> attachment(Optional<Row> rowOptional) {
-        if (rowOptional.isPresent()) {
-            return attachment(rowOptional.get())
-                .thenApply(Optional::of);
-        }
-        return CompletableFuture.completedFuture(Optional.empty());
-    }
-
-    private CompletableFuture<Attachment> attachment(Row row) {
-        return blobsDAO.read(BlobId.from(row.getString(BLOB_ID)))
-            .thenApply(bytes -> Attachment.builder()
-                .attachmentId(AttachmentId.from(row.getString(ID)))
-                .bytes(bytes)
-                .type(row.getString(TYPE))
-                .build());
-    }
 }

@@ -28,12 +28,14 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2.DAOAttachmentModel;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.util.FluentFutureStream;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,11 +48,13 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
 
     private final CassandraAttachmentDAO attachmentDAO;
     private final CassandraAttachmentDAOV2 attachmentDAOV2;
+    private final CassandraBlobsDAO blobsDAO;
 
     @Inject
-    public CassandraAttachmentMapper(CassandraAttachmentDAO attachmentDAO, CassandraAttachmentDAOV2 attachmentDAOV2) {
+    public CassandraAttachmentMapper(CassandraAttachmentDAO attachmentDAO, CassandraAttachmentDAOV2 attachmentDAOV2, CassandraBlobsDAO blobsDAO) {
         this.attachmentDAO = attachmentDAO;
         this.attachmentDAOV2 = attachmentDAOV2;
+        this.blobsDAO = blobsDAO;
     }
 
     @Override
@@ -65,10 +69,19 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     @Override
     public Attachment getAttachment(AttachmentId attachmentId) throws AttachmentNotFoundException {
         Preconditions.checkArgument(attachmentId != null);
-        return attachmentDAOV2.getAttachment(attachmentId)
-            .thenCompose(v2Value -> fallbackToV1(attachmentId, v2Value))
+        return getAttachmentInternal(attachmentId)
             .join()
             .orElseThrow(() -> new AttachmentNotFoundException(attachmentId.getId()));
+    }
+
+    @Nullable
+    private CompletionStage<Optional<Attachment>> retrievePayload(Optional<DAOAttachmentModel> input) {
+        if (!input.isPresent()) {
+            return CompletableFuture.completedFuture(Optional.empty());
+        }
+        DAOAttachmentModel model = input.get();
+        return blobsDAO.read(model.getBlobId())
+            .thenApply(bytes -> Optional.of(model.toAttachment(bytes)));
     }
 
     @Override
@@ -82,13 +95,18 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
         Stream<CompletableFuture<Optional<Attachment>>> attachments = attachmentIds
                 .stream()
                 .distinct()
-                .map(id -> attachmentDAOV2.getAttachment(id)
-                    .thenCompose(v2Value -> fallbackToV1(id, v2Value))
+                .map(id -> getAttachmentInternal(id)
                     .thenApply(finalValue -> logNotFound(id, finalValue)));
 
         return FluentFutureStream
             .ofOptionals(attachments)
             .collect(Guavate.toImmutableList());
+    }
+
+    private CompletableFuture<Optional<Attachment>> getAttachmentInternal(AttachmentId id) {
+        return attachmentDAOV2.getAttachment(id)
+            .thenCompose(this::retrievePayload)
+            .thenCompose(v2Value -> fallbackToV1(id, v2Value));
     }
 
     private CompletionStage<Optional<Attachment>> fallbackToV1(AttachmentId attachmentId, Optional<Attachment> v2Value) {
@@ -100,15 +118,23 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
 
     @Override
     public void storeAttachment(Attachment attachment) throws MailboxException {
-        attachmentDAOV2.storeAttachment(attachment).join();
+        storeAttachmentAsync(attachment).join();
     }
 
     @Override
     public void storeAttachments(Collection<Attachment> attachments) throws MailboxException {
         FluentFutureStream.of(
             attachments.stream()
-                .map(attachmentDAOV2::storeAttachment))
+                .map(this::storeAttachmentAsync))
             .join();
+    }
+
+    public CompletableFuture<Void> storeAttachmentAsync(Attachment attachment) {
+        return blobsDAO.save(attachment.getBytes())
+            // BlobDAO supports saving null blobs. But attachments ensure there blobs are never null. Hence optional unboxing is safe here.
+            .thenApply(Optional::get)
+            .thenApply(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
+            .thenCompose(attachmentDAOV2::storeAttachment);
     }
 
     private Optional<Attachment> logNotFound(AttachmentId attachmentId, Optional<Attachment> optional) {

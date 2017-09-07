@@ -59,9 +59,9 @@ public class TestCassandraMailboxSessionMapperFactory {
             new CassandraFirstUnseenDAO(session),
             new CassandraApplicableFlagDAO(session),
             new CassandraAttachmentDAO(session),
-            new CassandraAttachmentDAOV2(session, cassandraBlobsDAO),
+            new CassandraAttachmentDAOV2(session),
             new CassandraDeletedMessageDAO(session),
-            CassandraUtils.WITH_DEFAULT_CONFIGURATION,
+            cassandraBlobsDAO, CassandraUtils.WITH_DEFAULT_CONFIGURATION,
             CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 

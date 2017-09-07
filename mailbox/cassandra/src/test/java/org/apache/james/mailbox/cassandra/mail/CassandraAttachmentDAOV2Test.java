@@ -26,9 +26,9 @@ import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.mailbox.cassandra.ids.BlobId;
+import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2.DAOAttachmentModel;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraBlobModule;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.junit.After;
@@ -48,16 +48,12 @@ public class CassandraAttachmentDAOV2Test {
 
     @Before
     public void setUp() throws Exception {
-        CassandraModuleComposite compositeModule = new CassandraModuleComposite(
-            new CassandraAttachmentModule(),
-            new CassandraBlobModule());
-
         cassandra = CassandraCluster.create(
-            compositeModule,
+            new CassandraAttachmentModule(),
             cassandraServer.getIp(),
             cassandraServer.getBindingPort());
 
-        testee = new CassandraAttachmentDAOV2(cassandra.getConf(), new CassandraBlobsDAO(cassandra.getConf()));
+        testee = new CassandraAttachmentDAOV2(cassandra.getConf());
     }
 
     @After
@@ -67,7 +63,7 @@ public class CassandraAttachmentDAOV2Test {
 
     @Test
     public void getAttachmentShouldReturnEmptyWhenAbsent() {
-        Optional<Attachment> attachment = testee.getAttachment(ATTACHMENT_ID).join();
+        Optional<DAOAttachmentModel> attachment = testee.getAttachment(ATTACHMENT_ID).join();
 
         assertThat(attachment).isEmpty();
     }
@@ -79,10 +75,12 @@ public class CassandraAttachmentDAOV2Test {
             .type("application/json")
             .bytes("{\"property\":`\"value\"}".getBytes(StandardCharsets.UTF_8))
             .build();
-        testee.storeAttachment(attachment).join();
+        BlobId blobId = BlobId.from("blobId");
+        DAOAttachmentModel model = CassandraAttachmentDAOV2.from(attachment, blobId);
+        testee.storeAttachment(model).join();
 
-        Optional<Attachment> actual = testee.getAttachment(ATTACHMENT_ID).join();
+        Optional<DAOAttachmentModel> actual = testee.getAttachment(ATTACHMENT_ID).join();
 
-        assertThat(actual).contains(attachment);
+        assertThat(actual).contains(model);
     }
 }
