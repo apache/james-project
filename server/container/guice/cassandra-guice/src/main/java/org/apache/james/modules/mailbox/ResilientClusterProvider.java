@@ -71,7 +71,7 @@ public class ResilientClusterProvider implements Provider<Cluster> {
     private ResilientClusterProvider(CassandraSessionConfiguration cassandraSessionConfiguration, AsyncRetryExecutor executor) throws ConfigurationException, ExecutionException, InterruptedException {
         PropertiesConfiguration configuration = cassandraSessionConfiguration.getConfiguration();
         List<Host> servers = listCassandraServers(configuration);
-        LOGGER.warn("CASSANDRA NODES : {}", servers);
+
         QueryLoggerConfiguration queryLoggerConfiguration = getCassandraQueryLoggerConf(configuration);
 
         int maxRetries = configuration.getInt("cassandra.retryConnection.maxRetries", DEFAULT_CONNECTION_MAX_RETRIES);
