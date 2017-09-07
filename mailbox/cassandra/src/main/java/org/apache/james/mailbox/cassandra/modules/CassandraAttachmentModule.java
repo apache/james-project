@@ -29,6 +29,7 @@ import java.util.List;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
+import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable;
 import org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table;
 
@@ -60,6 +61,9 @@ public class CassandraAttachmentModule implements CassandraModule {
                     .addColumn(CassandraAttachmentV2Table.TYPE, text())
                     .addColumn(CassandraAttachmentV2Table.SIZE, bigint())
                     .withOptions()
+                    .compactionOptions(SchemaBuilder.leveledStrategy())
+                    .caching(SchemaBuilder.KeyCaching.ALL,
+                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))
                     .comment("Holds attachment for fast attachment retrieval. Content of messages is stored" +
                         "in `blobs` and `blobparts` tables.")));
         types = ImmutableList.of();
