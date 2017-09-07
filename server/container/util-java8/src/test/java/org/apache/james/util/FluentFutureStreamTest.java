@@ -247,7 +247,7 @@ public class FluentFutureStreamTest {
     }
 
     @Test
-    public void collectShouldReturnEmptyWhenSteamIsEmpty() {
+    public void collectShouldReturnEmptyWhenStreamIsEmpty() {
         assertThat(
             FluentFutureStream.ofFutures()
                 .collect(Guavate.toImmutableList())
