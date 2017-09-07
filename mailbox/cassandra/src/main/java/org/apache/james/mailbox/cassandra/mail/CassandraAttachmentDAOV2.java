@@ -65,7 +65,7 @@ public class CassandraAttachmentDAOV2 {
             return attachmentId;
         }
 
-        public org.apache.james.mailbox.cassandra.ids.BlobId getBlobId() {
+        public BlobId getBlobId() {
             return blobId;
         }
 

@@ -75,11 +75,11 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     @Nullable
-    private CompletionStage<Optional<Attachment>> retrievePayload(Optional<DAOAttachmentModel> input) {
-        if (!input.isPresent()) {
+    private CompletionStage<Optional<Attachment>> retrievePayload(Optional<DAOAttachmentModel> optionalModel) {
+        if (!optionalModel.isPresent()) {
             return CompletableFuture.completedFuture(Optional.empty());
         }
-        DAOAttachmentModel model = input.get();
+        DAOAttachmentModel model = optionalModel.get();
         return blobsDAO.read(model.getBlobId())
             .thenApply(bytes -> Optional.of(model.toAttachment(bytes)));
     }
