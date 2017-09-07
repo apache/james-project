@@ -127,4 +127,8 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
         recipientRewriteTable.removeRegexMapping(user, domain, regex);
     }
 
+    @Override
+    public void addDomainAliasMapping(String aliasDomain, String deliveryDomain) throws Exception {
+        recipientRewriteTable.addAliasDomainMapping(aliasDomain, deliveryDomain);
+    }
 }

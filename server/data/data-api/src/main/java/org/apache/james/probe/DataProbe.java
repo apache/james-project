@@ -56,4 +56,6 @@ public interface DataProbe {
 
     void removeRegexMapping(String user, String domain, String regex) throws Exception;
 
+    void addDomainAliasMapping(String aliasDomain, String deliveryDomain) throws Exception;
+
 }
