@@ -104,7 +104,8 @@ public class CassandraAttachmentDAOV2 {
 
     public CompletableFuture<Void> storeAttachment(Attachment attachment) {
         return blobsDAO.save(attachment.getBytes())
-            .thenApply(Optional::get) // attachment payload is never null
+            // BlobDAO supports saving null blobs. But attachments ensure there blobs are never null. Hence optional unboxing is safe here.
+            .thenApply(Optional::get)
             .thenApply(blobId ->
                 insertStatement.bind()
                     .setUUID(ID_AS_UUID, attachment.getAttachmentId().asUUID())
