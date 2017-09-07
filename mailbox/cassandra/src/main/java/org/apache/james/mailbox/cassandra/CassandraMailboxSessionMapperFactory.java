@@ -50,6 +50,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
+import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
@@ -61,7 +62,9 @@ import com.datastax.driver.core.Session;
 /**
  * Cassandra implementation of {@link MailboxSessionMapperFactory}
  */
-public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFactory {
+public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFactory implements AttachmentMapperFactory {
+    protected final static String ATTACHMENTMAPPER = "ATTACHMENTMAPPER";
+
     private final Session session;
     private final CassandraUidProvider uidProvider;
     private final CassandraModSeqProvider modSeqProvider;
@@ -122,7 +125,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
                                           uidProvider,
                                           modSeqProvider,
                                           null,
-                                          (CassandraAttachmentMapper) createAttachmentMapper(mailboxSession),
+                                          createAttachmentMapper(mailboxSession),
                                           messageDAO,
                                           messageIdDAO,
                                           imapUidDAO,
@@ -138,7 +141,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     @Override
     public MessageIdMapper createMessageIdMapper(MailboxSession mailboxSession) throws MailboxException {
         return new CassandraMessageIdMapper(getMailboxMapper(mailboxSession), mailboxDAO,
-                (CassandraAttachmentMapper) getAttachmentMapper(mailboxSession),
+                (CassandraAttachmentMapper) createAttachmentMapper(mailboxSession),
                 imapUidDAO, messageIdDAO, messageDAO, indexTableHandler, modSeqProvider, mailboxSession,
                 cassandraConfiguration);
     }
@@ -149,7 +152,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     }
 
     @Override
-    public AttachmentMapper createAttachmentMapper(MailboxSession mailboxSession) {
+    public CassandraAttachmentMapper createAttachmentMapper(MailboxSession mailboxSession) {
         return new CassandraAttachmentMapper(attachmentDAO, attachmentDAOV2, blobsDAO);
     }
 
@@ -174,5 +177,15 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     public AnnotationMapper createAnnotationMapper(MailboxSession mailboxSession)
             throws MailboxException {
         return new CassandraAnnotationMapper(session, cassandraUtils);
+    }
+
+    @Override
+    public AttachmentMapper getAttachmentMapper(MailboxSession session) throws MailboxException {
+        AttachmentMapper mapper = (AttachmentMapper) session.getAttributes().get(ATTACHMENTMAPPER);
+        if (mapper == null) {
+            mapper = createAttachmentMapper(session);
+            session.getAttributes().put(ATTACHMENTMAPPER, mapper);
+        }
+        return mapper;
     }
 }

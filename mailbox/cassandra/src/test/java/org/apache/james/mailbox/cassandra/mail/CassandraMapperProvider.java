@@ -86,7 +86,7 @@ public class CassandraMapperProvider implements MapperProvider {
 
     @Override
     public AttachmentMapper createAttachmentMapper() throws MailboxException {
-        return createMapperFactory().getAttachmentMapper(mailboxSession);
+        return createMapperFactory().createAttachmentMapper(mailboxSession);
     }
 
     @Override

@@ -27,12 +27,10 @@ import org.apache.james.mailbox.maildir.mail.MaildirMessageMapper;
 import org.apache.james.mailbox.maildir.user.MaildirSubscriptionMapper;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
-import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
-import org.apache.james.mailbox.store.mail.NoopAttachmentMapper;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 
@@ -69,13 +67,6 @@ public class MaildirMailboxSessionMapperFactory extends
             throws SubscriptionException {
         return new MaildirSubscriptionMapper(store);
     }
-
-
-    @Override
-    public AttachmentMapper createAttachmentMapper(MailboxSession session) throws MailboxException {
-        return new NoopAttachmentMapper();
-    }
-
 
     @Override
     public AnnotationMapper createAnnotationMapper(MailboxSession session)

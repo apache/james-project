@@ -51,6 +51,7 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
  */
 public class CassandraMailboxManager extends StoreMailboxManager {
     private final MailboxPathLocker locker;
+    private final CassandraMailboxSessionMapperFactory mapperFactory;
 
     @Inject
     public CassandraMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, Authorizator authorizator,
@@ -69,6 +70,7 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             mailboxEventDispatcher,
             delegatingMailboxListener);
         this.locker = locker;
+        this.mapperFactory = mapperFactory;
     }
 
     public CassandraMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, Authorizator authorizator,
@@ -82,6 +84,7 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             messageParser,
             messageIdFactory);
         this.locker = locker;
+        this.mapperFactory = mapperFactory;
     }
 
     public CassandraMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory, Authenticator authenticator,  Authorizator authorizator,
@@ -97,6 +100,7 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             limitOfAnnotations,
             limitAnnotationSize);
         this.locker = locker;
+        this.mapperFactory = mapperFactory;
     }
 
     @Override
@@ -124,7 +128,7 @@ public class CassandraMailboxManager extends StoreMailboxManager {
 
     @Override
     protected StoreMessageManager createMessageManager(Mailbox mailboxRow, MailboxSession session) throws MailboxException {
-        return new CassandraMessageManager(getMapperFactory(),
+        return new CassandraMessageManager(mapperFactory,
             getMessageSearchIndex(),
             getEventDispatcher(),
             this.locker,

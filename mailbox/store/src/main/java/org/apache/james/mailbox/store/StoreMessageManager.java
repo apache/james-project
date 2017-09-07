@@ -30,11 +30,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedFileInputStream;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.TeeInputStream;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
@@ -47,7 +50,6 @@ import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.ReadOnlyException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
@@ -67,7 +69,6 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
-import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -88,8 +89,6 @@ import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.stream.MimeTokenStream;
 import org.apache.james.mime4j.stream.RecursionMode;
 import org.apache.james.util.IteratorWrapper;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.input.TeeInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -634,15 +633,15 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
     protected MessageMetaData appendMessageToStore(final MailboxMessage message, final List<MessageAttachment> messageAttachments, MailboxSession session) throws MailboxException {
         final MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
-        final AttachmentMapper attachmentMapper = mapperFactory.getAttachmentMapper(session);
+
         return mapperFactory.getMessageMapper(session).execute(() -> {
-            ImmutableList.Builder<Attachment> attachments = ImmutableList.builder();
-            for (MessageAttachment attachment : messageAttachments) {
-                attachments.add(attachment.getAttachment());
-            }
-            attachmentMapper.storeAttachments(attachments.build());
+            storeAttachment(message, messageAttachments, session);
             return messageMapper.add(getMailboxEntity(), message);
         });
+    }
+
+    protected void storeAttachment(final MailboxMessage message, final List<MessageAttachment> messageAttachments, final MailboxSession session) throws MailboxException {
+
     }
 
     /**

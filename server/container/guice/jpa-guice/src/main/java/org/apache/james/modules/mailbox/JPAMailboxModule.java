@@ -50,7 +50,6 @@ import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
@@ -88,7 +87,6 @@ public class JPAMailboxModule extends AbstractModule {
 
         bind(MessageMapperFactory.class).to(JPAMailboxSessionMapperFactory.class);
         bind(MailboxMapperFactory.class).to(JPAMailboxSessionMapperFactory.class);
-        bind(AttachmentMapperFactory.class).to(JPAMailboxSessionMapperFactory.class);
         bind(MailboxSessionMapperFactory.class).to(JPAMailboxSessionMapperFactory.class);
         bind(MessageId.Factory.class).to(DefaultMessageId.Factory.class);
 

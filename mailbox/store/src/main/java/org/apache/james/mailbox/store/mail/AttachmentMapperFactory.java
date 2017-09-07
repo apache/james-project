@@ -23,5 +23,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 
 public interface AttachmentMapperFactory {
 
+    AttachmentMapper createAttachmentMapper(MailboxSession session) throws MailboxException;
+
     AttachmentMapper getAttachmentMapper(MailboxSession session) throws MailboxException;
 }

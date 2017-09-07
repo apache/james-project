@@ -47,6 +47,7 @@ import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
+import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.junit.After;
 import org.junit.Before;
@@ -120,5 +121,10 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
     @Override
     protected MailboxManager getParseFailingMailboxManager() {
         return parseFailingMailboxManager;
+    }
+
+    @Override
+    protected AttachmentMapperFactory getAttachmentMapperFactory() {
+        return mailboxSessionMapperFactory;
     }
 }

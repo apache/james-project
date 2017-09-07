@@ -6,12 +6,10 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
-import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
-import org.apache.james.mailbox.store.mail.NoopAttachmentMapper;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 
@@ -50,11 +48,6 @@ public class CachingMailboxSessionMapperFactory extends
     public SubscriptionMapper createSubscriptionMapper(MailboxSession session)
             throws SubscriptionException {
         return underlying.createSubscriptionMapper(session);
-    }
-
-    @Override
-    public AttachmentMapper createAttachmentMapper(MailboxSession session) throws MailboxException {
-        return new NoopAttachmentMapper();
     }
 
     @Override

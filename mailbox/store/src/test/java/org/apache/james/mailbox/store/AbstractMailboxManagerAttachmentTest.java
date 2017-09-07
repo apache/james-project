@@ -20,12 +20,14 @@
 package org.apache.james.mailbox.store;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
@@ -38,6 +40,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
+import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
@@ -61,6 +64,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
     protected abstract MailboxManager getMailboxManager();
     protected abstract MailboxManager getParseFailingMailboxManager();
     protected abstract MailboxSessionMapperFactory getMailboxSessionMapperFactory();
+    protected abstract AttachmentMapperFactory getAttachmentMapperFactory();
     
     public void setUp() throws Exception {
         mailboxSession = new MockMailboxSession(USERNAME);
@@ -71,7 +75,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         mailboxManager.createMailbox(inboxPath, mailboxSession);
         inbox = mailboxMapper.findMailboxByPath(inboxPath);
         inboxMessageManager = mailboxManager.getMailbox(inboxPath, mailboxSession);
-        attachmentMapper = getMailboxSessionMapperFactory().getAttachmentMapper(mailboxSession);
+        attachmentMapper = getAttachmentMapperFactory().createAttachmentMapper(mailboxSession);
     }
 
     @Test
