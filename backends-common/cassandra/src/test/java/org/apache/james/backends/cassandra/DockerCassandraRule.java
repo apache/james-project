@@ -19,6 +19,8 @@
 
 package org.apache.james.backends.cassandra;
 
+import java.util.UUID;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -80,6 +82,8 @@ public class DockerCassandraRule implements TestRule {
                         .run("echo \"JVM_OPTS=\\\"\\$JVM_OPTS -Dcassandra.skip_wait_for_gossip_to_settle=0\\\"\" >> " + CASSANDRA_ENV)
                         //make sure commit log disk flush won't happen
                         .run("sed -i -e \"s/commitlog_sync_period_in_ms: 10000/commitlog_sync_period_in_ms: 9999999/\" " + CASSANDRA_YAML)
+                        //Cassandra nodes should not cluster together
+                        .run("sed -i -e \"s/cluster_name: 'Test Cluster'/cluster_name: 'Test Cluster " + UUID.randomUUID() + "'/\" " + CASSANDRA_YAML)
                         //auto_bootstrap should be useless when no existing data
                         .run("echo auto_bootstrap: false >> " + CASSANDRA_YAML)
                         .run("echo \"-Xms1500M\" >> " + JVM_OPTIONS)
