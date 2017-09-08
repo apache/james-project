@@ -21,18 +21,19 @@ package org.apache.james.mailbox.extractor;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class ParsedContent {
 
-    private final String textualContent;
+    private final Optional<String> textualContent;
     private final Map<String, List<String>> metadata;
 
     public ParsedContent(String textualContent, Map<String, List<String>> metadata) {
-        this.textualContent = textualContent;
+        this.textualContent = Optional.ofNullable(textualContent);
         this.metadata = metadata;
     }
 
-    public String getTextualContent() {
+    public Optional<String> getTextualContent() {
         return textualContent;
     }
 

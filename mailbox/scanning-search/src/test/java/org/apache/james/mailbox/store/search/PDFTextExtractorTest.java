@@ -59,12 +59,12 @@ public class PDFTextExtractorTest {
 
         assertThat(testee.extractContent(inputStream, "text/plain")
             .getTextualContent())
-            .isEqualTo(content);
+            .contains(content);
     }
 
     @Test
     public void extractContentShouldExtractPDF() throws Exception {
-        String content = "Little PDF";
+        String content = "Little PDF\n";
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("pdf.pdf");
 
         assertThat(testee.extractContent(inputStream, PDFTextExtractor.PDF_TYPE)

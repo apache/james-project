@@ -74,6 +74,7 @@ import org.apache.james.mime4j.message.HeaderImpl;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.james.mime4j.utils.search.MessageMatcher;
+import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -256,12 +257,13 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
 
     private Stream<String> toAttachmentContent(Attachment attachment) {
         try {
-            return Stream.of(textExtractor
-                .extractContent(
-                    attachment.getStream(),
-                    attachment.getType())
-                .getTextualContent());
-        } catch (Exception e) {
+            return OptionalUtils.toStream(
+                    textExtractor
+                         .extractContent(
+                             attachment.getStream(),
+                             attachment.getType())
+                        .getTextualContent());
+            } catch (Exception e) {
             LOGGER.error("Error while parsing attachment content", e);
             return Stream.of();
         }

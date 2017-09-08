@@ -41,7 +41,7 @@ public class DefaultTextExtractorTest {
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "text/plain")
             .getTextualContent())
-            .isEqualTo("This is some awesome text text.\n\n");
+            .contains("This is some awesome text text.\n\n");
     }
 
     @Test
@@ -52,6 +52,6 @@ public class DefaultTextExtractorTest {
             inputStream,
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
             .getTextualContent())
-            .isNull();
+            .isEmpty();
     }
 }

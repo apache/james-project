@@ -16,31 +16,35 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
-package org.apache.james.mailbox.inmemory;
+package org.apache.james.mailbox.elasticsearch.json;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.InputStream;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 
-import org.apache.james.mailbox.extractor.TextExtractor;
-import org.junit.Before;
 import org.junit.Test;
 
-public class JsoupTextExtractorTest {
-    private TextExtractor textExtractor;
+public class MimePartTest {
 
-    @Before
-    public void setUp() {
-        textExtractor = new JsoupTextExtractor();
+    @Test
+    public void buildShouldWorkWhenTextualContentFromParserIsEmpty() {
+        MimePart.builder()
+            .addBodyContent(new ByteArrayInputStream(new byte[] {}))
+            .addMediaType("text")
+            .addSubType("plain")
+            .build();
     }
 
     @Test
-    public void extractedTextFromHtmlShouldNotContainTheContentOfTitleTag() throws Exception {
-        InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/html.txt");
-
-        assertThat(textExtractor.extractContent(inputStream, "text/html").getTextualContent().get())
-                .doesNotContain("*|MC:SUBJECT|*");
+    public void buildShouldWorkWhenTextualContentFromParserIsNonEmpty() {
+        String body = "text";
+        MimePart mimePart = MimePart.builder()
+            .addBodyContent(new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8)))
+            .addMediaType("text")
+            .addSubType("plain")
+            .build();
+        
+        assertThat(mimePart.getTextualBody()).contains(body);
     }
-
 }
