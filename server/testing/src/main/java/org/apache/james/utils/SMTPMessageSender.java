@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailets.utils;
+package org.apache.james.utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
