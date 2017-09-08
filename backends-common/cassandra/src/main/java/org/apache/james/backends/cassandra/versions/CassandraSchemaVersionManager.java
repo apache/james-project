@@ -34,7 +34,7 @@ import com.google.common.base.Preconditions;
 
 public class CassandraSchemaVersionManager {
     public static final int MIN_VERSION = 2;
-    public static final int MAX_VERSION = 3;
+    public static final int MAX_VERSION = 4;
     public static final int DEFAULT_VERSION = 2;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraSchemaVersionManager.class);

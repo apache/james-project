@@ -20,6 +20,7 @@
 package org.apache.james.modules.server;
 
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
+import org.apache.james.mailbox.cassandra.mail.migration.AttachmentV2Migration;
 import org.apache.james.mailbox.cassandra.mail.migration.Migration;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.routes.CassandraMigrationRoutes;
@@ -33,6 +34,7 @@ import com.google.inject.name.Names;
 
 public class CassandraRoutesModule extends AbstractModule {
     private static final int FROM_V2_TO_V3 = 2;
+    private static final int FROM_V3_TO_V4 = 3;
 
     @Override
     protected void configure() {
@@ -44,6 +46,7 @@ public class CassandraRoutesModule extends AbstractModule {
 
         MapBinder<Integer, Migration> allMigrationClazzBinder = MapBinder.newMapBinder(binder(), Integer.class, Migration.class);
         allMigrationClazzBinder.addBinding(FROM_V2_TO_V3).toInstance(() -> Migration.MigrationResult.COMPLETED);
+        allMigrationClazzBinder.addBinding(FROM_V3_TO_V4).to(AttachmentV2Migration.class);
 
         bindConstant()
             .annotatedWith(Names.named(CassandraMigrationService.LATEST_VERSION))
