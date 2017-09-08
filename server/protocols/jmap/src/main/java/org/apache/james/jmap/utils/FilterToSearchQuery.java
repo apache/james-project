@@ -21,6 +21,7 @@ package org.apache.james.jmap.utils;
 
 import java.util.Date;
 import java.util.Optional;
+
 import javax.mail.Flags.Flag;
 
 import org.apache.james.jmap.model.Filter;
@@ -58,6 +59,7 @@ public class FilterToSearchQuery {
                         SearchQuery.address(AddressType.Cc, text),
                         SearchQuery.address(AddressType.Bcc, text),
                         SearchQuery.headerContains("Subject", text),
+                        SearchQuery.attachmentContains(text),
                         SearchQuery.bodyContains(text)))
                 ));
         filter.getFrom().ifPresent(from -> searchQuery.andCriteria(SearchQuery.address(AddressType.From, from)));
