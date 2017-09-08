@@ -40,8 +40,6 @@ import javax.inject.Inject;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
@@ -49,9 +47,6 @@ import com.datastax.driver.core.Session;
 import com.google.common.base.Preconditions;
 
 public class CassandraAttachmentDAO {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraAttachmentMapper.class);
-    private static final boolean NO_LOG_IF_EMPTY = false;
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement insertStatement;
