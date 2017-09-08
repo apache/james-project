@@ -131,8 +131,6 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
 
     public CompletableFuture<Void> storeAttachmentAsync(Attachment attachment) {
         return blobsDAO.save(attachment.getBytes())
-            // BlobDAO supports saving null blobs. But attachments ensure there blobs are never null. Hence optional unboxing is safe here.
-            .thenApply(Optional::get)
             .thenApply(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
             .thenCompose(attachmentDAOV2::storeAttachment);
     }

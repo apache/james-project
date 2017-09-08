@@ -100,7 +100,7 @@ public class CassandraAttachmentFallbackTestTest {
             .bytes("{\"property\":`\"different\"}".getBytes(StandardCharsets.UTF_8))
             .build();
 
-        BlobId blobId = blobsDAO.save(attachment.getBytes()).join().get();
+        BlobId blobId = blobsDAO.save(attachment.getBytes()).join();
         attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).join();
         attachmentDAO.storeAttachment(otherAttachment).join();
 
@@ -135,7 +135,7 @@ public class CassandraAttachmentFallbackTestTest {
             .bytes("{\"property\":`\"different\"}".getBytes(StandardCharsets.UTF_8))
             .build();
 
-        BlobId blobId = blobsDAO.save(attachment.getBytes()).join().get();
+        BlobId blobId = blobsDAO.save(attachment.getBytes()).join();
         attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).join();
         attachmentDAO.storeAttachment(otherAttachment).join();
 
@@ -170,7 +170,7 @@ public class CassandraAttachmentFallbackTestTest {
             .bytes("{\"property\":`\"different\"}".getBytes(StandardCharsets.UTF_8))
             .build();
 
-        BlobId blobId = blobsDAO.save(attachment.getBytes()).join().get();
+        BlobId blobId = blobsDAO.save(attachment.getBytes()).join();
         attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).join();
         attachmentDAO.storeAttachment(otherAttachment).join();
 
