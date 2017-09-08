@@ -27,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.ids.BlobId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraBlobModule;
@@ -65,7 +66,7 @@ public class CassandraAttachmentFallbackTest {
             cassandraServer.getBindingPort());
 
         attachmentDAOV2 = new CassandraAttachmentDAOV2(cassandra.getConf());
-        attachmentDAO = new CassandraAttachmentDAO(cassandra.getConf());
+        attachmentDAO = new CassandraAttachmentDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
         blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
         attachmentMapper = new CassandraAttachmentMapper(attachmentDAO, attachmentDAOV2, blobsDAO);
     }

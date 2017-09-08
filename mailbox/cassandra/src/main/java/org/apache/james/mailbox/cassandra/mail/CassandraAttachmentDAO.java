@@ -23,6 +23,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static java.lang.Math.toIntExact;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.FIELDS;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.PAYLOAD;
@@ -34,10 +35,13 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 
@@ -48,16 +52,21 @@ import com.google.common.base.Preconditions;
 
 public class CassandraAttachmentDAO {
 
+    public static final int SELECT_ALL_TIMEOUT = toIntExact(TimeUnit.DAYS.toMillis(1));
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
+    private final CassandraUtils cassandraUtils;
     private final PreparedStatement insertStatement;
     private final PreparedStatement selectStatement;
+    private final PreparedStatement selectAllStatement;
 
     @Inject
-    public CassandraAttachmentDAO(Session session) {
+    public CassandraAttachmentDAO(Session session, CassandraUtils cassandraUtils) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
 
         this.selectStatement = prepareSelect(session);
+        this.selectAllStatement = prepareSelectAll(session);
         this.insertStatement = prepareInsert(session);
+        this.cassandraUtils = cassandraUtils;
     }
 
     private PreparedStatement prepareInsert(Session session) {
@@ -75,6 +84,11 @@ public class CassandraAttachmentDAO {
             .where(eq(ID, bindMarker(ID))));
     }
 
+    private PreparedStatement prepareSelectAll(Session session) {
+        return session.prepare(select(FIELDS)
+            .from(TABLE_NAME));
+    }
+
     public CompletableFuture<Optional<Attachment>> getAttachment(AttachmentId attachmentId) {
         Preconditions.checkArgument(attachmentId != null);
         return cassandraAsyncExecutor.executeSingleRow(
@@ -83,6 +97,15 @@ public class CassandraAttachmentDAO {
             .thenApply(optional -> optional.map(this::attachment));
     }
 
+    public Stream<Attachment> retrieveAll() {
+        return cassandraUtils.convertToStream(
+            cassandraAsyncExecutor.execute(
+                selectAllStatement.bind()
+                    .setReadTimeoutMillis(SELECT_ALL_TIMEOUT)
+                    .setFetchSize(1))
+                .join())
+            .map(this::attachment);
+    }
 
     public CompletableFuture<Void> storeAttachment(Attachment attachment) throws IOException {
         return cassandraAsyncExecutor.executeVoid(
