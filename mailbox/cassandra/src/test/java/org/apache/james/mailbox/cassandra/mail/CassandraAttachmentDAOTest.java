@@ -109,4 +109,19 @@ public class CassandraAttachmentDAOTest {
 
         assertThat(actual).contains(attachment);
     }
+
+    @Test
+    public void deleteAttachmentShouldRemoveAttachment() throws Exception {
+        Attachment attachment = Attachment.builder()
+            .attachmentId(ATTACHMENT_ID)
+            .type("application/json")
+            .bytes("{\"property\":`\"value\"}".getBytes(StandardCharsets.UTF_8))
+            .build();
+        testee.storeAttachment(attachment).join();
+
+        testee.deleteAttachment(attachment.getAttachmentId()).join();
+
+        assertThat(testee.getAttachment(attachment.getAttachmentId()).join())
+            .isEmpty();
+    }
 }

@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
@@ -56,6 +57,7 @@ public class CassandraAttachmentDAO {
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final CassandraUtils cassandraUtils;
     private final PreparedStatement insertStatement;
+    private final PreparedStatement deleteStatement;
     private final PreparedStatement selectStatement;
     private final PreparedStatement selectAllStatement;
 
@@ -65,8 +67,16 @@ public class CassandraAttachmentDAO {
 
         this.selectStatement = prepareSelect(session);
         this.selectAllStatement = prepareSelectAll(session);
+        this.deleteStatement = prepareDelete(session);
         this.insertStatement = prepareInsert(session);
         this.cassandraUtils = cassandraUtils;
+    }
+
+    private PreparedStatement prepareDelete(Session session) {
+        return session.prepare(
+            delete()
+                .from(TABLE_NAME)
+                .where(eq(ID, bindMarker(ID))));
     }
 
     private PreparedStatement prepareInsert(Session session) {
@@ -114,6 +124,13 @@ public class CassandraAttachmentDAO {
                 .setLong(SIZE, attachment.getSize())
                 .setString(TYPE, attachment.getType())
                 .setBytes(PAYLOAD, ByteBuffer.wrap(attachment.getBytes())));
+    }
+
+    public CompletableFuture<Void> deleteAttachment(AttachmentId attachmentId) {
+        return cassandraAsyncExecutor.executeVoid(
+            deleteStatement
+                .bind()
+                .setString(ID, attachmentId.getId()));
     }
 
     private Attachment attachment(Row row) {
