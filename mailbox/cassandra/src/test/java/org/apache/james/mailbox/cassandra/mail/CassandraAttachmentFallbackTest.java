@@ -39,7 +39,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
-public class CassandraAttachmentFallbackTestTest {
+public class CassandraAttachmentFallbackTest {
     public static final AttachmentId ATTACHMENT_ID_1 = AttachmentId.from("id1");
     public static final AttachmentId ATTACHMENT_ID_2 = AttachmentId.from("id2");
 
