@@ -93,13 +93,14 @@ public class FilterConditionTest {
         String bcc = "blindcopy@james.org";
         String subject = "subject";
         String body = "body";
+        String attachments = "attachments";
         Header header = Header.from(ImmutableList.of("name", "value"));
         Optional<String> hasKeyword = Optional.of("$Draft");
         Optional<String> notKeyword = Optional.of("$Flagged");
 
         FilterCondition expectedFilterCondition = new FilterCondition(Optional.of(ImmutableList.of("1")), Optional.of(ImmutableList.of("2")), Optional.of(before), Optional.of(after), Optional.of(minSize), Optional.of(maxSize),
                 Optional.of(isFlagged), Optional.of(isUnread), Optional.of(isAnswered), Optional.of(isDraft), Optional.of(hasAttachment), Optional.of(text), Optional.of(from), 
-                Optional.of(to), Optional.of(cc), Optional.of(bcc), Optional.of(subject), Optional.of(body), Optional.of(header),
+                Optional.of(to), Optional.of(cc), Optional.of(bcc), Optional.of(subject), Optional.of(body), Optional.of(attachments), Optional.of(header),
                 hasKeyword, notKeyword);
 
         FilterCondition filterCondition = FilterCondition.builder()
@@ -121,6 +122,7 @@ public class FilterConditionTest {
                 .bcc(bcc)
                 .subject(subject)
                 .body(body)
+                .attachments(attachments)
                 .header(header)
                 .hasKeyword(hasKeyword)
                 .notKeyword(notKeyword)

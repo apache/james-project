@@ -60,6 +60,7 @@ public class FilterCondition implements Filter {
         private String bcc;
         private String subject;
         private String body;
+        private String attachments;
         private Header header;
         private Optional<String> hasKeyword;
         private Optional<String> notKeyword;
@@ -185,6 +186,11 @@ public class FilterCondition implements Filter {
             return this;
         }
 
+        public Builder attachments(String attachments) {
+            this.attachments = attachments;
+            return this;
+        }
+
         public Builder header(Header header) {
             this.header = header;
             return this;
@@ -196,7 +202,7 @@ public class FilterCondition implements Filter {
             return new FilterCondition(inMailboxes, notInMailboxes, Optional.ofNullable(before), Optional.ofNullable(after), Optional.ofNullable(minSize), Optional.ofNullable(maxSize),
                     Optional.ofNullable(isFlagged), Optional.ofNullable(isUnread), Optional.ofNullable(isAnswered), Optional.ofNullable(isDraft), Optional.ofNullable(hasAttachment),
                     Optional.ofNullable(text), Optional.ofNullable(from), Optional.ofNullable(to), Optional.ofNullable(cc), Optional.ofNullable(bcc), Optional.ofNullable(subject),
-                    Optional.ofNullable(body), Optional.ofNullable(header), hasKeyword, notKeyword);
+                    Optional.ofNullable(body), Optional.ofNullable(attachments), Optional.ofNullable(header), hasKeyword, notKeyword);
         }
     }
 
@@ -218,6 +224,7 @@ public class FilterCondition implements Filter {
     private final Optional<String> bcc;
     private final Optional<String> subject;
     private final Optional<String> body;
+    private final Optional<String> attachments;
     private final Optional<Header> header;
     private final Optional<String> hasKeyword;
     private final Optional<String> notKeyword;
@@ -225,7 +232,7 @@ public class FilterCondition implements Filter {
     @VisibleForTesting FilterCondition(Optional<List<String>> inMailboxes, Optional<List<String>> notInMailboxes, Optional<ZonedDateTime> before, Optional<ZonedDateTime> after, Optional<Integer> minSize, Optional<Integer> maxSize,
                                        Optional<Boolean> isFlagged, Optional<Boolean> isUnread, Optional<Boolean> isAnswered, Optional<Boolean> isDraft, Optional<Boolean> hasAttachment,
                                        Optional<String> text, Optional<String> from, Optional<String> to, Optional<String> cc, Optional<String> bcc, Optional<String> subject,
-                                       Optional<String> body, Optional<Header> header, Optional<String> hasKeyword, Optional<String> notKeyword) {
+                                       Optional<String> body, Optional<String> attachments, Optional<Header> header, Optional<String> hasKeyword, Optional<String> notKeyword) {
 
         this.inMailboxes = inMailboxes;
         this.notInMailboxes = notInMailboxes;
@@ -245,6 +252,7 @@ public class FilterCondition implements Filter {
         this.bcc = bcc;
         this.subject = subject;
         this.body = body;
+        this.attachments = attachments;
         this.header = header;
         this.hasKeyword = hasKeyword;
         this.notKeyword = notKeyword;
@@ -322,6 +330,10 @@ public class FilterCondition implements Filter {
         return body;
     }
 
+    public Optional<String> getAttachments() {
+        return attachments;
+    }
+
     public Optional<Header> getHeader() {
         return header;
     }
@@ -356,6 +368,7 @@ public class FilterCondition implements Filter {
                 && Objects.equals(this.bcc, other.bcc)
                 && Objects.equals(this.subject, other.subject)
                 && Objects.equals(this.body, other.body)
+                && Objects.equals(this.attachments, other.attachments)
                 && Objects.equals(this.header, other.header)
                 && Objects.equals(this.hasKeyword, other.hasKeyword)
                 && Objects.equals(this.notKeyword, other.notKeyword);
@@ -366,7 +379,7 @@ public class FilterCondition implements Filter {
     @Override
     public final int hashCode() {
         return Objects.hash(inMailboxes, notInMailboxes, before, after, minSize, maxSize, isFlagged, isUnread, isAnswered, isDraft, hasAttachment,
-                text, from, to, cc, bcc, subject, body, header, hasKeyword, notKeyword);
+                text, from, to, cc, bcc, subject, body, attachments, header, hasKeyword, notKeyword);
     }
 
     @Override
@@ -390,6 +403,7 @@ public class FilterCondition implements Filter {
         bcc.ifPresent(x -> helper.add("bcc", x));
         subject.ifPresent(x -> helper.add("subject", x));
         body.ifPresent(x -> helper.add("body", x));
+        attachments.ifPresent(x -> helper.add("attachments", x));
         header.ifPresent(x -> helper.add("header", x));
         hasKeyword.ifPresent(x -> helper.add("hasKeyword", x));
         notKeyword.ifPresent(x -> helper.add("notKeyword", x));

@@ -67,6 +67,7 @@ public class FilterToSearchQuery {
         filter.getCc().ifPresent(cc -> searchQuery.andCriteria(SearchQuery.address(AddressType.Cc, cc)));
         filter.getBcc().ifPresent(bcc -> searchQuery.andCriteria(SearchQuery.address(AddressType.Bcc, bcc)));
         filter.getSubject().ifPresent(subject -> searchQuery.andCriteria(SearchQuery.headerContains("Subject", subject)));
+        filter.getAttachments().ifPresent(attachments ->  searchQuery.andCriteria(SearchQuery.attachmentContains(attachments)));
         filter.getBody().ifPresent(body ->  searchQuery.andCriteria(SearchQuery.bodyContains(body)));
         filter.getAfter().ifPresent(after -> searchQuery.andCriteria(SearchQuery.sentDateAfter(Date.from(after.toInstant()), DateResolution.Second)));
         filter.getBefore().ifPresent(before -> searchQuery.andCriteria(SearchQuery.sentDateBefore(Date.from(before.toInstant()), DateResolution.Second)));
