@@ -41,6 +41,11 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-scanning-search</artifactId>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-mailet-base</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -108,6 +113,10 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-guice-webadmin-swagger</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>

@@ -19,7 +19,7 @@
 
 package org.apache.james;
 import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
+import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.rules.TestRule;
@@ -49,7 +49,7 @@ public class CassandraJmapTestRule implements TestRule {
     public GuiceJamesServer jmapServer(Module... additionals) {
         return new GuiceJamesServer()
             .combineWith(CassandraJamesServerMain.cassandraServerModule, CassandraJamesServerMain.protocols)
-            .overrideWith(binder -> binder.bind(TextExtractor.class).to(DefaultTextExtractor.class))
+            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))
             .overrideWith(new TestESMetricReporterModule())
             .overrideWith(guiceModuleTestRule.getModule())

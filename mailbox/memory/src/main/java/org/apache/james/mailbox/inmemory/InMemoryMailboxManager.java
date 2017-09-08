@@ -39,6 +39,7 @@ import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
 public class InMemoryMailboxManager extends StoreMailboxManager {
 
@@ -62,6 +63,12 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
             MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, MessageParser messageParser,
             MessageId.Factory messageIdFactory, int limitOfAnnotations, int limitAnnotationSize) {
         super(mailboxSessionMapperFactory, authenticator, authorizator, aclResolver, groupMembershipResolver, messageParser, messageIdFactory, limitOfAnnotations, limitAnnotationSize);
+    }
+
+    @Override
+    @Inject
+    public void setMessageSearchIndex(MessageSearchIndex index) {
+        super.setMessageSearchIndex(index);
     }
 
     @Override

@@ -31,12 +31,14 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 
 import javax.mail.Flags;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.HttpJmapAuthentication;
@@ -48,6 +50,13 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
+import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.dom.MessageWriter;
+import org.apache.james.mime4j.dom.Multipart;
+import org.apache.james.mime4j.message.BodyPart;
+import org.apache.james.mime4j.message.BodyPartBuilder;
+import org.apache.james.mime4j.message.DefaultMessageWriter;
+import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.util.date.ImapDateTimeFormatter;
@@ -779,6 +788,106 @@ public abstract class GetMessageListMethodTest {
         .then()
             .statusCode(200)
             .body(ARGUMENTS + ".messageIds", empty());
+    }
+
+    @Test
+    public void getMessageListShouldFilterMessagesWhenTextFilterDoesntMatches() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+        await();
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(String.format("[[\"getMessageList\", {\"filter\":{\"text\":\"bad\"}}, \"#0\"]]"))
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(ARGUMENTS + ".messageIds", empty());
+    }
+
+    @Test
+    public void getMessageListShouldNotFilterMessagesWhenTextFilterMatchesBody() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        ComposedMessageId message = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+                ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags());
+        await();
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(String.format("[[\"getMessageList\", {\"filter\":{\"text\":\"html\"}}, \"#0\"]]"))
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(ARGUMENTS + ".messageIds", contains(message.getMessageId().serialize()));
+    }
+
+    @Test
+    public void getMessageListShouldFilterMessagesWhenAttachmentFilterDoesntMatches() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        byte[] attachmentContent = IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/attachment.pdf"));
+        BodyPart attachment = BodyPartBuilder.create()
+                .setBody(attachmentContent, "application/pdf")
+                .setContentDisposition("attachment")
+                .build();
+        BodyPart textPart = BodyPartBuilder.create().setBody("The message has a PDF attachment.", "plain", Charsets.UTF_8).build();
+        Multipart multipart = MultipartBuilder.create("mixed")
+                .addBodyPart(attachment)
+                .addBodyPart(textPart)
+                .build();
+        Message message = Message.Builder.of()
+                .setBody(multipart)
+                .build();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        MessageWriter writer = new DefaultMessageWriter();
+        writer.writeMessage(message, outputStream);
+        mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+                new ByteArrayInputStream(outputStream.toByteArray()), new Date(), false, new Flags());
+        await();
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(String.format("[[\"getMessageList\", {\"filter\":{\"attachments\":\"no apple inside\"}}, \"#0\"]]"))
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(ARGUMENTS + ".messageIds", empty());
+    }
+
+    @Test
+    public void getMessageListShouldNotFilterMessagesWhenAttachmentFilterMatches() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        byte[] attachmentContent = IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/attachment.pdf"));
+        BodyPart attachment = BodyPartBuilder.create()
+                .setBody(attachmentContent, "application/pdf")
+                .setContentDisposition("attachment")
+                .build();
+        BodyPart textPart = BodyPartBuilder.create().setBody("The message has a PDF attachment.", "plain", Charsets.UTF_8).build();
+        Multipart multipart = MultipartBuilder.create("mixed")
+                .addBodyPart(attachment)
+                .addBodyPart(textPart)
+                .build();
+        Message message = Message.Builder.of()
+                .setBody(multipart)
+                .build();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        MessageWriter writer = new DefaultMessageWriter();
+        writer.writeMessage(message, outputStream);
+        ComposedMessageId composedMessageId = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+                new ByteArrayInputStream(outputStream.toByteArray()), new Date(), false, new Flags());
+        await();
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(String.format("[[\"getMessageList\", {\"filter\":{\"attachments\":\"beautiful banana\"}}, \"#0\"]]"))
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(ARGUMENTS + ".messageIds", contains(composedMessageId.getMessageId().serialize()));
     }
 
     @Test

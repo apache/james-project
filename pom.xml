@@ -804,6 +804,17 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mailbox-scanning-search</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mailbox-scanning-search</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>apache-james-mailbox-spring</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1996,6 +2007,11 @@
                 <version>${maven-reporting-impl.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.apache.pdfbox</groupId>
+                <artifactId>pdfbox</artifactId>
+                <version>2.0.7</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.xbean</groupId>
                 <artifactId>xbean-spring</artifactId>
                 <version>${xbean-spring.version}</version>
@@ -2717,7 +2733,7 @@
                         <goals>
                             <goal>test-jar</goal>
                         </goals>
-			<phase>package</phase>
+                        <phase>package</phase>
                     </execution>
                 </executions>
             </plugin>

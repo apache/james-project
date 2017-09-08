@@ -73,6 +73,11 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-scanning-search</artifactId>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-tika</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -199,6 +204,10 @@
         <dependency>
             <groupId>com.nurkiewicz.asyncretry</groupId>
             <artifactId>asyncretry</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
