@@ -21,6 +21,7 @@ package org.apache.james.transport.mailets.delivery;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -91,11 +92,11 @@ public class SimpleMailStore implements MailStore {
         String username = computeUsername(recipient);
 
         String locatedFolder = locateFolder(username, mail);
-        mailboxAppender.append(mail.getMessage(), username, locatedFolder);
+        ComposedMessageId composedMessageId = mailboxAppender.append(mail.getMessage(), username, locatedFolder);
 
         metric.increment();
-        LOGGER.info("Local delivered mail {} successfully from {} to {} in folder {}", mail.getName(),
-            DeliveryUtils.prettyPrint(mail.getSender()), DeliveryUtils.prettyPrint(recipient), locatedFolder);
+        LOGGER.info("Local delivered mail {} successfully from {} to {} in folder {} with composedMessageId {}", mail.getName(),
+            DeliveryUtils.prettyPrint(mail.getSender()), DeliveryUtils.prettyPrint(recipient), locatedFolder, composedMessageId);
     }
 
     private String locateFolder(String username, Mail mail) {
