@@ -135,10 +135,10 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
             .thenCompose(attachmentDAOV2::storeAttachment);
     }
 
-    private Optional<Attachment> logNotFound(AttachmentId attachmentId, Optional<Attachment> optional) {
-        if (!optional.isPresent()) {
+    private Optional<Attachment> logNotFound(AttachmentId attachmentId, Optional<Attachment> optionalAttachment) {
+        if (!optionalAttachment.isPresent()) {
             LOGGER.warn("Failed retrieving attachment {}", attachmentId);
         }
-        return optional;
+        return optionalAttachment;
     }
 }
