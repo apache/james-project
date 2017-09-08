@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import org.apache.james.mailbox.MailboxManager.MessageCapabilities;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
@@ -76,8 +77,14 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     }
     
     @Override
-    public EnumSet<SearchCapabilities> getSupportedCapabilities() {
-        return EnumSet.of(SearchCapabilities.MultimailboxSearch, SearchCapabilities.Text, SearchCapabilities.FullText, SearchCapabilities.Attachment);
+    public EnumSet<SearchCapabilities> getSupportedCapabilities(EnumSet<MessageCapabilities> messageCapabilities) {
+        if (messageCapabilities.contains(MessageCapabilities.Attachment)) {
+            return EnumSet.of(SearchCapabilities.MultimailboxSearch,
+                SearchCapabilities.Text,
+                SearchCapabilities.Attachment);
+        }
+        return EnumSet.of(SearchCapabilities.MultimailboxSearch,
+            SearchCapabilities.Text);
     }
     
     /**

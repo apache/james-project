@@ -52,7 +52,7 @@ public interface MessageSearchIndex {
      */
     List<MessageId> search(MailboxSession session, MultimailboxesSearchQuery searchQuery, long limit) throws MailboxException;
 
-    EnumSet<MailboxManager.SearchCapabilities> getSupportedCapabilities();
+    EnumSet<MailboxManager.SearchCapabilities> getSupportedCapabilities(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities);
 
     class SearchResult {
         private final Optional<MessageId> messageId;

@@ -1113,7 +1113,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithFulTextShouldReturnMailsWhenToAndBodyAndAttachmentMatches() throws Exception {
+    public void searchWithFullTextShouldReturnMailsWhenNotAPerfectMatch() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.FullText));
         ComposedMessageId messageWithBeautifulBananaAsTextAttachment = myFolderMessageManager.appendMessage(
                 ClassLoader.getSystemResourceAsStream("eml/emailWithTextAttachment.eml"),

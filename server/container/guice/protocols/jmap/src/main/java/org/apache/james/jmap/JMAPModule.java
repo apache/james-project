@@ -151,8 +151,6 @@ public class JMAPModule extends AbstractModule {
             EnumSet<SearchCapabilities> searchCapabilities = mailboxManager.getSupportedSearchCapabilities();
             Preconditions.checkArgument(searchCapabilities.contains(MailboxManager.SearchCapabilities.MultimailboxSearch),
                     "Multimailbox search in MailboxManager is required by JMAP Module");
-            Preconditions.checkArgument(searchCapabilities.contains(MailboxManager.SearchCapabilities.FullText),
-                    "FullText support in MailboxManager is required by JMAP Module");
             Preconditions.checkArgument(searchCapabilities.contains(MailboxManager.SearchCapabilities.Attachment),
                     "Attachment Search support in MailboxManager is required by JMAP Module");
         }

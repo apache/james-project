@@ -286,7 +286,7 @@ public class StoreMailboxManager implements MailboxManager {
     
     @Override
     public EnumSet<SearchCapabilities> getSupportedSearchCapabilities() {
-        return index.getSupportedCapabilities();
+        return index.getSupportedCapabilities(getSupportedMessageCapabilities());
     }
     
 

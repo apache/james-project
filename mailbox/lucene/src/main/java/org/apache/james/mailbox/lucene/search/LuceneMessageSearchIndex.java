@@ -36,6 +36,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
+
 import javax.inject.Inject;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -402,8 +403,9 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
 
     @Override
-    public EnumSet<SearchCapabilities> getSupportedCapabilities() {
-        return EnumSet.noneOf(SearchCapabilities.class);
+    public EnumSet<SearchCapabilities> getSupportedCapabilities(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities) {
+        return EnumSet.of(SearchCapabilities.MultimailboxSearch);
+
     }
     
     /**

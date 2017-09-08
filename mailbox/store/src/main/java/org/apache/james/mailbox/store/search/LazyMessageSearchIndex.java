@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
@@ -70,7 +71,7 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
     }
     
     @Override
-    public EnumSet<SearchCapabilities> getSupportedCapabilities() {
+    public EnumSet<SearchCapabilities> getSupportedCapabilities(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities) {
         return EnumSet.noneOf(SearchCapabilities.class);
     }
 
