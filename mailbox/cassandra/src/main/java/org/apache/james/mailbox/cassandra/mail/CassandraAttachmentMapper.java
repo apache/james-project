@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2.DAOAttachmentModel;
+import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2.DAOAttachment;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Attachment;
@@ -75,13 +75,13 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     @Nullable
-    private CompletionStage<Optional<Attachment>> retrievePayload(Optional<DAOAttachmentModel> optionalModel) {
-        if (!optionalModel.isPresent()) {
+    private CompletionStage<Optional<Attachment>> retrievePayload(Optional<DAOAttachment> daoAttachmentOptional) {
+        if (!daoAttachmentOptional.isPresent()) {
             return CompletableFuture.completedFuture(Optional.empty());
         }
-        DAOAttachmentModel model = optionalModel.get();
-        return blobsDAO.read(model.getBlobId())
-            .thenApply(bytes -> Optional.of(model.toAttachment(bytes)));
+        DAOAttachment daoAttachment = daoAttachmentOptional.get();
+        return blobsDAO.read(daoAttachment.getBlobId())
+            .thenApply(bytes -> Optional.of(daoAttachment.toAttachment(bytes)));
     }
 
     @Override

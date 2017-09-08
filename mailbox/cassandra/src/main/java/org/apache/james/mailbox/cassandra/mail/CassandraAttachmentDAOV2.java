@@ -48,13 +48,13 @@ import com.datastax.driver.core.Session;
 import com.google.common.base.Preconditions;
 
 public class CassandraAttachmentDAOV2 {
-    public static class DAOAttachmentModel {
+    public static class DAOAttachment {
         private final AttachmentId attachmentId;
         private final BlobId blobId;
         private final String type;
         private final long size;
 
-        private DAOAttachmentModel(AttachmentId attachmentId, BlobId blobId, String type, long size) {
+        private DAOAttachment(AttachmentId attachmentId, BlobId blobId, String type, long size) {
             this.attachmentId = attachmentId;
             this.blobId = blobId;
             this.type = type;
@@ -87,8 +87,8 @@ public class CassandraAttachmentDAOV2 {
 
         @Override
         public final boolean equals(Object o) {
-            if (o instanceof DAOAttachmentModel) {
-                DAOAttachmentModel that = (DAOAttachmentModel) o;
+            if (o instanceof DAOAttachment) {
+                DAOAttachment that = (DAOAttachment) o;
 
                 return Objects.equals(this.size, that.size)
                     && Objects.equals(this.attachmentId, that.attachmentId)
@@ -104,16 +104,16 @@ public class CassandraAttachmentDAOV2 {
         }
     }
 
-    public static DAOAttachmentModel from(Attachment attachment, BlobId blobId) {
-        return new DAOAttachmentModel(
+    public static DAOAttachment from(Attachment attachment, BlobId blobId) {
+        return new DAOAttachment(
             attachment.getAttachmentId(),
             blobId,
             attachment.getType(),
             attachment.getSize());
     }
 
-    private static DAOAttachmentModel fromRow(Row row) {
-        return new DAOAttachmentModel(
+    private static DAOAttachment fromRow(Row row) {
+        return new DAOAttachment(
             AttachmentId.from(row.getString(ID)),
             BlobId.from(row.getString(BLOB_ID)),
             row.getString(TYPE),
@@ -148,7 +148,7 @@ public class CassandraAttachmentDAOV2 {
             .where(eq(ID_AS_UUID, bindMarker(ID_AS_UUID))));
     }
 
-    public CompletableFuture<Optional<DAOAttachmentModel>> getAttachment(AttachmentId attachmentId) {
+    public CompletableFuture<Optional<DAOAttachment>> getAttachment(AttachmentId attachmentId) {
         Preconditions.checkArgument(attachmentId != null);
         return cassandraAsyncExecutor.executeSingleRow(
             selectStatement.bind()
@@ -156,7 +156,7 @@ public class CassandraAttachmentDAOV2 {
             .thenApply(row -> row.map(CassandraAttachmentDAOV2::fromRow));
     }
 
-    public CompletableFuture<Void> storeAttachment(DAOAttachmentModel attachment) {
+    public CompletableFuture<Void> storeAttachment(DAOAttachment attachment) {
         return cassandraAsyncExecutor.executeVoid(
             insertStatement.bind()
                 .setUUID(ID_AS_UUID, attachment.getAttachmentId().asUUID())
