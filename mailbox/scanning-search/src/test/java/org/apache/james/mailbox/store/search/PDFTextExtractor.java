@@ -28,36 +28,32 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 public class PDFTextExtractor implements TextExtractor {
 
-    private static final String PDF_TYPE = "application/pdf";
+    static final String PDF_TYPE = "application/pdf";
 
     @Override
     public ParsedContent extractContent(InputStream inputStream, String contentType) throws Exception {
+        Preconditions.checkNotNull(inputStream);
+        Preconditions.checkNotNull(contentType);
+
         if (isPDF(contentType)) {
             return extractTextFromPDF(inputStream);
         }
-        try {
-            return new ParsedContent(IOUtils.toString(inputStream, Charsets.UTF_8), ImmutableMap.of());
-        } catch (IOException e) {
-            return new ParsedContent(null, ImmutableMap.of());
-        }
+        return new ParsedContent(IOUtils.toString(inputStream, Charsets.UTF_8), ImmutableMap.of());
     }
 
     private boolean isPDF(String contentType) {
         return contentType.equals(PDF_TYPE);
     }
 
-    private ParsedContent extractTextFromPDF(InputStream inputStream) {
-        try {
-            return new ParsedContent(
-                    new PDFTextStripper().getText(
-                            PDDocument.load(inputStream)),
-                    ImmutableMap.of());
-        } catch (IOException e) {
-            return new ParsedContent(null, ImmutableMap.of());
-        }
+    private ParsedContent extractTextFromPDF(InputStream inputStream) throws IOException {
+        return new ParsedContent(
+            new PDFTextStripper().getText(
+                PDDocument.load(inputStream)),
+            ImmutableMap.of());
     }
 }

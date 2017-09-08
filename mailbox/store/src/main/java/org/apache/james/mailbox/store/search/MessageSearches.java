@@ -35,13 +35,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.TimeZone;
+import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedSearchException;
-import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.MessageAttachment;
@@ -77,9 +77,7 @@ import org.apache.james.mime4j.utils.search.MessageMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 /**
@@ -252,10 +250,21 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
     private boolean isInAttachments(String value, List<MessageAttachment> attachments) {
         return attachments.stream()
             .map(MessageAttachment::getAttachment)
-            .map(Throwing.function((Attachment attachment) -> textExtractor.extractContent(attachment.getStream(), attachment.getType()))
-                    .orReturn(new ParsedContent(null, ImmutableMap.of())))
-            .map(ParsedContent::getTextualContent)
+            .flatMap(this::toAttachmentContent)
             .anyMatch(string -> string.contains(value));
+    }
+
+    private Stream<String> toAttachmentContent(Attachment attachment) {
+        try {
+            return Stream.of(textExtractor
+                .extractContent(
+                    attachment.getStream(),
+                    attachment.getType())
+                .getTextualContent());
+        } catch (Exception e) {
+            LOGGER.error("Error while parsing attachment content", e);
+            return Stream.of();
+        }
     }
 
     private InputStream textHeaders(MailboxMessage message) throws MimeIOException, IOException {
