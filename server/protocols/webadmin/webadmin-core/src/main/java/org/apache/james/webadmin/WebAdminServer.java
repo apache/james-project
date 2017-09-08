@@ -58,21 +58,13 @@ public class WebAdminServer implements Configurable {
 
     // Spark do not allow to retrieve allocated port when using a random port. Thus we generate the port.
     @Inject
-    private WebAdminServer(WebAdminConfiguration configuration, Set<Routes> routesList, AuthenticationFilter authenticationFilter,
+    protected WebAdminServer(WebAdminConfiguration configuration, Set<Routes> routesList, AuthenticationFilter authenticationFilter,
                            MetricFactory metricFactory) {
         this.configuration = configuration;
         this.routesList = routesList;
         this.authenticationFilter = authenticationFilter;
         this.metricFactory = metricFactory;
         this.service = Service.ignite();
-    }
-
-    @VisibleForTesting
-    public WebAdminServer(MetricFactory metricFactory, Routes... routes) throws IOException {
-        this(WebAdminConfiguration.testingConfiguration(),
-            ImmutableSet.copyOf(routes),
-            new NoAuthenticationFilter(),
-            metricFactory);
     }
 
     @Override

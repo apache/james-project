@@ -32,13 +32,6 @@ public class WebAdminConfiguration {
     public static final String CORS_ALL_ORIGINS = "*";
     public static final String DEFAULT_HOST = "localhost";
 
-    public static WebAdminConfiguration testingConfiguration() {
-        return WebAdminConfiguration.builder()
-            .enabled()
-            .port(new RandomPort())
-            .build();
-    }
-
     public static final WebAdminConfiguration DISABLED_CONFIGURATION = WebAdminConfiguration.builder()
         .disabled()
         .build();

@@ -40,6 +40,7 @@ import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.mailbox.cassandra.mail.migration.Migration;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.webadmin.WebAdminServer;
+import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.service.CassandraMigrationService;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.junit.After;
@@ -72,9 +73,10 @@ public class CassandraMigrationRoutesTest {
             .build();
         schemaVersionDAO = mock(CassandraSchemaVersionDAO.class);
 
-        webAdminServer = new WebAdminServer(
+        webAdminServer = WebAdminUtils.createWebAdminServer(
             new DefaultMetricFactory(),
             new CassandraMigrationRoutes(new CassandraMigrationService(schemaVersionDAO, allMigrationClazz, LATEST_VERSION), new JsonTransformer()));
+
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
 

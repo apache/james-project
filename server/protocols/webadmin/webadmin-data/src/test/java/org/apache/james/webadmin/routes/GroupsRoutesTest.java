@@ -46,6 +46,7 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
+import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
@@ -72,7 +73,7 @@ public class GroupsRoutesTest {
     private WebAdminServer webAdminServer;
 
     private void createServer(GroupsRoutes groupsRoutes) throws Exception {
-        webAdminServer = new WebAdminServer(
+        webAdminServer = WebAdminUtils.createWebAdminServer(
             new DefaultMetricFactory(),
             groupsRoutes);
         webAdminServer.configure(NO_CONFIGURATION);

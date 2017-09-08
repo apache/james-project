@@ -17,18 +17,29 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.integration;
+package org.apache.james.webadmin;
 
-import org.apache.james.webadmin.WebAdminConfiguration;
-import org.apache.james.webadmin.WebAdminUtils;
+import java.io.IOException;
 
-import com.google.inject.AbstractModule;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 
-public class WebAdminConfigurationModule extends AbstractModule {
+import com.google.common.collect.ImmutableSet;
 
-    @Override
-    protected void configure() {
-        bind(WebAdminConfiguration.class).toProvider(WebAdminUtils::webAdminConfigurationForTesting);
+public class WebAdminUtils {
+
+    public static WebAdminConfiguration webAdminConfigurationForTesting() {
+        return WebAdminConfiguration.builder()
+            .enabled()
+            .port(new RandomPort())
+            .build();
+    }
+
+    public static WebAdminServer createWebAdminServer(MetricFactory metricFactory, Routes... routes) throws IOException {
+        return new WebAdminServer(webAdminConfigurationForTesting(),
+            ImmutableSet.copyOf(routes),
+            new NoAuthenticationFilter(),
+            metricFactory);
     }
 
 }

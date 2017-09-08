@@ -42,6 +42,7 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
+import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.service.UserService;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.junit.After;
@@ -64,7 +65,7 @@ public class UsersRoutesTest {
     private WebAdminServer webAdminServer;
 
     private void createServer(UsersRepository usersRepository) throws Exception {
-        webAdminServer = new WebAdminServer(
+        webAdminServer = WebAdminUtils.createWebAdminServer(
             new DefaultMetricFactory(),
             new UserRoutes(new UserService(usersRepository), new JsonTransformer()));
         webAdminServer.configure(NO_CONFIGURATION);

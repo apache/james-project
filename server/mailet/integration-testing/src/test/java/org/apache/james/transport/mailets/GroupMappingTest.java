@@ -20,6 +20,9 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+
+import java.util.concurrent.TimeUnit;
 
 import javax.mail.internet.MimeMessage;
 
@@ -102,6 +105,17 @@ public class GroupMappingTest {
                 .addMailet(MailetConfiguration.builder()
                     .match("RecipientIsLocal")
                     .clazz("LocalDelivery")
+                    .build())
+                .addMailet(MailetConfiguration.builder()
+                    .match("All")
+                    .clazz("RemoteDelivery")
+                    .addProperty("outgoingQueue", "outgoing")
+                    .addProperty("delayTime", "5000, 100000, 500000")
+                    .addProperty("maxRetries", "25")
+                    .addProperty("maxDnsProblemRetries", "0")
+                    .addProperty("deliveryThreads", "10")
+                    .addProperty("sendpartial", "true")
+                    .addProperty("bounceProcessor", "bounces")
                     .build())
                 .build())
             .build();
