@@ -171,6 +171,21 @@
 
     </subsection>
 
+    <subsection name="From V3 to V4">
+
+      <p>Migration tag on git repository: <a href="https://github.com/apache/james-project/releases/tag/cassandra_migration_v3_to_v4">cassandra_migration_v3_to_v4</a></p>
+
+      <p>Goal is to store attachments in the blob tables.</p>
+
+      <p>Summary of available options for this migration:</p>
+
+      <dl>
+        <dt><strong>attachment.v2.migration.read.timeout</strong></dt>
+        <dd>Optional. Defaults to one day.<br/> Controls how many milliseconds before the read on attachment v1 time out.</dd>
+      </dl>
+      
+    </subsection>
+
   </section>
 
 </body>

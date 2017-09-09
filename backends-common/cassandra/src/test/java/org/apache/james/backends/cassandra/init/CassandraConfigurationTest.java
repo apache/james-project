@@ -21,7 +21,6 @@ package org.apache.james.backends.cassandra.init;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,7 +38,9 @@ public class CassandraConfigurationTest {
 
     @Test
     public void cassandraConfigurationShouldRespectBeanContract() {
-        EqualsVerifier.forClass(CassandraConfiguration.class).verify();
+        EqualsVerifier.forClass(CassandraConfiguration.class)
+            .allFieldsShouldBeUsed()
+            .verify();
     }
 
     @Test
@@ -193,6 +194,22 @@ public class CassandraConfigurationTest {
     }
 
     @Test
+    public void attachmentV2MigrationReadTimeoutShouldThrowOnZero() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        CassandraConfiguration.builder()
+            .attachmentV2MigrationReadTimeout(0);
+    }
+
+    @Test
+    public void attachmentV2MigrationReadTimeoutShouldThrowOnNegativeValue() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        CassandraConfiguration.builder()
+            .attachmentV2MigrationReadTimeout(-1);
+    }
+
+    @Test
     public void builderShouldCreateTheRightObject() {
         int aclMaxRetry = 1;
         int modSeqMaxRetry = 2;
@@ -204,6 +221,7 @@ public class CassandraConfigurationTest {
         int messageReadChunkSize = 8;
         int expungeChunkSize = 9;
         int blobPartSize = 10;
+        int attachmentV2MigrationReadTimeout = 11;
 
         CassandraConfiguration configuration = CassandraConfiguration.builder()
             .aclMaxRetry(aclMaxRetry)
@@ -216,6 +234,7 @@ public class CassandraConfigurationTest {
             .messageReadChunkSize(messageReadChunkSize)
             .expungeChunkSize(expungeChunkSize)
             .blobPartSize(blobPartSize)
+            .attachmentV2MigrationReadTimeout(attachmentV2MigrationReadTimeout)
             .build();
 
         softly.assertThat(configuration.getAclMaxRetry()).isEqualTo(aclMaxRetry);
@@ -228,6 +247,7 @@ public class CassandraConfigurationTest {
         softly.assertThat(configuration.getMessageReadChunkSize()).isEqualTo(messageReadChunkSize);
         softly.assertThat(configuration.getExpungeChunkSize()).isEqualTo(expungeChunkSize);
         softly.assertThat(configuration.getBlobPartSize()).isEqualTo(blobPartSize);
+        softly.assertThat(configuration.getAttachmentV2MigrationReadTimeout()).isEqualTo(attachmentV2MigrationReadTimeout);
     }
 
 }

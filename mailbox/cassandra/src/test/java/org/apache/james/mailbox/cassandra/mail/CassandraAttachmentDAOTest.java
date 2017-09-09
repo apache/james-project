@@ -26,6 +26,7 @@ import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.model.Attachment;
@@ -52,7 +53,9 @@ public class CassandraAttachmentDAOTest {
     public void setUp() throws Exception {
         cassandra = CassandraCluster.create(new CassandraAttachmentModule(),
             cassandraServer.getIp(), cassandraServer.getBindingPort());
-        testee = new CassandraAttachmentDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+        testee = new CassandraAttachmentDAO(cassandra.getConf(),
+            CassandraUtils.WITH_DEFAULT_CONFIGURATION,
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     @After

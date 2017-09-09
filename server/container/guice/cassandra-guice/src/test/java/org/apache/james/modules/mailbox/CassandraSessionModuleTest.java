@@ -60,6 +60,7 @@ public class CassandraSessionModuleTest {
                 .messageReadChunkSize(8)
                 .expungeChunkSize(9)
                 .blobPartSize(10)
+                .attachmentV2MigrationReadTimeout(11)
                 .build());
     }
 
