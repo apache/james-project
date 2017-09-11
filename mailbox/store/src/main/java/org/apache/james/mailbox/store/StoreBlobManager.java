@@ -22,6 +22,8 @@ package org.apache.james.mailbox.store;
 import java.io.IOException;
 import java.util.Optional;
 
+import javax.inject.Inject;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.BlobManager;
@@ -47,6 +49,7 @@ public class StoreBlobManager implements BlobManager {
     private final MessageIdManager messageIdManager;
     private final MessageId.Factory messageIdFactory;
 
+    @Inject
     public StoreBlobManager(AttachmentManager attachmentManager, MessageIdManager messageIdManager, MessageId.Factory messageIdFactory) {
         this.attachmentManager = attachmentManager;
         this.messageIdManager = messageIdManager;

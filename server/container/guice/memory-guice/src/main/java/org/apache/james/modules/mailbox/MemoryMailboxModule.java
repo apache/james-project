@@ -24,6 +24,7 @@ import javax.inject.Singleton;
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthenticator;
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthorizator;
 import org.apache.james.mailbox.AttachmentManager;
+import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MessageIdManager;
@@ -51,6 +52,7 @@ import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreAttachmentManager;
+import org.apache.james.mailbox.store.StoreBlobManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
@@ -88,6 +90,7 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(MailboxId.Factory.class).to(InMemoryId.Factory.class);
         bind(MessageId.Factory.class).to(InMemoryMessageId.Factory.class);
 
+        bind(BlobManager.class).to(StoreBlobManager.class);
         bind(SubscriptionManager.class).to(StoreSubscriptionManager.class);
         bind(SubscriptionMapperFactory.class).to(InMemoryMailboxSessionMapperFactory.class);
         bind(MailboxSessionMapperFactory.class).to(InMemoryMailboxSessionMapperFactory.class);
@@ -103,6 +106,7 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(MessageSearchIndex.class).to(SimpleMessageSearchIndex.class);
         bind(TextExtractor.class).to(JsoupTextExtractor.class);
 
+        bind(StoreBlobManager.class).in(Scopes.SINGLETON);
         bind(InMemoryMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
         bind(InMemoryModSeqProvider.class).in(Scopes.SINGLETON);
         bind(InMemoryUidProvider.class).in(Scopes.SINGLETON);
