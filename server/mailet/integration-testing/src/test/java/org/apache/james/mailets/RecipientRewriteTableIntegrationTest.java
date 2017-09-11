@@ -25,8 +25,8 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
-import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.IMAPMessageReader;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -44,12 +44,15 @@ public class RecipientRewriteTableIntegrationTest {
     private static final String PASSWORD = "secret";
 
     private static final String JAMES_APACHE_ORG = "james.org";
+    private static final String JAMES_ANOTHER_DOMAIN = "james.com";
 
     private static final String FROM = "fromUser@" + JAMES_APACHE_ORG;
     private static final String RECIPIENT = "touser@" + JAMES_APACHE_ORG;
 
     private static final String ANY_AT_JAMES = "any@" + JAMES_APACHE_ORG;
     private static final String OTHER_AT_JAMES = "other@" + JAMES_APACHE_ORG;
+
+    private static final String ANY_AT_ANOTHER_DOMAIN = "any@" + JAMES_ANOTHER_DOMAIN;
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -80,6 +83,7 @@ public class RecipientRewriteTableIntegrationTest {
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
         dataProbe.addDomain(JAMES_APACHE_ORG);
+        dataProbe.addDomain(JAMES_ANOTHER_DOMAIN);
     }
 
     @After
@@ -146,6 +150,36 @@ public class RecipientRewriteTableIntegrationTest {
 
             calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(OTHER_AT_JAMES, PASSWORD));
             calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(localUser, PASSWORD));
+        }
+    }
+
+    @Test
+    public void messageShouldRedirectToTheSameUserWhenDomainMapping() throws Exception {
+        dataProbe.addDomainAliasMapping(JAMES_APACHE_ORG, JAMES_ANOTHER_DOMAIN);
+
+        createUserInbox(ANY_AT_JAMES);
+        createUserInbox(ANY_AT_ANOTHER_DOMAIN);
+
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
+             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+            messageSender.sendMessage(FROM, ANY_AT_JAMES);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(ANY_AT_ANOTHER_DOMAIN, PASSWORD));
+        }
+    }
+
+    @Test
+    public void messageShouldNotSendToRecipientWhenDomainMapping() throws Exception {
+        dataProbe.addDomainAliasMapping(JAMES_APACHE_ORG, JAMES_ANOTHER_DOMAIN);
+
+        createUserInbox(ANY_AT_JAMES);
+        createUserInbox(ANY_AT_ANOTHER_DOMAIN);
+
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
+             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+            messageSender.sendMessage(FROM, ANY_AT_JAMES);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userDoesNotReceiveMessage(ANY_AT_JAMES, PASSWORD));
         }
     }
 
