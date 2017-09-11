@@ -24,6 +24,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
+import org.apache.james.mailbox.cassandra.TestCassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId.Factory;
@@ -78,26 +79,9 @@ public class CassandraMapperProvider implements MapperProvider {
     }
 
     private CassandraMailboxSessionMapperFactory createMapperFactory() {
-        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
-        CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(cassandra.getConf(), cassandra.getTypesProvider());
-        CassandraFirstUnseenDAO firstUnseenDAO = new CassandraFirstUnseenDAO(cassandra.getConf());
-        CassandraDeletedMessageDAO deletedMessageDAO = new CassandraDeletedMessageDAO(cassandra.getConf());
-        CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
-        CassandraMessageDAO messageDAO = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), blobsDAO);
-        return new CassandraMailboxSessionMapperFactory(
-            new CassandraUidProvider(cassandra.getConf()),
-            cassandraModSeqProvider,
-            cassandra.getConf(),
-            messageDAO,
-            new CassandraMessageIdDAO(cassandra.getConf(), MESSAGE_ID_FACTORY),
-            new CassandraMessageIdToImapUidDAO(cassandra.getConf(), MESSAGE_ID_FACTORY),
-            new CassandraMailboxCounterDAO(cassandra.getConf()),
-            new CassandraMailboxRecentsDAO(cassandra.getConf()),
-            mailboxDAO,
-            mailboxPathDAO,
-            firstUnseenDAO,
-            new CassandraApplicableFlagDAO(cassandra.getConf()),
-            deletedMessageDAO);
+        return TestCassandraMailboxSessionMapperFactory.forTests(cassandra.getConf(),
+            cassandra.getTypesProvider(),
+            new CassandraMessageId.Factory());
     }
 
     @Override

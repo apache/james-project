@@ -22,13 +22,16 @@ package org.apache.james.mailbox.cassandra.modules;
 import static com.datastax.driver.core.DataType.bigint;
 import static com.datastax.driver.core.DataType.blob;
 import static com.datastax.driver.core.DataType.text;
+import static com.datastax.driver.core.DataType.uuid;
 
 import java.util.List;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
+import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable;
+import org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.google.common.collect.ImmutableList;
@@ -48,7 +51,21 @@ public class CassandraAttachmentModule implements CassandraModule {
                     .addColumn(CassandraAttachmentTable.TYPE, text())
                     .addColumn(CassandraAttachmentTable.SIZE, bigint())
                     .withOptions()
-                    .comment("Holds attachment for fast attachment retrieval")));
+                    .comment("Holds attachment for fast attachment retrieval")),
+            new CassandraTable(CassandraAttachmentV2Table.TABLE_NAME,
+                SchemaBuilder.createTable(CassandraAttachmentV2Table.TABLE_NAME)
+                    .ifNotExists()
+                    .addPartitionKey(CassandraAttachmentV2Table.ID_AS_UUID, uuid())
+                    .addColumn(CassandraAttachmentV2Table.ID, text())
+                    .addColumn(CassandraAttachmentV2Table.BLOB_ID, text())
+                    .addColumn(CassandraAttachmentV2Table.TYPE, text())
+                    .addColumn(CassandraAttachmentV2Table.SIZE, bigint())
+                    .withOptions()
+                    .compactionOptions(SchemaBuilder.leveledStrategy())
+                    .caching(SchemaBuilder.KeyCaching.ALL,
+                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))
+                    .comment("Holds attachment for fast attachment retrieval. Content of messages is stored" +
+                        "in `blobs` and `blobparts` tables.")));
         types = ImmutableList.of();
     }
 

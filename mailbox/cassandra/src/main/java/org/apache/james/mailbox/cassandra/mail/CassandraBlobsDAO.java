@@ -23,11 +23,13 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -39,6 +41,8 @@ import org.apache.james.mailbox.cassandra.table.BlobTable;
 import org.apache.james.mailbox.cassandra.table.BlobTable.BlobParts;
 import org.apache.james.util.FluentFutureStream;
 import org.apache.james.util.OptionalUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
@@ -48,8 +52,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class CassandraBlobsDAO {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraBlobsDAO.class);
@@ -104,14 +106,13 @@ public class CassandraBlobsDAO {
             .value(BlobParts.DATA, bindMarker(BlobParts.DATA)));
     }
 
-    public CompletableFuture<Optional<BlobId>> save(byte[] data) {
-        if (data == null) {
-            return CompletableFuture.completedFuture(Optional.empty());
-        }
+    public CompletableFuture<BlobId> save(byte[] data) {
+        Preconditions.checkNotNull(data);
+
         BlobId blobId = BlobId.forPayload(data);
         return saveBlobParts(data, blobId)
             .thenCompose(numberOfChunk-> saveBlobPartsReferences(blobId, numberOfChunk))
-            .thenApply(any -> Optional.of(blobId));
+            .thenApply(any -> blobId);
     }
 
     private CompletableFuture<Integer> saveBlobParts(byte[] data, BlobId blobId) {

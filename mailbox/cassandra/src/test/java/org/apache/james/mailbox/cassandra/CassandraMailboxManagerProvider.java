@@ -25,19 +25,6 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraBlobsDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
-import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
@@ -52,34 +39,12 @@ public class CassandraMailboxManagerProvider {
     private static final int LIMIT_ANNOTATION_SIZE = 30;
 
     public static CassandraMailboxManager provideMailboxManager(Session session, CassandraTypesProvider cassandraTypesProvider) {
-        CassandraUidProvider uidProvider = new CassandraUidProvider(session);
-        CassandraModSeqProvider modSeqProvider = new CassandraModSeqProvider(session);
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
-        CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(session, messageIdFactory);
-        CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(session, messageIdFactory);
-        CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(session);
-        CassandraMessageDAO messageDAO = new CassandraMessageDAO(session, cassandraTypesProvider, blobsDAO);
-        CassandraMailboxCounterDAO mailboxCounterDAO = new CassandraMailboxCounterDAO(session);
-        CassandraMailboxRecentsDAO mailboxRecentsDAO = new CassandraMailboxRecentsDAO(session);
-        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(session, cassandraTypesProvider);
-        CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(session, cassandraTypesProvider);
-        CassandraFirstUnseenDAO firstUnseenDAO = new CassandraFirstUnseenDAO(session);
-        CassandraApplicableFlagDAO applicableFlagDAO = new CassandraApplicableFlagDAO(session);
-        CassandraDeletedMessageDAO deletedMessageDAO = new CassandraDeletedMessageDAO(session);
 
-        CassandraMailboxSessionMapperFactory mapperFactory = new CassandraMailboxSessionMapperFactory(uidProvider,
-            modSeqProvider,
+        CassandraMailboxSessionMapperFactory mapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
             session,
-            messageDAO,
-            messageIdDAO,
-            imapUidDAO,
-            mailboxCounterDAO,
-            mailboxRecentsDAO,
-            mailboxDAO,
-            mailboxPathDAO,
-            firstUnseenDAO,
-            applicableFlagDAO,
-            deletedMessageDAO);
+            cassandraTypesProvider,
+            messageIdFactory);
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();

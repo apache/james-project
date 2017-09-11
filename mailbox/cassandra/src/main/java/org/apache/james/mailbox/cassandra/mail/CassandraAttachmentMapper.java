@@ -19,50 +19,42 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.FIELDS;
-import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.ID;
-import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.PAYLOAD;
-import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.SIZE;
-import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.TABLE_NAME;
-import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.TYPE;
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.stream.Stream;
+
 import javax.inject.Inject;
 
-import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2.DAOAttachment;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.util.FluentFutureStream;
-import org.apache.james.util.OptionalUtils;
-
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
-import com.github.fge.lambdas.Throwing;
-import com.github.fge.lambdas.ThrownByLambdaException;
-import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CassandraAttachmentMapper implements AttachmentMapper {
+import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
+public class CassandraAttachmentMapper implements AttachmentMapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraAttachmentMapper.class);
-    private final CassandraAsyncExecutor cassandraAsyncExecutor;
+
+    private final CassandraAttachmentDAO attachmentDAO;
+    private final CassandraAttachmentDAOV2 attachmentDAOV2;
+    private final CassandraBlobsDAO blobsDAO;
 
     @Inject
-    public CassandraAttachmentMapper(Session session) {
-        this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
+    public CassandraAttachmentMapper(CassandraAttachmentDAO attachmentDAO, CassandraAttachmentDAOV2 attachmentDAOV2, CassandraBlobsDAO blobsDAO) {
+        this.attachmentDAO = attachmentDAO;
+        this.attachmentDAOV2 = attachmentDAOV2;
+        this.blobsDAO = blobsDAO;
     }
 
     @Override
@@ -77,21 +69,19 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     @Override
     public Attachment getAttachment(AttachmentId attachmentId) throws AttachmentNotFoundException {
         Preconditions.checkArgument(attachmentId != null);
-        return cassandraAsyncExecutor.executeSingleRow(
-            select(FIELDS)
-                .from(TABLE_NAME)
-                .where(eq(ID, attachmentId.getId())))
-            .thenApply(optional -> optional.map(this::attachment))
+        return getAttachmentInternal(attachmentId)
             .join()
             .orElseThrow(() -> new AttachmentNotFoundException(attachmentId.getId()));
     }
 
-    private Attachment attachment(Row row) {
-        return Attachment.builder()
-                .attachmentId(AttachmentId.from(row.getString(ID)))
-                .bytes(row.getBytes(PAYLOAD).array())
-                .type(row.getString(TYPE))
-                .build();
+    @Nullable
+    private CompletionStage<Optional<Attachment>> retrievePayload(Optional<DAOAttachment> daoAttachmentOptional) {
+        if (!daoAttachmentOptional.isPresent()) {
+            return CompletableFuture.completedFuture(Optional.empty());
+        }
+        DAOAttachment daoAttachment = daoAttachmentOptional.get();
+        return blobsDAO.read(daoAttachment.getBlobId())
+            .thenApply(bytes -> Optional.of(daoAttachment.toAttachment(bytes)));
     }
 
     @Override
@@ -99,63 +89,56 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
         return getAttachmentsAsFuture(attachmentIds).join();
     }
 
-    public CompletableFuture<List<Attachment>> getAttachmentsAsFuture(Collection<AttachmentId> attachmentIds) {
+    public CompletableFuture<ImmutableList<Attachment>> getAttachmentsAsFuture(Collection<AttachmentId> attachmentIds) {
         Preconditions.checkArgument(attachmentIds != null);
 
         Stream<CompletableFuture<Optional<Attachment>>> attachments = attachmentIds
                 .stream()
                 .distinct()
-                .map(this::getAttachmentAsFuture);
+                .map(id -> getAttachmentInternal(id)
+                    .thenApply(finalValue -> logNotFound(id, finalValue)));
 
         return FluentFutureStream
-            .of(attachments)
-            .flatMap(OptionalUtils::toStream)
-            .completableFuture()
-            .thenApply(stream ->
-                stream.collect(Guavate.toImmutableList()));
+            .ofOptionals(attachments)
+            .collect(Guavate.toImmutableList());
     }
 
-    private CompletableFuture<Optional<Attachment>> getAttachmentAsFuture(AttachmentId attachmentId) {
-        String id = attachmentId.getId();
+    private CompletableFuture<Optional<Attachment>> getAttachmentInternal(AttachmentId id) {
+        return attachmentDAOV2.getAttachment(id)
+            .thenCompose(this::retrievePayload)
+            .thenCompose(v2Value -> fallbackToV1(id, v2Value));
+    }
 
-        return cassandraAsyncExecutor.executeSingleRow(
-            select(FIELDS)
-                .from(TABLE_NAME)
-                .where(eq(ID, id)))
-            .thenApply(optional ->
-                OptionalUtils.ifEmpty(
-                    optional.map(this::attachment),
-                    () -> LOGGER.warn("Failed retrieving attachment {}", attachmentId)));
+    private CompletionStage<Optional<Attachment>> fallbackToV1(AttachmentId attachmentId, Optional<Attachment> v2Value) {
+        if (v2Value.isPresent()) {
+            return CompletableFuture.completedFuture(v2Value);
+        }
+        return attachmentDAO.getAttachment(attachmentId);
     }
 
     @Override
     public void storeAttachment(Attachment attachment) throws MailboxException {
-        try {
-            asyncStoreAttachment(attachment).join();
-        } catch (IOException e) {
-            throw new MailboxException(e.getMessage(), e);
-        }
-    }
-
-    private CompletableFuture<Void> asyncStoreAttachment(Attachment attachment) throws IOException {
-        return cassandraAsyncExecutor.executeVoid(
-            insertInto(TABLE_NAME)
-                .value(ID, attachment.getAttachmentId().getId())
-                .value(PAYLOAD, ByteBuffer.wrap(attachment.getBytes()))
-                .value(TYPE, attachment.getType())
-                .value(SIZE, attachment.getSize())
-        );
+        storeAttachmentAsync(attachment).join();
     }
 
     @Override
     public void storeAttachments(Collection<Attachment> attachments) throws MailboxException {
-        try {
-            FluentFutureStream.of(
-                attachments.stream()
-                    .map(Throwing.function(this::asyncStoreAttachment)))
-                .join();
-        } catch (ThrownByLambdaException e) {
-            throw new MailboxException(e.getCause().getMessage(), e.getCause());
+        FluentFutureStream.of(
+            attachments.stream()
+                .map(this::storeAttachmentAsync))
+            .join();
+    }
+
+    public CompletableFuture<Void> storeAttachmentAsync(Attachment attachment) {
+        return blobsDAO.save(attachment.getBytes())
+            .thenApply(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
+            .thenCompose(attachmentDAOV2::storeAttachment);
+    }
+
+    private Optional<Attachment> logNotFound(AttachmentId attachmentId, Optional<Attachment> optionalAttachment) {
+        if (!optionalAttachment.isPresent()) {
+            LOGGER.warn("Failed retrieving attachment {}", attachmentId);
         }
+        return optionalAttachment;
     }
 }

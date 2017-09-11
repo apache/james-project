@@ -233,4 +233,26 @@ public class FluentFutureStreamTest {
         assertThat(sideEffects).containsOnly(1, 2, 3);
     }
 
+    @Test
+    public void collectShouldReturnTheCollectionOfData() {
+        assertThat(
+            FluentFutureStream.of(
+                Stream.of(
+                    CompletableFuture.completedFuture(1),
+                    CompletableFuture.completedFuture(2),
+                    CompletableFuture.completedFuture(3)))
+                .collect(Guavate.toImmutableList())
+                .join())
+            .containsExactly(1, 2, 3);
+    }
+
+    @Test
+    public void collectShouldReturnEmptyWhenStreamIsEmpty() {
+        assertThat(
+            FluentFutureStream.ofFutures()
+                .collect(Guavate.toImmutableList())
+                .join())
+            .isEmpty();
+    }
+
 }

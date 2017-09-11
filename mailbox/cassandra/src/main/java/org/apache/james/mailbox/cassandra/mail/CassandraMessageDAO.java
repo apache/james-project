@@ -38,6 +38,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.M
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.PROPERTIES;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.TEXTUAL_LINE_COUNT;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -46,6 +47,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import javax.inject.Inject;
 import javax.mail.util.SharedByteArrayInputStream;
 
@@ -88,7 +90,6 @@ import com.google.common.primitives.Bytes;
 
 public class CassandraMessageDAO {
     public static final long DEFAULT_LONG_VALUE = 0L;
-    public static final String DEFAULT_OBJECT_VALUE = null;
     private static final byte[] EMPTY_BYTE_ARRAY = {};
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
@@ -154,7 +155,7 @@ public class CassandraMessageDAO {
             cassandraAsyncExecutor.executeVoid(boundWriteStatement(message, pair)));
     }
 
-    private CompletableFuture<Pair<Optional<BlobId>, Optional<BlobId>>> saveContent(MailboxMessage message) throws MailboxException {
+    private CompletableFuture<Pair<BlobId, BlobId>> saveContent(MailboxMessage message) throws MailboxException {
         try {
             return CompletableFutureUtil.combine(
                 blobsDAO.save(
@@ -169,7 +170,7 @@ public class CassandraMessageDAO {
         }
     }
 
-    private BoundStatement boundWriteStatement(MailboxMessage message, Pair<Optional<BlobId>, Optional<BlobId>> pair) {
+    private BoundStatement boundWriteStatement(MailboxMessage message, Pair<BlobId, BlobId> pair) {
         CassandraMessageId messageId = (CassandraMessageId) message.getMessageId();
         return insert.bind()
             .setUUID(MESSAGE_ID, messageId.get())
@@ -177,8 +178,8 @@ public class CassandraMessageDAO {
             .setInt(BODY_START_OCTET, (int) (message.getHeaderOctets()))
             .setLong(FULL_CONTENT_OCTETS, message.getFullContentOctets())
             .setLong(BODY_OCTECTS, message.getBodyOctets())
-            .setString(BODY_CONTENT, pair.getRight().map(BlobId::getId).orElse(DEFAULT_OBJECT_VALUE))
-            .setString(HEADER_CONTENT, pair.getLeft().map(BlobId::getId).orElse(DEFAULT_OBJECT_VALUE))
+            .setString(BODY_CONTENT, pair.getRight().getId())
+            .setString(HEADER_CONTENT, pair.getLeft().getId())
             .setLong(TEXTUAL_LINE_COUNT, Optional.ofNullable(message.getTextualLineCount()).orElse(DEFAULT_LONG_VALUE))
             .setList(PROPERTIES, buildPropertiesUdt(message))
             .setList(ATTACHMENTS, buildAttachmentUdt(message));

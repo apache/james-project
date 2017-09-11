@@ -24,6 +24,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 public class FluentFutureStream<T> {
@@ -171,6 +172,14 @@ public class FluentFutureStream<T> {
      */
     public CompletableFuture<Stream<T>> completableFuture() {
         return this.completableFuture;
+    }
+
+    /**
+     * Returns the future of the underlying collected stream.
+     */
+    public <C> CompletableFuture<C> collect(Collector<T, ?, C> collector) {
+        return this.completableFuture
+            .thenApply(stream -> stream.collect(collector));
     }
 
     /**
