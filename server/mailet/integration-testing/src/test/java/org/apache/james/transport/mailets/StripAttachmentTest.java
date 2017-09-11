@@ -23,19 +23,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
+import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
-import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
-import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.transport.matchers.All;
+import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.SMTPMessageSender;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.After;
@@ -77,33 +80,33 @@ public class StripAttachmentTest {
                     .state("transport")
                     .enableJmx(true)
                     .addMailet(MailetConfiguration.builder()
-                            .match("All")
-                            .clazz("RemoveMimeHeader")
+                            .matcher(All.class)
+                            .mailet(RemoveMimeHeader.class)
                             .addProperty("name", "bcc")
                             .build())
                     .addMailet(MailetConfiguration.builder()
-                            .match("All")
-                            .clazz("StripAttachment")
+                            .matcher(All.class)
+                            .mailet(StripAttachment.class)
                             .addProperty("attribute", "my.attribute")
                             .addProperty("remove", "all")
                             .addProperty("notpattern", ".*.tmp.*")
                             .build())
                     .addMailet(MailetConfiguration.builder()
-                            .match("All")
-                            .clazz("OnlyText")
+                            .matcher(All.class)
+                            .mailet(OnlyText.class)
                             .build())
                     .addMailet(MailetConfiguration.builder()
-                            .match("All")
-                            .clazz("RecoverAttachment")
+                            .matcher(All.class)
+                            .mailet(RecoverAttachment.class)
                             .addProperty("attribute", "my.attribute")
                             .build())
                     .addMailet(MailetConfiguration.builder()
-                            .match("RecipientIsLocal")
-                            .clazz("org.apache.james.jmap.mailet.VacationMailet")
+                            .matcher(RecipientIsLocal.class)
+                            .mailet(VacationMailet.class)
                             .build())
                     .addMailet(MailetConfiguration.builder()
-                            .match("RecipientIsLocal")
-                            .clazz("LocalDelivery")
+                            .matcher(RecipientIsLocal.class)
+                            .mailet(LocalDelivery.class)
                             .build())
                     .build())
             .build();

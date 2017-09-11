@@ -25,21 +25,25 @@ import java.util.Optional;
 
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
+import org.apache.james.jmap.mailet.TextCalendarBodyToAttachment;
+import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
-import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.amqp.AmqpRule;
+import org.apache.james.transport.matchers.All;
+import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.util.streams.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.SMTPMessageSender;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.After;
@@ -457,58 +461,58 @@ public class ICSAttachmentWorkflowTest {
                     .state("transport")
                     .enableJmx(true)
                     .addMailet(MailetConfiguration.builder()
-                            .match("All")
-                            .clazz("RemoveMimeHeader")
+                            .matcher(All.class)
+                            .mailet(RemoveMimeHeader.class)
                             .addProperty("name", "bcc")
                             .build())
                     .addMailet(MailetConfiguration.builder()
-                            .match("All")
-                            .clazz("StripAttachment")
+                            .matcher(All.class)
+                            .mailet(StripAttachment.class)
                             .addProperty("attribute", MAIL_ATTRIBUTE)
                             .addProperty("pattern", ".*")
                             .build())
                     .addMailet(MailetConfiguration.builder()
-                            .match("All")
-                            .clazz("MimeDecodingMailet")
+                            .matcher(All.class)
+                            .mailet(MimeDecodingMailet.class)
                             .addProperty("attribute", MAIL_ATTRIBUTE)
                             .build())
                     .addMailet(MailetConfiguration.builder()
-                            .match("All")
-                            .clazz("ICalendarParser")
+                            .matcher(All.class)
+                            .mailet(ICalendarParser.class)
                             .addProperty("sourceAttribute", MAIL_ATTRIBUTE)
                             .addProperty("destinationAttribute", PARSED_ICAL_MAIL_ATTRIBUTE)
                             .build())
                     .addMailet(MailetConfiguration.builder()
-                            .match("All")
-                            .clazz("ICALToHeader")
+                            .matcher(All.class)
+                            .mailet(ICALToHeader.class)
                             .addProperty("attribute", PARSED_ICAL_MAIL_ATTRIBUTE)
                             .build())
                     .addMailet(MailetConfiguration.builder()
-                            .match("All")
-                            .clazz("ICALToJsonAttribute")
+                            .matcher(All.class)
+                            .mailet(ICALToJsonAttribute.class)
                             .addProperty("source", PARSED_ICAL_MAIL_ATTRIBUTE)
                             .addProperty("rawSource", MAIL_ATTRIBUTE)
                             .addProperty("destination", JSON_MAIL_ATTRIBUTE)
                             .build())
                     .addMailet(MailetConfiguration.builder()
-                        .match("All")
-                        .clazz("org.apache.james.jmap.mailet.TextCalendarBodyToAttachment")
-                        .build())
+                            .matcher(All.class)
+                            .mailet(TextCalendarBodyToAttachment.class)
+                            .build())
                     .addMailet(MailetConfiguration.builder()
-                            .match("All")
-                            .clazz("AmqpForwardAttribute")
+                            .matcher(All.class)
+                            .mailet(AmqpForwardAttribute.class)
                             .addProperty("uri", amqpRule.getAmqpUri())
                             .addProperty("exchange", EXCHANGE_NAME)
                             .addProperty("attribute", JSON_MAIL_ATTRIBUTE)
                             .addProperty("routing_key", ROUTING_KEY)
                             .build())
                     .addMailet(MailetConfiguration.builder()
-                            .match("RecipientIsLocal")
-                            .clazz("org.apache.james.jmap.mailet.VacationMailet")
+                            .matcher(RecipientIsLocal.class)
+                            .mailet(VacationMailet.class)
                             .build())
                     .addMailet(MailetConfiguration.builder()
-                            .match("RecipientIsLocal")
-                            .clazz("LocalDelivery")
+                            .matcher(RecipientIsLocal.class)
+                            .mailet(LocalDelivery.class)
                             .build())
                     .build())
             .build();

@@ -23,18 +23,31 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.ZonedDateTime;
 
+import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
-import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
+import org.apache.james.transport.mailets.LocalDelivery;
+import org.apache.james.transport.mailets.RecipientRewriteTable;
+import org.apache.james.transport.mailets.RemoteDelivery;
+import org.apache.james.transport.mailets.RemoveMimeHeader;
+import org.apache.james.transport.mailets.SMIMESign;
+import org.apache.james.transport.mailets.SetMimeHeader;
+import org.apache.james.transport.mailets.ToProcessor;
+import org.apache.james.transport.matchers.All;
+import org.apache.james.transport.matchers.HasMailAttribute;
+import org.apache.james.transport.matchers.RecipientIsLocal;
+import org.apache.james.transport.matchers.SMTPAuthSuccessful;
+import org.apache.james.transport.matchers.SenderIsLocal;
 import org.apache.james.util.date.ZonedDateTimeProvider;
-import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.SMTPMessageSender;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -74,45 +87,46 @@ public class SMIMESignIntegrationTest {
                 .state("transport")
                 .enableJmx(true)
                 .addMailet(MailetConfiguration.builder()
-                    .match("SMTPAuthSuccessful")
-                    .clazz("SetMimeHeader")
+                    .matcher(SMTPAuthSuccessful.class)
+                    .mailet(SetMimeHeader.class)
                     .addProperty("name", "X-UserIsAuth")
                     .addProperty("value", "true")
                     .build())
                 .addMailet(MailetConfiguration.builder()
-                    .match("HasMailAttribute=org.apache.james.SMIMECheckSignature")
-                    .clazz("SetMimeHeader")
+                    .matcher(HasMailAttribute.class)
+                    .matcherCondition("org.apache.james.SMIMECheckSignature")
+                    .mailet(SetMimeHeader.class)
                     .addProperty("name", "X-WasSigned")
                     .addProperty("value", "true")
                     .build())
                 .addMailet(MailetConfiguration.builder()
-                    .match("All")
-                    .clazz("RemoveMimeHeader")
+                    .matcher(All.class)
+                    .mailet(RemoveMimeHeader.class)
                     .addProperty("name", "bcc")
                     .build())
                 .addMailet(MailetConfiguration.builder()
-                    .match("All")
-                    .clazz("RecipientRewriteTable")
+                    .matcher(All.class)
+                    .mailet(RecipientRewriteTable.class)
                     .build())
                 .addMailet(MailetConfiguration.builder()
-                    .match("RecipientIsLocal")
-                    .clazz("org.apache.james.jmap.mailet.VacationMailet")
+                    .matcher(RecipientIsLocal.class)
+                    .mailet(VacationMailet.class)
                     .build())
                 .addMailet(MailetConfiguration.builder()
-                    .clazz("SMIMESign")
-                    .match("SenderIsLocal")
+                    .mailet(SMIMESign.class)
+                    .matcher(SenderIsLocal.class)
                     .addProperty("keyStoreFileName", temporaryFolder.getRoot().getAbsoluteFile().getAbsolutePath() + "/conf/smime.p12")
                     .addProperty("keyStorePassword", "secret")
                     .addProperty("keyStoreType", "PKCS12")
                     .addProperty("debug", "true")
                     .build())
                 .addMailet(MailetConfiguration.builder()
-                    .match("RecipientIsLocal")
-                    .clazz("LocalDelivery")
+                    .matcher(RecipientIsLocal.class)
+                    .mailet(LocalDelivery.class)
                     .build())
                 .addMailet(MailetConfiguration.builder()
-                    .match("SMTPAuthSuccessful")
-                    .clazz("RemoteDelivery")
+                    .matcher(SMTPAuthSuccessful.class)
+                    .mailet(RemoteDelivery.class)
                     .addProperty("outgoingQueue", "outgoing")
                     .addProperty("delayTime", "5000, 100000, 500000")
                     .addProperty("maxRetries", "25")
@@ -122,8 +136,8 @@ public class SMIMESignIntegrationTest {
                     .addProperty("bounceProcessor", "bounces")
                     .build())
                 .addMailet(MailetConfiguration.builder()
-                    .match("All")
-                    .clazz("ToProcessor")
+                    .matcher(All.class)
+                    .mailet(ToProcessor.class)
                     .addProperty("processor", "relay-denied")
                     .build())
                 .build())
