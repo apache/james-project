@@ -19,6 +19,9 @@
 
 package org.apache.james.mailbox.model;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Objects;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -66,12 +69,14 @@ public class Blob {
     private final BlobId blobId;
     private final byte[] payload;
     private final String contentType;
+    private final long size;
 
     @VisibleForTesting
     Blob(BlobId blobId, byte[] payload, String contentType) {
         this.blobId = blobId;
         this.payload = payload;
         this.contentType = contentType;
+        this.size = payload.length;
     }
 
     public BlobId getBlobId() {
@@ -80,6 +85,14 @@ public class Blob {
 
     public byte[] getPayload() {
         return payload;
+    }
+
+    public InputStream getStream() throws IOException {
+        return new ByteArrayInputStream(payload);
+    }
+
+    public long getSize() {
+        return size;
     }
 
     public String getContentType() {

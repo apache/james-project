@@ -35,12 +35,12 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.jmap.api.SimpleTokenFactory;
 import org.apache.james.jmap.utils.DownloadPath;
-import org.apache.james.mailbox.AttachmentManager;
+import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.AttachmentNotFoundException;
+import org.apache.james.mailbox.exception.BlobNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.Attachment;
-import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.Blob;
+import org.apache.james.mailbox.model.BlobId;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.mime4j.codec.EncoderUtil;
@@ -56,13 +56,13 @@ public class DownloadServlet extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(DownloadServlet.class);
     private static final String TEXT_PLAIN_CONTENT_TYPE = "text/plain";
 
-    private final AttachmentManager attachmentManager;
+    private final BlobManager blobManager;
     private final SimpleTokenFactory simpleTokenFactory;
     private final MetricFactory metricFactory;
 
     @Inject
-    @VisibleForTesting DownloadServlet(AttachmentManager attachmentManager, SimpleTokenFactory simpleTokenFactory, MetricFactory metricFactory) {
-        this.attachmentManager = attachmentManager;
+    @VisibleForTesting DownloadServlet(BlobManager blobManager, SimpleTokenFactory simpleTokenFactory, MetricFactory metricFactory) {
+        this.blobManager = blobManager;
         this.simpleTokenFactory = simpleTokenFactory;
         this.metricFactory = metricFactory;
     }
@@ -102,9 +102,9 @@ public class DownloadServlet extends HttpServlet {
 
     private boolean attachmentExists(MailboxSession mailboxSession, String blobId) throws MailboxException {
         try {
-            attachmentManager.getAttachment(AttachmentId.from(blobId), mailboxSession);
+            blobManager.retrieve(BlobId.fromString(blobId), mailboxSession);
             return true;
-        } catch (AttachmentNotFoundException e) {
+        } catch (BlobNotFoundException e) {
             return false;
         }
     }
@@ -125,12 +125,12 @@ public class DownloadServlet extends HttpServlet {
         try {
             addContentDispositionHeader(downloadPath.getName(), resp);
 
-            Attachment attachment = attachmentManager.getAttachment(AttachmentId.from(blobId), mailboxSession);
-            IOUtils.copy(attachment.getStream(), resp.getOutputStream());
+            Blob blob = blobManager.retrieve(BlobId.fromString(blobId), mailboxSession);
+            IOUtils.copy(blob.getStream(), resp.getOutputStream());
 
-            resp.setHeader("Content-Length", String.valueOf(attachment.getSize()));
+            resp.setHeader("Content-Length", String.valueOf(blob.getSize()));
             resp.setStatus(SC_OK);
-        } catch (AttachmentNotFoundException e) {
+        } catch (BlobNotFoundException e) {
             LOGGER.info(String.format("Attachment '%s' not found", blobId), e);
             resp.setStatus(SC_NOT_FOUND);
         } catch (MailboxException | IOException e) {
