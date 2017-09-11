@@ -116,6 +116,14 @@ public class Attachment {
         return bytes;
     }
 
+    public Blob toBlob() {
+        return Blob.builder()
+            .id(BlobId.fromString(attachmentId.getId()))
+            .payload(bytes)
+            .contentType(type)
+            .build();
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Attachment) {

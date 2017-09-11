@@ -25,11 +25,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 
-import com.google.common.base.Charsets;
 import org.apache.commons.io.IOUtils;
-import org.apache.james.mailbox.model.Attachment;
-
 import org.junit.Test;
+
+import com.google.common.base.Charsets;
 
 public class AttachmentTest {
 
@@ -139,5 +138,22 @@ public class AttachmentTest {
                 .build();
 
         assertThat(attachment.getSize()).isEqualTo(input.getBytes(CHARSET).length);
+    }
+
+    @Test
+    public void toBlobShouldGenerateTheAttachmentBlob() throws Exception {
+        byte[] bytes = "mystream".getBytes(CHARSET);
+        String content = "content";
+        Attachment attachment = Attachment.builder()
+            .bytes(bytes)
+            .type(content)
+            .build();
+        Blob expected = Blob.builder()
+            .id(BlobId.fromString(attachment.getAttachmentId().getId()))
+            .contentType(content)
+            .payload(bytes)
+            .build();
+
+        assertThat(attachment.toBlob()).isEqualTo(expected);
     }
 }
