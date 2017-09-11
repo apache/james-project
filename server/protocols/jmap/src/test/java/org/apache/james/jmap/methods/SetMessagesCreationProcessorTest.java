@@ -26,11 +26,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
 import java.io.InputStream;
 import java.sql.Date;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+
 import javax.mail.Flags;
 
 import org.apache.james.jmap.exceptions.AttachmentsNotFoundException;
@@ -53,6 +55,7 @@ import org.apache.james.jmap.send.MailSpool;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
 import org.apache.james.jmap.utils.SystemMailboxesProvider;
 import org.apache.james.mailbox.AttachmentManager;
+import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
@@ -63,6 +66,7 @@ import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.util.OptionalUtils;
@@ -124,7 +128,9 @@ public class SetMessagesCreationProcessorTest {
         MessagePreviewGenerator messagePreview = mock(MessagePreviewGenerator.class);
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         when(messagePreview.compute(any())).thenReturn("text preview");
-        messageFactory = new MessageFactory(messagePreview, messageContentExtractor, htmlTextExtractor);
+        BlobManager blobManager = mock(BlobManager.class);
+        when(blobManager.toBlobId(any(MessageId.class))).thenReturn(org.apache.james.mailbox.model.BlobId.fromString("fake"));
+        messageFactory = new MessageFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor);
         mockedMailSpool = mock(MailSpool.class);
         mockedMailFactory = mock(MailFactory.class);
         mockedAttachmentManager = mock(AttachmentManager.class);

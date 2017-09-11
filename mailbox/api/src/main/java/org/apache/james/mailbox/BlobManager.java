@@ -23,7 +23,10 @@ import org.apache.james.mailbox.exception.BlobNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Blob;
 import org.apache.james.mailbox.model.BlobId;
+import org.apache.james.mailbox.model.MessageId;
 
 public interface BlobManager {
+    BlobId toBlobId(MessageId messageId);
+
     Blob retrieve(BlobId blobId, MailboxSession mailboxSession) throws MailboxException, BlobNotFoundException;
 }

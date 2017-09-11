@@ -30,11 +30,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 import javax.inject.Inject;
 import javax.mail.Flags;
 import javax.mail.internet.SharedInputStream;
 
 import org.apache.james.jmap.utils.HtmlTextExtractor;
+import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Cid;
@@ -69,12 +71,14 @@ public class MessageFactory {
         .setMaxLineLen(-1)
         .build();
 
+    private final BlobManager blobManager;
     private final MessagePreviewGenerator messagePreview;
     private final MessageContentExtractor messageContentExtractor;
     private final HtmlTextExtractor htmlTextExtractor;
 
     @Inject
-    public MessageFactory(MessagePreviewGenerator messagePreview, MessageContentExtractor messageContentExtractor, HtmlTextExtractor htmlTextExtractor) {
+    public MessageFactory(BlobManager blobManager, MessagePreviewGenerator messagePreview, MessageContentExtractor messageContentExtractor, HtmlTextExtractor htmlTextExtractor) {
+        this.blobManager = blobManager;
         this.messagePreview = messagePreview;
         this.messageContentExtractor = messageContentExtractor;
         this.htmlTextExtractor = htmlTextExtractor;
@@ -89,7 +93,7 @@ public class MessageFactory {
         String preview = messagePreview.compute(mainTextContent);
         return Message.builder()
                 .id(message.getMessageId())
-                .blobId(BlobId.of(String.valueOf(message.getUid().asLong())))
+                .blobId(BlobId.of(blobManager.toBlobId(message.getMessageId())))
                 .threadId(message.getMessageId().serialize())
                 .mailboxIds(message.getMailboxIds())
                 .inReplyToMessageId(getHeader(mimeMessage, "in-reply-to"))

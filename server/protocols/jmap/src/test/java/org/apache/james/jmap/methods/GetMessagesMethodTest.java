@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
 import java.io.ByteArrayInputStream;
 import java.util.Date;
 import java.util.List;
@@ -35,7 +36,6 @@ import java.util.stream.Collectors;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
-import com.google.common.collect.ImmutableSet;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMessagesRequest;
@@ -46,6 +46,7 @@ import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.jmap.model.MessageProperties.MessageProperty;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
 import org.apache.james.jmap.utils.JsoupHtmlTextExtractor;
+import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -56,11 +57,18 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryMessageIdManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.mailbox.model.BlobId;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.util.mime.MessageContentExtractor;
+import org.assertj.core.api.Condition;
+import org.assertj.core.data.MapEntry;
+import org.assertj.core.groups.Tuple;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
@@ -69,14 +77,9 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.jayway.jsonpath.JsonPath;
-
-import org.assertj.core.api.Condition;
-import org.assertj.core.data.MapEntry;
-import org.assertj.core.groups.Tuple;
-import org.junit.Before;
-import org.junit.Test;
 
 public class GetMessagesMethodTest {
     private final static String FORWARDED = "forwarded";
@@ -130,7 +133,9 @@ public class GetMessagesMethodTest {
         HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();
         MessagePreviewGenerator messagePreview = new MessagePreviewGenerator();
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
-        MessageFactory messageFactory = new MessageFactory(messagePreview, messageContentExtractor, htmlTextExtractor);
+        BlobManager blobManager = mock(BlobManager.class);
+        when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.fromString("fake"));
+        MessageFactory messageFactory = new MessageFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor);
         InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
         GroupMembershipResolver groupMembershipResolver = inMemoryIntegrationResources.createGroupMembershipResolver();
         mailboxManager = inMemoryIntegrationResources.createMailboxManager(groupMembershipResolver);

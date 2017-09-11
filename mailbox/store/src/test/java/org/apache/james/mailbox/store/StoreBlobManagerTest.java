@@ -221,4 +221,10 @@ public class StoreBlobManagerTest {
             .isInstanceOf(RuntimeException.class);
     }
 
+    @Test
+    public void toBlobIdShouldReturnBlobIdCorrespondingToAMessageId() {
+        assertThat(blobManager.toBlobId(MESSAGE_ID))
+            .isEqualTo(BlobId.fromString("125"));
+    }
+
 }

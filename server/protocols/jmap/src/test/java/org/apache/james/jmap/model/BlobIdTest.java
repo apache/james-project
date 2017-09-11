@@ -34,7 +34,7 @@ public class BlobIdTest {
 
     @Test
     public void shouldNotAllowNullInput() {
-        assertThatThrownBy(() -> BlobId.of(null)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> BlobId.of((String) null)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

@@ -29,19 +29,22 @@ import java.util.Collection;
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
+import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.model.BlobId;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -81,7 +84,9 @@ public class MailFactoryTest {
         when(messagePreview.compute(any())).thenReturn("text preview");
 
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
-        MessageFactory messageFactory = new MessageFactory(messagePreview, messageContentExtractor, htmlTextExtractor);
+        BlobManager blobManager = mock(BlobManager.class);
+        when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.fromString("fake"));
+        MessageFactory messageFactory = new MessageFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor);
         jmapMessage = messageFactory.fromMetaDataWithContent(message);
     }
 

@@ -57,6 +57,11 @@ public class StoreBlobManager implements BlobManager {
     }
 
     @Override
+    public BlobId toBlobId(MessageId messageId) {
+        return BlobId.fromString(messageId.serialize());
+    }
+
+    @Override
     public Blob retrieve(BlobId blobId, MailboxSession mailboxSession) throws MailboxException, BlobNotFoundException {
         return getBlobFromAttachment(blobId, mailboxSession)
             .orElseGet(() -> getBlobFromMessage(blobId, mailboxSession)

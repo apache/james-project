@@ -31,6 +31,10 @@ public class BlobId {
         return new BlobId(rawValue);
     }
 
+    public static BlobId of(org.apache.james.mailbox.model.BlobId blobId) {
+        return new BlobId(blobId.asString());
+    }
+
     private final String rawValue;
     
     private BlobId(String rawValue) {
@@ -54,5 +58,12 @@ public class BlobId {
     @Override
     public final int hashCode() {
         return Objects.hashCode(this.rawValue);
+    }
+
+    @Override
+    public String toString() {
+        return "BlobId{" +
+            "rawValue='" + rawValue + '\'' +
+            '}';
     }
 }

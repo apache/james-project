@@ -19,32 +19,38 @@
 package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.io.ByteArrayInputStream;
 import java.time.Instant;
 import java.util.Optional;
+
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
 import org.apache.james.jmap.utils.JsoupHtmlTextExtractor;
+import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.util.mime.MessageContentExtractor;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Before;
-import org.junit.Test;
 
 public class MessageFactoryTest {
     private static final String FORWARDED = "forwarded";
@@ -62,7 +68,9 @@ public class MessageFactoryTest {
         messagePreview = new MessagePreviewGenerator();
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
 
-        messageFactory = new MessageFactory(messagePreview, messageContentExtractor, htmlTextExtractor);
+        BlobManager blobManager = mock(BlobManager.class);
+        when(blobManager.toBlobId(any(MessageId.class))).thenReturn(org.apache.james.mailbox.model.BlobId.fromString("blobId"));
+        messageFactory = new MessageFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor);
     }
 
     @Test
@@ -151,7 +159,7 @@ public class MessageFactoryTest {
         Message testee = messageFactory.fromMetaDataWithContent(testMail);
         Message expected = Message.builder()
                 .id(TestMessageId.of(2))
-                .blobId(BlobId.of("2"))
+                .blobId(BlobId.of("blobId"))
                 .threadId("2")
                 .mailboxId(MAILBOX_ID)
                 .inReplyToMessageId("<SNT124-W2664003139C1E520CF4F6787D30@phx.gbl>")
@@ -205,7 +213,7 @@ public class MessageFactoryTest {
         Message testee = messageFactory.fromMetaDataWithContent(testMail);
         Message expected = Message.builder()
             .id(TestMessageId.of(2))
-            .blobId(BlobId.of("2"))
+            .blobId(BlobId.of("blobId"))
             .threadId("2")
             .mailboxId(MAILBOX_ID)
             .headers(headersMap)
