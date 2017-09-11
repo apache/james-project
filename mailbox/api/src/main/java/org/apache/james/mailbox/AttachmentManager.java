@@ -26,6 +26,7 @@ import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.MessageId;
 
 public interface AttachmentManager {
 
@@ -35,5 +36,7 @@ public interface AttachmentManager {
 
     void storeAttachment(Attachment attachment, MailboxSession mailboxSession) throws MailboxException;
 
-    void storeAttachments(Collection<Attachment> attachments, MailboxSession mailboxSession) throws MailboxException;
+    void storeAttachmentsForMessage(Collection<Attachment> attachments, MessageId ownerMessageId, MailboxSession mailboxSession) throws MailboxException;
+
+    Collection<MessageId> getOwnerMessageIds(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException;
 }

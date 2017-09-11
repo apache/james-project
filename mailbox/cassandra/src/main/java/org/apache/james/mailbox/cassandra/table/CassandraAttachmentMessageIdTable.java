@@ -17,29 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.inmemory.mail;
+package org.apache.james.mailbox.cassandra.table;
 
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.inmemory.InMemoryMessageId;
-import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.mail.model.AttachmentMapperTest;
-import org.apache.james.mailbox.store.mail.model.MapperProvider;
-import org.junit.Before;
+public interface CassandraAttachmentMessageIdTable {
 
-public class MemoryAttachmentMapperTest extends AttachmentMapperTest {
-    
-    @Before
-    public void setUp() throws MailboxException {
-        super.setUp();
-    }
-    
-    @Override
-    protected MapperProvider createMapperProvider() {
-        return new InMemoryMapperProvider();
-    }
+    String TABLE_NAME = "attachmentMessageId";
+    String ATTACHMENT_ID_AS_UUID = "attachmentIdAsUUID";
+    String ATTACHMENT_ID = "attachmentId";
+    String MESSAGE_ID = "messageId";
+    String[] FIELDS = { ATTACHMENT_ID_AS_UUID, ATTACHMENT_ID, MESSAGE_ID };
 
-    @Override
-    protected MessageId generateMessageId() {
-        return new InMemoryMessageId.Factory().generate();
-    }
 }

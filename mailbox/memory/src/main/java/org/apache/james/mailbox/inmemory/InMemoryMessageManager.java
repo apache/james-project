@@ -46,9 +46,10 @@ public class InMemoryMessageManager extends StoreMessageManager {
     @Override
     protected void storeAttachment(final MailboxMessage message, final List<MessageAttachment> messageAttachments, final MailboxSession session) throws MailboxException {
         mapperFactory.getAttachmentMapper(session)
-            .storeAttachments(
+            .storeAttachmentsForMessage(
                 messageAttachments.stream()
                     .map(MessageAttachment::getAttachment)
-                    .collect(Guavate.toImmutableList()));
+                    .collect(Guavate.toImmutableList()),
+                message.getMessageId());
     }
 }

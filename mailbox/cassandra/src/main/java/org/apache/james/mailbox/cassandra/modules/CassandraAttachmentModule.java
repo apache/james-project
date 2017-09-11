@@ -30,6 +30,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
+import org.apache.james.mailbox.cassandra.table.CassandraAttachmentMessageIdTable;
 import org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable;
 import org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table;
 
@@ -65,7 +66,18 @@ public class CassandraAttachmentModule implements CassandraModule {
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))
                     .comment("Holds attachment for fast attachment retrieval. Content of messages is stored" +
-                        "in `blobs` and `blobparts` tables.")));
+                        "in `blobs` and `blobparts` tables.")),
+            new CassandraTable(CassandraAttachmentMessageIdTable.TABLE_NAME,
+                SchemaBuilder.createTable(CassandraAttachmentMessageIdTable.TABLE_NAME)
+                    .ifNotExists()
+                    .addPartitionKey(CassandraAttachmentMessageIdTable.ATTACHMENT_ID_AS_UUID, uuid())
+                    .addColumn(CassandraAttachmentMessageIdTable.ATTACHMENT_ID, text())
+                    .addClusteringColumn(CassandraAttachmentMessageIdTable.MESSAGE_ID, text())
+                    .withOptions()
+                    .compactionOptions(SchemaBuilder.leveledStrategy())
+                    .caching(SchemaBuilder.KeyCaching.ALL,
+                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))
+                    .comment("Holds ids of messages owning the attachment")));
         types = ImmutableList.of();
     }
 

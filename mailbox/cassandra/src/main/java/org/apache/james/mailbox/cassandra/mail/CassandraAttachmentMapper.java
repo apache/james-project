@@ -33,6 +33,7 @@ import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.util.FluentFutureStream;
 import org.jetbrains.annotations.Nullable;
@@ -49,12 +50,14 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     private final CassandraAttachmentDAO attachmentDAO;
     private final CassandraAttachmentDAOV2 attachmentDAOV2;
     private final CassandraBlobsDAO blobsDAO;
+    private final CassandraAttachmentMessageIdDAO attachmentMessageIdDAO;
 
     @Inject
-    public CassandraAttachmentMapper(CassandraAttachmentDAO attachmentDAO, CassandraAttachmentDAOV2 attachmentDAOV2, CassandraBlobsDAO blobsDAO) {
+    public CassandraAttachmentMapper(CassandraAttachmentDAO attachmentDAO, CassandraAttachmentDAOV2 attachmentDAOV2, CassandraBlobsDAO blobsDAO, CassandraAttachmentMessageIdDAO attachmentMessageIdDAO) {
         this.attachmentDAO = attachmentDAO;
         this.attachmentDAOV2 = attachmentDAOV2;
         this.blobsDAO = blobsDAO;
+        this.attachmentMessageIdDAO = attachmentMessageIdDAO;
     }
 
     @Override
@@ -118,21 +121,35 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
 
     @Override
     public void storeAttachment(Attachment attachment) throws MailboxException {
-        storeAttachmentAsync(attachment).join();
-    }
-
-    @Override
-    public void storeAttachments(Collection<Attachment> attachments) throws MailboxException {
-        FluentFutureStream.of(
-            attachments.stream()
-                .map(this::storeAttachmentAsync))
+        blobsDAO.save(attachment.getBytes())
+            .thenApply(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
+            .thenCompose(attachmentDAOV2::storeAttachment)
             .join();
     }
 
-    public CompletableFuture<Void> storeAttachmentAsync(Attachment attachment) {
+    @Override
+    public void storeAttachmentsForMessage(Collection<Attachment> attachments, MessageId ownerMessageId) throws MailboxException {
+        FluentFutureStream.of(
+            attachments.stream()
+                .map(attachment -> storeAttachmentAsync(attachment, ownerMessageId)))
+            .join();
+    }
+
+    @Override
+    public Collection<MessageId> getOwnerMessageIds(AttachmentId attachmentId) throws MailboxException {
+        return attachmentMessageIdDAO.getOwnerMessageIds(attachmentId)
+            .join();
+    }
+
+    public CompletableFuture<Void> storeAttachmentAsync(Attachment attachment, MessageId ownerMessageId) {
         return blobsDAO.save(attachment.getBytes())
             .thenApply(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
-            .thenCompose(attachmentDAOV2::storeAttachment);
+            .thenCompose(daoAttachment -> storeAttachmentWithIndex(daoAttachment, ownerMessageId));
+    }
+
+    private CompletableFuture<Void> storeAttachmentWithIndex(DAOAttachment daoAttachment, MessageId ownerMessageId) {
+        return attachmentDAOV2.storeAttachment(daoAttachment)
+                .thenCompose(any -> attachmentMessageIdDAO.storeAttachmentForMessageId(daoAttachment.getAttachmentId(), ownerMessageId));
     }
 
     private Optional<Attachment> logNotFound(AttachmentId attachmentId, Optional<Attachment> optionalAttachment) {

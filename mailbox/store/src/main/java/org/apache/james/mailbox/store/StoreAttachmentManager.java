@@ -30,6 +30,7 @@ import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 
@@ -66,7 +67,12 @@ public class StoreAttachmentManager implements AttachmentManager {
     }
 
     @Override
-    public void storeAttachments(Collection<Attachment> attachments, MailboxSession mailboxSession) throws MailboxException {
-        getAttachmentMapper(mailboxSession).storeAttachments(attachments);
+    public void storeAttachmentsForMessage(Collection<Attachment> attachments, MessageId ownerMessageId, MailboxSession mailboxSession) throws MailboxException {
+        getAttachmentMapper(mailboxSession).storeAttachmentsForMessage(attachments, ownerMessageId);
+    }
+
+    @Override
+    public Collection<MessageId> getOwnerMessageIds(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException {
+        return getAttachmentMapper(mailboxSession).getOwnerMessageIds(attachmentId);
     }
 }

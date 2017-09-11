@@ -22,6 +22,7 @@ package org.apache.james.mailbox.cassandra.mail;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
@@ -36,6 +37,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.AttachmentMapperTest;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.junit.After;
@@ -76,5 +78,10 @@ public class CassandraAttachmentMapperTest extends AttachmentMapperTest {
     @Override
     protected MapperProvider createMapperProvider() {
         return new CassandraMapperProvider(cassandra);
+    }
+
+    @Override
+    protected MessageId generateMessageId() {
+        return new CassandraMessageId.Factory().generate();
     }
 }
