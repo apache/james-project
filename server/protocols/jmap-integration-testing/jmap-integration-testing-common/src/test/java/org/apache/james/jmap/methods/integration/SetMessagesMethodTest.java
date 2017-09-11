@@ -39,6 +39,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
 import static org.hamcrest.collection.IsMapWithSize.anEmptyMap;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.ZonedDateTime;
@@ -47,9 +48,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
+import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.DefaultMailboxes;
 import org.apache.james.jmap.HttpJmapAuthentication;
@@ -68,13 +73,22 @@ import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.modules.MailboxProbeImpl;
-import org.apache.james.utils.MessageIdProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.util.ZeroedInputStream;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
-import org.apache.commons.io.IOUtils;
-import org.apache.http.client.utils.URIBuilder;
+import org.apache.james.utils.MessageIdProbe;
+import org.apache.james.utils.SMTPMessageSender;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.MimeMessageBuilder;
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -88,16 +102,11 @@ import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.builder.ResponseSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.specification.ResponseSpecification;
-import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
 
 public abstract class SetMessagesMethodTest {
-
-    private final static String FORWARDED = "$Forwarded";
+    private static final String LOCALHOST_IP = "127.0.0.1";
+    private static final int SMTP_PORT = 1025;
+    private static final String FORWARDED = "$Forwarded";
     private static final int _1MB = 1024*1024;
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
@@ -3687,5 +3696,50 @@ public abstract class SetMessagesMethodTest {
             .body(NAME, equalTo("error"))
             .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
             .body(ARGUMENTS + ".description", containsString("Does not allow to update 'Deleted' or 'Recent' flag"));
+    }
+
+    @Test
+    public void textBodyOfMessageWithTextCalendarShouldBeConvertedToAttachment() throws Exception {
+        MimeMessage calendarMessage = MimeMessageBuilder.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream("eml/calendar.eml"));
+        String fromAddress = USERNAME;
+
+        Mail mail = FakeMail.builder()
+            .mimeMessage(calendarMessage)
+            .sender(new MailAddress(fromAddress))
+            .recipient(new MailAddress(fromAddress))
+            .build();
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, USERS_DOMAIN);) {
+            messageSender.sendMessage(mail);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
+        }
+
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInInbox(accessToken));
+
+        String message = ARGUMENTS + ".list[0]";
+        String firstAttachment = message + ".attachments[0]";
+
+        String inboxId = getMailboxId(accessToken, Role.INBOX);
+        String receivedMessageId =
+            with()
+                .header("Authorization", accessToken.serialize())
+                .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + inboxId + "\"]}}, \"#0\"]]")
+                .post("/jmap")
+            .then()
+                .extract()
+                .path(ARGUMENTS + ".messageIds[0]");
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + receivedMessageId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(message + ".attachments", hasSize(1))
+            .body(firstAttachment + ".type", equalTo("text/calendar"))
+            .body(firstAttachment + ".blobId", not(isEmptyOrNullString()));
     }
 }

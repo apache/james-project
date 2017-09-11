@@ -31,13 +31,13 @@ import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
-import org.apache.james.mailets.utils.SMTPMessageSender;
+import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.amqp.AmqpRule;
 import org.apache.james.util.streams.SwarmGenericContainer;
-import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.IMAPMessageReader;
 import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
@@ -76,7 +76,7 @@ public class ICSAttachmentWorkflowTest {
     private static final String JSON_MAIL_ATTRIBUTE = "ical.json";
     private static final String EXCHANGE_NAME = "myExchange";
     private static final String ROUTING_KEY = "myRoutingKey";
-    
+
     private static final String ICS_UID = "f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc";
     private static final String ICS_DTSTAMP = "20170106T115036Z";
     private static final String ICS_SEQUENCE = "0";
@@ -161,7 +161,7 @@ public class ICSAttachmentWorkflowTest {
             " S-ACTION;X-OBM-ID=769:MAILTO:nguyen@linagora.com\n" +
             "END:VEVENT\n" +
             "END:VCALENDAR\n";
-    
+
     private static final String ICS_3 = "BEGIN:VCALENDAR\n" +
             "PRODID:-//Aliasource Groupe LINAGORA//OBM Calendar 3.2.1-rc2//FR\n" +
             "CALSCALE:GREGORIAN\n" +
@@ -490,6 +490,10 @@ public class ICSAttachmentWorkflowTest {
                             .addProperty("rawSource", MAIL_ATTRIBUTE)
                             .addProperty("destination", JSON_MAIL_ATTRIBUTE)
                             .build())
+                    .addMailet(MailetConfiguration.builder()
+                        .match("All")
+                        .clazz("org.apache.james.jmap.mailet.TextCalendarBodyToAttachment")
+                        .build())
                     .addMailet(MailetConfiguration.builder()
                             .match("All")
                             .clazz("AmqpForwardAttribute")
@@ -823,4 +827,24 @@ public class ICSAttachmentWorkflowTest {
         assertThat(amqpRule.readContent()).isEmpty();
     }
 
+    @Test
+    public void mailShouldNotContainCalendarContentInTextBodyButAttachment() throws Exception {
+        MimeMessage calendarMessage = MimeMessageBuilder.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream("eml/calendar.eml"));
+        Mail mail = FakeMail.builder()
+            .mimeMessage(calendarMessage)
+            .sender(new MailAddress(FROM))
+            .recipient(new MailAddress(RECIPIENT))
+            .build();
+
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
+             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+            messageSender.sendMessage(mail);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
+
+            String receivedMessage = imapMessageReader.readFirstMessageInInbox(RECIPIENT, PASSWORD);
+
+            assertThat(receivedMessage).containsSequence("Content-Type: multipart/mixed", "Content-Disposition: attachment");
+        }
+    }
 }

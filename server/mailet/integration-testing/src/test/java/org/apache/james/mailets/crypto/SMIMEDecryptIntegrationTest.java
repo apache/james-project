@@ -31,7 +31,7 @@ import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
-import org.apache.james.mailets.utils.SMTPMessageSender;
+import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.utils.IMAPMessageReader;
