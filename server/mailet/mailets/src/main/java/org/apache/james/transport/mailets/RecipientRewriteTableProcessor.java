@@ -46,6 +46,7 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 public class RecipientRewriteTableProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecipientRewriteTableProcessor.class);
@@ -77,9 +78,9 @@ public class RecipientRewriteTableProcessor {
     public void processMail(Mail mail) throws MessagingException{
         ImmutableList<RrtExecutionResult> mappingDatas = toMappingDatas(mail);
 
-        ImmutableList<MailAddress> newRecipients = getRecipientsByCondition(mappingDatas, mappingData -> !mappingData.isError());
+        ImmutableSet<MailAddress> newRecipients = getRecipientsByCondition(mappingDatas, mappingData -> !mappingData.isError());
 
-        ImmutableList<MailAddress> errorMailAddresses = getRecipientsByCondition(mappingDatas, RrtExecutionResult::isError);
+        ImmutableSet<MailAddress> errorMailAddresses = getRecipientsByCondition(mappingDatas, RrtExecutionResult::isError);
 
         if (!errorMailAddresses.isEmpty()) {
             mailetContext.sendMail(mail.getSender(), errorMailAddresses, mail.getMessage(), Mail.ERROR);
@@ -93,11 +94,11 @@ public class RecipientRewriteTableProcessor {
     }
 
 
-    private ImmutableList<MailAddress> getRecipientsByCondition(ImmutableList<RrtExecutionResult> mappingDatas, Predicate<RrtExecutionResult> filterCondition) {
+    private ImmutableSet<MailAddress> getRecipientsByCondition(ImmutableList<RrtExecutionResult> mappingDatas, Predicate<RrtExecutionResult> filterCondition) {
         return mappingDatas.stream()
             .filter(filterCondition)
             .flatMap(mailAddressesFromMappingData)
-            .collect(Guavate.toImmutableList());
+            .collect(Guavate.toImmutableSet());
     }
 
     private ImmutableList<RrtExecutionResult> toMappingDatas(final Mail mail) {
