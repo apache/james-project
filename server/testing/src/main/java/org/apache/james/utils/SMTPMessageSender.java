@@ -49,7 +49,9 @@ public class SMTPMessageSender implements Closeable {
         throws NoSuchAlgorithmException, IOException, InvalidKeySpecException, InvalidKeyException {
         AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient();
         smtpClient.connect(ip, port);
-        smtpClient.auth(AuthenticatingSMTPClient.AUTH_METHOD.PLAIN, username, password);
+        if (smtpClient.auth(AuthenticatingSMTPClient.AUTH_METHOD.PLAIN, username, password) == false) {
+            throw new RuntimeException("auth failed");
+        }
         return new SMTPMessageSender(smtpClient, senderDomain);
     }
 
