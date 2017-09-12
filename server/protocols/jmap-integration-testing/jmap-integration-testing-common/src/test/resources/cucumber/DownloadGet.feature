@@ -35,3 +35,10 @@ Feature: Download GET
     When "username@domain.tld" downloads "1"
     Then the user should receive that blob
     And the blob size is 4963
+
+  Scenario: Getting a message then getting its blob
+    Given the user has a message "m1" in "INBOX" mailbox with subject "my test subject", content "testmail"
+    And the user ask for messages "m1"
+    When "username@domain.tld" downloads the message by its blobId
+    Then the user should receive that blob
+    And the blob size is 36

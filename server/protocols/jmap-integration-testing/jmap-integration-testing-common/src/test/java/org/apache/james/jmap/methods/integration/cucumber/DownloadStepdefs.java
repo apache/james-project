@@ -35,6 +35,7 @@ import javax.mail.Flags;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.client.utils.URIBuilder;
@@ -73,6 +74,7 @@ public class DownloadStepdefs {
 
     private final UserStepdefs userStepdefs;
     private final MainStepdefs mainStepdefs;
+    private final GetMessagesMethodStepdefs getMessagesMethodStepdefs;
     private HttpResponse response;
     private Multimap<String, String> attachmentsByMessageId;
     private Map<String, String> blobIdByAttachmentId;
@@ -80,9 +82,10 @@ public class DownloadStepdefs {
     private Map<AttachmentAccessTokenKey, AttachmentAccessToken> attachmentAccessTokens;
 
     @Inject
-    private DownloadStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs) {
+    private DownloadStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs, GetMessagesMethodStepdefs getMessagesMethodStepdefs) {
         this.mainStepdefs = mainStepdefs;
         this.userStepdefs = userStepdefs;
+        this.getMessagesMethodStepdefs = getMessagesMethodStepdefs;
         this.attachmentsByMessageId = ArrayListMultimap.create();
         this.blobIdByAttachmentId = new HashMap<>();
         this.attachmentAccessTokens = new HashMap<>();
@@ -150,8 +153,17 @@ public class DownloadStepdefs {
                 .map(MessageId::serialize)
                 .orElse(null));
 
-        URIBuilder uriBuilder = mainStepdefs.baseUri().setPath("/download/" + attachmentIdOrMessageId);
-        response = authenticatedDownloadRequest(uriBuilder, attachmentIdOrMessageId, username).execute().returnResponse();
+        downLoad(username, attachmentIdOrMessageId);
+    }
+
+    @When("^\"([^\"]*)\" downloads the message by its blobId$")
+    public void downloads(String username) throws Throwable {
+        downLoad(username, getMessagesMethodStepdefs.getBlobId());
+    }
+
+    private void downLoad(String username, String blobId) throws IOException, ClientProtocolException, URISyntaxException {
+        URIBuilder uriBuilder = mainStepdefs.baseUri().setPath("/download/" + blobId);
+        response = authenticatedDownloadRequest(uriBuilder, blobId, username).execute().returnResponse();
     }
 
     private Request authenticatedDownloadRequest(URIBuilder uriBuilder, String blobId, String username) throws URISyntaxException {

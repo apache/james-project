@@ -533,4 +533,8 @@ public class GetMessagesMethodStepdefs {
         attachmentProperties.asList(TableRow.class)
             .forEach(entry -> assertThat(jsonPath.<Object>read(attachment + "." + entry.getKey())).isEqualTo(entry.getValue()));
     }
+
+    public String getBlobId() {
+        return jsonPath.<String>read(FIRST_MESSAGE + ".blobId");
+    }
 }
