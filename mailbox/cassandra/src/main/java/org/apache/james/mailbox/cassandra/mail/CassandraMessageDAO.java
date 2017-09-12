@@ -42,7 +42,9 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.T
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -56,6 +58,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.ids.BlobId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.utils.Limit;
@@ -68,6 +71,7 @@ import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -85,7 +89,10 @@ import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Bytes;
 
 public class CassandraMessageDAO {
@@ -96,38 +103,52 @@ public class CassandraMessageDAO {
     private final CassandraTypesProvider typesProvider;
     private final CassandraBlobsDAO blobsDAO;
     private final CassandraConfiguration configuration;
+    private final CassandraUtils cassandraUtils;
+    private final CassandraMessageId.Factory messageIdFactory;
     private final PreparedStatement insert;
     private final PreparedStatement delete;
     private final PreparedStatement selectMetadata;
     private final PreparedStatement selectHeaders;
     private final PreparedStatement selectFields;
     private final PreparedStatement selectBody;
+    private final PreparedStatement selectAllMessagesWithAttachment;
     private final Cid.CidParser cidParser;
 
     @Inject
-    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, CassandraBlobsDAO blobsDAO, CassandraConfiguration cassandraConfiguration) {
+    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, CassandraBlobsDAO blobsDAO, CassandraConfiguration cassandraConfiguration,
+            CassandraUtils cassandraUtils, CassandraMessageId.Factory messageIdFactory) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.typesProvider = typesProvider;
         this.blobsDAO = blobsDAO;
         this.configuration = cassandraConfiguration;
+        this.cassandraUtils = cassandraUtils;
+        this.messageIdFactory = messageIdFactory;
+
         this.insert = prepareInsert(session);
         this.delete = prepareDelete(session);
         this.selectMetadata = prepareSelect(session, METADATA);
         this.selectHeaders = prepareSelect(session, HEADERS);
         this.selectFields = prepareSelect(session, FIELDS);
         this.selectBody = prepareSelect(session, BODY);
+        this.selectAllMessagesWithAttachment = prepareSelectAllMessagesWithAttachment(session);
         this.cidParser = Cid.parser().relaxed();
     }
 
     @VisibleForTesting
-    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, CassandraBlobsDAO blobsDAO) {
-        this(session, typesProvider, blobsDAO, CassandraConfiguration.DEFAULT_CONFIGURATION);
+    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, CassandraBlobsDAO blobsDAO,
+            CassandraUtils cassandraUtils, CassandraMessageId.Factory messageIdFactory) {
+        this(session, typesProvider, blobsDAO, CassandraConfiguration.DEFAULT_CONFIGURATION, cassandraUtils, messageIdFactory);
     }
 
     private PreparedStatement prepareSelect(Session session, String[] fields) {
         return session.prepare(select(fields)
             .from(TABLE_NAME)
             .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
+    }
+
+    private PreparedStatement prepareSelectAllMessagesWithAttachment(Session session) {
+        return session.prepare(select(MESSAGE_ID, ATTACHMENTS)
+            .from(TABLE_NAME));
     }
 
     private PreparedStatement prepareInsert(Session session) {
@@ -379,6 +400,67 @@ public class CassandraMessageDAO {
 
         public Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> message() {
             return message.get();
+        }
+    }
+
+    public CompletableFuture<Stream<MessageIdAttachmentIds>> retrieveAllMessageIdAttachmentIds() {
+        return cassandraAsyncExecutor.execute(selectAllMessagesWithAttachment.bind())
+                .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
+                        .map(this::fromRow)
+                        .filter(MessageIdAttachmentIds::hasAttachment));
+    }
+
+    private MessageIdAttachmentIds fromRow(Row row) {
+        MessageId messageId = messageIdFactory.of(row.getUUID(MESSAGE_ID));
+        Set<AttachmentId> attachmentIds = attachmentByIds(row.getList(ATTACHMENTS, UDTValue.class))
+            .map(MessageAttachmentRepresentation::getAttachmentId)
+            .collect(Guavate.toImmutableSet());
+        return new MessageIdAttachmentIds(messageId, attachmentIds);
+    }
+
+    public static class MessageIdAttachmentIds {
+        private final MessageId messageId;
+        private final Set<AttachmentId> attachmentIds;
+        
+        public MessageIdAttachmentIds(MessageId messageId, Set<AttachmentId> attachmentIds) {
+            Preconditions.checkNotNull(messageId);
+            Preconditions.checkNotNull(attachmentIds);
+            this.messageId = messageId;
+            this.attachmentIds = ImmutableSet.copyOf(attachmentIds);
+        }
+        
+        public MessageId getMessageId() {
+            return messageId;
+        }
+        
+        public Set<AttachmentId> getAttachmentId() {
+            return attachmentIds;
+        }
+
+        public boolean hasAttachment() {
+            return ! attachmentIds.isEmpty();
+        }
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof MessageIdAttachmentIds) {
+                MessageIdAttachmentIds other = (MessageIdAttachmentIds) o;
+                return Objects.equals(messageId, other.messageId)
+                    && Objects.equals(attachmentIds, other.attachmentIds);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(messageId, attachmentIds);
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("messageId", messageId)
+                .add("attachmentIds", attachmentIds)
+                .toString();
         }
     }
 }

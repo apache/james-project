@@ -50,7 +50,7 @@ public class TestCassandraMailboxSessionMapperFactory {
             new CassandraUidProvider(session),
             new CassandraModSeqProvider(session),
             session,
-            new CassandraMessageDAO(session, typesProvider, cassandraBlobsDAO),
+            new CassandraMessageDAO(session, typesProvider, cassandraBlobsDAO, CassandraUtils.WITH_DEFAULT_CONFIGURATION, factory),
             new CassandraMessageIdDAO(session, factory),
             new CassandraMessageIdToImapUidDAO(session, factory),
             new CassandraMailboxCounterDAO(session),
