@@ -21,8 +21,10 @@ package org.apache.james.transport.mailets;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Stream;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
@@ -30,6 +32,7 @@ import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.rabbitmq.client.AMQP;
@@ -104,7 +107,7 @@ public class AmqpForwardAttribute extends GenericMailet {
         if (mail.getAttribute(attribute) == null) {
             return;
         }
-        Map<String, byte[]> content = getAttributeContent(mail);
+        Stream<byte[]> content = getAttributeContent(mail);
         try {
             sendContent(content);
         } catch (IOException e) {
@@ -115,17 +118,20 @@ public class AmqpForwardAttribute extends GenericMailet {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, byte[]> getAttributeContent(Mail mail) throws MailetException {
+    private Stream<byte[]> getAttributeContent(Mail mail) throws MailetException {
         Serializable attributeContent = mail.getAttribute(attribute);
-        if (! (attributeContent instanceof Map)) {
-            throw new MailetException("Invalid attribute found into attribute "
-                    + attribute + "class Map expected but "
-                    + attributeContent.getClass() + " found.");
+        if (attributeContent instanceof Map) {
+            return ((Map<String, byte[]>) attributeContent).values().stream();
         }
-        return (Map<String, byte[]>) attributeContent;
+        if (attributeContent instanceof List) {
+            return ((List<byte[]>) attributeContent).stream();
+        }
+        throw new MailetException("Invalid attribute found into attribute "
+                + attribute + "class Map or List expected but "
+                + attributeContent.getClass() + " found.");
     }
 
-    private void sendContent(Map<String, byte[]> content) throws IOException, TimeoutException {
+    private void sendContent(Stream<byte[]> content) throws IOException, TimeoutException {
         Connection connection = null;
         Channel channel = null;
         try {
@@ -143,13 +149,13 @@ public class AmqpForwardAttribute extends GenericMailet {
         }
     }
 
-    private void sendContentOnChannel(Channel channel, Map<String, byte[]> content) throws IOException {
-        for (byte[] body: content.values()) {
-            channel.basicPublish(exchange, 
-                    routingKey, 
-                    new AMQP.BasicProperties(), 
-                    body);
-        }
+    private void sendContentOnChannel(Channel channel, Stream<byte[]> content) throws IOException {
+        content.forEach(
+            Throwing.consumer(message ->
+                channel.basicPublish(exchange,
+                        routingKey,
+                        new AMQP.BasicProperties(),
+                        message)));
     }
 
     @Override
