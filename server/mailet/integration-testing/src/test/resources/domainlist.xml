@@ -21,7 +21,7 @@
 <!-- See http://james.apache.org/server/3/config.html for usage -->
 
 <domainlist>
-  <autodetect>true</autodetect>
-  <autodetectIP>true</autodetectIP>
+  <autodetect>false</autodetect>
+  <autodetectIP>false</autodetectIP>
   <defaultDomain>localhost</defaultDomain>
 </domainlist>

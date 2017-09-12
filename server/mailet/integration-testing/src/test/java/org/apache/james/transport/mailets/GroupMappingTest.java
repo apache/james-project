@@ -19,14 +19,19 @@
 
 package org.apache.james.transport.mailets;
 
+import static com.jayway.restassured.RestAssured.with;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
 
+import java.net.InetAddress;
 import java.util.concurrent.TimeUnit;
 
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
@@ -35,6 +40,7 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
+import org.apache.james.util.streams.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
@@ -79,13 +85,45 @@ public class GroupMappingTest {
     private RequestSpecification restApiRequest;
 
     @Rule
+    public final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer("weave/rest-smtp-sink:latest")
+        .withExposedPorts(25);
+
+    private final InMemoryDNSService inMemoryDNSService = new InMemoryDNSService();
+    @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+    private InetAddress containerIp;
     @Before
     public void setup() throws Exception {
+
+        containerIp = InetAddress.getByName(fakeSmtp.getContainerIp());
+        inMemoryDNSService.registerRecord("yopmail.com", containerIp, "yopmail.com");
+
         MailetContainer mailetContainer = MailetContainer.builder()
             .postmaster("postmaster@" + DOMAIN1)
             .threads(5)
-            .addProcessor(CommonProcessors.root())
+            .addProcessor(ProcessorConfiguration.builder()
+                .state("root")
+                .enableJmx(true)
+                .addMailet(MailetConfiguration.builder()
+                    .match("All")
+                    .clazz("PostmasterAlias")
+                    .build())
+                .addMailet(MailetConfiguration.builder()
+                    .match("RelayLimit=30")
+                    .clazz("Null")
+                    .build())
+                .addMailet(MailetConfiguration.builder()
+                    .match("SMTPAuthSuccessful")
+                    .clazz("ToProcessor")
+                    .addProperty("processor", "transport")
+                    .build())
+                .addMailet(MailetConfiguration.builder()
+                    .match("All")
+                    .clazz("ToProcessor")
+                    .addProperty("processor", "transport")
+                    .build())
+                .build())
             .addProcessor(CommonProcessors.error())
             .addProcessor(ProcessorConfiguration.transport()
                 .enableJmx(true)
@@ -120,7 +158,8 @@ public class GroupMappingTest {
                 .build())
             .build();
 
-        jamesServer = new TemporaryJamesServer(temporaryFolder, mailetContainer);
+        jamesServer = new TemporaryJamesServer(temporaryFolder, mailetContainer, (binder) -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));
+
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
 
@@ -386,6 +425,42 @@ public class GroupMappingTest {
             messageSender.sendMessage(mail);
             calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
             calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(USER_DOMAIN2, PASSWORD));
+        }
+    }
+
+    @Test
+    public void externalGroupMemberAreNotSupported() throws Exception {
+        String externalMail = "ray@yopmail.com";
+        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + externalMail);
+
+        Mail mail = FakeMail.builder()
+            .mimeMessage(message)
+            .sender(new MailAddress(SENDER))
+            .recipient(new MailAddress(GROUP_ON_DOMAIN1))
+            .build();
+
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1);) {
+            messageSender.sendMessage(mail);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
+
+            calmlyAwait.atMost(1, TimeUnit.MINUTES)
+                .until(() -> {
+                    try {
+                        with()
+                            .baseUri("http://" + containerIp.getHostAddress())
+                            .port(80)
+                            .get("/api/email")
+                        .then()
+                            .statusCode(200)
+                            .body("[0].from", equalTo(SENDER))
+                            .body("[0].to[0]", equalTo(externalMail))
+                            .body("[0].text", equalTo(MESSAGE_CONTENT));
+
+                        return true;
+                    } catch(AssertionError e) {
+                        return false;
+                    }
+                });
         }
     }
 }
