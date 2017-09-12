@@ -34,6 +34,7 @@ import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 
@@ -94,9 +95,9 @@ public class SMTPMessageSender implements Closeable {
             String from = mail.getSender().asString();
             smtpClient.helo(senderDomain);
             smtpClient.setSender(from);
-            for (MailAddress mailAddress : mail.getRecipients()) {
-                smtpClient.addRecipient(mailAddress.asString());
-            }
+            mail.getRecipients().stream()
+                .map(MailAddress::asString)
+                .forEach(Throwing.consumer(smtpClient::addRecipient));
             smtpClient.sendShortMessageData(asString(mail.getMessage()));
         } catch (IOException e) {
             throw Throwables.propagate(e);
