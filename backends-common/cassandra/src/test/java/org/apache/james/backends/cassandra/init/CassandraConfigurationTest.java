@@ -210,6 +210,22 @@ public class CassandraConfigurationTest {
     }
 
     @Test
+    public void messageAttachmentIdsReadTimeoutShouldThrowOnZero() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        CassandraConfiguration.builder()
+            .messageAttachmentIdsReadTimeout(0);
+    }
+
+    @Test
+    public void messageAttachmentIdsReadTimeoutShouldThrowOnNegativeValue() {
+        expectedException.expect(IllegalArgumentException.class);
+
+        CassandraConfiguration.builder()
+            .messageAttachmentIdsReadTimeout(-1);
+    }
+
+    @Test
     public void builderShouldCreateTheRightObject() {
         int aclMaxRetry = 1;
         int modSeqMaxRetry = 2;
@@ -222,6 +238,7 @@ public class CassandraConfigurationTest {
         int expungeChunkSize = 9;
         int blobPartSize = 10;
         int attachmentV2MigrationReadTimeout = 11;
+        int messageAttachmentIdReadTimeout = 12;
 
         CassandraConfiguration configuration = CassandraConfiguration.builder()
             .aclMaxRetry(aclMaxRetry)
@@ -235,6 +252,7 @@ public class CassandraConfigurationTest {
             .expungeChunkSize(expungeChunkSize)
             .blobPartSize(blobPartSize)
             .attachmentV2MigrationReadTimeout(attachmentV2MigrationReadTimeout)
+            .messageAttachmentIdsReadTimeout(messageAttachmentIdReadTimeout)
             .build();
 
         softly.assertThat(configuration.getAclMaxRetry()).isEqualTo(aclMaxRetry);
@@ -248,6 +266,7 @@ public class CassandraConfigurationTest {
         softly.assertThat(configuration.getExpungeChunkSize()).isEqualTo(expungeChunkSize);
         softly.assertThat(configuration.getBlobPartSize()).isEqualTo(blobPartSize);
         softly.assertThat(configuration.getAttachmentV2MigrationReadTimeout()).isEqualTo(attachmentV2MigrationReadTimeout);
+        softly.assertThat(configuration.getMessageAttachmentIdsReadTimeout()).isEqualTo(messageAttachmentIdReadTimeout);
     }
 
 }

@@ -404,10 +404,12 @@ public class CassandraMessageDAO {
     }
 
     public CompletableFuture<Stream<MessageIdAttachmentIds>> retrieveAllMessageIdAttachmentIds() {
-        return cassandraAsyncExecutor.execute(selectAllMessagesWithAttachment.bind())
-                .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
-                        .map(this::fromRow)
-                        .filter(MessageIdAttachmentIds::hasAttachment));
+        return cassandraAsyncExecutor.execute(
+            selectAllMessagesWithAttachment.bind()
+                .setReadTimeoutMillis(configuration.getMessageAttachmentIdsReadTimeout()))
+            .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
+                .map(this::fromRow)
+                .filter(MessageIdAttachmentIds::hasAttachment));
     }
 
     private MessageIdAttachmentIds fromRow(Row row) {

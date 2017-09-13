@@ -41,6 +41,7 @@ public class CassandraConfiguration {
     public static final int DEFAULT_FETCH_NEXT_PAGE_ADVANCE_IN_ROW = 100;
     public static final int DEFAULT_BLOB_PART_SIZE = 100 * 1024;
     public static final int DEFAULT_ATTACHMENT_V2_MIGRATION_READ_TIMEOUT = toIntExact(TimeUnit.DAYS.toMillis(1));
+    public static final int DEFAULT_MESSAGE_ATTACHMENT_ID_MIGRATION_READ_TIMEOUT = toIntExact(TimeUnit.DAYS.toMillis(1));
     public static final CassandraConfiguration DEFAULT_CONFIGURATION = builder().build();
 
     public static class Builder {
@@ -55,6 +56,7 @@ public class CassandraConfiguration {
         private Optional<Integer> fetchNextPageInAdvanceRow = Optional.empty();
         private Optional<Integer> blobPartSize = Optional.empty();
         private Optional<Integer> attachmentV2MigrationReadTimeout = Optional.empty();
+        private Optional<Integer> messageAttachmentIdsReadTimeout = Optional.empty();
 
         public Builder messageReadChunkSize(int value) {
             Preconditions.checkArgument(value > 0, "messageReadChunkSize needs to be strictly positive");
@@ -122,6 +124,12 @@ public class CassandraConfiguration {
             return this;
         }
 
+        public Builder messageAttachmentIdsReadTimeout(int value) {
+            Preconditions.checkArgument(value > 0, "messageAttachmentIdsReadTimeout needs to be strictly positive");
+            this.messageAttachmentIdsReadTimeout = Optional.of(value);
+            return this;
+        }
+
         public Builder messageReadChunkSize(Optional<Integer> value) {
             value.ifPresent(this::messageReadChunkSize);
             return this;
@@ -177,6 +185,11 @@ public class CassandraConfiguration {
             return this;
         }
 
+        public Builder messageAttachmentIdsReadTimeout(Optional<Integer> value) {
+            value.ifPresent(this::messageAttachmentIdsReadTimeout);
+            return this;
+        }
+
         public CassandraConfiguration build() {
             return new CassandraConfiguration(aclMaxRetry.orElse(DEFAULT_ACL_MAX_RETRY),
                 messageReadChunkSize.orElse(DEFAULT_MESSAGE_CHUNK_SIZE_ON_READ),
@@ -188,7 +201,8 @@ public class CassandraConfiguration {
                 uidMaxRetry.orElse(DEFAULT_UID_MAX_RETRY),
                 fetchNextPageInAdvanceRow.orElse(DEFAULT_FETCH_NEXT_PAGE_ADVANCE_IN_ROW),
                 blobPartSize.orElse(DEFAULT_BLOB_PART_SIZE),
-                attachmentV2MigrationReadTimeout.orElse(DEFAULT_ATTACHMENT_V2_MIGRATION_READ_TIMEOUT));
+                attachmentV2MigrationReadTimeout.orElse(DEFAULT_ATTACHMENT_V2_MIGRATION_READ_TIMEOUT),
+                messageAttachmentIdsReadTimeout.orElse(DEFAULT_MESSAGE_ATTACHMENT_ID_MIGRATION_READ_TIMEOUT));
         }
     }
 
@@ -207,12 +221,13 @@ public class CassandraConfiguration {
     private final int fetchNextPageInAdvanceRow;
     private final int blobPartSize;
     private final int attachmentV2MigrationReadTimeout;
+    private final int messageAttachmentIdsReadTimeout;
 
     @VisibleForTesting
     CassandraConfiguration(int aclMaxRetry, int messageReadChunkSize, int expungeChunkSize,
                            int flagsUpdateChunkSize, int flagsUpdateMessageIdMaxRetry, int flagsUpdateMessageMaxRetry,
                            int modSeqMaxRetry, int uidMaxRetry, int fetchNextPageInAdvanceRow,
-                           int blobPartSize, final int attachmentV2MigrationReadTimeout) {
+                           int blobPartSize, final int attachmentV2MigrationReadTimeout, int messageAttachmentIdsReadTimeout) {
         this.aclMaxRetry = aclMaxRetry;
         this.messageReadChunkSize = messageReadChunkSize;
         this.expungeChunkSize = expungeChunkSize;
@@ -224,6 +239,7 @@ public class CassandraConfiguration {
         this.flagsUpdateChunkSize = flagsUpdateChunkSize;
         this.blobPartSize = blobPartSize;
         this.attachmentV2MigrationReadTimeout = attachmentV2MigrationReadTimeout;
+        this.messageAttachmentIdsReadTimeout = messageAttachmentIdsReadTimeout;
     }
 
     public int getBlobPartSize() {
@@ -270,6 +286,10 @@ public class CassandraConfiguration {
         return attachmentV2MigrationReadTimeout;
     }
 
+    public int getMessageAttachmentIdsReadTimeout() {
+        return messageAttachmentIdsReadTimeout;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof CassandraConfiguration) {
@@ -285,7 +305,8 @@ public class CassandraConfiguration {
                 && Objects.equals(this.flagsUpdateChunkSize, that.flagsUpdateChunkSize)
                 && Objects.equals(this.fetchNextPageInAdvanceRow, that.fetchNextPageInAdvanceRow)
                 && Objects.equals(this.blobPartSize, that.blobPartSize)
-                && Objects.equals(this.attachmentV2MigrationReadTimeout, that.attachmentV2MigrationReadTimeout);
+                && Objects.equals(this.attachmentV2MigrationReadTimeout, that.attachmentV2MigrationReadTimeout)
+                && Objects.equals(this.messageAttachmentIdsReadTimeout, that.messageAttachmentIdsReadTimeout);
         }
         return false;
     }
@@ -294,7 +315,7 @@ public class CassandraConfiguration {
     public final int hashCode() {
         return Objects.hash(aclMaxRetry, messageReadChunkSize, expungeChunkSize, flagsUpdateMessageIdMaxRetry,
             flagsUpdateMessageMaxRetry, modSeqMaxRetry, uidMaxRetry, fetchNextPageInAdvanceRow, flagsUpdateChunkSize,
-            blobPartSize, attachmentV2MigrationReadTimeout);
+            blobPartSize, attachmentV2MigrationReadTimeout, messageAttachmentIdsReadTimeout);
     }
 
     @Override
@@ -311,6 +332,7 @@ public class CassandraConfiguration {
             .add("uidMaxRetry", uidMaxRetry)
             .add("blobPartSize", blobPartSize)
             .add("attachmentV2MigrationReadTimeout", attachmentV2MigrationReadTimeout)
+            .add("messageAttachmentIdsReadTimeout", messageAttachmentIdsReadTimeout)
             .toString();
     }
 }

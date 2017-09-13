@@ -186,6 +186,21 @@
       
     </subsection>
 
+    <subsection name="From V4 to V5">
+
+      <p>Migration tag on git repository: <a href="https://github.com/apache/james-project/releases/tag/cassandra_migration_v4_to_v5">cassandra_migration_v4_to_v5</a></p>
+
+      <p>Goal is to store attachment ids in the separated AttachmentMessageId table.</p>
+
+      <p>Summary of available options for this migration:</p>
+
+      <dl>
+        <dt><strong>message.attachmentids.read.timeout</strong></dt>
+        <dd>Optional. Defaults to one day.<br/> Controls how many milliseconds before the read attachment ids on message time out.</dd>
+      </dl>
+
+    </subsection>
+
   </section>
 
 </body>

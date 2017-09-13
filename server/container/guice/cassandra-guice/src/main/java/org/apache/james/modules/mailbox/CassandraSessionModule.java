@@ -73,6 +73,7 @@ public class CassandraSessionModule extends AbstractModule {
     private static final String CHUNK_SIZE_EXPUNGE = "chunk.size.expunge";
     private static final String BLOB_PART_SIZE = "mailbox.blob.part.size";
     private static final String ATTACHMENT_V2_MIGRATION_READ_TIMEOUT = "attachment.v2.migration.read.timeout";
+    private static final String MESSAGE_ATTACHMENTID_READ_TIMEOUT = "message.attachmentids.read.timeout";
     private static final String CASSANDRA_NODES = "cassandra.nodes";
 
     @Override
@@ -160,6 +161,8 @@ public class CassandraSessionModule extends AbstractModule {
                 propertiesConfiguration.getInteger(BLOB_PART_SIZE, null)))
             .attachmentV2MigrationReadTimeout(Optional.ofNullable(
                 propertiesConfiguration.getInteger(ATTACHMENT_V2_MIGRATION_READ_TIMEOUT, null)))
+            .messageAttachmentIdsReadTimeout(Optional.ofNullable(
+                propertiesConfiguration.getInteger(MESSAGE_ATTACHMENTID_READ_TIMEOUT, null)))
             .build();
     }
 
