@@ -61,9 +61,9 @@ public class Attachment {
 
         public Attachment build() {
             Preconditions.checkState(bytes != null, "'bytes' is mandatory");
+            Preconditions.checkState(type != null, "'type' is mandatory");
             AttachmentId builtAttachmentId = attachmentId();
             Preconditions.checkState(builtAttachmentId != null, "'attachmentId' is mandatory");
-            Preconditions.checkState(type != null, "'type' is mandatory");
             return new Attachment(bytes, builtAttachmentId, type, size());
         }
 
@@ -71,7 +71,7 @@ public class Attachment {
             if (attachmentId != null) {
                 return attachmentId;
             }
-            return AttachmentId.forPayload(bytes);
+            return AttachmentId.forPayloadAndType(bytes, type);
         }
 
         private long size() {

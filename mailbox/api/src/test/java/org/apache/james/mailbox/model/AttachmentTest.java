@@ -105,14 +105,14 @@ public class AttachmentTest {
     @Test (expected = IllegalStateException.class)
     public void buildShouldThrowWhenBytesIsNotProvided() {
         Attachment.builder()
-            .attachmentId(AttachmentId.forPayload("mystream".getBytes(CHARSET)))
+            .attachmentId(AttachmentId.forPayloadAndType("mystream".getBytes(CHARSET), "type"))
             .build();
     }
 
     @Test (expected = IllegalStateException.class)
     public void buildShouldThrowWhenTypeIsNotProvided() {
         Attachment.builder()
-            .attachmentId(AttachmentId.forPayload("mystream".getBytes(CHARSET)))
+            .attachmentId(AttachmentId.forPayloadAndType("mystream".getBytes(CHARSET), "type"))
             .bytes("mystream".getBytes(CHARSET))
             .build();
     }
@@ -120,11 +120,12 @@ public class AttachmentTest {
     @Test
     public void buildShouldSetTheAttachmentId() throws Exception {
         byte[] bytes = "mystream".getBytes(CHARSET);
+        String type = "content";
         Attachment attachment = Attachment.builder()
                 .bytes(bytes)
-                .type("content")
+                .type(type)
                 .build();
-        AttachmentId expected = AttachmentId.forPayload(bytes);
+        AttachmentId expected = AttachmentId.forPayloadAndType(bytes, type);
 
         assertThat(attachment.getAttachmentId()).isEqualTo(expected);
     }

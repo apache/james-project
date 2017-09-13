@@ -39,7 +39,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 
 public abstract class AttachmentMapperTest {
-    private static final AttachmentId UNKNOWN_ATTACHMENT_ID = AttachmentId.forPayload("unknown".getBytes(Charsets.UTF_8));
+    private static final AttachmentId UNKNOWN_ATTACHMENT_ID = AttachmentId.forPayloadAndType("unknown".getBytes(Charsets.UTF_8), "type");
 
     private AttachmentMapper attachmentMapper;
     private MapperProvider mapperProvider;
