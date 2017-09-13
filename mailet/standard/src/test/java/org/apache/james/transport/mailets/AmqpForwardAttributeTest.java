@@ -27,6 +27,7 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeoutException;
 
 import javax.mail.MessagingException;
@@ -243,6 +244,27 @@ public class AmqpForwardAttributeTest {
 
         ArgumentCaptor<BasicProperties> basicPropertiesCaptor = ArgumentCaptor.forClass(BasicProperties.class);
         verify(channel).basicPublish(eq(EXCHANGE_NAME), eq(ROUTING_KEY), basicPropertiesCaptor.capture(), eq(ATTACHMENT_CONTENT));
+        assertThat(basicPropertiesCaptor.getValue()).isEqualToComparingFieldByField(expectedProperties);
+    }
+
+    @Test
+    public void serviceShouldPublishAttributeContentWhenAttributeInMailAndIsAString() throws Exception {
+        mailet.init(mailetConfig);
+        Channel channel = mock(Channel.class);
+        Connection connection = mock(Connection.class);
+        when(connection.createChannel()).thenReturn(channel);
+        ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
+        when(connectionFactory.newConnection()).thenReturn(connection);
+        mailet.setConnectionFactory(connectionFactory);
+        Mail mail = mock(Mail.class);
+        String content = "Attachment content";
+        when(mail.getAttribute(MAIL_ATTRIBUTE)).thenReturn(content);
+        BasicProperties expectedProperties = new AMQP.BasicProperties();
+
+        mailet.service(mail);
+
+        ArgumentCaptor<BasicProperties> basicPropertiesCaptor = ArgumentCaptor.forClass(BasicProperties.class);
+        verify(channel).basicPublish(eq(EXCHANGE_NAME), eq(ROUTING_KEY), basicPropertiesCaptor.capture(), eq(content.getBytes(StandardCharsets.UTF_8)));
         assertThat(basicPropertiesCaptor.getValue()).isEqualToComparingFieldByField(expectedProperties);
     }
 }

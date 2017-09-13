@@ -21,6 +21,7 @@ package org.apache.james.transport.mailets;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
@@ -126,8 +127,11 @@ public class AmqpForwardAttribute extends GenericMailet {
         if (attributeContent instanceof List) {
             return ((List<byte[]>) attributeContent).stream();
         }
+        if (attributeContent instanceof String) {
+            return Stream.of(((String) attributeContent).getBytes(StandardCharsets.UTF_8));
+        }
         throw new MailetException("Invalid attribute found into attribute "
-                + attribute + "class Map or List expected but "
+                + attribute + "class Map or List or String expected but "
                 + attributeContent.getClass() + " found.");
     }
 
