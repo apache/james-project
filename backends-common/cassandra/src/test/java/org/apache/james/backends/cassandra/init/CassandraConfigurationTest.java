@@ -20,19 +20,15 @@
 package org.apache.james.backends.cassandra.init;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class CassandraConfigurationTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     @Rule
     public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
 
@@ -51,178 +47,156 @@ public class CassandraConfigurationTest {
 
     @Test
     public void aclMaxRetryShouldThrowOnNegativeValue() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .aclMaxRetry(-1);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .aclMaxRetry(-1))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void aclMaxRetryShouldThrowOnZero() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .aclMaxRetry(0);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+            .aclMaxRetry(0))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void expungeChunkSizeShouldThrowOnNegativeValue() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .expungeChunkSize(-1);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .expungeChunkSize(-1))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void expungeChunkSizeShouldThrowOnZero() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .expungeChunkSize(0);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .expungeChunkSize(0))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void messageReadChunkSizeShouldThrowOnNegativeValue() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .messageReadChunkSize(-1);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .messageReadChunkSize(-1))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void messageReadChunkSizeShouldThrowOnZero() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .messageReadChunkSize(0);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .messageReadChunkSize(0))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void flagsUpdateChunkSizeShouldThrowOnNegativeValue() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .flagsUpdateChunkSize(-1);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .flagsUpdateChunkSize(-1))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void flagsUpdateChunkSizeShouldThrowOnZero() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .flagsUpdateChunkSize(0);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .flagsUpdateChunkSize(0))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void flagsUpdateMessageIdMaxRetryShouldThrowOnNegativeValue() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .flagsUpdateMessageIdMaxRetry(-1);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .flagsUpdateMessageIdMaxRetry(-1))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void flagsUpdateMessageIdMaxRetryShouldThrowOnZero() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .flagsUpdateMessageIdMaxRetry(0);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .flagsUpdateMessageIdMaxRetry(0))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void flagsUpdateMessageMaxRetryShouldThrowOnNegativeValue() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .flagsUpdateMessageMaxRetry(-1);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .flagsUpdateMessageMaxRetry(-1))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void flagsUpdateMessageMaxRetryShouldThrowOnZero() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .flagsUpdateMessageMaxRetry(0);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .flagsUpdateMessageMaxRetry(0))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fetchNextPageInAdvanceRowShouldThrowOnNegativeValue() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .fetchNextPageInAdvanceRow(-1);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .fetchNextPageInAdvanceRow(-1))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fetchNextPageInAdvanceRowShouldThrowOnZero() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .fetchNextPageInAdvanceRow(0);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .fetchNextPageInAdvanceRow(0))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void modSeqMaxRetryShouldThrowOnNegativeValue() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .modSeqMaxRetry(-1);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .modSeqMaxRetry(-1))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void modSeqMaxRetryShouldThrowOnZero() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .modSeqMaxRetry(0);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .modSeqMaxRetry(0))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void uidMaxRetryShouldThrowOnNegativeValue() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .uidMaxRetry(-1);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .uidMaxRetry(-1))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void uidMaxRetryShouldThrowOnZero() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .uidMaxRetry(0);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .uidMaxRetry(0))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void attachmentV2MigrationReadTimeoutShouldThrowOnZero() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .attachmentV2MigrationReadTimeout(0);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .attachmentV2MigrationReadTimeout(0))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void attachmentV2MigrationReadTimeoutShouldThrowOnNegativeValue() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .attachmentV2MigrationReadTimeout(-1);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .attachmentV2MigrationReadTimeout(-1))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void messageAttachmentIdsReadTimeoutShouldThrowOnZero() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .messageAttachmentIdsReadTimeout(0);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .messageAttachmentIdsReadTimeout(0))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void messageAttachmentIdsReadTimeoutShouldThrowOnNegativeValue() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraConfiguration.builder()
-            .messageAttachmentIdsReadTimeout(-1);
+        assertThatThrownBy(() -> CassandraConfiguration.builder()
+                .messageAttachmentIdsReadTimeout(-1))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
