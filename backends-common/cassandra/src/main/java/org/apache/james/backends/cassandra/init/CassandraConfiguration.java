@@ -40,8 +40,8 @@ public class CassandraConfiguration {
     public static final int DEFAULT_ACL_MAX_RETRY = 1000;
     public static final int DEFAULT_FETCH_NEXT_PAGE_ADVANCE_IN_ROW = 100;
     public static final int DEFAULT_BLOB_PART_SIZE = 100 * 1024;
-    public static final int DEFAULT_ATTACHMENT_V2_MIGRATION_READ_TIMEOUT = toIntExact(TimeUnit.DAYS.toMillis(1));
-    public static final int DEFAULT_MESSAGE_ATTACHMENT_ID_MIGRATION_READ_TIMEOUT = toIntExact(TimeUnit.DAYS.toMillis(1));
+    public static final int DEFAULT_ATTACHMENT_V2_MIGRATION_READ_TIMEOUT = toIntExact(TimeUnit.HOURS.toMillis(1));
+    public static final int DEFAULT_MESSAGE_ATTACHMENT_ID_MIGRATION_READ_TIMEOUT = toIntExact(TimeUnit.HOURS.toMillis(1));
     public static final CassandraConfiguration DEFAULT_CONFIGURATION = builder().build();
 
     public static class Builder {
