@@ -80,7 +80,7 @@ public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFac
     }
     
     @Override
-    public AttachmentMapper createAttachmentMapper(MailboxSession session) throws MailboxException {
+    public AttachmentMapper createAttachmentMapper(MailboxSession session) {
         return attachmentMapper;
     }
 
@@ -107,7 +107,7 @@ public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFac
     }
 
     @Override
-    public AttachmentMapper getAttachmentMapper(MailboxSession session) throws MailboxException {
+    public AttachmentMapper getAttachmentMapper(MailboxSession session) {
         return attachmentMapper;
     }
 

@@ -19,10 +19,14 @@
 
 package org.apache.james.mailbox.inmemory;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
+
 import javax.inject.Inject;
 import javax.mail.Flags;
 
@@ -42,7 +46,9 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
+import org.apache.james.util.OptionalUtils;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -58,7 +64,7 @@ public class InMemoryMessageIdManager implements MessageIdManager {
     public InMemoryMessageIdManager(MailboxManager mailboxManager) {
         this.mailboxManager = mailboxManager;
     }
-    
+
     @Override
     public void setFlags(Flags newState, FlagsUpdateMode flagsUpdateMode, MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException {
         for (MailboxId mailboxId: mailboxIds) {
@@ -71,13 +77,21 @@ public class InMemoryMessageIdManager implements MessageIdManager {
     }
 
     @Override
+    public Set<MessageId> accessibleMessages(Collection<MessageId> messageIds, MailboxSession mailboxSession) throws MailboxException {
+        return getUsersMailboxIds(mailboxSession)
+            .stream()
+            .flatMap(Throwing.function(mailboxId -> retrieveMailboxMessages(mailboxId, messageIds, FetchGroupImpl.MINIMAL, mailboxSession)))
+            .map(MessageResult::getMessageId)
+            .collect(Guavate.toImmutableSet());
+    }
+
+
+    @Override
     public List<MessageResult> getMessages(List<MessageId> messages, FetchGroup fetchGroup, final MailboxSession mailboxSession) throws MailboxException {
-        ImmutableList.Builder<MessageResult> builder = ImmutableList.builder();
-        List<MailboxId> userMailboxIds = getUsersMailboxIds(mailboxSession);
-        for (MailboxId mailboxId: userMailboxIds) {
-            builder.addAll(retrieveMailboxMessages(mailboxId, messages, fetchGroup, mailboxSession));
-        }
-        return builder.build();
+        return getUsersMailboxIds(mailboxSession)
+            .stream()
+            .flatMap(Throwing.function(mailboxId -> retrieveMailboxMessages(mailboxId, messages, FetchGroupImpl.MINIMAL, mailboxSession)))
+            .collect(Guavate.toImmutableList());
     }
 
     @Override
@@ -136,15 +150,10 @@ public class InMemoryMessageIdManager implements MessageIdManager {
                 .build();
     }
 
-    private List<MessageResult> retrieveMailboxMessages(MailboxId mailboxId, List<MessageId> messages, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
-        ImmutableList.Builder<MessageResult> builder = ImmutableList.builder();
-        for (MessageId messageId: messages) {
-            Optional<MessageResult> maybeMessage = findMessageWithId(mailboxId, messageId, fetchGroup, mailboxSession);
-            if (maybeMessage.isPresent()) {
-                builder.add(maybeMessage.get());
-            }
-        }
-        return builder.build();
+    private Stream<MessageResult> retrieveMailboxMessages(MailboxId mailboxId, Collection<MessageId> messages, FetchGroup fetchGroup, MailboxSession mailboxSession) {
+        return messages.stream()
+            .map(Throwing.function(messageId -> findMessageWithId(mailboxId, messageId, fetchGroup, mailboxSession)))
+            .flatMap(OptionalUtils::toStream);
     }
 
     private void filterOnMailboxSession(List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxNotFoundException {

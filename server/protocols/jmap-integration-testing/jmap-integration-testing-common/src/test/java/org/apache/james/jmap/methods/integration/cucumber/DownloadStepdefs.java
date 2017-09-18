@@ -340,6 +340,11 @@ public class DownloadStepdefs {
             .returnResponse();
     }
 
+    @When("^\"([^\"]*)\" delete mailbox \"([^\"]*)\"$")
+    public void deleteMailboxButNotAttachment(String username, String mailboxName) throws Exception {
+        mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).deleteMailbox(MailboxConstants.USER_NAMESPACE, username, mailboxName);
+    }
+
     @Then("^the user should be authorized$")
     public void httpStatusDifferentFromUnauthorized() throws IOException {
         assertThat(response.getStatusLine().getStatusCode()).isIn(200, 404);

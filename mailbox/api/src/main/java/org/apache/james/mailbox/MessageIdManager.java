@@ -19,7 +19,9 @@
 
 package org.apache.james.mailbox;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import javax.mail.Flags;
 
@@ -31,6 +33,8 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 
 public interface MessageIdManager {
+
+    Set<MessageId> accessibleMessages(Collection<MessageId> messageIds, final MailboxSession mailboxSession) throws MailboxException;
 
     void setFlags(Flags newState, FlagsUpdateMode replace, MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException;
 

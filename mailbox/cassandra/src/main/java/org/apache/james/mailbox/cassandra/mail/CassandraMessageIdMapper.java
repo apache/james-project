@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra.mail;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -88,12 +89,12 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     }
 
     @Override
-    public List<MailboxMessage> find(List<MessageId> messageIds, FetchType fetchType) {
+    public List<MailboxMessage> find(Collection<MessageId> messageIds, FetchType fetchType) {
         return findAsStream(messageIds, fetchType)
             .collect(Guavate.toImmutableList());
     }
 
-    private Stream<SimpleMailboxMessage> findAsStream(List<MessageId> messageIds, FetchType fetchType) {
+    private Stream<SimpleMailboxMessage> findAsStream(Collection<MessageId> messageIds, FetchType fetchType) {
         return FluentFutureStream.ofNestedStreams(
             messageIds.stream()
                 .map(messageId -> imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.empty())))

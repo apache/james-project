@@ -40,7 +40,7 @@ public class AttachmentId {
     private static final String DEFAULT_MIME_TYPE = "application/octet-stream";
 
     public static AttachmentId forPayloadAndType(byte[] payload, String contentType) {
-        Preconditions.checkArgument(payload != null);
+        Preconditions.checkNotNull(payload);
         Preconditions.checkArgument(!Strings.isNullOrEmpty(contentType));
 
         return new AttachmentId(computeRawId(payload, contentType));
@@ -60,8 +60,13 @@ public class AttachmentId {
                 .orElse(DEFAULT_MIME_TYPE);
     }
 
+    public static AttachmentId from(BlobId blobId) {
+        return new AttachmentId(blobId.asString());
+    }
+
     public static AttachmentId from(String id) {
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(id));
+        Preconditions.checkNotNull(id);
+        Preconditions.checkArgument(!id.isEmpty());
         return new AttachmentId(id);
     }
 

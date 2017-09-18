@@ -183,7 +183,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     }
 
     @Override
-    public AttachmentMapper getAttachmentMapper(MailboxSession session) throws MailboxException {
+    public AttachmentMapper getAttachmentMapper(MailboxSession session) {
         AttachmentMapper mapper = (AttachmentMapper) session.getAttributes().get(ATTACHMENTMAPPER);
         if (mapper == null) {
             mapper = createAttachmentMapper(session);

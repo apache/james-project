@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -160,7 +161,7 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
         messageIdMapper = new MessageIdMapper() {
 
             @Override
-            public List<MailboxMessage> find(final List<MessageId> messageIds, MessageMapper.FetchType fetchType) {
+            public List<MailboxMessage> find(final Collection<MessageId> messageIds, MessageMapper.FetchType fetchType) {
                 return messages.stream()
                     .filter(withMessageIdOneOf(messageIds))
                     .collect(Guavate.toImmutableList());
@@ -285,7 +286,7 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
         messages.clear();
     }
 
-    private Predicate<MailboxMessage> withMessageIdOneOf(final List<MessageId> messageIds) {
+    private Predicate<MailboxMessage> withMessageIdOneOf(final Collection<MessageId> messageIds) {
         return mailboxMessage -> messageIds.contains(mailboxMessage.getMessageId());
     }
 

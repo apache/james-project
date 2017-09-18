@@ -500,6 +500,34 @@ public abstract class AbstractMessageIdManagerStorageTest {
         assertThat(messageResults.get(0).getMailboxId()).isEqualTo(mailbox2.getMailboxId());
     }
 
+    @Test
+    public void accessibleMessagesShouldReturnMessageIdsThatBelongsToTheUser() throws Exception {
+        MessageId messageId = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
+
+        assertThat(messageIdManager.accessibleMessages(ImmutableList.of(messageId), session))
+            .containsExactly(messageId);
+    }
+
+    @Test
+    public void accessibleMessagesShouldReturnEmptyWhenSuppliedMessageIdsAreEmpty() throws Exception {
+        assertThat(messageIdManager.accessibleMessages(ImmutableList.of(), session))
+            .isEmpty();
+    }
+
+    @Test
+    public void accessibleMessagesShouldFilterOutMessageIdsWhenNotExisting() throws Exception {
+        assertThat(messageIdManager.accessibleMessages(ImmutableList.of(testingData.createNotUsedMessageId()), session))
+            .isEmpty();
+    }
+
+    @Test
+    public void accessibleMessagesShouldFilterOutMessageIdsWhenNotBelongingToTheUser() throws Exception {
+        MessageId messageId = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
+
+        assertThat(messageIdManager.accessibleMessages(ImmutableList.of(messageId), otherSession))
+            .isEmpty();
+    }
+
     private Predicate<MessageResult> inMailbox(final MailboxId mailboxId) {
         return messageResult -> messageResult.getMailboxId().equals(mailboxId);
     }

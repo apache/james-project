@@ -19,11 +19,10 @@
 package org.apache.james.mailbox.store.mail;
 
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
 
 public interface AttachmentMapperFactory {
 
-    AttachmentMapper createAttachmentMapper(MailboxSession session) throws MailboxException;
+    AttachmentMapper createAttachmentMapper(MailboxSession session);
 
-    AttachmentMapper getAttachmentMapper(MailboxSession session) throws MailboxException;
+    AttachmentMapper getAttachmentMapper(MailboxSession session);
 }

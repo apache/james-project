@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +35,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 public interface MessageIdMapper {
 
-    List<MailboxMessage> find(List<MessageId> messageIds, FetchType fetchType);
+    List<MailboxMessage> find(Collection<MessageId> messageIds, FetchType fetchType);
 
     List<MailboxId> findMailboxes(MessageId messageId);
 

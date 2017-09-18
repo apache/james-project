@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.inject.Inject;
@@ -96,6 +97,17 @@ public class StoreMessageIdManager implements MessageIdManager {
         for (Map.Entry<MailboxId, UpdatedFlags> entry : updatedFlags.entrySet()) {
             dispatchFlagsChange(mailboxSession, entry.getKey(), entry.getValue());
         }
+    }
+
+    @Override
+    public Set<MessageId> accessibleMessages(Collection<MessageId> messageIds, final MailboxSession mailboxSession) throws MailboxException {
+        MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
+        final MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
+        List<MailboxMessage> messageList = messageIdMapper.find(messageIds, MessageMapper.FetchType.Metadata);
+        return messageList.stream()
+            .filter(message -> mailboxBelongsToUser(mailboxSession, mailboxMapper).test(message.getMailboxId()))
+            .map(message -> message.getComposedMessageIdWithMetaData().getComposedMessageId().getMessageId())
+            .collect(Guavate.toImmutableSet());
     }
 
     @Override

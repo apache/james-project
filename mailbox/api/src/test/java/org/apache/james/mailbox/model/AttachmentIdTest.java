@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.UUID;
 
@@ -47,36 +48,50 @@ public class AttachmentIdTest {
         AttachmentId attachmentId2 = AttachmentId.forPayloadAndType("payload".getBytes(), "text/html; charset=UTF-16");
         assertThat(attachmentId.getId()).isEqualTo(attachmentId2.getId());
     }
-
-    @Test(expected = IllegalArgumentException.class)
+    
+    @Test
     public void forPayloadAndTypeShouldThrowWhenPayloadIsNull() {
-        AttachmentId.forPayloadAndType(null, null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void forPayloadAndTypeShouldThrowWhenTypeIsNull() {
-        AttachmentId.forPayloadAndType("payload".getBytes(), null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void forPayloadAndTypeShouldThrowWhenTypeIsEmpty() {
-        AttachmentId.forPayloadAndType("payload".getBytes(), "");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void fromShouldThrowWhenIdIsNull() {
-        AttachmentId.from(null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void fromShouldThrowWhenIdIsEmpty() {
-        AttachmentId.from("");
+        assertThatThrownBy(() -> AttachmentId.forPayloadAndType(null, "text/plain")).isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void fromShouldWork() {
+    public void forPayloadAndTypeShouldThrowWhenTypeIsNull() {
+        assertThatThrownBy(() -> AttachmentId.forPayloadAndType("payload".getBytes(), null)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void forPayloadAndTypeShouldThrowWhenTypeIsEmpty() {
+        assertThatThrownBy(() -> AttachmentId.forPayloadAndType("payload".getBytes(), "")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void fromShouldThrowWhenIdIsNull() {
+        String value = null;
+        assertThatThrownBy(() -> AttachmentId.from(value)).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void fromShouldThrowWhenBlobIdIsNull() {
+        BlobId value = null;
+        assertThatThrownBy(() -> AttachmentId.from(value)).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void fromShouldThrowWhenIdIsEmpty() {
+        assertThatThrownBy(() -> AttachmentId.from("")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void fromStringShouldWork() {
         String expectedId = "f07e5a815613c5abeddc4b682247a4c42d8a95df";
         AttachmentId attachmentId = AttachmentId.from(expectedId);
+        assertThat(attachmentId.getId()).isEqualTo(expectedId);
+    }
+
+    @Test
+    public void fromBlobIdShouldWork() {
+        String expectedId = "f07e5a815613c5abeddc4b682247a4c42d8a95df";
+        AttachmentId attachmentId = AttachmentId.from(BlobId.fromString(expectedId));
         assertThat(attachmentId.getId()).isEqualTo(expectedId);
     }
 
