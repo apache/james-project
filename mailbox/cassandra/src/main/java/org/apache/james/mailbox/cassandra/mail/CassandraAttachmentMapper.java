@@ -51,13 +51,15 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     private final CassandraAttachmentDAOV2 attachmentDAOV2;
     private final CassandraBlobsDAO blobsDAO;
     private final CassandraAttachmentMessageIdDAO attachmentMessageIdDAO;
+    private final CassandraAttachmentOwnerDAO ownerDAO;
 
     @Inject
-    public CassandraAttachmentMapper(CassandraAttachmentDAO attachmentDAO, CassandraAttachmentDAOV2 attachmentDAOV2, CassandraBlobsDAO blobsDAO, CassandraAttachmentMessageIdDAO attachmentMessageIdDAO) {
+    public CassandraAttachmentMapper(CassandraAttachmentDAO attachmentDAO, CassandraAttachmentDAOV2 attachmentDAOV2, CassandraBlobsDAO blobsDAO, CassandraAttachmentMessageIdDAO attachmentMessageIdDAO, final CassandraAttachmentOwnerDAO ownerDAO) {
         this.attachmentDAO = attachmentDAO;
         this.attachmentDAOV2 = attachmentDAOV2;
         this.blobsDAO = blobsDAO;
         this.attachmentMessageIdDAO = attachmentMessageIdDAO;
+        this.ownerDAO = ownerDAO;
     }
 
     @Override
@@ -120,8 +122,9 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public void storeAttachment(Attachment attachment) throws MailboxException {
-        blobsDAO.save(attachment.getBytes())
+    public void storeAttachmentForOwner(Attachment attachment, String owner) throws MailboxException {
+        ownerDAO.addOwner(attachment.getAttachmentId(), owner)
+            .thenCompose(any -> blobsDAO.save(attachment.getBytes()))
             .thenApply(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
             .thenCompose(attachmentDAOV2::storeAttachment)
             .join();
@@ -139,6 +142,11 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     public Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId) throws MailboxException {
         return attachmentMessageIdDAO.getOwnerMessageIds(attachmentId)
             .join();
+    }
+
+    @Override
+    public Collection<String> getOwners(AttachmentId attachmentId) throws MailboxException {
+        return ownerDAO.retrieveOwners(attachmentId).join();
     }
 
     public CompletableFuture<Void> storeAttachmentAsync(Attachment attachment, MessageId ownerMessageId) {

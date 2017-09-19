@@ -88,13 +88,11 @@ public abstract class MessageWithAttachmentMapperTest {
                 .bytes("attachment".getBytes())
                 .type("content")
                 .build();
-        attachmentMapper.storeAttachment(attachment);
         Attachment attachment2 = Attachment.builder()
                 .attachmentId(AttachmentId.from("456"))
                 .bytes("attachment2".getBytes())
                 .type("content")
                 .build();
-        attachmentMapper.storeAttachment(attachment2);
         messageWith1Attachment = createMessage(attachmentsMailbox, mapperProvider.generateMessageId(), "Subject: Test7 \n\nBody7\n.\n", BODY_START, new PropertyBuilder(), 
                 ImmutableList.of(MessageAttachment.builder()
                         .attachment(attachment)
@@ -115,6 +113,9 @@ public abstract class MessageWithAttachmentMapperTest {
                             .build()));
         messageWithoutAttachment = createMessage(attachmentsMailbox, mapperProvider.generateMessageId(), "Subject: Test1 \n\nBody1\n.\n", BODY_START, new PropertyBuilder());
 
+        attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(attachment), messageWith1Attachment.getMessageId());
+        attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(attachment), messageWith2Attachments.getMessageId());
+        attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(attachment2), messageWith2Attachments.getMessageId());
     }
 
     @Test

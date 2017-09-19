@@ -70,7 +70,8 @@ public class StoreAttachmentManager implements AttachmentManager {
 
     @Override
     public void storeAttachment(Attachment attachment, MailboxSession mailboxSession) throws MailboxException {
-        attachmentMapperFactory.getAttachmentMapper(mailboxSession).storeAttachment(attachment);
+        attachmentMapperFactory.getAttachmentMapper(mailboxSession)
+            .storeAttachmentForOwner(attachment, mailboxSession.getUser().getUserName());
     }
 
     @Override
@@ -80,13 +81,26 @@ public class StoreAttachmentManager implements AttachmentManager {
 
     private boolean userHasAccessToAttachment(AttachmentId attachmentId, MailboxSession mailboxSession) {
         try {
-            return !messageIdManager
-                .accessibleMessages(getRelatedMessageIds(attachmentId, mailboxSession), mailboxSession)
-                .isEmpty();
+            return isExplicitlyAOwner(attachmentId, mailboxSession)
+                || isReferencedInUserMessages(attachmentId, mailboxSession);
         } catch (MailboxException e) {
             LOGGER.warn("Error while checking attachment related accessible message ids", e);
             throw Throwables.propagate(e);
         }
+    }
+
+    private boolean isReferencedInUserMessages(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException {
+        Collection<MessageId> relatedMessageIds = getRelatedMessageIds(attachmentId, mailboxSession);
+        return !messageIdManager
+            .accessibleMessages(relatedMessageIds, mailboxSession)
+            .isEmpty();
+    }
+
+    private boolean isExplicitlyAOwner(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException {
+        Collection<String> explicitOwners = attachmentMapperFactory.getAttachmentMapper(mailboxSession)
+            .getOwners(attachmentId);
+        return explicitOwners.stream()
+            .anyMatch(username -> mailboxSession.getUser().isSameUser(username));
     }
 
     private Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException {

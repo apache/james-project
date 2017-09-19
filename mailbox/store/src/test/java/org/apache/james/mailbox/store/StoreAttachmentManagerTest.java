@@ -71,6 +71,7 @@ public class StoreAttachmentManagerTest {
         MailboxSession mailboxSession = mock(MailboxSession.class);
         when(attachmentMapper.getAttachment(ATTACHMENT_ID)).thenReturn(ATTACHMENT);
         when(attachmentMapper.getRelatedMessageIds(ATTACHMENT_ID)).thenReturn(MESSAGE_IDS);
+        when(attachmentMapper.getOwners(ATTACHMENT_ID)).thenReturn(ImmutableList.of());
         when(messageIdManager.accessibleMessages(MESSAGE_IDS, mailboxSession)).thenReturn(ImmutableSet.of());
 
         assertThatThrownBy(() -> testee.getAttachment(ATTACHMENT_ID, mailboxSession))

@@ -31,6 +31,7 @@ import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraAttachmentMessageIdTable;
+import org.apache.james.mailbox.cassandra.table.CassandraAttachmentOwnerTable;
 import org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable;
 import org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table;
 
@@ -77,7 +78,17 @@ public class CassandraAttachmentModule implements CassandraModule {
                     .compactionOptions(SchemaBuilder.leveledStrategy())
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))
-                    .comment("Holds ids of messages owning the attachment")));
+                    .comment("Holds ids of messages owning the attachment")),
+            new CassandraTable(CassandraAttachmentOwnerTable.TABLE_NAME,
+                SchemaBuilder.createTable(CassandraAttachmentOwnerTable.TABLE_NAME)
+                    .ifNotExists()
+                    .addPartitionKey(CassandraAttachmentOwnerTable.ID, uuid())
+                    .addClusteringColumn(CassandraAttachmentOwnerTable.OWNER, text())
+                    .withOptions()
+                    .compactionOptions(SchemaBuilder.leveledStrategy())
+                    .caching(SchemaBuilder.KeyCaching.ALL,
+                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))
+                    .comment("Holds explicit owners of some attachments")));
         types = ImmutableList.of();
     }
 

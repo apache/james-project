@@ -16,29 +16,14 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.store.mail;
 
-import java.util.Collection;
-import java.util.List;
+package org.apache.james.mailbox.cassandra.table;
 
-import org.apache.james.mailbox.exception.AttachmentNotFoundException;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.Attachment;
-import org.apache.james.mailbox.model.AttachmentId;
-import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.transaction.Mapper;
+public interface CassandraAttachmentOwnerTable {
 
-public interface AttachmentMapper extends Mapper {
+    String TABLE_NAME = "attachmentOwners";
+    String ID = "id";
+    String OWNER = "owner";
+    String[] FIELDS = { ID, OWNER };
 
-    Attachment getAttachment(AttachmentId attachmentId) throws AttachmentNotFoundException;
-
-    List<Attachment> getAttachments(Collection<AttachmentId> attachmentIds);
-
-    void storeAttachmentForOwner(Attachment attachment, String owner) throws MailboxException;
-
-    void storeAttachmentsForMessage(Collection<Attachment> attachments, MessageId ownerMessageId) throws MailboxException;
-
-    Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId) throws MailboxException;
-
-    Collection<String> getOwners(AttachmentId attachmentId) throws MailboxException;
 }

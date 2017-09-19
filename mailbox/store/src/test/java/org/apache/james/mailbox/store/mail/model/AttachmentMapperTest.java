@@ -40,9 +40,10 @@ import com.google.common.collect.ImmutableList;
 
 public abstract class AttachmentMapperTest {
     private static final AttachmentId UNKNOWN_ATTACHMENT_ID = AttachmentId.forPayloadAndType("unknown".getBytes(Charsets.UTF_8), "type");
+    public static final String OWNER = "owner";
+    public static final String ADDITIONAL_OWNER = "additionalOwner";
 
     private AttachmentMapper attachmentMapper;
-    private MapperProvider mapperProvider;
 
     @Rule
     public ExpectedException expected = ExpectedException.none();
@@ -52,7 +53,7 @@ public abstract class AttachmentMapperTest {
     protected abstract MessageId generateMessageId();
 
     public void setUp() throws MailboxException {
-        mapperProvider = createMapperProvider();
+        MapperProvider mapperProvider = createMapperProvider();
         Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.ATTACHMENT));
         this.attachmentMapper = mapperProvider.createAttachmentMapper();
     }
@@ -77,7 +78,7 @@ public abstract class AttachmentMapperTest {
                 .type("content")
                 .build();
         AttachmentId attachmentId = expected.getAttachmentId();
-        attachmentMapper.storeAttachment(expected);
+        attachmentMapper.storeAttachmentForOwner(expected, OWNER);
         //When
         Attachment attachment = attachmentMapper.getAttachment(attachmentId);
         //Then
@@ -127,14 +128,14 @@ public abstract class AttachmentMapperTest {
                 .type("content")
                 .build();
         AttachmentId attachmentId = expected.getAttachmentId();
-        attachmentMapper.storeAttachment(expected);
+        attachmentMapper.storeAttachmentForOwner(expected, OWNER);
 
         Attachment expected2 = Attachment.builder()
                 .bytes("payload2".getBytes(Charsets.UTF_8))
                 .type("content")
                 .build();
         AttachmentId attachmentId2 = expected2.getAttachmentId();
-        attachmentMapper.storeAttachment(expected2);
+        attachmentMapper.storeAttachmentForOwner(expected2, OWNER);
 
         //When
         List<Attachment> attachments = attachmentMapper.getAttachments(ImmutableList.of(attachmentId, attachmentId2));
@@ -157,7 +158,7 @@ public abstract class AttachmentMapperTest {
                 .type("content")
                 .build();
         AttachmentId attachmentId = attachment.getAttachmentId();
-        attachmentMapper.storeAttachment(attachment);
+        attachmentMapper.storeAttachmentForOwner(attachment, OWNER);
         
         //When
         Collection<MessageId> messageIds = attachmentMapper.getRelatedMessageIds(attachmentId);
@@ -263,5 +264,66 @@ public abstract class AttachmentMapperTest {
         Collection<MessageId> messageIds2 = attachmentMapper.getRelatedMessageIds(attachmentId2);
         //Then
         assertThat(messageIds).isEqualTo(messageIds2);
+    }
+
+    @Test
+    public void getOwnersShouldBeRetrievedWhenExplicitlySpecified() throws Exception {
+        //Given
+        Attachment attachment = Attachment.builder()
+            .bytes("payload".getBytes(Charsets.UTF_8))
+            .type("content")
+            .build();
+
+        AttachmentId attachmentId = attachment.getAttachmentId();
+        attachmentMapper.storeAttachmentForOwner(attachment, OWNER);
+
+        //When
+        Collection<String> expectedOwners = ImmutableList.of(OWNER);
+        Collection<String> actualOwners = attachmentMapper.getOwners(attachmentId);
+        //Then
+        assertThat(actualOwners).containsOnlyElementsOf(expectedOwners);
+    }
+
+    @Test
+    public void getOwnersShouldReturnEmptyWhenMessageIdReferenced() throws Exception {
+        //Given
+        Attachment attachment = Attachment.builder()
+            .bytes("payload".getBytes(Charsets.UTF_8))
+            .type("content")
+            .build();
+
+        AttachmentId attachmentId = attachment.getAttachmentId();
+        attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(attachment), generateMessageId());
+
+        //When
+        Collection<String> actualOwners = attachmentMapper.getOwners(attachmentId);
+        //Then
+        assertThat(actualOwners).isEmpty();
+    }
+
+    @Test
+    public void getOwnersShouldReturnAllOwners() throws Exception {
+        //Given
+        Attachment attachment = Attachment.builder()
+            .bytes("payload".getBytes(Charsets.UTF_8))
+            .type("content")
+            .build();
+
+        AttachmentId attachmentId = attachment.getAttachmentId();
+        attachmentMapper.storeAttachmentForOwner(attachment, OWNER);
+        attachmentMapper.storeAttachmentForOwner(attachment, ADDITIONAL_OWNER);
+
+        //When
+        Collection<String> expectedOwners = ImmutableList.of(OWNER, ADDITIONAL_OWNER);
+        Collection<String> actualOwners = attachmentMapper.getOwners(attachmentId);
+        //Then
+        assertThat(actualOwners).containsOnlyElementsOf(expectedOwners);
+    }
+
+    @Test
+    public void getOwnersShouldReturnEmptyWhenUnknownAttachmentId() throws Exception {
+        Collection<String> actualOwners = attachmentMapper.getOwners(AttachmentId.from("any"));
+
+        assertThat(actualOwners).isEmpty();
     }
 }

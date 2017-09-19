@@ -42,10 +42,12 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     private static final int INITIAL_SIZE = 128;
     private final Map<AttachmentId, Attachment> attachmentsById;
     private final Multimap<AttachmentId, MessageId> messageIdsByAttachmentId;
+    private final Multimap<AttachmentId, String> ownersByAttachmentId;
 
     public InMemoryAttachmentMapper() {
         attachmentsById = new ConcurrentHashMap<>(INITIAL_SIZE);
         messageIdsByAttachmentId = Multimaps.synchronizedSetMultimap(HashMultimap.create());
+        ownersByAttachmentId = Multimaps.synchronizedSetMultimap(HashMultimap.create());
     }
 
     @Override
@@ -60,7 +62,7 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     @Override
     public List<Attachment> getAttachments(Collection<AttachmentId> attachmentIds) {
         Preconditions.checkArgument(attachmentIds != null);
-        Builder<Attachment> builder = ImmutableList.<Attachment> builder();
+        Builder<Attachment> builder = ImmutableList.builder();
         for (AttachmentId attachmentId : attachmentIds) {
             if (attachmentsById.containsKey(attachmentId)) {
                 builder.add(attachmentsById.get(attachmentId));
@@ -70,8 +72,9 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public void storeAttachment(Attachment attachment) throws MailboxException {
+    public void storeAttachmentForOwner(Attachment attachment, String owner) throws MailboxException {
         attachmentsById.put(attachment.getAttachmentId(), attachment);
+        ownersByAttachmentId.put(attachment.getAttachmentId(), owner);
     }
 
     @Override
@@ -87,7 +90,7 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     @Override
     public void storeAttachmentsForMessage(Collection<Attachment> attachments, MessageId ownerMessageId) throws MailboxException {
         for (Attachment attachment: attachments) {
-            storeAttachment(attachment);
+            attachmentsById.put(attachment.getAttachmentId(), attachment);
             messageIdsByAttachmentId.put(attachment.getAttachmentId(), ownerMessageId);
         }
     }
@@ -95,5 +98,10 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     @Override
     public Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId) throws MailboxException {
         return messageIdsByAttachmentId.get(attachmentId);
+    }
+
+    @Override
+    public Collection<String> getOwners(final AttachmentId attachmentId) throws MailboxException {
+        return ownersByAttachmentId.get(attachmentId);
     }
 }
