@@ -161,14 +161,14 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
         messageIdMapper = new MessageIdMapper() {
 
             @Override
-            public List<MailboxMessage> find(final Collection<MessageId> messageIds, MessageMapper.FetchType fetchType) {
+            public List<MailboxMessage> find(Collection<MessageId> messageIds, MessageMapper.FetchType fetchType) {
                 return messages.stream()
                     .filter(withMessageIdOneOf(messageIds))
                     .collect(Guavate.toImmutableList());
             }
 
             @Override
-            public List<MailboxId> findMailboxes(final MessageId messageId) {
+            public List<MailboxId> findMailboxes(MessageId messageId) {
                 return messages.stream()
                     .filter(withMessageId(messageId))
                     .map(MailboxMessage::getMailboxId)
@@ -186,7 +186,7 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
             }
 
             @Override
-            public void delete(final MessageId messageId) {
+            public void delete(MessageId messageId) {
                 messages.removeAll(
                     messages.stream()
                         .filter(withMessageId(messageId))
@@ -194,7 +194,7 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
             }
 
             @Override
-            public void delete(final MessageId messageId, final List<MailboxId> mailboxIds) {
+            public void delete(MessageId messageId, List<MailboxId> mailboxIds) {
                 messages.removeAll(
                     messages.stream()
                         .filter(withMessageId(messageId))
@@ -204,7 +204,7 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
 
             @Override
             public Map<MailboxId, UpdatedFlags> setFlags(MessageId messageId, List<MailboxId> mailboxIds, Flags newState, MessageManager.FlagsUpdateMode updateMode) throws MailboxException {
-                final List<Map.Entry<MailboxId, UpdatedFlags>> entries = messages.stream()
+                List<Map.Entry<MailboxId, UpdatedFlags>> entries = messages.stream()
                     .filter(withMessageId(messageId))
                     .filter(inMailboxes(mailboxIds))
                     .map(toMapEntryOfUpdatedFlags(newState, updateMode))
@@ -286,15 +286,15 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
         messages.clear();
     }
 
-    private Predicate<MailboxMessage> withMessageIdOneOf(final Collection<MessageId> messageIds) {
+    private Predicate<MailboxMessage> withMessageIdOneOf(Collection<MessageId> messageIds) {
         return mailboxMessage -> messageIds.contains(mailboxMessage.getMessageId());
     }
 
-    private Predicate<MailboxMessage> inMailboxes(final List<MailboxId> mailboxIds) {
+    private Predicate<MailboxMessage> inMailboxes(List<MailboxId> mailboxIds) {
         return mailboxMessage -> mailboxIds.contains(mailboxMessage.getMailboxId());
     }
 
-    private Predicate<MailboxMessage> withMessageId(final MessageId messageId) {
+    private Predicate<MailboxMessage> withMessageId(MessageId messageId) {
         return mailboxMessage -> mailboxMessage.getMessageId().equals(messageId);
     }
 
@@ -302,7 +302,7 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
         return entry -> entry.getValue().flagsChanged();
     }
 
-    private Function<MailboxMessage, Map.Entry<MailboxId, UpdatedFlags>> toMapEntryOfUpdatedFlags(final Flags newState, final MessageManager.FlagsUpdateMode updateMode) {
+    private Function<MailboxMessage, Map.Entry<MailboxId, UpdatedFlags>> toMapEntryOfUpdatedFlags(Flags newState, MessageManager.FlagsUpdateMode updateMode) {
         return mailboxMessage -> {
             Preconditions.checkState(updateMode.equals(MessageManager.FlagsUpdateMode.ADD));
             return new AbstractMap.SimpleEntry<>(mailboxMessage.getMailboxId(),
