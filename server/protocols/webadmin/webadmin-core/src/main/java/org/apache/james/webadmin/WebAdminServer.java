@@ -19,7 +19,6 @@
 
 package org.apache.james.webadmin;
 
-import java.io.IOException;
 import java.util.Set;
 
 import javax.annotation.PreDestroy;
@@ -30,7 +29,6 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
-import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 import org.apache.james.webadmin.mdc.MDCCleanupFilter;
 import org.apache.james.webadmin.mdc.MDCFilter;
 import org.apache.james.webadmin.metric.MetricPostFilter;
@@ -38,9 +36,6 @@ import org.apache.james.webadmin.metric.MetricPreFilter;
 import org.apache.james.webadmin.routes.CORSRoute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableSet;
 
 import spark.Service;
 

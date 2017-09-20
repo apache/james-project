@@ -161,7 +161,7 @@ public class AttachmentMessageIdCreationTest {
         when(cassandraMessageDAO.retrieveAllMessageIdAttachmentIds())
             .thenReturn(CompletableFuture.completedFuture(Stream.of(messageIdAttachmentIds)));
         when(attachmentMessageIdDAO.storeAttachmentForMessageId(any(AttachmentId.class), any(MessageId.class)))
-            .thenThrow(RuntimeException.class);
+            .thenThrow(new RuntimeException());
 
         assertThat(migration.run()).isEqualTo(Migration.MigrationResult.PARTIAL);
     }

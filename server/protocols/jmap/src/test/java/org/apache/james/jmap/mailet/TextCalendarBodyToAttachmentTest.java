@@ -68,7 +68,7 @@ public class TextCalendarBodyToAttachmentTest {
         expectedException.expect(MessagingException.class);
         Mail mail = mock(Mail.class);
         when(mail.getMessage())
-            .thenThrow(MessagingException.class);
+            .thenThrow(new MessagingException());
 
         mailet.service(mail);
     }
@@ -80,7 +80,7 @@ public class TextCalendarBodyToAttachmentTest {
         MimeMessage message = mock(MimeMessage.class);
         Mail mail = FakeMail.from(message);
 
-        when(message.isMimeType(anyString())).thenThrow(MessagingException.class);
+        when(message.isMimeType(anyString())).thenThrow(new MessagingException());
 
         mailet.service(mail);
     }

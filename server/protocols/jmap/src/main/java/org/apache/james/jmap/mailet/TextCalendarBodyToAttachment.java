@@ -83,6 +83,7 @@ public class TextCalendarBodyToAttachment extends GenericMailet {
         mimeMessage.saveChanges();
     }
 
+    @SuppressWarnings("unchecked")
     private List<Header> getContentHeadersFromMimeMessage(MimeMessage mimeMessage) throws MessagingException {
         return Collections.list((Enumeration<Header>) mimeMessage.getAllHeaders())
             .stream()

@@ -22,7 +22,6 @@ package org.apache.james.transport.mailets;
 import static com.jayway.restassured.RestAssured.with;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
 
 import java.net.InetAddress;
 import java.util.concurrent.TimeUnit;
