@@ -33,6 +33,7 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
+import org.apache.james.mailbox.store.mail.model.Username;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +72,7 @@ public class StoreAttachmentManager implements AttachmentManager {
     @Override
     public void storeAttachment(Attachment attachment, MailboxSession mailboxSession) throws MailboxException {
         attachmentMapperFactory.getAttachmentMapper(mailboxSession)
-            .storeAttachmentForOwner(attachment, mailboxSession.getUser().getUserName());
+            .storeAttachmentForOwner(attachment, Username.fromMailboxSession(mailboxSession));
     }
 
     @Override
@@ -97,10 +98,10 @@ public class StoreAttachmentManager implements AttachmentManager {
     }
 
     private boolean isExplicitlyAOwner(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException {
-        Collection<String> explicitOwners = attachmentMapperFactory.getAttachmentMapper(mailboxSession)
+        Collection<Username> explicitOwners = attachmentMapperFactory.getAttachmentMapper(mailboxSession)
             .getOwners(attachmentId);
         return explicitOwners.stream()
-            .anyMatch(username -> mailboxSession.getUser().isSameUser(username));
+            .anyMatch(username -> mailboxSession.getUser().isSameUser(username.getValue()));
     }
 
     private Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException {

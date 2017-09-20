@@ -26,6 +26,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.store.mail.model.Username;
 import org.apache.james.mailbox.store.transaction.Mapper;
 
 public interface AttachmentMapper extends Mapper {
@@ -34,11 +35,11 @@ public interface AttachmentMapper extends Mapper {
 
     List<Attachment> getAttachments(Collection<AttachmentId> attachmentIds);
 
-    void storeAttachmentForOwner(Attachment attachment, String owner) throws MailboxException;
+    void storeAttachmentForOwner(Attachment attachment, Username owner) throws MailboxException;
 
     void storeAttachmentsForMessage(Collection<Attachment> attachments, MessageId ownerMessageId) throws MailboxException;
 
     Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId) throws MailboxException;
 
-    Collection<String> getOwners(AttachmentId attachmentId) throws MailboxException;
+    Collection<Username> getOwners(AttachmentId attachmentId) throws MailboxException;
 }

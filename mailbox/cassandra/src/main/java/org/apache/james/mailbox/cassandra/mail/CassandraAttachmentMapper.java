@@ -35,6 +35,7 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
+import org.apache.james.mailbox.store.mail.model.Username;
 import org.apache.james.util.FluentFutureStream;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -122,7 +123,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public void storeAttachmentForOwner(Attachment attachment, String owner) throws MailboxException {
+    public void storeAttachmentForOwner(Attachment attachment, Username owner) throws MailboxException {
         ownerDAO.addOwner(attachment.getAttachmentId(), owner)
             .thenCompose(any -> blobsDAO.save(attachment.getBytes()))
             .thenApply(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
@@ -145,7 +146,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public Collection<String> getOwners(AttachmentId attachmentId) throws MailboxException {
+    public Collection<Username> getOwners(AttachmentId attachmentId) throws MailboxException {
         return ownerDAO.retrieveOwners(attachmentId).join();
     }
 

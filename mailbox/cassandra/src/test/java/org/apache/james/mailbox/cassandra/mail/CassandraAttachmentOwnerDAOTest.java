@@ -26,14 +26,15 @@ import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.store.mail.model.Username;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 public class CassandraAttachmentOwnerDAOTest {
     public static final AttachmentId ATTACHMENT_ID = AttachmentId.from("id1");
-    public static final String OWNER_1 = "owner1";
-    public static final String OWNER_2 = "owner2";
+    public static final Username OWNER_1 = Username.fromRawValue("owner1");
+    public static final Username OWNER_2 = Username.fromRawValue("owner2");
 
     @ClassRule
     public static DockerCassandraRule cassandraServer = new DockerCassandraRule();

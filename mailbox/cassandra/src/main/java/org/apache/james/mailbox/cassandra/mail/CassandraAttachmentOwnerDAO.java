@@ -37,6 +37,7 @@ import javax.inject.Inject;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.store.mail.model.Username;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
@@ -74,14 +75,14 @@ public class CassandraAttachmentOwnerDAO {
                 .where(eq(ID, bindMarker(ID))));
     }
 
-    public CompletableFuture<Void> addOwner(AttachmentId attachmentId, String owner) {
+    public CompletableFuture<Void> addOwner(AttachmentId attachmentId, Username owner) {
         return executor.executeVoid(
             addStatement.bind()
                 .setUUID(ID, attachmentId.asUUID())
-                .setString(OWNER, owner));
+                .setString(OWNER, owner.getValue()));
     }
 
-    public CompletableFuture<Collection<String>> retrieveOwners(AttachmentId attachmentId) {
+    public CompletableFuture<Collection<Username>> retrieveOwners(AttachmentId attachmentId) {
         return executor.execute(
             selectStatement.bind()
                 .setUUID(ID, attachmentId.asUUID()))
@@ -89,7 +90,9 @@ public class CassandraAttachmentOwnerDAO {
             .thenApply(this::toOwners);
     }
 
-    private ImmutableList<String> toOwners(Stream<Row> stream) {
-        return stream.map(row -> row.getString(OWNER)).collect(Guavate.toImmutableList());
+    private ImmutableList<Username> toOwners(Stream<Row> stream) {
+        return stream.map(row -> row.getString(OWNER))
+            .map(Username::fromRawValue)
+            .collect(Guavate.toImmutableList());
     }
 }
