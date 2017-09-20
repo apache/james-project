@@ -56,7 +56,8 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
     public static final boolean RECENT = true;
 
     @Inject
-    private MailboxProbeImpl(MailboxManager mailboxManager, MailboxMapperFactory mailboxMapperFactory, SubscriptionManager subscriptionManager) {
+    private MailboxProbeImpl(MailboxManager mailboxManager, MailboxMapperFactory mailboxMapperFactory,
+                             SubscriptionManager subscriptionManager) {
         this.mailboxManager = mailboxManager;
         this.mailboxMapperFactory = mailboxMapperFactory;
         this.subscriptionManager = subscriptionManager;
@@ -190,4 +191,5 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(user);
         return subscriptionManager.subscriptions(mailboxSession);
     }
+
 }

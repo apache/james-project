@@ -136,7 +136,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public Collection<MessageId> getOwnerMessageIds(AttachmentId attachmentId) throws MailboxException {
+    public Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId) throws MailboxException {
         return attachmentMessageIdDAO.getOwnerMessageIds(attachmentId)
             .join();
     }

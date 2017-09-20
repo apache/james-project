@@ -144,7 +144,7 @@ public abstract class AttachmentMapperTest {
 
     @Test
     public void getOwnerMessageIdsShouldReturnEmptyWhenNone() throws Exception {
-        Collection<MessageId> messageIds = attachmentMapper.getOwnerMessageIds(UNKNOWN_ATTACHMENT_ID);
+        Collection<MessageId> messageIds = attachmentMapper.getRelatedMessageIds(UNKNOWN_ATTACHMENT_ID);
 
         assertThat(messageIds).isEmpty();
     }
@@ -160,7 +160,7 @@ public abstract class AttachmentMapperTest {
         attachmentMapper.storeAttachment(attachment);
         
         //When
-        Collection<MessageId> messageIds = attachmentMapper.getOwnerMessageIds(attachmentId);
+        Collection<MessageId> messageIds = attachmentMapper.getRelatedMessageIds(attachmentId);
         //Then
         assertThat(messageIds).isEmpty();
     }
@@ -177,7 +177,7 @@ public abstract class AttachmentMapperTest {
         attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(attachment), messageId);
         
         //When
-        Collection<MessageId> messageIds = attachmentMapper.getOwnerMessageIds(attachmentId);
+        Collection<MessageId> messageIds = attachmentMapper.getRelatedMessageIds(attachmentId);
         //Then
         assertThat(messageIds).containsOnly(messageId);
     }
@@ -196,7 +196,7 @@ public abstract class AttachmentMapperTest {
         attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(attachment), messageId2);
         
         //When
-        Collection<MessageId> messageIds = attachmentMapper.getOwnerMessageIds(attachmentId);
+        Collection<MessageId> messageIds = attachmentMapper.getRelatedMessageIds(attachmentId);
         //Then
         assertThat(messageIds).containsOnly(messageId1, messageId2);
     }
@@ -219,7 +219,7 @@ public abstract class AttachmentMapperTest {
         attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(otherAttachment), messageId2);
         
         //When
-        Collection<MessageId> messageIds = attachmentMapper.getOwnerMessageIds(attachmentId);
+        Collection<MessageId> messageIds = attachmentMapper.getRelatedMessageIds(attachmentId);
         //Then
         assertThat(messageIds).containsOnly(messageId1);
     }
@@ -237,7 +237,7 @@ public abstract class AttachmentMapperTest {
         attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(attachment), messageId);
         
         //When
-        Collection<MessageId> messageIds = attachmentMapper.getOwnerMessageIds(attachmentId);
+        Collection<MessageId> messageIds = attachmentMapper.getRelatedMessageIds(attachmentId);
         //Then
         assertThat(messageIds).containsOnly(messageId);
     }
@@ -259,8 +259,8 @@ public abstract class AttachmentMapperTest {
         attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(attachment, attachment2), messageId);
         
         //When
-        Collection<MessageId> messageIds = attachmentMapper.getOwnerMessageIds(attachmentId);
-        Collection<MessageId> messageIds2 = attachmentMapper.getOwnerMessageIds(attachmentId2);
+        Collection<MessageId> messageIds = attachmentMapper.getRelatedMessageIds(attachmentId);
+        Collection<MessageId> messageIds2 = attachmentMapper.getRelatedMessageIds(attachmentId2);
         //Then
         assertThat(messageIds).isEqualTo(messageIds2);
     }

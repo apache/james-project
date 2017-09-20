@@ -93,7 +93,7 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public Collection<MessageId> getOwnerMessageIds(AttachmentId attachmentId) throws MailboxException {
+    public Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId) throws MailboxException {
         return messageIdsByAttachmentId.get(attachmentId);
     }
 }

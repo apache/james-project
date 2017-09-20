@@ -38,5 +38,5 @@ public interface AttachmentMapper extends Mapper {
 
     void storeAttachmentsForMessage(Collection<Attachment> attachments, MessageId ownerMessageId) throws MailboxException;
 
-    Collection<MessageId> getOwnerMessageIds(AttachmentId attachmentId) throws MailboxException;
+    Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId) throws MailboxException;
 }

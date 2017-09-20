@@ -72,7 +72,7 @@ public class StoreAttachmentManager implements AttachmentManager {
     }
 
     @Override
-    public Collection<MessageId> getOwnerMessageIds(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException {
-        return getAttachmentMapper(mailboxSession).getOwnerMessageIds(attachmentId);
+    public Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException {
+        return getAttachmentMapper(mailboxSession).getRelatedMessageIds(attachmentId);
     }
 }

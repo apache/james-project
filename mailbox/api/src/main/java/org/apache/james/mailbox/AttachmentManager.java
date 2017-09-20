@@ -38,5 +38,5 @@ public interface AttachmentManager {
 
     void storeAttachmentsForMessage(Collection<Attachment> attachments, MessageId ownerMessageId, MailboxSession mailboxSession) throws MailboxException;
 
-    Collection<MessageId> getOwnerMessageIds(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException;
+    Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException;
 }
