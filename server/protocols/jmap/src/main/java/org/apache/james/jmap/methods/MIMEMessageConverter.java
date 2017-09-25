@@ -22,6 +22,8 @@ package org.apache.james.jmap.methods;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.function.Consumer;
@@ -42,6 +44,7 @@ import org.apache.james.mime4j.dom.TextBody;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.field.ContentDispositionField;
 import org.apache.james.mime4j.dom.field.ContentTypeField;
+import org.apache.james.mime4j.dom.field.FieldName;
 import org.apache.james.mime4j.dom.field.UnstructuredField;
 import org.apache.james.mime4j.field.Fields;
 import org.apache.james.mime4j.field.UnstructuredFieldImpl;
@@ -50,12 +53,12 @@ import org.apache.james.mime4j.message.BodyPart;
 import org.apache.james.mime4j.message.BodyPartBuilder;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.message.MultipartBuilder;
-import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.stream.NameValuePair;
 import org.apache.james.mime4j.stream.RawField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
@@ -77,6 +80,24 @@ public class MIMEMessageConverter {
     private static final String FIELD_PARAMETERS_SEPARATOR = ";";
     private static final String QUOTED_PRINTABLE = "quoted-printable";
     private static final String BASE64 = "base64";
+    private static final String IN_REPLY_TO_HEADER = "In-Reply-To";
+    private static final List<String> COMPUTED_HEADERS = ImmutableList.of(
+            FieldName.FROM,
+            FieldName.SENDER,
+            FieldName.REPLY_TO,
+            FieldName.TO,
+            FieldName.CC,
+            FieldName.BCC,
+            FieldName.SUBJECT,
+            FieldName.MESSAGE_ID,
+            FieldName.DATE,
+            IN_REPLY_TO_HEADER,
+            FieldName.CONTENT_TYPE,
+            FieldName.MIME_VERSION,
+            FieldName.CONTENT_TRANSFER_ENCODING);
+    private static final List<String> LOWERCASED_COMPUTED_HEADERS = COMPUTED_HEADERS.stream()
+            .map(s -> s.toLowerCase(Locale.ENGLISH))
+            .collect(Guavate.toImmutableList());
 
     private final BasicBodyFactory bodyFactory;
 
@@ -137,18 +158,21 @@ public class MIMEMessageConverter {
 
         // note that date conversion probably lose milliseconds!
         messageBuilder.setDate(Date.from(newMessage.getDate().toInstant()), TimeZone.getTimeZone(newMessage.getDate().getZone()));
-        newMessage.getInReplyToMessageId().ifPresent(addInReplyToHeader(messageBuilder::addField));
+        newMessage.getInReplyToMessageId()
+            .ifPresent(id -> addHeader(messageBuilder, IN_REPLY_TO_HEADER, id));
         if (!isMultipart(newMessage, messageAttachments)) {
             newMessage.getHtmlBody().ifPresent(x -> messageBuilder.setContentType(HTML_MEDIA_TYPE, UTF_8_CHARSET));
         }
+        newMessage.getHeaders().entrySet().stream()
+            .filter(header -> ! header.getKey().trim().isEmpty())
+            .filter(header -> ! LOWERCASED_COMPUTED_HEADERS.contains(header.getKey().toLowerCase(Locale.ENGLISH)))
+            .forEach(header -> addHeader(messageBuilder, header.getKey(), header.getValue()));
     }
 
-    private Consumer<String> addInReplyToHeader(Consumer<Field> headerAppender) {
-        return msgId -> {
-            FieldParser<UnstructuredField> parser = UnstructuredFieldImpl.PARSER;
-            RawField rawField = new RawField("In-Reply-To", msgId);
-            headerAppender.accept(parser.parse(rawField, DecodeMonitor.SILENT));
-        };
+    private void addHeader(Message.Builder messageBuilder, String fieldName, String value) {
+        FieldParser<UnstructuredField> parser = UnstructuredFieldImpl.PARSER;
+        RawField rawField = new RawField(fieldName, value);
+        messageBuilder.addField(parser.parse(rawField, DecodeMonitor.SILENT));
     }
 
     private boolean isMultipart(CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments) {
