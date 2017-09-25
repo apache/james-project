@@ -224,4 +224,9 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     public void updateACL(Mailbox mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException {
         mailbox.setACL(mailbox.getACL().apply(mailboxACLCommand));
     }
+
+    @Override
+    public void resetACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+        mailbox.setACL(mailboxACL);
+    }
 }

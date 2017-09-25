@@ -144,6 +144,11 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
             }
 
             @Override
+            public void resetACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+                throw new NotImplementedException();
+            }
+
+            @Override
             public List<Mailbox> list() throws MailboxException {
                 throw new NotImplementedException();
             }

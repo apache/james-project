@@ -247,6 +247,41 @@ public abstract class MailboxMapperACLTest {
             .containsEntry(key, finalRights);
     }
 
+    @Test
+    public void resetAclShouldReplaceStoredAcl() throws MailboxException {
+        SimpleMailboxACL.SimpleMailboxACLEntryKey key = new SimpleMailboxACL.SimpleMailboxACLEntryKey("user", MailboxACL.NameType.user, NEGATIVE);
+        SimpleMailboxACL.Rfc4314Rights rights = new SimpleMailboxACL.Rfc4314Rights("asew");
+        SimpleMailboxACL.Rfc4314Rights newRights = new SimpleMailboxACL.Rfc4314Rights("skate");
+        mailboxMapper.updateACL(benwaInboxMailbox,
+            new SimpleMailboxACL.SimpleMailboxACLCommand(key,
+                MailboxACL.EditMode.REPLACE,
+                rights));
+        mailboxMapper.resetACL(benwaInboxMailbox,
+            new SimpleMailboxACL(ImmutableMap.of(key, newRights)));
+
+        assertThat(
+            mailboxMapper.findMailboxById(benwaInboxMailbox.getMailboxId())
+                .getACL()
+                .getEntries())
+            .hasSize(1)
+            .containsEntry(key, newRights);
+    }
+    
+    @Test
+    public void resetAclShouldInitializeStoredAcl() throws MailboxException {
+        SimpleMailboxACL.SimpleMailboxACLEntryKey key = new SimpleMailboxACL.SimpleMailboxACLEntryKey("user", MailboxACL.NameType.user, NEGATIVE);
+        SimpleMailboxACL.Rfc4314Rights rights = new SimpleMailboxACL.Rfc4314Rights("skate");
+        mailboxMapper.resetACL(benwaInboxMailbox,
+            new SimpleMailboxACL(ImmutableMap.of(key, rights)));
+
+        assertThat(
+            mailboxMapper.findMailboxById(benwaInboxMailbox.getMailboxId())
+                .getACL()
+                .getEntries())
+            .hasSize(1)
+            .containsEntry(key, rights);
+    }
+
     private SimpleMailbox createMailbox(MailboxPath mailboxPath) {
         SimpleMailbox mailbox = new SimpleMailbox(mailboxPath, UID_VALIDITY);
         mailbox.setMailboxId(mapperProvider.generateId());

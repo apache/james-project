@@ -105,6 +105,14 @@ public interface MailboxMapper extends Mapper {
     void updateACL(Mailbox mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException;
 
     /**
+     * Reset the ACL of the stored mailbox.
+     *
+     * @param mailbox Mailbox for whom we want to update ACL
+     * @param mailboxACL New value of the ACL for this mailbox
+     */
+    void resetACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException;
+
+    /**
      * Return a unmodifable {@link List} of all {@link Mailbox} 
      * 
      * @return mailboxList

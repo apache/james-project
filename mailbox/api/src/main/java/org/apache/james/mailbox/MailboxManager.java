@@ -397,6 +397,14 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
 
 
     /**
+     * Reset the Mailbox ACL of the designated mailbox.
+     *
+     * @param mailboxACL New ACL value
+     * @throws UnsupportedRightException
+     */
+    void resetRights(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException;
+
+    /**
      * Return a unmodifiable {@link List} of {@link MailboxPath} objects
      * 
      * @param session

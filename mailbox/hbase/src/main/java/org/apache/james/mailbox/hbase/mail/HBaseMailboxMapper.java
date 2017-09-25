@@ -417,4 +417,9 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
     public void updateACL(Mailbox mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException {
         mailbox.setACL(mailbox.getACL().apply(mailboxACLCommand));
     }
+
+    @Override
+    public void resetACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+        mailbox.setACL(mailboxACL);
+    }
 }

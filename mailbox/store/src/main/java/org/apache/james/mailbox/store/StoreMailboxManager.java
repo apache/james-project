@@ -822,6 +822,13 @@ public class StoreMailboxManager implements MailboxManager {
         final Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
         mapper.execute(Mapper.toTransaction(() -> mapper.updateACL(mailbox, mailboxACLCommand)));
     }
+    
+    @Override
+    public void resetRights(MailboxPath mailboxPath, MailboxACL mailboxACLCommand, MailboxSession session) throws MailboxException {
+        final MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        final Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
+        mapper.execute(Mapper.toTransaction(() -> mapper.resetACL(mailbox, mailboxACLCommand)));
+    }
 
     @Override
     public List<MailboxAnnotation> getAllAnnotations(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {

@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLCommand;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -81,6 +82,11 @@ public class TransactionalMailboxMapper implements MailboxMapper {
     @Override
     public void updateACL(Mailbox mailbox, MailboxACLCommand mailboxACLCommand) throws MailboxException {
         wrapped.updateACL(mailbox, mailboxACLCommand);
+    }
+
+    @Override
+    public void resetACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+        wrapped.resetACL(mailbox, mailboxACL);
     }
 
     @Override

@@ -53,6 +53,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
 public class CassandraACLMapper {
+    private static final Logger LOG = LoggerFactory.getLogger(CassandraACLMapper.class);
+    public static final int INITIAL_VALUE = 0;
 
     @FunctionalInterface
     public interface CodeInjector {
@@ -64,8 +66,6 @@ public class CassandraACLMapper {
     private final Session session;
     private final int maxRetry;
     private final CodeInjector codeInjector;
-
-    private static final Logger LOG = LoggerFactory.getLogger(CassandraACLMapper.class);
 
     public CassandraACLMapper(CassandraId cassandraId, Session session, CassandraAsyncExecutor cassandraAsyncExecutor, CassandraConfiguration cassandraConfiguration) {
         this(cassandraId, session, cassandraAsyncExecutor, cassandraConfiguration, () -> {});
@@ -104,6 +104,18 @@ public class CassandraACLMapper {
             );
         } catch (LightweightTransactionException e) {
             throw new MailboxException("Exception during lightweight transaction", e);
+        }
+    }
+
+    public void resetACL(MailboxACL mailboxACL) {
+        try {
+            session.execute(
+                insertInto(CassandraACLTable.TABLE_NAME)
+                    .value(CassandraACLTable.ID, cassandraId.asUuid())
+                    .value(CassandraACLTable.ACL, SimpleMailboxACLJsonConverter.toJson(mailboxACL))
+                    .value(CassandraACLTable.VERSION, INITIAL_VALUE));
+        } catch (JsonProcessingException e) {
+            throw Throwables.propagate(e);
         }
     }
 

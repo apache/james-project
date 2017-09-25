@@ -27,6 +27,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
@@ -46,13 +47,13 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.util.CompletableFutureUtil;
 import org.apache.james.util.FluentFutureStream;
 import org.apache.james.util.OptionalUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.exceptions.InvalidQueryException;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class CassandraMailboxMapper implements MailboxMapper {
 
@@ -205,7 +206,15 @@ public class CassandraMailboxMapper implements MailboxMapper {
     @Override
     public void updateACL(Mailbox mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
-        new CassandraACLMapper(cassandraId, session, cassandraAsyncExecutor, cassandraConfiguration).updateACL(mailboxACLCommand);
+        new CassandraACLMapper(cassandraId, session, cassandraAsyncExecutor, cassandraConfiguration)
+            .updateACL(mailboxACLCommand);
+    }
+
+    @Override
+    public void resetACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+        CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
+        new CassandraACLMapper(cassandraId, session, cassandraAsyncExecutor, cassandraConfiguration)
+            .resetACL(mailboxACL);
     }
 
     @Override

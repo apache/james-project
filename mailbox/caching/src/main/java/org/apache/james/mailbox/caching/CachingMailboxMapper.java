@@ -110,6 +110,11 @@ public class CachingMailboxMapper implements MailboxMapper {
 		mailbox.setACL(mailbox.getACL().apply(mailboxACLCommand));
 	}
 
+	@Override
+	public void resetACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+		mailbox.setACL(mailboxACL);
+	}
+
 	private void invalidate(Mailbox mailbox) {
 		cache.invalidate(mailbox);
 	}
