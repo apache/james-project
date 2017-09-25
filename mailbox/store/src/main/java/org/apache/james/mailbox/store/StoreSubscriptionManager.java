@@ -55,17 +55,13 @@ public class StoreSubscriptionManager implements SubscriptionManager {
     public void subscribe(final MailboxSession session, final String mailbox) throws SubscriptionException {
         final SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
         try {
-            mapper.execute(new Mapper.VoidTransaction() {
-
-                public void runVoid() throws MailboxException {
-                    final Subscription subscription = mapper.findMailboxSubscriptionForUser(session.getUser().getUserName(), mailbox);
-                    if (subscription == null) {
-                        final Subscription newSubscription = createSubscription(session, mailbox);
-                        mapper.save(newSubscription);
-                    }
+            mapper.execute(Mapper.toTransaction(() -> {
+                Subscription subscription = mapper.findMailboxSubscriptionForUser(session.getUser().getUserName(), mailbox);
+                if (subscription == null) {
+                    Subscription newSubscription = createSubscription(session, mailbox);
+                    mapper.save(newSubscription);
                 }
-                
-            });
+            }));
         } catch (MailboxException e) {
             throw new SubscriptionException(e);
         }
@@ -101,16 +97,12 @@ public class StoreSubscriptionManager implements SubscriptionManager {
     public void unsubscribe(final MailboxSession session, final String mailbox) throws SubscriptionException {
         final SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
         try {
-            mapper.execute(new Mapper.VoidTransaction() {
-
-                public void runVoid() throws MailboxException {
-                    final Subscription subscription = mapper.findMailboxSubscriptionForUser(session.getUser().getUserName(), mailbox);
-                    if (subscription != null) {
-                        mapper.delete(subscription);
-                    }
+            mapper.execute(Mapper.toTransaction(() -> {
+                Subscription subscription = mapper.findMailboxSubscriptionForUser(session.getUser().getUserName(), mailbox);
+                if (subscription != null) {
+                    mapper.delete(subscription);
                 }
-
-            });
+            }));
         } catch (MailboxException e) {
             throw new SubscriptionException(e);
         }

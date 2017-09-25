@@ -29,6 +29,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.transaction.Mapper;
 
 public class TransactionalMailboxMapper implements MailboxMapper {
     private final JPAMailboxMapper wrapped;
@@ -48,18 +49,13 @@ public class TransactionalMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public MailboxId save(final Mailbox mailbox) throws MailboxException {
+    public MailboxId save(Mailbox mailbox) throws MailboxException {
         return wrapped.execute(() -> wrapped.save(mailbox));
     }
 
     @Override
-    public void delete(final Mailbox mailbox) throws MailboxException {
-        wrapped.execute(new VoidTransaction() {
-                @Override
-                public void runVoid() throws MailboxException {
-                    wrapped.delete(mailbox);
-                }
-            });
+    public void delete(Mailbox mailbox) throws MailboxException {
+        wrapped.execute(Mapper.toTransaction(() -> wrapped.delete(mailbox)));
     }
 
     @Override

@@ -23,8 +23,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 import javax.mail.Flags;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxCounters;
@@ -35,7 +37,7 @@ import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.mailbox.store.transaction.Mapper;
 
 public class TransactionalMessageMapper implements MessageMapper {
     private final JPAMessageMapper messageMapper;
@@ -92,12 +94,7 @@ public class TransactionalMessageMapper implements MessageMapper {
 
     @Override
     public void delete(final Mailbox mailbox, final MailboxMessage message) throws MailboxException {
-        messageMapper.execute(new VoidTransaction() {
-            @Override
-            public void runVoid() throws MailboxException {
-                messageMapper.delete(mailbox, message);
-            }
-        });
+        messageMapper.execute(Mapper.toTransaction(() -> messageMapper.delete(mailbox, message)));
     }
 
     @Override

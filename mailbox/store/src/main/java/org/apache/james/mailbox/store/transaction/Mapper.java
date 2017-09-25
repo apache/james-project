@@ -53,15 +53,15 @@ public interface Mapper {
          */
         T run() throws MailboxException;
     }
-    
-    
-    abstract class VoidTransaction implements Transaction<Void> {
-        
-        public final Void run() throws MailboxException {
-            runVoid();
-            return null;
-        }
-        public abstract void runVoid() throws MailboxException;
 
+    interface Operation {
+        void run() throws MailboxException;
+    }
+
+    static Transaction<Void> toTransaction(Operation operation) throws MailboxException {
+        return () -> {
+            operation.run();
+            return null;
+        };
     }
 }
