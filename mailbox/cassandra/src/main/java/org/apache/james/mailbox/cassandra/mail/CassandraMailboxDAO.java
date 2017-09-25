@@ -34,22 +34,18 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.UID
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.utils.MailboxBaseTupleUtil;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
-import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
-import org.apache.james.util.CompletableFutureUtil;
 import org.apache.james.util.FluentFutureStream;
 
 import com.datastax.driver.core.PreparedStatement;
@@ -68,10 +64,9 @@ public class CassandraMailboxDAO {
     private final PreparedStatement deleteStatement;
     private final PreparedStatement insertStatement;
     private final PreparedStatement updateStatement;
-    private CassandraACLMapper cassandraACLMapper;
 
     @Inject
-    public CassandraMailboxDAO(Session session, CassandraTypesProvider typesProvider, CassandraUtils cassandraUtils, CassandraConfiguration cassandraConfiguration) {
+    public CassandraMailboxDAO(Session session, CassandraTypesProvider typesProvider, CassandraUtils cassandraUtils) {
         this.executor = new CassandraAsyncExecutor(session);
         this.mailboxBaseTupleUtil = new MailboxBaseTupleUtil(typesProvider);
         this.insertStatement = prepareInsert(session);
@@ -80,12 +75,11 @@ public class CassandraMailboxDAO {
         this.listStatement = prepareList(session);
         this.readStatement = prepareRead(session);
         this.cassandraUtils = cassandraUtils;
-        this.cassandraACLMapper = new CassandraACLMapper(session, cassandraConfiguration);
     }
 
     @VisibleForTesting
     public CassandraMailboxDAO(Session session, CassandraTypesProvider typesProvider) {
-        this(session, typesProvider, CassandraUtils.WITH_DEFAULT_CONFIGURATION, CassandraConfiguration.DEFAULT_CONFIGURATION);
+        this(session, typesProvider, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
     private PreparedStatement prepareInsert(Session session) {
@@ -140,26 +134,14 @@ public class CassandraMailboxDAO {
     }
 
     public CompletableFuture<Optional<SimpleMailbox>> retrieveMailbox(CassandraId mailboxId) {
-        CompletableFuture<MailboxACL> aclCompletableFuture = cassandraACLMapper.getACL(mailboxId);
-
-        CompletableFuture<Optional<SimpleMailbox>> simpleMailboxFuture = executor.executeSingleRow(readStatement.bind()
+        return executor.executeSingleRow(readStatement.bind()
             .setUUID(ID, mailboxId.asUuid()))
             .thenApply(rowOptional -> rowOptional.map(this::mailboxFromRow))
             .thenApply(mailbox -> addMailboxId(mailboxId, mailbox));
-
-        return CompletableFutureUtil.combine(
-            aclCompletableFuture,
-            simpleMailboxFuture,
-            this::addAcl);
     }
 
     private Optional<SimpleMailbox> addMailboxId(CassandraId cassandraId, Optional<SimpleMailbox> mailboxOptional) {
         mailboxOptional.ifPresent(mailbox -> mailbox.setMailboxId(cassandraId));
-        return mailboxOptional;
-    }
-
-    private Optional<SimpleMailbox> addAcl(MailboxACL acl, Optional<SimpleMailbox> mailboxOptional) {
-        mailboxOptional.ifPresent(mailbox -> mailbox.setACL(acl));
         return mailboxOptional;
     }
 
@@ -172,27 +154,16 @@ public class CassandraMailboxDAO {
             row.getLong(UIDVALIDITY));
     }
 
-    public CompletableFuture<Stream<SimpleMailbox>> retrieveAllMailboxes() {
+    public FluentFutureStream<SimpleMailbox> retrieveAllMailboxes() {
         return FluentFutureStream.of(executor.execute(listStatement.bind())
             .thenApply(cassandraUtils::convertToStream))
-            .map(this::toMailboxWithId)
-            .thenComposeOnAll(this::toMailboxWithAclFuture)
-            .completableFuture();
+            .map(this::toMailboxWithId);
     }
 
     private SimpleMailbox toMailboxWithId(Row row) {
         SimpleMailbox mailbox = mailboxFromRow(row);
         mailbox.setMailboxId(CassandraId.of(row.getUUID(ID)));
         return mailbox;
-    }
-
-    private CompletableFuture<SimpleMailbox> toMailboxWithAclFuture(SimpleMailbox mailbox) {
-        CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
-        return cassandraACLMapper.getACL(cassandraId)
-            .thenApply(acl -> {
-                mailbox.setACL(acl);
-                return mailbox;
-            });
     }
 
 }
