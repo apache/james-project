@@ -62,27 +62,25 @@ public class CassandraMailboxDAO {
 
     private final CassandraAsyncExecutor executor;
     private final MailboxBaseTupleUtil mailboxBaseTupleUtil;
-    private final Session session;
     private final CassandraUtils cassandraUtils;
-    private CassandraConfiguration cassandraConfiguration;
     private final PreparedStatement readStatement;
     private final PreparedStatement listStatement;
     private final PreparedStatement deleteStatement;
     private final PreparedStatement insertStatement;
     private final PreparedStatement updateStatement;
+    private CassandraACLMapper cassandraACLMapper;
 
     @Inject
     public CassandraMailboxDAO(Session session, CassandraTypesProvider typesProvider, CassandraUtils cassandraUtils, CassandraConfiguration cassandraConfiguration) {
         this.executor = new CassandraAsyncExecutor(session);
         this.mailboxBaseTupleUtil = new MailboxBaseTupleUtil(typesProvider);
-        this.session = session;
         this.insertStatement = prepareInsert(session);
         this.updateStatement = prepareUpdate(session);
         this.deleteStatement = prepareDelete(session);
         this.listStatement = prepareList(session);
         this.readStatement = prepareRead(session);
         this.cassandraUtils = cassandraUtils;
-        this.cassandraConfiguration = cassandraConfiguration;
+        this.cassandraACLMapper = new CassandraACLMapper(session, cassandraConfiguration);
     }
 
     @VisibleForTesting
@@ -142,9 +140,7 @@ public class CassandraMailboxDAO {
     }
 
     public CompletableFuture<Optional<SimpleMailbox>> retrieveMailbox(CassandraId mailboxId) {
-        CompletableFuture<MailboxACL> aclCompletableFuture =
-            new CassandraACLMapper(mailboxId, session, executor, cassandraConfiguration)
-                .getACL();
+        CompletableFuture<MailboxACL> aclCompletableFuture = cassandraACLMapper.getACL(mailboxId);
 
         CompletableFuture<Optional<SimpleMailbox>> simpleMailboxFuture = executor.executeSingleRow(readStatement.bind()
             .setUUID(ID, mailboxId.asUuid()))
@@ -192,7 +188,7 @@ public class CassandraMailboxDAO {
 
     private CompletableFuture<SimpleMailbox> toMailboxWithAclFuture(SimpleMailbox mailbox) {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
-        return new CassandraACLMapper(cassandraId, session, executor, cassandraConfiguration).getACL()
+        return cassandraACLMapper.getACL(cassandraId)
             .thenApply(acl -> {
                 mailbox.setACL(acl);
                 return mailbox;

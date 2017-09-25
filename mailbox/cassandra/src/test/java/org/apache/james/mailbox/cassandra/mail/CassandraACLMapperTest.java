@@ -33,7 +33,6 @@ import java.util.concurrent.TimeoutException;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.CassandraConfiguration;
-import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
@@ -52,7 +51,6 @@ public class CassandraACLMapperTest {
     public static final CassandraId MAILBOX_ID = CassandraId.of(UUID.fromString("464765a0-e4e7-11e4-aba4-710c1de3782b"));
     private CassandraACLMapper cassandraACLMapper;
     private CassandraCluster cassandra;
-    private CassandraAsyncExecutor cassandraAsyncExecutor;
     private ExecutorService executor;
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
@@ -60,8 +58,7 @@ public class CassandraACLMapperTest {
     @Before
     public void setUp() {
         cassandra = CassandraCluster.create(new CassandraAclModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
-        cassandraAsyncExecutor = new CassandraAsyncExecutor(cassandra.getConf());
-        cassandraACLMapper = new CassandraACLMapper(MAILBOX_ID, cassandra.getConf(), cassandraAsyncExecutor, CassandraConfiguration.DEFAULT_CONFIGURATION);
+        cassandraACLMapper = new CassandraACLMapper(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
         executor = Executors.newFixedThreadPool(2);
     }
 
@@ -77,9 +74,9 @@ public class CassandraACLMapperTest {
             insertInto(CassandraACLTable.TABLE_NAME)
                 .value(CassandraACLTable.ID, MAILBOX_ID.asUuid())
                 .value(CassandraACLTable.ACL, "{\"entries\":{\"bob\":64}}")
-                .value(CassandraACLTable.VERSION, 1)
-        );
-        assertThat(cassandraACLMapper.getACL().join())
+                .value(CassandraACLTable.VERSION, 1));
+
+        assertThat(cassandraACLMapper.getACL(MAILBOX_ID).join())
             .isEqualTo(
                 SimpleMailboxACL.EMPTY.union(
                     new SimpleMailboxACL.SimpleMailboxACLEntryKey("bob", MailboxACL.NameType.user, false),
@@ -93,58 +90,71 @@ public class CassandraACLMapperTest {
             insertInto(CassandraACLTable.TABLE_NAME)
                 .value(CassandraACLTable.ID, MAILBOX_ID.asUuid())
                 .value(CassandraACLTable.ACL, "{\"entries\":{\"bob\":invalid}}")
-                .value(CassandraACLTable.VERSION, 1)
-        );
-        assertThat(cassandraACLMapper.getACL().join()).isEqualTo(SimpleMailboxACL.EMPTY);
+                .value(CassandraACLTable.VERSION, 1));
+
+        assertThat(cassandraACLMapper.getACL(MAILBOX_ID).join()).isEqualTo(SimpleMailboxACL.EMPTY);
     }
 
     @Test
     public void retrieveACLWhenNoACLStoredShouldReturnEmptyACL() {
-        assertThat(cassandraACLMapper.getACL().join()).isEqualTo(SimpleMailboxACL.EMPTY);
+        assertThat(cassandraACLMapper.getACL(MAILBOX_ID).join()).isEqualTo(SimpleMailboxACL.EMPTY);
     }
 
     @Test
     public void addACLWhenNoneStoredShouldReturnUpdatedACL() throws Exception {
         SimpleMailboxACL.SimpleMailboxACLEntryKey key = new SimpleMailboxACL.SimpleMailboxACLEntryKey("bob", MailboxACL.NameType.user, false);
         SimpleMailboxACL.Rfc4314Rights rights = new SimpleMailboxACL.Rfc4314Rights(SimpleMailboxACL.Right.Read);
-        cassandraACLMapper.updateACL(new SimpleMailboxACL.SimpleMailboxACLCommand(key, MailboxACL.EditMode.ADD, rights));
-        assertThat(cassandraACLMapper.getACL().join()).isEqualTo(new SimpleMailboxACL().union(key, rights));
+
+        cassandraACLMapper.updateACL(MAILBOX_ID,
+            new SimpleMailboxACL.SimpleMailboxACLCommand(key, MailboxACL.EditMode.ADD, rights));
+
+        assertThat(cassandraACLMapper.getACL(MAILBOX_ID).join())
+            .isEqualTo(new SimpleMailboxACL().union(key, rights));
     }
 
     @Test
     public void modifyACLWhenStoredShouldReturnUpdatedACL() throws MailboxException {
         SimpleMailboxACL.SimpleMailboxACLEntryKey keyBob = new SimpleMailboxACL.SimpleMailboxACLEntryKey("bob", MailboxACL.NameType.user, false);
         SimpleMailboxACL.Rfc4314Rights rights = new SimpleMailboxACL.Rfc4314Rights(SimpleMailboxACL.Right.Read);
-        cassandraACLMapper.updateACL(new SimpleMailboxACL.SimpleMailboxACLCommand(keyBob, MailboxACL.EditMode.ADD, rights));
+
+        cassandraACLMapper.updateACL(MAILBOX_ID, new SimpleMailboxACL.SimpleMailboxACLCommand(keyBob, MailboxACL.EditMode.ADD, rights));
         SimpleMailboxACL.SimpleMailboxACLEntryKey keyAlice = new SimpleMailboxACL.SimpleMailboxACLEntryKey("alice", MailboxACL.NameType.user, false);
-        cassandraACLMapper.updateACL(new SimpleMailboxACL.SimpleMailboxACLCommand(keyAlice, MailboxACL.EditMode.ADD, rights));
-        assertThat(cassandraACLMapper.getACL().join()).isEqualTo(new SimpleMailboxACL().union(keyBob, rights).union(keyAlice, rights));
+        cassandraACLMapper.updateACL(MAILBOX_ID, new SimpleMailboxACL.SimpleMailboxACLCommand(keyAlice, MailboxACL.EditMode.ADD, rights));
+
+        assertThat(cassandraACLMapper.getACL(MAILBOX_ID).join())
+            .isEqualTo(new SimpleMailboxACL().union(keyBob, rights).union(keyAlice, rights));
     }
 
     @Test
     public void removeWhenStoredShouldReturnUpdatedACL() throws MailboxException {
         SimpleMailboxACL.SimpleMailboxACLEntryKey key = new SimpleMailboxACL.SimpleMailboxACLEntryKey("bob", MailboxACL.NameType.user, false);
         SimpleMailboxACL.Rfc4314Rights rights = new SimpleMailboxACL.Rfc4314Rights(SimpleMailboxACL.Right.Read);
-        cassandraACLMapper.updateACL(new SimpleMailboxACL.SimpleMailboxACLCommand(key, MailboxACL.EditMode.ADD, rights));
-        cassandraACLMapper.updateACL(new SimpleMailboxACL.SimpleMailboxACLCommand(key, MailboxACL.EditMode.REMOVE, rights));
-        assertThat(cassandraACLMapper.getACL().join()).isEqualTo(SimpleMailboxACL.EMPTY);
+
+        cassandraACLMapper.updateACL(MAILBOX_ID, new SimpleMailboxACL.SimpleMailboxACLCommand(key, MailboxACL.EditMode.ADD, rights));
+        cassandraACLMapper.updateACL(MAILBOX_ID, new SimpleMailboxACL.SimpleMailboxACLCommand(key, MailboxACL.EditMode.REMOVE, rights));
+
+        assertThat(cassandraACLMapper.getACL(MAILBOX_ID).join()).isEqualTo(SimpleMailboxACL.EMPTY);
     }
 
     @Test
     public void replaceForSingleKeyWithNullRightsWhenSingleKeyStoredShouldReturnEmptyACL() throws MailboxException {
         SimpleMailboxACL.SimpleMailboxACLEntryKey key = new SimpleMailboxACL.SimpleMailboxACLEntryKey("bob", MailboxACL.NameType.user, false);
         SimpleMailboxACL.Rfc4314Rights rights = new SimpleMailboxACL.Rfc4314Rights(SimpleMailboxACL.Right.Read);
-        cassandraACLMapper.updateACL(new SimpleMailboxACL.SimpleMailboxACLCommand(key, MailboxACL.EditMode.ADD, rights));
-        cassandraACLMapper.updateACL(new SimpleMailboxACL.SimpleMailboxACLCommand(key, MailboxACL.EditMode.REPLACE, null));
-        assertThat(cassandraACLMapper.getACL().join()).isEqualTo(SimpleMailboxACL.EMPTY);
+
+        cassandraACLMapper.updateACL(MAILBOX_ID, new SimpleMailboxACL.SimpleMailboxACLCommand(key, MailboxACL.EditMode.ADD, rights));
+        cassandraACLMapper.updateACL(MAILBOX_ID, new SimpleMailboxACL.SimpleMailboxACLCommand(key, MailboxACL.EditMode.REPLACE, null));
+
+        assertThat(cassandraACLMapper.getACL(MAILBOX_ID).join()).isEqualTo(SimpleMailboxACL.EMPTY);
     }
 
     @Test
     public void replaceWhenNotStoredShouldUpdateACLEntry() throws MailboxException {
         SimpleMailboxACL.SimpleMailboxACLEntryKey key = new SimpleMailboxACL.SimpleMailboxACLEntryKey("bob", MailboxACL.NameType.user, false);
         SimpleMailboxACL.Rfc4314Rights rights = new SimpleMailboxACL.Rfc4314Rights(SimpleMailboxACL.Right.Read);
-        cassandraACLMapper.updateACL(new SimpleMailboxACL.SimpleMailboxACLCommand(key, MailboxACL.EditMode.REPLACE, rights));
-        assertThat(cassandraACLMapper.getACL().join()).isEqualTo(new SimpleMailboxACL().union(key, rights));
+
+        cassandraACLMapper.updateACL(MAILBOX_ID, new SimpleMailboxACL.SimpleMailboxACLCommand(key, MailboxACL.EditMode.REPLACE, rights));
+
+        assertThat(cassandraACLMapper.getACL(MAILBOX_ID).join()).isEqualTo(new SimpleMailboxACL().union(key, rights));
     }
 
     @Test
@@ -153,12 +163,13 @@ public class CassandraACLMapperTest {
             insertInto(CassandraACLTable.TABLE_NAME)
                 .value(CassandraACLTable.ID, MAILBOX_ID.asUuid())
                 .value(CassandraACLTable.ACL, "{\"entries\":{\"bob\":invalid}}")
-                .value(CassandraACLTable.VERSION, 1)
-        );
+                .value(CassandraACLTable.VERSION, 1));
         SimpleMailboxACL.SimpleMailboxACLEntryKey key = new SimpleMailboxACL.SimpleMailboxACLEntryKey("bob", MailboxACL.NameType.user, false);
         SimpleMailboxACL.Rfc4314Rights rights = new SimpleMailboxACL.Rfc4314Rights(SimpleMailboxACL.Right.Read);
-        cassandraACLMapper.updateACL(new SimpleMailboxACL.SimpleMailboxACLCommand(key, MailboxACL.EditMode.ADD, rights));
-        assertThat(cassandraACLMapper.getACL().join()).isEqualTo(new SimpleMailboxACL().union(key, rights));
+
+        cassandraACLMapper.updateACL(MAILBOX_ID, new SimpleMailboxACL.SimpleMailboxACLCommand(key, MailboxACL.EditMode.ADD, rights));
+
+        assertThat(cassandraACLMapper.getACL(MAILBOX_ID).join()).isEqualTo(new SimpleMailboxACL().union(key, rights));
     }
 
     @Test
@@ -170,7 +181,9 @@ public class CassandraACLMapperTest {
         Future<Boolean> future1 = performACLUpdateInExecutor(executor, keyBob, rights, countDownLatch::countDown);
         Future<Boolean> future2 = performACLUpdateInExecutor(executor, keyAlice, rights, countDownLatch::countDown);
         awaitAll(future1, future2);
-        assertThat(cassandraACLMapper.getACL().join()).isEqualTo(new SimpleMailboxACL().union(keyBob, rights).union(keyAlice, rights));
+
+        assertThat(cassandraACLMapper.getACL(MAILBOX_ID).join())
+            .isEqualTo(new SimpleMailboxACL().union(keyBob, rights).union(keyAlice, rights));
     }
 
     @Test
@@ -178,13 +191,16 @@ public class CassandraACLMapperTest {
         CountDownLatch countDownLatch = new CountDownLatch(2);
         SimpleMailboxACL.SimpleMailboxACLEntryKey keyBenwa = new SimpleMailboxACL.SimpleMailboxACLEntryKey("benwa", MailboxACL.NameType.user, false);
         SimpleMailboxACL.Rfc4314Rights rights = new SimpleMailboxACL.Rfc4314Rights(SimpleMailboxACL.Right.Read);
-        cassandraACLMapper.updateACL(new SimpleMailboxACL.SimpleMailboxACLCommand(keyBenwa, MailboxACL.EditMode.ADD, rights));
+        cassandraACLMapper.updateACL(MAILBOX_ID, new SimpleMailboxACL.SimpleMailboxACLCommand(keyBenwa, MailboxACL.EditMode.ADD, rights));
+
         SimpleMailboxACL.SimpleMailboxACLEntryKey keyBob = new SimpleMailboxACL.SimpleMailboxACLEntryKey("bob", MailboxACL.NameType.user, false);
         SimpleMailboxACL.SimpleMailboxACLEntryKey keyAlice = new SimpleMailboxACL.SimpleMailboxACLEntryKey("alice", MailboxACL.NameType.user, false);
         Future<Boolean> future1 = performACLUpdateInExecutor(executor, keyBob, rights, countDownLatch::countDown);
         Future<Boolean> future2 = performACLUpdateInExecutor(executor, keyAlice, rights, countDownLatch::countDown);
         awaitAll(future1, future2);
-        assertThat(cassandraACLMapper.getACL().join()).isEqualTo(new SimpleMailboxACL().union(keyBob, rights).union(keyAlice, rights).union(keyBenwa, rights));
+
+        assertThat(cassandraACLMapper.getACL(MAILBOX_ID).join())
+            .isEqualTo(new SimpleMailboxACL().union(keyBob, rights).union(keyAlice, rights).union(keyBenwa, rights));
     }
 
     private void awaitAll(Future<?>... futures) 
@@ -196,13 +212,12 @@ public class CassandraACLMapperTest {
 
     private Future<Boolean> performACLUpdateInExecutor(ExecutorService executor, SimpleMailboxACL.SimpleMailboxACLEntryKey key, SimpleMailboxACL.Rfc4314Rights rights, CassandraACLMapper.CodeInjector runnable) {
         return executor.submit(() -> {
-            CassandraACLMapper aclMapper = new CassandraACLMapper(MAILBOX_ID,
+            CassandraACLMapper aclMapper = new CassandraACLMapper(
                 cassandra.getConf(),
-                new CassandraAsyncExecutor(cassandra.getConf()),
                 CassandraConfiguration.DEFAULT_CONFIGURATION,
                 runnable);
             try {
-                aclMapper.updateACL(new SimpleMailboxACL.SimpleMailboxACLCommand(key, MailboxACL.EditMode.ADD, rights));
+                aclMapper.updateACL(MAILBOX_ID, new SimpleMailboxACL.SimpleMailboxACLCommand(key, MailboxACL.EditMode.ADD, rights));
             } catch (MailboxException exception) {
                 throw Throwables.propagate(exception);
             }

@@ -32,7 +32,6 @@ import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.backends.cassandra.init.CassandraConfiguration;
-import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
@@ -62,19 +61,15 @@ public class CassandraMailboxMapper implements MailboxMapper {
     public static final String CLUSTERING_COLUMNS_IS_TOO_LONG = "The sum of all clustering columns is too long";
     public static final Logger LOGGER = LoggerFactory.getLogger(CassandraMailboxMapper.class);
 
-    private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final CassandraMailboxPathDAO mailboxPathDAO;
     private final CassandraMailboxDAO mailboxDAO;
-    private final Session session;
-    private final CassandraConfiguration cassandraConfiguration;
+    private final CassandraACLMapper cassandraACLMapper;
 
     @Inject
     public CassandraMailboxMapper(Session session, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathDAO mailboxPathDAO, CassandraConfiguration cassandraConfiguration) {
-        this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.mailboxDAO = mailboxDAO;
         this.mailboxPathDAO = mailboxPathDAO;
-        this.session = session;
-        this.cassandraConfiguration = cassandraConfiguration;
+        this.cassandraACLMapper = new CassandraACLMapper(session, cassandraConfiguration);
     }
 
     @Override
@@ -206,15 +201,13 @@ public class CassandraMailboxMapper implements MailboxMapper {
     @Override
     public void updateACL(Mailbox mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
-        new CassandraACLMapper(cassandraId, session, cassandraAsyncExecutor, cassandraConfiguration)
-            .updateACL(mailboxACLCommand);
+        cassandraACLMapper.updateACL(cassandraId, mailboxACLCommand);
     }
 
     @Override
     public void resetACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
-        new CassandraACLMapper(cassandraId, session, cassandraAsyncExecutor, cassandraConfiguration)
-            .resetACL(mailboxACL);
+        cassandraACLMapper.resetACL(cassandraId, mailboxACL);
     }
 
     @Override
