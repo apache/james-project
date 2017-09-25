@@ -39,7 +39,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLEntryKey;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.SimpleMailboxACL.Rfc4314Rights;
+import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.model.SimpleMailboxACL.SimpleMailboxACLEntryKey;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
@@ -86,13 +86,13 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
              * would be used if the mailbox did not exist, thus revealing no
              * existence information, much less the mailbox’s ACL.
              */
-            if (!mailboxManager.hasRight(mailboxPath, Rfc4314Rights.l_Lookup_RIGHT, mailboxSession)) {
+            if (!mailboxManager.hasRight(mailboxPath, SimpleMailboxACL.Right.Lookup, mailboxSession)) {
                 no(command, tag, responder, HumanReadableText.MAILBOX_NOT_FOUND);
             }
             /* RFC 4314 section 4. */
-            else if (!mailboxManager.hasRight(mailboxPath, Rfc4314Rights.a_Administer_RIGHT, mailboxSession)) {
+            else if (!mailboxManager.hasRight(mailboxPath, SimpleMailboxACL.Right.Administer, mailboxSession)) {
                 Object[] params = new Object[] {
-                        Rfc4314Rights.a_Administer_RIGHT.toString(),
+                        SimpleMailboxACL.Right.Administer.toString(),
                         command.getName(),
                         mailboxName
                 };
@@ -101,7 +101,7 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
             }
             else {
                 
-                MailboxACLEntryKey key = new SimpleMailboxACLEntryKey(identifier);
+                MailboxACLEntryKey key = SimpleMailboxACLEntryKey.deserialize(identifier);
                 
                 // FIXME check if identifier is a valid user or group
                 // FIXME Servers, when processing a command that has an identifier as a

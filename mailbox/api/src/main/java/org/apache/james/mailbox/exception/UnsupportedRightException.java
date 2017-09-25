@@ -42,7 +42,7 @@ public class UnsupportedRightException extends MailboxSecurityException {
     }
     
     public UnsupportedRightException(MailboxACLRight unsupportedRight) {
-        this(unsupportedRight.getValue());
+        this(unsupportedRight.asCharacter());
     }
 
     public UnsupportedRightException(String msg, Exception cause) {

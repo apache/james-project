@@ -117,7 +117,7 @@ public interface MailboxACL {
          * 
          * @return char representation of this right
          */
-        char getValue();
+        char asCharacter();
     }
 
     /**

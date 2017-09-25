@@ -39,7 +39,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.SimpleMailboxACL.Rfc4314Rights;
+import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
@@ -86,12 +86,12 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
              * RFC 4314 section 4. * MYRIGHTS - any of the following rights is
              * required to perform the operation: "l", "r", "i", "k", "x", "a".
              */
-            if (!myRights.contains(Rfc4314Rights.l_Lookup_RIGHT)
-                    && !myRights.contains(Rfc4314Rights.r_Read_RIGHT)
-                    && !myRights.contains(Rfc4314Rights.i_Insert_RIGHT)
-                    && !myRights.contains(Rfc4314Rights.k_CreateMailbox_RIGHT)
-                    && !myRights.contains(Rfc4314Rights.x_DeleteMailbox_RIGHT)
-                    && !myRights.contains(Rfc4314Rights.a_Administer_RIGHT)) {
+            if (!myRights.contains(SimpleMailboxACL.Right.Lookup)
+                    && !myRights.contains(SimpleMailboxACL.Right.Read)
+                    && !myRights.contains(SimpleMailboxACL.Right.Insert)
+                    && !myRights.contains(SimpleMailboxACL.Right.CreateMailbox)
+                    && !myRights.contains(SimpleMailboxACL.Right.DeleteMailbox)
+                    && !myRights.contains(SimpleMailboxACL.Right.Administer)) {
                 no(command, tag, responder, HumanReadableText.MAILBOX_NOT_FOUND);
             } else {
                 MyRightsResponse myRightsResponse = new MyRightsResponse(mailboxName, myRights);

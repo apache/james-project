@@ -105,13 +105,13 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
              * would be used if the mailbox did not exist, thus revealing no
              * existence information, much less the mailbox’s ACL.
              */
-            if (!mailboxManager.hasRight(mailboxPath, Rfc4314Rights.l_Lookup_RIGHT, mailboxSession)) {
+            if (!mailboxManager.hasRight(mailboxPath, SimpleMailboxACL.Right.Lookup, mailboxSession)) {
                 no(command, tag, responder, HumanReadableText.MAILBOX_NOT_FOUND);
             }
             /* RFC 4314 section 4. */
-            else if (!mailboxManager.hasRight(mailboxPath, Rfc4314Rights.a_Administer_RIGHT, mailboxSession)) {
+            else if (!mailboxManager.hasRight(mailboxPath, SimpleMailboxACL.Right.Administer, mailboxSession)) {
                 Object[] params = new Object[] {
-                        Rfc4314Rights.a_Administer_RIGHT.toString(),
+                        SimpleMailboxACL.Right.Administer.toString(),
                         command.getName(),
                         mailboxName
                 };
@@ -120,7 +120,7 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
             }
             else {
                 
-                MailboxACLEntryKey key = new SimpleMailboxACLEntryKey(identifier);
+                MailboxACLEntryKey key = SimpleMailboxACLEntryKey.deserialize(identifier);
                 
                 // FIXME check if identifier is a valid user or group
                 // FIXME Servers, when processing a command that has an identifier as a

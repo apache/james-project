@@ -76,7 +76,7 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
 
         // First check mailbox exists
         try {
-            if (mailboxManager.hasRight(mailboxPath, SimpleMailboxACL.Rfc4314Rights.r_Read_RIGHT, mailboxSession)) {
+            if (mailboxManager.hasRight(mailboxPath, SimpleMailboxACL.Right.Read, mailboxSession)) {
                 QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxPath);
                 Quota messageQuota = quotaManager.getMessageQuota(quotaRoot);
                 // See RFC 2087 : response for STORAGE should be in KB. For more accuracy, we stores B, so conversion should be made
@@ -87,7 +87,7 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
                 okComplete(command, tag, responder);
             } else {
                 Object[] params = new Object[]{
-                        SimpleMailboxACL.Rfc4314Rights.r_Read_RIGHT.toString(),
+                        SimpleMailboxACL.Right.Read.toString(),
                         command.getName(),
                         message.getMailboxName()
                 };

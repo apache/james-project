@@ -287,7 +287,7 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
     @Override
     public boolean isReadWrite(MailboxACLRights mailboxACLRights, Flags sharedFlags) throws UnsupportedRightException {
         /* the two fast cases first */
-        if (mailboxACLRights.contains(Rfc4314Rights.i_Insert_RIGHT) || mailboxACLRights.contains(Rfc4314Rights.e_PerformExpunge_RIGHT)) {
+        if (mailboxACLRights.contains(SimpleMailboxACL.Right.Insert) || mailboxACLRights.contains(SimpleMailboxACL.Right.PerformExpunge)) {
             return true;
         }
         /*
@@ -303,12 +303,12 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
          * flags.
          */
         else if (sharedFlags != null) {
-            if (sharedFlags.contains(Flag.DELETED) && mailboxACLRights.contains(Rfc4314Rights.t_DeleteMessages_RIGHT)) {
+            if (sharedFlags.contains(Flag.DELETED) && mailboxACLRights.contains(SimpleMailboxACL.Right.DeleteMessages)) {
                 return true;
-            } else if (sharedFlags.contains(Flag.SEEN) && mailboxACLRights.contains(Rfc4314Rights.s_WriteSeenFlag_RIGHT)) {
+            } else if (sharedFlags.contains(Flag.SEEN) && mailboxACLRights.contains(SimpleMailboxACL.Right.WriteSeenFlag)) {
                 return true;
             } else {
-                boolean hasWriteRight = mailboxACLRights.contains(Rfc4314Rights.w_Write_RIGHT);
+                boolean hasWriteRight = mailboxACLRights.contains(SimpleMailboxACL.Right.Write);
                 return hasWriteRight && (sharedFlags.contains(Flag.ANSWERED) || sharedFlags.contains(Flag.DRAFT) || sharedFlags.contains(Flag.FLAGGED) || sharedFlags.contains(Flag.RECENT) || sharedFlags.contains(Flag.USER));
             }
         }
@@ -377,7 +377,7 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
     }
 
     private static MailboxACLRights[] toListRightsArray(MailboxACLRights implicitRights) throws UnsupportedRightException {
-        List<MailboxACLRights> result = new ArrayList<>(Rfc4314Rights.FIELD_COUNT);
+        List<MailboxACLRights> result = new ArrayList<>();
         result.add(implicitRights);
         for (MailboxACLRight right : SimpleMailboxACL.FULL_RIGHTS) {
             if (!implicitRights.contains(right)) {

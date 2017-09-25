@@ -93,7 +93,7 @@ public class GetQuotaProcessorTest {
             .thenReturn(QUOTA_ROOT);
         when(mockedQuotaRootResolver.retrieveAssociatedMailboxes(QUOTA_ROOT, mailboxSession))
             .thenReturn(ImmutableList.of(MAILBOX_PATH));
-        when(mockedMailboxManager.hasRight(MAILBOX_PATH, SimpleMailboxACL.Rfc4314Rights.r_Read_RIGHT, mailboxSession))
+        when(mockedMailboxManager.hasRight(MAILBOX_PATH, SimpleMailboxACL.Right.Read, mailboxSession))
             .thenReturn(true);
         when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(MESSAGE_QUOTA);
         when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(STORAGE_QUOTA);
@@ -125,7 +125,7 @@ public class GetQuotaProcessorTest {
             .thenReturn(QUOTA_ROOT);
         when(mockedQuotaRootResolver.retrieveAssociatedMailboxes(QUOTA_ROOT, mailboxSession))
             .thenReturn(ImmutableList.of(MAILBOX_PATH));
-        when(mockedMailboxManager.hasRight(MAILBOX_PATH, SimpleMailboxACL.Rfc4314Rights.r_Read_RIGHT, mailboxSession))
+        when(mockedMailboxManager.hasRight(MAILBOX_PATH, SimpleMailboxACL.Right.Read, mailboxSession))
             .thenReturn(true);
         when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenThrow(new MailboxException());
         when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(STORAGE_QUOTA);
@@ -152,7 +152,7 @@ public class GetQuotaProcessorTest {
             .thenReturn(QUOTA_ROOT);
         when(mockedQuotaRootResolver.retrieveAssociatedMailboxes(QUOTA_ROOT, mailboxSession))
             .thenReturn(ImmutableList.of(MAILBOX_PATH));
-        when(mockedMailboxManager.hasRight(MAILBOX_PATH, SimpleMailboxACL.Rfc4314Rights.r_Read_RIGHT, mailboxSession))
+        when(mockedMailboxManager.hasRight(MAILBOX_PATH, SimpleMailboxACL.Right.Read, mailboxSession))
             .thenReturn(false);
 
         testee.doProcess(getQuotaRequest, mockedResponder, mockedImapSession);

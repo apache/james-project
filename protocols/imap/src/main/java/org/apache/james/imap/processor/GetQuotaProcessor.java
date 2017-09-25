@@ -84,7 +84,7 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
                 okComplete(command, tag, responder);
             } else {
                 Object[] params = new Object[]{
-                        SimpleMailboxACL.Rfc4314Rights.r_Read_RIGHT.toString(),
+                        SimpleMailboxACL.Right.Read.toString(),
                         command.getName(),
                         "Any mailbox of this user USER"
                 };
@@ -101,7 +101,7 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
         List<MailboxPath> mailboxList = quotaRootResolver.retrieveAssociatedMailboxes(quotaRootResolver.createQuotaRoot(quotaRoot), mailboxSession);
         for(MailboxPath mailboxPath : mailboxList) {
-            if(getMailboxManager().hasRight(mailboxPath, SimpleMailboxACL.Rfc4314Rights.r_Read_RIGHT, mailboxSession)) {
+            if(getMailboxManager().hasRight(mailboxPath, SimpleMailboxACL.Right.Read, mailboxSession)) {
                 return true;
             }
         }
