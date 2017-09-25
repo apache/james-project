@@ -42,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -62,6 +63,7 @@ public class JMAPServlet extends HttpServlet {
         this.requestHandler = requestHandler;
         this.metricFactory = metricFactory;
         this.objectMapper = new ObjectMapper();
+        objectMapper.configure(Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true);
     }
 
     @Override

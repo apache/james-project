@@ -233,6 +233,55 @@ public class MessageFactoryTest {
     }
 
     @Test
+    public void multivaluedHeadersShouldBeSeparatedByLineFeed() throws Exception {
+        Flags flags = new Flags(Flag.SEEN);
+        String headers = "From: user <user@domain>\n"
+            + "Subject: test subject\n"
+            + "Multi-header: first value\n"
+            + "To: user1 <user1@domain>\n"
+            + "Multi-header: second value\n";
+        MetaDataWithContent testMail = MetaDataWithContent.builder()
+            .uid(MessageUid.of(2))
+            .flags(flags)
+            .size(headers.length())
+            .internalDate(INTERNAL_DATE)
+            .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
+            .attachments(ImmutableList.of())
+            .mailboxId(MAILBOX_ID)
+            .messageId(TestMessageId.of(2))
+            .build();
+
+        Emailer user = Emailer.builder().name("user").email("user@domain").build();
+        Emailer user1 = Emailer.builder().name("user1").email("user1@domain").build();
+        ImmutableMap<String, String> headersMap = ImmutableMap.<String, String>builder()
+            .put("From", "user <user@domain>")
+            .put("Subject", "test subject")
+            .put("Multi-header", "first value\nsecond value")
+            .put("To", "user1 <user1@domain>")
+            .put("MIME-Version", "1.0")
+            .build();
+        Message testee = messageFactory.fromMetaDataWithContent(testMail);
+        Message expected = Message.builder()
+            .id(TestMessageId.of(2))
+            .blobId(BlobId.of("blobId"))
+            .threadId("2")
+            .mailboxId(MAILBOX_ID)
+            .headers(headersMap)
+            .from(user)
+            .to(ImmutableList.of(user1))
+            .subject("test subject")
+            .date(Instant.parse("2012-02-03T14:30:42.000Z"))
+            .size(headers.length())
+            .preview("(Empty)")
+            .textBody(Optional.of(""))
+            .htmlBody(Optional.empty())
+            .flags(flags)
+            .build();
+
+        assertThat(testee).isEqualToComparingFieldByField(expected);
+    }
+
+    @Test
     public void textBodyShouldBeSetIntoMessage() throws Exception {
         String headers = "Subject: test subject\n";
         String body = "Mail body";

@@ -63,6 +63,8 @@ import com.google.common.collect.Sets;
 
 public class MessageFactory {
 
+    public static final String JMAP_MULTIVALUED_FIELD_DELIMITER = "\n";
+
     private static final MimeConfig MIME_ENTITY_CONFIG = MimeConfig.custom()
         .setMaxContentLen(-1)
         .setMaxHeaderCount(-1)
@@ -196,7 +198,7 @@ public class MessageFactory {
                 .map(MimeUtil::unscrambleHeaderValue)
                 .collect(Collectors.toList())
                 .stream()
-                .collect(Collectors.joining(","));
+                .collect(Collectors.joining(JMAP_MULTIVALUED_FIELD_DELIMITER));
         return Multimaps.index(fields, Field::getName)
                 .asMap()
                 .entrySet()

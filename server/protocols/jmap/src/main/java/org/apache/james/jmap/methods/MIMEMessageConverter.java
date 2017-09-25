@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.model.CreationMessageId;
+import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mime4j.Charsets;
 import org.apache.james.mime4j.codec.DecodeMonitor;
@@ -166,9 +167,14 @@ public class MIMEMessageConverter {
         newMessage.getHeaders().entrySet().stream()
             .filter(header -> ! header.getKey().trim().isEmpty())
             .filter(header -> ! LOWERCASED_COMPUTED_HEADERS.contains(header.getKey().toLowerCase(Locale.ENGLISH)))
-            .forEach(header -> addHeader(messageBuilder, header.getKey(), header.getValue()));
+            .forEach(header -> addMultivaluedHeader(messageBuilder, header.getKey(), header.getValue()));
     }
 
+    private void addMultivaluedHeader(Message.Builder messageBuilder, String fieldName, String multipleValues) {
+        Splitter.on(MessageFactory.JMAP_MULTIVALUED_FIELD_DELIMITER).split(multipleValues)
+            .forEach(value -> addHeader(messageBuilder, fieldName, value));
+    }
+    
     private void addHeader(Message.Builder messageBuilder, String fieldName, String value) {
         FieldParser<UnstructuredField> parser = UnstructuredFieldImpl.PARSER;
         RawField rawField = new RawField(fieldName, value);

@@ -169,6 +169,27 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
+    public void convertToMimeShouldAddMultivaluedHeadersWhenProvided() {
+        // Given
+        MIMEMessageConverter sut = new MIMEMessageConverter();
+
+        CreationMessage messageHavingInReplyTo = CreationMessage.builder()
+                .from(DraftEmailer.builder().name("sender").build())
+                .headers(ImmutableMap.of("FIRST", "first value\nsecond value"))
+                .mailboxIds(ImmutableList.of("dead-beef-1337"))
+                .subject("subject")
+                .build();
+
+        // When
+        Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
+                CreationMessageId.of("user|mailbox|1"), messageHavingInReplyTo), ImmutableList.of());
+
+        // Then
+        assertThat(result.getHeader().getFields("FIRST")).extracting(Field::getBody)
+            .containsOnly("first value", "second value");
+    }
+
+    @Test
     public void convertToMimeShouldFilterEmptyHeaderNames() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
