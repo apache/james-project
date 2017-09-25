@@ -40,7 +40,8 @@ public interface MapperProvider {
         MOVE,
         UNIQUE_MESSAGE_ID,
         THREAD_SAFE_FLAGS_UPDATE,
-        INCREMENTAL_APPLICABLE_FLAGS
+        INCREMENTAL_APPLICABLE_FLAGS,
+        ACL_STORAGE
     }
 
     List<Capabilities> getSupportedCapabilities();

@@ -156,6 +156,6 @@ public class InMemoryMailboxMapper implements MailboxMapper {
 
     @Override
     public void updateACL(Mailbox mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException{
-        mailbox.setACL(mailbox.getACL().apply(mailboxACLCommand));
+        mailboxesByPath.get(mailbox.generateAssociatedPath()).setACL(mailbox.getACL().apply(mailboxACLCommand));
     }
 }

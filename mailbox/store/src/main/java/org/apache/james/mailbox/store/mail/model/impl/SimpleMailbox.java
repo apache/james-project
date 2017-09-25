@@ -56,6 +56,7 @@ public class SimpleMailbox implements Mailbox {
         this.user = mailbox.getUser();
         this.name = mailbox.getName();
         this.uidValidity = mailbox.getUidValidity();
+        this.acl = new SimpleMailboxACL(mailbox.getACL().getEntries());
     }
 
     /**
