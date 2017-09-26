@@ -20,15 +20,17 @@
 package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Optional;
+
 import javax.mail.Flags;
 
 import org.apache.commons.lang3.StringUtils;
-
-import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class KeywordTest {
     private final static int FLAG_NAME_MAX_LENTH = 255;
@@ -184,5 +186,13 @@ public class KeywordTest {
         Keyword keyword = new Keyword(ANY_KEYWORD);
         assertThat(keyword.asFlags())
             .isEqualTo(new Flags(ANY_KEYWORD));
+    }
+
+    @Test
+    public void asFlagsShouldReturnFlagsWhenUserFlagContainsUnderscore() throws Exception {
+        String userFlag = "$has_cal";
+        Keyword keyword = new Keyword(userFlag);
+        assertThat(keyword.asFlags())
+            .isEqualTo(new Flags(userFlag));
     }
 }
