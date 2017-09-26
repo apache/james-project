@@ -1367,7 +1367,7 @@ public abstract class SetMessagesMethodTest {
             .post("/jmap");
 
         // Then
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> messageHasBeenMovedToSentBox(sentMailboxId));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> messageHasBeenMovedToSentBox(sentMailboxId));
     }
 
     private boolean messageHasBeenMovedToSentBox(String sentMailboxId) {
@@ -1565,7 +1565,7 @@ public abstract class SetMessagesMethodTest {
         .when()
             .post("/jmap");
         // Then
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> messageHasBeenMovedToSentBox(sentMailboxId));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> messageHasBeenMovedToSentBox(sentMailboxId));
     }
 
     @Test
@@ -1676,7 +1676,7 @@ public abstract class SetMessagesMethodTest {
             .post("/jmap");
 
         // Then
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInRecipientsMailboxes(recipientToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(recipientToken));
     }
 
     @Test
@@ -1720,7 +1720,7 @@ public abstract class SetMessagesMethodTest {
             .post("/jmap");
 
         // Then
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInRecipientsMailboxes(recipientToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(recipientToken));
         with()
             .header("Authorization", recipientToken.serialize())
             .body("[[\"getMessageList\", {\"fetchMessages\": true, \"fetchMessageProperties\": [\"bcc\"] }, \"#0\"]]")
@@ -1775,7 +1775,7 @@ public abstract class SetMessagesMethodTest {
             .post("/jmap");
 
         // Then
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> messageHasBeenMovedToSentBox(sentMailboxId));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> messageHasBeenMovedToSentBox(sentMailboxId));
         with()
             .header("Authorization", this.accessToken.serialize())
             .body("[[\"getMessageList\", {\"fetchMessages\":true, \"fetchMessageProperties\": [\"bcc\"], \"filter\":{\"inMailboxes\":[\"" + sentMailboxId + "\"]}}, \"#0\"]]")
@@ -1834,7 +1834,7 @@ public abstract class SetMessagesMethodTest {
             .post("/jmap");
 
         // Then
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInRecipientsMailboxes(bccToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bccToken));
         with()
             .header("Authorization", bccToken.serialize())
             .body("[[\"getMessageList\", {\"fetchMessages\": true, \"fetchMessageProperties\": [\"bcc\"] }, \"#0\"]]")
@@ -1904,7 +1904,7 @@ public abstract class SetMessagesMethodTest {
             .post("/jmap");
 
         // Then
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isHtmlMessageReceived(recipientToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isHtmlMessageReceived(recipientToken));
     }
 
 
@@ -2053,7 +2053,7 @@ public abstract class SetMessagesMethodTest {
             .post("/jmap");
 
         // Then
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isTextPlusHtmlMessageReceived(recipientToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isTextPlusHtmlMessageReceived(recipientToken));
     }
 
     private boolean isTextPlusHtmlMessageReceived(AccessToken recipientToken) {
@@ -2827,7 +2827,7 @@ public abstract class SetMessagesMethodTest {
         .when()
             .post("/jmap").then();
 
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInInbox(accessToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
         String message = ARGUMENTS + ".list[0]";
         String firstAttachment = message + ".attachments[0]";
@@ -2923,7 +2923,7 @@ public abstract class SetMessagesMethodTest {
             .body(requestBody)
         .post("/jmap");
 
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInInbox(accessToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
         String inboxId = getMailboxId(accessToken, Role.INBOX);
         String receivedMessageId =
@@ -2995,7 +2995,7 @@ public abstract class SetMessagesMethodTest {
         .when()
             .post("/jmap");
 
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInInbox(accessToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
         String inboxId = getMailboxId(accessToken, Role.INBOX);
         String receivedMessageId =
@@ -3087,7 +3087,7 @@ public abstract class SetMessagesMethodTest {
         .when()
             .post("/jmap");
 
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInInbox(accessToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
         String inboxId = getMailboxId(accessToken, Role.INBOX);
         String receivedMessageId =
@@ -3160,7 +3160,7 @@ public abstract class SetMessagesMethodTest {
         .when()
             .post("/jmap");
 
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInInbox(accessToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
         String inboxId = getMailboxId(accessToken, Role.INBOX);
         String receivedMessageId =
@@ -3229,7 +3229,7 @@ public abstract class SetMessagesMethodTest {
         .when()
             .post("/jmap");
 
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInInbox(accessToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
         String inboxId = getMailboxId(accessToken, Role.INBOX);
         String receivedMessageId =
@@ -3293,7 +3293,7 @@ public abstract class SetMessagesMethodTest {
         accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), toUsername, password);
         String inboxMailboxId = getMailboxId(accessToken, Role.INBOX);
 
-        calmlyAwait.atMost(60, TimeUnit.SECONDS).until( () -> messageInMailboxHasHeaders(inboxMailboxId, buildExpectedHeaders()));
+        calmlyAwait.atMost(60, TimeUnit.SECONDS).until(() -> messageInMailboxHasHeaders(inboxMailboxId, buildExpectedHeaders()));
 
     }
 
@@ -3329,7 +3329,7 @@ public abstract class SetMessagesMethodTest {
 
         String sentMailboxId = getMailboxId(accessToken, Role.SENT);
 
-        calmlyAwait.atMost(60, TimeUnit.SECONDS).until( () -> messageInMailboxHasHeaders(sentMailboxId, buildExpectedHeaders()));
+        calmlyAwait.atMost(60, TimeUnit.SECONDS).until(() -> messageInMailboxHasHeaders(sentMailboxId, buildExpectedHeaders()));
 
     }
 
@@ -3408,7 +3408,7 @@ public abstract class SetMessagesMethodTest {
             .body()
             .<String>path(ARGUMENTS + ".created."+ messageCreationId +".id");
 
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInInbox(accessToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
         String message = ARGUMENTS + ".list[0]";
 
@@ -3460,7 +3460,7 @@ public abstract class SetMessagesMethodTest {
 
         String sentMailboxId = getMailboxId(accessToken, Role.SENT);
 
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> messageHasBeenMovedToSentBox(sentMailboxId));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> messageHasBeenMovedToSentBox(sentMailboxId));
 
         String message = SECOND_ARGUMENTS + ".list[0]";
         with()
@@ -3508,7 +3508,7 @@ public abstract class SetMessagesMethodTest {
             .body()
             .<String>path(ARGUMENTS + ".created."+ messageCreationId +".id");
 
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInInbox(accessToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
         String message = ARGUMENTS + ".list[0]";
 
@@ -3550,7 +3550,7 @@ public abstract class SetMessagesMethodTest {
             .body(requestBody)
         .post("/jmap");
 
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInInbox(accessToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
         try (IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT);) {
             assertThat(imapMessageReader.readFirstMessageHeadersInInbox(USERNAME, PASSWORD))
@@ -3589,7 +3589,7 @@ public abstract class SetMessagesMethodTest {
             .body()
             .<String>path(ARGUMENTS + ".created."+ messageCreationId +".id");
 
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInInbox(accessToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
         String message = ARGUMENTS + ".list[0]";
 
@@ -3705,7 +3705,7 @@ public abstract class SetMessagesMethodTest {
             .body()
             .<String>path(ARGUMENTS + ".created."+ messageCreationId +".id");
 
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInInbox(accessToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
         String message = ARGUMENTS + ".list[0]";
 
@@ -3765,7 +3765,7 @@ public abstract class SetMessagesMethodTest {
             .body()
             .<String>path(ARGUMENTS + ".created."+ messageCreationId +".id");
 
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInInbox(accessToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -3949,7 +3949,7 @@ public abstract class SetMessagesMethodTest {
             calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
         }
 
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInInbox(accessToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
         String message = ARGUMENTS + ".list[0]";
         String firstAttachment = message + ".attachments[0]";

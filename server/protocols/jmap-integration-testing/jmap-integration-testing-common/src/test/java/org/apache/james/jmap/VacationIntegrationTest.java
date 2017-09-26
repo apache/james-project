@@ -151,7 +151,7 @@ public abstract class VacationIntegrationTest {
             .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2, USER_1));
         // User 2 should well receive a notification about user 1 vacation
         calmlyAwait.atMost(30, TimeUnit.SECONDS)
-            .until( () -> isTextMessageReceived(user2AccessToken, getInboxId(user2AccessToken), REASON, USER_1, USER_2));
+            .until(() -> isTextMessageReceived(user2AccessToken, getInboxId(user2AccessToken), REASON, USER_1, USER_2));
     }
 
     @Test
@@ -175,7 +175,7 @@ public abstract class VacationIntegrationTest {
             .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2, USER_1));
         // User 2 should well receive a notification about user 1 vacation
         calmlyAwait.atMost(30, TimeUnit.SECONDS)
-            .until( () -> isTextMessageReceived(user2AccessToken, getInboxId(user2AccessToken), "", USER_1, USER_2));
+            .until(() -> isTextMessageReceived(user2AccessToken, getInboxId(user2AccessToken), "", USER_1, USER_2));
     }
 
     @Test
@@ -193,7 +193,7 @@ public abstract class VacationIntegrationTest {
         calmlyAwait.atMost(10, TimeUnit.SECONDS)
             .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2, USER_1));
         calmlyAwait.atMost(10, TimeUnit.SECONDS)
-                .until( () -> assertOneMessageWithHtmlBodyReceived(user2AccessToken, getInboxId(user2AccessToken), HTML_REASON, USER_1, USER_2));
+                .until(() -> assertOneMessageWithHtmlBodyReceived(user2AccessToken, getInboxId(user2AccessToken), HTML_REASON, USER_1, USER_2));
     }
 
     @Test
