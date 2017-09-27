@@ -166,20 +166,8 @@ public class MailboxACL {
      * MailboxACLRights are initialized.
      */
     public static class Rfc4314Rights {
-        /**
-         * See RFC 4314 section 2.1.1. Obsolete Rights.
-         */
-        public enum CompatibilityMode {
-            ck_detx, ckx_det, NO_COMPATIBILITY
-        }
-
         private static final char c_ObsoleteCreate = 'c';
         private static final char d_ObsoleteDelete = 'd';
-
-        /**
-         * See RFC 4314 section 2.1.1. Obsolete Rights.
-         */
-        private final CompatibilityMode compatibilityMode = CompatibilityMode.ckx_det;
 
         private final EnumSet<Right> value;
 
@@ -209,37 +197,11 @@ public class MailboxACL {
         private Stream<Right> convert(char flag) throws UnsupportedRightException {
             switch (flag) {
             case c_ObsoleteCreate:
-                return convertObsoleteCreate(flag);
+                return Stream.of(Right.CreateMailbox, Right.DeleteMailbox);
             case d_ObsoleteDelete:
-                return convertObsoleteDelete(flag);
+                return Stream.of(Right.PerformExpunge, Right.DeleteMessages, Right.DeleteMailbox);
             default:
                 return Stream.of(Right.forChar(flag));
-            }
-        }
-
-        private Stream<Right> convertObsoleteDelete(char flag) throws UnsupportedRightException {
-            switch (compatibilityMode) {
-            case ck_detx:
-                return Stream.of(Right.PerformExpunge, Right.DeleteMessages, Right.DeleteMailbox);
-            case ckx_det:
-                return Stream.of(Right.PerformExpunge, Right.DeleteMessages);
-            case NO_COMPATIBILITY:
-                throw new UnsupportedRightException(flag);
-            default:
-                throw new IllegalStateException("Unexpected enum member: " + CompatibilityMode.class.getName() + "." + compatibilityMode.name());
-            }
-        }
-
-        private Stream<Right> convertObsoleteCreate(char flag) throws UnsupportedRightException {
-            switch (compatibilityMode) {
-            case ck_detx:
-                return Stream.of(Right.CreateMailbox);
-            case ckx_det:
-                return Stream.of(Right.CreateMailbox, Right.DeleteMailbox);
-            case NO_COMPATIBILITY:
-                throw new UnsupportedRightException(flag);
-            default:
-                throw new IllegalStateException("Unexpected enum member: " + CompatibilityMode.class.getName() + "." + compatibilityMode.name());
             }
         }
 
