@@ -138,7 +138,7 @@ public class CassandraACLMapper {
         }
     }
 
-    public void resetACL(CassandraId cassandraId, MailboxACL mailboxACL) {
+    public void setACL(CassandraId cassandraId, MailboxACL mailboxACL) {
         try {
             executor.executeVoid(
                 insertStatement.bind()

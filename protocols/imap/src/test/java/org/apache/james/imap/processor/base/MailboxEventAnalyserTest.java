@@ -375,14 +375,14 @@ public class MailboxEventAnalyserTest {
             throw new NotImplementedException("Not implemented");
         }
 
-        public void setRights(MailboxPath mailboxPath,
-                              ACLCommand mailboxACLCommand, MailboxSession session)
+        public void applyRightsCommand(MailboxPath mailboxPath,
+                                       ACLCommand mailboxACLCommand, MailboxSession session)
                 throws MailboxException {
             throw new NotImplementedException("Not implemented");
         }
 
         @Override
-        public void resetRights(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
+        public void setRights(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
             throw new NotImplementedException("Not implemented");
         }
 

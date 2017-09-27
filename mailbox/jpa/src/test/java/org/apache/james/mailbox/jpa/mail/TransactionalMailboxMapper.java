@@ -84,8 +84,8 @@ public class TransactionalMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public void resetACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
-        wrapped.resetACL(mailbox, mailboxACL);
+    public void setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+        wrapped.setACL(mailbox, mailboxACL);
     }
 
     @Override

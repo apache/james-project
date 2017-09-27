@@ -199,7 +199,7 @@ public class DeleteACLProcessorTest {
         expectations.allowing(mailboxManagerStub).hasRight(expectations.with(path), expectations.with(Expectations.equal(MailboxACL.Right.Administer)), expectations.with(Expectations.same(mailboxSessionStub)));
         expectations.will(Expectations.returnValue(true));
         
-        expectations.allowing(mailboxManagerStub).setRights(expectations.with(path), expectations.with(new MailboxACL.ACLCommand(user1Key, EditMode.REPLACE, null)), expectations.with(mailboxSessionStub));
+        expectations.allowing(mailboxManagerStub).applyRightsCommand(expectations.with(path), expectations.with(new MailboxACL.ACLCommand(user1Key, EditMode.REPLACE, null)), expectations.with(mailboxSessionStub));
 
         expectations.allowing(metaDataStub).getACL();
         expectations.will(Expectations.returnValue(acl));

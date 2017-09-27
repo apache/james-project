@@ -222,9 +222,9 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public void resetACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+    public void setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
-        cassandraACLMapper.resetACL(cassandraId, mailboxACL);
+        cassandraACLMapper.setACL(cassandraId, mailboxACL);
     }
 
     @Override

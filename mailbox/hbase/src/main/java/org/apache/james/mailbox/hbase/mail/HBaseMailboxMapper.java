@@ -419,7 +419,7 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
     }
 
     @Override
-    public void resetACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+    public void setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
         mailbox.setACL(mailboxACL);
     }
 }

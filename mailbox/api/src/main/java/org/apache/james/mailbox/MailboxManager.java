@@ -392,7 +392,7 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      * @param mailboxACLCommand Update to perform.
      * @throws UnsupportedRightException
      */
-    void setRights(MailboxPath mailboxPath, MailboxACL.ACLCommand mailboxACLCommand, MailboxSession session) throws MailboxException;
+    void applyRightsCommand(MailboxPath mailboxPath, MailboxACL.ACLCommand mailboxACLCommand, MailboxSession session) throws MailboxException;
 
 
     /**
@@ -401,7 +401,7 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      * @param mailboxACL New ACL value
      * @throws UnsupportedRightException
      */
-    void resetRights(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException;
+    void setRights(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException;
 
     /**
      * Return a unmodifiable {@link List} of {@link MailboxPath} objects

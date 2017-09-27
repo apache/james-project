@@ -112,7 +112,7 @@ public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLReques
                 // Note that Section 6 recommends additional identifier’s verification
                 // steps.
 
-                mailboxManager.setRights(mailboxPath,
+                mailboxManager.applyRightsCommand(mailboxPath,
                     new MailboxACL.ACLCommand(key, EditMode.REPLACE, null), mailboxSession);
 
                 okComplete(command, tag, responder);

@@ -258,7 +258,7 @@ public abstract class MailboxMapperACLTest {
             new MailboxACL.ACLCommand(key,
                 MailboxACL.EditMode.REPLACE,
                 rights));
-        mailboxMapper.resetACL(benwaInboxMailbox,
+        mailboxMapper.setACL(benwaInboxMailbox,
             new MailboxACL(ImmutableMap.of(key, newRights)));
 
         assertThat(
@@ -273,7 +273,7 @@ public abstract class MailboxMapperACLTest {
     public void resetAclShouldInitializeStoredAcl() throws MailboxException {
         EntryKey key = new EntryKey("user", NameType.user, NEGATIVE);
         Rfc4314Rights rights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
-        mailboxMapper.resetACL(benwaInboxMailbox,
+        mailboxMapper.setACL(benwaInboxMailbox,
             new MailboxACL(ImmutableMap.of(key, rights)));
 
         assertThat(
