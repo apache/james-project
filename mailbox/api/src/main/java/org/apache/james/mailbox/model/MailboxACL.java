@@ -21,6 +21,7 @@ package org.apache.james.mailbox.model;
 
 import java.util.AbstractMap;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
@@ -50,6 +51,13 @@ import com.google.common.collect.ImmutableMap;
  *
  */
 public class MailboxACL {
+
+    private static EnumSet<Right> copyOf(Collection<Right> collection) {
+        if (collection.isEmpty()) {
+            return EnumSet.noneOf(Right.class);
+        }
+        return EnumSet.copyOf(collection);
+    }
 
     /**
      * SETACL command mode.
@@ -176,7 +184,7 @@ public class MailboxACL {
         private final EnumSet<Right> value;
 
         private Rfc4314Rights(EnumSet<Right> rights) {
-            this.value = EnumSet.copyOf(rights);
+            this.value = copyOf(rights);
         }
 
         private Rfc4314Rights() {
@@ -184,7 +192,7 @@ public class MailboxACL {
         }
 
         public Rfc4314Rights(Right... rights) {
-            this(EnumSet.copyOf(Arrays.asList(rights)));
+            this(copyOf(Arrays.asList(rights)));
         }
 
         public Rfc4314Rights(Right right) throws UnsupportedRightException {
@@ -193,26 +201,17 @@ public class MailboxACL {
 
         /* Used for json serialization (probably a bad idea) */
         public Rfc4314Rights(int serializedRights) {
-            List<Right> rights = Right.allRights.stream()
+            this(copyOf(Right.allRights
+                .stream()
                 .filter(right -> ((serializedRights >> right.ordinal()) & 1) != 0)
-                .collect(Collectors.toList());
-            if (rights.isEmpty()) {
-                this.value = EnumSet.noneOf(Right.class);
-            } else {
-                this.value = EnumSet.copyOf(rights);
-            }
+                .collect(Collectors.toList())));
         }
 
         public Rfc4314Rights(String serializedRfc4314Rights) throws UnsupportedRightException {
-            List<Right> rights = serializedRfc4314Rights.chars()
+            this.value = copyOf(serializedRfc4314Rights.chars()
                 .mapToObj(i -> (char) i)
                 .flatMap(Throwing.function(this::convert).sneakyThrow())
-                .collect(Collectors.toList());
-            if (rights.isEmpty()) {
-                this.value = EnumSet.noneOf(Right.class);
-            } else {
-                this.value = EnumSet.copyOf(rights);
-            }
+                .collect(Collectors.toList()));
         }
 
         private Stream<Right> convert(char flag) throws UnsupportedRightException {
@@ -292,7 +291,7 @@ public class MailboxACL {
          * @throws UnsupportedRightException
          */
         public Rfc4314Rights except(Rfc4314Rights toRemove) throws UnsupportedRightException {
-            EnumSet<Right> copy = EnumSet.copyOf(value);
+            EnumSet<Right> copy = copyOf(value);
             copy.removeAll(convertRightsToList(toRemove));
             return new Rfc4314Rights(copy);
         }
