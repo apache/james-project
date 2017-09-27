@@ -30,11 +30,11 @@ import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
-public class SimpleMailboxACLJsonConverter {
+public class MailboxACLJsonConverter {
 
     interface Rfc4314RightsMixIn {
         @JsonValue
-        int serializeAsInteger();
+        String serialize();
     }
 
     static class ACLKeyDeserializer extends KeyDeserializer {

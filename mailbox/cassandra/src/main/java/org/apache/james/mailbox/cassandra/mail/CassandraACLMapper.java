@@ -41,7 +41,7 @@ import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.store.json.SimpleMailboxACLJsonConverter;
+import org.apache.james.mailbox.store.json.MailboxACLJsonConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -143,7 +143,7 @@ public class CassandraACLMapper {
             executor.executeVoid(
                 insertStatement.bind()
                     .setUUID(CassandraACLTable.ID, cassandraId.asUuid())
-                    .setString(CassandraACLTable.ACL, SimpleMailboxACLJsonConverter.toJson(mailboxACL)))
+                    .setString(CassandraACLTable.ACL, MailboxACLJsonConverter.toJson(mailboxACL)))
                 .join();
         } catch (JsonProcessingException e) {
             throw Throwables.propagate(e);
@@ -169,7 +169,7 @@ public class CassandraACLMapper {
             return executor.execute(
                 conditionalUpdateStatement.bind()
                     .setUUID(CassandraACLTable.ID, cassandraId.asUuid())
-                    .setString(CassandraACLTable.ACL,  SimpleMailboxACLJsonConverter.toJson(aclWithVersion.mailboxACL))
+                    .setString(CassandraACLTable.ACL,  MailboxACLJsonConverter.toJson(aclWithVersion.mailboxACL))
                     .setLong(CassandraACLTable.VERSION, aclWithVersion.version + 1)
                     .setLong(OLD_VERSION, aclWithVersion.version))
                 .join();
@@ -183,7 +183,7 @@ public class CassandraACLMapper {
             return executor.execute(
                 conditionalInsertStatement.bind()
                     .setUUID(CassandraACLTable.ID, cassandraId.asUuid())
-                    .setString(CassandraACLTable.ACL, SimpleMailboxACLJsonConverter.toJson(acl)))
+                    .setString(CassandraACLTable.ACL, MailboxACLJsonConverter.toJson(acl)))
                 .join();
         } catch (JsonProcessingException exception) {
             throw Throwables.propagate(exception);
@@ -201,7 +201,7 @@ public class CassandraACLMapper {
 
     private MailboxACL deserializeACL(CassandraId cassandraId, String serializedACL) {
         try {
-            return SimpleMailboxACLJsonConverter.toACL(serializedACL);
+            return MailboxACLJsonConverter.toACL(serializedACL);
         } catch(IOException exception) {
             LOG.error("Unable to read stored ACL. " +
                 "We will use empty ACL instead." +
