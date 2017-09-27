@@ -32,6 +32,7 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 public class MessageTest {
 
@@ -259,6 +260,48 @@ public class MessageTest {
                     .date(Instant.now())
                     .build()))
             .build();
+    }
+
+    @Test
+    public void buildShouldNotThrowWhenNonValidFlags() throws Exception {
+        Message.builder()
+            .id(TestMessageId.of(1))
+            .blobId(BlobId.of("blobId"))
+            .threadId("threadId")
+            .mailboxId(InMemoryId.of(456))
+            .headers(ImmutableMap.of("key", "value"))
+            .subject("subject")
+            .size(1)
+            .date(Instant.now())
+            .preview("preview")
+            .attachments(ImmutableList.of())
+            .flags(FlagsBuilder.builder()
+                    .add("@ert", "t^a", "op§")
+                    .build())
+            .build();
+    }
+
+    @Test
+    public void buildShouldIgnoreNonValidFlag() throws Exception {
+        Message message = Message.builder()
+            .id(TestMessageId.of(1))
+            .blobId(BlobId.of("blobId"))
+            .threadId("threadId")
+            .mailboxId(InMemoryId.of(456))
+            .headers(ImmutableMap.of("key", "value"))
+            .subject("subject")
+            .size(1)
+            .date(Instant.now())
+            .preview("preview")
+            .attachments(ImmutableList.of())
+            .flags(FlagsBuilder.builder()
+                    .add("$Draft", "@ert", "t^a", "op§", "$user_flag")
+                    .build())
+            .build();
+
+        assertThat(message.getKeywords()).containsOnly(
+                Maps.immutableEntry("$Draft", true), 
+                Maps.immutableEntry("$user_flag", true));
     }
 
     @Test

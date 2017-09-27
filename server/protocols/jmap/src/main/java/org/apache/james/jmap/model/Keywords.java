@@ -25,9 +25,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.FlagsBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
@@ -38,7 +41,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 public class Keywords {
+
     public static final Keywords DEFAULT_VALUE = factory().fromSet(ImmutableSet.of());
+    private static final Logger LOGGER = LoggerFactory.getLogger(Keywords.class);
 
     public interface KeywordsValidator {
         void validate(Set<Keyword> keywords);
@@ -121,10 +126,19 @@ public class Keywords {
         public Keywords fromFlags(Flags flags) {
             return fromSet(Stream.concat(
                     Stream.of(flags.getUserFlags())
-                        .map(Keyword::new),
+                        .flatMap(this::asKeyword),
                     Stream.of(flags.getSystemFlags())
                         .map(Keyword::fromFlag))
                 .collect(Guavate.toImmutableSet()));
+        }
+
+        private Stream<Keyword> asKeyword(String flagName) {
+            try {
+                return Stream.of(new Keyword(flagName));
+            } catch (IllegalArgumentException e) {
+                LOGGER.warn("Fail to parse {} flag", flagName);
+                return Stream.of();
+            }
         }
 
         public Optional<Keywords> fromMapOrOldKeyword(Optional<Map<String, Boolean>> mapKeyword, Optional<OldKeyword> oldKeyword) {

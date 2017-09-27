@@ -20,6 +20,7 @@
 package org.apache.james.jmap.model;
 
 import java.util.Optional;
+
 import javax.mail.Flags;
 
 import org.apache.commons.lang.StringUtils;
@@ -34,7 +35,10 @@ import com.google.common.collect.ImmutableList;
 public class Keyword {
     private final static int FLAG_NAME_MIN_LENGTH = 1;
     private final static int FLAG_NAME_MAX_LENGTH = 255;
-    private final static CharMatcher FLAG_NAME_PATTERN = CharMatcher.JAVA_LETTER_OR_DIGIT.or(CharMatcher.is('$'));
+    private final static CharMatcher FLAG_NAME_PATTERN = 
+            CharMatcher.JAVA_LETTER_OR_DIGIT
+                .or(CharMatcher.is('$'))
+                .or(CharMatcher.is('_'));
 
     public final static Keyword DRAFT = new Keyword("$Draft");
     public final static Keyword SEEN = new Keyword("$Seen");
