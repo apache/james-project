@@ -45,6 +45,7 @@ import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.OptionalUtils;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -120,27 +121,34 @@ public class GetMailboxesMethod implements Method {
     }
 
     private Stream<Mailbox> retrieveMailboxes(Optional<ImmutableList<MailboxId>> mailboxIds, MailboxSession mailboxSession) throws MailboxException {
-        if (mailboxIds.isPresent()) {
-            return mailboxIds.get()
-                .stream()
-                .map(mailboxId -> mailboxFactory.builder()
-                        .id(mailboxId)
-                        .session(mailboxSession)
-                        .build())
-                .flatMap(OptionalUtils::toStream);
-        } else {
-            List<MailboxMetaData> userMailboxes = mailboxManager.search(
-                MailboxQuery.builder(mailboxSession).privateUserMailboxes().build(),
-                mailboxSession);
-            return userMailboxes
-                .stream()
-                .map(MailboxMetaData::getId)
-                .map(mailboxId -> mailboxFactory.builder()
-                        .id(mailboxId)
-                        .session(mailboxSession)
-                        .usingPreloadedMailboxesMetadata(userMailboxes)
-                        .build())
-                .flatMap(OptionalUtils::toStream);
-        }
+        return mailboxIds
+            .map(ids -> retrieveSpecificMailboxes(mailboxSession, ids))
+            .orElseGet(Throwing.supplier(() -> retrieveAllMailboxes(mailboxSession)).sneakyThrow());
     }
+
+    private Stream<Mailbox> retrieveSpecificMailboxes(MailboxSession mailboxSession, ImmutableList<MailboxId> mailboxIds) {
+        return mailboxIds
+            .stream()
+            .map(mailboxId -> mailboxFactory.builder()
+                .id(mailboxId)
+                .session(mailboxSession)
+                .build())
+            .flatMap(OptionalUtils::toStream);
+    }
+
+    private Stream<Mailbox> retrieveAllMailboxes(MailboxSession mailboxSession) throws MailboxException {
+        List<MailboxMetaData> userMailboxes = mailboxManager.search(
+            MailboxQuery.builder(mailboxSession).privateUserMailboxes().build(),
+            mailboxSession);
+        return userMailboxes
+            .stream()
+            .map(MailboxMetaData::getId)
+            .map(mailboxId -> mailboxFactory.builder()
+                    .id(mailboxId)
+                    .session(mailboxSession)
+                    .usingPreloadedMailboxesMetadata(userMailboxes)
+                    .build())
+            .flatMap(OptionalUtils::toStream);
+    }
+
 }
