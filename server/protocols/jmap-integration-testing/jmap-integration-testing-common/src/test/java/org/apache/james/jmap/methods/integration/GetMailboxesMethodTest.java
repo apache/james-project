@@ -82,6 +82,7 @@ public abstract class GetMailboxesMethodTest {
 
     private AccessToken accessToken;
     private String alice;
+    private String bob;
     private GuiceJamesServer jmapServer;
     private MailboxProbe mailboxProbe;
     private ACLProbe aclProbe;
@@ -102,10 +103,12 @@ public abstract class GetMailboxesMethodTest {
 
         String domain = "domain.tld";
         alice = "alice@" + domain;
+        bob = "bob@" + domain;
         String password = "password";
         DataProbe dataProbe = jmapServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(domain);
         dataProbe.addUser(alice, password);
+        dataProbe.addUser(bob, password);
         accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), alice, password);
     }
 
@@ -498,5 +501,23 @@ public abstract class GetMailboxesMethodTest {
             .body(ARGUMENTS + ".list", hasSize(1))
             .body(FIRST_MAILBOX + ".role", equalTo(DefaultMailboxes.OUTBOX.toLowerCase(Locale.US)));
     }
+
+    @Test
+    public void getMailboxesShouldReturnMailboxesWhenShared() throws Exception {
+        String mailboxName = "name";
+        MailboxId bobMailbox = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, mailboxName);
+        aclProbe.replaceRights(MailboxPath.forUser(bob, mailboxName), alice, new Rfc4314Rights(Right.Read));
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + bobMailbox.serialize() + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list.name", hasItem(mailboxName));
+    }
+
 
 }

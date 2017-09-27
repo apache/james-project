@@ -50,6 +50,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.NotAdminException;
 import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -513,8 +514,8 @@ public class StoreMailboxManager implements MailboxManager {
             LOGGER.info("Mailbox '" + mailboxId.serialize() + "' not found.");
             throw new MailboxNotFoundException(mailboxId.serialize());
         }
-        
-        if (! belongsToCurrentUser(mailboxRow, session)) {
+
+        if (! assertUserHasAccessTo(mailboxRow, session)) {
             LOGGER.info("Mailbox '" + mailboxId.serialize() + "' does not belong to user '" + session.getUser() + "' but to '" + mailboxRow.getUser());
             throw new MailboxNotFoundException(mailboxId.serialize());
         }
@@ -524,8 +525,16 @@ public class StoreMailboxManager implements MailboxManager {
         return createMessageManager(mailboxRow, session);
     }
 
+    private boolean assertUserHasAccessTo(Mailbox mailbox, MailboxSession session) throws MailboxException {
+        return belongsToCurrentUser(mailbox, session) || userHasReadRightsOn(mailbox, session);
+    }
+
     private boolean belongsToCurrentUser(Mailbox mailbox, MailboxSession session) {
         return session.getUser().isSameUser(mailbox.getUser());
+    }
+
+    private boolean userHasReadRightsOn(Mailbox mailbox, MailboxSession session) throws MailboxException {
+        return hasRight(mailbox.generateAssociatedPath(), Right.Read, session);
     }
 
     @Override
@@ -786,7 +795,7 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public boolean hasRight(MailboxPath mailboxPath, MailboxACL.Right right, MailboxSession session) throws MailboxException {
+    public boolean hasRight(MailboxPath mailboxPath, Right right, MailboxSession session) throws MailboxException {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
         MailboxSession.User user = session.getUser();
