@@ -23,6 +23,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxACL.EntryKey;
+import org.apache.james.mailbox.model.MailboxACL.NameType;
+import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
+import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
@@ -38,7 +42,6 @@ public abstract class MailboxMapperACLTest {
     public static final boolean POSITIVE = true;
     public static final boolean NEGATIVE = !POSITIVE;
 
-    private MailboxPath benwaInboxPath;
     private Mailbox benwaInboxMailbox;
 
     @Rule
@@ -55,7 +58,7 @@ public abstract class MailboxMapperACLTest {
 
         this.mailboxMapper = mapperProvider.createMailboxMapper();
 
-        benwaInboxPath = new MailboxPath("#private", "benwa", "INBOX");
+        MailboxPath benwaInboxPath = new MailboxPath("#private", "benwa", "INBOX");
         benwaInboxMailbox = createMailbox(benwaInboxPath);
         mailboxMapper.save(benwaInboxMailbox);
     }
@@ -71,8 +74,8 @@ public abstract class MailboxMapperACLTest {
 
     @Test
     public void updateAclShouldSaveAclWhenReplace() throws MailboxException {
-        MailboxACL.EntryKey key = new MailboxACL.EntryKey("user", MailboxACL.NameType.user, NEGATIVE);
-        MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights("asew");
+        EntryKey key = new EntryKey("user", NameType.user, NEGATIVE);
+        Rfc4314Rights rights = new Rfc4314Rights(Right.Administer, Right.PerformExpunge, Right.Write, Right.WriteSeenFlag);
         mailboxMapper.updateACL(benwaInboxMailbox,
             new MailboxACL.ACLCommand(key,
                 MailboxACL.EditMode.REPLACE,
@@ -87,10 +90,10 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void updateAclShouldOverrightStoredAclWhenReplace() throws MailboxException {
-        MailboxACL.EntryKey key = new MailboxACL.EntryKey("user", MailboxACL.NameType.user, NEGATIVE);
-        MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights("asew");
-        MailboxACL.Rfc4314Rights newRights = new MailboxACL.Rfc4314Rights("skate");
+    public void updateAclShouldOverwriteStoredAclWhenReplace() throws MailboxException {
+        EntryKey key = new EntryKey("user", NameType.user, NEGATIVE);
+        Rfc4314Rights rights = new Rfc4314Rights(Right.Administer, Right.PerformExpunge, Right.Write, Right.WriteSeenFlag);
+        Rfc4314Rights newRights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
         mailboxMapper.updateACL(benwaInboxMailbox,
             new MailboxACL.ACLCommand(key,
                 MailboxACL.EditMode.REPLACE,
@@ -110,10 +113,10 @@ public abstract class MailboxMapperACLTest {
 
     @Test
     public void updateAclShouldTreatNegativeAndPositiveRightSeparately() throws MailboxException {
-        MailboxACL.EntryKey key1 = new MailboxACL.EntryKey("user", MailboxACL.NameType.user, NEGATIVE);
-        MailboxACL.EntryKey key2 = new MailboxACL.EntryKey("user", MailboxACL.NameType.user, POSITIVE);
-        MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights("asew");
-        MailboxACL.Rfc4314Rights newRights = new MailboxACL.Rfc4314Rights("skate");
+        EntryKey key1 = new EntryKey("user", NameType.user, NEGATIVE);
+        EntryKey key2 = new EntryKey("user", NameType.user, POSITIVE);
+        Rfc4314Rights rights = new Rfc4314Rights(Right.Administer, Right.PerformExpunge, Right.Write, Right.WriteSeenFlag);
+        Rfc4314Rights newRights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
         mailboxMapper.updateACL(benwaInboxMailbox,
             new MailboxACL.ACLCommand(key1,
                 MailboxACL.EditMode.REPLACE,
@@ -134,10 +137,10 @@ public abstract class MailboxMapperACLTest {
 
     @Test
     public void updateAclShouldTreatNameTypesRightSeparately() throws MailboxException {
-        MailboxACL.EntryKey key1 = new MailboxACL.EntryKey("user", MailboxACL.NameType.user, NEGATIVE);
-        MailboxACL.EntryKey key2 = new MailboxACL.EntryKey("user", MailboxACL.NameType.group, NEGATIVE);
-        MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights("asew");
-        MailboxACL.Rfc4314Rights newRights = new MailboxACL.Rfc4314Rights("skate");
+        EntryKey key1 = new EntryKey("user", NameType.user, NEGATIVE);
+        EntryKey key2 = new EntryKey("user", NameType.group, NEGATIVE);
+        Rfc4314Rights rights = new Rfc4314Rights(Right.Administer, Right.PerformExpunge, Right.Write, Right.WriteSeenFlag);
+        Rfc4314Rights newRights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
         mailboxMapper.updateACL(benwaInboxMailbox,
             new MailboxACL.ACLCommand(key1,
                 MailboxACL.EditMode.REPLACE,
@@ -158,9 +161,9 @@ public abstract class MailboxMapperACLTest {
 
     @Test
     public void updateAclShouldCleanAclEntryWhenEmptyReplace() throws MailboxException {
-        MailboxACL.EntryKey key = new MailboxACL.EntryKey("user", MailboxACL.NameType.user, NEGATIVE);
-        MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights("asew");
-        MailboxACL.Rfc4314Rights newRights = new MailboxACL.Rfc4314Rights("");
+        EntryKey key = new EntryKey("user", NameType.user, NEGATIVE);
+        Rfc4314Rights rights = new Rfc4314Rights(Right.Administer, Right.PerformExpunge, Right.Write, Right.WriteSeenFlag);
+        Rfc4314Rights newRights = new Rfc4314Rights();
         mailboxMapper.updateACL(benwaInboxMailbox,
             new MailboxACL.ACLCommand(key,
                 MailboxACL.EditMode.REPLACE,
@@ -179,10 +182,10 @@ public abstract class MailboxMapperACLTest {
 
     @Test
     public void updateAclShouldCombineStoredAclWhenAdd() throws MailboxException {
-        MailboxACL.EntryKey key = new MailboxACL.EntryKey("user", MailboxACL.NameType.user, NEGATIVE);
-        MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights("asew");
-        MailboxACL.Rfc4314Rights newRights = new MailboxACL.Rfc4314Rights("skate");
-        MailboxACL.Rfc4314Rights bothRights = new MailboxACL.Rfc4314Rights("asewkt");
+        EntryKey key = new EntryKey("user", NameType.user, NEGATIVE);
+        Rfc4314Rights rights = new Rfc4314Rights(Right.Administer, Right.PerformExpunge, Right.Write, Right.WriteSeenFlag);
+        Rfc4314Rights newRights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
+        Rfc4314Rights bothRights = new Rfc4314Rights(Right.Administer, Right.WriteSeenFlag, Right.PerformExpunge, Right.Write, Right.CreateMailbox, Right.DeleteMessages);
         mailboxMapper.updateACL(benwaInboxMailbox,
             new MailboxACL.ACLCommand(key,
                 MailboxACL.EditMode.REPLACE,
@@ -202,10 +205,10 @@ public abstract class MailboxMapperACLTest {
 
     @Test
     public void removeAclShouldRemoveSomeStoredAclWhenAdd() throws MailboxException {
-        MailboxACL.EntryKey key = new MailboxACL.EntryKey("user", MailboxACL.NameType.user, NEGATIVE);
-        MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights("asew");
-        MailboxACL.Rfc4314Rights removedRights = new MailboxACL.Rfc4314Rights("se");
-        MailboxACL.Rfc4314Rights finalRights = new MailboxACL.Rfc4314Rights("aw");
+        EntryKey key = new EntryKey("user", NameType.user, NEGATIVE);
+        Rfc4314Rights rights = new Rfc4314Rights(Right.Administer, Right.PerformExpunge, Right.Write, Right.WriteSeenFlag);
+        Rfc4314Rights removedRights = new Rfc4314Rights(Right.WriteSeenFlag, Right.PerformExpunge);
+        Rfc4314Rights finalRights = new Rfc4314Rights(Right.Administer, Right.Write);
         mailboxMapper.updateACL(benwaInboxMailbox,
             new MailboxACL.ACLCommand(key,
                 MailboxACL.EditMode.REPLACE,
@@ -225,10 +228,10 @@ public abstract class MailboxMapperACLTest {
 
     @Test
     public void removeAclShouldNotFailWhenRemovingNonExistingRight() throws MailboxException {
-        MailboxACL.EntryKey key = new MailboxACL.EntryKey("user", MailboxACL.NameType.user, NEGATIVE);
-        MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights("asew");
-        MailboxACL.Rfc4314Rights removedRights = new MailboxACL.Rfc4314Rights("sel");
-        MailboxACL.Rfc4314Rights finalRights = new MailboxACL.Rfc4314Rights("aw");
+        EntryKey key = new EntryKey("user", NameType.user, NEGATIVE);
+        Rfc4314Rights rights = new Rfc4314Rights(Right.Administer, Right.PerformExpunge, Right.Write, Right.WriteSeenFlag);
+        Rfc4314Rights removedRights = new Rfc4314Rights(Right.WriteSeenFlag, Right.PerformExpunge, Right.Lookup);
+        Rfc4314Rights finalRights = new Rfc4314Rights(Right.Administer, Right.Write);
         mailboxMapper.updateACL(benwaInboxMailbox,
             new MailboxACL.ACLCommand(key,
                 MailboxACL.EditMode.REPLACE,
@@ -248,9 +251,9 @@ public abstract class MailboxMapperACLTest {
 
     @Test
     public void resetAclShouldReplaceStoredAcl() throws MailboxException {
-        MailboxACL.EntryKey key = new MailboxACL.EntryKey("user", MailboxACL.NameType.user, NEGATIVE);
-        MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights("asew");
-        MailboxACL.Rfc4314Rights newRights = new MailboxACL.Rfc4314Rights("skate");
+        EntryKey key = new EntryKey("user", NameType.user, NEGATIVE);
+        Rfc4314Rights rights = new Rfc4314Rights(Right.Administer, Right.PerformExpunge, Right.Write, Right.WriteSeenFlag);
+        Rfc4314Rights newRights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
         mailboxMapper.updateACL(benwaInboxMailbox,
             new MailboxACL.ACLCommand(key,
                 MailboxACL.EditMode.REPLACE,
@@ -268,8 +271,8 @@ public abstract class MailboxMapperACLTest {
     
     @Test
     public void resetAclShouldInitializeStoredAcl() throws MailboxException {
-        MailboxACL.EntryKey key = new MailboxACL.EntryKey("user", MailboxACL.NameType.user, NEGATIVE);
-        MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights("skate");
+        EntryKey key = new EntryKey("user", NameType.user, NEGATIVE);
+        Rfc4314Rights rights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
         mailboxMapper.resetACL(benwaInboxMailbox,
             new MailboxACL(ImmutableMap.of(key, rights)));
 
