@@ -24,9 +24,11 @@ import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
@@ -43,21 +45,26 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.DefaultMailboxes;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
+import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.probe.ACLProbe;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
+import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
-import org.apache.james.utils.JmapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
@@ -65,6 +72,11 @@ import com.jayway.restassured.http.ContentType;
 public abstract class GetMailboxesMethodTest {
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
+    private static final String FIRST_MAILBOX = ARGUMENTS + ".list[0]";
+
+    public static final String READ = String.valueOf(Right.Read.asCharacter());
+    public static final String LOOKUP = String.valueOf(Right.Lookup.asCharacter());
+    public static final String ADMINISTER = String.valueOf(Right.Administer.asCharacter());
 
     protected abstract GuiceJamesServer createJmapServer();
 
@@ -72,13 +84,15 @@ public abstract class GetMailboxesMethodTest {
     private String username;
     private GuiceJamesServer jmapServer;
     private MailboxProbe mailboxProbe;
+    private ACLProbe aclProbe;
     
     @Before
     public void setup() throws Throwable {
         jmapServer = createJmapServer();
         jmapServer.start();
         mailboxProbe = jmapServer.getProbe(MailboxProbeImpl.class);
-        
+        aclProbe = jmapServer.getProbe(ACLProbeImpl.class);
+
         RestAssured.requestSpecification = new RequestSpecBuilder()
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
@@ -195,7 +209,7 @@ public abstract class GetMailboxesMethodTest {
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
             .body(ARGUMENTS + ".list", hasSize(1))
-            .body(ARGUMENTS + ".list[0].id", equalTo(mailboxId));
+            .body(FIRST_MAILBOX + ".id", equalTo(mailboxId));
     }
 
     @Test
@@ -234,6 +248,67 @@ public abstract class GetMailboxesMethodTest {
             .body(NAME, equalTo("mailboxes"))
             .body(ARGUMENTS + ".list", hasSize(7))
             .body(ARGUMENTS + ".list.name", hasItems(expectedMailboxes.toArray()));
+    }
+
+    @Test
+    public void getMailboxesShouldReturnSharedWithProperty() throws Exception {
+        String mailboxName = "myMailbox";
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, mailboxName);
+        String targetUser1 = "toUser1@domain.com";
+        String targetUser2 = "toUser2@domain.com";
+        Mailbox myMailbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, username, mailboxName);
+        aclProbe.replaceRights(myMailbox.generateAssociatedPath(), targetUser1, new Rfc4314Rights(Right.Read, Right.Administer));
+        aclProbe.replaceRights(myMailbox.generateAssociatedPath(), targetUser2, new Rfc4314Rights(Right.Read, Right.Lookup));
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + myMailbox.getMailboxId().serialize() + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(FIRST_MAILBOX + ".name", equalTo(mailboxName))
+            .body(FIRST_MAILBOX + ".sharedWith", hasEntry(targetUser1, ImmutableList.of(ADMINISTER, READ)))
+            .body(FIRST_MAILBOX + ".sharedWith", hasEntry(targetUser2, ImmutableList.of(LOOKUP, READ)));
+    }
+
+    @Test
+    public void getMailboxShouldReturnEmptySharedWithWhenNoDelegation() throws Exception {
+        String mailboxName = "myMailbox";
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, mailboxName);
+        Mailbox myMailbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, username, mailboxName);
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + myMailbox.getMailboxId().serialize() + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(FIRST_MAILBOX + ".name", equalTo(mailboxName))
+            .body(FIRST_MAILBOX + ".sharedWith", is(ImmutableMap.of()));
+    }
+
+    @Test
+    public void nonHandledRightsShouldBeFilteredOut() throws Exception {
+        String mailboxName = "myMailbox";
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, mailboxName);
+        String targetUser1 = "toUser1@domain.com";
+        Mailbox myMailbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, username, mailboxName);
+        aclProbe.replaceRights(myMailbox.generateAssociatedPath(), targetUser1, new Rfc4314Rights(Right.Read, Right.Post));
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + myMailbox.getMailboxId().serialize() + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(FIRST_MAILBOX + ".name", equalTo(mailboxName))
+            .body(FIRST_MAILBOX + ".sharedWith", hasEntry(targetUser1, ImmutableList.of(READ)));
     }
     
     @Test
@@ -325,19 +400,19 @@ public abstract class GetMailboxesMethodTest {
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
             .body(ARGUMENTS + ".list.name", hasItem("name"))
-            .body(ARGUMENTS + ".list[0].parentId", nullValue())
-            .body(ARGUMENTS + ".list[0].role", nullValue())
-            .body(ARGUMENTS + ".list[0].sortOrder", equalTo(1000))
-            .body(ARGUMENTS + ".list[0].mustBeOnlyMailbox", equalTo(false))
-            .body(ARGUMENTS + ".list[0].mayReadItems", equalTo(false))
-            .body(ARGUMENTS + ".list[0].mayAddItems", equalTo(false))
-            .body(ARGUMENTS + ".list[0].mayRemoveItems", equalTo(false))
-            .body(ARGUMENTS + ".list[0].mayCreateChild", equalTo(false))
-            .body(ARGUMENTS + ".list[0].mayRename", equalTo(false))
-            .body(ARGUMENTS + ".list[0].mayDelete", equalTo(false))
-            .body(ARGUMENTS + ".list[0].totalMessages", equalTo(1))
-            .body(ARGUMENTS + ".list[0].unreadMessages", equalTo(1))
-            .body(ARGUMENTS + ".list[0].unreadThreads", equalTo(0));
+            .body(FIRST_MAILBOX + ".parentId", nullValue())
+            .body(FIRST_MAILBOX + ".role", nullValue())
+            .body(FIRST_MAILBOX + ".sortOrder", equalTo(1000))
+            .body(FIRST_MAILBOX + ".mustBeOnlyMailbox", equalTo(false))
+            .body(FIRST_MAILBOX + ".mayReadItems", equalTo(false))
+            .body(FIRST_MAILBOX + ".mayAddItems", equalTo(false))
+            .body(FIRST_MAILBOX + ".mayRemoveItems", equalTo(false))
+            .body(FIRST_MAILBOX + ".mayCreateChild", equalTo(false))
+            .body(FIRST_MAILBOX + ".mayRename", equalTo(false))
+            .body(FIRST_MAILBOX + ".mayDelete", equalTo(false))
+            .body(FIRST_MAILBOX + ".totalMessages", equalTo(1))
+            .body(FIRST_MAILBOX + ".unreadMessages", equalTo(1))
+            .body(FIRST_MAILBOX + ".unreadThreads", equalTo(0));
     }
 
     @Test
@@ -353,21 +428,21 @@ public abstract class GetMailboxesMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
-            .body(ARGUMENTS + ".list[0].id", not(isEmptyOrNullString()))
-            .body(ARGUMENTS + ".list[0].name", nullValue())
-            .body(ARGUMENTS + ".list[0].parentId", nullValue())
-            .body(ARGUMENTS + ".list[0].role", nullValue())
-            .body(ARGUMENTS + ".list[0].sortOrder", equalTo(1000))
-            .body(ARGUMENTS + ".list[0].mustBeOnlyMailbox", nullValue())
-            .body(ARGUMENTS + ".list[0].mayReadItems", nullValue())
-            .body(ARGUMENTS + ".list[0].mayAddItems", nullValue())
-            .body(ARGUMENTS + ".list[0].mayRemoveItems", nullValue())
-            .body(ARGUMENTS + ".list[0].mayCreateChild", nullValue())
-            .body(ARGUMENTS + ".list[0].mayRename", nullValue())
-            .body(ARGUMENTS + ".list[0].mayDelete", nullValue())
-            .body(ARGUMENTS + ".list[0].totalMessages", nullValue())
-            .body(ARGUMENTS + ".list[0].unreadMessages", equalTo(0))
-            .body(ARGUMENTS + ".list[0].unreadThreads", nullValue());
+            .body(FIRST_MAILBOX + ".id", not(isEmptyOrNullString()))
+            .body(FIRST_MAILBOX + ".name", nullValue())
+            .body(FIRST_MAILBOX + ".parentId", nullValue())
+            .body(FIRST_MAILBOX + ".role", nullValue())
+            .body(FIRST_MAILBOX + ".sortOrder", equalTo(1000))
+            .body(FIRST_MAILBOX + ".mustBeOnlyMailbox", nullValue())
+            .body(FIRST_MAILBOX + ".mayReadItems", nullValue())
+            .body(FIRST_MAILBOX + ".mayAddItems", nullValue())
+            .body(FIRST_MAILBOX + ".mayRemoveItems", nullValue())
+            .body(FIRST_MAILBOX + ".mayCreateChild", nullValue())
+            .body(FIRST_MAILBOX + ".mayRename", nullValue())
+            .body(FIRST_MAILBOX + ".mayDelete", nullValue())
+            .body(FIRST_MAILBOX + ".totalMessages", nullValue())
+            .body(FIRST_MAILBOX + ".unreadMessages", equalTo(0))
+            .body(FIRST_MAILBOX + ".unreadThreads", nullValue());
     }
 
     @Test
@@ -382,8 +457,8 @@ public abstract class GetMailboxesMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
-            .body(ARGUMENTS + ".list[0].id", not(isEmptyOrNullString()))
-            .body(ARGUMENTS + ".list[0].name", nullValue());
+            .body(FIRST_MAILBOX + ".id", not(isEmptyOrNullString()))
+            .body(FIRST_MAILBOX + ".name", nullValue());
     }
 
     @Test
@@ -398,8 +473,8 @@ public abstract class GetMailboxesMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
-            .body(ARGUMENTS + ".list[0].id", not(isEmptyOrNullString()))
-            .body(ARGUMENTS + ".list[0].name", nullValue());
+            .body(FIRST_MAILBOX + ".id", not(isEmptyOrNullString()))
+            .body(FIRST_MAILBOX + ".name", nullValue());
     }
 
     @Test
@@ -438,7 +513,7 @@ public abstract class GetMailboxesMethodTest {
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
             .body(ARGUMENTS + ".list", hasSize(1))
-            .body(ARGUMENTS + ".list[0].role", equalTo(DefaultMailboxes.OUTBOX.toLowerCase(Locale.US)));
+            .body(FIRST_MAILBOX + ".role", equalTo(DefaultMailboxes.OUTBOX.toLowerCase(Locale.US)));
     }
 
 }

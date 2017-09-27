@@ -49,7 +49,6 @@ import org.apache.james.utils.GuiceProbe;
 import com.google.common.base.Throwables;
 
 public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
-
     private final MailboxManager mailboxManager;
     private final MailboxMapperFactory mailboxMapperFactory;
     private final SubscriptionManager subscriptionManager;

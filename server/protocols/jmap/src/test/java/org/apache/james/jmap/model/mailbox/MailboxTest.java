@@ -63,7 +63,7 @@ public class MailboxTest {
     @Test
     public void buildShouldWork() {
         Mailbox expectedMailbox = new Mailbox(InMemoryId.of(1), "name", Optional.of(InMemoryId.of(0)), Optional.of(Role.DRAFTS), SortOrder.of(123),
-                true, true, true, true, true, true, true, 456, 789, 741, 852);
+                true, true, true, true, true, true, true, 456, 789, 741, 852, Rights.EMPTY);
 
         Mailbox mailbox = Mailbox.builder()
             .id(InMemoryId.of(1))

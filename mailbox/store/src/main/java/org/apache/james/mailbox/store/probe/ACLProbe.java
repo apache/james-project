@@ -16,21 +16,13 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules;
 
-import org.apache.james.utils.GuiceProbe;
+package org.apache.james.mailbox.store.probe;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
+import org.apache.james.mailbox.model.MailboxPath;
 
-public class MailboxModule extends AbstractModule {
-
-    @Override
-    protected void configure() {
-        Multibinder<GuiceProbe> probeMultiBinder = Multibinder.newSetBinder(binder(), GuiceProbe.class);
-        probeMultiBinder.addBinding().to(MailboxProbeImpl.class);
-        probeMultiBinder.addBinding().to(QuotaProbesImpl.class);
-        probeMultiBinder.addBinding().to(ACLProbeImpl.class);
-    }
-
+public interface ACLProbe {
+    void replaceRights(MailboxPath mailboxPath, String targetUser, Rfc4314Rights rights) throws MailboxException;
 }

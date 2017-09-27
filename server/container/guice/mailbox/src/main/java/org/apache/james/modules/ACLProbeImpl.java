@@ -16,21 +16,36 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.modules;
 
+import javax.inject.Inject;
+
+import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxACL.ACLCommand;
+import org.apache.james.mailbox.model.MailboxACL.EditMode;
+import org.apache.james.mailbox.model.MailboxACL.EntryKey;
+import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
+import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.probe.ACLProbe;
 import org.apache.james.utils.GuiceProbe;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
+public class ACLProbeImpl implements GuiceProbe, ACLProbe {
+    private final MailboxManager mailboxManager;
 
-public class MailboxModule extends AbstractModule {
-
-    @Override
-    protected void configure() {
-        Multibinder<GuiceProbe> probeMultiBinder = Multibinder.newSetBinder(binder(), GuiceProbe.class);
-        probeMultiBinder.addBinding().to(MailboxProbeImpl.class);
-        probeMultiBinder.addBinding().to(QuotaProbesImpl.class);
-        probeMultiBinder.addBinding().to(ACLProbeImpl.class);
+    @Inject
+    private ACLProbeImpl(MailboxManager mailboxManager) {
+        this.mailboxManager = mailboxManager;
     }
 
+    @Override
+    public void replaceRights(MailboxPath mailboxPath, String targetUser, Rfc4314Rights rights) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(mailboxPath.getUser());
+
+        EntryKey key = EntryKey.createUser(targetUser);
+        ACLCommand mailboxACLCommand = new ACLCommand(key, EditMode.REPLACE, rights);
+        mailboxManager.applyRightsCommand(mailboxPath, mailboxACLCommand, mailboxSession);
+    }
 }
