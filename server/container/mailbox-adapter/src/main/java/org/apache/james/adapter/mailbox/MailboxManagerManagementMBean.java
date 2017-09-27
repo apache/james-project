@@ -20,6 +20,8 @@ package org.apache.james.adapter.mailbox;
 
 import java.util.List;
 
+import org.apache.james.mailbox.model.MailboxId;
+
 /**
  * JMX MBean for Mailbox management
  */
@@ -43,12 +45,11 @@ public interface MailboxManagerManagementMBean {
 
     /**
      * Create a mailbox
-     *
      * @param namespace Namespace of the created mailbox
      * @param user User of the created mailbox
      * @param name Name of the created mailbox
      */
-    void createMailbox(String namespace,String user, String name);
+    MailboxId createMailbox(String namespace, String user, String name);
 
     /**
      * Delete the given mailbox

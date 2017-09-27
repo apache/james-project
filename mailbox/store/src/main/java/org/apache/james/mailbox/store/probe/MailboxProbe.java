@@ -27,12 +27,13 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public interface MailboxProbe {
 
-    void createMailbox(String namespace, String user, String name);
+    MailboxId createMailbox(String namespace, String user, String name);
 
     Mailbox getMailbox(String namespace, String user, String name);
 
