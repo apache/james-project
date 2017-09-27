@@ -221,4 +221,10 @@ public class MailboxACLTest {
             .containsAllEntriesOf(expectedEntries);
     }
 
+    @Test
+    public void propertiesConstructorShouldAcceptNullValues() throws Exception {
+        assertThat(new MailboxACL((Properties) null))
+            .isEqualTo(MailboxACL.EMPTY);
+    }
+
 }

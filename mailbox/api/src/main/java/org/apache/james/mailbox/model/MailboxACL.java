@@ -633,8 +633,10 @@ public class MailboxACL {
 
     private static Map<EntryKey, Rfc4314Rights> toMap(Properties props) throws UnsupportedRightException {
         ImmutableMap.Builder<EntryKey, Rfc4314Rights> builder = ImmutableMap.builder();
-        for (Map.Entry prop : props.entrySet()) {
-            builder.put(EntryKey.deserialize((String) prop.getKey()), new Rfc4314Rights((String) prop.getValue()));
+        if (props != null) {
+            for (Map.Entry prop : props.entrySet()) {
+                builder.put(EntryKey.deserialize((String) prop.getKey()), new Rfc4314Rights((String) prop.getValue()));
+            }
         }
         return builder.build();
     }
