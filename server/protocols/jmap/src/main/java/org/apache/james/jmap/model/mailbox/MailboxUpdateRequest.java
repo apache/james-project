@@ -46,12 +46,14 @@ public class MailboxUpdateRequest {
         private Optional<MailboxId> parentId;
         private Optional<Role> role;
         private Optional<SortOrder> sortOrder;
+        private Optional<Rights> sharedWith;
 
         private Builder() {
             name = Optional.empty();
             role = Optional.empty();
             sortOrder = Optional.empty();
             parentId = Optional.empty();
+            sharedWith = Optional.empty();
         }
 
         public Builder name(String name) throws MailboxException {
@@ -80,9 +82,14 @@ public class MailboxUpdateRequest {
             throw new NotImplementedException();
         }
 
+        public Builder sharedWith(Rights rights) {
+            Preconditions.checkNotNull(rights);
+            this.sharedWith = Optional.of(rights);
+            return this;
+        }
 
         public MailboxUpdateRequest build() {
-            return new MailboxUpdateRequest(name, parentId, role, sortOrder);
+            return new MailboxUpdateRequest(name, parentId, role, sortOrder, sharedWith);
         }
     }
 
@@ -90,14 +97,16 @@ public class MailboxUpdateRequest {
     private final Optional<MailboxId> parentId;
     private final Optional<Role> role;
     private final Optional<SortOrder> sortOrder;
+    private final Optional<Rights> sharedWith;
 
     @VisibleForTesting
-    MailboxUpdateRequest(Optional<String> name, Optional<MailboxId> parentId, Optional<Role> role, Optional<SortOrder> sortOrder) {
+    MailboxUpdateRequest(Optional<String> name, Optional<MailboxId> parentId, Optional<Role> role, Optional<SortOrder> sortOrder, Optional<Rights> sharedWith) {
 
         this.name = name;
         this.parentId = parentId;
         this.role = role;
         this.sortOrder = sortOrder;
+        this.sharedWith = sharedWith;
     }
 
     public Optional<String> getName() {
@@ -116,6 +125,9 @@ public class MailboxUpdateRequest {
         return sortOrder;
     }
 
+    public Optional<Rights> getSharedWith() {
+        return sharedWith;
+    }
 
     @Override
     public final boolean equals(Object obj) {
@@ -124,23 +136,25 @@ public class MailboxUpdateRequest {
             return Objects.equals(this.name, other.name)
                 && Objects.equals(this.parentId, other.parentId)
                 && Objects.equals(this.role, other.role)
-                && Objects.equals(this.sortOrder, other.sortOrder);
+                && Objects.equals(this.sortOrder, other.sortOrder)
+                && Objects.equals(this.sharedWith, other.sharedWith);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(name, parentId, role, sortOrder);
+        return Objects.hash(name, parentId, role, sortOrder, sharedWith);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(getClass())
-                .add("name", name)
-                .add("parentId", parentId)
-                .add("role", role)
-                .add("sortOrder", sortOrder)
-                .toString();
+            .add("name", name)
+            .add("parentId", parentId)
+            .add("role", role)
+            .add("sortOrder", sortOrder)
+            .add("sharedWith", sharedWith)
+            .toString();
     }
 }

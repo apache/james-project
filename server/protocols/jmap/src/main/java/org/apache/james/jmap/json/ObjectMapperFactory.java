@@ -24,6 +24,7 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+import org.apache.james.jmap.model.mailbox.Rights;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 
@@ -43,6 +44,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 public class ObjectMapperFactory {
@@ -66,6 +68,8 @@ public class ObjectMapperFactory {
         mailboxIdModule.addSerializer(MessageId.class, new MessageIdSerializer());
         mailboxIdModule.addKeyDeserializer(MessageId.class, new MessageIdKeyDeserializer(messageIdFactory));
         mailboxIdModule.addKeySerializer(MessageId.class, new MessageIdKeySerializer());
+        mailboxIdModule.addKeyDeserializer(Rights.Username.class, new UsernameKeyDeserializer());
+        mailboxIdModule.addDeserializer(Rights.Right.class, new RightDeserializer());
         jacksonModules = JACKSON_BASE_MODULES.add(mailboxIdModule).build();
     }
 
@@ -99,6 +103,24 @@ public class ObjectMapperFactory {
         @Override
         public void serialize(MailboxId value, JsonGenerator gen, SerializerProvider serializers) throws IOException, JsonProcessingException {
             gen.writeString(value.serialize());
+        }
+    }
+
+    public static class UsernameKeyDeserializer extends KeyDeserializer {
+        @Override
+        public Object deserializeKey(String key, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+            return new Rights.Username(key);
+        }
+    }
+
+    public static class RightDeserializer extends JsonDeserializer<Rights.Right> {
+
+        @Override
+        public Rights.Right deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+            String nodeValue = p.getValueAsString();
+            Preconditions.checkArgument(nodeValue.length() == 1, "Rights should be represented as single value characters");
+
+            return Rights.Right.forChar(nodeValue.charAt(0));
         }
     }
 

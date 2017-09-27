@@ -89,7 +89,6 @@ public class Rights {
     public static class Username {
         private final String value;
 
-     //   @JsonCreator
         public Username(String value) {
             this.value = value;
         }

@@ -19,9 +19,11 @@
 package org.apache.james.jmap.json;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Map;
 
+import org.apache.james.jmap.model.mailbox.Rights;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.MailboxId;
@@ -70,6 +72,61 @@ public class ObjectMapperFactoryTest {
         String expectedJson = "{\"map\":{\"key\":\"value\"}}";
         String actual = testeeWithoutToString.forWriting().writeValueAsString(container);
         assertThat(actual).isEqualTo(expectedJson);
+    }
+
+    @Test
+    public void readValueShouldParseRightObject() throws Exception {
+        Rights.Right actual = testee.forParsing()
+            .readValue("\"a\"", Rights.Right.class);
+
+        assertThat(actual)
+            .isEqualTo(Rights.Right.Administer);
+    }
+
+    @Test
+    public void readValueShouldParseUsernameObject() throws Exception {
+        String username = "username";
+        Rights.Username actual = testee.forParsing()
+            .readValue("\"" + username + "\"", Rights.Username.class);
+
+        assertThat(actual)
+            .isEqualTo(new Rights.Username(username));
+    }
+
+    @Test
+    public void readValueShouldParseRightsObject() throws Exception {
+        String username = "username";
+        Rights actual = testee.forParsing()
+            .readValue("{\"" + username + "\" : [\"a\", \"e\"]}", Rights.class);
+
+        assertThat(actual)
+            .isEqualTo(Rights.builder()
+                .delegateTo(new Rights.Username(username), Rights.Right.Administer, Rights.Right.Expunge)
+                .build());
+    }
+
+    @Test
+    public void readValueShouldRejectMultiCharacterRights() throws Exception {
+        assertThatThrownBy(() ->
+            testee.forParsing()
+                .readValue("\"ae\"", Rights.Right.class))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void readValueShouldRejectUnsupportedRights() throws Exception {
+        assertThatThrownBy(() ->
+            testee.forParsing()
+                .readValue("\"p\"", Rights.Right.class))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void readValueShouldRejectUnExistingRights() throws Exception {
+        assertThatThrownBy(() ->
+            testee.forParsing()
+                .readValue("\"z\"", Rights.Right.class))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     public static class MailboxIdTestContainer {

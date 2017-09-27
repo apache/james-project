@@ -83,8 +83,7 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
 
         SetMailboxesResponse.Builder responseBuilder = SetMailboxesResponse.builder();
         request.getUpdate()
-            .entrySet()
-            .forEach(update -> handleUpdate(update.getKey(), update.getValue(), responseBuilder, mailboxSession));
+            .forEach((key, value) -> handleUpdate(key, value, responseBuilder, mailboxSession));
         timeMetric.stopAndPublish();
         return responseBuilder.build();
     }
@@ -210,6 +209,9 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
     private void updateMailbox(Mailbox mailbox, MailboxUpdateRequest updateRequest, MailboxSession mailboxSession) throws MailboxException {
         MailboxPath originMailboxPath = mailboxManager.getMailbox(mailbox.getId(), mailboxSession).getMailboxPath();
         MailboxPath destinationMailboxPath = computeNewMailboxPath(mailbox, originMailboxPath, updateRequest, mailboxSession);
+        if (updateRequest.getSharedWith().isPresent()) {
+            mailboxManager.setRights(originMailboxPath, updateRequest.getSharedWith().get().toMailboxAcl(), mailboxSession);
+        }
         if (!originMailboxPath.equals(destinationMailboxPath)) {
             mailboxManager.renameMailbox(originMailboxPath, destinationMailboxPath, mailboxSession);
 
