@@ -685,12 +685,17 @@ public class MailboxACL {
     public MailboxACL except(MailboxACL other) throws UnsupportedRightException {
         return new MailboxACL(entries.entrySet()
             .stream()
-            .map(entry -> Pair.of(entry.getKey(),
-                Optional.ofNullable(other.getEntries().get(entry.getKey()))
-                    .map(Throwing.function(exceptValue -> entry.getValue().except(exceptValue)))
-                    .orElse(entry.getValue())))
+            .map(entry -> Pair.of(
+                entry.getKey(),
+                except(entry.getValue(), other.getEntries().get(entry.getKey()))))
             .filter(pair -> !pair.getValue().isEmpty())
             .collect(Guavate.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue)));
+    }
+
+    private Rfc4314Rights except(Rfc4314Rights thisRight, Rfc4314Rights exceptRights) {
+        return Optional.ofNullable(exceptRights)
+            .map(Throwing.function(thisRight::except))
+            .orElse(thisRight);
     }
 
     public MailboxACL except(EntryKey key, Rfc4314Rights mailboxACLRights) throws UnsupportedRightException {
@@ -776,15 +781,15 @@ public class MailboxACL {
                 .asMap()
                 .entrySet()
                 .stream()
-                .map(entry -> Pair.of(entry.getKey(),
-                    entry.getValue()
-                        .stream()
-                        .reduce(
-                            new Rfc4314Rights(),
-                            Throwing.binaryOperator(Rfc4314Rights::union))))
-                .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue)));
+                .collect(Guavate.toImmutableMap(Map.Entry::getKey, e -> union(e.getValue()))));
     }
-    
+
+    private Rfc4314Rights union(Collection<Rfc4314Rights> rights) {
+        return rights.stream()
+            .reduce(
+                new Rfc4314Rights(),
+                Throwing.binaryOperator(Rfc4314Rights::union));
+    }
 
     public MailboxACL union(EntryKey key, Rfc4314Rights mailboxACLRights) throws UnsupportedRightException {
         return union(new MailboxACL(new Entry(key, mailboxACLRights)));
