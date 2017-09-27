@@ -241,7 +241,8 @@ public class MailboxACL {
          */
         public Rfc4314Rights except(Rfc4314Rights toRemove) throws UnsupportedRightException {
             EnumSet<Right> copy = copyOf(value);
-            copy.removeAll(convertRightsToList(toRemove));
+            Optional.ofNullable(toRemove)
+                .ifPresent(rights -> copy.removeAll(rights.value));
             return new Rfc4314Rights(copy);
         }
 
@@ -313,16 +314,8 @@ public class MailboxACL {
             Preconditions.checkNotNull(toAdd);
             EnumSet<Right> rightUnion = EnumSet.noneOf(Right.class);
             rightUnion.addAll(value);
-            rightUnion.addAll(convertRightsToList(toAdd));
+            rightUnion.addAll(toAdd.value);
             return new Rfc4314Rights(rightUnion);
-        }
-
-        private List<Right> convertRightsToList(Rfc4314Rights toAdd) {
-            return Optional.ofNullable(toAdd).orElse(Rfc4314Rights.empty())
-                .list()
-                .stream()
-                .map(Throwing.function(right -> Right.forChar(right.asCharacter())))
-                .collect(Guavate.toImmutableList());
         }
 
         private static Rfc4314Rights empty() {
