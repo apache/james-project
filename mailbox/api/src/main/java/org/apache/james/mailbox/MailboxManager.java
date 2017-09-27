@@ -40,7 +40,6 @@ import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
-import org.apache.james.mailbox.model.SimpleMailboxACL;
 
 /**
  * <p>
@@ -348,7 +347,7 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      *         mailbox; false otherwise.
      * @throws MailboxException
      */
-    boolean hasRight(MailboxPath mailboxPath, MailboxACL.MailboxACLRight right, MailboxSession session) throws MailboxException;
+    boolean hasRight(MailboxPath mailboxPath, MailboxACL.Right right, MailboxSession session) throws MailboxException;
 
     /**
      * Returns the rights applicable to the user who has sent the current
@@ -357,11 +356,11 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      * @param mailboxPath Path of the mailbox you want to get your rights on.
      * @param session The session used to determine the user we should retrieve the rights of.
      * @return the rights applicable to the user who has sent the request,
-     *         returns {@link SimpleMailboxACL#NO_RIGHTS} if
+     *         returns {@link MailboxACL#NO_RIGHTS} if
      *         {@code session.getUser()} is null.
      * @throws UnsupportedRightException
      */
-    MailboxACL.MailboxACLRights myRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
+    MailboxACL.Rfc4314Rights myRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 
     /**
      * Computes a result suitable for the LISTRIGHTS IMAP command. The result is
@@ -385,7 +384,7 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      * @return result suitable for the LISTRIGHTS IMAP command
      * @throws UnsupportedRightException
      */
-    MailboxACL.MailboxACLRights[] listRigths(MailboxPath mailboxPath, MailboxACL.MailboxACLEntryKey identifier, MailboxSession session) throws MailboxException;
+    MailboxACL.Rfc4314Rights[] listRigths(MailboxPath mailboxPath, MailboxACL.EntryKey identifier, MailboxSession session) throws MailboxException;
 
     /**
      * Update the Mailbox ACL of the designated mailbox. We can either ADD REPLACE or REMOVE entries.
@@ -393,7 +392,7 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      * @param mailboxACLCommand Update to perform.
      * @throws UnsupportedRightException
      */
-    void setRights(MailboxPath mailboxPath, MailboxACL.MailboxACLCommand mailboxACLCommand, MailboxSession session) throws MailboxException;
+    void setRights(MailboxPath mailboxPath, MailboxACL.ACLCommand mailboxACLCommand, MailboxSession session) throws MailboxException;
 
 
     /**

@@ -41,7 +41,6 @@ import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.store.json.SimpleMailboxACLJsonConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,13 +115,13 @@ public class CassandraACLMapper {
 
     private MailboxACL getAcl(CassandraId cassandraId, ResultSet resultSet) {
         if (resultSet.isExhausted()) {
-            return SimpleMailboxACL.EMPTY;
+            return MailboxACL.EMPTY;
         }
         String serializedACL = resultSet.one().getString(CassandraACLTable.ACL);
         return deserializeACL(cassandraId, serializedACL);
     }
 
-    public void updateACL(CassandraId cassandraId, MailboxACL.MailboxACLCommand command) throws MailboxException {
+    public void updateACL(CassandraId cassandraId, MailboxACL.ACLCommand command) throws MailboxException {
         try {
             new FunctionRunnerWithRetry(maxRetry)
                 .execute(
@@ -151,9 +150,9 @@ public class CassandraACLMapper {
         }
     }
 
-    private MailboxACL applyCommandOnEmptyACL(MailboxACL.MailboxACLCommand command) {
+    private MailboxACL applyCommandOnEmptyACL(MailboxACL.ACLCommand command) {
         try {
-            return SimpleMailboxACL.EMPTY.apply(command);
+            return MailboxACL.EMPTY.apply(command);
         } catch (UnsupportedRightException exception) {
             throw Throwables.propagate(exception);
         }
@@ -208,7 +207,7 @@ public class CassandraACLMapper {
                 "We will use empty ACL instead." +
                 "Mailbox is {} ." +
                 "ACL is {}", cassandraId, serializedACL, exception);
-            return SimpleMailboxACL.EMPTY;
+            return MailboxACL.EMPTY;
         }
     }
 
@@ -221,7 +220,7 @@ public class CassandraACLMapper {
             this.mailboxACL = mailboxACL;
         }
 
-        public ACLWithVersion apply(MailboxACL.MailboxACLCommand command) {
+        public ACLWithVersion apply(MailboxACL.ACLCommand command) {
             try {
                 return new ACLWithVersion(version, mailboxACL.apply(command));
             } catch(UnsupportedRightException exception) {

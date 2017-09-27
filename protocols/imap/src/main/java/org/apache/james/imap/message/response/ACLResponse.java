@@ -24,8 +24,8 @@ import java.util.Map.Entry;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.model.MailboxACL.MailboxACLEntryKey;
-import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
+import org.apache.james.mailbox.model.MailboxACL.EntryKey;
+import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 
 /**
  * ACL Response.
@@ -74,13 +74,11 @@ public final class ACLResponse implements ImapResponseMessage {
         .append(' ')
         .append(mailboxName);
         
-        for (Entry<MailboxACLEntryKey, MailboxACLRights> en : acl.getEntries().entrySet()) {
-            result
-            .append(' ')
-            .append(en.getKey().toString())
-            .append(' ')
-            .append(en.getValue().toString())
-            ;
+        for (Entry<EntryKey, Rfc4314Rights> en : acl.getEntries().entrySet()) {
+            result.append(' ')
+                .append(en.getKey().toString())
+                .append(' ')
+                .append(en.getValue().toString());
         }
         
         return result.toString();

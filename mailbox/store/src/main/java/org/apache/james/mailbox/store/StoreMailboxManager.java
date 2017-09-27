@@ -62,7 +62,6 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageId.Factory;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
-import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
@@ -790,7 +789,7 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public boolean hasRight(MailboxPath mailboxPath, MailboxACL.MailboxACLRight right, MailboxSession session) throws MailboxException {
+    public boolean hasRight(MailboxPath mailboxPath, MailboxACL.Right right, MailboxSession session) throws MailboxException {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
         MailboxSession.User user = session.getUser();
@@ -799,35 +798,35 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public MailboxACL.MailboxACLRights myRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
+    public MailboxACL.Rfc4314Rights myRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
         MailboxSession.User user = session.getUser();
         if (user != null) {
             return aclResolver.resolveRights(user.getUserName(), groupMembershipResolver, mailbox.getACL(), mailbox.getUser(), new GroupFolderResolver(session).isGroupFolder(mailbox));
         } else {
-            return SimpleMailboxACL.NO_RIGHTS;
+            return MailboxACL.NO_RIGHTS;
         }
     }
 
-    public MailboxACL.MailboxACLRights[] listRigths(MailboxPath mailboxPath, MailboxACL.MailboxACLEntryKey key, MailboxSession session) throws MailboxException {
-        final MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+    public MailboxACL.Rfc4314Rights[] listRigths(MailboxPath mailboxPath, MailboxACL.EntryKey key, MailboxSession session) throws MailboxException {
+        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
         return aclResolver.listRights(key, groupMembershipResolver, mailbox.getUser(), new GroupFolderResolver(session).isGroupFolder(mailbox));
     }
 
     @Override
-    public void setRights(MailboxPath mailboxPath, MailboxACL.MailboxACLCommand mailboxACLCommand, MailboxSession session) throws MailboxException {
-        final MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        final Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
+    public void setRights(MailboxPath mailboxPath, MailboxACL.ACLCommand mailboxACLCommand, MailboxSession session) throws MailboxException {
+        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
         mapper.execute(Mapper.toTransaction(() -> mapper.updateACL(mailbox, mailboxACLCommand)));
     }
     
     @Override
-    public void resetRights(MailboxPath mailboxPath, MailboxACL mailboxACLCommand, MailboxSession session) throws MailboxException {
-        final MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        final Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
-        mapper.execute(Mapper.toTransaction(() -> mapper.resetACL(mailbox, mailboxACLCommand)));
+    public void resetRights(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
+        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
+        mapper.execute(Mapper.toTransaction(() -> mapper.resetACL(mailbox, mailboxACL)));
     }
 
     @Override

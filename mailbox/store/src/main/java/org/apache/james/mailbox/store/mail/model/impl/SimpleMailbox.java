@@ -22,7 +22,6 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxUtil;
 
@@ -36,7 +35,7 @@ public class SimpleMailbox implements Mailbox {
     private String user;
     private String name;
     private final long uidValidity;
-    private MailboxACL acl = SimpleMailboxACL.EMPTY;
+    private MailboxACL acl = MailboxACL.EMPTY;
 
     public SimpleMailbox(MailboxPath path, long uidValidity, MailboxId mailboxId) {
         this.id = mailboxId;
@@ -56,7 +55,7 @@ public class SimpleMailbox implements Mailbox {
         this.user = mailbox.getUser();
         this.name = mailbox.getName();
         this.uidValidity = mailbox.getUidValidity();
-        this.acl = new SimpleMailboxACL(mailbox.getACL().getEntries());
+        this.acl = new MailboxACL(mailbox.getACL().getEntries());
     }
 
     /**

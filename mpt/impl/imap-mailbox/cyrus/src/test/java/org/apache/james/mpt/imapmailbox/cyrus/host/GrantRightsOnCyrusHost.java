@@ -19,11 +19,12 @@
 
 package org.apache.james.mpt.imapmailbox.cyrus.host;
 
-import com.google.inject.Inject;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mpt.imapmailbox.GrantRightsOnHost;
 import org.apache.james.mpt.protocol.ProtocolSession;
+
+import com.google.inject.Inject;
 
 public class GrantRightsOnCyrusHost implements GrantRightsOnHost {
     private static final String GRANT_RIGHTS_LOCATION = "ACLCommands.grantRights";
@@ -35,7 +36,7 @@ public class GrantRightsOnCyrusHost implements GrantRightsOnHost {
         this.system = system;
     }
 
-    public void grantRights(MailboxPath mailboxPath, String userName, MailboxACL.MailboxACLRights rights) throws Exception {
+    public void grantRights(MailboxPath mailboxPath, String userName, MailboxACL.Rfc4314Rights rights) throws Exception {
         ProtocolSession protocolSession = system.logAndGetAdminProtocolSession(new ProtocolSession());
         protocolSession.CL(String.format("A1 SETACL %s %s %s",
             system.createMailboxStringFromMailboxPath(mailboxPath),

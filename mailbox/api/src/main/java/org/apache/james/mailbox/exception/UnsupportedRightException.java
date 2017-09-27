@@ -20,7 +20,7 @@
 
 package org.apache.james.mailbox.exception;
 
-import org.apache.james.mailbox.model.MailboxACL.MailboxACLRight;
+import org.apache.james.mailbox.model.MailboxACL.Right;
 
 /**
  * Thrown when the current system does not support the given right.
@@ -41,7 +41,7 @@ public class UnsupportedRightException extends MailboxSecurityException {
         this.unsupportedRight  = right;
     }
     
-    public UnsupportedRightException(MailboxACLRight unsupportedRight) {
+    public UnsupportedRightException(Right unsupportedRight) {
         this(unsupportedRight.asCharacter());
     }
 

@@ -39,10 +39,10 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.quota.QuotaImpl;
@@ -93,7 +93,7 @@ public class GetQuotaProcessorTest {
             .thenReturn(QUOTA_ROOT);
         when(mockedQuotaRootResolver.retrieveAssociatedMailboxes(QUOTA_ROOT, mailboxSession))
             .thenReturn(ImmutableList.of(MAILBOX_PATH));
-        when(mockedMailboxManager.hasRight(MAILBOX_PATH, SimpleMailboxACL.Right.Read, mailboxSession))
+        when(mockedMailboxManager.hasRight(MAILBOX_PATH, MailboxACL.Right.Read, mailboxSession))
             .thenReturn(true);
         when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(MESSAGE_QUOTA);
         when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(STORAGE_QUOTA);
@@ -125,7 +125,7 @@ public class GetQuotaProcessorTest {
             .thenReturn(QUOTA_ROOT);
         when(mockedQuotaRootResolver.retrieveAssociatedMailboxes(QUOTA_ROOT, mailboxSession))
             .thenReturn(ImmutableList.of(MAILBOX_PATH));
-        when(mockedMailboxManager.hasRight(MAILBOX_PATH, SimpleMailboxACL.Right.Read, mailboxSession))
+        when(mockedMailboxManager.hasRight(MAILBOX_PATH, MailboxACL.Right.Read, mailboxSession))
             .thenReturn(true);
         when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenThrow(new MailboxException());
         when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(STORAGE_QUOTA);
@@ -152,7 +152,7 @@ public class GetQuotaProcessorTest {
             .thenReturn(QUOTA_ROOT);
         when(mockedQuotaRootResolver.retrieveAssociatedMailboxes(QUOTA_ROOT, mailboxSession))
             .thenReturn(ImmutableList.of(MAILBOX_PATH));
-        when(mockedMailboxManager.hasRight(MAILBOX_PATH, SimpleMailboxACL.Right.Read, mailboxSession))
+        when(mockedMailboxManager.hasRight(MAILBOX_PATH, MailboxACL.Right.Read, mailboxSession))
             .thenReturn(false);
 
         testee.doProcess(getQuotaRequest, mockedResponder, mockedImapSession);

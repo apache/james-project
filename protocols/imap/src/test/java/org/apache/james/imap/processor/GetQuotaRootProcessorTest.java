@@ -37,7 +37,6 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.quota.QuotaImpl;
@@ -94,7 +93,7 @@ public class GetQuotaRootProcessorTest {
         expectations.will(Expectations.returnValue(QUOTA_ROOT));
 
         expectations.allowing(mockedMailboxManager).hasRight(expectations.with(MAILBOX_PATH),
-            expectations.with((MailboxACL.MailboxACLRight) SimpleMailboxACL.Right.Read), expectations.with(mailboxSession));
+            expectations.with(MailboxACL.Right.Read), expectations.with(mailboxSession));
         expectations.will(Expectations.returnValue(true));
 
         expectations.allowing(mockedQuotaManager).getMessageQuota(expectations.with(QUOTA_ROOT));
@@ -137,7 +136,7 @@ public class GetQuotaRootProcessorTest {
         expectations.will(Expectations.returnValue(mailboxSession));
 
         expectations.allowing(mockedMailboxManager).hasRight(expectations.with(MAILBOX_PATH),
-            expectations.with((MailboxACL.MailboxACLRight) SimpleMailboxACL.Right.Read), expectations.with(mailboxSession));
+            expectations.with(MailboxACL.Right.Read), expectations.with(mailboxSession));
         expectations.will(Expectations.throwException(new MailboxException()));
 
         expectations.allowing(mockedMailboxManager).startProcessingRequest(expectations.with(mailboxSession));
@@ -168,7 +167,7 @@ public class GetQuotaRootProcessorTest {
         expectations.will(Expectations.returnValue(mailboxSession));
 
         expectations.allowing(mockedMailboxManager).hasRight(expectations.with(MAILBOX_PATH),
-            expectations.with((MailboxACL.MailboxACLRight) SimpleMailboxACL.Right.Read), expectations.with(mailboxSession));
+            expectations.with(MailboxACL.Right.Read), expectations.with(mailboxSession));
         expectations.will(Expectations.returnValue(false));
 
         expectations.allowing(mockedMailboxManager).startProcessingRequest(expectations.with(mailboxSession));

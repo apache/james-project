@@ -36,10 +36,10 @@ import org.apache.james.imap.message.response.QuotaRootResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.metrics.api.MetricFactory;
@@ -76,7 +76,7 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
 
         // First check mailbox exists
         try {
-            if (mailboxManager.hasRight(mailboxPath, SimpleMailboxACL.Right.Read, mailboxSession)) {
+            if (mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Read, mailboxSession)) {
                 QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxPath);
                 Quota messageQuota = quotaManager.getMessageQuota(quotaRoot);
                 // See RFC 2087 : response for STORAGE should be in KB. For more accuracy, we stores B, so conversion should be made
@@ -87,7 +87,7 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
                 okComplete(command, tag, responder);
             } else {
                 Object[] params = new Object[]{
-                        SimpleMailboxACL.Right.Read.toString(),
+                        MailboxACL.Right.Read.toString(),
                         command.getName(),
                         message.getMailboxName()
                 };

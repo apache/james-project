@@ -46,7 +46,6 @@ import org.apache.james.mailbox.model.SearchQuery.DateResolution;
 import org.apache.james.mailbox.model.SearchQuery.Sort;
 import org.apache.james.mailbox.model.SearchQuery.Sort.Order;
 import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause;
-import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.MessageBuilder;
@@ -688,7 +687,7 @@ public class LuceneMailboxMessageSearchIndexTest {
 
         @Override
         public MailboxACL getACL() {
-            return SimpleMailboxACL.OWNER_FULL_ACL;
+            return MailboxACL.OWNER_FULL_ACL;
         }
 
         @Override

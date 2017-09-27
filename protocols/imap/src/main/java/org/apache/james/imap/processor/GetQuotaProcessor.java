@@ -34,10 +34,10 @@ import org.apache.james.imap.message.response.QuotaResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.metrics.api.MetricFactory;
@@ -84,7 +84,7 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
                 okComplete(command, tag, responder);
             } else {
                 Object[] params = new Object[]{
-                        SimpleMailboxACL.Right.Read.toString(),
+                        MailboxACL.Right.Read.toString(),
                         command.getName(),
                         "Any mailbox of this user USER"
                 };
@@ -101,7 +101,7 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
         List<MailboxPath> mailboxList = quotaRootResolver.retrieveAssociatedMailboxes(quotaRootResolver.createQuotaRoot(quotaRoot), mailboxSession);
         for(MailboxPath mailboxPath : mailboxList) {
-            if(getMailboxManager().hasRight(mailboxPath, SimpleMailboxACL.Right.Read, mailboxSession)) {
+            if(getMailboxManager().hasRight(mailboxPath, MailboxACL.Right.Read, mailboxSession)) {
                 return true;
             }
         }

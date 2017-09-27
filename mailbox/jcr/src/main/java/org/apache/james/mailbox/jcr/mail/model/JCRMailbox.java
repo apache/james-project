@@ -30,7 +30,6 @@ import org.apache.james.mailbox.jcr.Persistent;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxUtil;
 import org.slf4j.Logger;
@@ -316,7 +315,7 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
     @Override
     public MailboxACL getACL() {
         // TODO ACL support
-        return SimpleMailboxACL.OWNER_FULL_ACL;
+        return MailboxACL.OWNER_FULL_ACL;
     }
 
     /* (non-Javadoc)

@@ -37,9 +37,9 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
-import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
+import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
@@ -71,7 +71,7 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
             MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
             // Check that mailbox exists
             mailboxManager.getMailbox(mailboxPath, mailboxSession);
-            MailboxACLRights myRights = mailboxManager.myRights(mailboxPath, mailboxSession);
+            Rfc4314Rights myRights = mailboxManager.myRights(mailboxPath, mailboxSession);
 
             /*
              * RFC 4314 section 6. An implementation MUST make sure the ACL
@@ -86,12 +86,12 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
              * RFC 4314 section 4. * MYRIGHTS - any of the following rights is
              * required to perform the operation: "l", "r", "i", "k", "x", "a".
              */
-            if (!myRights.contains(SimpleMailboxACL.Right.Lookup)
-                    && !myRights.contains(SimpleMailboxACL.Right.Read)
-                    && !myRights.contains(SimpleMailboxACL.Right.Insert)
-                    && !myRights.contains(SimpleMailboxACL.Right.CreateMailbox)
-                    && !myRights.contains(SimpleMailboxACL.Right.DeleteMailbox)
-                    && !myRights.contains(SimpleMailboxACL.Right.Administer)) {
+            if (!myRights.contains(MailboxACL.Right.Lookup)
+                    && !myRights.contains(MailboxACL.Right.Read)
+                    && !myRights.contains(MailboxACL.Right.Insert)
+                    && !myRights.contains(MailboxACL.Right.CreateMailbox)
+                    && !myRights.contains(MailboxACL.Right.DeleteMailbox)
+                    && !myRights.contains(MailboxACL.Right.Administer)) {
                 no(command, tag, responder, HumanReadableText.MAILBOX_NOT_FOUND);
             } else {
                 MyRightsResponse myRightsResponse = new MyRightsResponse(mailboxName, myRights);

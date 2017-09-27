@@ -32,7 +32,6 @@ import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxUtil;
 
@@ -238,7 +237,7 @@ public class JPAMailbox implements Mailbox {
     
     @Override
     public MailboxACL getACL() {
-        return SimpleMailboxACL.EMPTY;
+        return MailboxACL.EMPTY;
     }
 
     @Override

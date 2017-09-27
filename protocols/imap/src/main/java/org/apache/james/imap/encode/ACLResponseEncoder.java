@@ -28,8 +28,8 @@ import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.ACLResponse;
-import org.apache.james.mailbox.model.MailboxACL.MailboxACLEntryKey;
-import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
+import org.apache.james.mailbox.model.MailboxACL.EntryKey;
+import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 
 /**
  * ACL Response Encoder.
@@ -52,7 +52,7 @@ public class ACLResponseEncoder extends AbstractChainedImapEncoder {
      */
     protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
         final ACLResponse aclResponse = (ACLResponse) acceptableMessage;
-        final Map<MailboxACLEntryKey, MailboxACLRights> entries = aclResponse.getAcl().getEntries();
+        final Map<EntryKey, Rfc4314Rights> entries = aclResponse.getAcl().getEntries();
         composer.untagged();
         composer.commandName(ImapConstants.ACL_RESPONSE_NAME);
         
@@ -60,7 +60,7 @@ public class ACLResponseEncoder extends AbstractChainedImapEncoder {
         composer.mailbox(mailboxName == null ? "" : mailboxName);
         
         if (entries != null) {
-            for (Entry<MailboxACLEntryKey, MailboxACLRights> entry : entries.entrySet()) {
+            for (Entry<EntryKey, Rfc4314Rights> entry : entries.entrySet()) {
                 String identifier = entry.getKey().serialize();
                 composer.quote(identifier);
                 String rights = entry.getValue().serialize();

@@ -54,10 +54,10 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.Headers;
 import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.model.MailboxACL.MailboxACLCommand;
-import org.apache.james.mailbox.model.MailboxACL.MailboxACLEntryKey;
-import org.apache.james.mailbox.model.MailboxACL.MailboxACLRight;
-import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
+import org.apache.james.mailbox.model.MailboxACL.ACLCommand;
+import org.apache.james.mailbox.model.MailboxACL.EntryKey;
+import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
+import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxCounters;
@@ -363,20 +363,20 @@ public class MailboxEventAnalyserTest {
             throw new UnsupportedOperationException("Not implemented");
         }
 
-        public boolean hasRight(MailboxPath mailboxPath, MailboxACLRight mailboxACLRight, MailboxSession mailboxSession) throws MailboxException {
+        public boolean hasRight(MailboxPath mailboxPath, Right mailboxACLRight, MailboxSession mailboxSession) throws MailboxException {
             throw new NotImplementedException("Not implemented");
         }
 
-        public MailboxACLRights myRights(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
+        public Rfc4314Rights myRights(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
             throw new NotImplementedException("Not implemented");
         }
 
-        public MailboxACLRights[] listRigths(MailboxPath mailboxPath, MailboxACLEntryKey mailboxACLEntryKey, MailboxSession mailboxSession) throws MailboxException {
+        public Rfc4314Rights[] listRigths(MailboxPath mailboxPath, EntryKey mailboxACLEntryKey, MailboxSession mailboxSession) throws MailboxException {
             throw new NotImplementedException("Not implemented");
         }
 
         public void setRights(MailboxPath mailboxPath,
-                MailboxACLCommand mailboxACLCommand, MailboxSession session)
+                              ACLCommand mailboxACLCommand, MailboxSession session)
                 throws MailboxException {
             throw new NotImplementedException("Not implemented");
         }

@@ -23,7 +23,7 @@ import java.util.Arrays;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
-import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
+import org.apache.james.mailbox.model.MailboxACL;
 
 /**
  * LISTRIGHTS Response.
@@ -34,9 +34,9 @@ public final class ListRightsResponse implements ImapResponseMessage {
 
     private final String identifier;
     private final String mailboxName;
-    private final MailboxACLRights[] rights;
+    private final MailboxACL.Rfc4314Rights[] rights;
 
-    public ListRightsResponse(String mailboxName, String identifier, MailboxACLRights[] rights) {
+    public ListRightsResponse(String mailboxName, String identifier, MailboxACL.Rfc4314Rights[] rights) {
         super();
         this.mailboxName = mailboxName;
         this.identifier = identifier;
@@ -60,7 +60,7 @@ public final class ListRightsResponse implements ImapResponseMessage {
         return mailboxName;
     }
 
-    public MailboxACLRights[] getRights() {
+    public MailboxACL.Rfc4314Rights[] getRights() {
         return rights;
     }
 
@@ -78,7 +78,7 @@ public final class ListRightsResponse implements ImapResponseMessage {
     public String toString() {
         StringBuilder result = new StringBuilder().append(ImapConstants.LISTRIGHTS_RESPONSE_NAME).append(' ').append(mailboxName).append(' ').append(identifier);
 
-        for (MailboxACLRights optionalRightsGroup : rights) {
+        for (MailboxACL.Rfc4314Rights optionalRightsGroup : rights) {
             result.append(' ').append(optionalRightsGroup.toString());
         }
 
