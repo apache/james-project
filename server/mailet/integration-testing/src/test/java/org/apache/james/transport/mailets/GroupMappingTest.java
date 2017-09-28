@@ -31,6 +31,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
+import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
@@ -39,6 +40,10 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
+import org.apache.james.transport.matchers.All;
+import org.apache.james.transport.matchers.RecipientIsLocal;
+import org.apache.james.transport.matchers.RelayLimit;
+import org.apache.james.transport.matchers.SMTPAuthSuccessful;
 import org.apache.james.util.streams.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
@@ -105,21 +110,22 @@ public class GroupMappingTest {
                 .state("root")
                 .enableJmx(true)
                 .addMailet(MailetConfiguration.builder()
-                    .match("All")
-                    .clazz("PostmasterAlias")
+                    .matcher(All.class)
+                    .mailet(PostmasterAlias.class)
                     .build())
                 .addMailet(MailetConfiguration.builder()
-                    .match("RelayLimit=30")
-                    .clazz("Null")
+                    .matcher(RelayLimit.class)
+                    .matcherCondition("30")
+                    .mailet(Null.class)
                     .build())
                 .addMailet(MailetConfiguration.builder()
-                    .match("SMTPAuthSuccessful")
-                    .clazz("ToProcessor")
+                    .matcher(SMTPAuthSuccessful.class)
+                    .mailet(ToProcessor.class)
                     .addProperty("processor", "transport")
                     .build())
                 .addMailet(MailetConfiguration.builder()
-                    .match("All")
-                    .clazz("ToProcessor")
+                    .matcher(All.class)
+                    .mailet(ToProcessor.class)
                     .addProperty("processor", "transport")
                     .build())
                 .build())
@@ -127,25 +133,25 @@ public class GroupMappingTest {
             .addProcessor(ProcessorConfiguration.transport()
                 .enableJmx(true)
                 .addMailet(MailetConfiguration.builder()
-                    .match("All")
-                    .clazz("RemoveMimeHeader")
+                    .matcher(All.class)
+                    .mailet(RemoveMimeHeader.class)
                     .addProperty("name", "bcc")
                     .build())
                 .addMailet(MailetConfiguration.builder()
-                    .match("All")
-                    .clazz("RecipientRewriteTable")
+                    .matcher(All.class)
+                    .mailet(RecipientRewriteTable.class)
                     .build())
                 .addMailet(MailetConfiguration.builder()
-                    .match("RecipientIsLocal")
-                    .clazz("org.apache.james.jmap.mailet.VacationMailet")
+                    .matcher(RecipientIsLocal.class)
+                    .mailet(VacationMailet.class)
                     .build())
                 .addMailet(MailetConfiguration.builder()
-                    .match("RecipientIsLocal")
-                    .clazz("LocalDelivery")
+                    .matcher(RecipientIsLocal.class)
+                    .mailet(LocalDelivery.class)
                     .build())
                 .addMailet(MailetConfiguration.builder()
-                    .match("All")
-                    .clazz("RemoteDelivery")
+                    .matcher(All.class)
+                    .mailet(RemoteDelivery.class)
                     .addProperty("outgoingQueue", "outgoing")
                     .addProperty("delayTime", "5000, 100000, 500000")
                     .addProperty("maxRetries", "25")

@@ -1724,6 +1724,11 @@
                 <version>${log4j.version}</version>
             </dependency>
             <dependency>
+                <groupId>net.javacrumbs.json-unit</groupId>
+                <artifactId>json-unit-fluent</artifactId>
+                <version>1.5.5</version>
+            </dependency>
+            <dependency>
                 <groupId>nl.jqno.equalsverifier</groupId>
                 <artifactId>equalsverifier</artifactId>
                 <version>1.7.6</version>

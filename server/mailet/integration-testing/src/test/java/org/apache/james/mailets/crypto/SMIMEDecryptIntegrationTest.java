@@ -25,17 +25,23 @@ import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
-import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.modules.MailboxProbeImpl;
+import org.apache.james.transport.mailets.LocalDelivery;
+import org.apache.james.transport.mailets.RemoveMimeHeader;
+import org.apache.james.transport.mailets.SMIMEDecrypt;
+import org.apache.james.transport.matchers.All;
+import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.util.date.ZonedDateTimeProvider;
-import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.SMTPMessageSender;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -75,25 +81,25 @@ public class SMIMEDecryptIntegrationTest {
                 .state("transport")
                 .enableJmx(true)
                 .addMailet(MailetConfiguration.builder()
-                    .match("All")
-                    .clazz("RemoveMimeHeader")
+                    .matcher(All.class)
+                    .mailet(RemoveMimeHeader.class)
                     .addProperty("name", "bcc")
                     .build())
                 .addMailet(MailetConfiguration.builder()
-                    .clazz("SMIMEDecrypt")
-                    .match("All")
+                    .mailet(SMIMEDecrypt.class)
+                    .matcher(All.class)
                     .addProperty("keyStoreFileName", temporaryFolder.getRoot().getAbsoluteFile().getAbsolutePath() + "/conf/smime.p12")
                     .addProperty("keyStorePassword", "secret")
                     .addProperty("keyStoreType", "PKCS12")
                     .addProperty("debug", "true")
                     .build())
                 .addMailet(MailetConfiguration.builder()
-                    .match("RecipientIsLocal")
-                    .clazz("org.apache.james.jmap.mailet.VacationMailet")
+                    .matcher(RecipientIsLocal.class)
+                    .mailet(VacationMailet.class)
                     .build())
                 .addMailet(MailetConfiguration.builder()
-                    .match("RecipientIsLocal")
-                    .clazz("LocalDelivery")
+                    .matcher(RecipientIsLocal.class)
+                    .mailet(LocalDelivery.class)
                     .build())
                 .build())
             .build();
