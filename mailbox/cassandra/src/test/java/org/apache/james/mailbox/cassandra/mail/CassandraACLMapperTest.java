@@ -68,22 +68,6 @@ public class CassandraACLMapperTest {
     }
 
     @Test
-    public void retrieveACLWhenPresentInBaseShouldReturnCorrespondingACL() throws Exception {
-        cassandra.getConf().execute(
-            insertInto(CassandraACLTable.TABLE_NAME)
-                .value(CassandraACLTable.ID, MAILBOX_ID.asUuid())
-                .value(CassandraACLTable.ACL, "{\"entries\":{\"bob\":64}}")
-                .value(CassandraACLTable.VERSION, 1));
-
-        assertThat(cassandraACLMapper.getACL(MAILBOX_ID).join())
-            .isEqualTo(
-                MailboxACL.EMPTY.union(
-                    new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false),
-                    new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read))
-            );
-    }
-
-    @Test
     public void retrieveACLWhenInvalidInBaseShouldReturnEmptyACL() throws Exception {
         cassandra.getConf().execute(
             insertInto(CassandraACLTable.TABLE_NAME)
