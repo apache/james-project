@@ -40,14 +40,16 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.ParseException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.PerRecipientHeaders.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
 
 /**
  * <p>
@@ -589,6 +591,7 @@ public class MailImpl implements Disposable, Mail {
 
     @Override
     public Serializable setAttribute(String key, Serializable object) {
+        Preconditions.checkNotNull(key, "Key of an attribute should not be null");
         return (Serializable) attributes.put(key, object);
     }
 

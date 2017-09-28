@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.server.core;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -111,5 +112,13 @@ public class MailImplTest extends MailTestAllImplementations {
         assertEquals("new name set", newName, duplicate.getName());
         helperTestInitialState(duplicate);
         helperTestMessageSize(duplicate, 0);
+    }
+
+    @Test
+    public void setAttributeShouldThrowOnNullAttributeName() throws MessagingException {
+        MailImpl mail = new MailImpl();
+
+        assertThatThrownBy(() -> mail.setAttribute(null, "toto"))
+            .isInstanceOf(NullPointerException.class);
     }
 }
