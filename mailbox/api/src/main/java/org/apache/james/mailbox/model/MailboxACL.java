@@ -317,11 +317,6 @@ public class MailboxACL {
             rightUnion.addAll(toAdd.value);
             return new Rfc4314Rights(rightUnion);
         }
-
-        private static Rfc4314Rights empty() {
-            return new Rfc4314Rights();
-        }
-
     }
 
     /**
@@ -575,7 +570,7 @@ public class MailboxACL {
     private static Map<EntryKey, Rfc4314Rights> toMap(Properties props) throws UnsupportedRightException {
         ImmutableMap.Builder<EntryKey, Rfc4314Rights> builder = ImmutableMap.builder();
         if (props != null) {
-            for (Map.Entry prop : props.entrySet()) {
+            for (Map.Entry<?, ?> prop : props.entrySet()) {
                 builder.put(EntryKey.deserialize((String) prop.getKey()), new Rfc4314Rights((String) prop.getValue()));
             }
         }
@@ -598,6 +593,7 @@ public class MailboxACL {
      * 
      * @param entries
      */
+    @SafeVarargs
     public MailboxACL(Map.Entry<EntryKey, Rfc4314Rights>... entries) {
         this(ImmutableMap.copyOf(
             Optional.ofNullable(entries)
