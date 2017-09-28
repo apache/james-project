@@ -73,7 +73,11 @@ public class LSubProcessor extends AbstractSubscriptionProcessor<LsubRequest> {
             basePath = PathConverter.forSession(session).buildFullPath(CharsetUtil.decodeModifiedUTF7(finalReferencename));
         }
 
-        final MailboxQuery expression = new MailboxQuery(basePath, CharsetUtil.decodeModifiedUTF7(mailboxName), mailboxSession.getPathDelimiter());
+        final MailboxQuery expression = MailboxQuery.builder()
+                .base(basePath)
+                .expression(CharsetUtil.decodeModifiedUTF7(mailboxName))
+                .pathDelimiter(mailboxSession.getPathDelimiter())
+                .build();
         final Collection<String> mailboxResponses = new ArrayList<>();
         for (String mailbox : mailboxes) {
             respond(responder, expression, mailbox, true, mailboxes, mailboxResponses, mailboxSession.getPathDelimiter());

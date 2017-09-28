@@ -241,7 +241,13 @@ public abstract class MailboxManagerTest {
         session = mailboxManager.createSystemSession(USER_1);
         mailboxManager.createMailbox(new MailboxPath("other_namespace", USER_1, "Other"), session);
         mailboxManager.createMailbox(MailboxPath.inbox(session), session);
-        List<MailboxMetaData> metaDatas = mailboxManager.search(new MailboxQuery(MailboxPath.forUser(USER_1, ""), "*", '.'), session);
+        List<MailboxMetaData> metaDatas = mailboxManager.search(
+                MailboxQuery.builder()
+                    .base(MailboxPath.forUser(USER_1, ""))
+                    .expression("*")
+                    .pathDelimiter('.')
+                    .build(), 
+                session);
         assertThat(metaDatas).hasSize(1);
         assertThat(metaDatas.get(0).getPath()).isEqualTo(MailboxPath.inbox(session));
     }
@@ -251,7 +257,13 @@ public abstract class MailboxManagerTest {
         session = mailboxManager.createSystemSession(USER_1);
         mailboxManager.createMailbox(MailboxPath.forUser(USER_2, "Other"), session);
         mailboxManager.createMailbox(MailboxPath.inbox(session), session);
-        List<MailboxMetaData> metaDatas = mailboxManager.search(new MailboxQuery(MailboxPath.forUser(USER_1, ""), "*", '.'), session);
+        List<MailboxMetaData> metaDatas = mailboxManager.search(
+                MailboxQuery.builder()
+                .base(MailboxPath.forUser(USER_1, ""))
+                .expression("*")
+                .pathDelimiter('.')
+                .build(), 
+            session);
         assertThat(metaDatas).hasSize(1);
         assertThat(metaDatas.get(0).getPath()).isEqualTo(MailboxPath.inbox(session));
     }

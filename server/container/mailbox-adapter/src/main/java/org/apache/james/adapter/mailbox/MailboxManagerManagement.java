@@ -213,9 +213,11 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
 
     private List<MailboxMetaData> retrieveAllUserMailboxes(String username, MailboxSession session) throws MailboxException {
         return mailboxManager.search(
-            new MailboxQuery(MailboxPath.forUser(username, ""),
-                "*",
-                session.getPathDelimiter()),
+            MailboxQuery.builder()
+                .base(MailboxPath.forUser(username, ""))
+                .expression("*")
+                .pathDelimiter(session.getPathDelimiter())
+                .build(),
             session);
     }
 

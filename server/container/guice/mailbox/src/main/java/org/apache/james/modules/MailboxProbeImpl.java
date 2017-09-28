@@ -123,9 +123,11 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
 
     private List<MailboxMetaData> searchUserMailboxes(String username, MailboxSession session) throws MailboxException {
         return mailboxManager.search(
-            new MailboxQuery(MailboxPath.forUser(username, ""),
-                "*",
-                session.getPathDelimiter()),
+            MailboxQuery.builder()
+                .base(MailboxPath.forUser(username, ""))
+                .expression("*")
+                .pathDelimiter(session.getPathDelimiter())
+                .build(),
             session);
     }
 

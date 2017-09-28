@@ -171,7 +171,13 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
                     basePath = PathConverter.forSession(session).buildFullPath(finalReferencename);
                 }
 
-                results = getMailboxManager().search(new MailboxQuery(basePath, CharsetUtil.decodeModifiedUTF7(mailboxName), mailboxSession.getPathDelimiter()), mailboxSession);
+                results = getMailboxManager().search(
+                        MailboxQuery.builder()
+                            .base(basePath)
+                            .expression(CharsetUtil.decodeModifiedUTF7(mailboxName))
+                            .pathDelimiter(mailboxSession.getPathDelimiter())
+                            .build()
+                        , mailboxSession);
             }
 
             for (MailboxMetaData metaData : results) {
