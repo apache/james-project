@@ -86,7 +86,7 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
                     break;
                 }
             }
-            Rfc4314Rights mailboxAclRights = new Rfc4314Rights(rights);
+            Rfc4314Rights mailboxAclRights = Rfc4314Rights.fromSerializedRfc4314Rights(rights);
 
             MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
             // Check that mailbox exists

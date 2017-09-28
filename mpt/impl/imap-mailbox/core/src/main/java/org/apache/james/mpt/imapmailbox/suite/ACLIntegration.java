@@ -60,42 +60,42 @@ public abstract class ACLIntegration implements ImapTestConstants {
     @Test
     public void rightRShouldBeSufficientToPerformStatusSelectCloseExamineUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("r"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("r"))
             .run("aclIntegration/ACLIntegrationRightR");
     }
 
     @Test
     public void rightRShouldBeNeededToPerformStatusSelectCloseExamineUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("lswipkxtecda"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("lswipkxtecda"))
             .run("aclIntegration/ACLIntegrationWithoutRightR");
     }
 
     @Test
     public void rightLShouldBeSufficientToPerformListUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("l"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("l"))
             .run("aclIntegration/ACLIntegrationRightL");
     }
 
     @Test
     public void rightLShouldBeNeededToPerformListLsubSubscribeUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("rswipkxtecda"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rswipkxtecda"))
             .run("aclIntegration/ACLIntegrationWithoutRightL");
     }
 
     @Test
     public void rightAShouldBeSufficientToManageACLUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("a"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("a"))
             .run("aclIntegration/ACLIntegrationRightA");
     }
 
     @Test
     public void rightAShouldBeNeededToManageACLUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("rswipkxtecdl"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rswipkxtecdl"))
             .run("aclIntegration/ACLIntegrationWithoutRightA");
     }
 
@@ -103,7 +103,7 @@ public abstract class ACLIntegration implements ImapTestConstants {
     public void rightXOnOriginShouldBeSufficientToRenameAMailboxUS() throws Exception {
         scriptedTestProtocol
             .withMailbox(new MailboxPath("#private","Boby","test"))
-            .withGrantRights(new MailboxPath("#private", OTHER_USER_NAME, "test"), USER, new MailboxACL.Rfc4314Rights("x"))
+            .withGrantRights(new MailboxPath("#private", OTHER_USER_NAME, "test"), USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("x"))
             .run("aclIntegration/ACLIntegrationRightX");
     }
 
@@ -111,7 +111,7 @@ public abstract class ACLIntegration implements ImapTestConstants {
     public void rightXOnOriginShouldBeNeededToRenameAMailboxUS() throws Exception {
         scriptedTestProtocol
             .withMailbox(new MailboxPath("#private","Boby","test"))
-            .withGrantRights(new MailboxPath("#private", OTHER_USER_NAME, "test"), USER, new MailboxACL.Rfc4314Rights("rswipktela"))
+            .withGrantRights(new MailboxPath("#private", OTHER_USER_NAME, "test"), USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rswipktela"))
             .run("aclIntegration/ACLIntegrationWithoutRightX");
     }
 
@@ -120,8 +120,8 @@ public abstract class ACLIntegration implements ImapTestConstants {
         MailboxPath newMailbox = new MailboxPath("#private", USER, "test");
         scriptedTestProtocol
             .withMailbox(newMailbox)
-            .withGrantRights(newMailbox, USER, new MailboxACL.Rfc4314Rights("x"))
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("k"))
+            .withGrantRights(newMailbox, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("x"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("k"))
             .run("aclIntegration/ACLIntegrationRightK");
     }
 
@@ -130,64 +130,64 @@ public abstract class ACLIntegration implements ImapTestConstants {
         MailboxPath newMailbox = new MailboxPath("#private", USER, "test");
         scriptedTestProtocol
             .withMailbox(newMailbox)
-            .withGrantRights(newMailbox, USER, new MailboxACL.Rfc4314Rights("x"))
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("rswipxtela"))
+            .withGrantRights(newMailbox, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("x"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rswipxtela"))
             .run("aclIntegration/ACLIntegrationWithoutRightK");
     }
 
     @Test
     public void rightREShouldBeSufficientToPerformExpungeUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("re"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("re"))
             .run("aclIntegration/ACLIntegrationRightRE");
     }
 
     @Test
     public void rightEShouldBeNeededToPerformExpungeUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("rswipxtclak"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rswipxtclak"))
             .run("aclIntegration/ACLIntegrationWithoutRightE");
     }
 
     @Test
     public void rightIShouldBeSufficientToPerformAppendUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("ri"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("ri"))
             .run("aclIntegration/ACLIntegrationRightI");
     }
 
     @Test
     public void rightIShouldBeNeededToPerformAppendUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("rswepxtcdlak"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rswepxtcdlak"))
             .run("aclIntegration/ACLIntegrationWithoutRightI");
     }
 
     @Test
     public void rightISShouldBeSufficientToPerformAppendOfSeenMessageUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("ris"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("ris"))
             .run("aclIntegration/ACLIntegrationRightIS");
     }
 
     @Test
     public void rightITShouldBeSufficientToPerformAppendOfDeletedMessageUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("rit"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rit"))
             .run("aclIntegration/ACLIntegrationRightIT");
     }
 
     @Test
     public void rightIWShouldBeSufficientToPerformAppendOfDeletedMessageUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("riw"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("riw"))
             .run("aclIntegration/ACLIntegrationRightIW");
     }
 
     @Test
     public void rightRSShouldBeSufficientToPerformStoreAndFetchOnSeenMessageUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("rs"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rs"))
             .withFilledMailbox(OTHER_USER_MAILBOX)
             .run("aclIntegration/ACLIntegrationRightRS");
     }
@@ -195,7 +195,7 @@ public abstract class ACLIntegration implements ImapTestConstants {
     @Test
     public void rightSShouldBeNeededToPerformStoreAndFetchOnSeenMessageUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("rwipxtcdlake"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rwipxtcdlake"))
             .withFilledMailbox(OTHER_USER_MAILBOX)
             .run("aclIntegration/ACLIntegrationWithoutRightS");
     }
@@ -203,7 +203,7 @@ public abstract class ACLIntegration implements ImapTestConstants {
     @Test
     public void rightRWShouldBeSufficientToPerformStoreOnFlaggedMessageUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("rw"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rw"))
             .withFilledMailbox(OTHER_USER_MAILBOX)
             .run("aclIntegration/ACLIntegrationRightRW");
     }
@@ -211,7 +211,7 @@ public abstract class ACLIntegration implements ImapTestConstants {
     @Test
     public void rightWShouldBeNeededToPerformStoreOnFlaggedMessageUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("rsipxtcdlake"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rsipxtcdlake"))
             .withFilledMailbox(OTHER_USER_MAILBOX)
             .run("aclIntegration/ACLIntegrationWithoutRightW");
     }
@@ -219,7 +219,7 @@ public abstract class ACLIntegration implements ImapTestConstants {
     @Test
     public void rightRTShouldBeSufficientToPerformStoreOnDeletedMessageUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("rt"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rt"))
             .withFilledMailbox(OTHER_USER_MAILBOX)
             .run("aclIntegration/ACLIntegrationRightRT");
     }
@@ -227,7 +227,7 @@ public abstract class ACLIntegration implements ImapTestConstants {
     @Test
     public void rightTShouldBeNeededToPerformStoreOnFlaggedMessageUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("rwipxslake"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rwipxslake"))
             .withFilledMailbox(OTHER_USER_MAILBOX)
             .run("aclIntegration/ACLIntegrationWithoutRightT");
     }
@@ -235,7 +235,7 @@ public abstract class ACLIntegration implements ImapTestConstants {
     @Test
     public void rightIShouldBeSufficientToPerformCopyUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("i"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("i"))
             .withFilledMailbox(MY_INBOX)
             .run("aclIntegration/ACLIntegrationCopyI");
     }
@@ -243,7 +243,7 @@ public abstract class ACLIntegration implements ImapTestConstants {
     @Test
     public void rightIShouldBeNeededToPerformCopyUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("rswpxtcdlake"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rswpxtcdlake"))
             .withFilledMailbox(MY_INBOX)
             .run("aclIntegration/ACLIntegrationCopyWithoutI");
     }
@@ -251,7 +251,7 @@ public abstract class ACLIntegration implements ImapTestConstants {
     @Test
     public void rightIShouldBeSufficientToPerformOfSeenMessagesCopyUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("ris"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("ris"))
             .withFilledMailbox(MY_INBOX)
             .run("aclIntegration/ACLIntegrationCopyIS");
     }
@@ -259,7 +259,7 @@ public abstract class ACLIntegration implements ImapTestConstants {
     @Test
     public void rightSShouldBeNeededToPerformCopyOfSeenMessageUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("riwpxtcdlake"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("riwpxtcdlake"))
             .withFilledMailbox(MY_INBOX)
             .run("aclIntegration/ACLIntegrationCopyWithoutS");
     }
@@ -267,7 +267,7 @@ public abstract class ACLIntegration implements ImapTestConstants {
     @Test
     public void rightIWShouldBeSufficientToPerformOfFlaggedMessagesCopyUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("riw"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("riw"))
             .withFilledMailbox(MY_INBOX)
             .run("aclIntegration/ACLIntegrationCopyIW");
     }
@@ -275,7 +275,7 @@ public abstract class ACLIntegration implements ImapTestConstants {
     @Test
     public void rightWShouldBeNeededToPerformCopyOfFlaggedMessageUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("rispxtcdlake"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rispxtcdlake"))
             .withFilledMailbox(MY_INBOX)
             .run("aclIntegration/ACLIntegrationCopyWithoutW");
     }
@@ -283,7 +283,7 @@ public abstract class ACLIntegration implements ImapTestConstants {
     @Test
     public void rightITShouldBeSufficientToPerformOfDeletedMessagesCopyUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("rit"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rit"))
             .withFilledMailbox(MY_INBOX)
             .run("aclIntegration/ACLIntegrationCopyIT");
     }
@@ -291,7 +291,7 @@ public abstract class ACLIntegration implements ImapTestConstants {
     @Test
     public void rightTShouldBeNeededToPerformCopyOfDeletedMessageUS() throws Exception {
         scriptedTestProtocol
-            .withGrantRights(OTHER_USER_MAILBOX, USER, new MailboxACL.Rfc4314Rights("rispxwlake"))
+            .withGrantRights(OTHER_USER_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rispxwlake"))
             .withFilledMailbox(MY_INBOX)
             .run("aclIntegration/ACLIntegrationCopyWithoutT");
     }

@@ -97,7 +97,7 @@ public class MailboxACLTest {
     public void testUnionACLExisting() throws UnsupportedRightException {
 
         Map<EntryKey, Rfc4314Rights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
-        expectedEntries.put(EntryKey.deserialize(USER_1), new Rfc4314Rights(aeik + lprs));
+        expectedEntries.put(EntryKey.deserialize(USER_1), Rfc4314Rights.fromSerializedRfc4314Rights(aeik + lprs));
 
         MailboxACL toAdd = new MailboxACL(new Entry(USER_1, lprs));
         MailboxACL result = u1u2g1g2ACL.union(toAdd);
@@ -111,9 +111,9 @@ public class MailboxACLTest {
     public void testUnionEntryExisting() throws UnsupportedRightException {
 
         Map<EntryKey, Rfc4314Rights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
-        expectedEntries.put(EntryKey.deserialize(USER_1), new Rfc4314Rights(aeik + lprs));
+        expectedEntries.put(EntryKey.deserialize(USER_1), Rfc4314Rights.fromSerializedRfc4314Rights(aeik + lprs));
 
-        MailboxACL result = u1u2g1g2ACL.union(EntryKey.deserialize(USER_1), new Rfc4314Rights(lprs));
+        MailboxACL result = u1u2g1g2ACL.union(EntryKey.deserialize(USER_1), Rfc4314Rights.fromSerializedRfc4314Rights(lprs));
 
         Map<EntryKey, Rfc4314Rights> foundEntries = result.getEntries();
 
@@ -161,7 +161,7 @@ public class MailboxACLTest {
     public void testExceptACLExisting() throws UnsupportedRightException {
 
         Map<EntryKey, Rfc4314Rights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
-        expectedEntries.put(EntryKey.deserialize(USER_1), new Rfc4314Rights(ik));
+        expectedEntries.put(EntryKey.deserialize(USER_1), Rfc4314Rights.fromSerializedRfc4314Rights(ik));
 
         MailboxACL toRemove = new MailboxACL(new Entry(USER_1, ae));
         MailboxACL result = u1u2g1g2ACL.except(toRemove);
@@ -175,9 +175,9 @@ public class MailboxACLTest {
     public void testExceptEntryExisting() throws UnsupportedRightException {
 
         Map<EntryKey, Rfc4314Rights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
-        expectedEntries.put(EntryKey.deserialize(USER_1), new Rfc4314Rights(ik));
+        expectedEntries.put(EntryKey.deserialize(USER_1), Rfc4314Rights.fromSerializedRfc4314Rights(ik));
 
-        MailboxACL result = u1u2g1g2ACL.except(EntryKey.deserialize(USER_1), new Rfc4314Rights(ae));
+        MailboxACL result = u1u2g1g2ACL.except(EntryKey.deserialize(USER_1), Rfc4314Rights.fromSerializedRfc4314Rights(ae));
 
         Map<EntryKey, Rfc4314Rights> foundEntries = result.getEntries();
 

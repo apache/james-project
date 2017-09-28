@@ -171,30 +171,32 @@ public class MailboxACL {
 
         private final EnumSet<Right> value;
 
-        private Rfc4314Rights(EnumSet<Right> rights) {
+        private Rfc4314Rights(Collection<Right> rights) {
             this.value = copyOf(rights);
-        }
-
-        private Rfc4314Rights() {
-            this(EnumSet.noneOf(Right.class));
         }
 
         public Rfc4314Rights(Right... rights) {
             this(copyOf(Arrays.asList(rights)));
         }
 
-        public Rfc4314Rights(Right right) throws UnsupportedRightException {
-            this.value = EnumSet.of(Right.forChar(right.asCharacter()));
+        // JSON Deserialization
+        @SuppressWarnings("unused")
+        private Rfc4314Rights(String serializedRfc4314Rights) throws UnsupportedRightException {
+            this(rightListFromSerializedRfc4314Rights(serializedRfc4314Rights));
         }
 
-        public Rfc4314Rights(String serializedRfc4314Rights) throws UnsupportedRightException {
-            this.value = copyOf(serializedRfc4314Rights.chars()
+        public static Rfc4314Rights fromSerializedRfc4314Rights(String serializedRfc4314Rights) throws UnsupportedRightException {
+            return new Rfc4314Rights(rightListFromSerializedRfc4314Rights(serializedRfc4314Rights));
+        }
+
+        private static List<Right> rightListFromSerializedRfc4314Rights(String serializedRfc4314Rights) throws UnsupportedRightException {
+            return serializedRfc4314Rights.chars()
                 .mapToObj(i -> (char) i)
-                .flatMap(Throwing.function(this::convert).sneakyThrow())
-                .collect(Collectors.toList()));
+                .flatMap(Throwing.function(Rfc4314Rights::convert).sneakyThrow())
+                .collect(Collectors.toList());
         }
 
-        private Stream<Right> convert(char flag) throws UnsupportedRightException {
+        private static Stream<Right> convert(char flag) throws UnsupportedRightException {
             switch (flag) {
             case c_ObsoleteCreate:
                 return Stream.of(Right.CreateMailbox, Right.DeleteMailbox);
@@ -214,8 +216,8 @@ public class MailboxACL {
             return contains(Right.forChar(flag));
         }
 
-        public boolean contains(Right right) throws UnsupportedRightException {
-            return value.contains(Right.forChar(right.asCharacter()));
+        public boolean contains(Right right) {
+            return value.contains(right);
         }
 
         public boolean equals(Object o) {
@@ -329,7 +331,7 @@ public class MailboxACL {
         }
 
         public Entry(String key, String value) throws UnsupportedRightException {
-            this(EntryKey.deserialize(key), new Rfc4314Rights(value));
+            this(EntryKey.deserialize(key), Rfc4314Rights.fromSerializedRfc4314Rights(value));
         }
     }
 
@@ -571,7 +573,7 @@ public class MailboxACL {
         ImmutableMap.Builder<EntryKey, Rfc4314Rights> builder = ImmutableMap.builder();
         if (props != null) {
             for (Map.Entry<?, ?> prop : props.entrySet()) {
-                builder.put(EntryKey.deserialize((String) prop.getKey()), new Rfc4314Rights((String) prop.getValue()));
+                builder.put(EntryKey.deserialize((String) prop.getKey()), Rfc4314Rights.fromSerializedRfc4314Rights((String) prop.getValue()));
             }
         }
         return builder.build();

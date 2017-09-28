@@ -52,21 +52,21 @@ public class Rfc4314RightsTest {
     
     @Before
     public void setUp() throws Exception {
-        aeik = new Rfc4314Rights("aeik");
-        lprs = new Rfc4314Rights("lprs");
-        twx = new Rfc4314Rights("twx");
+        aeik = Rfc4314Rights.fromSerializedRfc4314Rights("aeik");
+        lprs = Rfc4314Rights.fromSerializedRfc4314Rights("lprs");
+        twx = Rfc4314Rights.fromSerializedRfc4314Rights("twx");
         full = MailboxACL.FULL_RIGHTS;
         none = MailboxACL.NO_RIGHTS;
     }
     
     @Test(expected=NullPointerException.class)
     public void newInstanceShouldThrowWhenNullString() throws UnsupportedRightException {
-        new Rfc4314Rights((String) null);
+        Rfc4314Rights.fromSerializedRfc4314Rights((String) null);
     }
     
     @Test
     public void newInstanceShouldHaveNoRightsWhenEmptyString() throws UnsupportedRightException {
-        Rfc4314Rights rights = new Rfc4314Rights("");
+        Rfc4314Rights rights = Rfc4314Rights.fromSerializedRfc4314Rights("");
         assertThat(rights.list()).isEmpty();
     }
     
@@ -97,7 +97,7 @@ public class Rfc4314RightsTest {
 
     @Test
     public void rfc4314RightsShouldThrowWhenUnknownFlag() throws UnsupportedRightException {
-        assertThatThrownBy(() -> new Rfc4314Rights("z"))
+        assertThatThrownBy(() -> Rfc4314Rights.fromSerializedRfc4314Rights("z"))
             .isInstanceOf(UnsupportedRightException.class);
     }
     
@@ -170,7 +170,7 @@ public class Rfc4314RightsTest {
 
     @Test
     public void getValueShouldReturnEmptyWhenNone() throws UnsupportedRightException {
-        assertThat(new Rfc4314Rights("").list()).isEmpty();
+        assertThat(Rfc4314Rights.fromSerializedRfc4314Rights("").list()).isEmpty();
     }
 
     @Test

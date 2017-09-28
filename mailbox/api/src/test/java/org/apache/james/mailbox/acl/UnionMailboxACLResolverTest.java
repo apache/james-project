@@ -71,7 +71,7 @@ public class UnionMailboxACLResolverTest {
 
         MailboxACL acl = new MailboxACL(new Entry(MailboxACL.AUTHENTICATED_KEY, MailboxACL.FULL_RIGHTS));
         authenticatedReadListWriteGlobal = new UnionMailboxACLResolver(acl, acl);
-        acl = new MailboxACL(new Entry(MailboxACL.ANYBODY_KEY, new Rfc4314Rights("rl")));
+        acl = new MailboxACL(new Entry(MailboxACL.ANYBODY_KEY, Rfc4314Rights.fromSerializedRfc4314Rights("rl")));
         anyoneReadListGlobal = new UnionMailboxACLResolver(acl, acl);
         acl = new MailboxACL(new Entry(MailboxACL.OWNER_KEY, MailboxACL.FULL_RIGHTS));
         ownerFullGlobal = new UnionMailboxACLResolver(acl, acl);
@@ -83,20 +83,20 @@ public class UnionMailboxACLResolverTest {
         groupMembershipResolver.addMembership(GROUP_1, USER_1);
         groupMembershipResolver.addMembership(GROUP_2, USER_2);
 
-        user1Read = new MailboxACL(new Entry(user1Key, new Rfc4314Rights("r")));
-        user1ReadNegative = new MailboxACL(new Entry(EntryKey.createUser(USER_1, true), new Rfc4314Rights("r")));
+        user1Read = new MailboxACL(new Entry(user1Key, Rfc4314Rights.fromSerializedRfc4314Rights("r")));
+        user1ReadNegative = new MailboxACL(new Entry(EntryKey.createUser(USER_1, true), Rfc4314Rights.fromSerializedRfc4314Rights("r")));
 
-        group1Read = new MailboxACL(new Entry(group1Key, new Rfc4314Rights("r")));
-        group1ReadNegative = new MailboxACL(new Entry(EntryKey.createGroup(GROUP_1, true), new Rfc4314Rights("r")));
+        group1Read = new MailboxACL(new Entry(group1Key, Rfc4314Rights.fromSerializedRfc4314Rights("r")));
+        group1ReadNegative = new MailboxACL(new Entry(EntryKey.createGroup(GROUP_1, true), Rfc4314Rights.fromSerializedRfc4314Rights("r")));
 
-        anybodyRead = new MailboxACL(new Entry(MailboxACL.ANYBODY_KEY, new Rfc4314Rights("r")));
-        anybodyReadNegative = new MailboxACL(new Entry(MailboxACL.ANYBODY_NEGATIVE_KEY, new Rfc4314Rights("r")));
+        anybodyRead = new MailboxACL(new Entry(MailboxACL.ANYBODY_KEY, Rfc4314Rights.fromSerializedRfc4314Rights("r")));
+        anybodyReadNegative = new MailboxACL(new Entry(MailboxACL.ANYBODY_NEGATIVE_KEY, Rfc4314Rights.fromSerializedRfc4314Rights("r")));
 
-        authenticatedRead = new MailboxACL(new Entry(MailboxACL.AUTHENTICATED_KEY, new Rfc4314Rights("r")));
-        authenticatedReadNegative = new MailboxACL(new Entry(MailboxACL.AUTHENTICATED_NEGATIVE_KEY, new Rfc4314Rights("r")));
+        authenticatedRead = new MailboxACL(new Entry(MailboxACL.AUTHENTICATED_KEY, Rfc4314Rights.fromSerializedRfc4314Rights("r")));
+        authenticatedReadNegative = new MailboxACL(new Entry(MailboxACL.AUTHENTICATED_NEGATIVE_KEY, Rfc4314Rights.fromSerializedRfc4314Rights("r")));
 
-        ownerRead = new MailboxACL(new Entry(MailboxACL.OWNER_KEY, new Rfc4314Rights("r")));
-        ownerReadNegative = new MailboxACL(new Entry(MailboxACL.OWNER_NEGATIVE_KEY, new Rfc4314Rights("r")));
+        ownerRead = new MailboxACL(new Entry(MailboxACL.OWNER_KEY, Rfc4314Rights.fromSerializedRfc4314Rights("r")));
+        ownerReadNegative = new MailboxACL(new Entry(MailboxACL.OWNER_NEGATIVE_KEY, Rfc4314Rights.fromSerializedRfc4314Rights("r")));
 
     }
 

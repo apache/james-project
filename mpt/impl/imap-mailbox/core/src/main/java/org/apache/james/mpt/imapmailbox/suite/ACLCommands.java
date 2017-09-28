@@ -53,7 +53,7 @@ public abstract class ACLCommands implements ImapTestConstants {
         scriptedTestProtocol = new ACLScriptedTestProtocol(grantRightsOnHost, appender, "/org/apache/james/imap/scripts/", system)
                 .withUser(USER, PASSWORD)
                 .withLocale(Locale.US);
-        readWriteSeenRight = new MailboxACL.Rfc4314Rights("rsw");
+        readWriteSeenRight = MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rsw");
     }
 
     @Test
