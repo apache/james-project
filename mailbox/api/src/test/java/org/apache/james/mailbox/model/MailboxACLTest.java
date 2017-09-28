@@ -90,9 +90,7 @@ public class MailboxACLTest {
 
         Map<EntryKey, Rfc4314Rights> foundEntries = result.getEntries();
 
-        assertThat(foundEntries)
-            .hasSize(expectedEntries.size())
-            .containsAllEntriesOf(expectedEntries);
+        assertThat(foundEntries).isEqualTo(expectedEntries);
     }
 
     @Test
@@ -170,9 +168,7 @@ public class MailboxACLTest {
 
         Map<EntryKey, Rfc4314Rights> foundEntries = result.getEntries();
 
-        assertThat(foundEntries)
-            .hasSize(expectedEntries.size())
-            .containsAllEntriesOf(expectedEntries);
+        assertThat(foundEntries).isEqualTo(expectedEntries);
     }
 
     @Test
@@ -185,9 +181,7 @@ public class MailboxACLTest {
 
         Map<EntryKey, Rfc4314Rights> foundEntries = result.getEntries();
 
-        assertThat(foundEntries)
-            .hasSize(expectedEntries.size())
-            .containsAllEntriesOf(expectedEntries);
+        assertThat(foundEntries).isEqualTo(expectedEntries);
     }
 
     @Test
@@ -201,9 +195,7 @@ public class MailboxACLTest {
 
         Map<EntryKey, Rfc4314Rights> foundEntries = result.getEntries();
 
-        assertThat(foundEntries)
-            .hasSize(expectedEntries.size())
-            .containsAllEntriesOf(expectedEntries);
+        assertThat(foundEntries).isEqualTo(expectedEntries);
     }
 
     @Test
@@ -216,14 +208,19 @@ public class MailboxACLTest {
 
         Map<EntryKey, Rfc4314Rights> foundEntries = result.getEntries();
 
-        assertThat(foundEntries)
-            .hasSize(expectedEntries.size())
-            .containsAllEntriesOf(expectedEntries);
+        assertThat(foundEntries).isEqualTo(expectedEntries);
     }
 
     @Test
     public void propertiesConstructorShouldAcceptNullValues() throws Exception {
         assertThat(new MailboxACL((Properties) null))
+            .isEqualTo(MailboxACL.EMPTY);
+    }
+
+    @Test
+    public void applyShouldNotThrowWhenRemovingANonExistingEntry() throws Exception{
+        assertThat(MailboxACL.EMPTY
+            .apply(new MailboxACL.ACLCommand(EntryKey.createUser("bob"), MailboxACL.EditMode.REPLACE, null)))
             .isEqualTo(MailboxACL.EMPTY);
     }
 

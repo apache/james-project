@@ -740,11 +740,13 @@ public class MailboxACL {
                     .filter(pair -> pair.getValue() != null && !pair.getValue().isEmpty())
                     .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue)));
         } else {
-            return new MailboxACL(
-                ImmutableMap.<EntryKey, Rfc4314Rights>builder()
-                    .putAll(entries)
-                    .put(key, replacement)
-                    .build());
+            return Optional.ofNullable(replacement)
+                .map(replacementValue ->  new MailboxACL(
+                    ImmutableMap.<EntryKey, Rfc4314Rights>builder()
+                        .putAll(entries)
+                        .put(key, replacementValue)
+                        .build()))
+                .orElse(this);
         }
     }
 
