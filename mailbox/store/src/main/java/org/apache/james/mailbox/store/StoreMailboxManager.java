@@ -589,49 +589,46 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public void renameMailbox(final MailboxPath from, final MailboxPath to, final MailboxSession session) throws MailboxException {
-        final Logger log = LOGGER;
-        if (log.isDebugEnabled())
-            log.debug("renameMailbox " + from + " to " + to);
+    public void renameMailbox(MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException {
+        LOGGER.debug("renameMailbox " + from + " to " + to);
         if (mailboxExists(to, session)) {
             throw new MailboxExistsException(to.toString());
         }
 
-        final MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        mapper.execute(Mapper.toTransaction(() -> {
-            // TODO put this into a serilizable transaction
-            final Mailbox mailbox = mapper.findMailboxByPath(from);
-            if (mailbox == null) {
-                throw new MailboxNotFoundException(from);
-            }
-            mailbox.setNamespace(to.getNamespace());
-            mailbox.setUser(to.getUser());
-            mailbox.setName(to.getName());
-            mapper.save(mailbox);
-
-            dispatcher.mailboxRenamed(session, from, mailbox);
-
-            // rename submailboxes
-            final MailboxPath children = new MailboxPath(MailboxConstants.USER_NAMESPACE, from.getUser(), from.getName() + getDelimiter() + "%");
-            locker.executeWithLock(session, children, (LockAwareExecution<Void>) () -> {
-                final List<Mailbox> subMailboxes = mapper.findMailboxWithPathLike(children);
-                for (Mailbox sub : subMailboxes) {
-                    final String subOriginalName = sub.getName();
-                    final String subNewName = to.getName() + subOriginalName.substring(from.getName().length());
-                    final MailboxPath fromPath = new MailboxPath(children, subOriginalName);
-                    sub.setName(subNewName);
-                    mapper.save(sub);
-                    dispatcher.mailboxRenamed(session, fromPath, sub);
-
-                    if (log.isDebugEnabled())
-                        log.debug("Rename mailbox sub-mailbox " + subOriginalName + " to " + subNewName);
-                }
-                return null;
-
-            }, true);
-        }));
+        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        mapper.execute(Mapper.toTransaction(() -> doRenameMailbox(from, to, session, mapper)));
     }
 
+    private void doRenameMailbox(MailboxPath from, MailboxPath to, MailboxSession session, MailboxMapper mapper) throws MailboxException {
+        // TODO put this into a serilizable transaction
+        Mailbox mailbox = Optional.ofNullable(mapper.findMailboxByPath(from))
+            .orElseThrow(() -> new MailboxNotFoundException(from));
+
+        mailbox.setNamespace(to.getNamespace());
+        mailbox.setUser(to.getUser());
+        mailbox.setName(to.getName());
+        mapper.save(mailbox);
+
+        dispatcher.mailboxRenamed(session, from, mailbox);
+
+        // rename submailboxes
+        MailboxPath children = new MailboxPath(MailboxConstants.USER_NAMESPACE, from.getUser(), from.getName() + getDelimiter() + "%");
+        locker.executeWithLock(session, children, (LockAwareExecution<Void>) () -> {
+            List<Mailbox> subMailboxes = mapper.findMailboxWithPathLike(children);
+            for (Mailbox sub : subMailboxes) {
+                String subOriginalName = sub.getName();
+                String subNewName = to.getName() + subOriginalName.substring(from.getName().length());
+                MailboxPath fromPath = new MailboxPath(children, subOriginalName);
+                sub.setName(subNewName);
+                mapper.save(sub);
+                dispatcher.mailboxRenamed(session, fromPath, sub);
+
+                LOGGER.debug("Rename mailbox sub-mailbox " + subOriginalName + " to " + subNewName);
+            }
+            return null;
+
+        }, true);
+    }
 
     @Override
     public List<MessageRange> copyMessages(MessageRange set, MailboxPath from, MailboxPath to, final MailboxSession session) throws MailboxException {
