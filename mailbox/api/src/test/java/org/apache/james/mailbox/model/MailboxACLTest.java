@@ -30,9 +30,13 @@ import java.util.Properties;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL.Entry;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
+import org.apache.james.mailbox.model.MailboxACL.NameType;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
+import org.assertj.core.data.MapEntry;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * @author Peter Palaga
@@ -41,6 +45,7 @@ public class MailboxACLTest {
 
     private static final String USER_1 = "user1";
     private static final String USER_2 = "user2";
+    private static final boolean NEGATIVE = true;
 
     private static final String ae = "ae";
     private static final String ik = "ik";
@@ -224,4 +229,40 @@ public class MailboxACLTest {
             .isEqualTo(MailboxACL.EMPTY);
     }
 
+    @Test
+    public void usersACLShouldReturnEmptyMapWhenEmpty() {
+        assertThat(MailboxACL.EMPTY.ofPositiveNameType(NameType.user))
+            .isEmpty();
+    }
+
+    @Test
+    public void usersACLShouldReturnEmptyMapWhenNoUserEntry() {
+        MailboxACL mailboxACL = new MailboxACL(
+                ImmutableMap.of(EntryKey.createGroupEntryKey("group"), MailboxACL.FULL_RIGHTS,
+                    EntryKey.createGroupEntryKey("group2"), MailboxACL.NO_RIGHTS));
+        assertThat(mailboxACL.ofPositiveNameType(NameType.user))
+            .isEmpty();
+    }
+
+    @Test
+    public void usersACLShouldReturnOnlyUsersMapWhenSomeUserEntries() throws Exception {
+        MailboxACL.Rfc4314Rights rights = MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("aei");
+        MailboxACL mailboxACL = new MailboxACL(
+            ImmutableMap.of(EntryKey.createUserEntryKey("user1"), MailboxACL.FULL_RIGHTS,
+                EntryKey.createGroupEntryKey("group"), MailboxACL.FULL_RIGHTS,
+                EntryKey.createUserEntryKey("user2"), rights,
+                EntryKey.createGroupEntryKey("group2"), MailboxACL.NO_RIGHTS));
+        assertThat(mailboxACL.ofPositiveNameType(NameType.user))
+            .containsOnly(
+                MapEntry.entry(EntryKey.createUserEntryKey("user1"), MailboxACL.FULL_RIGHTS),
+                MapEntry.entry(EntryKey.createUserEntryKey("user2"), rights));
+    }
+
+    @Test
+    public void ofPositiveNameTypeShouldFilterOutNegativeEntries() throws Exception {
+        MailboxACL mailboxACL = new MailboxACL(
+            ImmutableMap.of(EntryKey.createUserEntryKey("user1", NEGATIVE), MailboxACL.FULL_RIGHTS));
+        assertThat(mailboxACL.ofPositiveNameType(NameType.user))
+            .isEmpty();
+    }
 }

@@ -878,4 +878,10 @@ public class MailboxACL {
         return union(new MailboxACL(new Entry(key, mailboxACLRights)));
     }
 
+    public Map<EntryKey, Rfc4314Rights> ofPositiveNameType(NameType nameType) {
+        return this.entries.entrySet().stream()
+            .filter(entry -> !entry.getKey().isNegative())
+            .filter(entry -> entry.getKey().getNameType().equals(nameType))
+            .collect(Guavate.entriesToMap());
+    }
 }
