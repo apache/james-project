@@ -73,6 +73,66 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
+    public void convertToMimeShouldGenerateMessageId() {
+        // Given
+        MIMEMessageConverter sut = new MIMEMessageConverter();
+
+        CreationMessage message = CreationMessage.builder()
+                .mailboxIds(ImmutableList.of("dead-beef-1337"))
+                .subject("subject")
+                .build();
+
+        // When
+        Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
+                CreationMessageId.of("user|mailbox|1"), message), ImmutableList.of());
+
+        // Then
+        assertThat(result.getHeader().getFields("Message-ID")).extracting(Field::getBody)
+                .isNotNull();
+    }
+
+    @Test
+    public void convertToMimeShouldGenerateMessageIdWhenSenderWithoutDomain() {
+        // Given
+        MIMEMessageConverter sut = new MIMEMessageConverter();
+
+        CreationMessage message = CreationMessage.builder()
+                .from(DraftEmailer.builder().email("sender").build())
+                .mailboxIds(ImmutableList.of("dead-beef-1337"))
+                .subject("subject")
+                .build();
+
+        // When
+        Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
+                CreationMessageId.of("user|mailbox|1"), message), ImmutableList.of());
+
+        // Then
+        assertThat(result.getHeader().getFields("Message-ID")).extracting(Field::getBody)
+                .isNotNull();
+    }
+
+    @Test
+    public void convertToMimeShouldGenerateMessageIdContainingSenderDomain() {
+        // Given
+        MIMEMessageConverter sut = new MIMEMessageConverter();
+
+        CreationMessage message = CreationMessage.builder()
+                .from(DraftEmailer.builder().email("email@domain.com").build())
+                .mailboxIds(ImmutableList.of("dead-beef-1337"))
+                .subject("subject")
+                .build();
+
+        // When
+        Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
+                CreationMessageId.of("user|mailbox|1"), message), ImmutableList.of());
+
+        // Then
+        assertThat(result.getHeader().getFields("Message-ID")).hasSize(1);
+        assertThat(result.getHeader().getFields("Message-ID").get(0).getBody())
+            .contains("@domain.com");
+    }
+
+    @Test
     public void convertToMimeShouldAddHeaderWhenProvided() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
@@ -406,7 +466,7 @@ public class MIMEMessageConverterTest {
 
         String expectedHeaders = "MIME-Version: 1.0\r\n" +
                 "Content-Type: multipart/alternative;\r\n" +
-                " boundary=\"-=Part.1.";
+                " boundary=\"-=Part.";
         String expectedPart1 = "Content-Type: text/plain; charset=UTF-8\r\n" +
                 "Content-Transfer-Encoding: quoted-printable\r\n" +
                 "\r\n" +

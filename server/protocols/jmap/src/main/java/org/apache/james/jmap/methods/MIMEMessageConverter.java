@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 
 import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
-import org.apache.james.jmap.model.CreationMessageId;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mime4j.Charsets;
@@ -56,6 +55,7 @@ import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.mime4j.stream.NameValuePair;
 import org.apache.james.mime4j.stream.RawField;
+import org.apache.james.mime4j.util.MimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,11 +130,11 @@ public class MIMEMessageConverter {
             messageBuilder.setBody(createTextBody(creationMessageEntry.getValue()))
                 .setContentTransferEncoding(QUOTED_PRINTABLE);
         }
-        buildMimeHeaders(messageBuilder, creationMessageEntry.getCreationId(), creationMessageEntry.getValue(), messageAttachments);
+        buildMimeHeaders(messageBuilder, creationMessageEntry.getValue(), messageAttachments);
         return messageBuilder.build();
     }
 
-    private void buildMimeHeaders(Message.Builder messageBuilder, CreationMessageId creationId, CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments) {
+    private void buildMimeHeaders(Message.Builder messageBuilder, CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments) {
         Optional<Mailbox> fromAddress = newMessage.getFrom().filter(DraftEmailer::hasValidEmail).map(this::convertEmailToMimeHeader);
         fromAddress.ifPresent(messageBuilder::setFrom);
         fromAddress.ifPresent(messageBuilder::setSender);
@@ -155,7 +155,7 @@ public class MIMEMessageConverter {
                 .map(this::convertEmailToMimeHeader)
                 .collect(Collectors.toList()));
         messageBuilder.setSubject(newMessage.getSubject());
-        messageBuilder.setMessageId(creationId.getId());
+        messageBuilder.setMessageId(generateUniqueMessageId(fromAddress));
 
         // note that date conversion probably lose milliseconds!
         messageBuilder.setDate(Date.from(newMessage.getDate().toInstant()), TimeZone.getTimeZone(newMessage.getDate().getZone()));
@@ -168,6 +168,13 @@ public class MIMEMessageConverter {
             .filter(header -> ! header.getKey().trim().isEmpty())
             .filter(header -> ! LOWERCASED_COMPUTED_HEADERS.contains(header.getKey().toLowerCase(Locale.ENGLISH)))
             .forEach(header -> addMultivaluedHeader(messageBuilder, header.getKey(), header.getValue()));
+    }
+
+    private String generateUniqueMessageId(Optional<Mailbox> fromAddress) {
+        String noDomain = null;
+        return MimeUtil.createUniqueMessageId(fromAddress
+            .map(Mailbox::getDomain)
+            .orElse(noDomain));
     }
 
     private void addMultivaluedHeader(Message.Builder messageBuilder, String fieldName, String multipleValues) {
