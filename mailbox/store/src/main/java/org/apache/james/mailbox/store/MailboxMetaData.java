@@ -35,7 +35,7 @@ public class MailboxMetaData implements MessageManager.MetaData {
 
     private final long recentCount;
     private final List<MessageUid> recent;
-    private final Flags premanentFlags;
+    private final Flags permanentFlags;
     private final long uidValidity;
     private final MessageUid nextUid;
     private final long messageCount;
@@ -46,7 +46,7 @@ public class MailboxMetaData implements MessageManager.MetaData {
     private final boolean modSeqPermanent;
     private final MailboxACL acl;
 
-    public MailboxMetaData(List<MessageUid> recent, Flags premanentFlags, long uidValidity, MessageUid uidNext, long highestModSeq, long messageCount, long unseenCount, MessageUid firstUnseen, boolean writeable, boolean modSeqPermanent, MailboxACL acl) {
+    public MailboxMetaData(List<MessageUid> recent, Flags permanentFlags, long uidValidity, MessageUid uidNext, long highestModSeq, long messageCount, long unseenCount, MessageUid firstUnseen, boolean writeable, boolean modSeqPermanent, MailboxACL acl) {
         super();
         if (recent == null) {
             this.recent = new ArrayList<>();
@@ -57,7 +57,7 @@ public class MailboxMetaData implements MessageManager.MetaData {
         this.highestModSeq = highestModSeq;
         recentCount = this.recent.size();
 
-        this.premanentFlags = premanentFlags;
+        this.permanentFlags = permanentFlags;
         this.uidValidity = uidValidity;
         this.nextUid = uidNext;
         this.messageCount = messageCount;
@@ -79,7 +79,7 @@ public class MailboxMetaData implements MessageManager.MetaData {
      * @see MailboxMetaData#getPermanentFlags()
      */
     public Flags getPermanentFlags() {
-        return premanentFlags;
+        return permanentFlags;
     }
 
     @Override
