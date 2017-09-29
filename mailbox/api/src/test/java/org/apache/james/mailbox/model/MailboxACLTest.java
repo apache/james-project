@@ -220,7 +220,7 @@ public class MailboxACLTest {
     @Test
     public void applyShouldNotThrowWhenRemovingANonExistingEntry() throws Exception{
         assertThat(MailboxACL.EMPTY
-            .apply(new MailboxACL.ACLCommand(EntryKey.createUser("bob"), MailboxACL.EditMode.REPLACE, null)))
+            .apply(MailboxACL.command().forUser("bob").noRights().asReplacement()))
             .isEqualTo(MailboxACL.EMPTY);
     }
 

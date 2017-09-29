@@ -130,7 +130,8 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
                 // steps.
 
                 mailboxManager.applyRightsCommand(mailboxPath,
-                    new MailboxACL.ACLCommand(key, editMode, mailboxAclRights), mailboxSession);
+                    MailboxACL.command().key(key).mode(editMode).rights(mailboxAclRights).build(),
+                    mailboxSession);
 
                 okComplete(command, tag, responder);
                 // FIXME should we send unsolicited responses here?
