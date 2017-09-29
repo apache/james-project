@@ -24,11 +24,12 @@ import java.util.List;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
-import org.apache.james.mailbox.model.MailboxACL.MailboxACLCommand;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.transaction.Mapper;
 
 public class TransactionalMailboxMapper implements MailboxMapper {
     private final JPAMailboxMapper wrapped;
@@ -48,18 +49,13 @@ public class TransactionalMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public MailboxId save(final Mailbox mailbox) throws MailboxException {
+    public MailboxId save(Mailbox mailbox) throws MailboxException {
         return wrapped.execute(() -> wrapped.save(mailbox));
     }
 
     @Override
-    public void delete(final Mailbox mailbox) throws MailboxException {
-        wrapped.execute(new VoidTransaction() {
-                @Override
-                public void runVoid() throws MailboxException {
-                    wrapped.delete(mailbox);
-                }
-            });
+    public void delete(Mailbox mailbox) throws MailboxException {
+        wrapped.execute(Mapper.toTransaction(() -> wrapped.delete(mailbox)));
     }
 
     @Override
@@ -83,8 +79,13 @@ public class TransactionalMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public void updateACL(Mailbox mailbox, MailboxACLCommand mailboxACLCommand) throws MailboxException {
+    public void updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
         wrapped.updateACL(mailbox, mailboxACLCommand);
+    }
+
+    @Override
+    public void setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+        wrapped.setACL(mailbox, mailboxACL);
     }
 
     @Override

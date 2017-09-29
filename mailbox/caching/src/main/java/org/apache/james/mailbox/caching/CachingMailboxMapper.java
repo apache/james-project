@@ -18,6 +18,7 @@
  ****************************************************************/
 
 package org.apache.james.mailbox.caching;
+
 import java.util.List;
 
 import org.apache.james.mailbox.exception.MailboxException;
@@ -106,8 +107,13 @@ public class CachingMailboxMapper implements MailboxMapper {
 	}
 
 	@Override
-	public void updateACL(Mailbox mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException {
+	public void updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
 		mailbox.setACL(mailbox.getACL().apply(mailboxACLCommand));
+	}
+
+	@Override
+	public void setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+		mailbox.setACL(mailboxACL);
 	}
 
 	private void invalidate(Mailbox mailbox) {

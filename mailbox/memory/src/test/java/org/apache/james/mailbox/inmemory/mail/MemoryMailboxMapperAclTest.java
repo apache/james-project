@@ -17,51 +17,21 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.transaction;
+package org.apache.james.mailbox.inmemory.mail;
 
-import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.store.mail.model.MailboxMapperACLTest;
+import org.apache.james.mailbox.store.mail.model.MapperProvider;
+import org.junit.Before;
 
-/**
- * Mapper which execute units of work in a {@link Transaction}
- *
- */
-public interface Mapper {
+public class MemoryMailboxMapperAclTest extends MailboxMapperACLTest {
     
-    /**
-     * IMAP Request was complete. Cleanup all Request scoped stuff
-     */
-    void endRequest();
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+    }
     
-    /**
-     * Execute the given Transaction
-     * 
-     * @param transaction 
-     * @throws MailboxException
-     */
-    <T> T execute(Transaction<T> transaction) throws MailboxException;
-        
-    /**
-     * Unit of work executed in a Transaction
-     *
-     */
-    interface Transaction<T> {
-        
-        /**
-         * Run unit of work in a Transaction and return a value
-         * 
-         * @throws MailboxException
-         */
-        T run() throws MailboxException;
-    }
-
-    interface Operation {
-        void run() throws MailboxException;
-    }
-
-    static Transaction<Void> toTransaction(Operation operation) throws MailboxException {
-        return () -> {
-            operation.run();
-            return null;
-        };
+    @Override
+    protected MapperProvider createMapperProvider() {
+        return new InMemoryMapperProvider();
     }
 }

@@ -34,7 +34,7 @@ import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.apache.james.mailbox.store.transaction.TransactionalMapper;
+import org.apache.james.mailbox.store.transaction.Mapper;
 
 /**
  * JPA implementation of {@link StoreMailboxManager}
@@ -74,16 +74,8 @@ public abstract class JPAMailboxManager extends StoreMailboxManager {
      */
     public void deleteEverything(MailboxSession mailboxSession) throws MailboxException {
         final JPAMailboxMapper mapper = (JPAMailboxMapper) getMapperFactory().getMailboxMapper(mailboxSession);
-        mapper.execute(new TransactionalMapper.VoidTransaction() {
-            public void runVoid() throws MailboxException {
-                mapper.deleteAllMemberships(); 
-            }
-        });
-        mapper.execute(new TransactionalMapper.VoidTransaction() {
-            public void runVoid() throws MailboxException {
-                mapper.deleteAllMailboxes(); 
-            }
-        });
+        mapper.execute(Mapper.toTransaction(mapper::deleteAllMemberships));
+        mapper.execute(Mapper.toTransaction(mapper::deleteAllMailboxes));
     }
 
 }

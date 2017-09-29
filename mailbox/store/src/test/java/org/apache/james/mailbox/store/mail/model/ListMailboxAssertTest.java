@@ -19,8 +19,8 @@
 
 package org.apache.james.mailbox.store.mail.model;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.apache.james.mailbox.store.mail.model.ListMailboxAssert.assertMailboxes;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 

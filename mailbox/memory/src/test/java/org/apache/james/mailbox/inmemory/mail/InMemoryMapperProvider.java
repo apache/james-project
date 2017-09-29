@@ -113,7 +113,8 @@ public class InMemoryMapperProvider implements MapperProvider {
             Capabilities.MAILBOX,
             Capabilities.ATTACHMENT,
             Capabilities.ANNOTATION,
-            Capabilities.MOVE);
+            Capabilities.MOVE,
+            Capabilities.ACL_STORAGE);
     }
 
     @Override

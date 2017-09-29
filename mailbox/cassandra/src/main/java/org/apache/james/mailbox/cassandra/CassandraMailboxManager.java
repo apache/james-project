@@ -31,10 +31,10 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
@@ -122,7 +122,7 @@ public class CassandraMailboxManager extends StoreMailboxManager {
     @Override
     protected Mailbox doCreateMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
         SimpleMailbox cassandraMailbox = new SimpleMailbox(mailboxPath, randomUidValidity());
-        cassandraMailbox.setACL(SimpleMailboxACL.EMPTY);
+        cassandraMailbox.setACL(MailboxACL.EMPTY);
         return cassandraMailbox;
     }
 

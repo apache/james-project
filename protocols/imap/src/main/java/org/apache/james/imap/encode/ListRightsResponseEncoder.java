@@ -26,7 +26,7 @@ import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.ListRightsResponse;
-import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
+import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 
 /**
  * ACL Response Encoder.
@@ -57,9 +57,9 @@ public class ListRightsResponseEncoder extends AbstractChainedImapEncoder {
         String identifier = listRightsResponse.getIdentifier();
         composer.quote(identifier);
         
-        MailboxACLRights[] rights = listRightsResponse.getRights();
+        Rfc4314Rights[] rights = listRightsResponse.getRights();
         
-        for (MailboxACLRights entry : rights) {
+        for (Rfc4314Rights entry : rights) {
             composer.quote(entry.serialize());
        }
         composer.end();

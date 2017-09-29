@@ -24,6 +24,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 
 public interface GrantRightsOnHost {
 
-    void grantRights(MailboxPath mailboxPath, String userName, MailboxACL.MailboxACLRights rights) throws Exception;
+    void grantRights(MailboxPath mailboxPath, String userName, MailboxACL.Rfc4314Rights rights) throws Exception;
 
 }

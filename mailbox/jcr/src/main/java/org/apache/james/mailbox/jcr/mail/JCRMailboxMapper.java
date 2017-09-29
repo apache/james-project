@@ -251,7 +251,12 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
     }
 
     @Override
-    public void updateACL(Mailbox mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException {
+    public void updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
         mailbox.setACL(mailbox.getACL().apply(mailboxACLCommand));
+    }
+
+    @Override
+    public void setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+        mailbox.setACL(mailboxACL);
     }
 }

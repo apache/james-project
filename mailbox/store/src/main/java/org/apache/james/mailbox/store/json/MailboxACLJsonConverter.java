@@ -19,29 +19,28 @@
 
 package org.apache.james.mailbox.store.json;
 
+import java.io.IOException;
+
+import org.apache.james.mailbox.model.MailboxACL;
+
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.model.SimpleMailboxACL;
 
-import java.io.IOException;
-
-public class SimpleMailboxACLJsonConverter {
+public class MailboxACLJsonConverter {
 
     interface Rfc4314RightsMixIn {
         @JsonValue
-        int getValue();
+        String serialize();
     }
 
     static class ACLKeyDeserializer extends KeyDeserializer {
         @Override
-        public Object deserializeKey(String key, DeserializationContext deserializationContext ) throws IOException {
-            return new SimpleMailboxACL.SimpleMailboxACLEntryKey(key);
+        public Object deserializeKey(String key, DeserializationContext deserializationContext) throws IOException {
+            return MailboxACL.EntryKey.deserialize(key);
         }
     }
 
@@ -49,11 +48,9 @@ public class SimpleMailboxACLJsonConverter {
 
     static {
         SimpleModule module = new SimpleModule()
-                .addAbstractTypeMapping(MailboxACL.MailboxACLEntryKey.class, SimpleMailboxACL.SimpleMailboxACLEntryKey.class)
-                .addAbstractTypeMapping(MailboxACL.MailboxACLRights.class, SimpleMailboxACL.Rfc4314Rights.class)
-                .addKeyDeserializer(MailboxACL.MailboxACLEntryKey.class, new ACLKeyDeserializer());
+                .addKeyDeserializer(MailboxACL.EntryKey.class, new ACLKeyDeserializer());
         objectMapper
-            .addMixIn(SimpleMailboxACL.Rfc4314Rights.class, Rfc4314RightsMixIn.class)
+            .addMixIn(MailboxACL.Rfc4314Rights.class, Rfc4314RightsMixIn.class)
             .registerModule(module);
     }
 
@@ -62,6 +59,6 @@ public class SimpleMailboxACLJsonConverter {
     }
     
     public static MailboxACL toACL(String jsonACLString) throws IOException {
-        return objectMapper.readValue(jsonACLString, SimpleMailboxACL.class);
+        return objectMapper.readValue(jsonACLString, MailboxACL.class);
     }
 }

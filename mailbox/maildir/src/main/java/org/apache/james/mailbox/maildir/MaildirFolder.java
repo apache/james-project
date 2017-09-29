@@ -40,19 +40,18 @@ import java.util.Properties;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.model.MailboxACL.MailboxACLEntryKey;
-import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
+import org.apache.james.mailbox.model.MailboxACL.EntryKey;
+import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.SimpleMailboxACL;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -934,7 +933,7 @@ public class MaildirFolder {
                 }
             }
 
-            return new SimpleMailboxACL(props);
+            return new MailboxACL(props);
 
         }, true);
         
@@ -959,9 +958,9 @@ public class MaildirFolder {
                 File f = aclFile;
                 OutputStream out = null;
                 Properties props = new Properties();
-                Map<MailboxACLEntryKey, MailboxACLRights> entries = acl.getEntries();
+                Map<EntryKey, Rfc4314Rights> entries = acl.getEntries();
                 if (entries != null) {
-                    for (Entry<MailboxACLEntryKey, MailboxACLRights> en : entries.entrySet()) {
+                    for (Entry<EntryKey, Rfc4314Rights> en : entries.entrySet()) {
                         props.put(en.getKey().serialize(), en.getValue().serialize());
                     }
                 }

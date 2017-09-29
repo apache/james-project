@@ -37,12 +37,10 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.EditMode;
-import org.apache.james.mailbox.model.MailboxACL.MailboxACLEntryKey;
+import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.SimpleMailboxACL;
-import org.apache.james.mailbox.model.SimpleMailboxACL.Rfc4314Rights;
-import org.apache.james.mailbox.model.SimpleMailboxACL.SimpleMailboxACLEntryKey;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
@@ -87,13 +85,13 @@ public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLReques
              * would be used if the mailbox did not exist, thus revealing no
              * existence information, much less the mailbox’s ACL.
              */
-            if (!mailboxManager.hasRight(mailboxPath, Rfc4314Rights.l_Lookup_RIGHT, mailboxSession)) {
+            if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Lookup, mailboxSession)) {
                 no(command, tag, responder, HumanReadableText.MAILBOX_NOT_FOUND);
             }
             /* RFC 4314 section 4. */
-            else if (!mailboxManager.hasRight(mailboxPath, Rfc4314Rights.a_Administer_RIGHT, mailboxSession)) {
+            else if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Administer, mailboxSession)) {
                 Object[] params = new Object[] {
-                        Rfc4314Rights.a_Administer_RIGHT.toString(),
+                        MailboxACL.Right.Administer.toString(),
                         command.getName(),
                         mailboxName
                 };
@@ -102,7 +100,7 @@ public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLReques
             }
             else {
                 
-                MailboxACLEntryKey key = new SimpleMailboxACLEntryKey(identifier);
+                EntryKey key = EntryKey.deserialize(identifier);
                 
                 // FIXME check if identifier is a valid user or group
                 // FIXME Servers, when processing a command that has an identifier as a
@@ -114,8 +112,8 @@ public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLReques
                 // Note that Section 6 recommends additional identifier’s verification
                 // steps.
 
-                mailboxManager.setRights(mailboxPath,
-                    new SimpleMailboxACL.SimpleMailboxACLCommand(key, EditMode.REPLACE, null), mailboxSession);
+                mailboxManager.applyRightsCommand(mailboxPath,
+                    new MailboxACL.ACLCommand(key, EditMode.REPLACE, null), mailboxSession);
 
                 okComplete(command, tag, responder);
                 // FIXME should we send unsolicited responses here?

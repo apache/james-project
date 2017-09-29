@@ -36,7 +36,7 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.apache.james.mailbox.store.transaction.TransactionalMapper;
+import org.apache.james.mailbox.store.transaction.Mapper;
 
 /**
  * HBase implementation of {@link StoreMailboxManager}
@@ -71,20 +71,8 @@ public class HBaseMailboxManager extends StoreMailboxManager {
 
         final HBaseMailboxMapper mapper = (HBaseMailboxMapper) getMapperFactory().getMailboxMapper(mailboxSession);
 
-        mapper.execute(new TransactionalMapper.VoidTransaction() {
-
-            @Override
-            public void runVoid() throws MailboxException {
-                mapper.deleteAllMemberships();
-            }
-        });
-        mapper.execute(new TransactionalMapper.VoidTransaction() {
-
-            @Override
-            public void runVoid() throws MailboxException {
-                mapper.deleteAllMailboxes();
-            }
-        });
+        mapper.execute(Mapper.toTransaction(mapper::deleteAllMemberships));
+        mapper.execute(Mapper.toTransaction(mapper::deleteAllMailboxes));
     }
 
     @Override
