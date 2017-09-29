@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -48,14 +49,9 @@ public class MailboxMetaData implements MessageManager.MetaData {
 
     public MailboxMetaData(List<MessageUid> recent, Flags permanentFlags, long uidValidity, MessageUid uidNext, long highestModSeq, long messageCount, long unseenCount, MessageUid firstUnseen, boolean writeable, boolean modSeqPermanent, MailboxACL acl) {
         super();
-        if (recent == null) {
-            this.recent = new ArrayList<>();
-        } else {
-            this.recent = recent;
-
-        }
+        this.recent = Optional.ofNullable(recent).orElseGet(ArrayList::new);
         this.highestModSeq = highestModSeq;
-        recentCount = this.recent.size();
+        this.recentCount = this.recent.size();
 
         this.permanentFlags = permanentFlags;
         this.uidValidity = uidValidity;
@@ -68,16 +64,12 @@ public class MailboxMetaData implements MessageManager.MetaData {
         this.acl = acl;
     }
 
-    /**
-     * @see MailboxMetaData#countRecent()
-     */
+    @Override
     public long countRecent() {
         return recentCount;
     }
 
-    /**
-     * @see MailboxMetaData#getPermanentFlags()
-     */
+    @Override
     public Flags getPermanentFlags() {
         return permanentFlags;
     }
@@ -87,61 +79,46 @@ public class MailboxMetaData implements MessageManager.MetaData {
         return recent;
     }
 
-    /**
-     * @see MailboxMetaData#getUidValidity()
-     */
+    @Override
     public long getUidValidity() {
         return uidValidity;
     }
 
+    @Override
     public MessageUid getUidNext() {
         return nextUid;
     }
 
-    /**
-     * @see MailboxMetaData#getMessageCount()
-     */
+    @Override
     public long getMessageCount() {
         return messageCount;
     }
 
-    /**
-     * @see MailboxMetaData#getUnseenCount()
-     */
+    @Override
     public long getUnseenCount() {
         return unseenCount;
     }
 
+    @Override
     public MessageUid getFirstUnseen() {
         return firstUnseen;
     }
 
-    /**
-     * @see MailboxMetaData#isWriteable()
-     */
+    @Override
     public boolean isWriteable() {
         return writeable;
     }
 
-    /**
-     * @see MailboxMetaData#getHighestModSeq()
-     */
+    @Override
     public long getHighestModSeq() {
         return highestModSeq;
     }
 
-    /**
-     * @see MailboxMetaData#isModSeqPermanent()
-     */
+    @Override
     public boolean isModSeqPermanent() {
         return modSeqPermanent;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.mailbox.MessageManager.MetaData#getACL()
-     */
     @Override
     public MailboxACL getACL() {
         return acl;
