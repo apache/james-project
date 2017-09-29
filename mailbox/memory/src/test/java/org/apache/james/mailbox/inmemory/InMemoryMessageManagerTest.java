@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the            *
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
- * *
- * http://www.apache.org/licenses/LICENSE-2.0                 *
- * *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
@@ -16,20 +16,23 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.mailbox.inmemory;
 
-package org.apache.james.mailbox.fixture;
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.store.AbstractMessageManagerTest;
+import org.apache.james.mailbox.store.MessageManagerTestSystem;
+import org.junit.Before;
 
-import org.apache.james.mailbox.model.MailboxPath;
+public class InMemoryMessageManagerTest extends AbstractMessageManagerTest {
 
-public class MailboxFixture {
-    public static final String PRIVATE_NAMESPACE = "#private";
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+    }
+    
+    @Override
+    protected MessageManagerTestSystem createTestSystem() throws MailboxException {
+        return MessageManagerTestSystemProvider.createTestSystem();
+    }
 
-    public static final String USER = "user";
-    public static final String OTHER_USER = "otheruser";
-    public static final String THIRD_USER = "thirdUser";
-
-    public static final MailboxPath MAILBOX_PATH1 = new MailboxPath(PRIVATE_NAMESPACE, USER, "INBOX");
-    public static final MailboxPath MAILBOX_PATH2 = new MailboxPath(PRIVATE_NAMESPACE, USER, "OUTBOX");
-    public static final MailboxPath MAILBOX_PATH3 = new MailboxPath(PRIVATE_NAMESPACE, USER, "SENT");
-    public static final MailboxPath MAILBOX_PATH4 = new MailboxPath(PRIVATE_NAMESPACE, OTHER_USER, "INBOX");
 }

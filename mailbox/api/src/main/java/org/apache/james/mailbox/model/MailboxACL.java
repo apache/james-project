@@ -527,7 +527,6 @@ public class MailboxACL {
                 return this;
             }
 
-
             public Builder key(EntryKey key) {
                 this.key = key;
                 return this;

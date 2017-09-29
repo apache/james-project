@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.store;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -33,6 +34,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.NotAdminException;
 import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
@@ -167,11 +169,13 @@ public class StoreMailboxManagerTest {
     }
 
     @Test(expected = MailboxNotFoundException.class)
-    public void getMailboxShouldThrowWhenMailboxDoesNotMatchUser() throws Exception {
+    public void getMailboxShouldThrowWhenMailboxDoesNotMatchUserWithoutRight() throws Exception {
         Mailbox mockedMailbox = mock(Mailbox.class);
+        when(mockedMailbox.getACL()).thenReturn(new MailboxACL());
         when(mockedMailbox.getUser()).thenReturn("other.user");
         when(mockedMailbox.getMailboxId()).thenReturn(MAILBOX_ID);
         when(mockedMailboxMapper.findMailboxById(MAILBOX_ID)).thenReturn(mockedMailbox);
+        when(mockedMailboxMapper.findMailboxByPath(any())).thenReturn(mockedMailbox);
 
         MessageManager expected = storeMailboxManager.getMailbox(MAILBOX_ID, mockedMailboxSession);
 

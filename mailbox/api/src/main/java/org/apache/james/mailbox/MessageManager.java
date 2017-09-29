@@ -184,8 +184,7 @@ public interface MessageManager {
      *            context, not null
      * @param fetchGroup
      *            describes which optional data should be returned
-     * @return meta data, not null
-     * @throws MailboxException
+     * @return metadata view filtered for the session's user, not null
      */
     MetaData getMetaData(boolean resetRecent, MailboxSession mailboxSession, MessageManager.MetaData.FetchGroup fetchGroup) throws MailboxException;
 

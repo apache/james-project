@@ -22,6 +22,7 @@ package org.apache.james.jmap.methods.integration;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
@@ -37,6 +38,7 @@ import java.io.ByteArrayInputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.mail.Flags;
 
@@ -83,6 +85,7 @@ public abstract class GetMailboxesMethodTest {
     private AccessToken accessToken;
     private String alice;
     private String bob;
+    private String cedric;
     private GuiceJamesServer jmapServer;
     private MailboxProbe mailboxProbe;
     private ACLProbe aclProbe;
@@ -105,6 +108,7 @@ public abstract class GetMailboxesMethodTest {
         String domain = "domain.tld";
         alice = "alice@" + domain;
         bob = "bob@" + domain;
+        cedric = "cedric@" + domain;
         String password = "password";
         DataProbe dataProbe = jmapServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(domain);
@@ -507,9 +511,11 @@ public abstract class GetMailboxesMethodTest {
     public void getMailboxesShouldReturnMailboxesWhenShared() throws Exception {
         String mailboxName = "name";
         MailboxId bobMailbox = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, mailboxName);
-        aclProbe.replaceRights(MailboxPath.forUser(bob, mailboxName), alice, new Rfc4314Rights(Right.Read));
+        MailboxPath bobMailboxPath = MailboxPath.forUser(bob, mailboxName);
+        aclProbe.replaceRights(bobMailboxPath, alice, new Rfc4314Rights(Right.Read));
+        aclProbe.replaceRights(bobMailboxPath, cedric, new Rfc4314Rights(Right.Read));
 
-        given()
+        Map<String, String> sharedWith = given()
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + bobMailbox.serialize() + "\"]}, \"#0\"]]")
         .when()
@@ -517,7 +523,12 @@ public abstract class GetMailboxesMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
-            .body(ARGUMENTS + ".list.name", hasItem(mailboxName));
+            .body(ARGUMENTS + ".list.name", hasSize(1))
+        .extract()
+            .jsonPath()
+            .get(FIRST_MAILBOX + ".sharedWith");
+
+        assertThat(sharedWith).containsOnlyKeys(alice);
     }
 
 
