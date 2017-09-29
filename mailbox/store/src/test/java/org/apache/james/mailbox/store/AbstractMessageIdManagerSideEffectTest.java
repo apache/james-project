@@ -40,7 +40,7 @@ import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.OverQuotaException;
-import org.apache.james.mailbox.manager.MailboxManagerFixture;
+import org.apache.james.mailbox.fixture.MailboxFixture;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MailboxId;
@@ -88,9 +88,9 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         testingData = createTestSystem(quotaManager, dispatcher);
         messageIdManager = testingData.getMessageIdManager();
 
-        mailbox1 = testingData.createMailbox(MailboxManagerFixture.MAILBOX_PATH1, session);
-        mailbox2 = testingData.createMailbox(MailboxManagerFixture.MAILBOX_PATH2, session);
-        mailbox3 = testingData.createMailbox(MailboxManagerFixture.MAILBOX_PATH3, session);
+        mailbox1 = testingData.createMailbox(MailboxFixture.MAILBOX_PATH1, session);
+        mailbox2 = testingData.createMailbox(MailboxFixture.MAILBOX_PATH2, session);
+        mailbox3 = testingData.createMailbox(MailboxFixture.MAILBOX_PATH3, session);
     }
 
 

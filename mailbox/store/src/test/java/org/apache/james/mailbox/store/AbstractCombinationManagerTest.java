@@ -36,7 +36,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.manager.MailboxManagerFixture;
+import org.apache.james.mailbox.fixture.MailboxFixture;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.FetchGroupImpl;
@@ -74,11 +74,11 @@ public abstract class AbstractCombinationManagerTest {
     public abstract CombinationManagerTestSystem createTestingData() throws Exception ;
 
     public void setUp() throws Exception {
-        session = new MockMailboxSession(MailboxManagerFixture.USER);
+        session = new MockMailboxSession(MailboxFixture.USER);
         testingData = createTestingData();
 
-        mailbox1 = testingData.createMailbox(MailboxManagerFixture.MAILBOX_PATH1, session);
-        mailbox2 = testingData.createMailbox(MailboxManagerFixture.MAILBOX_PATH2, session);
+        mailbox1 = testingData.createMailbox(MailboxFixture.MAILBOX_PATH1, session);
+        mailbox2 = testingData.createMailbox(MailboxFixture.MAILBOX_PATH2, session);
 
         mailboxManager = testingData.getMailboxManager();
         messageIdManager = testingData.getMessageIdManager();
@@ -114,7 +114,7 @@ public abstract class AbstractCombinationManagerTest {
         query.andCriteria(SearchQuery.all());
 
         MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .base(MailboxManagerFixture.MAILBOX_PATH1)
+            .base(MailboxFixture.MAILBOX_PATH1)
             .build();
         MessageId messageId = messageManager1.appendMessage(new ByteArrayInputStream(MAIL_CONTENT), new Date(), session, false, FLAGS).getMessageId();
 
@@ -131,7 +131,7 @@ public abstract class AbstractCombinationManagerTest {
         query.andCriteria(SearchQuery.all());
 
         MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .username(MailboxManagerFixture.USER)
+            .username(MailboxFixture.USER)
             .expression(String.valueOf(MailboxQuery.FREEWILDCARD))
             .build();
         MessageId messageId = messageManager1.appendMessage(new ByteArrayInputStream(MAIL_CONTENT), new Date(), session, false, FLAGS).getMessageId();
@@ -214,7 +214,7 @@ public abstract class AbstractCombinationManagerTest {
     public void getMessageFromMessageIdManagerShouldReturnMessageWhenCopyMessageWithMailboxPathFromMailboxManager() throws Exception {
         MessageId messageId = messageManager1.appendMessage(new ByteArrayInputStream(MAIL_CONTENT), new Date(), session, false, FLAGS).getMessageId();
 
-        mailboxManager.copyMessages(MessageRange.all(), MailboxManagerFixture.MAILBOX_PATH1, MailboxManagerFixture.MAILBOX_PATH2, session);
+        mailboxManager.copyMessages(MessageRange.all(), MailboxFixture.MAILBOX_PATH1, MailboxFixture.MAILBOX_PATH2, session);
 
         List<MessageResult> listMessages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session);
 
@@ -227,7 +227,7 @@ public abstract class AbstractCombinationManagerTest {
     public void getMessageFromMessageIdManagerShouldReturnMessageWhenMoveMessageWithMailboxIdFromMailboxManager() throws Exception {
         MessageId messageId = messageManager1.appendMessage(new ByteArrayInputStream(MAIL_CONTENT), new Date(), session, false, FLAGS).getMessageId();
 
-        mailboxManager.moveMessages(MessageRange.all(), MailboxManagerFixture.MAILBOX_PATH1, MailboxManagerFixture.MAILBOX_PATH2, session);
+        mailboxManager.moveMessages(MessageRange.all(), MailboxFixture.MAILBOX_PATH1, MailboxFixture.MAILBOX_PATH2, session);
 
         List<MessageResult> listMessages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session);
 

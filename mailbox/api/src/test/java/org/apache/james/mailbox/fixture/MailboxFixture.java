@@ -17,16 +17,16 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.manager;
+package org.apache.james.mailbox.fixture;
 
 import org.apache.james.mailbox.model.MailboxPath;
 
-public class MailboxManagerFixture {
+public class MailboxFixture {
     public static final String PRIVATE_NAMESPACE = "#private";
 
     public static final String USER = "user";
     public static final String OTHER_USER = "otheruser";
-
+    
     public static final MailboxPath MAILBOX_PATH1 = new MailboxPath(PRIVATE_NAMESPACE, USER, "INBOX");
     public static final MailboxPath MAILBOX_PATH2 = new MailboxPath(PRIVATE_NAMESPACE, USER, "OUTBOX");
     public static final MailboxPath MAILBOX_PATH3 = new MailboxPath(PRIVATE_NAMESPACE, USER, "SENT");

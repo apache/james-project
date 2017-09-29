@@ -23,7 +23,7 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.manager.MailboxManagerFixture;
+import org.apache.james.mailbox.fixture.MailboxFixture;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
@@ -58,8 +58,8 @@ public class MessageIdManagerTestSystemProvider {
         MessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         FakeAuthenticator authenticator = new FakeAuthenticator();
         FakeAuthorizator authorizator = FakeAuthorizator.defaultReject();
-        authenticator.addUser(MailboxManagerFixture.USER, PASSWORD);
-        authenticator.addUser(MailboxManagerFixture.OTHER_USER, PASSWORD);
+        authenticator.addUser(MailboxFixture.USER, PASSWORD);
+        authenticator.addUser(MailboxFixture.OTHER_USER, PASSWORD);
         InMemoryMailboxManager mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, authenticator, authorizator,
                 aclResolver, groupMembershipResolver, messageParser, messageIdFactory, LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE);
 

@@ -29,7 +29,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
-import org.apache.james.mailbox.manager.MailboxManagerFixture;
+import org.apache.james.mailbox.fixture.MailboxFixture;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.junit.Before;
 import org.junit.Rule;
@@ -59,14 +59,14 @@ public class SystemMailboxesProviderImplTest {
     @Test
     @SuppressWarnings("unchecked")
     public void getMailboxByRoleShouldReturnEmptyWhenNoMailbox() throws Exception {
-        when(mailboxManager.getMailbox(eq(MailboxManagerFixture.MAILBOX_PATH1), eq(mailboxSession))).thenThrow(MailboxNotFoundException.class);
+        when(mailboxManager.getMailbox(eq(MailboxFixture.MAILBOX_PATH1), eq(mailboxSession))).thenThrow(MailboxNotFoundException.class);
 
         assertThat(systemMailboxProvider.getMailboxByRole(Role.INBOX, mailboxSession)).isEmpty();
     }
 
     @Test
     public void getMailboxByRoleShouldReturnMailboxByRole() throws Exception {
-        when(mailboxManager.getMailbox(eq(MailboxManagerFixture.MAILBOX_PATH1), eq(mailboxSession))).thenReturn(inboxMessageManager);
+        when(mailboxManager.getMailbox(eq(MailboxFixture.MAILBOX_PATH1), eq(mailboxSession))).thenReturn(inboxMessageManager);
 
         assertThat(systemMailboxProvider.getMailboxByRole(Role.INBOX, mailboxSession))
             .hasSize(1)
