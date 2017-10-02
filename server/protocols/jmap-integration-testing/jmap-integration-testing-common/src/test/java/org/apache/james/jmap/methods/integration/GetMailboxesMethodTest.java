@@ -107,14 +107,14 @@ public abstract class GetMailboxesMethodTest {
 
         String domain = "domain.tld";
         alice = "alice@" + domain;
+        String alicePassword = "aliceSecret";
         bob = "bob@" + domain;
         cedric = "cedric@" + domain;
-        String password = "password";
         DataProbe dataProbe = jmapServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(domain);
-        dataProbe.addUser(alice, password);
-        dataProbe.addUser(bob, password);
-        accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), alice, password);
+        dataProbe.addUser(alice, alicePassword);
+        dataProbe.addUser(bob, "bobSecret");
+        accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), alice, alicePassword);
     }
 
     private URIBuilder baseUri() {
