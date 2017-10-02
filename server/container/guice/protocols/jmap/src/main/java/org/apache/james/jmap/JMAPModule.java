@@ -141,6 +141,8 @@ public class JMAPModule extends AbstractModule {
         public void initModule() {
             Preconditions.checkArgument(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move),
                     "MOVE support in MailboxManager is required by JMAP Module");
+            Preconditions.checkArgument(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.ACL),
+                    "ACL support in MailboxManager is required by JMAP Module");
 
             EnumSet<MailboxManager.MessageCapabilities> messageCapabilities = mailboxManager.getSupportedMessageCapabilities();
             Preconditions.checkArgument(messageCapabilities.contains(MailboxManager.MessageCapabilities.Attachment),

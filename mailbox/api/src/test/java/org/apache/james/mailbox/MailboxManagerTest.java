@@ -441,7 +441,7 @@ public abstract class MailboxManagerTest {
 
     @Test
     public void searchShouldIncludeDelegatedMailboxes() throws MailboxException {
-        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.RightSearch));
+        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
         MailboxSession session1 = mailboxManager.createSystemSession(USER_1);
         MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox1 = MailboxPath.inbox(session1);

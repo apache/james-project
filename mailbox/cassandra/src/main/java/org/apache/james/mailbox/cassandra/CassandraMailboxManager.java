@@ -111,7 +111,7 @@ public class CassandraMailboxManager extends StoreMailboxManager {
 
     @Override
     public EnumSet<MailboxManager.MailboxCapabilities> getSupportedMailboxCapabilities() {
-        return EnumSet.of(MailboxCapabilities.Move, MailboxCapabilities.UserFlag, MailboxCapabilities.Namespace, MailboxCapabilities.Annotation);
+        return EnumSet.of(MailboxCapabilities.Move, MailboxCapabilities.UserFlag, MailboxCapabilities.Namespace, MailboxCapabilities.Annotation, MailboxCapabilities.ACL);
     }
 
     @Override

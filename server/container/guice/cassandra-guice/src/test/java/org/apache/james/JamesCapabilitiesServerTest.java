@@ -86,6 +86,21 @@ public class JamesCapabilitiesServerTest {
     }
     
     @Test
+    public void startShouldFailWhenNoACLCapability() throws Exception {
+        MailboxManager mailboxManager = mock(MailboxManager.class);
+        when(mailboxManager.getSupportedMailboxCapabilities())
+            .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.MailboxCapabilities.ACL)));
+        when(mailboxManager.getSupportedMessageCapabilities())
+            .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
+        when(mailboxManager.getSupportedSearchCapabilities())
+            .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
+
+        server = createCassandraJamesServer(mailboxManager);
+        
+        assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
+    }
+    
+    @Test
     public void startShouldFailWhenNoAttachmentCapability() throws Exception {
         MailboxManager mailboxManager = mock(MailboxManager.class);
         when(mailboxManager.getSupportedMailboxCapabilities())
@@ -149,6 +164,8 @@ public class JamesCapabilitiesServerTest {
     public void startShouldSucceedWhenRequiredCapabilities() throws Exception {
         MailboxManager mailboxManager = mock(MailboxManager.class);
         when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move))
+            .thenReturn(true);
+        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.ACL))
             .thenReturn(true);
         when(mailboxManager.getSupportedMessageCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));

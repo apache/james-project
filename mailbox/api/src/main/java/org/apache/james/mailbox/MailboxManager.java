@@ -80,7 +80,8 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
         Annotation,
         Move,
         Namespace,
-        UserFlag
+        UserFlag,
+        ACL
     }
 
     EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities();
