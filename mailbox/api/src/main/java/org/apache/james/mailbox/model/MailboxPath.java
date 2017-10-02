@@ -30,6 +30,47 @@ import com.google.common.collect.ImmutableList;
  * The path to a mailbox.
  */
 public class MailboxPath {
+    /**
+     * Return a {@link MailboxPath} which represent the INBOX of the given
+     * session
+     *
+     * @param session
+     * @return inbox
+     */
+    public static MailboxPath inbox(MailboxSession session) {
+        return new MailboxPath(session.getPersonalSpace(), session.getUser().getUserName(), MailboxConstants.INBOX);
+    }
+
+    /**
+     * Create a {@link MailboxPath} by parsing the given full mailboxname (which included the namespace)
+     *
+     * @param session
+     * @param fullmailboxname
+     * @return path
+     */
+    public static MailboxPath parse(MailboxSession session, String fullmailboxname) {
+        char delimiter = session.getPathDelimiter();
+        int i = fullmailboxname.indexOf(delimiter);
+        String namespace = fullmailboxname.substring(0, i);
+        String mailbox = fullmailboxname.substring(i + 1, fullmailboxname.length());
+        String username = null;
+        if (namespace == null || namespace.trim().equals("")) {
+            namespace = MailboxConstants.USER_NAMESPACE;
+        }
+        if (namespace.equals(session.getPersonalSpace())) {
+            username = session.getUser().getUserName();
+        }
+        return new MailboxPath(namespace, username, mailbox);
+
+    }
+
+    /**
+     * Create a {@link MailboxPath} in the prive namespace of the specified user
+     */
+    public static MailboxPath forUser(String username, String mailboxName) {
+        return new MailboxPath(MailboxConstants.USER_NAMESPACE, username, mailboxName);
+
+    }
 
     private String namespace;
     private String user;
@@ -193,40 +234,6 @@ public class MailboxPath {
      */
     public String getFullName(char delimiter) {
         return namespace + delimiter + name;
-    }
-
-    /**
-     * Return a {@link MailboxPath} which represent the INBOX of the given
-     * session
-     * 
-     * @param session
-     * @return inbox
-     */
-    public static MailboxPath inbox(MailboxSession session) {
-        return new MailboxPath(session.getPersonalSpace(), session.getUser().getUserName(), MailboxConstants.INBOX);
-    }
-    
-    /**
-     * Create a {@link MailboxPath} by parsing the given full mailboxname (which included the namespace)
-     * 
-     * @param session
-     * @param fullmailboxname
-     * @return path
-     */
-    public static MailboxPath parse(MailboxSession session, String fullmailboxname) {
-        char delimiter = session.getPathDelimiter();
-        int i = fullmailboxname.indexOf(delimiter);
-        String namespace = fullmailboxname.substring(0, i);
-        String mailbox = fullmailboxname.substring(i + 1, fullmailboxname.length());
-        String username = null;
-        if (namespace == null || namespace.trim().equals("")) {
-            namespace = MailboxConstants.USER_NAMESPACE;
-        } 
-        if (namespace.equals(session.getPersonalSpace())) {
-            username = session.getUser().getUserName();
-        }
-        return new MailboxPath(namespace, username, mailbox);
-
     }
 
 }
