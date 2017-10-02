@@ -141,7 +141,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
     private CompletableFuture<Optional<SimpleMailbox>> retrieveMailbox(CassandraMailboxPathDAO.CassandraIdAndPath idAndPath) {
         return retrieveMailbox(idAndPath.getCassandraId())
-            .thenApply(optional -> OptionalUtils.ifEmpty(optional,
+            .thenApply(optional -> OptionalUtils.peekOnEmpty(optional,
                 () -> LOGGER.warn("Could not retrieve mailbox {} with path {} in mailbox table.", idAndPath.getCassandraId(), idAndPath.getMailboxPath())));
     }
 

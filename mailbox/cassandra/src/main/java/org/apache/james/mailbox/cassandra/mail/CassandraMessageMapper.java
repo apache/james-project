@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
+
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
@@ -225,7 +226,7 @@ public class CassandraMessageMapper implements MessageMapper {
 
     private CompletableFuture<Optional<ComposedMessageIdWithMetaData>> retrieveComposedId(CassandraId mailboxId, MessageUid uid) {
         return messageIdDAO.retrieve(mailboxId, uid)
-            .thenApply(optional -> OptionalUtils.ifEmpty(optional,
+            .thenApply(optional -> OptionalUtils.peekOnEmpty(optional,
                 () -> LOGGER.warn("Could not retrieve message {} {}", mailboxId, uid)));
     }
 

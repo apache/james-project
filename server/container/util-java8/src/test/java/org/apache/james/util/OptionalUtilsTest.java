@@ -19,6 +19,7 @@
 package org.apache.james.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -35,7 +36,7 @@ public class OptionalUtilsTest {
 
     @Test
     public void ifEmptyShouldPreserveValueOfEmptyOptionals() {
-        Optional<Object> expected = OptionalUtils.ifEmpty(Optional.empty(), () -> { });
+        Optional<Object> expected = OptionalUtils.peekOnEmpty(Optional.empty(), () -> { });
 
         assertThat(expected).isEmpty();
     }
@@ -43,7 +44,7 @@ public class OptionalUtilsTest {
     @Test
     public void ifEmptyShouldPreserveValueOfPresentOptionals() {
         String value = "value";
-        Optional<String> expected = OptionalUtils.ifEmpty(Optional.of(value), () -> { });
+        Optional<String> expected = OptionalUtils.peekOnEmpty(Optional.of(value), () -> { });
 
         assertThat(expected).contains(value);
     }
@@ -52,7 +53,7 @@ public class OptionalUtilsTest {
     public void ifEmptyShouldPerformOperationIfEmpty() {
         AtomicInteger operationCounter = new AtomicInteger(0);
 
-        OptionalUtils.ifEmpty(Optional.empty(), operationCounter::incrementAndGet);
+        OptionalUtils.peekOnEmpty(Optional.empty(), operationCounter::incrementAndGet);
 
         assertThat(operationCounter.get()).isEqualTo(1);
     }
@@ -61,7 +62,7 @@ public class OptionalUtilsTest {
     public void ifEmptyShouldNotPerformOperationIfPresent() {
         AtomicInteger operationCounter = new AtomicInteger(0);
 
-        OptionalUtils.ifEmpty(Optional.of("value"), operationCounter::incrementAndGet);
+        OptionalUtils.peekOnEmpty(Optional.of("value"), operationCounter::incrementAndGet);
 
         assertThat(operationCounter.get()).isEqualTo(0);
     }
