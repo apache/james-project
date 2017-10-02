@@ -508,7 +508,7 @@ public abstract class GetMailboxesMethodTest {
     }
 
     @Test
-    public void getMailboxesShouldReturnMailboxesWhenShared() throws Exception {
+    public void getMailboxesShouldReturnMailboxesWithFilteredSharedWithWhenShared() throws Exception {
         String mailboxName = "name";
         MailboxId bobMailbox = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, mailboxName);
         MailboxPath bobMailboxPath = MailboxPath.forUser(bob, mailboxName);
@@ -531,5 +531,27 @@ public abstract class GetMailboxesMethodTest {
         assertThat(sharedWith).containsOnlyKeys(alice);
     }
 
+    @Test
+    public void getMailboxesShouldReturnMailboxesWithFullSharedWithWhenHasAdminRight() throws Exception {
+        String mailboxName = "name";
+        MailboxId bobMailbox = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, mailboxName);
+        MailboxPath bobMailboxPath = MailboxPath.forUser(bob, mailboxName);
+        aclProbe.replaceRights(bobMailboxPath, alice, new Rfc4314Rights(Right.Read, Right.Administer));
+        aclProbe.replaceRights(bobMailboxPath, cedric, new Rfc4314Rights(Right.Read));
 
+        Map<String, String> sharedWith = given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + bobMailbox.serialize() + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list.name", hasSize(1))
+        .extract()
+            .jsonPath()
+            .get(FIRST_MAILBOX + ".sharedWith");
+
+        assertThat(sharedWith).containsOnlyKeys(alice, cedric);
+    }
 }
