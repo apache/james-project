@@ -30,8 +30,6 @@ import javax.inject.Inject;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.modules.MailboxProbeImpl;
-import org.apache.james.utils.DataProbeImpl;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Charsets;
@@ -62,7 +60,7 @@ public class UserStepdefs {
 
     @Given("^a domain named \"([^\"]*)\"$")
     public void createDomain(String domain) throws Exception {
-        mainStepdefs.jmapServer.getProbe(DataProbeImpl.class).addDomain(domain);
+        mainStepdefs.dataProbe.addDomain(domain);
         domains.add(domain);
     }
 
@@ -80,7 +78,7 @@ public class UserStepdefs {
     @Given("^a user \"([^\"]*)\"$")
     public void createUser(String username) throws Exception {
         String password = generatePassword(username);
-        mainStepdefs.jmapServer.getProbe(DataProbeImpl.class).addUser(username, password);
+        mainStepdefs.dataProbe.addUser(username, password);
         passwordByUser.put(username, password);
     }
 
@@ -92,7 +90,7 @@ public class UserStepdefs {
     
     @Given("^\"([^\"]*)\" has a mailbox \"([^\"]*)\"$")
     public void createMailbox(String username, String mailbox) throws Throwable {
-        mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, mailbox);
+        mainStepdefs.mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, mailbox);
     }
 
     

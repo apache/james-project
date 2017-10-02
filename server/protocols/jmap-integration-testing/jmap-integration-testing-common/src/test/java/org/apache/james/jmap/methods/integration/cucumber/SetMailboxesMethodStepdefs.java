@@ -36,7 +36,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.modules.MailboxProbeImpl;
 
 import com.github.fge.lambdas.Throwing;
 import com.jayway.awaitility.Awaitility;
@@ -66,7 +65,7 @@ public class SetMailboxesMethodStepdefs {
 
     @Given("^mailbox \"([^\"]*)\" with (\\d+) messages$")
     public void mailboxWithMessages(String mailboxName, int messageCount) throws Throwable {
-        mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).createMailbox("#private", userStepdefs.lastConnectedUser, mailboxName);
+        mainStepdefs.mailboxProbe.createMailbox("#private", userStepdefs.lastConnectedUser, mailboxName);
         MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, mailboxName);
         IntStream
             .range(0, messageCount)
@@ -77,14 +76,14 @@ public class SetMailboxesMethodStepdefs {
     private void appendMessage(MailboxPath mailboxPath, int i) throws MailboxException {
         String content = "Subject: test" + i + "\r\n\r\n"
                 + "testBody" + i;
-        mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).appendMessage(userStepdefs.lastConnectedUser, mailboxPath,
+        mainStepdefs.mailboxProbe.appendMessage(userStepdefs.lastConnectedUser, mailboxPath,
                 new ByteArrayInputStream(content.getBytes()), new Date(), false, new Flags());
     }
 
     @When("^renaming mailbox \"([^\"]*)\" to \"([^\"]*)\"")
     public void renamingMailbox(String actualMailboxName, String newMailboxName) throws Throwable {
         String username = userStepdefs.lastConnectedUser;
-        Mailbox mailbox = mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).getMailbox("#private", userStepdefs.lastConnectedUser, actualMailboxName);
+        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", userStepdefs.lastConnectedUser, actualMailboxName);
         String mailboxId = mailbox.getMailboxId().serialize();
         String requestBody =
                 "[" +
@@ -109,9 +108,9 @@ public class SetMailboxesMethodStepdefs {
     @When("^moving mailbox \"([^\"]*)\" to \"([^\"]*)\"$")
     public void movingMailbox(String actualMailboxPath, String newParentMailboxPath) throws Throwable {
         String username = userStepdefs.lastConnectedUser;
-        Mailbox mailbox = mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).getMailbox("#private", username, actualMailboxPath);
+        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", username, actualMailboxPath);
         String mailboxId = mailbox.getMailboxId().serialize();
-        Mailbox parent = mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).getMailbox("#private", username, newParentMailboxPath);
+        Mailbox parent = mainStepdefs.mailboxProbe.getMailbox("#private", username, newParentMailboxPath);
         String parentId = parent.getMailboxId().serialize();
 
         String requestBody =
@@ -139,7 +138,7 @@ public class SetMailboxesMethodStepdefs {
     public void mailboxContainsMessages(String mailboxName, int messageCount) throws Throwable {
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         String username = userStepdefs.lastConnectedUser;
-        Mailbox mailbox = mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).getMailbox("#private", username, mailboxName);
+        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", username, mailboxName);
         String mailboxId = mailbox.getMailboxId().serialize();
 
         Awaitility.await().atMost(Duration.FIVE_SECONDS).pollDelay(slowPacedPollInterval).pollInterval(slowPacedPollInterval).until(() -> {

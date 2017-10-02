@@ -22,6 +22,10 @@ package org.apache.james.jmap.methods.integration.cucumber;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.store.probe.MailboxProbe;
+import org.apache.james.modules.MailboxProbeImpl;
+import org.apache.james.probe.DataProbe;
+import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
 
 import com.google.common.base.Charsets;
@@ -32,11 +36,15 @@ import cucumber.runtime.java.guice.ScenarioScoped;
 public class MainStepdefs {
 
     public GuiceJamesServer jmapServer;
+    public DataProbe dataProbe;
+    public MailboxProbe mailboxProbe;
     public Runnable awaitMethod = () -> {};
     public MessageId.Factory messageIdFactory;
     
     public void init() throws Exception {
         jmapServer.start();
+        dataProbe = jmapServer.getProbe(DataProbeImpl.class);
+        mailboxProbe = jmapServer.getProbe(MailboxProbeImpl.class);
     }
     
 

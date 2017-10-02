@@ -46,7 +46,6 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mime4j.codec.DecoderUtil;
-import org.apache.james.modules.MailboxProbeImpl;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
@@ -96,7 +95,7 @@ public class DownloadStepdefs {
     public void appendMessageToMailbox(String user, String mailbox, String messageId) throws Throwable {
         MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, user, mailbox);
 
-        ComposedMessageId composedMessageId = mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).appendMessage(user, mailboxPath,
+        ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
             ClassLoader.getSystemResourceAsStream("eml/oneAttachment.eml"), new Date(), false, new Flags());
 
         inputToMessageId.put(messageId, composedMessageId.getMessageId());
@@ -106,7 +105,7 @@ public class DownloadStepdefs {
     public void appendMessageWithAttachmentToMailbox(String user, String mailbox, String messageId, String attachmentId) throws Throwable {
         MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, user, mailbox);
 
-        mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).appendMessage(user, mailboxPath,
+        mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
                 ClassLoader.getSystemResourceAsStream("eml/oneAttachment.eml"), new Date(), false, new Flags());
         
         attachmentsByMessageId.put(messageId, attachmentId);
@@ -117,7 +116,7 @@ public class DownloadStepdefs {
     public void appendMessageWithInlinedAttachmentToMailbox(String user, String mailbox, String messageId, String attachmentId) throws Throwable {
         MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, user, mailbox);
 
-        mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).appendMessage(user, mailboxPath,
+        mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
                 ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml"), new Date(), false, new Flags());
         
         attachmentsByMessageId.put(messageId, attachmentId);
@@ -127,7 +126,7 @@ public class DownloadStepdefs {
     public void appendMessageWithSameInlinedAttachmentsToMailbox(String user, String mailbox, String messageName, String attachmentId) throws Throwable {
         MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, user, mailbox);
 
-        mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).appendMessage(user, mailboxPath,
+        mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
             ClassLoader.getSystemResourceAsStream("eml/sameInlinedImages.eml"), new Date(), false, new Flags());
 
         attachmentsByMessageId.put(messageName, attachmentId);
@@ -342,7 +341,7 @@ public class DownloadStepdefs {
 
     @When("^\"([^\"]*)\" delete mailbox \"([^\"]*)\"$")
     public void deleteMailboxButNotAttachment(String username, String mailboxName) throws Exception {
-        mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).deleteMailbox(MailboxConstants.USER_NAMESPACE, username, mailboxName);
+        mainStepdefs.mailboxProbe.deleteMailbox(MailboxConstants.USER_NAMESPACE, username, mailboxName);
     }
 
     @Then("^the user should be authorized$")

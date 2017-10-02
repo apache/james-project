@@ -104,8 +104,8 @@ public class GetMessagesMethodStepdefs {
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" and \"([^\"]*)\" mailboxes with subject \"([^\"]*)\", content \"([^\"]*)\"$")
     public void appendMessageInTwoMailboxes(String messageName, String mailbox1, String mailbox2, String subject, String content) throws Exception {
         MessageId id = appendMessage(mailbox1, ContentType.noContentType(), subject, content, NO_HEADERS);
-        MailboxId mailboxId1 = mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, mailbox1).getMailboxId();
-        MailboxId mailboxId2 = mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, mailbox2).getMailboxId();
+        MailboxId mailboxId1 = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, mailbox1).getMailboxId();
+        MailboxId mailboxId2 = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, mailbox2).getMailboxId();
 
         mainStepdefs.jmapServer.getProbe(JmapGuiceProbe.class).setInMailboxes(id, userStepdefs.lastConnectedUser, mailboxId1, mailboxId2);
         messageIdsByName.put(messageName, id);
@@ -138,7 +138,7 @@ public class GetMessagesMethodStepdefs {
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox, composed of a multipart with inlined text part and inlined html part$")
     public void appendMessageFromFileInlinedMultipart(String messageName, String mailbox) throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
-        MessageId id = mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).appendMessage(userStepdefs.lastConnectedUser,
+        MessageId id = mainStepdefs.mailboxProbe.appendMessage(userStepdefs.lastConnectedUser,
                     new MailboxPath(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, mailbox),
                     ClassLoader.getSystemResourceAsStream("eml/inlinedMultipart.eml"),
                     Date.from(dateTime.toInstant()), false, new Flags())
@@ -148,7 +148,7 @@ public class GetMessagesMethodStepdefs {
 
     private MessageId appendMessage(String mailbox, ContentType contentType, String subject, String content, Optional<Map<String, String>> headers) throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
-        return mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).appendMessage(userStepdefs.lastConnectedUser,
+        return mainStepdefs.mailboxProbe.appendMessage(userStepdefs.lastConnectedUser,
                 new MailboxPath(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, mailbox),
                 new ByteArrayInputStream(message(contentType, subject, content, headers).getBytes(Charsets.UTF_8)),
                 Date.from(dateTime.toInstant()), false, new Flags()).getMessageId();
@@ -258,7 +258,7 @@ public class GetMessagesMethodStepdefs {
     private void appendMessage(String messageName, Flags flags) throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         boolean isRecent = flags.contains(Flags.Flag.RECENT);
-        MessageId id = mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).appendMessage(userStepdefs.lastConnectedUser,
+        MessageId id = mainStepdefs.mailboxProbe.appendMessage(userStepdefs.lastConnectedUser,
                 new MailboxPath(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, DefaultMailboxes.INBOX),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
                 Date.from(dateTime.toInstant()), isRecent, flags)
@@ -268,7 +268,7 @@ public class GetMessagesMethodStepdefs {
 
     private void appendMessage(String messageName, String emlFileName) throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
-        MessageId id = mainStepdefs.jmapServer.getProbe(MailboxProbeImpl.class).appendMessage(userStepdefs.lastConnectedUser,
+        MessageId id = mainStepdefs.mailboxProbe.appendMessage(userStepdefs.lastConnectedUser,
             new MailboxPath(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, DefaultMailboxes.INBOX),
                 ClassLoader.getSystemResourceAsStream(emlFileName),
                 Date.from(dateTime.toInstant()), false, new Flags())

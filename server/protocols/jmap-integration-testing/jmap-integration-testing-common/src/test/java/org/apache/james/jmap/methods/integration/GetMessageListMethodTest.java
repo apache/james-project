@@ -48,7 +48,6 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.MessageWriter;
@@ -126,17 +125,15 @@ public abstract class GetMessageListMethodTest {
 
     @Test
     public void getMessageListShouldNotDuplicateMessagesInSeveralMailboxes() throws Exception {
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
-        Mailbox mailbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
-        Mailbox mailbox2 = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
+        MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        MailboxId mailboxId2 = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
 
         ComposedMessageId message = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
 
         await();
 
-        jmapServer.getProbe(JmapGuiceProbe.class).setInMailboxes(message.getMessageId(), username, mailbox.getMailboxId(), mailbox2.getMailboxId());
+        jmapServer.getProbe(JmapGuiceProbe.class).setInMailboxes(message.getMessageId(), username, mailboxId, mailboxId2);
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -624,13 +621,11 @@ public abstract class GetMessageListMethodTest {
 
     @Test
     public void getMessageListShouldFilterMessagesWhenInMailboxesFilterMatches() throws Exception {
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
         ComposedMessageId message = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
         await();
 
-        MailboxId mailboxId = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox").getMailboxId();
-        
         given()
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId.serialize() + "\"]}}, \"#0\"]]")
@@ -644,15 +639,12 @@ public abstract class GetMessageListMethodTest {
 
     @Test
     public void getMessageListShouldFilterMessagesWhenMultipleInMailboxesFilterMatches() throws Exception {
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
         ComposedMessageId message = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
 
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
+        MailboxId mailboxId2 = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
         await();
-
-        MailboxId mailboxId = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox").getMailboxId();
-        MailboxId mailboxId2 = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2").getMailboxId();
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -667,12 +659,10 @@ public abstract class GetMessageListMethodTest {
 
     @Test
     public void getMessageListShouldFilterMessagesWhenNotInMailboxesFilterMatches() throws Exception {
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
         mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        MailboxId mailboxId = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox").getMailboxId();
 
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
         await();
         
         given()
@@ -688,15 +678,13 @@ public abstract class GetMessageListMethodTest {
 
     @Test
     public void getMessageListShouldFilterMessagesWhenNotInMailboxesFilterMatchesTwice() throws Exception {
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
         mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        MailboxId mailboxId = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox").getMailboxId();
 
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
+        MailboxId mailbox2Id = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
         mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox2"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        MailboxId mailbox2Id = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2").getMailboxId();
         await();
 
         given()
@@ -712,10 +700,9 @@ public abstract class GetMessageListMethodTest {
 
     @Test
     public void getMessageListShouldFilterMessagesWhenIdenticalNotInMailboxesAndInmailboxesFilterMatch() throws Exception {
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
         mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        MailboxId mailboxId = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox").getMailboxId();
         await();
 
         given()
@@ -735,8 +722,7 @@ public abstract class GetMessageListMethodTest {
         ComposedMessageId message = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
 
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
-        MailboxId mailbox2Id = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2").getMailboxId();
+        MailboxId mailbox2Id = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
         await();
 
         given()
@@ -772,9 +758,8 @@ public abstract class GetMessageListMethodTest {
 
     @Test
     public void getMessageListShouldFilterMessagesWhenInMailboxesFilterDoesntMatches() throws Exception {
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "emptyMailbox");
-        MailboxId emptyMailboxId = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, username, "emptyMailbox").getMailboxId();
-        
+        MailboxId emptyMailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "emptyMailbox");
+
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
         mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
