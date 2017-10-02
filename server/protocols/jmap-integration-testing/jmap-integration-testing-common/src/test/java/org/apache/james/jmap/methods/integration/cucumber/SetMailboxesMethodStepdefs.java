@@ -33,7 +33,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
@@ -66,7 +65,7 @@ public class SetMailboxesMethodStepdefs {
     @Given("^mailbox \"([^\"]*)\" with (\\d+) messages$")
     public void mailboxWithMessages(String mailboxName, int messageCount) throws Throwable {
         mainStepdefs.mailboxProbe.createMailbox("#private", userStepdefs.lastConnectedUser, mailboxName);
-        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, mailboxName);
+        MailboxPath mailboxPath = MailboxPath.forUser(userStepdefs.lastConnectedUser, mailboxName);
         IntStream
             .range(0, messageCount)
             .forEach(Throwing.intConsumer(i -> appendMessage(mailboxPath, i)));

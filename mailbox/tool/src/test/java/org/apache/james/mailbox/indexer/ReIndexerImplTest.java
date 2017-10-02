@@ -31,7 +31,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.mock.MockMailboxSession;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -50,7 +49,7 @@ import com.google.common.collect.ImmutableList;
 
 public class ReIndexerImplTest {
 
-    public static final MailboxPath INBOX = new MailboxPath("#private", "benwa@apache.org", "INBOX");
+    public static final MailboxPath INBOX = MailboxPath.forUser("benwa@apache.org", "INBOX");
     public static final int LIMIT = 0;
     private MailboxManager mailboxManager;
     private MailboxSessionMapperFactory mailboxSessionMapperFactory;
@@ -108,7 +107,7 @@ public class ReIndexerImplTest {
             .thenReturn(mailboxMapper);
 
         String user1 = "user1@james.org";
-        MailboxPath user1MailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, user1, "Inbox");
+        MailboxPath user1MailboxPath = MailboxPath.forUser(user1, "Inbox");
         MockMailboxSession user1MailboxSession = new MockMailboxSession(user1);
         when(mailboxManager.createSystemSession(user1))
             .thenReturn(user1MailboxSession);

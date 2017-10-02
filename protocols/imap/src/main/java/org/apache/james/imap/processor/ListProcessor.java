@@ -166,7 +166,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
 
                 MailboxPath basePath = null;
                 if (isRelative) {
-                    basePath = new MailboxPath(MailboxConstants.USER_NAMESPACE, user, finalReferencename);
+                    basePath = MailboxPath.forUser(user, finalReferencename);
                 } else {
                     basePath = PathConverter.forSession(session).buildFullPath(finalReferencename);
                 }

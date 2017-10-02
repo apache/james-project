@@ -23,12 +23,14 @@ import static org.apache.james.mailbox.store.mail.model.ListMessageAssert.assert
 import static org.apache.james.mailbox.store.mail.model.ListMessagePropertiesAssert.assertProperties;
 import static org.apache.james.mailbox.store.mail.model.MessageAssert.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.IOException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 import javax.mail.util.SharedByteArrayInputStream;
@@ -99,8 +101,8 @@ public abstract class MessageMapperTest {
     }
 
     private void initData() throws MailboxException {
-        benwaInboxMailbox = createMailbox(new MailboxPath("#private", "benwa", "INBOX"));
-        benwaWorkMailbox = createMailbox( new MailboxPath("#private", "benwa", "INBOX"+DELIMITER+"work"));
+        benwaInboxMailbox = createMailbox(MailboxPath.forUser("benwa", "INBOX"));
+        benwaWorkMailbox = createMailbox( MailboxPath.forUser("benwa", "INBOX"+DELIMITER+"work"));
 
         message1 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test1 \n\nBody1\n.\n", BODY_START, new PropertyBuilder());
         message2 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test2 \n\nBody2\n.\n", BODY_START, new PropertyBuilder());
@@ -1035,7 +1037,7 @@ public abstract class MessageMapperTest {
 
     @Test
     public void getApplicableFlagShouldReturnDefaultApplicableFlagsWhenMailboxEmpty() throws Exception {
-        SimpleMailbox emptyMailbox = createMailbox(new MailboxPath("#private", "benwa", "EMPTY"));
+        SimpleMailbox emptyMailbox = createMailbox(MailboxPath.forUser("benwa", "EMPTY"));
 
         assertThat(messageMapper.getApplicableFlag(emptyMailbox))
             .isEqualTo(new FlagsBuilder()

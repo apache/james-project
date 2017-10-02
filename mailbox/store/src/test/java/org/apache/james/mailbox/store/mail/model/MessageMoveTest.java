@@ -68,8 +68,8 @@ public abstract class MessageMoveTest {
         this.messageMapper = mapperProvider.createMessageMapper();
         Assume.assumeNotNull(messageMapper);
 
-        benwaInboxMailbox = createMailbox(new MailboxPath("#private", "benwa", "INBOX"));
-        benwaWorkMailbox = createMailbox( new MailboxPath("#private", "benwa", "INBOX"+DELIMITER+"work"));
+        benwaInboxMailbox = createMailbox(MailboxPath.forUser("benwa", "INBOX"));
+        benwaWorkMailbox = createMailbox( MailboxPath.forUser("benwa", "INBOX"+DELIMITER+"work"));
         message1 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test1 \n\nBody1\n.\n", BODY_START, new PropertyBuilder());
     }
 

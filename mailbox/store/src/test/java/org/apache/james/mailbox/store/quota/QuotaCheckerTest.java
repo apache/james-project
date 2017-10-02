@@ -37,7 +37,7 @@ import org.junit.Test;
 public class QuotaCheckerTest {
 
     public static final QuotaRoot QUOTA_ROOT = QuotaRootImpl.quotaRoot("benwa");
-    public static final MailboxPath MAILBOX_PATH = new MailboxPath("#private", "benwa", "INBOX");
+    public static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("benwa", "INBOX");
     public static final SimpleMailbox MAILBOX = new SimpleMailbox(MAILBOX_PATH, 10);
 
     private QuotaRootResolver mockedQuotaRootResolver;

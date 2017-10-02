@@ -36,10 +36,10 @@ import com.google.common.collect.Lists;
 
 public class DefaultQuotaRootResolverTest {
 
-    public static final MailboxPath MAILBOX_PATH = new MailboxPath("#private", "benwa", "INBOX");
+    public static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("benwa", "INBOX");
     public static final SimpleMailbox MAILBOX = new SimpleMailbox(MAILBOX_PATH, 10);
-    public static final MailboxPath PATH_LIKE = new MailboxPath("#private", "benwa", "%");
-    public static final MailboxPath MAILBOX_PATH_2 = new MailboxPath("#private", "benwa", "test");
+    public static final MailboxPath PATH_LIKE = MailboxPath.forUser("benwa", "%");
+    public static final MailboxPath MAILBOX_PATH_2 = MailboxPath.forUser("benwa", "test");
     public static final SimpleMailbox MAILBOX_2 = new SimpleMailbox(MAILBOX_PATH_2, 10);
     public static final QuotaRoot QUOTA_ROOT = QuotaRootImpl.quotaRoot("#private&benwa");
 
@@ -64,7 +64,7 @@ public class DefaultQuotaRootResolverTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void getQuotaRootShouldThrowWhenUserContainsSeparator() throws Exception {
-        testee.getQuotaRoot(new MailboxPath("#private", "ben&wa", "INBOX"));
+        testee.getQuotaRoot(MailboxPath.forUser("ben&wa", "INBOX"));
     }
 
     @Test

@@ -27,7 +27,6 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.mock.MockMailboxSession;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
@@ -59,7 +58,7 @@ public class DefaultMailboxesProvisioningFilterTest {
         assertThat(mailboxManager.list(session))
             .containsOnlyElementsOf(DefaultMailboxes.DEFAULT_MAILBOXES
                 .stream()
-                .map(mailboxName -> new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, mailboxName))
+                .map(mailboxName -> MailboxPath.forUser(USERNAME, mailboxName))
                 .collect(Guavate.toImmutableList()));
     }
 
@@ -76,7 +75,7 @@ public class DefaultMailboxesProvisioningFilterTest {
         assertThat(mailboxManager.list(session))
             .containsOnlyElementsOf(DefaultMailboxes.DEFAULT_MAILBOXES
                 .stream()
-                .map(mailboxName -> new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, mailboxName))
+                .map(mailboxName -> MailboxPath.forUser(USERNAME, mailboxName))
                 .collect(Guavate.toImmutableList()));
     }
 

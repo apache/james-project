@@ -101,7 +101,7 @@ public class ListRightsProcessorTest {
 
     @Before
     public void setUp() throws Exception {
-        path = new MailboxPath("#private", USER_1, MAILBOX_NAME);
+        path = MailboxPath.forUser(USER_1, MAILBOX_NAME);
         statusResponseFactory = new UnpooledStatusResponseFactory();
         mailboxManagerStub = mockery.mock(MailboxManager.class);
         subject = new ListRightsProcessor(mockery.mock(ImapProcessor.class), mailboxManagerStub, statusResponseFactory, new NoopMetricFactory());

@@ -58,7 +58,7 @@ public abstract class MailboxMapperACLTest {
 
         this.mailboxMapper = mapperProvider.createMailboxMapper();
 
-        MailboxPath benwaInboxPath = new MailboxPath("#private", "benwa", "INBOX");
+        MailboxPath benwaInboxPath = MailboxPath.forUser("benwa", "INBOX");
         benwaInboxMailbox = createMailbox(benwaInboxPath);
         mailboxMapper.save(benwaInboxMailbox);
     }

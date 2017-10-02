@@ -412,14 +412,14 @@ public abstract class AuthenticatedState extends BasicImapCommands {
     @Test
     public void listShouldNotListMailboxWithOtherNamspaceUS() throws Exception {
         Assume.assumeTrue(system.supports(Feature.NAMESPACE_SUPPORT));
-        system.createMailbox(new MailboxPath("#namespace", USER, "Other"));
+        system.createMailbox(MailboxPath.forUser(USER, "Other"));
         simpleScriptedTestProtocol.run("ListMailboxes");
     }
 
     @Test
     public void listShouldNotListMailboxWithOtherNamspaceITALY() throws Exception {
         Assume.assumeTrue(system.supports(Feature.NAMESPACE_SUPPORT));
-        system.createMailbox(new MailboxPath("#namespace", USER, "Other"));
+        system.createMailbox(MailboxPath.forUser(USER, "Other"));
         simpleScriptedTestProtocol
             .withLocale(Locale.ITALY)
             .run("ListMailboxes");
@@ -428,7 +428,7 @@ public abstract class AuthenticatedState extends BasicImapCommands {
     @Test
     public void listShouldNotListMailboxWithOtherNamspaceKOREA() throws Exception {
         Assume.assumeTrue(system.supports(Feature.NAMESPACE_SUPPORT));
-        system.createMailbox(new MailboxPath("#namespace", USER, "Other"));
+        system.createMailbox(MailboxPath.forUser(USER, "Other"));
         simpleScriptedTestProtocol
             .withLocale(Locale.KOREA)
             .run("ListMailboxes");
@@ -436,13 +436,13 @@ public abstract class AuthenticatedState extends BasicImapCommands {
 
     @Test
     public void listShouldNotListMailboxWithOtherUserUS() throws Exception {
-        system.createMailbox(new MailboxPath("#namespace", USER + "2", "Other"));
+        system.createMailbox(MailboxPath.forUser(USER + "2", "Other"));
         simpleScriptedTestProtocol.run("ListMailboxes");
     }
 
     @Test
     public void listShouldNotListMailboxWithOtherUserITALY() throws Exception {
-        system.createMailbox(new MailboxPath("#namespace", USER + "2", "Other"));
+        system.createMailbox(MailboxPath.forUser(USER + "2", "Other"));
         simpleScriptedTestProtocol
             .withLocale(Locale.ITALY)
             .run("ListMailboxes");
@@ -450,7 +450,7 @@ public abstract class AuthenticatedState extends BasicImapCommands {
 
     @Test
     public void listShouldNotListMailboxWithOtherUserKOREA() throws Exception {
-        system.createMailbox(new MailboxPath("#namespace", USER + "2", "Other"));
+        system.createMailbox(MailboxPath.forUser(USER + "2", "Other"));
         simpleScriptedTestProtocol
             .withLocale(Locale.KOREA)
             .run("ListMailboxes");

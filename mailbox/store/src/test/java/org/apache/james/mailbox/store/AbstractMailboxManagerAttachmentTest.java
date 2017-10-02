@@ -35,7 +35,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.mock.MockMailboxSession;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageRange;
@@ -70,7 +69,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         mailboxSession = new MockMailboxSession(USERNAME);
         messageMapper = getMailboxSessionMapperFactory().getMessageMapper(mailboxSession);
         mailboxMapper = getMailboxSessionMapperFactory().getMailboxMapper(mailboxSession);
-        inboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, "INBOX");
+        inboxPath = MailboxPath.forUser(USERNAME, "INBOX");
         mailboxManager = getMailboxManager();
         mailboxManager.createMailbox(inboxPath, mailboxSession);
         inbox = mailboxMapper.findMailboxByPath(inboxPath);
@@ -180,7 +179,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         MailboxSession user2MailboxSession = new MockMailboxSession(user2);
         MessageMapper user2MessageMapper = getMailboxSessionMapperFactory().getMessageMapper(user2MailboxSession);
         MailboxMapper user2MailboxMapper = getMailboxSessionMapperFactory().getMailboxMapper(user2MailboxSession);
-        MailboxPath user2InboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, user2, "INBOX");
+        MailboxPath user2InboxPath = MailboxPath.forUser(user2, "INBOX");
         mailboxManager.createMailbox(user2InboxPath, user2MailboxSession);
         Mailbox user2Inbox = user2MailboxMapper.findMailboxByPath(user2InboxPath);
         MessageManager user2InboxMessageManager = mailboxManager.getMailbox(user2InboxPath, user2MailboxSession);

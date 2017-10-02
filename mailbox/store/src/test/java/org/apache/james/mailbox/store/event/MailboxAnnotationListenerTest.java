@@ -25,13 +25,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.ImmutableList;
+import java.util.List;
+
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.TestId;
@@ -44,7 +44,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.List;
+import com.google.common.collect.ImmutableList;
 
 public class MailboxAnnotationListenerTest {
     private static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", "user", "name");
@@ -75,7 +75,7 @@ public class MailboxAnnotationListenerTest {
         mailboxSession = new MockMailboxSession("test");
         listener = new MailboxAnnotationListener(mailboxSessionMapperFactory);
         eventFactory = new EventFactory();
-        mailbox = new SimpleMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "name"), UID_VALIDITY, mailboxId);
+        mailbox = new SimpleMailbox(MailboxPath.forUser("user", "name"), UID_VALIDITY, mailboxId);
 
         deleteEvent = eventFactory.mailboxDeleted(mailboxSession, mailbox);
 

@@ -36,7 +36,6 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
@@ -105,8 +104,8 @@ public abstract class AbstractMessageSearchIndexTest {
         session = storeMailboxManager.createSystemSession(USERNAME);
         otherSession = storeMailboxManager.createSystemSession(OTHERUSER);
 
-        MailboxPath inboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, INBOX);
-        MailboxPath otherInboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, OTHERUSER, INBOX);
+        MailboxPath inboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxPath otherInboxPath = MailboxPath.forUser(OTHERUSER, INBOX);
 
         storeMailboxManager.createMailbox(inboxPath, session);
         storeMailboxManager.createMailbox(otherInboxPath, otherSession);
@@ -114,7 +113,7 @@ public abstract class AbstractMessageSearchIndexTest {
         StoreMessageManager inboxMessageManager = (StoreMessageManager) storeMailboxManager.getMailbox(inboxPath, session);
         StoreMessageManager otherInboxMessageManager = (StoreMessageManager) storeMailboxManager.getMailbox(otherInboxPath, otherSession);
 
-        MailboxPath myFolderPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, "MyFolder");
+        MailboxPath myFolderPath = MailboxPath.forUser(USERNAME, "MyFolder");
         storeMailboxManager.createMailbox(myFolderPath, session);
         myFolderMessageManager = (StoreMessageManager) storeMailboxManager.getMailbox(myFolderPath, session);
         mailbox = inboxMessageManager.getMailboxEntity();
@@ -1227,7 +1226,7 @@ public abstract class AbstractMessageSearchIndexTest {
 
     @Test
     public void searchShouldOrderByInternalDateWhenSortOnSentDateAndNoCorrespondingHeader() throws Exception {
-        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, "sentDate");
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "sentDate");
         storeMailboxManager.createMailbox(mailboxPath, session);
 
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
@@ -1253,7 +1252,7 @@ public abstract class AbstractMessageSearchIndexTest {
 
     @Test
     public void searchShouldOrderBySentDateThenInternalDateWhenSortOnSentDateAndNonHomogeneousCorrespondingHeader() throws Exception {
-        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, "sentDate");
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "sentDate");
         storeMailboxManager.createMailbox(mailboxPath, session);
 
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);

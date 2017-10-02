@@ -93,7 +93,7 @@ public class DownloadStepdefs {
 
     @Given("^\"([^\"]*)\" mailbox \"([^\"]*)\" contains a message \"([^\"]*)\"$")
     public void appendMessageToMailbox(String user, String mailbox, String messageId) throws Throwable {
-        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, user, mailbox);
+        MailboxPath mailboxPath = MailboxPath.forUser(user, mailbox);
 
         ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
             ClassLoader.getSystemResourceAsStream("eml/oneAttachment.eml"), new Date(), false, new Flags());
@@ -103,7 +103,7 @@ public class DownloadStepdefs {
 
     @Given("^\"([^\"]*)\" mailbox \"([^\"]*)\" contains a message \"([^\"]*)\" with an attachment \"([^\"]*)\"$")
     public void appendMessageWithAttachmentToMailbox(String user, String mailbox, String messageId, String attachmentId) throws Throwable {
-        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, user, mailbox);
+        MailboxPath mailboxPath = MailboxPath.forUser(user, mailbox);
 
         mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
                 ClassLoader.getSystemResourceAsStream("eml/oneAttachment.eml"), new Date(), false, new Flags());
@@ -114,7 +114,7 @@ public class DownloadStepdefs {
 
     @Given("^\"([^\"]*)\" mailbox \"([^\"]*)\" contains a message \"([^\"]*)\" with an inlined attachment \"([^\"]*)\"$")
     public void appendMessageWithInlinedAttachmentToMailbox(String user, String mailbox, String messageId, String attachmentId) throws Throwable {
-        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, user, mailbox);
+        MailboxPath mailboxPath = MailboxPath.forUser(user, mailbox);
 
         mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
                 ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml"), new Date(), false, new Flags());
@@ -124,7 +124,7 @@ public class DownloadStepdefs {
 
     @Given("^\"([^\"]*)\" mailbox \"([^\"]*)\" contains a message \"([^\"]*)\" with multiple same inlined attachments \"([^\"]*)\"$")
     public void appendMessageWithSameInlinedAttachmentsToMailbox(String user, String mailbox, String messageName, String attachmentId) throws Throwable {
-        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, user, mailbox);
+        MailboxPath mailboxPath = MailboxPath.forUser(user, mailbox);
 
         mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
             ClassLoader.getSystemResourceAsStream("eml/sameInlinedImages.eml"), new Date(), false, new Flags());

@@ -89,7 +89,6 @@ public class SetMessagesCreationProcessorTest {
     private static final InMemoryId OUTBOX_ID = InMemoryId.of(12345);
     private static final String DRAFTS = "drafts";
     private static final InMemoryId DRAFTS_ID = InMemoryId.of(12);
-    private static final String NAMESPACE = "#private";
 
     private final CreationMessage.Builder creationMessageBuilder = CreationMessage.builder()
             .from(DraftEmailer.builder().name("alice").email("alice@example.com").build())
@@ -142,14 +141,14 @@ public class SetMessagesCreationProcessorTest {
         
         outbox = mock(MessageManager.class);
         when(outbox.getId()).thenReturn(OUTBOX_ID);
-        when(outbox.getMailboxPath()).thenReturn(new MailboxPath(NAMESPACE, USER, OUTBOX));
+        when(outbox.getMailboxPath()).thenReturn(MailboxPath.forUser(USER, OUTBOX));
         
         when(outbox.appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), any(Boolean.class), any(Flags.class)))
             .thenReturn(new ComposedMessageId(OUTBOX_ID, TestMessageId.of(23), MessageUid.of(1)));
 
         drafts = mock(MessageManager.class);
         when(drafts.getId()).thenReturn(DRAFTS_ID);
-        when(drafts.getMailboxPath()).thenReturn(new MailboxPath(NAMESPACE, USER, DRAFTS));
+        when(drafts.getMailboxPath()).thenReturn(MailboxPath.forUser(USER, DRAFTS));
         optionalOutbox = Optional.of(outbox);
         optionalDrafts = Optional.of(drafts);
     }

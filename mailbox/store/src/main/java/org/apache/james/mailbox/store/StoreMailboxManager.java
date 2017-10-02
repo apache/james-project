@@ -621,7 +621,7 @@ public class StoreMailboxManager implements MailboxManager {
         dispatcher.mailboxRenamed(session, from, mailbox);
 
         // rename submailboxes
-        MailboxPath children = new MailboxPath(MailboxConstants.USER_NAMESPACE, from.getUser(), from.getName() + getDelimiter() + "%");
+        MailboxPath children = new MailboxPath(from.getNamespace(), from.getUser(), from.getName() + getDelimiter() + "%");
         locker.executeWithLock(session, children, (LockAwareExecution<Void>) () -> {
             List<Mailbox> subMailboxes = mapper.findMailboxWithPathLike(children);
             for (Mailbox sub : subMailboxes) {

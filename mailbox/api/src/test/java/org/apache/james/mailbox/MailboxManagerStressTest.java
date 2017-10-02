@@ -35,7 +35,6 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.junit.Test;
 
@@ -63,7 +62,7 @@ public abstract class MailboxManagerStressTest {
         final String username = "username";
         MailboxSession session = mailboxManager.createSystemSession(username);
         mailboxManager.startProcessingRequest(session);
-        final MailboxPath path = new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "INBOX");
+        final MailboxPath path = MailboxPath.forUser(username, "INBOX");
         mailboxManager.createMailbox(path, session);
         mailboxManager.addListener(path, new MailboxListener() {
 

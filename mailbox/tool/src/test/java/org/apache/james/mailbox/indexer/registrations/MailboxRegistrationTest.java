@@ -47,7 +47,7 @@ import com.google.common.collect.Lists;
 
 public class MailboxRegistrationTest {
 
-    public static final MailboxPath INBOX = new MailboxPath("#private", "btellier@apache.org", "INBOX");
+    public static final MailboxPath INBOX = MailboxPath.forUser("btellier@apache.org", "INBOX");
     public static final MessageUid UID = MessageUid.of(18);
     public static final int UID_VALIDITY = 45;
     public static final SimpleMailbox MAILBOX = new SimpleMailbox(INBOX, UID_VALIDITY);

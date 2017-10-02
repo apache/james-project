@@ -34,7 +34,7 @@ public abstract class ACLCommands implements ImapTestConstants {
     
     public static final String OTHER_USER_NAME = "Boby";
     public static final String OTHER_USER_PASSWORD = "password";
-    public static final MailboxPath OTHER_USER_MAILBOX = new MailboxPath("#private", OTHER_USER_NAME, "") ;
+    public static final MailboxPath OTHER_USER_MAILBOX = MailboxPath.forUser(OTHER_USER_NAME, "") ;
 
     protected abstract ImapHostSystem createImapHostSystem();
     protected abstract GrantRightsOnHost createGrantRightsOnHost();

@@ -139,7 +139,7 @@ public class GetMessagesMethodStepdefs {
     public void appendMessageFromFileInlinedMultipart(String messageName, String mailbox) throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         MessageId id = mainStepdefs.mailboxProbe.appendMessage(userStepdefs.lastConnectedUser,
-                    new MailboxPath(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, mailbox),
+                    MailboxPath.forUser(userStepdefs.lastConnectedUser, mailbox),
                     ClassLoader.getSystemResourceAsStream("eml/inlinedMultipart.eml"),
                     Date.from(dateTime.toInstant()), false, new Flags())
                 .getMessageId();
@@ -149,7 +149,7 @@ public class GetMessagesMethodStepdefs {
     private MessageId appendMessage(String mailbox, ContentType contentType, String subject, String content, Optional<Map<String, String>> headers) throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         return mainStepdefs.mailboxProbe.appendMessage(userStepdefs.lastConnectedUser,
-                new MailboxPath(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, mailbox),
+                MailboxPath.forUser(userStepdefs.lastConnectedUser, mailbox),
                 new ByteArrayInputStream(message(contentType, subject, content, headers).getBytes(Charsets.UTF_8)),
                 Date.from(dateTime.toInstant()), false, new Flags()).getMessageId();
     }
@@ -259,7 +259,7 @@ public class GetMessagesMethodStepdefs {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         boolean isRecent = flags.contains(Flags.Flag.RECENT);
         MessageId id = mainStepdefs.mailboxProbe.appendMessage(userStepdefs.lastConnectedUser,
-                new MailboxPath(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, DefaultMailboxes.INBOX),
+                MailboxPath.forUser(userStepdefs.lastConnectedUser, DefaultMailboxes.INBOX),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
                 Date.from(dateTime.toInstant()), isRecent, flags)
                 .getMessageId();
@@ -269,7 +269,7 @@ public class GetMessagesMethodStepdefs {
     private void appendMessage(String messageName, String emlFileName) throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         MessageId id = mainStepdefs.mailboxProbe.appendMessage(userStepdefs.lastConnectedUser,
-            new MailboxPath(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, DefaultMailboxes.INBOX),
+            MailboxPath.forUser(userStepdefs.lastConnectedUser, DefaultMailboxes.INBOX),
                 ClassLoader.getSystemResourceAsStream(emlFileName),
                 Date.from(dateTime.toInstant()), false, new Flags())
                     .getMessageId();

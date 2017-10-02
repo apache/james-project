@@ -34,6 +34,7 @@ import javax.mail.Flags;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -44,7 +45,6 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.transport.mailets.LocalDelivery;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -93,7 +93,7 @@ public class LocalDeliveryTest {
     public void mailShouldBeWellDeliveredByDefaultToUserWhenVirtualHostingIsTurnedOn() throws Exception {
         // Given
         String username = "receiver@domain.com";
-        MailboxPath inbox = new MailboxPath("#private", username, "INBOX");
+        MailboxPath inbox = MailboxPath.forUser(username, "INBOX");
         MessageManager messageManager = mock(MessageManager.class);
 
         when(usersRepository.supportVirtualHosting()).thenReturn(true);
@@ -114,7 +114,7 @@ public class LocalDeliveryTest {
     public void mailShouldBeWellDeliveredByDefaultToUserWhenVirtualHostingIsTurnedOff() throws Exception {
         // Given
         String username = "receiver";
-        MailboxPath inbox = new MailboxPath("#private", username, "INBOX");
+        MailboxPath inbox = MailboxPath.forUser(username, "INBOX");
         MessageManager messageManager = mock(MessageManager.class);
         when(usersRepository.supportVirtualHosting()).thenReturn(false);
         when(usersRepository.getUser(new MailAddress("receiver@localhost"))).thenReturn(username);

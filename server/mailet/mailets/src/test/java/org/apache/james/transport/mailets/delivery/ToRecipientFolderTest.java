@@ -35,6 +35,7 @@ import javax.mail.Flags;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -45,7 +46,6 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.transport.mailets.ToRecipientFolder;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -61,9 +61,9 @@ public class ToRecipientFolderTest {
 
     public static final String USER_LOCAL_PART = "receiver";
     public static final String USER = USER_LOCAL_PART + "@domain.com";
-    public static final MailboxPath INBOX = new MailboxPath("#private", USER, "INBOX");
-    public static final MailboxPath JUNK = new MailboxPath("#private", USER_LOCAL_PART, "Junk");
-    public static final MailboxPath JUNK_VIRTUAL_HOSTING = new MailboxPath("#private", USER, "Junk");
+    public static final MailboxPath INBOX = MailboxPath.forUser(USER, "INBOX");
+    public static final MailboxPath JUNK = MailboxPath.forUser(USER_LOCAL_PART, "Junk");
+    public static final MailboxPath JUNK_VIRTUAL_HOSTING = MailboxPath.forUser(USER, "Junk");
     public static final String MAILET_NAME = "RecipientFolderTest";
 
     private MessageManager messageManager;

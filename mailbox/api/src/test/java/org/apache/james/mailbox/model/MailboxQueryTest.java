@@ -25,10 +25,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.model.MailboxQuery.Builder;
 import org.junit.Before;
 import org.junit.Test;
-import org.apache.james.mailbox.MailboxSession.User;
 
 public class MailboxQueryTest {
 
@@ -1207,7 +1207,7 @@ public class MailboxQueryTest {
     @Test
     public void buildShouldConstructMailboxPathWhenPrivateUserMailboxes() throws Exception {
         //Given
-        MailboxPath expected = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "");
+        MailboxPath expected = MailboxPath.forUser("user", "");
         //When
         MailboxQuery actual = MailboxQuery.builder()
                 .username("user")

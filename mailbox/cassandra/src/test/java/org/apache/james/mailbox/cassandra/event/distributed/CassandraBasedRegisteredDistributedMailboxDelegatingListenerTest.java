@@ -60,8 +60,8 @@ import com.google.common.collect.ImmutableMap;
  */
 public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
 
-    public static final MailboxPath MAILBOX_PATH_1 = new MailboxPath("#private", "user", "mbx");
-    public static final MailboxPath MAILBOX_PATH_2 = new MailboxPath("#private", "user", "mbx.other");
+    public static final MailboxPath MAILBOX_PATH_1 = MailboxPath.forUser("user", "mbx");
+    public static final MailboxPath MAILBOX_PATH_2 = MailboxPath.forUser("user", "mbx.other");
     public static final int CASSANDRA_TIME_OUT_IN_S = 10;
     public static final int SCHEDULER_PERIOD_IN_S = 20;
     public static final ImmutableMap<MessageUid, MailboxMessage> EMPTY_MESSAGE_CACHE = ImmutableMap.of();

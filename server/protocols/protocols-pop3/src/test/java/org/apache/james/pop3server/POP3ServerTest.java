@@ -213,7 +213,7 @@ public class POP3ServerTest {
         assertEquals("Found unexpected messages", 0, list.length);
 
         pop3Client.disconnect();
-        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, "foo", "INBOX");
+        MailboxPath mailboxPath = MailboxPath.forUser("foo", "INBOX");
         MailboxSession session = mailboxManager.login("foo", "bar");
         if (!mailboxManager.mailboxExists(mailboxPath, session)) {
             mailboxManager.createMailbox(mailboxPath, session);
@@ -298,7 +298,7 @@ public class POP3ServerTest {
 
         usersRepository.addUser("foo2", "bar2");
 
-        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, "foo2", "INBOX");
+        MailboxPath mailboxPath = MailboxPath.forUser("foo2", "INBOX");
         MailboxSession session = mailboxManager.login("foo2", "bar2");
 
         if (!mailboxManager.mailboxExists(mailboxPath, session)) {
@@ -387,7 +387,7 @@ public class POP3ServerTest {
 
         usersRepository.addUser("foo2", "bar2");
 
-        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, "foo2", "INBOX");
+        MailboxPath mailboxPath = MailboxPath.forUser("foo2", "INBOX");
         MailboxSession session = mailboxManager.login("foo2", "bar2");
 
         if (!mailboxManager.mailboxExists(mailboxPath, session)) {
@@ -437,7 +437,7 @@ public class POP3ServerTest {
 
         usersRepository.addUser("foo2", "bar2");
 
-        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, "foo2", "INBOX");
+        MailboxPath mailboxPath = MailboxPath.forUser("foo2", "INBOX");
         MailboxSession session = mailboxManager.login("foo2", "bar2");
 
         if (!mailboxManager.mailboxExists(mailboxPath, session)) {

@@ -72,7 +72,7 @@ public class PathConverterTest {
     public void buildPathShouldAcceptRelativeMailboxName() {
         String mailboxName = "mailboxName";
         assertThat(pathConverter.buildFullPath(mailboxName))
-            .isEqualTo(new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, mailboxName));
+            .isEqualTo(MailboxPath.forUser(USERNAME, mailboxName));
     }
 
     @Ignore("Shared mailbox is not supported yet")
@@ -85,7 +85,7 @@ public class PathConverterTest {
     @Test
     public void buildFullPathShouldAcceptUserNamespace() {
         assertThat(pathConverter.buildFullPath(MailboxConstants.USER_NAMESPACE))
-            .isEqualTo(new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, ""));
+            .isEqualTo(MailboxPath.forUser(USERNAME, ""));
     }
 
     @Ignore("Shared mailbox is not supported yet")
@@ -99,7 +99,7 @@ public class PathConverterTest {
     @Test
     public void buildFullPathShouldAcceptUserNamespaceAndDelimiter() {
         assertThat(pathConverter.buildFullPath(MailboxConstants.USER_NAMESPACE + PATH_DELIMITER))
-            .isEqualTo(new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, ""));
+            .isEqualTo(MailboxPath.forUser(USERNAME, ""));
     }
 
     @Ignore("Shared mailbox is not supported yet")
@@ -114,7 +114,7 @@ public class PathConverterTest {
     public void buildFullPathShouldAcceptFullAbsoluteUserPath() {
         String mailboxName = "mailboxName";
         assertThat(pathConverter.buildFullPath(MailboxConstants.USER_NAMESPACE + PATH_DELIMITER + mailboxName))
-            .isEqualTo(new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, mailboxName));
+            .isEqualTo(MailboxPath.forUser(USERNAME, mailboxName));
     }
 
     @Ignore("Shared mailbox is not supported yet")
@@ -130,14 +130,14 @@ public class PathConverterTest {
     public void buildFullPathShouldAcceptRelativePathWithSubFolder() {
         String mailboxName = "mailboxName" + PATH_DELIMITER + "subFolder";
         assertThat(pathConverter.buildFullPath(mailboxName))
-            .isEqualTo(new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, mailboxName));
+            .isEqualTo(MailboxPath.forUser(USERNAME, mailboxName));
     }
 
     @Test
     public void buildFullPathShouldAcceptAbsoluteUserPathWithSubFolder() {
         String mailboxName = "mailboxName.subFolder";
         assertThat(pathConverter.buildFullPath(MailboxConstants.USER_NAMESPACE + PATH_DELIMITER + mailboxName))
-            .isEqualTo(new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, mailboxName));
+            .isEqualTo(MailboxPath.forUser(USERNAME, mailboxName));
     }
 
     @Ignore("Shared mailbox is not supported yet")

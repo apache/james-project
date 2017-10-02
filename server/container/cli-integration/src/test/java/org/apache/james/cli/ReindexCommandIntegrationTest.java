@@ -71,7 +71,7 @@ public class ReindexCommandIntegrationTest {
         String mailbox = "mailbox";
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "reindexmailbox", MailboxConstants.USER_NAMESPACE, USER, mailbox});
 
-        verify(reIndexer).reIndex(new MailboxPath(MailboxConstants.USER_NAMESPACE, USER, mailbox));
+        verify(reIndexer).reIndex(MailboxPath.forUser(USER, mailbox));
     }
 
 }

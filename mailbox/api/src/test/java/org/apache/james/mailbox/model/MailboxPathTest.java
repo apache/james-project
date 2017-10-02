@@ -28,35 +28,35 @@ public class MailboxPathTest {
 
     @Test
     public void getHierarchyLevelsShouldBeOrdered() {
-        assertThat(new MailboxPath("#private", "user", "inbox.folder.subfolder")
+        assertThat(MailboxPath.forUser("user", "inbox.folder.subfolder")
             .getHierarchyLevels('.'))
             .containsExactly(
-                new MailboxPath("#private", "user", "inbox"),
-                new MailboxPath("#private", "user", "inbox.folder"),
-                new MailboxPath("#private", "user", "inbox.folder.subfolder"));
+                MailboxPath.forUser("user", "inbox"),
+                MailboxPath.forUser("user", "inbox.folder"),
+                MailboxPath.forUser("user", "inbox.folder.subfolder"));
     }
 
     @Test
     public void getHierarchyLevelsShouldReturnPathWhenOneLevel() {
-        assertThat(new MailboxPath("#private", "user", "inbox")
+        assertThat(MailboxPath.forUser("user", "inbox")
             .getHierarchyLevels('.'))
             .containsExactly(
-                new MailboxPath("#private", "user", "inbox"));
+                MailboxPath.forUser("user", "inbox"));
     }
 
     @Test
     public void getHierarchyLevelsShouldReturnPathWhenEmptyName() {
-        assertThat(new MailboxPath("#private", "user", "")
+        assertThat(MailboxPath.forUser("user", "")
             .getHierarchyLevels('.'))
             .containsExactly(
-                new MailboxPath("#private", "user", ""));
+                MailboxPath.forUser("user", ""));
     }
 
     @Test
     public void getHierarchyLevelsShouldReturnPathWhenNullName() {
-        assertThat(new MailboxPath("#private", "user", null)
+        assertThat(MailboxPath.forUser("user", null)
             .getHierarchyLevels('.'))
             .containsExactly(
-                new MailboxPath("#private", "user", null));
+                MailboxPath.forUser("user", null));
     }
 }

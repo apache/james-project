@@ -47,7 +47,7 @@ public class CassandraMailboxMapperTest {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMailboxMapperTest.class);
     private static final int UID_VALIDITY = 52;
-    private static final MailboxPath MAILBOX_PATH = new MailboxPath("#private", "user", "name");
+    private static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("user", "name");
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     

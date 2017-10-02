@@ -50,8 +50,8 @@ import com.google.common.collect.ImmutableMap;
  */
 public class BroadcastDelegatingMailboxListenerIntegrationTest {
 
-    public static final MailboxPath MAILBOX_PATH_1 = new MailboxPath("#private", "user", "mbx");
-    public static final MailboxPath MAILBOX_PATH_2 = new MailboxPath("#private", "user", "mbx.other");
+    public static final MailboxPath MAILBOX_PATH_1 = MailboxPath.forUser("user", "mbx");
+    public static final MailboxPath MAILBOX_PATH_2 = MailboxPath.forUser("user", "mbx.other");
     public static final String TOPIC = "TOPIC";
     public static final ImmutableMap<MessageUid, MailboxMessage> EMPTY_MESSAGE_CACHE = ImmutableMap.<MessageUid, MailboxMessage>of();
     private BroadcastDelegatingMailboxListener broadcastDelegatingMailboxListener1;

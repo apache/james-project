@@ -39,17 +39,16 @@ import com.github.steveash.guavate.Guavate;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class CassandraMailboxPathDAOTest {
-    private static final String PRIVATE_NAMESPACE = "#private";
     private static final String USER = "user";
     private static final String OTHER_USER = "other";
     private static final CassandraId INBOX_ID = CassandraId.timeBased();
     private static final CassandraId OUTBOX_ID = CassandraId.timeBased();
     private static final CassandraId otherMailboxId = CassandraId.timeBased();
 
-    public static final MailboxPath USER_INBOX_MAILBOXPATH = new MailboxPath(PRIVATE_NAMESPACE, USER, "INBOX");
+    public static final MailboxPath USER_INBOX_MAILBOXPATH = MailboxPath.forUser(USER, "INBOX");
     public static final CassandraIdAndPath INBOX_ID_AND_PATH = new CassandraIdAndPath(INBOX_ID, USER_INBOX_MAILBOXPATH);
-    public static final MailboxPath USER_OUTBOX_MAILBOXPATH = new MailboxPath(PRIVATE_NAMESPACE, USER, "OUTBOX");
-    public static final MailboxPath OTHER_USER_MAILBOXPATH = new MailboxPath(PRIVATE_NAMESPACE, OTHER_USER, "INBOX");
+    public static final MailboxPath USER_OUTBOX_MAILBOXPATH = MailboxPath.forUser(USER, "OUTBOX");
+    public static final MailboxPath OTHER_USER_MAILBOXPATH = MailboxPath.forUser(OTHER_USER, "INBOX");
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     

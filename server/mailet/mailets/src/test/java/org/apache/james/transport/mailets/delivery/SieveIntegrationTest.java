@@ -28,13 +28,13 @@ import java.io.IOException;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.transport.mailets.Sieve;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -57,9 +57,9 @@ public class SieveIntegrationTest {
     public static final DateTime DATE_DEFAULT = formatter.parseDateTime("2016-01-14 00:00:00");
     public static final DateTime DATE_NEW = formatter.parseDateTime("2016-01-18 00:00:00");
     public static final DateTime DATE_OLD = formatter.parseDateTime("2011-01-18 00:00:00");
-    public static final MailboxPath NOT_SELECTED_MAILBOX = new MailboxPath("#private", LOCAL_PART, "INBOX.not.selected");
-    public static final MailboxPath SELECTED_MAILBOX = new MailboxPath("#private", LOCAL_PART, "INBOX.select");
-    public static final MailboxPath INBOX = new MailboxPath("#private", LOCAL_PART, "INBOX");
+    public static final MailboxPath NOT_SELECTED_MAILBOX = MailboxPath.forUser(LOCAL_PART, "INBOX.not.selected");
+    public static final MailboxPath SELECTED_MAILBOX = MailboxPath.forUser(LOCAL_PART, "INBOX.select");
+    public static final MailboxPath INBOX = MailboxPath.forUser(LOCAL_PART, "INBOX");
 
     private Sieve testee;
     private UsersRepository usersRepository;

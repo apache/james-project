@@ -30,7 +30,6 @@ import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.After;
@@ -44,7 +43,7 @@ public class CassandraMailboxDAOTest {
 
     public static final int UID_VALIDITY_1 = 145;
     public static final int UID_VALIDITY_2 = 147;
-    public static final MailboxPath NEW_MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "xyz");
+    public static final MailboxPath NEW_MAILBOX_PATH = MailboxPath.forUser("user", "xyz");
     public static CassandraId CASSANDRA_ID_1 = CassandraId.timeBased();
     public static CassandraId CASSANDRA_ID_2 = CassandraId.timeBased();
 
@@ -62,10 +61,10 @@ public class CassandraMailboxDAOTest {
 
         testee = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
 
-        mailbox1 = new SimpleMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "abcd"),
+        mailbox1 = new SimpleMailbox(MailboxPath.forUser("user", "abcd"),
             UID_VALIDITY_1,
             CASSANDRA_ID_1);
-        mailbox2 = new SimpleMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "defg"),
+        mailbox2 = new SimpleMailbox(MailboxPath.forUser("user", "defg"),
             UID_VALIDITY_2,
             CASSANDRA_ID_2);
     }

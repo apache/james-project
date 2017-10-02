@@ -68,7 +68,7 @@ public class LSubProcessor extends AbstractSubscriptionProcessor<LsubRequest> {
         boolean isRelative = ((finalReferencename + mailboxName).charAt(0) != MailboxConstants.NAMESPACE_PREFIX_CHAR);
         MailboxPath basePath = null;
         if (isRelative) {
-            basePath = new MailboxPath(MailboxConstants.USER_NAMESPACE, mailboxSession.getUser().getUserName(), CharsetUtil.decodeModifiedUTF7(finalReferencename));
+            basePath = MailboxPath.forUser(mailboxSession.getUser().getUserName(), CharsetUtil.decodeModifiedUTF7(finalReferencename));
         } else {
             basePath = PathConverter.forSession(session).buildFullPath(CharsetUtil.decodeModifiedUTF7(finalReferencename));
         }

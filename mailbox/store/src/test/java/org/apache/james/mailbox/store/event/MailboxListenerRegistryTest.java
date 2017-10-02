@@ -30,8 +30,8 @@ import org.junit.Test;
 
 public class MailboxListenerRegistryTest {
 
-    private static final MailboxPath MAILBOX_PATH = new MailboxPath("#private", "user", "INBOX");
-    private static final MailboxPath OTHER_MAILBOX_PATH = new MailboxPath("#private", "user", "other");
+    private static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("user", "INBOX");
+    private static final MailboxPath OTHER_MAILBOX_PATH = MailboxPath.forUser("user", "other");
     private MailboxListenerRegistry testee;
     private MailboxListener mailboxListener;
     private MailboxListener otherMailboxListener;

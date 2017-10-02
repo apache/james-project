@@ -365,7 +365,7 @@ public abstract class GetMailboxesMethodTest {
     public void getMailboxesShouldReturnMailboxesWhenAvailable() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "name");
 
-        mailboxProbe.appendMessage(alice, new MailboxPath(MailboxConstants.USER_NAMESPACE, alice, "name"),
+        mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "name"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
 
         given()
@@ -383,7 +383,7 @@ public abstract class GetMailboxesMethodTest {
     public void getMailboxesShouldReturnMailboxPropertiesWhenAvailable() throws Exception {
         String myMailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "name").serialize();
 
-        mailboxProbe.appendMessage(alice, new MailboxPath(MailboxConstants.USER_NAMESPACE, alice, "name"),
+        mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "name"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
 
         given()

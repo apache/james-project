@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.indexer.registrations;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Optional;
 
 import org.apache.james.mailbox.MailboxListener;
@@ -31,8 +32,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class GlobalRegistrationTest {
-    public static final MailboxPath INBOX = new MailboxPath("#private", "btellier@apache.org", "INBOX");
-    public static final MailboxPath NEW_PATH = new MailboxPath("#private", "btellier@apache.org", "INBOX.new");
+    public static final MailboxPath INBOX = MailboxPath.forUser("btellier@apache.org", "INBOX");
+    public static final MailboxPath NEW_PATH = MailboxPath.forUser("btellier@apache.org", "INBOX.new");
     public static final int UID_VALIDITY = 45;
     public static final SimpleMailbox MAILBOX = new SimpleMailbox(INBOX, UID_VALIDITY);
     public static final SimpleMailbox NEW_MAILBOX = new SimpleMailbox(NEW_PATH, UID_VALIDITY);

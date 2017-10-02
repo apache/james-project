@@ -81,7 +81,7 @@ public abstract class MessageWithAttachmentMapperTest {
         this.messageMapper = mapperProvider.createMessageMapper();
         this.attachmentMapper = mapperProvider.createAttachmentMapper();
 
-        attachmentsMailbox = createMailbox( new MailboxPath("#private", "benwa", "Attachments"));
+        attachmentsMailbox = createMailbox(MailboxPath.forUser("benwa", "Attachments"));
 
         Attachment attachment = Attachment.builder()
                 .attachmentId(AttachmentId.from("123"))

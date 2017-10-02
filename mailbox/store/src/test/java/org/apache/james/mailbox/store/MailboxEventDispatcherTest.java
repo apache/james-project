@@ -31,7 +31,6 @@ import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.mock.MockMailboxSession;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageResult;
@@ -78,7 +77,7 @@ public class MailboxEventDispatcherTest {
 
         dispatcher = MailboxEventDispatcher.ofListener(collector);
         result = mock(MessageResult.class);
-        mailbox = new SimpleMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "name"), UID_VALIDITY, MAILBOX_ID);
+        mailbox = new SimpleMailbox(MailboxPath.forUser("user", "name"), UID_VALIDITY, MAILBOX_ID);
 
         when(result.getUid()).thenReturn(MessageUid.of(23));
     }

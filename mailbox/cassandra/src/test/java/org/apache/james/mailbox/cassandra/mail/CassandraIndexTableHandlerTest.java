@@ -94,7 +94,7 @@ public class CassandraIndexTableHandlerTest {
                                                 applicableFlagDAO,
                                                 deletedMessageDAO);
 
-        mailbox = new SimpleMailbox(new MailboxPath("#private", "user", "name"),
+        mailbox = new SimpleMailbox(MailboxPath.forUser("user", "name"),
             UID_VALIDITY,
             MAILBOX_ID);
     }

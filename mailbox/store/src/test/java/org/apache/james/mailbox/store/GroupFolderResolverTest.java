@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Locale;
 
 import org.apache.james.mailbox.MailboxSession.SessionType;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Test;
@@ -50,7 +49,7 @@ public class GroupFolderResolverTest {
         SimpleMailboxSession mailboxSession = new SimpleMailboxSession(1, "username", "password", localePreferences, sharedSpaces, null, pathSeparator, SessionType.User);
         GroupFolderResolver testee =  new GroupFolderResolver(mailboxSession);
         
-        SimpleMailbox mailbox = new SimpleMailbox(new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "name"), UID_VALIDITY);
+        SimpleMailbox mailbox = new SimpleMailbox(MailboxPath.forUser("user", "name"), UID_VALIDITY);
         assertThat(testee.isGroupFolder(mailbox)).isFalse();
     }
     

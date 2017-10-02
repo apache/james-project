@@ -49,7 +49,6 @@ import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageIdManager;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.ComposedMessageId;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.FakeAuthenticator;
@@ -142,7 +141,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
 
     @Test
     public void termsBetweenElasticSearchAndLuceneLimitDueTuNonAsciiCharsShouldBeTruncated() throws Exception {
-        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, INBOX);
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MockMailboxSession session = new MockMailboxSession(USERNAME);
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
 
@@ -159,7 +158,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
 
     @Test
     public void tooLongTermsShouldNotMakeIndexingFail() throws Exception {
-        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, INBOX);
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MockMailboxSession session = new MockMailboxSession(USERNAME);
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
 
@@ -176,7 +175,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
 
     @Test
     public void fieldsExceedingLuceneLimitShouldNotBeIgnored() throws Exception {
-        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, INBOX);
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MockMailboxSession session = new MockMailboxSession(USERNAME);
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
 
@@ -193,7 +192,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
 
     @Test
     public void fieldsWithTooLongTermShouldStillBeIndexed() throws Exception {
-        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, INBOX);
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MockMailboxSession session = new MockMailboxSession(USERNAME);
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
 
@@ -210,7 +209,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
 
     @Test
     public void reasonableLongTermShouldNotBeIgnored() throws Exception {
-        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, INBOX);
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MockMailboxSession session = new MockMailboxSession(USERNAME);
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
 

@@ -80,7 +80,7 @@ public class MailboxAppenderTest {
     public void appendShouldAddMessageToDesiredMailbox() throws Exception {
         testee.append(mimeMessage, USER, FOLDER);
 
-        MessageResultIterator messages = mailboxManager.getMailbox(new MailboxPath("#private", USER, FOLDER), session)
+        MessageResultIterator messages = mailboxManager.getMailbox(MailboxPath.forUser(USER, FOLDER), session)
             .getMessages(MessageRange.all(), new FetchGroupImpl(MessageResult.FetchGroup.FULL_CONTENT), session);
 
         assertThat(messages).hasSize(1);
@@ -88,7 +88,7 @@ public class MailboxAppenderTest {
 
     @Test
     public void appendShouldAddMessageToDesiredMailboxWhenMailboxExists() throws Exception {
-        MailboxPath mailboxPath = new MailboxPath("#private", USER, FOLDER);
+        MailboxPath mailboxPath = MailboxPath.forUser(USER, FOLDER);
         mailboxManager.createMailbox(mailboxPath, session);
 
         testee.append(mimeMessage, USER, FOLDER);
@@ -110,7 +110,7 @@ public class MailboxAppenderTest {
     public void appendShouldRemovePathSeparatorAsFirstChar() throws Exception {
         testee.append(mimeMessage, USER, "." + FOLDER);
 
-        MessageResultIterator messages = mailboxManager.getMailbox(new MailboxPath("#private", USER, FOLDER), session)
+        MessageResultIterator messages = mailboxManager.getMailbox(MailboxPath.forUser(USER, FOLDER), session)
             .getMessages(MessageRange.all(), new FetchGroupImpl(MessageResult.FetchGroup.FULL_CONTENT), session);
 
         assertThat(messages).hasSize(1);
@@ -120,7 +120,7 @@ public class MailboxAppenderTest {
     public void appendShouldReplaceSlashBySeparator() throws Exception {
         testee.append(mimeMessage, USER, FOLDER + "/any");
 
-        MessageResultIterator messages = mailboxManager.getMailbox(new MailboxPath("#private", USER, FOLDER + ".any"), session)
+        MessageResultIterator messages = mailboxManager.getMailbox(MailboxPath.forUser(USER, FOLDER + ".any"), session)
             .getMessages(MessageRange.all(), new FetchGroupImpl(MessageResult.FetchGroup.FULL_CONTENT), session);
 
         assertThat(messages).hasSize(1);

@@ -114,19 +114,19 @@ public class MockMailboxManager {
                 String folderName = "INBOX";
 
                 MailboxSession mailboxSession = getMockMailboxManager().createSystemSession(user);
-                mailboxPath = new MailboxPath("#private", user, folderName);
+                mailboxPath = MailboxPath.forUser(user, folderName);
                 createMailbox(mailboxSession, mailboxPath);
                 
                 for (int k=0; k < SUB_MAILBOXES_COUNT; k++) {
                     
                     String subFolderName = folderName + ".SUB_FOLDER_" + k;
-                    mailboxPath = new MailboxPath("#private", user, subFolderName);
+                    mailboxPath = MailboxPath.forUser(user, subFolderName);
                     createMailbox(mailboxSession, mailboxPath);
                     
                     for (int l=0; l < SUB_SUB_MAILBOXES_COUNT; l++) {
 
                         String subSubfolderName = subFolderName + ".SUBSUB_FOLDER_" + l;
-                        mailboxPath = new MailboxPath("#private", user, subSubfolderName);
+                        mailboxPath = MailboxPath.forUser(user, subSubfolderName);
                         createMailbox(mailboxSession, mailboxPath);
 
                     }

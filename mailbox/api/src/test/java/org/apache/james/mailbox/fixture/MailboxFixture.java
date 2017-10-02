@@ -22,14 +22,12 @@ package org.apache.james.mailbox.fixture;
 import org.apache.james.mailbox.model.MailboxPath;
 
 public class MailboxFixture {
-    public static final String PRIVATE_NAMESPACE = "#private";
-
     public static final String USER = "user";
     public static final String OTHER_USER = "otheruser";
     public static final String THIRD_USER = "thirdUser";
 
-    public static final MailboxPath MAILBOX_PATH1 = new MailboxPath(PRIVATE_NAMESPACE, USER, "INBOX");
-    public static final MailboxPath MAILBOX_PATH2 = new MailboxPath(PRIVATE_NAMESPACE, USER, "OUTBOX");
-    public static final MailboxPath MAILBOX_PATH3 = new MailboxPath(PRIVATE_NAMESPACE, USER, "SENT");
-    public static final MailboxPath MAILBOX_PATH4 = new MailboxPath(PRIVATE_NAMESPACE, OTHER_USER, "INBOX");
+    public static final MailboxPath MAILBOX_PATH1 = MailboxPath.forUser(USER, "INBOX");
+    public static final MailboxPath MAILBOX_PATH2 = MailboxPath.forUser(USER, "OUTBOX");
+    public static final MailboxPath MAILBOX_PATH3 = MailboxPath.forUser(USER, "SENT");
+    public static final MailboxPath MAILBOX_PATH4 = MailboxPath.forUser(OTHER_USER, "INBOX");
 }

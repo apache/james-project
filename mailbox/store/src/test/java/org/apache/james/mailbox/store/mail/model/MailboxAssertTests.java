@@ -31,8 +31,8 @@ public class MailboxAssertTests {
 
     @Test
     public void isEqualToShouldNotFailWithEqualMailbox() {
-        SimpleMailbox mailbox1 = new SimpleMailbox(new MailboxPath("namespace", "user", "name"), UID_VALIDITY);
-        SimpleMailbox mailbox2 = new SimpleMailbox(new MailboxPath("namespace", "user", "name"), UID_VALIDITY);
+        SimpleMailbox mailbox1 = new SimpleMailbox(MailboxPath.forUser( "user", "name"), UID_VALIDITY);
+        SimpleMailbox mailbox2 = new SimpleMailbox(MailboxPath.forUser( "user", "name"), UID_VALIDITY);
         mailbox1.setMailboxId(MAILBOX_ID);
         mailbox2.setMailboxId(MAILBOX_ID);
         MailboxAssert.assertThat(mailbox1).isEqualTo(mailbox2);
@@ -40,7 +40,7 @@ public class MailboxAssertTests {
 
     @Test(expected = AssertionError.class)
     public void isEqualToShouldFailWithNotEqualNamespace() {
-        SimpleMailbox mailbox1 = new SimpleMailbox(new MailboxPath("namespace", "user", "name"), UID_VALIDITY);
+        SimpleMailbox mailbox1 = new SimpleMailbox(MailboxPath.forUser( "user", "name"), UID_VALIDITY);
         SimpleMailbox mailbox2 = new SimpleMailbox(new MailboxPath("other_namespace", "user", "name"), UID_VALIDITY);
         mailbox1.setMailboxId(MAILBOX_ID);
         mailbox2.setMailboxId(MAILBOX_ID);
@@ -49,7 +49,7 @@ public class MailboxAssertTests {
 
     @Test(expected = AssertionError.class)
     public void isEqualToShouldFailWithNotEqualUser() {
-        SimpleMailbox mailbox1 = new SimpleMailbox(new MailboxPath("namespace", "user", "name"), UID_VALIDITY);
+        SimpleMailbox mailbox1 = new SimpleMailbox(MailboxPath.forUser( "user", "name"), UID_VALIDITY);
         SimpleMailbox mailbox2 = new SimpleMailbox(new MailboxPath("namespace", "other_user", "name"), UID_VALIDITY);
         mailbox1.setMailboxId(MAILBOX_ID);
         mailbox2.setMailboxId(MAILBOX_ID);
@@ -58,7 +58,7 @@ public class MailboxAssertTests {
 
     @Test(expected = AssertionError.class)
     public void isEqualToShouldFailWithNotEqualName() {
-        SimpleMailbox mailbox1 = new SimpleMailbox(new MailboxPath("namespace", "user", "name"), UID_VALIDITY);
+        SimpleMailbox mailbox1 = new SimpleMailbox(MailboxPath.forUser( "user", "name"), UID_VALIDITY);
         SimpleMailbox mailbox2 = new SimpleMailbox(new MailboxPath("namespace", "user", "other_name"), UID_VALIDITY);
         mailbox1.setMailboxId(MAILBOX_ID);
         mailbox2.setMailboxId(MAILBOX_ID);
@@ -67,8 +67,8 @@ public class MailboxAssertTests {
 
     @Test(expected = AssertionError.class)
     public void isEqualToShouldFailWithNotEqualId() {
-        SimpleMailbox mailbox1 = new SimpleMailbox(new MailboxPath("namespace", "user", "name"), UID_VALIDITY);
-        SimpleMailbox mailbox2 = new SimpleMailbox(new MailboxPath("namespace", "user", "name"), UID_VALIDITY);
+        SimpleMailbox mailbox1 = new SimpleMailbox(MailboxPath.forUser( "user", "name"), UID_VALIDITY);
+        SimpleMailbox mailbox2 = new SimpleMailbox(MailboxPath.forUser( "user", "name"), UID_VALIDITY);
         mailbox1.setMailboxId(MAILBOX_ID);
         mailbox2.setMailboxId(TestId.of(MAILBOX_ID.id + 1));
         MailboxAssert.assertThat(mailbox1).isEqualTo(mailbox2);
@@ -76,8 +76,8 @@ public class MailboxAssertTests {
 
     @Test(expected = AssertionError.class)
     public void isEqualToShouldFailWithNotEqualUidValidity() {
-        SimpleMailbox mailbox1 = new SimpleMailbox(new MailboxPath("namespace", "user", "name"), UID_VALIDITY);
-        SimpleMailbox mailbox2 = new SimpleMailbox(new MailboxPath("namespace", "user", "name"), UID_VALIDITY + 1);
+        SimpleMailbox mailbox1 = new SimpleMailbox(MailboxPath.forUser( "user", "name"), UID_VALIDITY);
+        SimpleMailbox mailbox2 = new SimpleMailbox(MailboxPath.forUser( "user", "name"), UID_VALIDITY + 1);
         mailbox1.setMailboxId(MAILBOX_ID);
         mailbox2.setMailboxId(MAILBOX_ID);
         MailboxAssert.assertThat(mailbox1).isEqualTo(mailbox2);

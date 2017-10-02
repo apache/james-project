@@ -79,7 +79,7 @@ public class SelectedMailboxImplTest {
     @Before
     public void setUp() throws Exception {
         executorService = Executors.newFixedThreadPool(1);
-        mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, "tellier@linagora.com", MailboxConstants.INBOX);
+        mailboxPath = MailboxPath.forUser("tellier@linagora.com", MailboxConstants.INBOX);
         mailboxManager = mock(MailboxManager.class);
         messageManager = mock(MessageManager.class);
         imapSession = mock(ImapSession.class);

@@ -96,7 +96,7 @@ public abstract class MailboxMapperTest {
     @Test
     public void findMailboxByPathWhenAbsentShouldFail() throws MailboxException {
         expected.expect(MailboxNotFoundException.class);
-        mailboxMapper.findMailboxByPath(new MailboxPath("#private", "benwa", "INBOX"));
+        mailboxMapper.findMailboxByPath(MailboxPath.forUser("benwa", "INBOX"));
     }
 
     @Test
@@ -261,13 +261,13 @@ public abstract class MailboxMapperTest {
     }
 
     private void initData() {
-        benwaInboxPath = new MailboxPath("#private", "benwa", "INBOX");
-        benwaWorkPath = new MailboxPath("#private", "benwa", "INBOX"+DELIMITER+"work");
-        benwaWorkTodoPath = new MailboxPath("#private", "benwa", "INBOX"+DELIMITER+"work"+DELIMITER+"todo");
-        benwaPersoPath = new MailboxPath("#private", "benwa", "INBOX"+DELIMITER+"perso");
-        benwaWorkDonePath = new MailboxPath("#private", "benwa", "INBOX"+DELIMITER+"work"+DELIMITER+"done");
-        bobInboxPath = new MailboxPath("#private", "bob", "INBOX");
-        bobyMailboxPath = new MailboxPath("#private", "boby", "INBOX.that.is.a.trick");
+        benwaInboxPath = MailboxPath.forUser("benwa", "INBOX");
+        benwaWorkPath = MailboxPath.forUser("benwa", "INBOX"+DELIMITER+"work");
+        benwaWorkTodoPath = MailboxPath.forUser("benwa", "INBOX"+DELIMITER+"work"+DELIMITER+"todo");
+        benwaPersoPath = MailboxPath.forUser("benwa", "INBOX"+DELIMITER+"perso");
+        benwaWorkDonePath = MailboxPath.forUser("benwa", "INBOX"+DELIMITER+"work"+DELIMITER+"done");
+        bobInboxPath = MailboxPath.forUser("bob", "INBOX");
+        bobyMailboxPath = MailboxPath.forUser("boby", "INBOX.that.is.a.trick");
         bobDifferentNamespacePath = new MailboxPath("#private_bob", "bob", "INBOX.bob");
         esnDevGroupInboxPath = new MailboxPath("#community_ESN_DEV", null, "INBOX");
         esnDevGroupHublinPath = new MailboxPath("#community_ESN_DEV", null, "INBOX"+DELIMITER+"hublin");

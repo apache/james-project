@@ -128,7 +128,7 @@ public abstract class GetMessageListMethodTest {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
         MailboxId mailboxId2 = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
 
-        ComposedMessageId message = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
 
         await();
@@ -150,9 +150,9 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListSetFlaggedFilterShouldResultFlaggedMessages() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags(Flags.Flag.FLAGGED));
 
         await();
@@ -174,9 +174,9 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListUnsetFlaggedFilterShouldReturnNotFlaggedMessages() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags(Flags.Flag.FLAGGED));
 
         await();
@@ -198,9 +198,9 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListReadFilterShouldReturnOnlyReadMessages() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        ComposedMessageId messageNotRead = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotRead = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageRead = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageRead = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags(Flags.Flag.SEEN));
 
         await();
@@ -222,9 +222,9 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListUnreadFilterShouldReturnOnlyUnreadMessages() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        ComposedMessageId messageNotRead = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotRead = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageRead = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageRead = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags(Flags.Flag.SEEN));
 
         await();
@@ -246,9 +246,9 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListSetDraftFilterShouldReturnOnlyDraftMessages() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        ComposedMessageId messageNotDraft = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotDraft = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageDraft = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageDraft = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags(Flags.Flag.DRAFT));
 
         await();
@@ -270,9 +270,9 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListUnsetDraftFilterShouldReturnOnlyNonDraftMessages() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        ComposedMessageId messageNotDraft = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotDraft = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageDraft = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageDraft = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags(Flags.Flag.DRAFT));
 
         await();
@@ -294,9 +294,9 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListSetAnsweredFilterShouldReturnOnlyAnsweredMessages() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        ComposedMessageId messageNotAnswered = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotAnswered = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageAnswered = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageAnswered = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags(Flags.Flag.ANSWERED));
 
         await();
@@ -318,9 +318,9 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListUnsetAnsweredFilterShouldReturnOnlyNotAnsweredMessages() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        ComposedMessageId messageNotAnswered = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotAnswered = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageAnswered = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageAnswered = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags(Flags.Flag.ANSWERED));
 
         await();
@@ -342,13 +342,13 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListANDOperatorShouldReturnMessagesWhichMatchAllConditions() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        ComposedMessageId messageNotSeenNotFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotSeenNotFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageNotSeenFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotSeenFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags(Flags.Flag.FLAGGED));
-        ComposedMessageId messageSeenNotFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageSeenNotFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml"), new Date(), false, new Flags(Flags.Flag.SEEN));
-        ComposedMessageId messageSeenFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageSeenFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml"), new Date(), false, FlagsBuilder.builder().add(Flags.Flag.SEEN, Flags.Flag.FLAGGED).build());
 
         await();
@@ -372,13 +372,13 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListOROperatorShouldReturnMessagesWhichMatchOneOfAllConditions() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        ComposedMessageId messageNotSeenNotFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotSeenNotFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageNotSeenFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotSeenFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags(Flags.Flag.FLAGGED));
-        ComposedMessageId messageSeenNotFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageSeenNotFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml"), new Date(), false, new Flags(Flags.Flag.SEEN));
-        ComposedMessageId messageSeenFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageSeenFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml"), new Date(), false, FlagsBuilder.builder().add(Flags.Flag.SEEN, Flags.Flag.FLAGGED).build());
 
         await();
@@ -402,13 +402,13 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListNOTOperatorShouldReturnMessagesWhichNotMatchAnyCondition() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        ComposedMessageId messageNotSeenNotFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotSeenNotFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageNotSeenFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotSeenFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags(Flags.Flag.FLAGGED));
-        ComposedMessageId messageSeenNotFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageSeenNotFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml"), new Date(), false, new Flags(Flags.Flag.SEEN));
-        ComposedMessageId messageSeenFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageSeenFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml"), new Date(), false, FlagsBuilder.builder().add(Flags.Flag.SEEN, Flags.Flag.FLAGGED).build());
 
         await();
@@ -432,13 +432,13 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListNestedOperatorsShouldReturnMessagesWhichMatchConditions() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        ComposedMessageId messageNotSeenNotFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotSeenNotFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageNotSeenFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotSeenFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags(Flags.Flag.FLAGGED));
-        ComposedMessageId messageSeenNotFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageSeenNotFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml"), new Date(), false, new Flags(Flags.Flag.SEEN));
-        ComposedMessageId messageSeenFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageSeenFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml"), new Date(), false, FlagsBuilder.builder().add(Flags.Flag.SEEN, Flags.Flag.FLAGGED).build());
 
         await();
@@ -491,11 +491,11 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListShouldSupportHasAttachmentSetToTrue() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags());
-        mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml"), new Date(), false, new Flags());
         await();
 
@@ -514,11 +514,11 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListShouldSupportHasAttachmentSetToFalse() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags());
-        ComposedMessageId message3 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message3 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml"), new Date(), false, new Flags());
         await();
 
@@ -549,9 +549,9 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListShouldReturnAllMessagesWhenSingleMailboxNoParameters() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
         await();
 
@@ -569,11 +569,11 @@ public abstract class GetMessageListMethodTest {
     @Test
     public void getMessageListShouldReturnAllMessagesWhenMultipleMailboxesAndNoParameters() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
 
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox2"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox2"),
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
         await();
 
@@ -595,16 +595,16 @@ public abstract class GetMessageListMethodTest {
         dataProbe.addUser(otherUser, password);
 
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
 
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox2"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox2"),
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
         await();
 
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, otherUser, "mailbox");
-        mailboxProbe.appendMessage(otherUser, new MailboxPath(MailboxConstants.USER_NAMESPACE, otherUser, "mailbox"),
+        mailboxProbe.appendMessage(otherUser, MailboxPath.forUser(otherUser, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
         await();
 
@@ -622,7 +622,7 @@ public abstract class GetMessageListMethodTest {
     @Test
     public void getMessageListShouldFilterMessagesWhenInMailboxesFilterMatches() throws Exception {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
-        ComposedMessageId message = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
         await();
 
@@ -640,7 +640,7 @@ public abstract class GetMessageListMethodTest {
     @Test
     public void getMessageListShouldFilterMessagesWhenMultipleInMailboxesFilterMatches() throws Exception {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
-        ComposedMessageId message = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
 
         MailboxId mailboxId2 = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
@@ -660,7 +660,7 @@ public abstract class GetMessageListMethodTest {
     @Test
     public void getMessageListShouldFilterMessagesWhenNotInMailboxesFilterMatches() throws Exception {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
-        mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
 
         await();
@@ -679,11 +679,11 @@ public abstract class GetMessageListMethodTest {
     @Test
     public void getMessageListShouldFilterMessagesWhenNotInMailboxesFilterMatchesTwice() throws Exception {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
-        mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
 
         MailboxId mailbox2Id = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
-        mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox2"),
+        mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox2"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
         await();
 
@@ -701,7 +701,7 @@ public abstract class GetMessageListMethodTest {
     @Test
     public void getMessageListShouldFilterMessagesWhenIdenticalNotInMailboxesAndInmailboxesFilterMatch() throws Exception {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
-        mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
         await();
 
@@ -719,7 +719,7 @@ public abstract class GetMessageListMethodTest {
     @Test
     public void getMessageListShouldNotFilterMessagesWhenNotInMailboxesFilterDoesNotMatch() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
-        ComposedMessageId message = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
 
         MailboxId mailbox2Id = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
@@ -739,7 +739,7 @@ public abstract class GetMessageListMethodTest {
     @Test
     public void getMessageListShouldNotFilterMessagesWhenEmptyNotInMailboxesFilter() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
-        ComposedMessageId message = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
 
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
@@ -761,7 +761,7 @@ public abstract class GetMessageListMethodTest {
         MailboxId emptyMailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "emptyMailbox");
 
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
-        mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
         await();
 
@@ -778,7 +778,7 @@ public abstract class GetMessageListMethodTest {
     @Test
     public void getMessageListShouldFilterMessagesWhenTextFilterDoesntMatches() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
-        mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
         await();
 
@@ -795,7 +795,7 @@ public abstract class GetMessageListMethodTest {
     @Test
     public void getMessageListShouldNotFilterMessagesWhenTextFilterMatchesBody() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
-        ComposedMessageId message = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags());
         await();
 
@@ -828,7 +828,7 @@ public abstract class GetMessageListMethodTest {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         MessageWriter writer = new DefaultMessageWriter();
         writer.writeMessage(message, outputStream);
-        mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream(outputStream.toByteArray()), new Date(), false, new Flags());
         await();
 
@@ -861,7 +861,7 @@ public abstract class GetMessageListMethodTest {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         MessageWriter writer = new DefaultMessageWriter();
         writer.writeMessage(message, outputStream);
-        ComposedMessageId composedMessageId = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId composedMessageId = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream(outputStream.toByteArray()), new Date(), false, new Flags());
         await();
 
@@ -880,9 +880,9 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), convertToDate(date.plusDays(1)), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
         await();
 
@@ -902,10 +902,10 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.parse("Wed, 28 Jun 17 09:23:01 +0200", ImapDateTimeFormatter.rfc5322());
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), convertToDate(date.plusDays(1)), false, new Flags());
         LocalDate date2 = LocalDate.parse("Tue, 27 Jun 2017 09:23:01 +0200", ImapDateTimeFormatter.rfc5322());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), convertToDate(date2), false, new Flags());
         await();
 
@@ -925,9 +925,9 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 13:54:59 +0200\r\nSubject: test\r\n\r\ntestmail".getBytes()), convertToDate(date.plusDays(1)), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 14:54:59 +0200\r\nSubject: test2\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
         await();
 
@@ -947,9 +947,9 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 13:54:59 +0200\r\nSubject: a subject\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 14:54:59 +0200\r\nSubject: b subject\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
         await();
 
@@ -969,9 +969,9 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 13:54:59 +0200\r\nSubject: a subject\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 14:54:59 +0200\r\nSubject: b subject\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
         await();
 
@@ -991,9 +991,9 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 13:54:59 +0200\r\nSubject: subject\r\nFrom: bbb\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 14:54:59 +0200\r\nSubject: subject\r\nFrom: aaa\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
         await();
 
@@ -1013,9 +1013,9 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 13:54:59 +0200\r\nSubject: subject\r\nFrom: aaa\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 14:54:59 +0200\r\nSubject: subject\r\nFrom: bbb\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
         await();
 
@@ -1035,9 +1035,9 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 13:54:59 +0200\r\nSubject: subject\r\nTo: bbb\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 14:54:59 +0200\r\nSubject: subject\r\nTo: aaa\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
         await();
 
@@ -1057,9 +1057,9 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 13:54:59 +0200\r\nSubject: subject\r\nTo: aaa\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 14:54:59 +0200\r\nSubject: subject\r\nTo: bbb\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
         await();
 
@@ -1080,9 +1080,9 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 13:54:59 +0200\r\nSubject: subject\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 14:54:59 +0200\r\nSubject: subject\r\n\r\ntestmail bigger".getBytes()), convertToDate(date), false, new Flags());
         await();
 
@@ -1102,9 +1102,9 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 13:54:59 +0200\r\nSubject: subject\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 14:54:59 +0200\r\nSubject: subject\r\n\r\ntestmail bigger".getBytes()), convertToDate(date), false, new Flags());
         await();
 
@@ -1124,11 +1124,11 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 13:54:59 +0200\r\nSubject: test\r\n\r\ntestmail really bigger".getBytes()), convertToDate(date.plusDays(1)), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 14:54:59 +0200\r\nSubject: test\r\n\r\ntestmail smaller".getBytes()), convertToDate(date), false, new Flags());
-        ComposedMessageId message3 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message3 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 15:54:59 +0200\r\nSubject: test\r\n\r\ntestmail really bigger".getBytes()), convertToDate(date.plusDays(1)), false, new Flags());
 
         await();
@@ -1149,11 +1149,11 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 13:54:59 +0200\r\nSubject: test\r\n\r\ntestmail really bigger".getBytes()), convertToDate(date), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 13:54:59 +0200\r\nSubject: test\r\n\r\ntestmail smaller".getBytes()), convertToDate(date), false, new Flags());
-        ComposedMessageId message3 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message3 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Date: Fri, 02 Jun 2017 15:54:59 +0200\r\nSubject: test\r\n\r\ntestmail really bigger".getBytes()), convertToDate(date), false, new Flags());
 
         await();
@@ -1174,9 +1174,9 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), convertToDate(date.plusDays(1)), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
         await();
 
@@ -1196,9 +1196,9 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), convertToDate(date.plusDays(1)), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
         await();
 
@@ -1242,9 +1242,9 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), convertToDate(date.plusDays(1)), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
         await();
 
@@ -1264,9 +1264,9 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), convertToDate(date.plusDays(1)), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
         await();
 
@@ -1286,11 +1286,11 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), convertToDate(date.plusDays(2)), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), convertToDate(date.plusDays(1)), false, new Flags());
-        mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
         await();
 
@@ -1310,9 +1310,9 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), convertToDate(date.plusDays(1)), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
         await();
 
@@ -1332,9 +1332,9 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        ComposedMessageId message = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), convertToDate(date.plusDays(1)), false, new Flags());
-        mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
         await();
 
@@ -1354,13 +1354,13 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), convertToDate(date.plusDays(1)), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
-        ComposedMessageId message3 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message3 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
-        mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test4\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
         await();
 
@@ -1380,7 +1380,7 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        ComposedMessageId message = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), convertToDate(date.plusDays(1)), false, new Flags());
         await();
 
@@ -1408,7 +1408,7 @@ public abstract class GetMessageListMethodTest {
             + "\r\n"
             + "Hello <b>someone</b>, and thank you for joining example.com!";
         LocalDate date = LocalDate.now();
-        mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream(mailContent.getBytes()), convertToDate(date.plusDays(1)), false, new Flags());
         await();
 
@@ -1431,9 +1431,9 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListHasKeywordFilterShouldReturnMessagesWithKeywords() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags(Flags.Flag.FLAGGED));
 
         await();
@@ -1460,9 +1460,9 @@ public abstract class GetMessageListMethodTest {
             .add(FORWARDED)
             .build();
 
-        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, flags);
 
         await();
@@ -1484,9 +1484,9 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListNotKeywordFilterShouldReturnMessagesWithoutKeywords() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags(Flags.Flag.FLAGGED));
 
         await();
@@ -1513,9 +1513,9 @@ public abstract class GetMessageListMethodTest {
             .add(FORWARDED)
             .build();
 
-        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, flags);
 
         await();
@@ -1542,9 +1542,9 @@ public abstract class GetMessageListMethodTest {
             .add(Flags.Flag.DRAFT)
             .build();
 
-        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags(Flags.Flag.FLAGGED));
-        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, flags);
 
         await();
@@ -1565,9 +1565,9 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListHasKeywordAndNotKeywordFilterShouldReturnMessagesWithAndWithoutKeywords() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags(Flags.Flag.FLAGGED));
 
         await();
@@ -1589,9 +1589,9 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListHasKeywordShouldIgnoreDeleted() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags(Flags.Flag.DELETED));
 
         await();
@@ -1612,9 +1612,9 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListHasKeywordShouldIgnoreRecent() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags(Flags.Flag.RECENT));
 
         await();
@@ -1635,9 +1635,9 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListNotKeywordShouldIgnoreDeleted() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags(Flags.Flag.DELETED));
 
         await();
@@ -1658,9 +1658,9 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListNotKeywordShouldIgnoreRecent() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags(Flags.Flag.RECENT));
 
         await();
@@ -1682,9 +1682,9 @@ public abstract class GetMessageListMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        ComposedMessageId message1 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message1 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), convertToDate(date.plusDays(1)), false, new Flags());
-        ComposedMessageId message2 = mailboxProbe.appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+        ComposedMessageId message2 = mailboxProbe.appendMessage(username, MailboxPath.forUser(username, "mailbox"),
             new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
 
         await();

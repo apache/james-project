@@ -74,7 +74,7 @@ public abstract class EventSerializerTest {
         eventFactory = new EventFactory();
         serializer = createSerializer();
         mailboxSession = new MockMailboxSession("benwa");
-        mailbox = new SimpleMailbox(new MailboxPath("#private", "benwa", "name"), 42);
+        mailbox = new SimpleMailbox(MailboxPath.forUser("benwa", "name"), 42);
         mailbox.setMailboxId(TestId.of(28L));
     }
 

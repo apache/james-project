@@ -51,7 +51,7 @@ import org.junit.Test;
 public class GetQuotaRootProcessorTest {
 
     private static final QuotaRoot QUOTA_ROOT = QuotaRootImpl.quotaRoot("plop");
-    public static final MailboxPath MAILBOX_PATH = new MailboxPath("#private", "plop", "INBOX");
+    public static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("plop", "INBOX");
     public static final Quota MESSAGE_QUOTA = QuotaImpl.quota(24, 1589);
     public static final Quota STORAGE_QUOTA = QuotaImpl.quota(240, 15890);
 

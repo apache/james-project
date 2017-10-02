@@ -36,7 +36,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -214,7 +213,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
 
     private List<MailboxMetaData> retrieveAllUserMailboxes(String username, MailboxSession session) throws MailboxException {
         return mailboxManager.search(
-            new MailboxQuery(new MailboxPath(MailboxConstants.USER_NAMESPACE, username, ""),
+            new MailboxQuery(MailboxPath.forUser(username, ""),
                 "*",
                 session.getPathDelimiter()),
             session);
