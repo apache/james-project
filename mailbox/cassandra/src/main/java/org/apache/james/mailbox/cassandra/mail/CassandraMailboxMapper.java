@@ -49,7 +49,6 @@ import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.datastax.driver.core.Session;
 import com.datastax.driver.core.exceptions.InvalidQueryException;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
@@ -66,10 +65,10 @@ public class CassandraMailboxMapper implements MailboxMapper {
     private final CassandraACLMapper cassandraACLMapper;
 
     @Inject
-    public CassandraMailboxMapper(Session session, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathDAO mailboxPathDAO, CassandraConfiguration cassandraConfiguration) {
+    public CassandraMailboxMapper(CassandraMailboxDAO mailboxDAO, CassandraMailboxPathDAO mailboxPathDAO, CassandraACLMapper aclMapper, CassandraConfiguration cassandraConfiguration) {
         this.mailboxDAO = mailboxDAO;
         this.mailboxPathDAO = mailboxPathDAO;
-        this.cassandraACLMapper = new CassandraACLMapper(session, cassandraConfiguration);
+        this.cassandraACLMapper = aclMapper;
     }
 
     @Override

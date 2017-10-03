@@ -26,6 +26,7 @@ import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.AbstractSubscriptionManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
+import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
@@ -95,6 +96,7 @@ public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManage
         CassandraBlobsDAO cassandraBlobsDAO = null;
         CassandraAttachmentMessageIdDAO attachmentMessageIdDAO = null;
         CassandraAttachmentOwnerDAO ownerDAO = null;
+        CassandraACLMapper aclMapper = null;
         return new CassandraSubscriptionManager(
             new CassandraMailboxSessionMapperFactory(
                 new CassandraUidProvider(cassandra.getConf()),
@@ -115,6 +117,7 @@ public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManage
                 cassandraBlobsDAO,
                 attachmentMessageIdDAO,
                 ownerDAO,
+                aclMapper,
                 CassandraUtils.WITH_DEFAULT_CONFIGURATION,
                 CassandraConfiguration.DEFAULT_CONFIGURATION));
     }

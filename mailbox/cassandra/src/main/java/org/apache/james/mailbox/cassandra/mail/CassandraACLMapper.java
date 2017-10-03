@@ -31,6 +31,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
+import javax.inject.Inject;
+
 import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.FunctionRunnerWithRetry;
@@ -69,6 +71,7 @@ public class CassandraACLMapper {
     private final PreparedStatement conditionalUpdateStatement;
     private final PreparedStatement readStatement;
 
+    @Inject
     public CassandraACLMapper(Session session, CassandraConfiguration cassandraConfiguration) {
         this(session, cassandraConfiguration, () -> {});
     }
