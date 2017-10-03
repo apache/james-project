@@ -412,14 +412,14 @@ public abstract class AuthenticatedState extends BasicImapCommands {
     @Test
     public void listShouldNotListMailboxWithOtherNamspaceUS() throws Exception {
         Assume.assumeTrue(system.supports(Feature.NAMESPACE_SUPPORT));
-        system.createMailbox(MailboxPath.forUser(USER, "Other"));
+        system.createMailbox(new MailboxPath("#namespace", USER, "Other"));
         simpleScriptedTestProtocol.run("ListMailboxes");
     }
 
     @Test
     public void listShouldNotListMailboxWithOtherNamspaceITALY() throws Exception {
         Assume.assumeTrue(system.supports(Feature.NAMESPACE_SUPPORT));
-        system.createMailbox(MailboxPath.forUser(USER, "Other"));
+        system.createMailbox(new MailboxPath("#namespace", USER, "Other"));
         simpleScriptedTestProtocol
             .withLocale(Locale.ITALY)
             .run("ListMailboxes");
@@ -428,7 +428,7 @@ public abstract class AuthenticatedState extends BasicImapCommands {
     @Test
     public void listShouldNotListMailboxWithOtherNamspaceKOREA() throws Exception {
         Assume.assumeTrue(system.supports(Feature.NAMESPACE_SUPPORT));
-        system.createMailbox(MailboxPath.forUser(USER, "Other"));
+        system.createMailbox(new MailboxPath("#namespace", USER, "Other"));
         simpleScriptedTestProtocol
             .withLocale(Locale.KOREA)
             .run("ListMailboxes");
