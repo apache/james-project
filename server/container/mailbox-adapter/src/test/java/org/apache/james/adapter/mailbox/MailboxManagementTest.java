@@ -149,7 +149,7 @@ public class MailboxManagementTest {
     }
 
     @Test
-    public void createMailboxShouldThrowIfMailboxAlreadyExist() throws Exception {
+    public void createMailboxShouldThrowIfMailboxAlreadyExists() throws Exception {
         MailboxPath path = MailboxPath.forUser(USER, "name");
         Mailbox mailbox = new SimpleMailbox(path, UID_VALIDITY);
         inMemoryMapperFactory.createMailboxMapper(session).save(mailbox);
