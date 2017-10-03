@@ -157,6 +157,14 @@ public class MailboxManagementTest {
         assertThatThrownBy(() -> mailboxManagerManagement.createMailbox(MailboxConstants.USER_NAMESPACE, USER, "name"))
             .isInstanceOf(RuntimeException.class)
             .hasCauseInstanceOf(MailboxExistsException.class);
+    }
+
+    @Test
+    public void createMailboxShouldNotCreateAdditionalMailboxesIfMailboxAlreadyExists() throws Exception {
+        MailboxPath path = MailboxPath.forUser(USER, "name");
+        Mailbox mailbox = new SimpleMailbox(path, UID_VALIDITY);
+        inMemoryMapperFactory.createMailboxMapper(session).save(mailbox);
+
         assertThat(inMemoryMapperFactory.createMailboxMapper(session).list()).containsExactly(mailbox);
     }
 
