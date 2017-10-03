@@ -105,7 +105,7 @@ public class InMemoryMailboxMapper implements MailboxMapper {
         InMemoryId id = (InMemoryId) mailbox.getMailboxId();
         if (id == null) {
             id = InMemoryId.of(mailboxIdGenerator.incrementAndGet());
-            ((SimpleMailbox) mailbox).setMailboxId(id);
+            mailbox.setMailboxId(id);
         } else {
             try {
                 Mailbox mailboxWithPreviousName = findMailboxById(id);
