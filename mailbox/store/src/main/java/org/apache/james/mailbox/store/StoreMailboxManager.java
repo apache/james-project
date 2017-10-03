@@ -26,6 +26,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -674,9 +675,12 @@ public class StoreMailboxManager implements MailboxManager {
     @Override
     public List<MailboxMetaData> search(MailboxQuery mailboxExpression, MailboxSession session) throws MailboxException {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        List<Mailbox> mailboxes = mailboxMapper
+        Stream<Mailbox> baseMailboxes = mailboxMapper
             .findMailboxWithPathLike(mailboxExpression.getPathLike())
-            .stream()
+            .stream();
+        Stream<Mailbox> delegatedMailboxes = getDelegatedMailboxes(mailboxMapper, mailboxExpression, session);
+        List<Mailbox> mailboxes = Stream.concat(baseMailboxes,
+                delegatedMailboxes)
             .filter(Throwing.predicate(mailbox -> isReadable(session, mailbox)))
             .collect(Guavate.toImmutableList());
 
@@ -686,6 +690,13 @@ public class StoreMailboxManager implements MailboxManager {
             .map(mailbox -> toMailboxMetadata(session, mailboxes, mailbox))
             .sorted(new StandardMailboxMetaDataComparator())
             .collect(Guavate.toImmutableList());
+    }
+
+    private Stream<Mailbox> getDelegatedMailboxes(MailboxMapper mailboxMapper, MailboxQuery mailboxQuery, MailboxSession session) throws MailboxException {
+        if (mailboxQuery.isPrivateMailboxes(session)) {
+            return Stream.of();
+        }
+        return mailboxMapper.findMailboxes(session.getUser().getUserName(), Right.Read).stream();
     }
 
     private boolean isReadable(MailboxSession session, Mailbox mailbox) throws MailboxException {
