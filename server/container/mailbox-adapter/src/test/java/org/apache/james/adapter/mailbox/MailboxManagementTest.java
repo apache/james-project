@@ -20,6 +20,7 @@
 package org.apache.james.adapter.mailbox;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,6 +30,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
+import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -147,11 +149,14 @@ public class MailboxManagementTest {
     }
 
     @Test
-    public void createMailboxShouldNotThrowIfMailboxAlreadyExist() throws Exception {
+    public void createMailboxShouldThrowIfMailboxAlreadyExist() throws Exception {
         MailboxPath path = MailboxPath.forUser(USER, "name");
         Mailbox mailbox = new SimpleMailbox(path, UID_VALIDITY);
         inMemoryMapperFactory.createMailboxMapper(session).save(mailbox);
-        mailboxManagerManagement.createMailbox(MailboxConstants.USER_NAMESPACE, USER, "name");
+
+        assertThatThrownBy(() -> mailboxManagerManagement.createMailbox(MailboxConstants.USER_NAMESPACE, USER, "name"))
+            .isInstanceOf(RuntimeException.class)
+            .hasCauseInstanceOf(MailboxExistsException.class);
         assertThat(inMemoryMapperFactory.createMailboxMapper(session).list()).containsExactly(mailbox);
     }
 

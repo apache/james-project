@@ -18,9 +18,11 @@
  ****************************************************************/
 package org.apache.james.mailbox.jcr;
 
+import java.io.Serializable;
+
 import org.apache.james.mailbox.model.MailboxId;
 
-public class JCRId implements MailboxId {
+public class JCRId implements MailboxId, Serializable {
 
     public static JCRId of(String value) {
         return new JCRId(value);

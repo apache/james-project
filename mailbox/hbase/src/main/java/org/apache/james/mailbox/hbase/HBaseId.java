@@ -18,12 +18,13 @@
  ****************************************************************/
 package org.apache.james.mailbox.hbase;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.james.mailbox.model.MailboxId;
 
-public class HBaseId implements MailboxId {
+public class HBaseId implements MailboxId, Serializable {
 
     private final UUID id;
 

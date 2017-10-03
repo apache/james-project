@@ -18,7 +18,9 @@
  ****************************************************************/
 package org.apache.james.mailbox.model;
 
-public class TestId implements MailboxId {
+import java.io.Serializable;
+
+public class TestId implements MailboxId, Serializable {
 
     public static class Factory implements MailboxId.Factory {
         

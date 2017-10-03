@@ -35,6 +35,7 @@ import org.apache.james.cli.exceptions.InvalidPortException;
 import org.apache.james.cli.exceptions.MissingCommandException;
 import org.apache.james.cli.exceptions.UnrecognizedCommandException;
 import org.apache.james.cli.type.CmdType;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.store.mail.model.SerializableQuota;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
@@ -308,8 +309,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.CREATEMAILBOX.getCommand(), namespace, user, name};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        mailboxProbe.createMailbox(namespace, user, name);
-        expectLastCall();
+        expect(mailboxProbe.createMailbox(namespace, user, name)).andReturn(control.createMock(MailboxId.class));
 
         control.replay();
         testee.executeCommandLine(commandLine);

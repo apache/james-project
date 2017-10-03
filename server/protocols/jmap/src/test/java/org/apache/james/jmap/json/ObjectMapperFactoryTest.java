@@ -21,6 +21,7 @@ package org.apache.james.jmap.json;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.Serializable;
 import java.util.Map;
 
 import org.apache.james.jmap.model.mailbox.Rights;
@@ -151,7 +152,7 @@ public class ObjectMapperFactoryTest {
         }
     }
 
-    public static class KeyWithoutToString implements MailboxId {
+    public static class KeyWithoutToString implements MailboxId, Serializable {
         private String value;
 
         public KeyWithoutToString(String value) {

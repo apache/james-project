@@ -18,9 +18,11 @@
  ****************************************************************/
 package org.apache.james.mailbox.maildir;
 
+import java.io.Serializable;
+
 import org.apache.james.mailbox.model.MailboxId;
 
-public class MaildirId implements MailboxId {
+public class MaildirId implements MailboxId, Serializable {
 
     public static class Factory implements MailboxId.Factory {
         @Override

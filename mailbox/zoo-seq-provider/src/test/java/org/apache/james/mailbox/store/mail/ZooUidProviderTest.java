@@ -19,6 +19,8 @@
 package org.apache.james.mailbox.store.mail;
 
 import static org.junit.Assert.assertEquals;
+
+import java.io.Serializable;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -41,7 +43,7 @@ import com.netflix.curator.test.TestingServer;
  */
 public class ZooUidProviderTest {
 
-    public static class LongId implements MailboxId {
+    public static class LongId implements MailboxId, Serializable {
 
         public final Long id;
 
@@ -81,7 +83,7 @@ public class ZooUidProviderTest {
 
     }
 
-    public static class UUIDId implements MailboxId {
+    public static class UUIDId implements MailboxId, Serializable {
 
         private final UUID id;
 

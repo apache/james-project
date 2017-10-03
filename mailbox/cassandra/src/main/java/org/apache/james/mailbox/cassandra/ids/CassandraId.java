@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra.ids;
 
+import java.io.Serializable;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -26,7 +27,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import com.datastax.driver.core.utils.UUIDs;
 import com.google.common.base.MoreObjects;
 
-public class CassandraId implements MailboxId {
+public class CassandraId implements MailboxId, Serializable {
 
     public static class Factory implements MailboxId.Factory {
         @Override
