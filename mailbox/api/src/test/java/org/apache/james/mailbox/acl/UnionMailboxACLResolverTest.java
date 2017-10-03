@@ -64,10 +64,10 @@ public class UnionMailboxACLResolverTest {
 
     @Before
     public void setUp() throws Exception {
-        user1Key = EntryKey.createUser(USER_1);
-        user2Key = EntryKey.createUser(USER_2);
-        group1Key = EntryKey.createGroup(GROUP_1);
-        group2Key = EntryKey.createGroup(GROUP_2);
+        user1Key = EntryKey.createUserEntryKey(USER_1);
+        user2Key = EntryKey.createUserEntryKey(USER_2);
+        group1Key = EntryKey.createGroupEntryKey(GROUP_1);
+        group2Key = EntryKey.createGroupEntryKey(GROUP_2);
 
         MailboxACL acl = new MailboxACL(new Entry(MailboxACL.AUTHENTICATED_KEY, MailboxACL.FULL_RIGHTS));
         authenticatedReadListWriteGlobal = new UnionMailboxACLResolver(acl, acl);
@@ -84,10 +84,10 @@ public class UnionMailboxACLResolverTest {
         groupMembershipResolver.addMembership(GROUP_2, USER_2);
 
         user1Read = new MailboxACL(new Entry(user1Key, Rfc4314Rights.fromSerializedRfc4314Rights("r")));
-        user1ReadNegative = new MailboxACL(new Entry(EntryKey.createUser(USER_1, true), Rfc4314Rights.fromSerializedRfc4314Rights("r")));
+        user1ReadNegative = new MailboxACL(new Entry(EntryKey.createUserEntryKey(USER_1, true), Rfc4314Rights.fromSerializedRfc4314Rights("r")));
 
         group1Read = new MailboxACL(new Entry(group1Key, Rfc4314Rights.fromSerializedRfc4314Rights("r")));
-        group1ReadNegative = new MailboxACL(new Entry(EntryKey.createGroup(GROUP_1, true), Rfc4314Rights.fromSerializedRfc4314Rights("r")));
+        group1ReadNegative = new MailboxACL(new Entry(EntryKey.createGroupEntryKey(GROUP_1, true), Rfc4314Rights.fromSerializedRfc4314Rights("r")));
 
         anybodyRead = new MailboxACL(new Entry(MailboxACL.ANYBODY_KEY, Rfc4314Rights.fromSerializedRfc4314Rights("r")));
         anybodyReadNegative = new MailboxACL(new Entry(MailboxACL.ANYBODY_NEGATIVE_KEY, Rfc4314Rights.fromSerializedRfc4314Rights("r")));

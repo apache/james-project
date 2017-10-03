@@ -63,6 +63,6 @@ public class StoreMessageManagerTest {
             .apply(MailboxACL.command().rights(Right.Read, Right.Write, Right.Administer).forUser(THIRD_USER).asAddition());
         MailboxACL actual = StoreMessageManager.filteredForSession(
             new SimpleMailbox(MAILBOX_PATH1, UID_VALIDITY), acl, new MockMailboxSession(OTHER_USER));
-        assertThat(actual.getEntries()).containsKey(MailboxACL.EntryKey.createUser(OTHER_USER));
+        assertThat(actual.getEntries()).containsKey(MailboxACL.EntryKey.createUserEntryKey(OTHER_USER));
     }
 }

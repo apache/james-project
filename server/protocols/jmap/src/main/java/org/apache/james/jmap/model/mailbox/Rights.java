@@ -208,7 +208,7 @@ public class Rights {
             .stream()
             .map(entry -> new MailboxACL(
                 ImmutableMap.of(
-                    EntryKey.createUser(entry.getKey().value),
+                    EntryKey.createUserEntryKey(entry.getKey().value),
                     toMailboxAclRights(entry.getValue()))))
             .reduce(MailboxACL.EMPTY, union);
     }

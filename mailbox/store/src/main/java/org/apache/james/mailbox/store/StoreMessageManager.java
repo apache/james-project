@@ -826,7 +826,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         if (mailboxSession.getUser().isSameUser(mailbox.getUser())) {
             return acl;
         }
-        MailboxACL.EntryKey userAsKey = MailboxACL.EntryKey.createUser(mailboxSession.getUser().getUserName());
+        MailboxACL.EntryKey userAsKey = MailboxACL.EntryKey.createUserEntryKey(mailboxSession.getUser().getUserName());
         Rfc4314Rights rights = acl.getEntries().getOrDefault(userAsKey, new Rfc4314Rights());
         if (rights.contains(MailboxACL.Right.Administer)) {
             return acl;

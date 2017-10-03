@@ -352,19 +352,19 @@ public class MailboxACL {
      *
      */
     public static class EntryKey {
-        public static EntryKey createGroup(String name) {
+        public static EntryKey createGroupEntryKey(String name) {
             return new EntryKey(name, NameType.group, false);
         }
 
-        public static EntryKey createGroup(String name, boolean negative) {
+        public static EntryKey createGroupEntryKey(String name, boolean negative) {
             return new EntryKey(name, NameType.group, negative);
         }
 
-        public static EntryKey createUser(String name) {
+        public static EntryKey createUserEntryKey(String name) {
             return new EntryKey(name, NameType.user, false);
         }
 
-        public static EntryKey createUser(String name, boolean negative) {
+        public static EntryKey createUserEntryKey(String name, boolean negative) {
             return new EntryKey(name, NameType.user, negative);
         }
 
@@ -518,12 +518,12 @@ public class MailboxACL {
             }
 
             public Builder forUser(String user) {
-                key = EntryKey.createUser(user);
+                key = EntryKey.createUserEntryKey(user);
                 return this;
             }
 
             public Builder forGroup(String group) {
-                key = EntryKey.createGroup(group);
+                key = EntryKey.createGroupEntryKey(group);
                 return this;
             }
 

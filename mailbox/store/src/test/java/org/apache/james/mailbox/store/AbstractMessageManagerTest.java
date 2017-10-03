@@ -25,17 +25,12 @@ import static org.apache.james.mailbox.fixture.MailboxFixture.THIRD_USER;
 import static org.apache.james.mailbox.fixture.MailboxFixture.USER;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.mail.Flags;
-
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MailboxSession.SessionType;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.fixture.MailboxFixture;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.junit.Test;
 
 public abstract class AbstractMessageManagerTest {
@@ -68,7 +63,7 @@ public abstract class AbstractMessageManagerTest {
         MessageManager messageManager = mailboxManager.getMailbox(MAILBOX_PATH1, session);
 
         MessageManager.MetaData actual = messageManager.getMetaData(NO_RESET_RECENT, session, MessageManager.MetaData.FetchGroup.NO_COUNT);
-        assertThat(actual.getACL().getEntries()).containsKeys(MailboxACL.EntryKey.createUser(OTHER_USER), MailboxACL.EntryKey.createUser(THIRD_USER));
+        assertThat(actual.getACL().getEntries()).containsKeys(MailboxACL.EntryKey.createUserEntryKey(OTHER_USER), MailboxACL.EntryKey.createUserEntryKey(THIRD_USER));
     }
 
     @Test
@@ -78,7 +73,7 @@ public abstract class AbstractMessageManagerTest {
         MessageManager messageManager = mailboxManager.getMailbox(MAILBOX_PATH1, session);
 
         MessageManager.MetaData actual = messageManager.getMetaData(NO_RESET_RECENT, otherSession, MessageManager.MetaData.FetchGroup.NO_COUNT);
-        assertThat(actual.getACL().getEntries()).containsOnlyKeys(MailboxACL.EntryKey.createUser(OTHER_USER));
+        assertThat(actual.getACL().getEntries()).containsOnlyKeys(MailboxACL.EntryKey.createUserEntryKey(OTHER_USER));
     }
 
 }

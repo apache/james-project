@@ -101,7 +101,7 @@ public class RightsTest {
     @Test
     public void fromACLShouldFilterOutGroups() throws Exception {
         MailboxACL acl = new MailboxACL(ImmutableMap.of(
-            EntryKey.createGroup("group"), Rfc4314Rights.fromSerializedRfc4314Rights("aet")));
+            EntryKey.createGroupEntryKey("group"), Rfc4314Rights.fromSerializedRfc4314Rights("aet")));
 
         assertThat(Rights.fromACL(acl))
             .isEqualTo(Rights.EMPTY);
@@ -110,7 +110,7 @@ public class RightsTest {
     @Test
     public void fromACLShouldFilterNegatedUsers() throws Exception {
         MailboxACL acl = new MailboxACL(ImmutableMap.of(
-            EntryKey.createUser("user", NEGATIVE), Rfc4314Rights.fromSerializedRfc4314Rights("aet")));
+            EntryKey.createUserEntryKey("user", NEGATIVE), Rfc4314Rights.fromSerializedRfc4314Rights("aet")));
 
         assertThat(Rights.fromACL(acl))
             .isEqualTo(Rights.EMPTY);
@@ -119,7 +119,7 @@ public class RightsTest {
     @Test
     public void fromACLShouldAcceptUsers() throws Exception {
         MailboxACL acl = new MailboxACL(ImmutableMap.of(
-            EntryKey.createUser("user"), Rfc4314Rights.fromSerializedRfc4314Rights("aet")));
+            EntryKey.createUserEntryKey("user"), Rfc4314Rights.fromSerializedRfc4314Rights("aet")));
 
         assertThat(Rights.fromACL(acl))
             .isEqualTo(Rights.builder()
@@ -130,7 +130,7 @@ public class RightsTest {
     @Test
     public void fromACLShouldFilterOutUnknownRights() throws Exception {
         MailboxACL acl = new MailboxACL(ImmutableMap.of(
-            EntryKey.createUser("user"), Rfc4314Rights.fromSerializedRfc4314Rights("aetpk")));
+            EntryKey.createUserEntryKey("user"), Rfc4314Rights.fromSerializedRfc4314Rights("aetpk")));
 
         assertThat(Rights.fromACL(acl))
             .isEqualTo(Rights.builder()
