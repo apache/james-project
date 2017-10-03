@@ -25,12 +25,8 @@ import java.util.stream.LongStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.backends.cassandra.init.CassandraConfiguration;
-import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
+import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
@@ -42,36 +38,21 @@ import org.junit.Test;
 import com.github.fge.lambdas.Throwing;
 
 public class CassandraUidProviderTest {
+    private static final CassandraId CASSANDRA_ID = new CassandraId.Factory().fromString("e22b3ac0-a80b-11e7-bb00-777268d65503");
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     
-    
-    private final CassandraModuleComposite modules = new CassandraModuleComposite(
-            new CassandraAclModule(),
-            new CassandraMailboxModule(),
-            new CassandraUidModule());
-    
-    private final CassandraCluster cassandra = CassandraCluster.create(modules, cassandraServer.getIp(), cassandraServer.getBindingPort());
+    private final CassandraCluster cassandra = CassandraCluster.create(new CassandraUidModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
     
     private CassandraUidProvider uidProvider;
-    private CassandraMailboxMapper mapper;
     private SimpleMailbox mailbox;
 
     @Before
     public void setUpClass() throws Exception {
         uidProvider = new CassandraUidProvider(cassandra.getConf());
-        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
-        CassandraMailboxPathDAO mailboxPathDAO = new CassandraMailboxPathDAO(cassandra.getConf(), cassandra.getTypesProvider());
-        CassandraUserMailboxRightsDAO userMailboxRightsDAO = new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
-        mapper = new CassandraMailboxMapper(
-            mailboxDAO,
-            mailboxPathDAO,
-            userMailboxRightsDAO,
-            new CassandraACLMapper(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION),
-            CassandraConfiguration.DEFAULT_CONFIGURATION);
         MailboxPath path = new MailboxPath("gsoc", "ieugen", "Trash");
         mailbox = new SimpleMailbox(path, 1234);
-        mapper.save(mailbox);
+        mailbox.setMailboxId(CASSANDRA_ID);
     }
     
     @After
