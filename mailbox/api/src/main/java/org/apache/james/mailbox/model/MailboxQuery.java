@@ -33,62 +33,65 @@ import com.google.common.base.Preconditions;
  * Expresses select criteria for mailboxes.
  */
 public final class MailboxQuery {
-
-    private final MailboxPath base;
-
-    private final String expression;
-
-    private final char pathDelimiter;
-    
-    private final Pattern pattern;
+    public static final char SQL_WILDCARD_CHAR = '%';
     
     /**
      * Use this wildcard to match every char including the hierarchy delimiter
      */
     public final static char FREEWILDCARD = '*';
-    
-    
+
     /**
      * Use this wildcard to match every char except the hierarchy delimiter
      */
     public final static char LOCALWILDCARD = '%';
-    
+    private static final String EMPTY_PATH_NAME = "";
+
+    private final MailboxPath base;
+    private final String expression;
+    private final char pathDelimiter;
+    private final Pattern pattern;
+    private final Optional<String> namespace;
+    private final Optional<String> user;
+    private final Optional<String> name;
+
     public static Builder builder() {
         return new Builder();
     }
 
-    public static Builder builder(MailboxSession session) {
-        return builder().pathDelimiter(session.getPathDelimiter()).username(session.getUser().getUserName());
+    public static Builder privateMailboxesBuilder(MailboxSession session) {
+        return builder()
+            .mailboxSession(session)
+            .username(session.getUser().getUserName());
     }
 
     public static class Builder {
-        private static final String EMPTY_PATH_NAME = "";
-        private MailboxPath base;
         private String expression;
-        @VisibleForTesting char pathDelimiter;
-        @VisibleForTesting String username;
+        @VisibleForTesting MailboxSession mailboxSession;
+        @VisibleForTesting Optional<String> username;
         @VisibleForTesting Optional<String> pathName;
         @VisibleForTesting Optional<String> namespace;
         
         private Builder() {
             this.pathName = Optional.empty();
             this.namespace = Optional.empty();
+            this.username = Optional.empty();
         }
         
         public Builder base(MailboxPath base) {
-            this.base = base;
+            this.namespace = Optional.ofNullable(base.getNamespace());
+            this.username = Optional.ofNullable(base.getUser());
+            this.pathName = Optional.ofNullable(base.getName());
             return this;
         }
         
         public Builder username(String username) {
-            this.username = username;
+            this.username = Optional.of(username);
             return this;
         }
         
-        public Builder privateUserMailboxes() {
+        public Builder privateMailboxes() {
             Preconditions.checkState(!pathName.isPresent());
             Preconditions.checkState(!namespace.isPresent());
-            Preconditions.checkState(base == null);
             this.namespace = Optional.of(MailboxConstants.USER_NAMESPACE);
             this.pathName = Optional.of(EMPTY_PATH_NAME);
             return matchesAll();
@@ -104,25 +107,14 @@ public final class MailboxQuery {
             return this;
         }
         
-        public Builder pathDelimiter(char pathDelimiter) {
-            this.pathDelimiter = pathDelimiter;
+        public Builder mailboxSession(MailboxSession session) {
+            this.mailboxSession = session;
             return this;
         }
         
         public MailboxQuery build() {
-            Preconditions.checkState(base != null || username != null);
-            if (base != null && username != null) {
-                throw new IllegalStateException("'base' and 'username' are exclusives");
-            }
-            return new MailboxQuery(buildBase(), expression, pathDelimiter);
-        }
-
-        private MailboxPath buildBase() {
-            if (base != null) {
-                return base;
-            } else {
-                return new MailboxPath(namespace.orElse(MailboxConstants.USER_NAMESPACE), username, pathName.orElse(EMPTY_PATH_NAME));
-            }
+            Preconditions.checkState(mailboxSession != null);
+            return new MailboxQuery(namespace, username, pathName, expression, mailboxSession);
         }
     }
 
@@ -136,18 +128,41 @@ public final class MailboxQuery {
      * @param pathDelimiter
      *            path delimiter to use
      */
-    @VisibleForTesting MailboxQuery(MailboxPath base, String expression, char pathDelimiter) {
-        super();
-        this.base = base;
-        if (base.getName() == null)
-            this.base.setName("");
+    @VisibleForTesting MailboxQuery(Optional<String> namespace, Optional<String> user, Optional<String> name,
+                                    String expression, MailboxSession session) {
+        this.namespace = namespace;
+        this.user = user;
+        this.name = name;
+        this.base = new MailboxPath(
+            namespace.orElse(MailboxConstants.USER_NAMESPACE),
+            user.orElse(session.getUser().getUserName()),
+            name.orElse(EMPTY_PATH_NAME));
         if (expression == null) {
             this.expression = "";
         } else {
             this.expression = expression;
         }
-        this.pathDelimiter = pathDelimiter;
+        this.pathDelimiter = session.getPathDelimiter();
         pattern = constructEscapedRegex();
+    }
+
+    public MailboxPath getPathLike() {
+        String combinedName = getCombinedName()
+            .replace(getFreeWildcard(), SQL_WILDCARD_CHAR)
+            .replace(getLocalWildcard(), SQL_WILDCARD_CHAR)
+            + SQL_WILDCARD_CHAR;
+        return new MailboxPath(getBase(), combinedName);
+    }
+
+    public boolean belongsToRequestedNamespaceAndUser(MailboxPath mailboxPath) {
+        boolean belongsToRequestedNamespace = namespace
+            .map(value -> value.equals(mailboxPath.getNamespace()))
+            .orElse(true);
+        boolean belongsToRequestedUser = user
+            .map(value -> value.equals(mailboxPath.getUser()))
+            .orElse(true);
+
+        return belongsToRequestedNamespace && belongsToRequestedUser;
     }
 
     /**
@@ -195,7 +210,7 @@ public final class MailboxQuery {
      *            name to be matched
      * @return true if the given name matches this expression, false otherwise
      */
-    public final boolean isExpressionMatch(String name) {
+    public boolean isExpressionMatch(String name) {
         final boolean result;
         if (isWild()) {
             if (name == null) {
@@ -207,6 +222,16 @@ public final class MailboxQuery {
             result = expression.equals(name);
         }
         return result;
+    }
+
+    public boolean isPathMatch(MailboxPath mailboxPath) {
+        String baseName = name.orElse(EMPTY_PATH_NAME);
+        int baseNameLength = baseName.length();
+        String mailboxName = mailboxPath.getName();
+
+        return belongsToRequestedNamespaceAndUser(mailboxPath)
+            && mailboxName.startsWith(baseName)
+            && isExpressionMatch(mailboxName.substring(baseNameLength));
     }
   
     /**

@@ -216,7 +216,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
             MailboxQuery.builder()
                 .base(MailboxPath.forUser(username, ""))
                 .expression("*")
-                .pathDelimiter(session.getPathDelimiter())
+                .mailboxSession(session)
                 .build(),
             session);
     }

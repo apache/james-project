@@ -147,6 +147,7 @@ public class InMemoryMessageIdManager implements MessageIdManager {
         return MailboxQuery.builder()
                 .matchesAll()
                 .username(mailboxSession.getUser().getUserName())
+                .mailboxSession(mailboxSession)
                 .build();
     }
 

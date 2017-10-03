@@ -21,6 +21,7 @@ package org.apache.james.mailbox.inmemory;
 import java.io.ByteArrayInputStream;
 import java.util.Date;
 import java.util.Optional;
+
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxManager;
@@ -82,7 +83,7 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
     }
 
     @Override
-    public void deleteMailbox(final MailboxId mailboxId, MailboxSession session) {
+    public void deleteMailbox(MailboxId mailboxId, MailboxSession session) {
         try {
             Optional<MailboxMetaData> mailbox = retrieveMailbox(mailboxId, session);
             if (mailbox.isPresent()) {
@@ -93,8 +94,8 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
         }
     }
 
-    private Optional<MailboxMetaData> retrieveMailbox(final MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
-        MailboxQuery userMailboxesQuery = MailboxQuery.builder(mailboxSession).expression("*").build();
+    private Optional<MailboxMetaData> retrieveMailbox(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
+        MailboxQuery userMailboxesQuery = MailboxQuery.privateMailboxesBuilder(mailboxSession).expression("*").build();
         return mailboxManager.search(userMailboxesQuery, mailboxSession)
             .stream()
             .filter(mailboxMetaData -> mailboxMetaData.getId().equals(mailboxId))

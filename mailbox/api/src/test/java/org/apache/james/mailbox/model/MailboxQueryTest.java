@@ -26,23 +26,31 @@ import static org.mockito.Mockito.when;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSession.User;
+import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxQuery.Builder;
 import org.junit.Before;
 import org.junit.Test;
 
 public class MailboxQueryTest {
+    private static final String CURRENT_USER = "user";
 
-    MailboxPath mailboxPath;
+    private MailboxPath mailboxPath;
+    private MailboxSession mailboxSession;
 
     @Before
     public void setUp() {
         mailboxPath = new MailboxPath("namespace", "user", "name");
+        mailboxSession = new MockMailboxSession("user");
     }
 
     @Test
     public void IsWildShouldReturnTrueWhenOnlyFreeWildcard() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "*", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("*")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isWild();
         //Then
@@ -52,7 +60,11 @@ public class MailboxQueryTest {
     @Test
     public void IsWildShouldReturnTrueWhenOnlyLocalWildcard() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "%", '.'); 
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("%")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isWild();
         //Then
@@ -62,7 +74,11 @@ public class MailboxQueryTest {
     @Test
     public void IsWildShouldReturnTrueWhenFreeWildcardAtBeginning() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "*One", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("*One")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isWild();
         //Then
@@ -72,7 +88,11 @@ public class MailboxQueryTest {
     @Test
     public void IsWildShouldReturnTrueWhenLocalWildcardAtBeginning() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "%One", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("%One")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isWild();
         //Then
@@ -82,7 +102,11 @@ public class MailboxQueryTest {
     @Test
     public void IsWildShouldReturnTrueWhenFreeWildcardInMiddle() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "A*A", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("A*A")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isWild();
         //Then
@@ -92,7 +116,11 @@ public class MailboxQueryTest {
     @Test
     public void IsWildShouldReturnTrueWhenLocalWildcardInMiddle() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "A%A", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("A%A")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isWild();
         //Then
@@ -102,7 +130,11 @@ public class MailboxQueryTest {
     @Test
     public void IsWildShouldReturnTrueWhenFreeWildcardAtEnd() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "One*", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("One*")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isWild();
         //Then
@@ -112,7 +144,11 @@ public class MailboxQueryTest {
     @Test
     public void IsWildShouldReturnTrueWhenLocalWildcardAtEnd() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "One%", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("One%")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isWild();
         //Then
@@ -122,7 +158,11 @@ public class MailboxQueryTest {
     @Test
     public void IsWildShouldReturnFalseWhenEmptyExpression() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isWild();
         //Then
@@ -132,7 +172,11 @@ public class MailboxQueryTest {
     @Test
     public void IsWildShouldReturnFalseWhenNullExpression() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, null, '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression(null)
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isWild();
         //Then
@@ -142,7 +186,11 @@ public class MailboxQueryTest {
     @Test
     public void IsWildShouldReturnFalseWhenNoWildcard() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "ONE", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("ONE")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isWild();
         //Then
@@ -152,7 +200,11 @@ public class MailboxQueryTest {
     @Test
     public void getCombinedNameShouldWork() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         String actual = testee.getCombinedName();
         //Then
@@ -162,7 +214,11 @@ public class MailboxQueryTest {
     @Test
     public void getCombinedNameShouldWorkWhenEmptyExpression() throws Exception { 
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         String actual = testee.getCombinedName();
         //Then
@@ -173,7 +229,11 @@ public class MailboxQueryTest {
     public void getCombinedNameShouldReturnEmptyStringWhenNullMailboxPathAndExpression() throws Exception {
         //Given
         MailboxPath nullMailboxPath = new MailboxPath(null, null, null);
-        MailboxQuery testee = new MailboxQuery(nullMailboxPath, null, '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(nullMailboxPath)
+            .expression(null)
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         String actual = testee.getCombinedName();
         //Then
@@ -183,7 +243,11 @@ public class MailboxQueryTest {
     @Test
     public void getCombinedNameShouldIgnoreDelimiterWhenPresentAtBeginningOfExpression() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, ".mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression(".mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         String actual = testee.getCombinedName();
         //Then
@@ -194,7 +258,11 @@ public class MailboxQueryTest {
     public void getCombinedNameShouldIgnoreDelimiterWhenPresentAtEndOfMailboxName() throws Exception {
         //Given
         MailboxPath mailboxPathWithNullNamespaceAndUser = new MailboxPath(null, null, "name.");
-        MailboxQuery testee = new MailboxQuery(mailboxPathWithNullNamespaceAndUser,  "mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPathWithNullNamespaceAndUser)
+            .expression("mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         String actual = testee.getCombinedName();
         //Then
@@ -205,7 +273,11 @@ public class MailboxQueryTest {
     public void getCombinedNameShouldIgnoreDelimiterWhenPresentAtBeginningOfExpressionAndEndOfMailboxName() throws Exception {
         //Given
         MailboxPath mailboxPathWithNullNamespaceAndUser = new MailboxPath(null, null, "name.");
-        MailboxQuery testee = new MailboxQuery(mailboxPathWithNullNamespaceAndUser, ".mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPathWithNullNamespaceAndUser)
+            .expression(".mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         String actual = testee.getCombinedName();
         //Then
@@ -215,7 +287,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnFalseWhenNullExpression() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, null, '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression(null)
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("folder");
         //Then
@@ -225,7 +301,11 @@ public class MailboxQueryTest {
     @Test 
     public void isExpressionMatchShouldMatchFolderWhenMatching() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailbox");
         //Then
@@ -235,7 +315,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnFalseWhenNameBeginsWithDelimiter() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch(".mailbox");
         //Then
@@ -245,7 +329,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnFalseWhenNameEndsWithDelimiter() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailbox.");
         //Then
@@ -255,7 +343,12 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchFolderWhenNoMatching() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "mailbox", '.');
+
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub");
         //Then
@@ -265,7 +358,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchFolderWithExpandedEndName() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailbox123");
         //Then
@@ -275,7 +372,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchSubFolder() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailbox.123");
         //Then
@@ -285,7 +386,12 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnTrueWhenEmptyNameAndExpression() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "", '.');
+
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("");
         //Then
@@ -295,7 +401,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnFalseWhenEmptyExpressionAndNameBeginsWithDelimiter() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch(".123");
         //Then
@@ -305,7 +415,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchFolderWhenEmptyExpression() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("folder");
         //Then
@@ -315,7 +429,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnTrueWhenEmptyNameAndOnlyLocalWildcard() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "%", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("%")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("");
         //Then
@@ -325,7 +443,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnTrueWhenOnlyLocalWildcard() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "%", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("%")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("folder");
         //Then
@@ -335,7 +457,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchSubFolderWhenOnlyLocalWildcard() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "%", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("%")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailbox.sub");
         //Then
@@ -345,7 +471,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnTrueWhenEmptyNameAndOnlyFreeWildcard() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "*", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("*")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("");
         //Then
@@ -355,7 +485,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchFolderWhenOnlyFreeWildcard() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "*", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("*")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub");
         //Then
@@ -365,7 +499,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchSubFolderWhenOnlyFreeWildcard() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "*", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("*")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailbox.sub");
         //Then
@@ -375,7 +513,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnFalseWhenEmptyNameAndLocalWildcardAtEnd() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "mailbox%", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("mailbox%")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("");
         //Then
@@ -385,7 +527,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnFalseWhenLocalWildcardAtEndAndNoMatching() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "mailbox%", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("mailbox%")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub");
         //Then
@@ -395,7 +541,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchFolderWhenLocalWildcardAtEndNotUsed() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "mailbox%", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("mailbox%")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailbox");
         //Then
@@ -405,7 +555,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnTrueWhenLocalWildcardAtEndUsed() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "mailbox%", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("mailbox%")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailboxsub");
         //Then
@@ -415,7 +569,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchSubFolderWhenLocalWildcardAtEnd() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "mailbox%", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("mailbox%")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailbox.sub");
         //Then
@@ -425,7 +583,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnFalseWhenEmptyNameAndLocalWildcardAtBeginning() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "%mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("%mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("");
         //Then
@@ -435,7 +597,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchFolderWhenLocalWildcardAtBeginningAndNoMatching() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "%mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("%mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub");
         //Then
@@ -445,7 +611,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchFolderWhenLocalWildcardAtBeginningNotUsed() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "%mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("%mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailbox");
         //Then
@@ -455,7 +625,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchFolderWhenLocalWildcardAtBeginningUsed() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "%mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("%mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("submailbox");
         //Then
@@ -465,7 +639,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchSubFolderWhenLocalWildcardAtBeginning() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "%mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("%mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub.mailbox");
         //Then
@@ -475,7 +653,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchDeeplyNestedFolderWhenLocalWildcardAtBeginning() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "%mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("%mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub.mailbox.sub");
         //Then
@@ -485,7 +667,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnFalseWhenEmptyNameAndLocalWildcardInMiddle() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub%mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub%mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("");
         //Then
@@ -495,7 +681,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnFalseWhenLocalWildcardInMiddleAndMissingEndName() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub%mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub%mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub");
         //Then
@@ -505,7 +695,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchFolderWhenLocalWildcardInMiddleAndMatching() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub%mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub%mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("submailbox");
         //Then
@@ -515,7 +709,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchFolderWhenLocalWildcardInMiddle() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub%mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub%mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub123mailbox");
         //Then
@@ -525,7 +723,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchSubFolderWhenLocalWildcardInMiddle() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub%mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub%mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub.mailbox");
         //Then
@@ -534,8 +736,12 @@ public class MailboxQueryTest {
 
     @Test
     public void isExpressionMatchShouldNotMatchSubFolderWhenLocalWildcardInMiddleAndExpandedMiddleName() throws Exception {
-        //Given 
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub%mailbox", '.');
+        //Given
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub%mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub.123mailbox");
         //Then
@@ -545,7 +751,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnFalseWhenLocalWildcardInMiddleAndMissingBeginningName() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub%mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub%mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailbox");
         //Then
@@ -555,7 +765,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchDeeplyNestedFolderWhenLocalWildcardInMiddle() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub%mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub%mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("subw.hat.eve.rmailbox");
         //Then
@@ -565,7 +779,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchSubFolderWhenFreeWildcardAtEnd() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "mailbox*", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("mailbox*")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailbox.sub");
         //Then
@@ -575,7 +793,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnFalseWhenEmptyNameAndFreeWildcardAtEnd() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "mailbox*", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("mailbox*")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("");
         //Then
@@ -585,7 +807,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchFolderWhenFreeWildcardAtEndAndNoMatching() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "mailbox*", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("mailbox*")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub");
         //Then
@@ -595,7 +821,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchFolderWhenFreeWildcardAtEndNotUsed() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "mailbox*", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("mailbox*")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailbox");
         //Then
@@ -605,7 +835,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchFolderWhenFreeWildcardAtEndUsed() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "mailbox*", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("mailbox*")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailbox123");
         //Then
@@ -615,7 +849,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnFalseWhenEmptyNameAndFreeWildcardAtBeginning() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "*mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("*mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("");
         //Then
@@ -625,7 +863,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchFolderWhenFreeWildcardAtBeginningAndNoMatching() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "*mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("*mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub");
         //Then
@@ -635,7 +877,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchFolderWhenFreeWildcardAtBeginningNotUsed() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "*mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("*mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailbox");
         //Then
@@ -645,7 +891,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchFolderWhenFreeWildcardAtBeginningUsed() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "*mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("*mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("submailbox");
         //Then
@@ -655,7 +905,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchSubFolderWhenFreeWildcardAtBeginning() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "*mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("*mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub.mailbox");
         //Then
@@ -665,7 +919,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnFalseWhenEmptyNameAndFreeWildcardInMiddle() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("");
         //Then
@@ -675,7 +933,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchFolderWhenFreeWildcardInMiddleAndMissingEndName() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub");
         //Then
@@ -685,7 +947,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchFolderWhenFreeWildcardInMiddleNotUsed() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("submailbox");
         //Then
@@ -695,7 +961,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchSubFolderWhenFreeWildcardInMiddle() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub.mailbox");
         //Then
@@ -705,7 +975,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnFalseWhenFreeWildcardInMiddleNotUsedAndMissingBeginningName() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailbox");
         //Then
@@ -715,7 +989,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchDeeplyNestedFolderWhenFreeWildcardInMiddle() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("subw.hat.eve.rmailbox");
         //Then
@@ -725,7 +1003,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnFalseWhenEmptyNameAndDoubleFreeWildcardInMiddle() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub**mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub**mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("");
         //Then
@@ -735,7 +1017,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnFalseWhenDoubleFreeWildcardInMiddleAndMissingEndName() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub**mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub**mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub");
         //Then
@@ -745,7 +1031,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnTrueWhenDoubleFreeWildcardInMiddleNotUsed() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub**mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub**mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("submailbox");
         //Then
@@ -755,7 +1045,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchSubFolderWhenDoubleFreeWildcardInMiddle() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub**mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub**mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub.mailbox");
         //Then
@@ -765,7 +1059,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnFalseWhenDoubleFreeWildcardInMiddleAndMissingBeginningName() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub**mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub**mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailbox");
         //Then
@@ -775,7 +1073,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchDeeplyNestedFolderWhenDoubleFreeWildcardInMiddle() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub**mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub**mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("subw.hat.eve.rmailbox");
         //Then
@@ -785,7 +1087,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnFalseWhenEmptyNameAndFreeLocalWildcardInMiddle() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*%mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*%mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("");
         //Then
@@ -795,7 +1101,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnFalseWhenFreeLocalWildcardInMiddleAndMissingEndName() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*%mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*%mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub");
         //Then
@@ -805,7 +1115,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchFolderWhenFreeLocalWildcardInMiddleNotUsed() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*%mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*%mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("submailbox");
         //Then
@@ -815,7 +1129,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchSubFolderWhenFreeLocalWildcardInMiddle() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*%mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*%mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub.mailbox");
         //Then
@@ -825,7 +1143,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnFalseWhenFreeLocalWildcardInMiddleAndMissingBeginningName() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*%mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*%mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailbox");
         //Then
@@ -835,7 +1157,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchDeeplyNestedFolderWhenFreeLocalWildcardInMiddle() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*%mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*%mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("subw.hat.eve.rmailbox");
         //Then
@@ -845,7 +1171,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldReturnFalseWhenEmptyNameAndLocalFreeWildcardInMiddle() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub%*mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub%*mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("");
         //Then
@@ -855,7 +1185,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchFolderWhenLocalFreeWildcardInMiddleAndMissingEndName() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub%*mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub%*mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub");
         //Then
@@ -865,7 +1199,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchFolderWhenLocalFreewildcardInMiddleNotUsed() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub%*mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub%*mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("submailbox");
         //Then
@@ -875,7 +1213,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchSubFolderWhenLocalFreeWildcardInMiddle() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub%*mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub%*mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub.mailbox");
         //Then
@@ -885,7 +1227,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchFolderWhenLocalFreeWildcardInMiddleAndMissingBeginningName() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub%*mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub%*mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailbox");
         //Then
@@ -895,7 +1241,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchDeeplyNestedFolderWhenLocalFreeWildcardInMiddle() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub%*mailbox", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub%*mailbox")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("subw.hat.eve.rmailbox");
         //Then
@@ -905,7 +1255,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchFolderWhenMultipleFreeWildcards() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*mailbox*sub**", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*mailbox*sub**")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("submailboxsub");
         //Then
@@ -915,7 +1269,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchDeeplyNestedFolderWhenMultipleFreeWildcardsNotUsed() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*mailbox*sub**", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*mailbox*sub**")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub.mailbox.sub");
         //Then
@@ -925,7 +1283,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchDeeplyNestedFolderWhenMultipleFreeWildcardsUsed() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*mailbox*sub**", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*mailbox*sub**")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("subtosh.boshmailboxtosh.boshsubboshtosh");
         //Then
@@ -935,7 +1297,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchDeeplyNestedFolderWhenMultipleFreeWildcardsAndMissingMiddleName() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*mailbox*sub**", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*mailbox*sub**")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub.a.sub");
         //Then
@@ -945,7 +1311,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchDeeplyNestedFolderWhenMultipleFreeWildcardsAndMissingEndName() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*mailbox*sub**", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*mailbox*sub**")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub.a.submailbox.u");
         //Then
@@ -955,7 +1325,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchDeeplyNestedFolderWhenMultipleFreeWildcardsAndMissingBeginningdName() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*mailbox*sub**", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*mailbox*sub**")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("utosh.boshmailboxtosh.boshsubasubboshtoshmailboxu");
         //Then
@@ -965,7 +1339,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchFolderWhenMixedLocalFreeWildcardsNotUsed() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub%mailbox*sub", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub%mailbox*sub")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("submailboxsub");
         //Then
@@ -975,7 +1353,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchSubFolderWhenMixedLocalFreeWildcards() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub%mailbox*sub", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub%mailbox*sub")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub.mailboxsub");
         //Then
@@ -985,7 +1367,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchFolderWhenMixedFreeLocalWildcardsNotUsed() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*mailbox%sub", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*mailbox%sub")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("submailboxsub");
         //Then
@@ -995,7 +1381,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchSubFolderWhenMixedFreeLocalWildcards() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*mailbox%sub", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*mailbox%sub")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub.mailboxsub");
         //Then
@@ -1005,7 +1395,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchSubFolderWhenMixedFreeLocalWildcards() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*mailbox%sub", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*mailbox%sub")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("submailbox.sub");
         //Then
@@ -1015,7 +1409,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchFolderWhenMixedFreeLocalWildcards() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*mailbox%sub", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*mailbox%sub")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("submailboxwhateversub");
         //Then
@@ -1025,7 +1423,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchSubFolderEndingWithDelimiterWhenMixedFreeLocalWildcards() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*mailbox%sub", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*mailbox%sub")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("submailboxsub.Whatever.");
         //Then
@@ -1035,7 +1437,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchDeeplyNestedFolderWhenMixedFreeLocalWildcards() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*mailbox%sub", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*mailbox%sub")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub.mailboxsub.sub");
         //Then
@@ -1045,7 +1451,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchSubFoldeWhenMixedFreeLocalWildcards() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*mailbox%sub", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*mailbox%sub")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub.mailboxsub");
         //Then
@@ -1055,7 +1465,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchDeeplyNestedFoldeWhenMixedFreeLocalWildcards() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "sub*mailbox%sub", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("sub*mailbox%sub")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("sub.whatever.mailbox123sub");
         //Then
@@ -1065,7 +1479,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchFolderWhenTwoLocalPathDelimitedWildcards() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "%.%", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("%.%")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailbox");
         //Then
@@ -1075,7 +1493,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchDeeplyNestedFolderWhenTwoLocalPathDelimitedWildcards() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "%.%", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("%.%")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailbox.sub.sub");
         //Then
@@ -1085,7 +1507,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchSubFolderWhenTwoLocalPathDelimitedWildcards() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "%.%", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("%.%")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("mailbox.sub");
         //Then
@@ -1095,7 +1521,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldMatchSubFolderWhenFreeWildcardAndPathDelimiterAtBeginning() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "*.test", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("*.test")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("blah.test");
         //Then
@@ -1105,7 +1535,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchSubFolderWhenWhenFreeWildcardAndPathDelimiterAtBeginning() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "*.test", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("*.test")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("blah.test3");
         //Then
@@ -1115,7 +1549,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotMatchDeeplyNestedFolderWhenFreeWildcardAndPathDelimiterAtBeginning() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "*.test", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("*.test")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("blah.test.go");
         //Then
@@ -1125,7 +1563,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldIgnoreRegexInjection() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "folder^$!)(%3", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("folder^$!)(%3")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("folder^$!)(123");
         //Then
@@ -1135,7 +1577,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldIgnoreRegexInjectionWhenUsingEndOfQuoteAndNoMatching() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "\\Efo.", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("\\Efo.")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("\\Efol");
         //Then
@@ -1145,7 +1591,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldIgnoreRegexInjectionWhenUsingEndOfQuoteAndMatching() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "\\Efo.", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("\\Efo.")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("\\Efo.");
         //Then
@@ -1155,7 +1605,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldIgnoreRegexInjectionWhenUsingBeginOfQuoteAndNoMatching() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "\\Qfo?", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("\\Qfo?")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("\\Qfol");
         //Then
@@ -1165,7 +1619,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldIgnoreRegexInjectionWhenUsingBeginOfQuoteAndMatching() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "\\Qfo?", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("\\Qfo?")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("\\Qfo?");
         //Then
@@ -1175,7 +1633,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotEscapeFreeWildcard() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "folder\\*", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("folder\\*")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("folder\\123");
         //Then
@@ -1185,7 +1647,11 @@ public class MailboxQueryTest {
     @Test
     public void isExpressionMatchShouldNotEscapeLocalWildcard() throws Exception {
         //Given
-        MailboxQuery testee = new MailboxQuery(mailboxPath, "folder\\%", '.');
+        MailboxQuery testee = MailboxQuery.builder()
+            .base(mailboxPath)
+            .expression("folder\\%")
+            .mailboxSession(mailboxSession)
+            .build();
         //When
         boolean actual = testee.isExpressionMatch("folder\\123");
         //Then
@@ -1198,7 +1664,7 @@ public class MailboxQueryTest {
         MailboxQuery actual = MailboxQuery.builder()
                 .base(mailboxPath)
                 .matchesAll()
-                .pathDelimiter('.')
+                .mailboxSession(mailboxSession)
                 .build();
         //Then
         assertThat(actual.isExpressionMatch("folder")).isTrue();
@@ -1211,8 +1677,8 @@ public class MailboxQueryTest {
         //When
         MailboxQuery actual = MailboxQuery.builder()
                 .username("user")
-                .privateUserMailboxes()
-                .pathDelimiter('.')
+                .privateMailboxes()
+                .mailboxSession(mailboxSession)
                 .build();
         //Then
         assertThat(actual.getBase()).isEqualTo(expected);
@@ -1223,8 +1689,8 @@ public class MailboxQueryTest {
         //Given
         Builder testee = MailboxQuery.builder()
                 .username("user")
-                .privateUserMailboxes()
-                .pathDelimiter('.');
+                .privateMailboxes()
+            .mailboxSession(mailboxSession);
         //When
         MailboxQuery actual = testee.build();
         //Then
@@ -1240,21 +1706,33 @@ public class MailboxQueryTest {
         when(user.getUserName()).thenReturn("little bobby table");
         when(mailboxSession.getUser()).thenReturn(user);
         // When
-        Builder query = MailboxQuery.builder(mailboxSession);
+        Builder query = MailboxQuery.privateMailboxesBuilder(mailboxSession);
         //Then
-        assertThat(query.pathDelimiter).isEqualTo('#');
-        assertThat(query.username).isEqualTo("little bobby table");
+        assertThat(query.mailboxSession.getPathDelimiter()).isEqualTo('#');
+        assertThat(query.username).contains("little bobby table");
     }
 
-    @Test(expected=IllegalStateException.class)
-    public void builderShouldThrowWhenNoBaseDefined() throws Exception {
+    @Test
+    public void builderShouldNotThrowWhenNoBaseDefined() throws Exception {
         //Given
         Builder testee = MailboxQuery.builder()
                 .expression("abc")
-                .pathDelimiter('/');
+                .mailboxSession(mailboxSession);
         //When
         testee.build();
-    } 
+    }
+
+    @Test
+    public void getPathLikeShouldReturnUserPathLikeWhenNoBaseDefined() throws Exception {
+        //Given
+        Builder testee = MailboxQuery.builder()
+            .expression("abc")
+            .mailboxSession(mailboxSession);
+        //When
+        MailboxQuery mailboxQuery = testee.build();
+
+        assertThat(mailboxQuery.getPathLike()).isEqualTo(MailboxPath.forUser("user", "abc%"));
+    }
 
     @Test(expected=IllegalStateException.class)
     public void builderShouldThrowWhenBaseAndUsernameGiven() throws Exception {
@@ -1271,7 +1749,7 @@ public class MailboxQueryTest {
         //Given
         Builder testee = MailboxQuery.builder()
                 .base(mailboxPath)
-                .privateUserMailboxes();
+                .privateMailboxes();
         //When
         testee.build();
     } 
@@ -1280,7 +1758,7 @@ public class MailboxQueryTest {
     public void builderShouldThrowWhenMissingUsername() throws Exception {
         //Given
         Builder testee = MailboxQuery.builder()
-                .privateUserMailboxes();
+                .privateMailboxes();
         //When
         testee.build();
     }
@@ -1290,8 +1768,110 @@ public class MailboxQueryTest {
         //When
         MailboxQuery actual = MailboxQuery.builder()
                 .base(mailboxPath)
+                .mailboxSession(mailboxSession)
                 .build();
         //Then
-        assertThat(actual.getBase()).isSameAs(mailboxPath);
+        assertThat(actual.getBase()).isEqualTo(mailboxPath);
+    }
+
+    @Test
+    public void belongsToNamespaceAndUserShouldReturnTrueWithIdenticalMailboxes() {
+        MailboxQuery mailboxQuery = MailboxQuery.builder()
+            .base(mailboxPath)
+            .mailboxSession(mailboxSession)
+            .build();
+
+        assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(mailboxPath))
+            .isTrue();
+    }
+
+    @Test
+    public void belongsToNamespaceAndUserShouldReturnTrueWithIdenticalMailboxesWithNullUser() {
+        MailboxPath base = new MailboxPath("namespace", null, "name");
+
+        MailboxQuery mailboxQuery = MailboxQuery.builder()
+            .base(base)
+            .mailboxSession(mailboxSession)
+            .build();
+
+        assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(mailboxPath))
+            .isTrue();
+    }
+
+    @Test
+    public void belongsToNamespaceAndUserShouldReturnTrueWithIdenticalMailboxesWithNullNamespace() {
+        MailboxPath mailboxPath = new MailboxPath(null, "user", "name");
+
+        MailboxQuery mailboxQuery = MailboxQuery.builder()
+            .base(mailboxPath)
+            .mailboxSession(mailboxSession)
+            .build();
+
+        assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(mailboxPath))
+            .isTrue();
+    }
+
+    @Test
+    public void belongsToNamespaceAndUserShouldReturnTrueWithMailboxWithSameNamespaceAndUserWithNullUser() {
+        MailboxQuery mailboxQuery = MailboxQuery.builder()
+            .base(new MailboxPath("namespace", null, "name"))
+            .mailboxSession(mailboxSession)
+            .build();
+
+        assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(new MailboxPath("namespace", null, "name")))
+            .isTrue();
+    }
+
+    @Test
+    public void belongsToNamespaceAndUserShouldReturnTrueWithMailboxWithSameNamespaceAndUser() {
+        MailboxQuery mailboxQuery = MailboxQuery.builder()
+            .base(new MailboxPath("namespace", CURRENT_USER, "name"))
+            .mailboxSession(mailboxSession)
+            .build();
+
+        assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(new MailboxPath("namespace", CURRENT_USER, "name2")))
+            .isTrue();
+    }
+
+    @Test
+    public void belongsToNamespaceAndUserShouldReturnFalseWithDifferentNamespace() {
+        MailboxQuery mailboxQuery = MailboxQuery.builder()
+            .base(new MailboxPath("namespace", CURRENT_USER, "name"))
+            .mailboxSession(mailboxSession)
+            .build();
+
+        assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(new MailboxPath("namespace2", CURRENT_USER, "name")))
+            .isFalse();
+    }
+
+    @Test
+    public void belongsToNamespaceAndUserShouldReturnFalseWithDifferentUser() {
+        MailboxQuery mailboxQuery = MailboxQuery.builder()
+            .base(new MailboxPath("namespace", CURRENT_USER, "name"))
+            .mailboxSession(mailboxSession)
+            .build();
+
+        assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(new MailboxPath("namespace", CURRENT_USER + "2", "name")))
+            .isFalse();
+    }
+    @Test
+    public void belongsToNamespaceAndUserShouldReturnFalseWithOneOfTheUserNull() {
+        MailboxQuery mailboxQuery = MailboxQuery.builder()
+            .base(new MailboxPath("namespace", CURRENT_USER, "name"))
+            .mailboxSession(mailboxSession)
+            .build();
+
+        assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(new MailboxPath("namespace", null + "2", "name")))
+            .isFalse();
+    }
+    @Test
+    public void belongsToNamespaceAndUserShouldReturnFalseIfNamespaceAreDifferentWithNullUser() {
+        MailboxQuery mailboxQuery = MailboxQuery.builder()
+            .base(new MailboxPath("namespace", null, "name"))
+            .mailboxSession(mailboxSession)
+            .build();
+
+        assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(new MailboxPath("namespace2", null, "name")))
+            .isFalse();
     }
 }

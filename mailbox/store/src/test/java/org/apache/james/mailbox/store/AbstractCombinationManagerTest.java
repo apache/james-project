@@ -20,10 +20,12 @@
 package org.apache.james.mailbox.store;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.ByteArrayInputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Predicate;
+
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
@@ -115,6 +117,7 @@ public abstract class AbstractCombinationManagerTest {
 
         MailboxQuery mailboxQuery = MailboxQuery.builder()
             .base(MailboxFixture.MAILBOX_PATH1)
+            .mailboxSession(session)
             .build();
         MessageId messageId = messageManager1.appendMessage(new ByteArrayInputStream(MAIL_CONTENT), new Date(), session, false, FLAGS).getMessageId();
 
@@ -133,6 +136,7 @@ public abstract class AbstractCombinationManagerTest {
         MailboxQuery mailboxQuery = MailboxQuery.builder()
             .username(MailboxFixture.USER)
             .expression(String.valueOf(MailboxQuery.FREEWILDCARD))
+            .mailboxSession(session)
             .build();
         MessageId messageId = messageManager1.appendMessage(new ByteArrayInputStream(MAIL_CONTENT), new Date(), session, false, FLAGS).getMessageId();
 

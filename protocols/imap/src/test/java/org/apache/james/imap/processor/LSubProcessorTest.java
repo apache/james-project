@@ -66,6 +66,35 @@ public class LSubProcessorTest {
     private static final String MAILBOX_A = "A.MAILBOX";
 
     private static final String TAG = "TAG";
+    public static final MailboxSession.User USER = new MailboxSession.User() {
+
+        /**
+         * @see MailboxSession.User#getLocalePreferences()
+         */
+        public List<Locale> getLocalePreferences() {
+            return new ArrayList<>();
+        }
+
+        /**
+         * @see MailboxSession.User#getPassword()
+         */
+        public String getPassword() {
+            return "test";
+        }
+
+        /**
+         * @see MailboxSession.User#getUserName()
+         */
+        public String getUserName() {
+            return "test";
+        }
+
+        @Override
+        public boolean isSameUser(String username) {
+            return "test".equalsIgnoreCase(username);
+        }
+
+    };
 
     LSubProcessor processor;
 
@@ -139,6 +168,7 @@ public class LSubProcessorTest {
         subscriptions.add(CHILD_TWO);
 
         mockery.checking(new Expectations() {{
+            oneOf(mailboxSession).getUser(); will(returnValue(USER));
             oneOf(responder).respond(with(
                     equal(new LSubResponse(CHILD_ONE, false, HIERARCHY_DELIMITER))));
             oneOf(responder).respond(with(
@@ -164,6 +194,7 @@ public class LSubProcessorTest {
         subscriptions.add(CHILD_TWO);
 
         mockery.checking(new Expectations() {{
+            oneOf(mailboxSession).getUser(); will(returnValue(USER));
             oneOf(responder).respond(with(
                     equal(new LSubResponse(PARENT, true, HIERARCHY_DELIMITER))));
         }});
@@ -188,6 +219,7 @@ public class LSubProcessorTest {
         subscriptions.add(CHILD_TWO);
 
         mockery.checking(new Expectations() {{
+            oneOf(mailboxSession).getUser(); will(returnValue(USER));
             oneOf(responder).respond(with(
                     equal(new LSubResponse(PARENT, false, HIERARCHY_DELIMITER))));
         }});
@@ -204,6 +236,7 @@ public class LSubProcessorTest {
     @Test
     public void testSelectAll() throws Exception {
         mockery.checking(new Expectations() {{
+            oneOf(mailboxSession).getUser(); will(returnValue(USER));
             oneOf(responder).respond(with(equal(
                     new LSubResponse(MAILBOX_A, false, HIERARCHY_DELIMITER))));
             oneOf(responder).respond(with(equal(
@@ -239,35 +272,7 @@ public class LSubProcessorTest {
             exactly(2).of(session).getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY);
                     will(returnValue(mailboxSession));
                     allowing(mailboxSession).getPathDelimiter(); will(returnValue(HIERARCHY_DELIMITER));
-            oneOf(mailboxSession).getUser(); will(returnValue(new MailboxSession.User() {
-
-                /**
-                 * @see org.apache.james.mailbox.MailboxSession.User#getLocalePreferences()
-                 */
-                public List<Locale> getLocalePreferences() {
-                    return new ArrayList<>();
-                }
-
-                /**
-                 * @see org.apache.james.mailbox.MailboxSession.User#getPassword()
-                 */
-                public String getPassword() {
-                    return "test";
-                }
-
-                /**
-                 * @see org.apache.james.mailbox.MailboxSession.User#getUserName()
-                 */
-                public String getUserName() {
-                    return "test";
-                }
-
-                @Override
-                public boolean isSameUser(String username) {
-                    return "test".equalsIgnoreCase(username);
-                }
-                
-            }));     
+            oneOf(mailboxSession).getUser(); will(returnValue(USER));
             oneOf(manager).subscriptions(with(same(mailboxSession)));will(returnValue(subscriptions));     
         }});
     }

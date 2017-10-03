@@ -57,7 +57,7 @@ import com.google.common.collect.ImmutableSet;
  * 
  */
 public abstract class MailboxManagerTest {
-    
+
     public final static String USER_1 = "USER_1";
     public final static String USER_2 = "USER_2";
 
@@ -245,7 +245,7 @@ public abstract class MailboxManagerTest {
                 MailboxQuery.builder()
                     .base(MailboxPath.forUser(USER_1, ""))
                     .expression("*")
-                    .pathDelimiter('.')
+                    .mailboxSession(session)
                     .build(), 
                 session);
         assertThat(metaDatas).hasSize(1);
@@ -261,7 +261,7 @@ public abstract class MailboxManagerTest {
                 MailboxQuery.builder()
                 .base(MailboxPath.forUser(USER_1, ""))
                 .expression("*")
-                .pathDelimiter('.')
+                    .mailboxSession(session)
                 .build(), 
             session);
         assertThat(metaDatas).hasSize(1);

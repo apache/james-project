@@ -175,7 +175,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
                         MailboxQuery.builder()
                             .base(basePath)
                             .expression(CharsetUtil.decodeModifiedUTF7(mailboxName))
-                            .pathDelimiter(mailboxSession.getPathDelimiter())
+                            .mailboxSession(mailboxSession)
                             .build()
                         , mailboxSession);
             }

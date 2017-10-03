@@ -136,7 +136,7 @@ public class UserMailboxesService {
     private MailboxQuery createUserMailboxesQuery(String username) {
         return MailboxQuery.builder()
             .username(username)
-            .privateUserMailboxes()
+            .privateMailboxes()
             .build();
     }
 

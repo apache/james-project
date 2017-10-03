@@ -65,8 +65,8 @@ public class SystemMailboxesProviderImpl implements SystemMailboxesProvider {
 
     private Stream<MessageManager> searchMessageManagerByMailboxRole(Role aRole, MailboxSession session) throws MailboxException {
         ThrowingFunction<MailboxPath, MessageManager> loadMailbox = path -> mailboxManager.getMailbox(path, session);
-        MailboxQuery mailboxQuery = MailboxQuery.builder(session)
-            .privateUserMailboxes()
+        MailboxQuery mailboxQuery = MailboxQuery.privateMailboxesBuilder(session)
+            .privateMailboxes()
             .expression(aRole.getDefaultMailbox())
             .build();
         return mailboxManager.search(mailboxQuery, session)
