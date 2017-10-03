@@ -226,7 +226,7 @@ public class CassandraMessageMapper implements MessageMapper {
 
     private CompletableFuture<Optional<ComposedMessageIdWithMetaData>> retrieveComposedId(CassandraId mailboxId, MessageUid uid) {
         return messageIdDAO.retrieve(mailboxId, uid)
-            .thenApply(optional -> OptionalUtils.peekOnEmpty(optional,
+            .thenApply(optional -> OptionalUtils.executeIfEmpty(optional,
                 () -> LOGGER.warn("Could not retrieve message {} {}", mailboxId, uid)));
     }
 

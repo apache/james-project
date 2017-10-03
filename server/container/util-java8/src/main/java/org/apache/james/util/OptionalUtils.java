@@ -28,7 +28,7 @@ public class OptionalUtils {
         void perform();
     }
 
-    public static <T> Optional<T> peekOnEmpty(Optional<T> optional, Operation operation) {
+    public static <T> Optional<T> executeIfEmpty(Optional<T> optional, Operation operation) {
         if (!optional.isPresent()) {
             operation.perform();
         }

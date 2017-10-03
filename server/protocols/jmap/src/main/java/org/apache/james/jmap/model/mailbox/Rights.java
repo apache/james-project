@@ -71,7 +71,7 @@ public class Rights {
         }
 
         public static Optional<Right> forRight(MailboxACL.Right right) {
-            return OptionalUtils.peekOnEmpty(
+            return OptionalUtils.executeIfEmpty(
                 Arrays.stream(values())
                     .filter(jmapRight -> jmapRight.right == right)
                     .findAny(),

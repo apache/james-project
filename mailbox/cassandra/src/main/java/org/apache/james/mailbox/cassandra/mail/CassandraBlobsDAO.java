@@ -168,7 +168,7 @@ public class CassandraBlobsDAO {
 
     private byte[] concatenateDataParts(Stream<BlobPart> blobParts) {
         ImmutableList<byte[]> parts = blobParts
-            .map(blobPart -> OptionalUtils.peekOnEmpty(
+            .map(blobPart -> OptionalUtils.executeIfEmpty(
                 blobPart.row,
                 () -> LOGGER.warn("Missing blob part for blobId {} and position {}", blobPart.blobId, blobPart.position)))
             .flatMap(OptionalUtils::toStream)

@@ -36,7 +36,7 @@ public class OptionalUtilsTest {
 
     @Test
     public void ifEmptyShouldPreserveValueOfEmptyOptionals() {
-        Optional<Object> expected = OptionalUtils.peekOnEmpty(Optional.empty(), () -> { });
+        Optional<Object> expected = OptionalUtils.executeIfEmpty(Optional.empty(), () -> { });
 
         assertThat(expected).isEmpty();
     }
@@ -44,7 +44,7 @@ public class OptionalUtilsTest {
     @Test
     public void ifEmptyShouldPreserveValueOfPresentOptionals() {
         String value = "value";
-        Optional<String> expected = OptionalUtils.peekOnEmpty(Optional.of(value), () -> { });
+        Optional<String> expected = OptionalUtils.executeIfEmpty(Optional.of(value), () -> { });
 
         assertThat(expected).contains(value);
     }
@@ -53,7 +53,7 @@ public class OptionalUtilsTest {
     public void ifEmptyShouldPerformOperationIfEmpty() {
         AtomicInteger operationCounter = new AtomicInteger(0);
 
-        OptionalUtils.peekOnEmpty(Optional.empty(), operationCounter::incrementAndGet);
+        OptionalUtils.executeIfEmpty(Optional.empty(), operationCounter::incrementAndGet);
 
         assertThat(operationCounter.get()).isEqualTo(1);
     }
@@ -62,7 +62,7 @@ public class OptionalUtilsTest {
     public void ifEmptyShouldNotPerformOperationIfPresent() {
         AtomicInteger operationCounter = new AtomicInteger(0);
 
-        OptionalUtils.peekOnEmpty(Optional.of("value"), operationCounter::incrementAndGet);
+        OptionalUtils.executeIfEmpty(Optional.of("value"), operationCounter::incrementAndGet);
 
         assertThat(operationCounter.get()).isEqualTo(0);
     }
