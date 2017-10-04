@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.model;
+package org.apache.james.mailbox.model.search;
 
 import java.util.Optional;
 import java.util.StringTokenizer;

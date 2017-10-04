@@ -17,50 +17,42 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.model;
+package org.apache.james.mailbox.model.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.Test;
 
-public class ExactNameTest {
-
-    public static final String NAME = "toto";
+public class WildcardTest {
 
     @Test
-    public void constructorShouldThrowOnNullName() {
-        assertThatThrownBy(() -> new ExactName(null))
-            .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    public void isWildShouldReturnFalse() {
-        assertThat(new ExactName(NAME).isWild())
-            .isFalse();
-    }
-
-    @Test
-    public void getCombinedNameShouldReturnName() {
-        assertThat(new ExactName(NAME).getCombinedName())
-            .isEqualTo(NAME);
-    }
-
-    @Test
-    public void isExpressionMatchShouldReturnTrueWhenName() {
-        assertThat(new ExactName(NAME).isExpressionMatch(NAME))
+    public void isWildShouldBeTrue() {
+        assertThat(new Wildcard().isWild())
             .isTrue();
     }
 
     @Test
-    public void isExpressionMatchShouldReturnFalseWhenOtherValue() {
-        assertThat(new ExactName(NAME).isExpressionMatch("other"))
-            .isFalse();
+    public void getCombinedNameShouldReturnWildcard() {
+        assertThat(new Wildcard().getCombinedName())
+            .isEqualTo(String.valueOf(MailboxNameExpression.FREEWILDCARD));
+    }
+
+    @Test
+    public void isExpressionMatchShouldMatchAnyValue() {
+        assertThat(new Wildcard().isExpressionMatch("any"))
+            .isTrue();
+    }
+
+    @Test
+    public void isExpressionMatchShouldMatchEmptyValue() {
+        assertThat(new Wildcard().isExpressionMatch(""))
+            .isTrue();
     }
 
     @Test
     public void isExpressionMatchShouldThrowOnNullValue() {
-        assertThatThrownBy(() -> new ExactName(NAME).isExpressionMatch(null))
+        assertThatThrownBy(() -> new Wildcard().isExpressionMatch(null))
             .isInstanceOf(NullPointerException.class);
     }
 

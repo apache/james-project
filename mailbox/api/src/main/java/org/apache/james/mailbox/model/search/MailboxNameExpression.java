@@ -17,32 +17,22 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.model;
+package org.apache.james.mailbox.model.search;
 
-import com.google.common.base.Preconditions;
+interface MailboxNameExpression {
+    /**
+     * Use this wildcard to match every char including the hierarchy delimiter
+     */
+    char FREEWILDCARD = '*';
 
-public class ExactName implements MailboxNameExpression {
+    /**
+     * Use this wildcard to match every char except the hierarchy delimiter
+     */
+    char LOCALWILDCARD = '%';
 
-    private final String name;
+    boolean isExpressionMatch(String name);
 
-    public ExactName(String name) {
-        Preconditions.checkNotNull(name);
-        this.name = name;
-    }
+    String getCombinedName();
 
-    @Override
-    public boolean isExpressionMatch(String mailboxName) {
-        Preconditions.checkNotNull(mailboxName);
-        return name.equals(mailboxName);
-    }
-
-    @Override
-    public String getCombinedName() {
-        return name;
-    }
-
-    @Override
-    public boolean isWild() {
-        return false;
-    }
+    boolean isWild();
 }

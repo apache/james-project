@@ -18,7 +18,7 @@
  *
  */
 
-package org.apache.james.mailbox.model;
+package org.apache.james.mailbox.model.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -27,7 +27,8 @@ import static org.mockito.Mockito.when;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.mock.MockMailboxSession;
-import org.apache.james.mailbox.model.MailboxQuery.Builder;
+import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.search.MailboxQuery.Builder;
 import org.junit.Before;
 import org.junit.Test;
 

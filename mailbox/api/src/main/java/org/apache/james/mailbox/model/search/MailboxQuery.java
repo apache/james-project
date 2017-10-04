@@ -17,13 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.model;
+package org.apache.james.mailbox.model.search;
 
 import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxPath;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;

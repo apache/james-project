@@ -17,43 +17,32 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.model;
+package org.apache.james.mailbox.model.search;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import com.google.common.base.Preconditions;
 
-import org.junit.Test;
+public class ExactName implements MailboxNameExpression {
 
-public class WildcardTest {
+    private final String name;
 
-    @Test
-    public void isWildShouldBeTrue() {
-        assertThat(new Wildcard().isWild())
-            .isTrue();
+    public ExactName(String name) {
+        Preconditions.checkNotNull(name);
+        this.name = name;
     }
 
-    @Test
-    public void getCombinedNameShouldReturnWildcard() {
-        assertThat(new Wildcard().getCombinedName())
-            .isEqualTo(String.valueOf(MailboxNameExpression.FREEWILDCARD));
+    @Override
+    public boolean isExpressionMatch(String mailboxName) {
+        Preconditions.checkNotNull(mailboxName);
+        return name.equals(mailboxName);
     }
 
-    @Test
-    public void isExpressionMatchShouldMatchAnyValue() {
-        assertThat(new Wildcard().isExpressionMatch("any"))
-            .isTrue();
+    @Override
+    public String getCombinedName() {
+        return name;
     }
 
-    @Test
-    public void isExpressionMatchShouldMatchEmptyValue() {
-        assertThat(new Wildcard().isExpressionMatch(""))
-            .isTrue();
+    @Override
+    public boolean isWild() {
+        return false;
     }
-
-    @Test
-    public void isExpressionMatchShouldThrowOnNullValue() {
-        assertThatThrownBy(() -> new Wildcard().isExpressionMatch(null))
-            .isInstanceOf(NullPointerException.class);
-    }
-
 }
