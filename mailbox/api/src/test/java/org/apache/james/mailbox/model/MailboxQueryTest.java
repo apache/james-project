@@ -48,7 +48,7 @@ public class MailboxQueryTest {
         //Given
         MailboxQuery testee = MailboxQuery.builder()
             .base(mailboxPath)
-            .expression("*")
+            .matchesAll()
             .mailboxSession(mailboxSession)
             .build();
         //When
@@ -473,7 +473,7 @@ public class MailboxQueryTest {
         //Given
         MailboxQuery testee = MailboxQuery.builder()
             .base(mailboxPath)
-            .expression("*")
+            .matchesAll()
             .mailboxSession(mailboxSession)
             .build();
         //When
@@ -487,7 +487,7 @@ public class MailboxQueryTest {
         //Given
         MailboxQuery testee = MailboxQuery.builder()
             .base(mailboxPath)
-            .expression("*")
+            .matchesAll()
             .mailboxSession(mailboxSession)
             .build();
         //When
@@ -501,7 +501,7 @@ public class MailboxQueryTest {
         //Given
         MailboxQuery testee = MailboxQuery.builder()
             .base(mailboxPath)
-            .expression("*")
+            .matchesAll()
             .mailboxSession(mailboxSession)
             .build();
         //When
