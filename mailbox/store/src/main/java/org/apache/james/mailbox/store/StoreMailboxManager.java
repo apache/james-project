@@ -48,6 +48,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.NotAdminException;
+import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Right;
@@ -534,7 +535,7 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     private boolean userHasReadRightsOn(Mailbox mailbox, MailboxSession session) throws MailboxException {
-        return hasRight(mailbox.generateAssociatedPath(), Right.Read, session);
+        return hasRight(mailbox, Right.Read, session);
     }
 
     @Override
@@ -798,6 +799,10 @@ public class StoreMailboxManager implements MailboxManager {
     public boolean hasRight(MailboxPath mailboxPath, Right right, MailboxSession session) throws MailboxException {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
+        return hasRight(mailbox, right, session);
+    }
+
+    private boolean hasRight(Mailbox mailbox, Right right, MailboxSession session) throws UnsupportedRightException {
         MailboxSession.User user = session.getUser();
         String userName = user != null ? user.getUserName() : null;
         return aclResolver.hasRight(userName, groupMembershipResolver, right, mailbox.getACL(), mailbox.getUser(), new GroupFolderResolver(session).isGroupFolder(mailbox));
