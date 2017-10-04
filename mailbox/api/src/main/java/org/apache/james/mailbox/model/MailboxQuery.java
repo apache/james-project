@@ -275,7 +275,10 @@ public final class MailboxQuery {
      * @return true if wildcard contained, false otherwise
      */
     public boolean isWild() {
-        return expression != null && (expression.indexOf(getFreeWildcard()) >= 0 || expression.indexOf(getLocalWildcard()) >= 0);
+        return expression != null
+            && (
+                expression.indexOf(getFreeWildcard()) >= 0
+                || expression.indexOf(getLocalWildcard()) >= 0);
     }
 
     /**
