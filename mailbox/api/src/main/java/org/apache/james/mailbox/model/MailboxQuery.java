@@ -58,7 +58,7 @@ public final class MailboxQuery {
 
     public static class Builder {
         private String expression;
-        @VisibleForTesting MailboxSession mailboxSession;
+        @VisibleForTesting Optional<Character> pathDelimiter;
         @VisibleForTesting Optional<String> username;
         @VisibleForTesting Optional<String> pathName;
         @VisibleForTesting Optional<String> namespace;
@@ -67,6 +67,7 @@ public final class MailboxQuery {
             this.pathName = Optional.empty();
             this.namespace = Optional.empty();
             this.username = Optional.empty();
+            this.pathDelimiter = Optional.empty();
         }
         
         public Builder base(MailboxPath base) {
@@ -98,15 +99,20 @@ public final class MailboxQuery {
             this.expression = String.valueOf(FREEWILDCARD);
             return this;
         }
-        
+
         public Builder mailboxSession(MailboxSession session) {
-            this.mailboxSession = session;
+            this.pathDelimiter = Optional.of(session.getPathDelimiter());
+            return this;
+        }
+
+        public Builder pathDelimiter(char pathDelimiter) {
+            this.pathDelimiter = Optional.of(pathDelimiter);
             return this;
         }
         
         public MailboxQuery build() {
-            Preconditions.checkState(mailboxSession != null);
-            return new MailboxQuery(namespace, username, pathName, expression, mailboxSession);
+            Preconditions.checkState(pathDelimiter.isPresent());
+            return new MailboxQuery(namespace, username, pathName, expression, pathDelimiter.get());
         }
     }
 
@@ -128,7 +134,7 @@ public final class MailboxQuery {
      *            path delimiter to use
      */
     @VisibleForTesting MailboxQuery(Optional<String> namespace, Optional<String> user, Optional<String> baseName,
-                                    String expression, MailboxSession session) {
+                                    String expression, char pathDelimiter) {
         this.namespace = namespace;
         this.user = user;
         this.baseName = baseName;
@@ -137,7 +143,7 @@ public final class MailboxQuery {
         } else {
             this.expression = expression;
         }
-        this.pathDelimiter = session.getPathDelimiter();
+        this.pathDelimiter = pathDelimiter;
         pattern = constructEscapedRegex();
     }
 

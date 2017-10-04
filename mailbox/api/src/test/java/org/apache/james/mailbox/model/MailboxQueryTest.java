@@ -1710,7 +1710,7 @@ public class MailboxQueryTest {
         // When
         Builder query = MailboxQuery.privateMailboxesBuilder(mailboxSession);
         //Then
-        assertThat(query.mailboxSession.getPathDelimiter()).isEqualTo('#');
+        assertThat(query.pathDelimiter).contains('#');
         assertThat(query.username).contains("little bobby table");
     }
 
