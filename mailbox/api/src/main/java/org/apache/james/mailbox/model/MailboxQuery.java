@@ -207,17 +207,12 @@ public final class MailboxQuery {
      * @return true if the given name matches this expression, false otherwise
      */
     public boolean isExpressionMatch(String name) {
-        final boolean result;
         if (isWild()) {
-            if (name == null) {
-                result = false;
-            } else {
-                result = pattern.matcher(name).matches();
-            }
+            return name != null
+                && pattern.matcher(name).matches();
         } else {
-            result = expression.equals(name);
+            return expression.equals(name);
         }
-        return result;
     }
 
     public boolean isPathMatch(MailboxPath mailboxPath) {
