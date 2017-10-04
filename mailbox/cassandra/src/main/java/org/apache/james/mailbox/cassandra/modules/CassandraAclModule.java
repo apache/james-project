@@ -30,6 +30,7 @@ import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
+import org.apache.james.mailbox.cassandra.table.CassandraUserMailboxRightsTable;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.google.common.collect.ImmutableList;
@@ -50,7 +51,18 @@ public class CassandraAclModule implements CassandraModule {
                     .withOptions()
                     .comment("Holds mailbox ACLs")
                     .caching(SchemaBuilder.KeyCaching.ALL,
-                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
+                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))),
+            new CassandraTable(CassandraUserMailboxRightsTable.TABLE_NAME,
+                    SchemaBuilder.createTable(CassandraUserMailboxRightsTable.TABLE_NAME)
+                        .ifNotExists()
+                        .addPartitionKey(CassandraUserMailboxRightsTable.USER_NAME, text())
+                        .addClusteringColumn(CassandraUserMailboxRightsTable.MAILBOX_ID, timeuuid())
+                        .addColumn(CassandraUserMailboxRightsTable.RIGHTS, text())
+                        .withOptions()
+                        .compactionOptions(SchemaBuilder.leveledStrategy())
+                        .caching(SchemaBuilder.KeyCaching.ALL,
+                            SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))
+                        .comment("Denormalisation table. Allow to retrieve non personal mailboxIds a user has right on")));
         types = ImmutableList.of();
     }
 
