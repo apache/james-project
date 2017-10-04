@@ -88,6 +88,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Iterables;
 
 /**
@@ -100,6 +101,7 @@ import com.google.common.collect.Iterables;
  */
 public class StoreMailboxManager implements MailboxManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreMailboxManager.class);
+    public static final char SQL_WILDCARD_CHAR = '%';
 
 
     private MailboxEventDispatcher dispatcher;
@@ -676,7 +678,7 @@ public class StoreMailboxManager implements MailboxManager {
     public List<MailboxMetaData> search(MailboxQuery mailboxExpression, MailboxSession session) throws MailboxException {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Stream<Mailbox> baseMailboxes = mailboxMapper
-            .findMailboxWithPathLike(mailboxExpression.getPathLike())
+            .findMailboxWithPathLike(getPathLike(mailboxExpression, session))
             .stream();
         Stream<Mailbox> delegatedMailboxes = getDelegatedMailboxes(mailboxMapper, mailboxExpression, session);
         List<Mailbox> mailboxes = Stream.concat(baseMailboxes,
@@ -690,6 +692,19 @@ public class StoreMailboxManager implements MailboxManager {
             .map(mailbox -> toMailboxMetadata(session, mailboxes, mailbox))
             .sorted(new StandardMailboxMetaDataComparator())
             .collect(Guavate.toImmutableList());
+    }
+
+    @VisibleForTesting
+    public static MailboxPath getPathLike(MailboxQuery mailboxQuery, MailboxSession mailboxSession) {
+        String combinedName = mailboxQuery.getCombinedName()
+            .replace(mailboxQuery.getFreeWildcard(), SQL_WILDCARD_CHAR)
+            .replace(mailboxQuery.getLocalWildcard(), SQL_WILDCARD_CHAR)
+            + SQL_WILDCARD_CHAR;
+        MailboxPath base = new MailboxPath(
+            mailboxQuery.getNamespace().orElse(MailboxConstants.USER_NAMESPACE),
+            mailboxQuery.getUser().orElse(mailboxSession.getUser().getUserName()),
+            mailboxQuery.getBaseName().orElse(""));
+        return new MailboxPath(base, combinedName);
     }
 
     private Stream<Mailbox> getDelegatedMailboxes(MailboxMapper mailboxMapper, MailboxQuery mailboxQuery, MailboxSession session) throws MailboxException {

@@ -127,7 +127,7 @@ abstract public class AbstractStorageQuota extends AbstractQuotaMatcher {
             List<MailboxMetaData> mList = manager.search(
                     MailboxQuery.builder()
                         .base(MailboxPath.inbox(session))
-                        .pathDelimiter(session.getPathDelimiter())
+                        .mailboxSession(session)
                         .build(),
                     session);
             for (MailboxMetaData aMList : mList) {

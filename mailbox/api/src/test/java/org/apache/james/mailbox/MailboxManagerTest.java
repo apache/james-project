@@ -480,7 +480,7 @@ public abstract class MailboxManagerTest {
             session1);
 
         MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .matchesAllMailboxNames()
+            .matchesAll()
             .build();
 
         assertThat(mailboxManager.search(mailboxQuery, session2))
@@ -510,7 +510,7 @@ public abstract class MailboxManagerTest {
             session1);
 
         MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .matchesAllMailboxNames()
+            .matchesAll()
             .build();
 
         assertThat(mailboxManager.search(mailboxQuery, session2))

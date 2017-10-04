@@ -36,6 +36,8 @@ import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageId.Factory;
 import org.apache.james.mailbox.model.TestId;
@@ -46,14 +48,15 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class StoreMailboxManagerTest {
-
     private static final String CURRENT_USER = "user";
     private static final String CURRENT_USER_PASSWORD = "secret";
     private static final String ADMIN = "admin";
     private static final String ADMIN_PASSWORD = "adminsecret";
     private static final MailboxId MAILBOX_ID = TestId.of(123);
-    public static final String UNKNOWN_USER = "otheruser";
-    public static final String BAD_PASSWORD = "badpassword";
+    private static final String UNKNOWN_USER = "otheruser";
+    private static final String BAD_PASSWORD = "badpassword";
+    private static final String EMPTY_PREFIX = "";
+
     private StoreMailboxManager storeMailboxManager;
     private MailboxMapper mockedMailboxMapper;
     private MailboxSession mockedMailboxSession;
@@ -167,6 +170,35 @@ public class StoreMailboxManagerTest {
         MailboxSession expected = storeMailboxManager.loginAsOtherUser(ADMIN, ADMIN_PASSWORD, CURRENT_USER);
 
         assertThat(expected.getUser().getUserName()).isEqualTo(CURRENT_USER);
+    }
+
+    @Test
+    public void getPathLikeShouldReturnUserPathLikeWhenNoPrefixDefined() throws Exception {
+        //Given
+        MailboxSession session = new MockMailboxSession("user");
+        MailboxQuery.Builder testee = MailboxQuery.builder()
+            .expression("abc")
+            .mailboxSession(session);
+        //When
+        MailboxQuery mailboxQuery = testee.build();
+
+        assertThat(StoreMailboxManager.getPathLike(mailboxQuery, session))
+            .isEqualTo(MailboxPath.forUser("user", "abc%"));
+    }
+
+    @Test
+    public void getPathLikeShouldReturnUserPathLikeWhenPrefixDefined() throws Exception {
+        //Given
+        MailboxSession session = new MockMailboxSession("user");
+        MailboxQuery.Builder testee = MailboxQuery.builder()
+            .base(MailboxPath.forUser("user", "prefix."))
+            .expression("abc")
+            .mailboxSession(session);
+        //When
+        MailboxQuery mailboxQuery = testee.build();
+
+        assertThat(StoreMailboxManager.getPathLike(mailboxQuery, session))
+            .isEqualTo(MailboxPath.forUser("user", "prefix.abc%"));
     }
 }
 

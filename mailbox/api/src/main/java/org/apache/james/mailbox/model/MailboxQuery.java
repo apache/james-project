@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 import org.apache.james.mailbox.MailboxSession;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 
@@ -33,8 +34,6 @@ import com.google.common.base.Preconditions;
  * Expresses select criteria for mailboxes.
  */
 public final class MailboxQuery {
-    public static final char SQL_WILDCARD_CHAR = '%';
-    
     /**
      * Use this wildcard to match every char including the hierarchy delimiter
      */
@@ -44,15 +43,15 @@ public final class MailboxQuery {
      * Use this wildcard to match every char except the hierarchy delimiter
      */
     public final static char LOCALWILDCARD = '%';
+
     private static final String EMPTY_PATH_NAME = "";
 
-    private final MailboxPath base;
     private final String expression;
     private final char pathDelimiter;
     private final Pattern pattern;
     private final Optional<String> namespace;
     private final Optional<String> user;
-    private final Optional<String> name;
+    private final Optional<String> baseName;
 
     public static Builder builder() {
         return new Builder();
@@ -128,15 +127,11 @@ public final class MailboxQuery {
      * @param pathDelimiter
      *            path delimiter to use
      */
-    @VisibleForTesting MailboxQuery(Optional<String> namespace, Optional<String> user, Optional<String> name,
+    @VisibleForTesting MailboxQuery(Optional<String> namespace, Optional<String> user, Optional<String> baseName,
                                     String expression, MailboxSession session) {
         this.namespace = namespace;
         this.user = user;
-        this.name = name;
-        this.base = new MailboxPath(
-            namespace.orElse(MailboxConstants.USER_NAMESPACE),
-            user.orElse(session.getUser().getUserName()),
-            name.orElse(EMPTY_PATH_NAME));
+        this.baseName = baseName;
         if (expression == null) {
             this.expression = "";
         } else {
@@ -146,18 +141,22 @@ public final class MailboxQuery {
         pattern = constructEscapedRegex();
     }
 
+    public Optional<String> getNamespace() {
+        return namespace;
+    }
+
+    public Optional<String> getUser() {
+        return user;
+    }
+
+    public Optional<String> getBaseName() {
+        return baseName;
+    }
+
     public boolean isPrivateMailboxes(MailboxSession session) {
         MailboxSession.User sessionUser = session.getUser();
         return namespace.map(MailboxConstants.USER_NAMESPACE::equals).orElse(false)
             && user.map(sessionUser::isSameUser).orElse(false);
-    }
-
-    public MailboxPath getPathLike() {
-        String combinedName = getCombinedName()
-            .replace(getFreeWildcard(), SQL_WILDCARD_CHAR)
-            .replace(getLocalWildcard(), SQL_WILDCARD_CHAR)
-            + SQL_WILDCARD_CHAR;
-        return new MailboxPath(getBase(), combinedName);
     }
 
     public boolean belongsToRequestedNamespaceAndUser(MailboxPath mailboxPath) {
@@ -169,15 +168,6 @@ public final class MailboxQuery {
             .orElse(true);
 
         return belongsToRequestedNamespace && belongsToRequestedUser;
-    }
-
-    /**
-     * Gets the base reference for the search.
-     * 
-     * @return the base
-     */
-    public final MailboxPath getBase() {
-        return base;
     }
 
     /**
@@ -231,7 +221,7 @@ public final class MailboxQuery {
     }
 
     public boolean isPathMatch(MailboxPath mailboxPath) {
-        String baseName = name.orElse(EMPTY_PATH_NAME);
+        String baseName = this.baseName.orElse(EMPTY_PATH_NAME);
         int baseNameLength = baseName.length();
         String mailboxName = mailboxPath.getName();
 
@@ -249,34 +239,33 @@ public final class MailboxQuery {
      *         notnull
      */
     public String getCombinedName() {
-        final String result;
-        if (base != null && base.getName() != null && base.getName().length() > 0) {
-            final int baseLength = base.getName().length();
-            if (base.getName().charAt(baseLength - 1) == pathDelimiter) {
+        String baseName = this.baseName.orElse(null);
+        if (baseName != null && baseName.length() > 0) {
+            final int baseLength = baseName.length();
+            if (baseName.charAt(baseLength - 1) == pathDelimiter) {
                 if (expression != null && expression.length() > 0) {
                     if (expression.charAt(0) == pathDelimiter) {
-                        result = base.getName() + expression.substring(1);
+                        return baseName + expression.substring(1);
                     } else {
-                        result = base.getName() + expression;
+                        return baseName + expression;
                     }
                 } else {
-                    result = base.getName();
+                    return baseName;
                 }
             } else {
                 if (expression != null && expression.length() > 0) {
                     if (expression.charAt(0) == pathDelimiter) {
-                        result = base.getName() + expression;
+                        return baseName + expression;
                     } else {
-                        result = base.getName() + pathDelimiter + expression;
+                        return baseName + pathDelimiter + expression;
                     }
                 } else {
-                    result = base.getName();
+                    return baseName;
                 }
             }
         } else {
-            result = expression;
+            return expression;
         }
-        return result;
     }
 
     /**
@@ -294,8 +283,14 @@ public final class MailboxQuery {
      * @return a <code>String</code> representation of this object.
      */
     public String toString() {
-        final String TAB = " ";
-        return "MailboxExpression [ " + "base = " + this.base + TAB + "expression = " + this.expression + TAB + "freeWildcard = " + this.getFreeWildcard() + TAB + "localWildcard = " + this.getLocalWildcard() + TAB + " ]";
+        return MoreObjects.toStringHelper(this)
+            .add("expression", expression)
+            .add("pathDelimiter", pathDelimiter)
+            .add("pattern", pattern)
+            .add("namespace", namespace)
+            .add("user", user)
+            .add("baseName", baseName)
+            .toString();
     }
 
 

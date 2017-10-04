@@ -126,7 +126,7 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
             MailboxQuery.builder()
                 .base(MailboxPath.forUser(username, ""))
                 .expression("*")
-                .pathDelimiter(session.getPathDelimiter())
+                .mailboxSession(session)
                 .build(),
             session);
     }
