@@ -95,8 +95,8 @@ public class TransactionalMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public List<Mailbox> findMailboxes(String userName, Right right) throws MailboxException {
-        return wrapped.findMailboxes(userName, right);
+    public List<Mailbox> findNonPersonalMailboxes(String userName, Right right) throws MailboxException {
+        return wrapped.findNonPersonalMailboxes(userName, right);
     }
 
 }

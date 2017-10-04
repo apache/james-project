@@ -713,7 +713,7 @@ public class StoreMailboxManager implements MailboxManager {
         if (mailboxQuery.isPrivateMailboxes(session)) {
             return Stream.of();
         }
-        return mailboxMapper.findMailboxes(session.getUser().getUserName(), Right.Read).stream();
+        return mailboxMapper.findNonPersonalMailboxes(session.getUser().getUserName(), Right.Read).stream();
     }
 
     private boolean isReadable(MailboxSession session, Mailbox mailbox) throws MailboxException {

@@ -168,7 +168,7 @@ public class InMemoryMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public List<Mailbox> findMailboxes(String userName, Right right) throws MailboxException {
+    public List<Mailbox> findNonPersonalMailboxes(String userName, Right right) throws MailboxException {
         return mailboxesByPath.values()
             .stream()
             .filter(mailbox -> hasRightOn(mailbox, userName, right))

@@ -122,8 +122,8 @@ public class CachingMailboxMapper implements MailboxMapper {
 	}
 
     @Override
-    public List<Mailbox> findMailboxes(String userName, Right right) throws MailboxException {
-        return underlying.findMailboxes(userName, right);
+    public List<Mailbox> findNonPersonalMailboxes(String userName, Right right) throws MailboxException {
+        return underlying.findNonPersonalMailboxes(userName, right);
     }
 
 }

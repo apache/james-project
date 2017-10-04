@@ -165,7 +165,7 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
             }
 
             @Override
-            public List<Mailbox> findMailboxes(String userName, Right right) throws MailboxException {
+            public List<Mailbox> findNonPersonalMailboxes(String userName, Right right) throws MailboxException {
                 throw new NotImplementedException();
             }
         };

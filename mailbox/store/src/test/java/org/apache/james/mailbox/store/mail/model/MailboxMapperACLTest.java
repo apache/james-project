@@ -244,7 +244,7 @@ public abstract class MailboxMapperACLTest {
 
     @Test
     public void findMailboxesShouldReturnEmptyWhenNone() throws MailboxException {
-        assertThat(mailboxMapper.findMailboxes("user", Right.Administer)).isEmpty();
+        assertThat(mailboxMapper.findNonPersonalMailboxes("user", Right.Administer)).isEmpty();
     }
 
     @Test
@@ -257,7 +257,7 @@ public abstract class MailboxMapperACLTest {
                 .rights(rights)
                 .asReplacement());
 
-        assertThat(mailboxMapper.findMailboxes("user", Right.Read)).isEmpty();
+        assertThat(mailboxMapper.findNonPersonalMailboxes("user", Right.Read)).isEmpty();
     }
 
     @Test
@@ -269,7 +269,7 @@ public abstract class MailboxMapperACLTest {
                 .rights(rights)
                 .asAddition());
 
-        assertThat(mailboxMapper.findMailboxes("user", Right.Administer))
+        assertThat(mailboxMapper.findNonPersonalMailboxes("user", Right.Administer))
             .containsOnly(benwaInboxMailbox);
     }
 
@@ -289,7 +289,7 @@ public abstract class MailboxMapperACLTest {
                 .rights(newRights)
                 .asReplacement());
 
-        assertThat(mailboxMapper.findMailboxes("user", Right.Read))
+        assertThat(mailboxMapper.findNonPersonalMailboxes("user", Right.Read))
             .containsOnly(benwaInboxMailbox);
     }
 
@@ -310,7 +310,7 @@ public abstract class MailboxMapperACLTest {
                 .rights(new Rfc4314Rights())
                 .build());
 
-        assertThat(mailboxMapper.findMailboxes("user", Right.Administer))
+        assertThat(mailboxMapper.findNonPersonalMailboxes("user", Right.Administer))
             .isEmpty();
     }
 
@@ -329,7 +329,7 @@ public abstract class MailboxMapperACLTest {
                 .rights(initialRights)
                 .asRemoval());
 
-        assertThat(mailboxMapper.findMailboxes("user", Right.Administer))
+        assertThat(mailboxMapper.findNonPersonalMailboxes("user", Right.Administer))
             .isEmpty();
     }
 
@@ -344,7 +344,7 @@ public abstract class MailboxMapperACLTest {
                 .asReplacement());
         mailboxMapper.delete(benwaInboxMailbox);
 
-        assertThat(mailboxMapper.findMailboxes("user", Right.Administer))
+        assertThat(mailboxMapper.findNonPersonalMailboxes("user", Right.Administer))
             .isEmpty();
     }
 
@@ -357,9 +357,9 @@ public abstract class MailboxMapperACLTest {
             new MailboxACL.Entry(user1, new Rfc4314Rights(Right.Administer)),
             new MailboxACL.Entry(user2, new Rfc4314Rights(Right.Read))));
 
-        assertThat(mailboxMapper.findMailboxes("user1", Right.Administer))
+        assertThat(mailboxMapper.findNonPersonalMailboxes("user1", Right.Administer))
             .containsOnly(benwaInboxMailbox);
-        assertThat(mailboxMapper.findMailboxes("user2", Right.Read))
+        assertThat(mailboxMapper.findNonPersonalMailboxes("user2", Right.Read))
             .containsOnly(benwaInboxMailbox);
     }
 
@@ -375,7 +375,7 @@ public abstract class MailboxMapperACLTest {
         mailboxMapper.setACL(benwaInboxMailbox, new MailboxACL(
             new MailboxACL.Entry(user2, new Rfc4314Rights(Right.Read))));
 
-        assertThat(mailboxMapper.findMailboxes("user1", Right.Administer))
+        assertThat(mailboxMapper.findNonPersonalMailboxes("user1", Right.Administer))
             .isEmpty();
     }
 
@@ -391,7 +391,7 @@ public abstract class MailboxMapperACLTest {
         mailboxMapper.setACL(benwaInboxMailbox, new MailboxACL(
             new MailboxACL.Entry(user2, new Rfc4314Rights(Right.Write))));
 
-        assertThat(mailboxMapper.findMailboxes("user2", Right.Write))
+        assertThat(mailboxMapper.findNonPersonalMailboxes("user2", Right.Write))
             .containsOnly(benwaInboxMailbox);
     }
 
