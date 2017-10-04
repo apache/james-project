@@ -281,11 +281,6 @@ public final class MailboxQuery {
                 || expression.indexOf(getLocalWildcard()) >= 0);
     }
 
-    /**
-     * Renders a string suitable for logging.
-     * 
-     * @return a <code>String</code> representation of this object.
-     */
     public String toString() {
         return MoreObjects.toStringHelper(this)
             .add("expression", expression)
