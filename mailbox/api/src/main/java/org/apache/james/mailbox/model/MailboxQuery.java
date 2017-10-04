@@ -46,13 +46,6 @@ public final class MailboxQuery {
 
     private static final String EMPTY_PATH_NAME = "";
 
-    private final String expression;
-    private final char pathDelimiter;
-    private final Pattern pattern;
-    private final Optional<String> namespace;
-    private final Optional<String> user;
-    private final Optional<String> baseName;
-
     public static Builder builder() {
         return new Builder();
     }
@@ -116,6 +109,13 @@ public final class MailboxQuery {
             return new MailboxQuery(namespace, username, pathName, expression, mailboxSession);
         }
     }
+
+    private final String expression;
+    private final char pathDelimiter;
+    private final Pattern pattern;
+    private final Optional<String> namespace;
+    private final Optional<String> user;
+    private final Optional<String> baseName;
 
     /**
      * Constructs an expression determining a set of mailbox names.
