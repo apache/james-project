@@ -554,4 +554,106 @@ public abstract class GetMailboxesMethodTest {
 
         assertThat(sharedWith).containsOnlyKeys(alice, cedric);
     }
+
+    @Test
+    public void getMailboxesShouldReturnAllAccessibleMailboxesWhenEmptyIds() throws Exception {
+        String sharedMailboxName = "BobShared";
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, DefaultMailboxes.INBOX);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, sharedMailboxName);
+
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, DefaultMailboxes.INBOX);
+        MailboxPath bobMailboxPath = MailboxPath.forUser(bob, sharedMailboxName);
+        aclProbe.replaceRights(bobMailboxPath, alice, new Rfc4314Rights(Right.Read));
+
+        List<String> expectedMailboxes = ImmutableList.<String> builder()
+            .addAll(DefaultMailboxes.DEFAULT_MAILBOXES)
+            .add(sharedMailboxName)
+            .build();
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list", hasSize(6))
+            .body(ARGUMENTS + ".list.name", hasItems(expectedMailboxes.toArray()));
+    }
+
+    @Test
+    public void getMailboxesShouldFilterMailboxesWithReadRightWhenEmptyIds() throws Exception {
+        String sharedReadMailboxName = "BobShared";
+        String sharedAdministerMailboxName = "BobShared1";
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, DefaultMailboxes.INBOX);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, sharedReadMailboxName);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, sharedAdministerMailboxName);
+
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, DefaultMailboxes.INBOX);
+        MailboxPath bobSharedReadMailboxPath = MailboxPath.forUser(bob, sharedReadMailboxName);
+        MailboxPath bobSharedAdministerMailboxPath = MailboxPath.forUser(bob, sharedAdministerMailboxName);
+
+        aclProbe.replaceRights(bobSharedReadMailboxPath, alice, new Rfc4314Rights(Right.Read));
+        aclProbe.replaceRights(bobSharedAdministerMailboxPath, alice, new Rfc4314Rights(Right.Administer));
+
+        List<String> expectedMailboxes = ImmutableList.<String> builder()
+            .addAll(DefaultMailboxes.DEFAULT_MAILBOXES)
+            .add(sharedReadMailboxName)
+            .build();
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list", hasSize(6))
+            .body(ARGUMENTS + ".list.name", hasItems(expectedMailboxes.toArray()));
+    }
+
+    @Test
+    public void getMailboxesShouldReturnExactUserInbox() throws Exception {
+        String mailboxName = "BobShared";
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, mailboxName);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, DefaultMailboxes.INBOX);
+        MailboxId aliceInboxMailbox = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, DefaultMailboxes.INBOX);
+        MailboxPath bobMailboxPath = MailboxPath.forUser(bob, mailboxName);
+        aclProbe.replaceRights(bobMailboxPath, alice, new Rfc4314Rights(Right.Read));
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + aliceInboxMailbox.serialize() + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list.name", hasItems(MailboxConstants.INBOX))
+            .body(ARGUMENTS + ".list.id", hasItems(aliceInboxMailbox.serialize()));
+    }
+
+    @Test
+    public void getMailboxesShouldReturnSharedMailboxesWithRead() throws Exception {
+        String sharedMailboxName = "BobShared";
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, DefaultMailboxes.INBOX);
+        MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, sharedMailboxName);
+
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, DefaultMailboxes.INBOX);
+        MailboxPath bobMailboxPath = MailboxPath.forUser(bob, sharedMailboxName);
+        aclProbe.replaceRights(bobMailboxPath, alice, new Rfc4314Rights(Right.Read));
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId.serialize() + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(ARGUMENTS + ".list.id", hasItems(mailboxId.serialize()));
+    }
 }

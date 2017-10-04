@@ -139,7 +139,7 @@ public class GetMailboxesMethod implements Method {
 
     private Stream<Mailbox> retrieveAllMailboxes(MailboxSession mailboxSession) throws MailboxException {
         List<MailboxMetaData> userMailboxes = mailboxManager.search(
-            MailboxQuery.privateMailboxesBuilder(mailboxSession)
+            MailboxQuery.builder()
                 .matchesAllMailboxNames()
                 .build(),
             mailboxSession);
@@ -147,10 +147,10 @@ public class GetMailboxesMethod implements Method {
             .stream()
             .map(MailboxMetaData::getId)
             .map(mailboxId -> mailboxFactory.builder()
-                    .id(mailboxId)
-                    .session(mailboxSession)
-                    .usingPreloadedMailboxesMetadata(userMailboxes)
-                    .build())
+                .id(mailboxId)
+                .session(mailboxSession)
+                .usingPreloadedMailboxesMetadata(userMailboxes)
+                .build())
             .flatMap(OptionalUtils::toStream);
     }
 
