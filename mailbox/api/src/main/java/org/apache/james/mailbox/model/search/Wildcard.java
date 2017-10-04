@@ -19,9 +19,17 @@
 
 package org.apache.james.mailbox.model.search;
 
+import java.util.Objects;
+
 import com.google.common.base.Preconditions;
 
 public class Wildcard implements MailboxNameExpression {
+
+    public static final Wildcard INSTANCE = new Wildcard();
+
+    private Wildcard() {
+    }
+
     @Override
     public boolean isExpressionMatch(String name) {
         Preconditions.checkNotNull(name);
@@ -36,5 +44,15 @@ public class Wildcard implements MailboxNameExpression {
     @Override
     public boolean isWild() {
         return true;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        return o instanceof Wildcard;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash();
     }
 }

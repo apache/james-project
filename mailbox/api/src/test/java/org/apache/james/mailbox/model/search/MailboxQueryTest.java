@@ -21,12 +21,7 @@
 package org.apache.james.mailbox.model.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MailboxSession.User;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxQuery.Builder;
 import org.junit.Before;
@@ -36,127 +31,98 @@ public class MailboxQueryTest {
     private static final String CURRENT_USER = "user";
 
     private MailboxPath mailboxPath;
-    private MailboxSession mailboxSession;
 
     @Before
     public void setUp() {
         mailboxPath = new MailboxPath("namespace", "user", "name");
-        mailboxSession = new MockMailboxSession("user");
     }
 
     @Test
     public void buildShouldMatchAllValuesWhenMatchesAll() throws Exception {
-        //When
+
         MailboxQuery actual = MailboxQuery.builder()
-                .base(mailboxPath)
-                .matchesAll()
-                .mailboxSession(mailboxSession)
+                .userAndNamespaceFrom(mailboxPath)
+                .matchesAllMailboxNames()
                 .build();
-        //Then
+
         assertThat(actual.isExpressionMatch("folder")).isTrue();
     }
 
     @Test
     public void buildShouldConstructMailboxPathWhenPrivateUserMailboxes() throws Exception {
-        //Given
         MailboxPath expected = MailboxPath.forUser("user", "");
-        //When
+
         MailboxQuery actual = MailboxQuery.builder()
                 .username("user")
-                .privateMailboxes()
-                .mailboxSession(mailboxSession)
+                .privateNamespace()
                 .build();
-        //Then
+
         assertThat(actual.getNamespace()).contains(expected.getNamespace());
         assertThat(actual.getUser()).contains(expected.getUser());
-        assertThat(actual.getBaseName()).contains(expected.getName());
+        assertThat(actual.getMailboxNameExpression()).isEqualTo(Wildcard.INSTANCE);
     }
 
     @Test
     public void buildShouldMatchAllValuesWhenPrivateUserMailboxes() throws Exception {
-        //Given
         Builder testee = MailboxQuery.builder()
                 .username("user")
-                .privateMailboxes()
-            .mailboxSession(mailboxSession);
-        //When
+                .privateNamespace();
+
         MailboxQuery actual = testee.build();
-        //Then
+
         assertThat(actual.isExpressionMatch("folder")).isTrue();
     }
 
     @Test
-    public void builderShouldInitFromSessionWhenGiven() throws Exception {
-        //Given
-        MailboxSession mailboxSession = mock(MailboxSession.class);
-        when(mailboxSession.getPathDelimiter()).thenReturn('#');
-        User user = mock(User.class);
-        when(user.getUserName()).thenReturn("little bobby table");
-        when(mailboxSession.getUser()).thenReturn(user);
-        // When
-        Builder query = MailboxQuery.privateMailboxesBuilder(mailboxSession);
-        //Then
-        assertThat(query.pathDelimiter).contains('#');
-        assertThat(query.username).contains("little bobby table");
-    }
-
-    @Test
     public void builderShouldNotThrowWhenNoBaseDefined() throws Exception {
-        //Given
         Builder testee = MailboxQuery.builder()
-                .expression("abc")
-                .mailboxSession(mailboxSession);
-        //When
+                .expression(new ExactName("abc"));
+
         testee.build();
     }
 
     @Test(expected=IllegalStateException.class)
     public void builderShouldThrowWhenBaseAndUsernameGiven() throws Exception {
-        //Given
         Builder testee = MailboxQuery.builder()
-                .base(mailboxPath)
+                .userAndNamespaceFrom(mailboxPath)
                 .username("user");
-        //When
+
         testee.build();
     }
 
     @Test(expected=IllegalStateException.class)
     public void builderShouldThrowWhenBaseGiven() throws Exception {
-        //Given
         Builder testee = MailboxQuery.builder()
-                .base(mailboxPath)
-                .privateMailboxes();
-        //When
+                .userAndNamespaceFrom(mailboxPath)
+                .privateNamespace();
+
         testee.build();
     } 
 
-    @Test(expected=IllegalStateException.class)
-    public void builderShouldThrowWhenMissingUsername() throws Exception {
-        //Given
+    @Test
+    public void builderShouldNotThrowWhenMissingUsername() throws Exception {
         Builder testee = MailboxQuery.builder()
-                .privateMailboxes();
-        //When
+                .privateNamespace();
+
         testee.build();
     }
 
     @Test
     public void builderShouldUseBaseWhenGiven() throws Exception {
-        //When
+
         MailboxQuery actual = MailboxQuery.builder()
-                .base(mailboxPath)
-                .mailboxSession(mailboxSession)
+                .userAndNamespaceFrom(mailboxPath)
                 .build();
-        //Then
+
         assertThat(actual.getNamespace()).contains(mailboxPath.getNamespace());
         assertThat(actual.getUser()).contains(mailboxPath.getUser());
-        assertThat(actual.getBaseName()).contains(mailboxPath.getName());
+        assertThat(actual.getMailboxNameExpression()).isEqualTo(Wildcard.INSTANCE);
     }
 
     @Test
     public void belongsToNamespaceAndUserShouldReturnTrueWithIdenticalMailboxes() {
         MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .base(mailboxPath)
-            .mailboxSession(mailboxSession)
+            .userAndNamespaceFrom(mailboxPath)
             .build();
 
         assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(mailboxPath))
@@ -168,8 +134,7 @@ public class MailboxQueryTest {
         MailboxPath base = new MailboxPath("namespace", null, "name");
 
         MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .base(base)
-            .mailboxSession(mailboxSession)
+            .userAndNamespaceFrom(base)
             .build();
 
         assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(mailboxPath))
@@ -181,8 +146,7 @@ public class MailboxQueryTest {
         MailboxPath mailboxPath = new MailboxPath(null, "user", "name");
 
         MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .base(mailboxPath)
-            .mailboxSession(mailboxSession)
+            .userAndNamespaceFrom(mailboxPath)
             .build();
 
         assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(mailboxPath))
@@ -192,8 +156,7 @@ public class MailboxQueryTest {
     @Test
     public void belongsToNamespaceAndUserShouldReturnTrueWithMailboxWithSameNamespaceAndUserWithNullUser() {
         MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .base(new MailboxPath("namespace", null, "name"))
-            .mailboxSession(mailboxSession)
+            .userAndNamespaceFrom(new MailboxPath("namespace", null, "name"))
             .build();
 
         assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(new MailboxPath("namespace", null, "name")))
@@ -203,8 +166,7 @@ public class MailboxQueryTest {
     @Test
     public void belongsToNamespaceAndUserShouldReturnTrueWithMailboxWithSameNamespaceAndUser() {
         MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .base(new MailboxPath("namespace", CURRENT_USER, "name"))
-            .mailboxSession(mailboxSession)
+            .userAndNamespaceFrom(new MailboxPath("namespace", CURRENT_USER, "name"))
             .build();
 
         assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(new MailboxPath("namespace", CURRENT_USER, "name2")))
@@ -214,8 +176,7 @@ public class MailboxQueryTest {
     @Test
     public void belongsToNamespaceAndUserShouldReturnFalseWithDifferentNamespace() {
         MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .base(new MailboxPath("namespace", CURRENT_USER, "name"))
-            .mailboxSession(mailboxSession)
+            .userAndNamespaceFrom(new MailboxPath("namespace", CURRENT_USER, "name"))
             .build();
 
         assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(new MailboxPath("namespace2", CURRENT_USER, "name")))
@@ -225,8 +186,7 @@ public class MailboxQueryTest {
     @Test
     public void belongsToNamespaceAndUserShouldReturnFalseWithDifferentUser() {
         MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .base(new MailboxPath("namespace", CURRENT_USER, "name"))
-            .mailboxSession(mailboxSession)
+            .userAndNamespaceFrom(new MailboxPath("namespace", CURRENT_USER, "name"))
             .build();
 
         assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(new MailboxPath("namespace", CURRENT_USER + "2", "name")))
@@ -235,8 +195,7 @@ public class MailboxQueryTest {
     @Test
     public void belongsToNamespaceAndUserShouldReturnFalseWithOneOfTheUserNull() {
         MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .base(new MailboxPath("namespace", CURRENT_USER, "name"))
-            .mailboxSession(mailboxSession)
+            .userAndNamespaceFrom(new MailboxPath("namespace", CURRENT_USER, "name"))
             .build();
 
         assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(new MailboxPath("namespace", null, "name")))
@@ -246,8 +205,7 @@ public class MailboxQueryTest {
     @Test
     public void belongsToNamespaceAndUserShouldReturnFalseWhenDifferentUser() {
         MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .base(new MailboxPath("namespace", CURRENT_USER, "name"))
-            .mailboxSession(mailboxSession)
+            .userAndNamespaceFrom(new MailboxPath("namespace", CURRENT_USER, "name"))
             .build();
 
         assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(new MailboxPath("namespace", "other", "name")))
@@ -257,8 +215,7 @@ public class MailboxQueryTest {
     @Test
     public void belongsToNamespaceAndUserShouldReturnFalseIfNamespaceAreDifferentWithNullUser() {
         MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .base(new MailboxPath("namespace", null, "name"))
-            .mailboxSession(mailboxSession)
+            .userAndNamespaceFrom(new MailboxPath("namespace", null, "name"))
             .build();
 
         assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(new MailboxPath("namespace2", null, "name")))

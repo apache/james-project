@@ -46,6 +46,7 @@ import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxMetaData.Children;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mailbox.model.search.PrefixedRegex;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
@@ -173,9 +174,11 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
 
                 results = getMailboxManager().search(
                         MailboxQuery.builder()
-                            .base(basePath)
-                            .expression(CharsetUtil.decodeModifiedUTF7(mailboxName))
-                            .mailboxSession(mailboxSession)
+                            .userAndNamespaceFrom(basePath)
+                            .expression(new PrefixedRegex(
+                                basePath.getName(),
+                                CharsetUtil.decodeModifiedUTF7(mailboxName),
+                                mailboxSession.getPathDelimiter()))
                             .build()
                         , mailboxSession);
             }

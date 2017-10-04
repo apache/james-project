@@ -243,12 +243,10 @@ public abstract class MailboxManagerTest {
         mailboxManager.createMailbox(new MailboxPath("other_namespace", USER_1, "Other"), session);
         mailboxManager.createMailbox(MailboxPath.inbox(session), session);
         List<MailboxMetaData> metaDatas = mailboxManager.search(
-                MailboxQuery.builder()
-                    .base(MailboxPath.forUser(USER_1, ""))
-                    .expression("*")
-                    .mailboxSession(session)
-                    .build(), 
-                session);
+            MailboxQuery.privateMailboxesBuilder(session)
+                .matchesAllMailboxNames()
+                .build(),
+            session);
         assertThat(metaDatas).hasSize(1);
         assertThat(metaDatas.get(0).getPath()).isEqualTo(MailboxPath.inbox(session));
     }
@@ -259,11 +257,9 @@ public abstract class MailboxManagerTest {
         mailboxManager.createMailbox(MailboxPath.forUser(USER_2, "Other"), session);
         mailboxManager.createMailbox(MailboxPath.inbox(session), session);
         List<MailboxMetaData> metaDatas = mailboxManager.search(
-                MailboxQuery.builder()
-                .base(MailboxPath.forUser(USER_1, ""))
-                .expression("*")
-                    .mailboxSession(session)
-                .build(), 
+            MailboxQuery.privateMailboxesBuilder(session)
+                .matchesAllMailboxNames()
+                .build(),
             session);
         assertThat(metaDatas).hasSize(1);
         assertThat(metaDatas.get(0).getPath()).isEqualTo(MailboxPath.inbox(session));
@@ -454,8 +450,7 @@ public abstract class MailboxManagerTest {
             session1);
 
         MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .mailboxSession(session2)
-            .matchesAll()
+            .matchesAllMailboxNames()
             .build();
 
         assertThat(mailboxManager.search(mailboxQuery, session2))
@@ -480,7 +475,7 @@ public abstract class MailboxManagerTest {
             session1);
 
         MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .matchesAll()
+            .matchesAllMailboxNames()
             .build();
 
         assertThat(mailboxManager.search(mailboxQuery, session2))
@@ -510,7 +505,7 @@ public abstract class MailboxManagerTest {
             session1);
 
         MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .matchesAll()
+            .matchesAllMailboxNames()
             .build();
 
         assertThat(mailboxManager.search(mailboxQuery, session2))

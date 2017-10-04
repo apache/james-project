@@ -95,7 +95,9 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
     }
 
     private Optional<MailboxMetaData> retrieveMailbox(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
-        MailboxQuery userMailboxesQuery = MailboxQuery.privateMailboxesBuilder(mailboxSession).expression("*").build();
+        MailboxQuery userMailboxesQuery = MailboxQuery.privateMailboxesBuilder(mailboxSession)
+            .matchesAllMailboxNames()
+            .build();
         return mailboxManager.search(userMailboxesQuery, mailboxSession)
             .stream()
             .filter(mailboxMetaData -> mailboxMetaData.getId().equals(mailboxId))

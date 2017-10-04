@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.model.search;
 
-interface MailboxNameExpression {
+public interface MailboxNameExpression {
     /**
      * Use this wildcard to match every char including the hierarchy delimiter
      */
@@ -30,9 +30,49 @@ interface MailboxNameExpression {
      */
     char LOCALWILDCARD = '%';
 
+    /**
+     * Is the given name a match for this expression?
+     *
+     * @param name
+     *            name to be matched
+     * @return true if the given name matches this expression, false otherwise
+     */
     boolean isExpressionMatch(String name);
 
+    /**
+     * Get combined name formed by adding the expression to the base using the
+     * given hierarchy delimiter. Note that the wildcards are retained in the
+     * combined name.
+     *
+     * @return {@link #getBase()} combined with {@link #getExpression()},
+     *         notnull
+     */
     String getCombinedName();
 
+    /**
+     * Is this expression wild?
+     *
+     * @return true if wildcard contained, false otherwise
+     */
     boolean isWild();
+
+    /**
+     * Gets wildcard character that matches any series of characters.
+     *
+     * @return the freeWildcard
+     */
+    default char getFreeWildcard() {
+        return FREEWILDCARD;
+    }
+
+    /**
+     * Gets wildcard character that matches any series of characters excluding
+     * hierarchy delimiters. Effectively, this means that it matches any
+     * sequence within a name part.
+     *
+     * @return the localWildcard
+     */
+    default char getLocalWildcard() {
+        return LOCALWILDCARD;
+    }
 }

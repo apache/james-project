@@ -63,6 +63,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageId.Factory;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
+import org.apache.james.mailbox.model.search.MailboxNameExpression;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
@@ -696,14 +697,15 @@ public class StoreMailboxManager implements MailboxManager {
 
     @VisibleForTesting
     public static MailboxPath getPathLike(MailboxQuery mailboxQuery, MailboxSession mailboxSession) {
-        String combinedName = mailboxQuery.getCombinedName()
-            .replace(mailboxQuery.getFreeWildcard(), SQL_WILDCARD_CHAR)
-            .replace(mailboxQuery.getLocalWildcard(), SQL_WILDCARD_CHAR)
+        MailboxNameExpression nameExpression = mailboxQuery.getMailboxNameExpression();
+        String combinedName = nameExpression.getCombinedName()
+            .replace(nameExpression.getFreeWildcard(), SQL_WILDCARD_CHAR)
+            .replace(nameExpression.getLocalWildcard(), SQL_WILDCARD_CHAR)
             + SQL_WILDCARD_CHAR;
         MailboxPath base = new MailboxPath(
             mailboxQuery.getNamespace().orElse(MailboxConstants.USER_NAMESPACE),
             mailboxQuery.getUser().orElse(mailboxSession.getUser().getUserName()),
-            mailboxQuery.getBaseName().orElse(""));
+            combinedName);
         return new MailboxPath(base, combinedName);
     }
 

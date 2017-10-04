@@ -35,10 +35,10 @@ import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MailboxMetaData;
-import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mailbox.model.search.Wildcard;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Experimental;
@@ -125,9 +125,8 @@ abstract public class AbstractStorageQuota extends AbstractQuotaMatcher {
             // get all mailboxes for the user to calculate the size
             // TODO: See JAMES-1198
             List<MailboxMetaData> mList = manager.search(
-                    MailboxQuery.builder()
-                        .base(MailboxPath.inbox(session))
-                        .mailboxSession(session)
+                    MailboxQuery.privateMailboxesBuilder(session)
+                        .expression(Wildcard.INSTANCE)
                         .build(),
                     session);
             for (MailboxMetaData aMList : mList) {

@@ -32,6 +32,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mailbox.model.search.PrefixedWildcard;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
@@ -66,8 +67,7 @@ public class SystemMailboxesProviderImpl implements SystemMailboxesProvider {
     private Stream<MessageManager> searchMessageManagerByMailboxRole(Role aRole, MailboxSession session) throws MailboxException {
         ThrowingFunction<MailboxPath, MessageManager> loadMailbox = path -> mailboxManager.getMailbox(path, session);
         MailboxQuery mailboxQuery = MailboxQuery.privateMailboxesBuilder(session)
-            .privateMailboxes()
-            .expression(aRole.getDefaultMailbox())
+            .expression(new PrefixedWildcard(aRole.getDefaultMailbox()))
             .build();
         return mailboxManager.search(mailboxQuery, session)
             .stream()

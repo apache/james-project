@@ -139,7 +139,9 @@ public class GetMailboxesMethod implements Method {
 
     private Stream<Mailbox> retrieveAllMailboxes(MailboxSession mailboxSession) throws MailboxException {
         List<MailboxMetaData> userMailboxes = mailboxManager.search(
-            MailboxQuery.privateMailboxesBuilder(mailboxSession).privateMailboxes().build(),
+            MailboxQuery.privateMailboxesBuilder(mailboxSession)
+                .matchesAllMailboxNames()
+                .build(),
             mailboxSession);
         return userMailboxes
             .stream()

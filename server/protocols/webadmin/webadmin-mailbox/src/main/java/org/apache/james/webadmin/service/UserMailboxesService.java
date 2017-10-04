@@ -75,7 +75,7 @@ public class UserMailboxesService {
     public void deleteMailboxes(String username) throws MailboxException, UsersRepositoryException {
         usernamePreconditions(username);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USER_NAME);
-        listUserMailboxes(username, mailboxSession)
+        listUserMailboxes(mailboxSession)
             .map(MailboxMetaData::getPath)
             .forEach(Throwing.consumer(mailboxPath -> deleteMailbox(mailboxSession, mailboxPath)));
     }
@@ -83,7 +83,7 @@ public class UserMailboxesService {
     public List<MailboxResponse> listMailboxes(String username) throws MailboxException, UsersRepositoryException {
         usernamePreconditions(username);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USER_NAME);
-        return listUserMailboxes(username, mailboxSession)
+        return listUserMailboxes(mailboxSession)
             .map(mailboxMetaData -> new MailboxResponse(mailboxMetaData.getPath().getName()))
             .collect(Guavate.toImmutableList());
     }
@@ -105,7 +105,7 @@ public class UserMailboxesService {
     }
 
     private Stream<MailboxPath> listChildren(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
-        return mailboxManager.search(createUserMailboxesQuery(mailboxPath.getUser()), mailboxSession)
+        return mailboxManager.search(createUserMailboxesQuery(mailboxSession), mailboxSession)
             .stream()
             .map(MailboxMetaData::getPath)
             .filter(path -> path.getHierarchyLevels(mailboxSession.getPathDelimiter()).contains(mailboxPath));
@@ -128,15 +128,13 @@ public class UserMailboxesService {
         return new MailboxPath(mailboxSession.getPersonalSpace(), username, mailboxName);
     }
 
-    private Stream<MailboxMetaData> listUserMailboxes(String username, MailboxSession mailboxSession) throws MailboxException {
-        return mailboxManager.search(createUserMailboxesQuery(username), mailboxSession)
+    private Stream<MailboxMetaData> listUserMailboxes(MailboxSession mailboxSession) throws MailboxException {
+        return mailboxManager.search(createUserMailboxesQuery(mailboxSession), mailboxSession)
             .stream();
     }
 
-    private MailboxQuery createUserMailboxesQuery(String username) {
-        return MailboxQuery.builder()
-            .username(username)
-            .privateMailboxes()
+    private MailboxQuery createUserMailboxesQuery(MailboxSession mailboxSession) {
+        return MailboxQuery.privateMailboxesBuilder(mailboxSession)
             .build();
     }
 

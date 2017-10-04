@@ -20,8 +20,6 @@
 package org.apache.james.mailbox.model.search;
 
 import java.util.Optional;
-import java.util.StringTokenizer;
-import java.util.regex.Pattern;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -36,17 +34,6 @@ import com.google.common.base.Preconditions;
  * Expresses select criteria for mailboxes.
  */
 public final class MailboxQuery {
-    /**
-     * Use this wildcard to match every char including the hierarchy delimiter
-     */
-    public final static char FREEWILDCARD = '*';
-
-    /**
-     * Use this wildcard to match every char except the hierarchy delimiter
-     */
-    public final static char LOCALWILDCARD = '%';
-
-    private static final String EMPTY_PATH_NAME = "";
 
     public static Builder builder() {
         return new Builder();
@@ -54,76 +41,72 @@ public final class MailboxQuery {
 
     public static Builder privateMailboxesBuilder(MailboxSession session) {
         return builder()
-            .mailboxSession(session)
-            .username(session.getUser().getUserName());
+            .namespace(MailboxConstants.USER_NAMESPACE)
+            .username(session.getUser().getUserName())
+            .matchesAllMailboxNames();
     }
 
     public static class Builder {
-        private String expression;
-        @VisibleForTesting Optional<Character> pathDelimiter;
-        @VisibleForTesting Optional<String> username;
-        @VisibleForTesting Optional<String> pathName;
-        @VisibleForTesting Optional<String> namespace;
+        private static final Wildcard DEFAULT_WILDCARD = Wildcard.INSTANCE;
+
+        Optional<String> username;
+        Optional<String> namespace;
+        Optional<MailboxNameExpression> mailboxNameExpression;
         
         private Builder() {
-            this.pathName = Optional.empty();
             this.namespace = Optional.empty();
             this.username = Optional.empty();
-            this.pathDelimiter = Optional.empty();
+            this.mailboxNameExpression = Optional.empty();
         }
         
-        public Builder base(MailboxPath base) {
+        public Builder userAndNamespaceFrom(MailboxPath base) {
+            Preconditions.checkState(!this.namespace.isPresent());
+            Preconditions.checkState(!this.username.isPresent());
+
             this.namespace = Optional.ofNullable(base.getNamespace());
             this.username = Optional.ofNullable(base.getUser());
-            this.pathName = Optional.ofNullable(base.getName());
             return this;
         }
-        
+
         public Builder username(String username) {
+            Preconditions.checkState(!this.username.isPresent());
+
             this.username = Optional.of(username);
             return this;
         }
-        
-        public Builder privateMailboxes() {
-            Preconditions.checkState(!pathName.isPresent());
-            Preconditions.checkState(!namespace.isPresent());
+
+        public Builder namespace(String namespace) {
+            Preconditions.checkState(!this.namespace.isPresent());
+
+            this.namespace = Optional.of(namespace);
+            return this;
+        }
+
+        public Builder privateNamespace() {
+            Preconditions.checkState(!this.namespace.isPresent());
+
             this.namespace = Optional.of(MailboxConstants.USER_NAMESPACE);
-            this.pathName = Optional.of(EMPTY_PATH_NAME);
-            return matchesAll();
-        }
-        
-        public Builder expression(String expression) {
-            this.expression = expression;
             return this;
         }
         
-        public Builder matchesAll() {
-            this.expression = String.valueOf(FREEWILDCARD);
+        public Builder expression(MailboxNameExpression expression) {
+            this.mailboxNameExpression = Optional.of(expression);
             return this;
         }
-
-        public Builder mailboxSession(MailboxSession session) {
-            this.pathDelimiter = Optional.of(session.getPathDelimiter());
-            return this;
-        }
-
-        public Builder pathDelimiter(char pathDelimiter) {
-            this.pathDelimiter = Optional.of(pathDelimiter);
+        
+        public Builder matchesAllMailboxNames() {
+            this.mailboxNameExpression = Optional.of(Wildcard.INSTANCE);
             return this;
         }
         
         public MailboxQuery build() {
-            Preconditions.checkState(pathDelimiter.isPresent());
-            return new MailboxQuery(namespace, username, pathName, expression, pathDelimiter.get());
+            return new MailboxQuery(namespace, username, mailboxNameExpression.orElse(DEFAULT_WILDCARD));
         }
     }
 
-    private final String expression;
-    private final char pathDelimiter;
-    private final Pattern pattern;
     private final Optional<String> namespace;
     private final Optional<String> user;
-    private final Optional<String> baseName;
+    private final MailboxNameExpression mailboxNameExpression;
 
     /**
      * Constructs an expression determining a set of mailbox names.
@@ -135,18 +118,10 @@ public final class MailboxQuery {
      * @param pathDelimiter
      *            path delimiter to use
      */
-    @VisibleForTesting MailboxQuery(Optional<String> namespace, Optional<String> user, Optional<String> baseName,
-                                    String expression, char pathDelimiter) {
+    @VisibleForTesting MailboxQuery(Optional<String> namespace, Optional<String> user, MailboxNameExpression mailboxNameExpression) {
         this.namespace = namespace;
         this.user = user;
-        this.baseName = baseName;
-        if (expression == null) {
-            this.expression = "";
-        } else {
-            this.expression = expression;
-        }
-        this.pathDelimiter = pathDelimiter;
-        pattern = constructEscapedRegex();
+        this.mailboxNameExpression = mailboxNameExpression;
     }
 
     public Optional<String> getNamespace() {
@@ -157,8 +132,8 @@ public final class MailboxQuery {
         return user;
     }
 
-    public Optional<String> getBaseName() {
-        return baseName;
+    public MailboxNameExpression getMailboxNameExpression() {
+        return mailboxNameExpression;
     }
 
     public boolean isPrivateMailboxes(MailboxSession session) {
@@ -167,7 +142,8 @@ public final class MailboxQuery {
             && user.map(sessionUser::isSameUser).orElse(false);
     }
 
-    public boolean belongsToRequestedNamespaceAndUser(MailboxPath mailboxPath) {
+    @VisibleForTesting
+    boolean belongsToRequestedNamespaceAndUser(MailboxPath mailboxPath) {
         boolean belongsToRequestedNamespace = namespace
             .map(value -> value.equals(mailboxPath.getNamespace()))
             .orElse(true);
@@ -178,141 +154,21 @@ public final class MailboxQuery {
         return belongsToRequestedNamespace && belongsToRequestedUser;
     }
 
-    /**
-     * Gets the name search expression. This may contain wildcards.
-     * 
-     * @return the expression
-     */
-    public final String getExpression() {
-        return expression;
-    }
-
-    /**
-     * Gets wildcard character that matches any series of characters.
-     * 
-     * @return the freeWildcard
-     */
-    public final char getFreeWildcard() {
-        return FREEWILDCARD;
-    }
-
-    /**
-     * Gets wildcard character that matches any series of characters excluding
-     * hierarchy delimiters. Effectively, this means that it matches any
-     * sequence within a name part.
-     * 
-     * @return the localWildcard
-     */
-    public final char getLocalWildcard() {
-        return LOCALWILDCARD;
-    }
-
-    /**
-     * Is the given name a match for {@link #getExpression()}?
-     * 
-     * @param name
-     *            name to be matched
-     * @return true if the given name matches this expression, false otherwise
-     */
     public boolean isExpressionMatch(String name) {
-        if (isWild()) {
-            return name != null
-                && pattern.matcher(name).matches();
-        } else {
-            return expression.equals(name);
-        }
+        return mailboxNameExpression.isExpressionMatch(name);
     }
 
     public boolean isPathMatch(MailboxPath mailboxPath) {
-        String baseName = this.baseName.orElse(EMPTY_PATH_NAME);
-        int baseNameLength = baseName.length();
-        String mailboxName = mailboxPath.getName();
-
         return belongsToRequestedNamespaceAndUser(mailboxPath)
-            && mailboxName.startsWith(baseName)
-            && isExpressionMatch(mailboxName.substring(baseNameLength));
-    }
-  
-    /**
-     * Get combined name formed by adding the expression to the base using the
-     * given hierarchy delimiter. Note that the wildcards are retained in the
-     * combined name.
-     * 
-     * @return {@link #getBase()} combined with {@link #getExpression()},
-     *         notnull
-     */
-    public String getCombinedName() {
-        String baseName = this.baseName.orElse(null);
-        if (baseName != null && baseName.length() > 0) {
-            final int baseLength = baseName.length();
-            if (baseName.charAt(baseLength - 1) == pathDelimiter) {
-                if (expression != null && expression.length() > 0) {
-                    if (expression.charAt(0) == pathDelimiter) {
-                        return baseName + expression.substring(1);
-                    } else {
-                        return baseName + expression;
-                    }
-                } else {
-                    return baseName;
-                }
-            } else {
-                if (expression != null && expression.length() > 0) {
-                    if (expression.charAt(0) == pathDelimiter) {
-                        return baseName + expression;
-                    } else {
-                        return baseName + pathDelimiter + expression;
-                    }
-                } else {
-                    return baseName;
-                }
-            }
-        } else {
-            return expression;
-        }
-    }
-
-    /**
-     * Is this expression wild?
-     * 
-     * @return true if wildcard contained, false otherwise
-     */
-    public boolean isWild() {
-        return expression != null
-            && (
-                expression.indexOf(getFreeWildcard()) >= 0
-                || expression.indexOf(getLocalWildcard()) >= 0);
+            && isExpressionMatch(mailboxPath.getName());
     }
 
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("expression", expression)
-            .add("pathDelimiter", pathDelimiter)
-            .add("pattern", pattern)
             .add("namespace", namespace)
             .add("user", user)
-            .add("baseName", baseName)
+            .add("mailboxNameExpression", mailboxNameExpression)
             .toString();
-    }
-
-
-    private Pattern constructEscapedRegex() {
-        StringBuilder stringBuilder = new StringBuilder();
-        StringTokenizer tokenizer = new StringTokenizer(expression, "*%", true);
-        while (tokenizer.hasMoreTokens()) {
-            stringBuilder.append(getRegexPartAssociatedWithToken(tokenizer));
-        }
-        return Pattern.compile(stringBuilder.toString());
-    }
-
-    private String getRegexPartAssociatedWithToken(StringTokenizer tokenizer) {
-        String token = tokenizer.nextToken();
-        if (token.equals("*")) {
-            return ".*";
-        } else if (token.equals("%")) {
-            return "[^" + Pattern.quote(String.valueOf(pathDelimiter)) + "]*";
-        } else {
-            return Pattern.quote(token);
-        }
     }
 
 }

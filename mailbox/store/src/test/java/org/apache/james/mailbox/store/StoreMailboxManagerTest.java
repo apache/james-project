@@ -40,7 +40,10 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageId.Factory;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.search.MailboxNameExpression;
 import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mailbox.model.search.PrefixedRegex;
+import org.apache.james.mailbox.model.search.PrefixedWildcard;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -177,8 +180,7 @@ public class StoreMailboxManagerTest {
         //Given
         MailboxSession session = new MockMailboxSession("user");
         MailboxQuery.Builder testee = MailboxQuery.builder()
-            .expression("abc")
-            .mailboxSession(session);
+            .expression(new PrefixedRegex(EMPTY_PREFIX, "abc", session.getPathDelimiter()));
         //When
         MailboxQuery mailboxQuery = testee.build();
 
@@ -191,9 +193,8 @@ public class StoreMailboxManagerTest {
         //Given
         MailboxSession session = new MockMailboxSession("user");
         MailboxQuery.Builder testee = MailboxQuery.builder()
-            .base(MailboxPath.forUser("user", "prefix."))
-            .expression("abc")
-            .mailboxSession(session);
+            .expression(new PrefixedRegex("prefix.", "abc", session.getPathDelimiter()));
+
         //When
         MailboxQuery mailboxQuery = testee.build();
 

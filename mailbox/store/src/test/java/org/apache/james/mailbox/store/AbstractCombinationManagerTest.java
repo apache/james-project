@@ -48,6 +48,7 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mailbox.model.search.PrefixedWildcard;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.junit.Test;
 
@@ -115,9 +116,8 @@ public abstract class AbstractCombinationManagerTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
 
-        MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .base(MailboxFixture.MAILBOX_PATH1)
-            .mailboxSession(session)
+        MailboxQuery mailboxQuery = MailboxQuery.privateMailboxesBuilder(session)
+            .expression(new PrefixedWildcard(MailboxFixture.MAILBOX_PATH1.getName()))
             .build();
         MessageId messageId = messageManager1.appendMessage(new ByteArrayInputStream(MAIL_CONTENT), new Date(), session, false, FLAGS).getMessageId();
 
@@ -133,10 +133,8 @@ public abstract class AbstractCombinationManagerTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
 
-        MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .username(MailboxFixture.USER)
-            .expression(String.valueOf(MailboxQuery.FREEWILDCARD))
-            .mailboxSession(session)
+        MailboxQuery mailboxQuery = MailboxQuery.privateMailboxesBuilder(session)
+            .matchesAllMailboxNames()
             .build();
         MessageId messageId = messageManager1.appendMessage(new ByteArrayInputStream(MAIL_CONTENT), new Date(), session, false, FLAGS).getMessageId();
 
