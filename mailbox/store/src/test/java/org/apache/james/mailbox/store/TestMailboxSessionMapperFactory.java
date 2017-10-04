@@ -42,6 +42,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.fixture.MailboxFixture;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
@@ -160,6 +161,11 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
 
             @Override
             public <T> T execute(Transaction<T> transaction) throws MailboxException {
+                throw new NotImplementedException();
+            }
+
+            @Override
+            public List<Mailbox> findMailboxes(String userName, Right right) throws MailboxException {
                 throw new NotImplementedException();
             }
         };

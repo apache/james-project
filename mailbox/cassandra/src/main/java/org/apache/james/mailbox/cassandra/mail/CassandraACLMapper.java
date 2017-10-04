@@ -37,6 +37,7 @@ import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.FunctionRunnerWithRetry;
 import org.apache.james.backends.cassandra.utils.LightweightTransactionException;
+import org.apache.james.mailbox.acl.PositiveUserACLChanged;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
@@ -67,22 +68,24 @@ public class CassandraACLMapper {
     private final CassandraAsyncExecutor executor;
     private final int maxRetry;
     private final CodeInjector codeInjector;
+    private final CassandraUserMailboxRightsDAO userMailboxRightsDAO;
     private final PreparedStatement conditionalInsertStatement;
     private final PreparedStatement conditionalUpdateStatement;
     private final PreparedStatement readStatement;
 
     @Inject
-    public CassandraACLMapper(Session session, CassandraConfiguration cassandraConfiguration) {
-        this(session, cassandraConfiguration, () -> {});
+    public CassandraACLMapper(Session session, CassandraUserMailboxRightsDAO userMailboxRightsDAO, CassandraConfiguration cassandraConfiguration) {
+        this(session, userMailboxRightsDAO, cassandraConfiguration, () -> {});
     }
 
-    public CassandraACLMapper(Session session, CassandraConfiguration cassandraConfiguration, CodeInjector codeInjector) {
+    public CassandraACLMapper(Session session, CassandraUserMailboxRightsDAO userMailboxRightsDAO, CassandraConfiguration cassandraConfiguration, CodeInjector codeInjector) {
         this.executor = new CassandraAsyncExecutor(session);
         this.maxRetry = cassandraConfiguration.getAclMaxRetry();
         this.codeInjector = codeInjector;
         this.conditionalInsertStatement = prepareConditionalInsert(session);
         this.conditionalUpdateStatement = prepareConditionalUpdate(session);
         this.readStatement = prepareReadStatement(session);
+        this.userMailboxRightsDAO = userMailboxRightsDAO;
     }
 
     private PreparedStatement prepareConditionalInsert(Session session) {
@@ -126,25 +129,31 @@ public class CassandraACLMapper {
     public void updateACL(CassandraId cassandraId, MailboxACL.ACLCommand command) throws MailboxException {
         MailboxACL replacement = MailboxACL.EMPTY.apply(command);
 
-        updateAcl(cassandraId, aclWithVersion -> aclWithVersion.apply(command), replacement);
+        PositiveUserACLChanged positiveUserAclChanged = updateAcl(cassandraId, aclWithVersion -> aclWithVersion.apply(command), replacement);
+
+        userMailboxRightsDAO.update(cassandraId, positiveUserAclChanged).join();
     }
 
     public void setACL(CassandraId cassandraId, MailboxACL mailboxACL) throws MailboxException {
-        updateAcl(cassandraId,
+        PositiveUserACLChanged positiveUserAclChanged = updateAcl(cassandraId,
             acl -> new ACLWithVersion(acl.version, mailboxACL),
             mailboxACL);
+
+        userMailboxRightsDAO.update(cassandraId, positiveUserAclChanged).join();
     }
 
-    private void updateAcl(CassandraId cassandraId, Function<ACLWithVersion, ACLWithVersion> aclTransformation, MailboxACL replacement) throws MailboxException {
+    private PositiveUserACLChanged updateAcl(CassandraId cassandraId, Function<ACLWithVersion, ACLWithVersion> aclTransformation, MailboxACL replacement) throws MailboxException {
         try {
-            new FunctionRunnerWithRetry(maxRetry)
-                .execute(
+            return new FunctionRunnerWithRetry(maxRetry)
+                .executeAndRetrieveObject(
                     () -> {
                         codeInjector.inject();
                         return getAclWithVersion(cassandraId)
-                            .map(aclTransformation)
-                            .map(aclWithVersion -> updateStoredACL(cassandraId, aclWithVersion))
-                            .orElseGet(() -> insertACL(cassandraId, replacement));
+                            .map(aclWithVersion ->
+                                updateStoredACL(cassandraId, aclTransformation.apply(aclWithVersion))
+                                    .map(newACL -> new PositiveUserACLChanged(aclWithVersion.mailboxACL, newACL)))
+                            .orElseGet(() -> insertACL(cassandraId, replacement)
+                                .map(newACL -> new PositiveUserACLChanged(MailboxACL.EMPTY, newACL)));
                     });
         } catch (LightweightTransactionException e) {
             throw new MailboxException("Exception during lightweight transaction", e);
@@ -157,7 +166,7 @@ public class CassandraACLMapper {
                 .setUUID(CassandraACLTable.ID, cassandraId.asUuid()));
     }
 
-    private boolean updateStoredACL(CassandraId cassandraId, ACLWithVersion aclWithVersion) {
+    private Optional<MailboxACL> updateStoredACL(CassandraId cassandraId, ACLWithVersion aclWithVersion) {
         try {
             return executor.executeReturnApplied(
                 conditionalUpdateStatement.bind()
@@ -165,18 +174,22 @@ public class CassandraACLMapper {
                     .setString(CassandraACLTable.ACL,  MailboxACLJsonConverter.toJson(aclWithVersion.mailboxACL))
                     .setLong(CassandraACLTable.VERSION, aclWithVersion.version + 1)
                     .setLong(OLD_VERSION, aclWithVersion.version))
+                .thenApply(Optional::of)
+                .thenApply(optional -> optional.filter(b -> b).map(any -> aclWithVersion.mailboxACL))
                 .join();
         } catch (JsonProcessingException exception) {
             throw Throwables.propagate(exception);
         }
     }
 
-    private boolean insertACL(CassandraId cassandraId, MailboxACL acl) {
+    private Optional<MailboxACL> insertACL(CassandraId cassandraId, MailboxACL acl) {
         try {
             return executor.executeReturnApplied(
                 conditionalInsertStatement.bind()
                     .setUUID(CassandraACLTable.ID, cassandraId.asUuid())
                     .setString(CassandraACLTable.ACL, MailboxACLJsonConverter.toJson(acl)))
+                .thenApply(Optional::of)
+                .thenApply(optional -> optional.filter(b -> b).map(any -> acl))
                 .join();
         } catch (JsonProcessingException exception) {
             throw Throwables.propagate(exception);

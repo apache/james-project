@@ -44,6 +44,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
+import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
@@ -102,6 +103,7 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(CassandraAttachmentDAO.class).in(Scopes.SINGLETON);
         bind(CassandraAttachmentMessageIdDAO.class).in(Scopes.SINGLETON);
         bind(CassandraAttachmentDAOV2.class).in(Scopes.SINGLETON);
+        bind(CassandraUserMailboxRightsDAO.class).in(Scopes.SINGLETON);
         bind(StoreBlobManager.class).in(Scopes.SINGLETON);
 
         bind(BlobManager.class).to(StoreBlobManager.class);

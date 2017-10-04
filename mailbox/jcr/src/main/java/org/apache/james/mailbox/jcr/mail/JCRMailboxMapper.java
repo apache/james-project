@@ -40,10 +40,13 @@ import org.apache.james.mailbox.jcr.AbstractJCRScalingMapper;
 import org.apache.james.mailbox.jcr.MailboxSessionJCRRepository;
 import org.apache.james.mailbox.jcr.mail.model.JCRMailbox;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * JCR implementation of a MailboxMapper
@@ -258,5 +261,10 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
     @Override
     public void setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
         mailbox.setACL(mailboxACL);
+    }
+
+    @Override
+    public List<Mailbox> findMailboxes(String userName, Right right) throws MailboxException {
+        return ImmutableList.of();
     }
 }

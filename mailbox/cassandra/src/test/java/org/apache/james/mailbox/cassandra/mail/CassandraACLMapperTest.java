@@ -33,12 +33,12 @@ import java.util.concurrent.TimeoutException;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.CassandraConfiguration;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -58,7 +58,9 @@ public class CassandraACLMapperTest {
     @Before
     public void setUp() {
         cassandra = CassandraCluster.create(new CassandraAclModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
-        cassandraACLMapper = new CassandraACLMapper(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
+        cassandraACLMapper = new CassandraACLMapper(cassandra.getConf(),
+            new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION),
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
         executor = Executors.newFixedThreadPool(2);
     }
 
@@ -198,6 +200,7 @@ public class CassandraACLMapperTest {
         return executor.submit(() -> {
             CassandraACLMapper aclMapper = new CassandraACLMapper(
                 cassandra.getConf(),
+                new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION),
                 CassandraConfiguration.DEFAULT_CONFIGURATION,
                 runnable);
             try {

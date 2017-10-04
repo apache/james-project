@@ -35,6 +35,7 @@ import org.apache.james.mailbox.maildir.MaildirId;
 import org.apache.james.mailbox.maildir.MaildirMessageName;
 import org.apache.james.mailbox.maildir.MaildirStore;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -44,6 +45,8 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 public class MaildirMailboxMapper extends NonTransactionalMapper implements MailboxMapper {
 
@@ -345,5 +348,10 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
         MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
         folder.setACL(session, mailboxACL);
         mailbox.setACL(mailboxACL);
+    }
+
+    @Override
+    public List<Mailbox> findMailboxes(String userName, Right right) throws MailboxException {
+        return ImmutableList.of();
     }
 }
