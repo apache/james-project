@@ -37,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -46,6 +45,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
+import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
@@ -566,7 +566,7 @@ public class UserMailboxesRoutesTest {
         @Before
         public void setUp() throws Exception {
             mailboxManager = mock(MailboxManager.class);
-            when(mailboxManager.createSystemSession(any())).thenReturn(mock(MailboxSession.class));
+            when(mailboxManager.createSystemSession(any())).thenReturn(new MockMailboxSession(USERNAME));
 
             createServer(mailboxManager);
         }
