@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.transport.mailets;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -25,6 +26,8 @@ import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
+import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetException;
@@ -84,7 +87,7 @@ public class ContactExtractor extends GenericMailet implements Mailet {
     @Override
     public void service(Mail mail) throws MessagingException {
         try {
-            Optional<String> payload = extractContacts(mail.getMessage());
+            Optional<String> payload = extractContacts(mail);
             LOGGER.debug("payload : {}", payload);
             payload.ifPresent(x -> mail.setAttribute(extractAttributeTo, x));
         } catch (Exception e) {
@@ -92,12 +95,14 @@ public class ContactExtractor extends GenericMailet implements Mailet {
         }
     }
 
-    private Optional<String> extractContacts(MimeMessage mimeMessage) throws MessagingException {
-        return Optional.ofNullable(mimeMessage.getSender())
-                .map(Address::toString)
-                .filter(Throwing.predicate(sender -> hasRecipients(mimeMessage)))
-                .map(Throwing.function(sender -> new ExtractedContacts(sender, recipients(mimeMessage))))
-                .map(Throwing.function(message -> objectMapper.writeValueAsString(message)));
+    private Optional<String> extractContacts(Mail mail) throws MessagingException, IOException {
+        MimeMessage message = mail.getMessage();
+
+        return Optional.of(mail.getSender())
+            .map(MailAddress::asString)
+            .filter(Throwing.predicate(sender -> hasRecipients(message)))
+            .map(Throwing.function(sender -> new ExtractedContacts(sender, recipients(message))))
+            .map(Throwing.function(extractedContacts -> objectMapper.writeValueAsString(extractedContacts)));
     }
 
     private boolean hasRecipients(MimeMessage mimeMessage) throws MessagingException {
@@ -107,6 +112,7 @@ public class ContactExtractor extends GenericMailet implements Mailet {
     private ImmutableList<String> recipients(MimeMessage mimeMessage) throws MessagingException {
         return Arrays.stream(mimeMessage.getAllRecipients())
                 .map(Address::toString)
+                .map(MimeUtil::unscrambleHeaderValue)
                 .collect(Guavate.toImmutableList());
     }
 
