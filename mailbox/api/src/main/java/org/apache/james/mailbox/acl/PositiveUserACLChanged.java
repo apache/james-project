@@ -19,9 +19,7 @@
 
 package org.apache.james.mailbox.acl;
 
-import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import org.apache.james.mailbox.model.MailboxACL;
 
@@ -40,36 +38,6 @@ public class PositiveUserACLChanged {
 
     public MailboxACL getNewACL() {
         return newACL;
-    }
-
-    public Stream<MailboxACL.Entry> addedEntries() {
-        Map<MailboxACL.EntryKey, MailboxACL.Rfc4314Rights> oldEntries = oldACL.ofPositiveNameType(MailboxACL.NameType.user);
-
-        return newACL.ofPositiveNameType(MailboxACL.NameType.user)
-            .entrySet()
-            .stream()
-            .filter(entry -> !oldEntries.containsKey(entry.getKey()))
-            .map(entry -> new MailboxACL.Entry(entry.getKey(), entry.getValue()));
-    }
-
-    public Stream<MailboxACL.Entry> removedEntries() {
-        Map<MailboxACL.EntryKey, MailboxACL.Rfc4314Rights> newEntries = newACL.ofPositiveNameType(MailboxACL.NameType.user);
-
-        return oldACL.ofPositiveNameType(MailboxACL.NameType.user)
-            .entrySet()
-            .stream()
-            .filter(entry -> !newEntries.containsKey(entry.getKey()))
-            .map(entry -> new MailboxACL.Entry(entry.getKey(), entry.getValue()));
-    }
-
-    public Stream<MailboxACL.Entry> changedEntries() {
-        Map<MailboxACL.EntryKey, MailboxACL.Rfc4314Rights> oldEntries = oldACL.ofPositiveNameType(MailboxACL.NameType.user);
-
-        return newACL.ofPositiveNameType(MailboxACL.NameType.user)
-            .entrySet()
-            .stream()
-            .filter(entry -> oldEntries.containsKey(entry.getKey()))
-            .map(entry -> new MailboxACL.Entry(entry.getKey(), entry.getValue()));
     }
 
     @Override

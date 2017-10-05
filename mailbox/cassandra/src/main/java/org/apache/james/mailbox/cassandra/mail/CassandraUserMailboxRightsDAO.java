@@ -39,8 +39,10 @@ import javax.inject.Inject;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.acl.PositiveUserACLChanged;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
+import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.util.FluentFutureStream;
@@ -98,10 +100,11 @@ public class CassandraUserMailboxRightsDAO {
     }
 
     public CompletableFuture<Void> update(CassandraId cassandraId, PositiveUserACLChanged positiveUserAclChanged) {
+        ACLDiff aclDiff = ACLDiff.from(positiveUserAclChanged.getOldACL(), positiveUserAclChanged.getNewACL());
         return CompletableFuture.allOf(
-            addAll(cassandraId, positiveUserAclChanged.addedEntries()),
-            removeAll(cassandraId, positiveUserAclChanged.removedEntries()),
-            addAll(cassandraId, positiveUserAclChanged.changedEntries()));
+            addAll(cassandraId, aclDiff.addedEntries()),
+            removeAll(cassandraId, aclDiff.removedEntries()),
+            addAll(cassandraId, aclDiff.changedEntries()));
     }
 
     private CompletableFuture<Stream<Void>> removeAll(CassandraId cassandraId, Stream<MailboxACL.Entry> removedEntries) {
@@ -133,15 +136,18 @@ public class CassandraUserMailboxRightsDAO {
     }
 
     public CompletableFuture<Map<CassandraId, Rfc4314Rights>> listRightsForUser(String userName) {
-        Function<Row, Pair<CassandraId, Rfc4314Rights>> toPair = Throwing.function(row ->
-            Pair.of(CassandraId.of(row.getUUID(MAILBOX_ID)), Rfc4314Rights.fromSerializedRfc4314Rights(row.getString(RIGHTS))));
-
         return cassandraAsyncExecutor.execute(
             selectUser.bind()
                 .setString(USER_NAME, userName))
             .thenApply(cassandraUtils::convertToStream)
             .thenApply(row ->
-                row.map(toPair)
+                row.map(Throwing.function(this::toPair))
                     .collect(Collectors.toMap(Pair::getLeft, Pair::getRight)));
+    }
+
+    private Pair<CassandraId, Rfc4314Rights> toPair(Row row) throws UnsupportedRightException {
+        return Pair.of(
+            CassandraId.of(row.getUUID(MAILBOX_ID)),
+            Rfc4314Rights.fromSerializedRfc4314Rights(row.getString(RIGHTS)));
     }
 }
