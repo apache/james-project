@@ -24,6 +24,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.jmap.model.mailbox.Mailbox;
+import org.apache.james.jmap.model.mailbox.MailboxNamespace;
 import org.apache.james.jmap.model.mailbox.Rights;
 import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.jmap.model.mailbox.SortOrder;
@@ -111,7 +112,16 @@ public class MailboxFactory {
             .totalMessages(mailboxCounters.getCount())
             .sortOrder(SortOrder.getSortOrder(role))
             .sharedWith(Rights.fromACL(metaData.getACL()))
+            .namespace(getNamespace(mailboxPath, mailboxSession))
             .build();
+    }
+
+    @VisibleForTesting MailboxNamespace getNamespace(MailboxPath mailboxPath, MailboxSession mailboxSession) {
+        String mailboxPathUser = mailboxPath.getUser();
+        if (mailboxSession.getUser().isSameUser(mailboxPathUser)) {
+            return MailboxNamespace.personal();
+        }
+        return MailboxNamespace.delegated(mailboxPathUser);
     }
 
     @VisibleForTesting String getName(MailboxPath mailboxPath, MailboxSession mailboxSession) {

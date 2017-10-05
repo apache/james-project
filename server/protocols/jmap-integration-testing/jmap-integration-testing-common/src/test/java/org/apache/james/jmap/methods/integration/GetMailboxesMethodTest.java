@@ -47,6 +47,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.DefaultMailboxes;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.model.mailbox.MailboxNamespace;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -655,5 +656,43 @@ public abstract class GetMailboxesMethodTest {
             .body(NAME, equalTo("mailboxes"))
             .body(ARGUMENTS + ".list", hasSize(1))
             .body(ARGUMENTS + ".list.id", hasItems(mailboxId.serialize()));
+    }
+
+    @Test
+    public void getMailboxesShouldReturnDelegatedNamespaceWhenSharedMailbox() throws Exception {
+        String sharedMailboxName = "BobShared";
+        MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, sharedMailboxName);
+
+        MailboxPath bobMailboxPath = MailboxPath.forUser(bob, sharedMailboxName);
+        aclProbe.replaceRights(bobMailboxPath, alice, new Rfc4314Rights(Right.Read));
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId.serialize() + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(FIRST_MAILBOX + ".namespace.type", equalTo(MailboxNamespace.Type.Delegated.toString()))
+            .body(FIRST_MAILBOX + ".namespace.owner", equalTo(bob));
+    }
+
+    @Test
+    public void getMailboxesShouldReturnPersonalNamespaceWhenOwnerMailbox() throws Exception {
+        MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, DefaultMailboxes.INBOX);
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId.serialize() + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(FIRST_MAILBOX + ".namespace.type", equalTo(MailboxNamespace.Type.Personal.toString()))
+            .body(FIRST_MAILBOX + ".namespace.owner", isEmptyOrNullString());
     }
 }

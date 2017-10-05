@@ -61,10 +61,12 @@ public class Mailbox {
         private long totalThreads;
         private long unreadThreads;
         private Optional<Rights> sharedWith;
+        private Optional<MailboxNamespace> namespace;
 
         private Builder() {
             parentId = Optional.empty();
             sharedWith = Optional.empty();
+            namespace = Optional.empty();
         }
 
         public Builder id(MailboxId id) {
@@ -154,12 +156,17 @@ public class Mailbox {
             return this;
         }
 
+        public Builder namespace(MailboxNamespace namespace) {
+            this.namespace = Optional.of(namespace);
+            return this;
+        }
+
         public Mailbox build() {
             Preconditions.checkState(!Strings.isNullOrEmpty(name), "'name' is mandatory");
             Preconditions.checkState(id != null, "'id' is mandatory");
 
             return new Mailbox(id, name, parentId, role, sortOrder, mustBeOnlyMailbox, mayReadItems, mayAddItems, mayRemoveItems, mayCreateChild, mayRename, mayDelete,
-                    totalMessages, unreadMessages, totalThreads, unreadThreads, sharedWith.orElse(Rights.EMPTY));
+                    totalMessages, unreadMessages, totalThreads, unreadThreads, sharedWith.orElse(Rights.EMPTY), namespace.orElse(MailboxNamespace.personal()));
         }
     }
 
@@ -180,10 +187,11 @@ public class Mailbox {
     private final long totalThreads;
     private final long unreadThreads;
     private final Rights sharedWith;
+    private final MailboxNamespace namespace;
 
     @VisibleForTesting Mailbox(MailboxId id, String name, Optional<MailboxId> parentId, Optional<Role> role, SortOrder sortOrder, boolean mustBeOnlyMailbox,
                                boolean mayReadItems, boolean mayAddItems, boolean mayRemoveItems, boolean mayCreateChild, boolean mayRename, boolean mayDelete,
-                               long totalMessages, long unreadMessages, long totalThreads, long unreadThreads, Rights sharedWith) {
+                               long totalMessages, long unreadMessages, long totalThreads, long unreadThreads, Rights sharedWith, MailboxNamespace namespace) {
 
         this.id = id;
         this.name = name;
@@ -202,6 +210,7 @@ public class Mailbox {
         this.totalThreads = totalThreads;
         this.unreadThreads = unreadThreads;
         this.sharedWith = sharedWith;
+        this.namespace = namespace;
     }
 
     public MailboxId getId() {
@@ -272,6 +281,10 @@ public class Mailbox {
         return sharedWith;
     }
 
+    public MailboxNamespace getNamespace() {
+        return namespace;
+    }
+
     @Override
     public final boolean equals(Object obj) {
         if (obj instanceof Mailbox) {
@@ -292,7 +305,8 @@ public class Mailbox {
                 && Objects.equals(this.unreadMessages, other.unreadMessages)
                 && Objects.equals(this.totalThreads, other.totalThreads)
                 && Objects.equals(this.unreadThreads, other.unreadThreads)
-                && Objects.equals(this.sharedWith, other.sharedWith);
+                && Objects.equals(this.sharedWith, other.sharedWith)
+                && Objects.equals(this.namespace, other.namespace);
         }
         return false;
     }
@@ -301,7 +315,7 @@ public class Mailbox {
     public final int hashCode() {
         return Objects.hash(id, name, parentId, role, sortOrder, mustBeOnlyMailbox, mayReadItems, mayAddItems, 
             mayRemoveItems, mayCreateChild, mayRename, mayDelete, totalMessages, unreadMessages, totalThreads,
-            unreadThreads, sharedWith);
+            unreadThreads, sharedWith, namespace);
     }
 
     @Override

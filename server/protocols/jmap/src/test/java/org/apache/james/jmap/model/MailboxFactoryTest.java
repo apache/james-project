@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Optional;
 
 import org.apache.james.jmap.model.mailbox.Mailbox;
+import org.apache.james.jmap.model.mailbox.MailboxNamespace;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.inmemory.InMemoryId;
@@ -159,4 +160,20 @@ public class MailboxFactoryTest {
         assertThat(id).contains(parentId);
     }
 
+    @Test
+    public void getNamespaceShouldReturnPersonalNamespaceWhenUserMailboxPathAndUserMailboxSessionAreTheSame() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(user, "mailboxName");
+
+        assertThat(sut.getNamespace(mailboxPath, mailboxSession))
+            .isEqualTo(MailboxNamespace.personal());
+    }
+
+    @Test
+    public void getNamespaceShouldReturnDelegatedNamespaceWhenUserMailboxPathAndUserMailboxSessionAreNotTheSame() throws Exception {
+        String mailboxPathUser = "other@domain.org";
+        MailboxPath mailboxPath = MailboxPath.forUser(mailboxPathUser, "mailboxName");
+
+        assertThat(sut.getNamespace(mailboxPath, mailboxSession))
+            .isEqualTo(MailboxNamespace.delegated(mailboxPathUser));
+    }
 }
