@@ -291,6 +291,9 @@ public abstract class MailboxMapperACLTest {
 
         assertThat(mailboxMapper.findNonPersonalMailboxes("user", Right.Read))
             .containsOnly(benwaInboxMailbox);
+
+        assertThat(mailboxMapper.findNonPersonalMailboxes("user", Right.Administer))
+            .isEmpty();
     }
 
     @Test
