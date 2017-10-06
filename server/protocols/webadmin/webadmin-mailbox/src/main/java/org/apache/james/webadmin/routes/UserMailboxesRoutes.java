@@ -97,7 +97,7 @@ public class UserMailboxesRoutes implements Routes {
     })
     @ApiOperation(value = "Listing all mailboxes of user.")
     @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "The list of mailboxes", response = String.class),
+            @ApiResponse(code = HttpStatus.OK_200, message = "The list of mailboxes", response = String.class),
             @ApiResponse(code = HttpStatus.UNAUTHORIZED_401, message = "Unauthorized. The user is not authenticated on the platform", response = String.class),
             @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The user name does not exist."),
             @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
