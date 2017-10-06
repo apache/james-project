@@ -20,18 +20,16 @@
 package org.apache.james.transport.matchers;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
+
+import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Before;
 import org.junit.Test;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import java.util.Collections;
 
 public class HasMimeTypeTest {
 
@@ -41,53 +39,98 @@ public class HasMimeTypeTest {
     private static final String NON_MATCHING_MIME_TYPES = "text/plain, application/zip";
 
     private HasMimeType matcher;
-    private FakeMail mail;
 
     @Before
     public void setUp() throws Exception {
         matcher = new HasMimeType();
-        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
-                .setMultipartWithBodyParts(
-                        MimeMessageBuilder.bodyPartBuilder()
-                                .data("simple text")
-                                .disposition("text")
-                                .build(),
-                        MimeMessageBuilder.bodyPartBuilder()
-                                .filename("text_file.txt")
-                                .disposition("attachment")
-                                .build(),
-                        MimeMessageBuilder.bodyPartBuilder()
-                                .type("application/zip")
-                                .filename("zip_file.zip")
-                                .disposition("attachment")
-                                .build())
-                .setSubject("test")
-                .build();
-
-        mail = FakeMail.builder()
-                .mimeMessage(message)
-                .sender(new MailAddress(FROM))
-                .recipient(new MailAddress(RECIPIENT))
-                .build();
     }
 
     @Test
-    public void hasMimeType() throws MessagingException {
+    public void hasMimeType() throws Exception {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("HasMimeType")
                 .condition(MIME_TYPES)
                 .build());
 
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("simple text")
+                    .disposition("text")
+                    .build(),
+                MimeMessageBuilder.bodyPartBuilder()
+                    .filename("text_file.txt")
+                    .disposition("attachment")
+                    .build(),
+                MimeMessageBuilder.bodyPartBuilder()
+                    .type("application/zip")
+                    .filename("zip_file.zip")
+                    .disposition("attachment")
+                    .build())
+            .setSubject("test")
+            .build();
+
+        Mail mail = FakeMail.builder()
+            .mimeMessage(message)
+            .sender(new MailAddress(FROM))
+            .recipient(new MailAddress(RECIPIENT))
+            .build();
+
         assertThat(matcher.match(mail)).containsAll(mail.getRecipients());
     }
 
     @Test
-    public void doesNotHaveMimeType() throws MessagingException{
+    public void doesNotHaveMimeType() throws Exception {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("HasMimeType")
                 .condition(NON_MATCHING_MIME_TYPES)
                 .build());
 
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("simple text")
+                    .disposition("text")
+                    .build(),
+                MimeMessageBuilder.bodyPartBuilder()
+                    .filename("text_file.txt")
+                    .disposition("attachment")
+                    .build(),
+                MimeMessageBuilder.bodyPartBuilder()
+                    .type("application/zip")
+                    .filename("zip_file.zip")
+                    .disposition("attachment")
+                    .build())
+            .setSubject("test")
+            .build();
+
+        Mail mail = FakeMail.builder()
+            .mimeMessage(message)
+            .sender(new MailAddress(FROM))
+            .recipient(new MailAddress(RECIPIENT))
+            .build();
+
         assertThat(matcher.match(mail)).isEmpty();
+    }
+
+    @Test
+    public void matchShouldReturnRecipientsWhenAtLeastOneMimeTypeMatch() throws Exception {
+        matcher.init(FakeMatcherConfig.builder()
+            .matcherName("HasMimeType")
+            .condition("text/md, text/html")
+            .build());
+
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .setText("content <b>in</b> <i>HTML</i>", "text/html")
+            .setSubject("test")
+            .build();
+
+        Mail mail = FakeMail.builder()
+            .mimeMessage(message)
+            .sender(new MailAddress(FROM))
+            .recipient(new MailAddress(RECIPIENT))
+            .build();
+
+        assertThat(matcher.match(mail)).containsExactlyElementsOf(mail.getRecipients());
     }
 }

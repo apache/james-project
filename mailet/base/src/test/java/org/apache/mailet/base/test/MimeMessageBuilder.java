@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
+
 import javax.activation.DataHandler;
 import javax.mail.BodyPart;
 import javax.mail.Message;
@@ -208,6 +209,7 @@ public class MimeMessageBuilder {
     }
 
     private Optional<String> text = Optional.empty();
+    private Optional<String> textContentType = Optional.empty();
     private Optional<String> subject = Optional.empty();
     private Optional<InternetAddress> sender = Optional.empty();
     private Optional<MimeMultipart> content = Optional.empty();
@@ -219,6 +221,12 @@ public class MimeMessageBuilder {
 
     public MimeMessageBuilder setText(String text) {
         this.text = Optional.of(text);
+        return this;
+    }
+
+    public MimeMessageBuilder setText(String text, String contentType) {
+        this.text = Optional.of(text);
+        this.textContentType = Optional.of(contentType);
         return this;
     }
 
@@ -331,7 +339,7 @@ public class MimeMessageBuilder {
         Preconditions.checkState(!(text.isPresent() && content.isPresent()), "Can not get at the same time a text and a content");
         MimeMessage mimeMessage = new MimeMessage(Session.getInstance(new Properties()));
         if (text.isPresent()) {
-            mimeMessage.setContent(text.get(), "text/plain");
+            mimeMessage.setContent(text.get(), textContentType.orElse("text/plain"));
         }
         if (content.isPresent()) {
             mimeMessage.setContent(content.get());
