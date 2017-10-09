@@ -33,13 +33,18 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.SimpleMailboxMetaData;
+import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 
 public class MailboxFactoryTest {
     public static final char DELIMITER = '.';
+
+    @Rule
+    public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
 
     private MailboxManager mailboxManager;
     private MailboxSession mailboxSession;
@@ -188,7 +193,7 @@ public class MailboxFactoryTest {
         mailboxManager.applyRightsCommand(inbox,
             MailboxACL.command()
                 .forUser(otherUser)
-                .rights(MailboxACL.Right.Read)
+                .rights(MailboxACL.Right.Read, MailboxACL.Right.Lookup)
                 .asAddition(),
             mailboxSession);
 

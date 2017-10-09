@@ -530,15 +530,15 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     private boolean assertUserHasAccessTo(Mailbox mailbox, MailboxSession session) throws MailboxException {
-        return belongsToCurrentUser(mailbox, session) || userHasReadRightsOn(mailbox, session);
+        return belongsToCurrentUser(mailbox, session) || userHasLookupRightsOn(mailbox, session);
     }
 
     private boolean belongsToCurrentUser(Mailbox mailbox, MailboxSession session) {
         return session.getUser().isSameUser(mailbox.getUser());
     }
 
-    private boolean userHasReadRightsOn(Mailbox mailbox, MailboxSession session) throws MailboxException {
-        return hasRight(mailbox, Right.Read, session);
+    private boolean userHasLookupRightsOn(Mailbox mailbox, MailboxSession session) throws MailboxException {
+        return hasRight(mailbox, Right.Lookup, session);
     }
 
     @Override
@@ -714,12 +714,12 @@ public class StoreMailboxManager implements MailboxManager {
         if (mailboxQuery.isPrivateMailboxes(session)) {
             return Stream.of();
         }
-        return mailboxMapper.findNonPersonalMailboxes(session.getUser().getUserName(), Right.Read).stream();
+        return mailboxMapper.findNonPersonalMailboxes(session.getUser().getUserName(), Right.Lookup).stream();
     }
 
     private boolean isReadable(MailboxSession session, Mailbox mailbox) throws MailboxException {
         return (isSameUser(session, mailbox) && isUserNamespace(mailbox))
-                || hasRight(mailbox, Right.Read, session);
+                || hasRight(mailbox, Right.Lookup, session);
     }
 
     private boolean isSameUser(MailboxSession session, Mailbox mailbox) {

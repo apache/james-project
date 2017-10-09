@@ -255,7 +255,7 @@ public abstract class GetMailboxesMethodTest {
         String targetUser1 = "toUser1@domain.com";
         String targetUser2 = "toUser2@domain.com";
         Mailbox myMailbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, alice, mailboxName);
-        aclProbe.replaceRights(myMailbox.generateAssociatedPath(), targetUser1, new Rfc4314Rights(Right.Read, Right.Administer));
+        aclProbe.replaceRights(myMailbox.generateAssociatedPath(), targetUser1, new Rfc4314Rights(Right.Lookup, Right.Administer));
         aclProbe.replaceRights(myMailbox.generateAssociatedPath(), targetUser2, new Rfc4314Rights(Right.Read, Right.Lookup));
 
         given()
@@ -267,7 +267,7 @@ public abstract class GetMailboxesMethodTest {
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
             .body(FIRST_MAILBOX + ".name", equalTo(mailboxName))
-            .body(FIRST_MAILBOX + ".sharedWith", hasEntry(targetUser1, ImmutableList.of(ADMINISTER, READ)))
+            .body(FIRST_MAILBOX + ".sharedWith", hasEntry(targetUser1, ImmutableList.of(ADMINISTER, LOOKUP)))
             .body(FIRST_MAILBOX + ".sharedWith", hasEntry(targetUser2, ImmutableList.of(LOOKUP, READ)));
     }
 
@@ -315,7 +315,7 @@ public abstract class GetMailboxesMethodTest {
         String myMailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, mailboxName).serialize();
         String targetUser1 = "toUser1@domain.com";
         Mailbox myMailbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, alice, mailboxName);
-        aclProbe.replaceRights(myMailbox.generateAssociatedPath(), targetUser1, new Rfc4314Rights(Right.Read, Right.Post));
+        aclProbe.replaceRights(myMailbox.generateAssociatedPath(), targetUser1, new Rfc4314Rights(Right.Lookup, Right.Post));
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -326,7 +326,7 @@ public abstract class GetMailboxesMethodTest {
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
             .body(FIRST_MAILBOX + ".name", equalTo(mailboxName))
-            .body(FIRST_MAILBOX + ".sharedWith", hasEntry(targetUser1, ImmutableList.of(READ)));
+            .body(FIRST_MAILBOX + ".sharedWith", hasEntry(targetUser1, ImmutableList.of(LOOKUP)));
     }
     
     @Test
@@ -534,8 +534,8 @@ public abstract class GetMailboxesMethodTest {
         String mailboxName = "name";
         MailboxId bobMailbox = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, mailboxName);
         MailboxPath bobMailboxPath = MailboxPath.forUser(bob, mailboxName);
-        aclProbe.replaceRights(bobMailboxPath, alice, new Rfc4314Rights(Right.Read));
-        aclProbe.replaceRights(bobMailboxPath, cedric, new Rfc4314Rights(Right.Read));
+        aclProbe.replaceRights(bobMailboxPath, alice, new Rfc4314Rights(Right.Lookup));
+        aclProbe.replaceRights(bobMailboxPath, cedric, new Rfc4314Rights(Right.Lookup));
 
         Map<String, String> sharedWith = given()
             .header("Authorization", accessToken.serialize())
@@ -558,8 +558,8 @@ public abstract class GetMailboxesMethodTest {
         String mailboxName = "name";
         MailboxId bobMailbox = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, mailboxName);
         MailboxPath bobMailboxPath = MailboxPath.forUser(bob, mailboxName);
-        aclProbe.replaceRights(bobMailboxPath, alice, new Rfc4314Rights(Right.Read, Right.Administer));
-        aclProbe.replaceRights(bobMailboxPath, cedric, new Rfc4314Rights(Right.Read));
+        aclProbe.replaceRights(bobMailboxPath, alice, new Rfc4314Rights(Right.Lookup, Right.Administer));
+        aclProbe.replaceRights(bobMailboxPath, cedric, new Rfc4314Rights(Right.Lookup));
 
         Map<String, String> sharedWith = given()
             .header("Authorization", accessToken.serialize())
@@ -585,7 +585,7 @@ public abstract class GetMailboxesMethodTest {
 
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, DefaultMailboxes.INBOX);
         MailboxPath bobMailboxPath = MailboxPath.forUser(bob, sharedMailboxName);
-        aclProbe.replaceRights(bobMailboxPath, alice, new Rfc4314Rights(Right.Read));
+        aclProbe.replaceRights(bobMailboxPath, alice, new Rfc4314Rights(Right.Lookup));
 
         List<String> expectedMailboxes = ImmutableList.<String> builder()
             .addAll(DefaultMailboxes.DEFAULT_MAILBOXES)
@@ -600,12 +600,12 @@ public abstract class GetMailboxesMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
-            .body(ARGUMENTS + ".list", hasSize(6))
+            .body(ARGUMENTS + ".list", hasSize(expectedMailboxes.size()))
             .body(ARGUMENTS + ".list.name", hasItems(expectedMailboxes.toArray()));
     }
 
     @Test
-    public void getMailboxesShouldFilterMailboxesWithReadRightWhenEmptyIds() throws Exception {
+    public void getMailboxesShouldFilterMailboxesWithLookupRightWhenEmptyIds() throws Exception {
         String sharedReadMailboxName = "BobShared";
         String sharedAdministerMailboxName = "BobShared1";
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, DefaultMailboxes.INBOX);
@@ -616,7 +616,7 @@ public abstract class GetMailboxesMethodTest {
         MailboxPath bobSharedReadMailboxPath = MailboxPath.forUser(bob, sharedReadMailboxName);
         MailboxPath bobSharedAdministerMailboxPath = MailboxPath.forUser(bob, sharedAdministerMailboxName);
 
-        aclProbe.replaceRights(bobSharedReadMailboxPath, alice, new Rfc4314Rights(Right.Read));
+        aclProbe.replaceRights(bobSharedReadMailboxPath, alice, new Rfc4314Rights(Right.Lookup));
         aclProbe.replaceRights(bobSharedAdministerMailboxPath, alice, new Rfc4314Rights(Right.Administer));
 
         List<String> expectedMailboxes = ImmutableList.<String> builder()
@@ -643,7 +643,7 @@ public abstract class GetMailboxesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, DefaultMailboxes.INBOX);
         MailboxId aliceInboxMailbox = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, DefaultMailboxes.INBOX);
         MailboxPath bobMailboxPath = MailboxPath.forUser(bob, mailboxName);
-        aclProbe.replaceRights(bobMailboxPath, alice, new Rfc4314Rights(Right.Read));
+        aclProbe.replaceRights(bobMailboxPath, alice, new Rfc4314Rights(Right.Lookup));
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -665,7 +665,7 @@ public abstract class GetMailboxesMethodTest {
 
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, DefaultMailboxes.INBOX);
         MailboxPath bobMailboxPath = MailboxPath.forUser(bob, sharedMailboxName);
-        aclProbe.replaceRights(bobMailboxPath, alice, new Rfc4314Rights(Right.Read));
+        aclProbe.replaceRights(bobMailboxPath, alice, new Rfc4314Rights(Right.Lookup));
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -685,7 +685,7 @@ public abstract class GetMailboxesMethodTest {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, sharedMailboxName);
 
         MailboxPath bobMailboxPath = MailboxPath.forUser(bob, sharedMailboxName);
-        aclProbe.replaceRights(bobMailboxPath, alice, new Rfc4314Rights(Right.Read));
+        aclProbe.replaceRights(bobMailboxPath, alice, new Rfc4314Rights(Right.Lookup));
 
         given()
             .header("Authorization", accessToken.serialize())
