@@ -22,6 +22,7 @@ package org.apache.james.jmap.model.mailbox;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.james.jmap.model.mailbox.Rights.Right;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Entry;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
@@ -35,8 +36,8 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 public class RightsTest {
 
     public static final boolean NEGATIVE = true;
-    public static final Rights.Username USERNAME = new Rights.Username("username");
-    public static final Rights.Username OTHER_USERNAME = new Rights.Username("otherUsername");
+    public static final Rights.Username USERNAME = new Rights.Username("user");
+    public static final Rights.Username OTHER_USERNAME = new Rights.Username("otherUser");
 
     @Test
     public void rightsShouldMatchBeanContract() {
@@ -54,49 +55,49 @@ public class RightsTest {
 
     @Test
     public void forCharShouldReturnRightWhenA() {
-        assertThat(Rights.Right.forChar('a'))
-            .isEqualTo(Rights.Right.Administer);
+        assertThat(Right.forChar('a'))
+            .isEqualTo(Right.Administer);
     }
 
     @Test
     public void forCharShouldReturnRightWhenE() {
-        assertThat(Rights.Right.forChar('e'))
-            .isEqualTo(Rights.Right.Expunge);
+        assertThat(Right.forChar('e'))
+            .isEqualTo(Right.Expunge);
     }
 
     @Test
     public void forCharShouldReturnRightWhenI() {
-        assertThat(Rights.Right.forChar('i'))
-            .isEqualTo(Rights.Right.Insert);
+        assertThat(Right.forChar('i'))
+            .isEqualTo(Right.Insert);
     }
 
     @Test
     public void forCharShouldReturnRightWhenL() {
-        assertThat(Rights.Right.forChar('l'))
-            .isEqualTo(Rights.Right.Lookup);
+        assertThat(Right.forChar('l'))
+            .isEqualTo(Right.Lookup);
     }
 
     @Test
     public void forCharShouldReturnRightWhenR() {
-        assertThat(Rights.Right.forChar('r'))
-            .isEqualTo(Rights.Right.Read);
+        assertThat(Right.forChar('r'))
+            .isEqualTo(Right.Read);
     }
 
     @Test
     public void forCharShouldReturnRightWhenW() {
-        assertThat(Rights.Right.forChar('w'))
-            .isEqualTo(Rights.Right.Write);
+        assertThat(Right.forChar('w'))
+            .isEqualTo(Right.Write);
     }
 
     @Test
     public void forCharShouldReturnRightWhenT() {
-        assertThat(Rights.Right.forChar('t'))
-            .isEqualTo(Rights.Right.DeleteMessages);
+        assertThat(Right.forChar('t'))
+            .isEqualTo(Right.DeleteMessages);
     }
 
     @Test
     public void forCharShouldThrowOnUnsupportedRight() {
-        assertThatThrownBy(() -> Rights.Right.forChar('k'))
+        assertThatThrownBy(() -> Right.forChar('k'))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -125,7 +126,7 @@ public class RightsTest {
 
         assertThat(Rights.fromACL(acl))
             .isEqualTo(Rights.builder()
-                .delegateTo(new Rights.Username("user"), Rights.Right.Administer, Rights.Right.Expunge, Rights.Right.DeleteMessages)
+                .delegateTo(USERNAME, Right.Administer, Right.Expunge, Right.DeleteMessages)
                 .build());
     }
 
@@ -136,7 +137,7 @@ public class RightsTest {
 
         assertThat(Rights.fromACL(acl))
             .isEqualTo(Rights.builder()
-                .delegateTo(new Rights.Username("user"), Rights.Right.Administer, Rights.Right.Expunge, Rights.Right.DeleteMessages)
+                .delegateTo(USERNAME, Right.Administer, Right.Expunge, Right.DeleteMessages)
                 .build());
     }
 
@@ -153,8 +154,8 @@ public class RightsTest {
         String user1 = "user1";
         String user2 = "user2";
         Rights rights = Rights.builder()
-            .delegateTo(new Rights.Username(user1), Rights.Right.Administer, Rights.Right.DeleteMessages)
-            .delegateTo(new Rights.Username(user2), Rights.Right.Expunge, Rights.Right.Lookup)
+            .delegateTo(new Rights.Username(user1), Right.Administer, Right.DeleteMessages)
+            .delegateTo(new Rights.Username(user2), Right.Expunge, Right.Lookup)
             .build();
 
         assertThat(rights.toMailboxAcl())
@@ -172,7 +173,7 @@ public class RightsTest {
     @Test
     public void removeEntriesForShouldRemoveUsernameEntryWhenPresent() {
         Rights rights = Rights.builder()
-            .delegateTo(USERNAME, Rights.Right.Lookup)
+            .delegateTo(USERNAME, Right.Lookup)
             .build();
         assertThat(rights.removeEntriesFor(USERNAME))
             .isEqualTo(Rights.EMPTY);
@@ -181,15 +182,157 @@ public class RightsTest {
     @Test
     public void removeEntriesForShouldOnlyRemoveSpecifiedUsername() {
         Rights rights = Rights.builder()
-            .delegateTo(USERNAME, Rights.Right.Lookup)
-            .delegateTo(OTHER_USERNAME, Rights.Right.Lookup)
+            .delegateTo(USERNAME, Right.Lookup)
+            .delegateTo(OTHER_USERNAME, Right.Lookup)
             .build();
 
         Rights expected = Rights.builder()
-            .delegateTo(OTHER_USERNAME, Rights.Right.Lookup)
+            .delegateTo(OTHER_USERNAME, Right.Lookup)
             .build();
 
         assertThat(rights.removeEntriesFor(USERNAME))
             .isEqualTo(expected);
+    }
+
+    @Test
+    public void mayAddItemsShouldReturnEmptyWhenNoUserRights() {
+        assertThat(Rights.EMPTY.mayAddItems(USERNAME))
+            .isEmpty();
+    }
+
+    @Test
+    public void mayCreateChildShouldReturnUnsupportedWhenNoUserRights() {
+        assertThat(Rights.EMPTY.mayCreateChild(USERNAME))
+            .isEqualTo(Rights.UNSUPPORTED);
+    }
+
+    @Test
+    public void mayDeleteShouldReturnUnsupportedWhenNoUserRights() {
+        assertThat(Rights.EMPTY.mayDelete(USERNAME))
+            .isEqualTo(Rights.UNSUPPORTED);
+    }
+
+    @Test
+    public void mayReadItemsShouldReturnEmptyWhenNoUserRights() {
+        assertThat(Rights.EMPTY.mayReadItems(USERNAME))
+            .isEmpty();
+    }
+
+    @Test
+    public void mayRemoveItemsShouldReturnEmptyWhenNoUserRights() {
+        assertThat(Rights.EMPTY.mayRemoveItems(USERNAME))
+            .isEmpty();
+    }
+
+    @Test
+    public void mayRenameShouldReturnEmptyWhenNoUserRights() {
+        assertThat(Rights.EMPTY.mayRename(USERNAME))
+            .isEmpty();
+    }
+
+    @Test
+    public void mayAddItemsShouldReturnFalseWhenNoInsertRights() {
+        Rights rights = Rights.builder()
+            .delegateTo(USERNAME, Right.Administer, Right.Expunge, Right.Lookup,
+                Right.DeleteMessages, Right.Read, Right.Seen, Right.Write)
+            .build();
+
+        assertThat(rights.mayAddItems(USERNAME))
+            .contains(false);
+    }
+
+    @Test
+    public void mayCreateChildShouldReturnUnsupportedWhenFullRights() {
+        Rights rights = Rights.builder()
+            .delegateTo(USERNAME, Right.Administer, Right.Expunge, Right.Lookup, Right.Insert,
+                Right.DeleteMessages, Right.Read, Right.Seen, Right.Write)
+            .build();
+
+        assertThat(rights.mayCreateChild(USERNAME))
+            .isEqualTo(Rights.UNSUPPORTED);
+    }
+
+    @Test
+    public void mayDeleteShouldReturnUnsupportedWhenFullRights() {
+        Rights rights = Rights.builder()
+            .delegateTo(USERNAME, Right.Administer, Right.Expunge, Right.Lookup, Right.Insert,
+                Right.DeleteMessages, Right.Read, Right.Seen, Right.Write)
+            .build();
+
+        assertThat(rights.mayDelete(USERNAME))
+            .isEqualTo(Rights.UNSUPPORTED);
+    }
+
+    @Test
+    public void mayReadItemsShouldReturnFalseWhenNoReadRights() {
+        Rights rights = Rights.builder()
+            .delegateTo(USERNAME, Right.Administer, Right.Expunge, Right.Lookup, Right.Insert,
+                Right.DeleteMessages, Right.Seen, Right.Write)
+            .build();
+
+        assertThat(rights.mayReadItems(USERNAME))
+            .contains(false);
+    }
+
+    @Test
+    public void mayRemoveItemsShouldReturnFalseWhenNoDeleteMessagesRights() {
+        Rights rights = Rights.builder()
+            .delegateTo(USERNAME, Right.Administer, Right.Expunge, Right.Lookup, Right.Insert,
+                Right.Read, Right.Seen, Right.Write)
+            .build();
+
+        assertThat(rights.mayRemoveItems(USERNAME))
+            .contains(false);
+    }
+
+    @Test
+    public void mayRenameShouldReturnFalseWhenNoWriteRights() {
+        Rights rights = Rights.builder()
+            .delegateTo(USERNAME, Right.Administer, Right.Expunge, Right.Lookup, Right.Insert,
+                Right.DeleteMessages, Right.Read, Right.Seen)
+            .build();
+
+        assertThat(rights.mayRename(USERNAME))
+            .isEqualTo(Rights.UNSUPPORTED);
+    }
+
+    @Test
+    public void mayAddItemsShouldReturnTrueWhenInsertRight() {
+        Rights rights = Rights.builder()
+            .delegateTo(USERNAME, Right.Insert)
+            .build();
+
+        assertThat(rights.mayAddItems(USERNAME))
+            .contains(true);
+    }
+
+    @Test
+    public void mayReadItemsShouldReturnTrueWhenReadRight() {
+        Rights rights = Rights.builder()
+            .delegateTo(USERNAME, Right.Read)
+            .build();
+
+        assertThat(rights.mayReadItems(USERNAME))
+            .contains(true);
+    }
+
+    @Test
+    public void mayRemoveItemsShouldReturnTrueWhenDeleteMessagesRight() {
+        Rights rights = Rights.builder()
+            .delegateTo(USERNAME, Right.DeleteMessages)
+            .build();
+
+        assertThat(rights.mayRemoveItems(USERNAME))
+            .contains(true);
+    }
+
+    @Test
+    public void mayRenameShouldReturnTrueWhenWriteRight() {
+        Rights rights = Rights.builder()
+            .delegateTo(USERNAME, Right.Write)
+            .build();
+
+        assertThat(rights.mayRename(USERNAME))
+            .isEqualTo(Rights.UNSUPPORTED);
     }
 }
