@@ -45,6 +45,8 @@ public class ManagerTestResources {
 
     public static final String USER = "user@domain.org";
     public static final String USER_PASS = "pass";
+    public static final String OTHER_USER = "otherUser@domain.org";
+    public static final String OTHER_USER_PASS = "otherPass";
 
     private MailboxManager mailboxManager;
 

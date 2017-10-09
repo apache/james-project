@@ -120,7 +120,7 @@ public class MailboxFactory {
             .build();
     }
 
-    @VisibleForTesting MailboxNamespace getNamespace(MailboxPath mailboxPath, MailboxSession mailboxSession) {
+    private MailboxNamespace getNamespace(MailboxPath mailboxPath, MailboxSession mailboxSession) {
         String mailboxPathUser = mailboxPath.getUser();
         if (mailboxSession.getUser().isSameUser(mailboxPathUser)) {
             return MailboxNamespace.personal();

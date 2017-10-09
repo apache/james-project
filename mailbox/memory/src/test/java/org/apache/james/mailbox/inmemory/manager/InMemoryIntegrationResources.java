@@ -55,6 +55,7 @@ public class InMemoryIntegrationResources implements IntegrationResources {
     public MailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver) throws MailboxException {
         FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
         fakeAuthenticator.addUser(ManagerTestResources.USER, ManagerTestResources.USER_PASS);
+        fakeAuthenticator.addUser(ManagerTestResources.OTHER_USER, ManagerTestResources.OTHER_USER_PASS);
         InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
         final StoreMailboxManager manager = new InMemoryMailboxManager(
             mailboxSessionMapperFactory,
