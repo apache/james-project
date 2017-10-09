@@ -716,4 +716,51 @@ public abstract class GetMailboxesMethodTest {
             .body(FIRST_MAILBOX + ".namespace.type", equalTo(MailboxNamespace.Type.Personal.toString()))
             .body(FIRST_MAILBOX + ".namespace.owner", isEmptyOrNullString());
     }
+
+
+    @Test
+    public void getMailboxesShouldReturnAllowedForAllMayPropertiesWhenOwner() throws Exception {
+        MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, DefaultMailboxes.INBOX);
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId.serialize() + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(FIRST_MAILBOX + ".mayReadItems", equalTo(true))
+            .body(FIRST_MAILBOX + ".mayAddItems", equalTo(true))
+            .body(FIRST_MAILBOX + ".mayRemoveItems", equalTo(true))
+            .body(FIRST_MAILBOX + ".mayCreateChild", equalTo(true))
+            .body(FIRST_MAILBOX + ".mayDelete", equalTo(true))
+            .body(FIRST_MAILBOX + ".mayRename", equalTo(true));
+    }
+
+    @Test
+    public void getMailboxesShouldReturnPartiallyAllowedMayPropertiesWhenDelegated() throws Exception {
+        String sharedMailboxName = "BobShared";
+        MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, sharedMailboxName);
+
+        MailboxPath bobMailboxPath = MailboxPath.forUser(bob, sharedMailboxName);
+        aclProbe.replaceRights(bobMailboxPath, alice, new Rfc4314Rights(Right.Lookup, Right.Read));
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId.serialize() + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(FIRST_MAILBOX + ".mayReadItems", equalTo(true))
+            .body(FIRST_MAILBOX + ".mayAddItems", equalTo(false))
+            .body(FIRST_MAILBOX + ".mayRemoveItems", equalTo(false))
+            .body(FIRST_MAILBOX + ".mayCreateChild", equalTo(false))
+            .body(FIRST_MAILBOX + ".mayDelete", equalTo(false))
+            .body(FIRST_MAILBOX + ".mayRename", equalTo(false));
+    }
 }
