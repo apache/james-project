@@ -678,6 +678,10 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public List<MailboxMetaData> search(MailboxQuery mailboxExpression, MailboxSession session) throws MailboxException {
+        return searchMailboxes(mailboxExpression, session, Right.Lookup);
+    }
+
+    private List<MailboxMetaData> searchMailboxes(MailboxQuery mailboxExpression, MailboxSession session, Right right) throws MailboxException {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Stream<Mailbox> baseMailboxes = mailboxMapper
             .findMailboxWithPathLike(getPathLike(mailboxExpression, session))
@@ -686,7 +690,7 @@ public class StoreMailboxManager implements MailboxManager {
         List<Mailbox> mailboxes = Stream.concat(baseMailboxes,
                 delegatedMailboxes)
             .distinct()
-            .filter(Throwing.predicate(mailbox -> isReadable(session, mailbox)))
+            .filter(Throwing.predicate(mailbox -> hasRightForCurrentUser(session, mailbox, right)))
             .collect(Guavate.toImmutableList());
 
         return mailboxes
@@ -711,16 +715,18 @@ public class StoreMailboxManager implements MailboxManager {
         return new MailboxPath(base, combinedName);
     }
 
-    private Stream<Mailbox> getDelegatedMailboxes(MailboxMapper mailboxMapper, MailboxQuery mailboxQuery, MailboxSession session) throws MailboxException {
+    private Stream<Mailbox> getDelegatedMailboxes(MailboxMapper mailboxMapper, MailboxQuery mailboxQuery,
+                                                  MailboxSession session) throws MailboxException {
         if (mailboxQuery.isPrivateMailboxes(session)) {
             return Stream.of();
         }
         return mailboxMapper.findNonPersonalMailboxes(session.getUser().getUserName(), Right.Lookup).stream();
     }
 
-    private boolean isReadable(MailboxSession session, Mailbox mailbox) throws MailboxException {
+    private boolean hasRightForCurrentUser(MailboxSession session, Mailbox mailbox,
+                                           Right right) throws MailboxException {
         return (isSameUser(session, mailbox) && isUserNamespace(mailbox))
-                || hasRight(mailbox, Right.Lookup, session);
+                || hasRight(mailbox, right, session);
     }
 
     private boolean isSameUser(MailboxSession session, Mailbox mailbox) {
@@ -772,7 +778,7 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     private Stream<MailboxId> getAllReadableMailbox(MailboxSession session) throws MailboxException {
-        return search(MailboxQuery.builder().matchesAllMailboxNames().build(), session)
+        return searchMailboxes(MailboxQuery.builder().matchesAllMailboxNames().build(), session, Right.Read)
             .stream()
             .map(MailboxMetaData::getId);
     }
