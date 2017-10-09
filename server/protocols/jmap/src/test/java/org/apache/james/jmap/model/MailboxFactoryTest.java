@@ -206,4 +206,98 @@ public class MailboxFactoryTest {
         assertThat(retrievedMailbox.getNamespace())
             .isEqualTo(MailboxNamespace.delegated(user));
     }
+
+    @Test
+    public void ownerShouldHaveFullRightsViaMayProperties() throws Exception {
+        MailboxPath inbox = MailboxPath.forUser(user, "inbox");
+        Optional<MailboxId> mailboxId = mailboxManager.createMailbox(inbox, mailboxSession);
+
+        Mailbox retrievedMailbox = sut.builder()
+            .id(mailboxId.get())
+            .session(mailboxSession)
+            .build()
+            .get();
+
+        softly.assertThat(retrievedMailbox.isMayAddItems()).isTrue();
+        softly.assertThat(retrievedMailbox.isMayCreateChild()).isTrue();
+        softly.assertThat(retrievedMailbox.isMayDelete()).isTrue();
+        softly.assertThat(retrievedMailbox.isMayReadItems()).isTrue();
+        softly.assertThat(retrievedMailbox.isMayRemoveItems()).isTrue();
+        softly.assertThat(retrievedMailbox.isMayRename()).isTrue();
+    }
+
+    @Test
+    public void delegatedUserShouldHaveMayAddItemsWhenAllowedToInsert() throws Exception {
+        MailboxPath inbox = MailboxPath.forUser(user, "inbox");
+        Optional<MailboxId> mailboxId = mailboxManager.createMailbox(inbox, mailboxSession);
+        mailboxManager.applyRightsCommand(inbox,
+            MailboxACL.command()
+                .forUser(otherUser)
+                .rights(MailboxACL.Right.Insert, MailboxACL.Right.Lookup)
+                .asAddition(),
+            mailboxSession);
+
+        Mailbox retrievedMailbox = sut.builder()
+            .id(mailboxId.get())
+            .session(otherMailboxSession)
+            .build()
+            .get();
+
+        softly.assertThat(retrievedMailbox.isMayAddItems()).isTrue();
+        softly.assertThat(retrievedMailbox.isMayCreateChild()).isFalse();
+        softly.assertThat(retrievedMailbox.isMayDelete()).isFalse();
+        softly.assertThat(retrievedMailbox.isMayReadItems()).isFalse();
+        softly.assertThat(retrievedMailbox.isMayRemoveItems()).isFalse();
+        softly.assertThat(retrievedMailbox.isMayRename()).isFalse();
+    }
+
+    @Test
+    public void delegatedUserShouldHaveMayReadItemsWhenAllowedToRead() throws Exception {
+        MailboxPath inbox = MailboxPath.forUser(user, "inbox");
+        Optional<MailboxId> mailboxId = mailboxManager.createMailbox(inbox, mailboxSession);
+        mailboxManager.applyRightsCommand(inbox,
+            MailboxACL.command()
+                .forUser(otherUser)
+                .rights(MailboxACL.Right.Read, MailboxACL.Right.Lookup)
+                .asAddition(),
+            mailboxSession);
+
+        Mailbox retrievedMailbox = sut.builder()
+            .id(mailboxId.get())
+            .session(otherMailboxSession)
+            .build()
+            .get();
+
+        softly.assertThat(retrievedMailbox.isMayAddItems()).isFalse();
+        softly.assertThat(retrievedMailbox.isMayCreateChild()).isFalse();
+        softly.assertThat(retrievedMailbox.isMayDelete()).isFalse();
+        softly.assertThat(retrievedMailbox.isMayReadItems()).isTrue();
+        softly.assertThat(retrievedMailbox.isMayRemoveItems()).isFalse();
+        softly.assertThat(retrievedMailbox.isMayRename()).isFalse();
+    }
+
+    @Test
+    public void delegatedUserShouldHaveMayRemoveItemsWhenAllowedToRemoveItems() throws Exception {
+        MailboxPath inbox = MailboxPath.forUser(user, "inbox");
+        Optional<MailboxId> mailboxId = mailboxManager.createMailbox(inbox, mailboxSession);
+        mailboxManager.applyRightsCommand(inbox,
+            MailboxACL.command()
+                .forUser(otherUser)
+                .rights(MailboxACL.Right.DeleteMessages, MailboxACL.Right.Lookup)
+                .asAddition(),
+            mailboxSession);
+
+        Mailbox retrievedMailbox = sut.builder()
+            .id(mailboxId.get())
+            .session(otherMailboxSession)
+            .build()
+            .get();
+
+        softly.assertThat(retrievedMailbox.isMayAddItems()).isFalse();
+        softly.assertThat(retrievedMailbox.isMayCreateChild()).isFalse();
+        softly.assertThat(retrievedMailbox.isMayDelete()).isFalse();
+        softly.assertThat(retrievedMailbox.isMayReadItems()).isFalse();
+        softly.assertThat(retrievedMailbox.isMayRemoveItems()).isTrue();
+        softly.assertThat(retrievedMailbox.isMayRename()).isFalse();
+    }
 }

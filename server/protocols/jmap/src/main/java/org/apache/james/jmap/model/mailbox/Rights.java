@@ -122,6 +122,7 @@ public class Rights {
         public final int hashCode() {
             return Objects.hash(value);
         }
+
     }
 
     public static class Builder {

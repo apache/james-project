@@ -39,6 +39,7 @@ public class MailboxNamespace {
             this.type = type;
         }
     }
+
     public static MailboxNamespace delegated(String owner) {
         Preconditions.checkArgument(!StringUtils.isBlank(owner));
         return new MailboxNamespace(Type.Delegated, Optional.of(owner));

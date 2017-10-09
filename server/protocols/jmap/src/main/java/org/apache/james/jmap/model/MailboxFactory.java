@@ -100,13 +100,15 @@ public class MailboxFactory {
     private Mailbox fromMessageManager(MessageManager messageManager, Optional<List<MailboxMetaData>> userMailboxesMetadata,
                                                  MailboxSession mailboxSession) throws MailboxException {
         MailboxPath mailboxPath = messageManager.getMailboxPath();
+        boolean isOwner = isSameUser(mailboxSession, mailboxPath);
         Optional<Role> role = Role.from(mailboxPath.getName());
         MailboxCounters mailboxCounters = messageManager.getMailboxCounters(mailboxSession);
         MessageManager.MetaData metaData = messageManager.getMetaData(NO_RESET_RECENT, mailboxSession, MessageManager.MetaData.FetchGroup.NO_COUNT);
 
-        System.out.println(messageManager.getMailboxPath());
         Rights rights = Rights.fromACL(metaData.getACL())
             .removeEntriesFor(Username.forMailboxPath(messageManager.getMailboxPath()));
+        Username username = new Username(mailboxSession.getUser().getUserName());
+
         return Mailbox.builder()
             .id(messageManager.getId())
             .name(getName(mailboxPath, mailboxSession))
@@ -116,16 +118,26 @@ public class MailboxFactory {
             .totalMessages(mailboxCounters.getCount())
             .sortOrder(SortOrder.getSortOrder(role))
             .sharedWith(rights)
-            .namespace(getNamespace(mailboxPath, mailboxSession))
+            .mayAddItems(rights.mayAddItems(username).orElse(isOwner))
+            .mayCreateChild(rights.mayCreateChild(username).orElse(isOwner))
+            .mayDelete(rights.mayDelete(username).orElse(isOwner))
+            .mayReadItems(rights.mayReadItems(username).orElse(isOwner))
+            .mayRemoveItems(rights.mayRemoveItems(username).orElse(isOwner))
+            .mayRename(rights.mayRename(username).orElse(isOwner))
+            .namespace(getNamespace(mailboxPath, isOwner))
             .build();
     }
 
-    private MailboxNamespace getNamespace(MailboxPath mailboxPath, MailboxSession mailboxSession) {
-        String mailboxPathUser = mailboxPath.getUser();
-        if (mailboxSession.getUser().isSameUser(mailboxPathUser)) {
+    private MailboxNamespace getNamespace(MailboxPath mailboxPath, boolean isOwner) {
+            String mailboxPathUser = mailboxPath.getUser();
+        if (isOwner) {
             return MailboxNamespace.personal();
         }
         return MailboxNamespace.delegated(mailboxPathUser);
+    }
+
+    private boolean isSameUser(MailboxSession mailboxSession, MailboxPath mailboxPath) {
+        return mailboxSession.getUser().isSameUser(mailboxPath.getUser());
     }
 
     @VisibleForTesting String getName(MailboxPath mailboxPath, MailboxSession mailboxSession) {
