@@ -684,6 +684,7 @@ public class StoreMailboxManager implements MailboxManager {
         Stream<Mailbox> delegatedMailboxes = getDelegatedMailboxes(mailboxMapper, mailboxExpression, session);
         List<Mailbox> mailboxes = Stream.concat(baseMailboxes,
                 delegatedMailboxes)
+            .distinct()
             .filter(Throwing.predicate(mailbox -> isReadable(session, mailbox)))
             .collect(Guavate.toImmutableList());
 
