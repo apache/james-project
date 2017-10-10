@@ -19,6 +19,7 @@
 package org.apache.james.pop3server.core;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -28,6 +29,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.pop3server.mailbox.MailboxAdapter;
 import org.apache.james.protocols.api.Request;
@@ -37,12 +39,15 @@ import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.core.AbstractPassCmdHandler;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link PassCmdHandler} which also handles POP3 Before SMTP
  * 
  */
 public class PassCmdHandler extends AbstractPassCmdHandler  {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PassCmdHandler.class);
 
     private MailboxManager manager;
 
@@ -71,7 +76,8 @@ public class PassCmdHandler extends AbstractPassCmdHandler  {
             
             // check if the mailbox exists, if not create it
             if (!manager.mailboxExists(inbox, mSession)) {
-                manager.createMailbox(inbox, mSession);
+                Optional<MailboxId> mailboxId = manager.createMailbox(inbox, mSession);
+                LOGGER.info("Provisioning INBOX. " + mailboxId + " created.");
             }
             MessageManager mailbox = manager.getMailbox(MailboxPath.inbox(mSession), mSession);
             return new MailboxAdapter(manager, mailbox, mSession);

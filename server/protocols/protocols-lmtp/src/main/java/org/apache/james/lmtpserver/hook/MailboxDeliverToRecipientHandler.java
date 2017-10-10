@@ -21,6 +21,7 @@ package org.apache.james.lmtpserver.hook;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -31,6 +32,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.protocols.lmtp.hook.DeliverToRecipientHook;
 import org.apache.james.protocols.smtp.MailEnvelope;
@@ -85,7 +87,8 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
 
             // create inbox if not exist
             if (!mailboxManager.mailboxExists(inbox, mailboxSession)) {
-                mailboxManager.createMailbox(inbox, mailboxSession);
+                Optional<MailboxId> mailboxId = mailboxManager.createMailbox(inbox, mailboxSession);
+                LOGGER.info("Provisioning INBOX. " + mailboxId + " created.");
             }
             mailboxManager.getMailbox(MailboxPath.inbox(mailboxSession), mailboxSession).appendMessage(envelope.getMessageInputStream(), new Date(), mailboxSession, true, null);
             mailboxManager.endProcessingRequest(mailboxSession);

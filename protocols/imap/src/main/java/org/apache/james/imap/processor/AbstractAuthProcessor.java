@@ -36,6 +36,7 @@ import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.NotAdminException;
 import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.slf4j.Logger;
@@ -135,12 +136,10 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
             }
         } else {
             try {
-                LOGGER.debug("INBOX does not exist. Creating it.");
-                mailboxManager.createMailbox(inboxPath, mailboxSession);
+                Optional<MailboxId> mailboxId = mailboxManager.createMailbox(inboxPath, mailboxSession);
+                LOGGER.info("Provisioning INBOX. " + mailboxId + " created.");
             } catch (MailboxExistsException e) {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Mailbox created by concurrent call. Safe to ignore this exception.");
-                }
+                LOGGER.warn("Mailbox INBOX created by concurrent call. Safe to ignore this exception.");
             }
         }
     }

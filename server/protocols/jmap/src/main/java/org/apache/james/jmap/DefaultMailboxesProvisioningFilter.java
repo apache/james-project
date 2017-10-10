@@ -35,6 +35,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
@@ -102,7 +103,8 @@ public class DefaultMailboxesProvisioningFilter implements Filter {
     
     private void createMailbox(MailboxPath mailboxPath, MailboxSession session) {
         try {
-            mailboxManager.createMailbox(mailboxPath, session);
+            Optional<MailboxId> mailboxId = mailboxManager.createMailbox(mailboxPath, session);
+            LOGGER.info("Provisioning " + mailboxPath + ". " + mailboxId + " created.");
         } catch (MailboxExistsException e) {
             LOGGER.info("Mailbox {} have been created concurrently", mailboxPath);
         } catch (MailboxException e) {
