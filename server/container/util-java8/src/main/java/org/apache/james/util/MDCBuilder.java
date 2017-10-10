@@ -32,10 +32,25 @@ import org.slf4j.MDC;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class MDCBuilder {
+
+    public static <T> T withMdc(MDCBuilder mdcBuilder, Supplier<T> answerSupplier) {
+        try (Closeable closeable = mdcBuilder.build()) {
+            try {
+                return answerSupplier.get();
+            } catch (RuntimeException e) {
+                LOGGER.error("Got error, logging its context", e);
+                throw e;
+            }
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+    }
 
     public static final String HOST = "host";
     public static final String IP = "ip";

@@ -19,9 +19,13 @@
 
 package org.apache.james.metrics.api;
 
+import java.util.function.Supplier;
+
 public interface MetricFactory {
 
     Metric generate(String name);
 
     TimeMetric timer(String name);
+
+    <T> T withMetric(String name, Supplier<T> operation);
 }

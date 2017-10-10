@@ -19,8 +19,6 @@
 
 package org.apache.james.jmap.methods;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -31,12 +29,10 @@ import org.apache.james.jmap.model.SetMailboxesRequest;
 import org.apache.james.jmap.model.SetMailboxesResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.util.MDCBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 
 public class SetMailboxesMethod implements Method {
 
@@ -68,26 +64,20 @@ public class SetMailboxesMethod implements Method {
         Preconditions.checkNotNull(clientId);
         Preconditions.checkNotNull(mailboxSession);
         Preconditions.checkArgument(request instanceof SetMailboxesRequest);
-        
-        TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + METHOD_NAME.getName());
+
         SetMailboxesRequest setMailboxesRequest = (SetMailboxesRequest) request;
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addContext(MDCBuilder.ACTION, "SET_MAILBOXES")
-                     .addContext("create", setMailboxesRequest.getCreate())
-                     .addContext("update", setMailboxesRequest.getUpdate())
-                     .addContext("destroy", setMailboxesRequest.getDestroy())
-                     .build()) {
-            return Stream.of(
+        return metricFactory.withMetric(JMAP_PREFIX + METHOD_NAME.getName(),
+            () -> MDCBuilder.withMdc(
+                MDCBuilder.create()
+                    .addContext(MDCBuilder.ACTION, "SET_MAILBOXES")
+                    .addContext("create", setMailboxesRequest.getCreate())
+                    .addContext("update", setMailboxesRequest.getUpdate())
+                    .addContext("destroy", setMailboxesRequest.getDestroy()),
+                () -> Stream.of(
                     JmapResponse.builder().clientId(clientId)
-                    .response(setMailboxesResponse(setMailboxesRequest, mailboxSession))
-                    .responseName(RESPONSE_NAME)
-                    .build());
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        } finally {
-            timeMetric.stopAndPublish();
-        }
+                        .response(setMailboxesResponse(setMailboxesRequest, mailboxSession))
+                        .responseName(RESPONSE_NAME)
+                        .build())));
     }
 
     private SetMailboxesResponse setMailboxesResponse(SetMailboxesRequest request, MailboxSession mailboxSession) {

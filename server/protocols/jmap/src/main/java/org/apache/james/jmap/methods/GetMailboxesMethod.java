@@ -19,8 +19,6 @@
 
 package org.apache.james.jmap.methods;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -42,7 +40,6 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.OptionalUtils;
 
@@ -83,25 +80,23 @@ public class GetMailboxesMethod implements Method {
     public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
         Preconditions.checkArgument(request instanceof GetMailboxesRequest);
         GetMailboxesRequest mailboxesRequest = (GetMailboxesRequest) request;
-        TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + METHOD_NAME.getName());
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addContext(MDCBuilder.ACTION, "GET_MAILBOXES")
-                     .addContext("accountId", mailboxesRequest.getAccountId())
-                     .addContext("mailboxIds", mailboxesRequest.getIds())
-                     .addContext("properties", mailboxesRequest.getProperties())
-                     .build()) {
-            return Stream.of(
-                    JmapResponse.builder().clientId(clientId)
-                    .response(getMailboxesResponse(mailboxesRequest, mailboxSession))
-                    .properties(mailboxesRequest.getProperties().map(this::ensureContainsId))
-                    .responseName(RESPONSE_NAME)
-                    .build());
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        } finally {
-            timeMetric.stopAndPublish();
-        }
+        return metricFactory.withMetric(JMAP_PREFIX + METHOD_NAME.getName(),
+            () -> MDCBuilder.withMdc(
+                MDCBuilder.create()
+                    .addContext(MDCBuilder.ACTION, "GET_MAILBOXES")
+                    .addContext("accountId", mailboxesRequest.getAccountId())
+                    .addContext("mailboxIds", mailboxesRequest.getIds())
+                    .addContext("properties", mailboxesRequest.getProperties()),
+                () -> process(clientId, mailboxSession, mailboxesRequest)));
+    }
+
+    private Stream<JmapResponse> process(ClientId clientId, MailboxSession mailboxSession, GetMailboxesRequest mailboxesRequest) {
+        return Stream.of(
+            JmapResponse.builder().clientId(clientId)
+                .response(getMailboxesResponse(mailboxesRequest, mailboxSession))
+                .properties(mailboxesRequest.getProperties().map(this::ensureContainsId))
+                .responseName(RESPONSE_NAME)
+                .build());
     }
 
     private Set<MailboxProperty> ensureContainsId(Set<MailboxProperty> input) {

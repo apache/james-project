@@ -19,8 +19,6 @@
 
 package org.apache.james.jmap.methods;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -36,11 +34,9 @@ import org.apache.james.jmap.model.SetVacationResponse;
 import org.apache.james.jmap.model.VacationResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.util.MDCBuilder;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 
 public class SetVacationResponseMethod implements Method {
 
@@ -80,33 +76,30 @@ public class SetVacationResponseMethod implements Method {
         Preconditions.checkArgument(request instanceof SetVacationRequest);
         SetVacationRequest setVacationRequest = (SetVacationRequest) request;
 
-        TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + METHOD_NAME.getName());
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addContext(MDCBuilder.ACTION, "SET_VACATION")
-                     .addContext("update", setVacationRequest.getUpdate())
-                     .build()) {
-            if (!setVacationRequest.isValid()) {
-                return Stream.of(JmapResponse
-                    .builder()
-                    .clientId(clientId)
-                    .error(ErrorResponse.builder()
-                        .type(INVALID_ARGUMENTS1)
-                        .description(INVALID_ARGUMENT_DESCRIPTION)
-                        .build())
-                    .build());
-            }
-    
-            return process(clientId,
-                AccountId.fromString(mailboxSession.getUser().getUserName()),
-                setVacationRequest.getUpdate().get(Vacation.ID));
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        } finally {
-            timeMetric.stopAndPublish();
-        }
+        return metricFactory.withMetric(JMAP_PREFIX + METHOD_NAME.getName(),
+            () -> MDCBuilder.withMdc(
+                MDCBuilder.create()
+                    .addContext(MDCBuilder.ACTION, "SET_VACATION")
+                    .addContext("update", setVacationRequest.getUpdate()),
+                () -> process(clientId, mailboxSession, setVacationRequest)));
     }
 
+    private Stream<JmapResponse> process(ClientId clientId, MailboxSession mailboxSession, SetVacationRequest setVacationRequest) {
+        if (!setVacationRequest.isValid()) {
+            return Stream.of(JmapResponse
+                .builder()
+                .clientId(clientId)
+                .error(ErrorResponse.builder()
+                    .type(INVALID_ARGUMENTS1)
+                    .description(INVALID_ARGUMENT_DESCRIPTION)
+                    .build())
+                .build());
+        }
+
+        return process(clientId,
+            AccountId.fromString(mailboxSession.getUser().getUserName()),
+            setVacationRequest.getUpdate().get(Vacation.ID));
+    }
 
 
     private Stream<JmapResponse> process(ClientId clientId, AccountId accountId, VacationResponse vacationResponse) {
