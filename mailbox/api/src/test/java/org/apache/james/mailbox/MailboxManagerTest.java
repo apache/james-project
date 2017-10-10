@@ -30,7 +30,6 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxManager.MailboxCapabilities;
 import org.apache.james.mailbox.exception.AnnotationException;
-import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.mock.MockMailboxManager;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -43,7 +42,6 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.search.MailboxQuery;
-import org.apache.james.mime4j.dom.address.Mailbox;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
@@ -204,7 +202,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void closingSessionShouldWork() throws BadCredentialsException, MailboxException, UnsupportedEncodingException {
+    public void closingSessionShouldWork() throws MailboxException, UnsupportedEncodingException {
         session = mailboxManager.createSystemSession(USER_1);
         mailboxManager.startProcessingRequest(session);
 
@@ -223,7 +221,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void user2ShouldBeAbleToCreateRootlessFolder() throws BadCredentialsException, MailboxException {
+    public void user2ShouldBeAbleToCreateRootlessFolder() throws MailboxException {
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath trash = MailboxPath.forUser(USER_2, "Trash");
         mailboxManager.createMailbox(trash, session);
@@ -232,7 +230,7 @@ public abstract class MailboxManagerTest {
     }
     
     @Test
-    public void user2ShouldBeAbleToCreateNestedFoldersWithoutTheirParents() throws BadCredentialsException, MailboxException {
+    public void user2ShouldBeAbleToCreateNestedFoldersWithoutTheirParents() throws MailboxException {
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath nestedFolder = MailboxPath.forUser(USER_2, "INBOX.testfolder");
         mailboxManager.createMailbox(nestedFolder, session);
@@ -284,7 +282,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void updateAnnotationsShouldDeleteAnnotationWithNilValue() throws BadCredentialsException, MailboxException {
+    public void updateAnnotationsShouldDeleteAnnotationWithNilValue() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -307,7 +305,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void getAnnotationsShouldReturnEmptyForNonStoredAnnotation() throws BadCredentialsException, MailboxException {
+    public void getAnnotationsShouldReturnEmptyForNonStoredAnnotation() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -317,7 +315,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void getAllAnnotationsShouldRetrieveStoredAnnotations() throws BadCredentialsException, MailboxException {
+    public void getAllAnnotationsShouldRetrieveStoredAnnotations() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -339,7 +337,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void getAnnotationsByKeysShouldRetrieveStoresAnnotationsByKeys() throws BadCredentialsException, MailboxException {
+    public void getAnnotationsByKeysShouldRetrieveStoresAnnotationsByKeys() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -362,7 +360,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void getAnnotationsByKeysWithOneDepthShouldRetriveAnnotationsWithOneDepth() throws BadCredentialsException, MailboxException {
+    public void getAnnotationsByKeysWithOneDepthShouldRetriveAnnotationsWithOneDepth() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -375,7 +373,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void getAnnotationsByKeysWithAllDepthShouldThrowExceptionWhenMailboxDoesNotExist() throws BadCredentialsException, MailboxException {
+    public void getAnnotationsByKeysWithAllDepthShouldThrowExceptionWhenMailboxDoesNotExist() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         expected.expect(MailboxException.class);
         session = mailboxManager.createSystemSession(USER_2);
@@ -385,7 +383,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void getAnnotationsByKeysWithAllDepthShouldRetriveAnnotationsWithAllDepth() throws BadCredentialsException, MailboxException {
+    public void getAnnotationsByKeysWithAllDepthShouldRetriveAnnotationsWithAllDepth() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
