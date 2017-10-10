@@ -39,8 +39,13 @@ import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
+import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mime4j.dom.address.Mailbox;
 import org.junit.Assume;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -61,6 +66,7 @@ public abstract class MailboxManagerTest {
 
     public final static String USER_1 = "USER_1";
     public final static String USER_2 = "USER_2";
+    private static final int DEFAULT_MAXIMUM_LIMIT = 256;
 
     private static final MailboxAnnotationKey PRIVATE_KEY = new MailboxAnnotationKey("/private/comment");
     private static final MailboxAnnotationKey PRIVATE_CHILD_KEY = new MailboxAnnotationKey("/private/comment/user");
@@ -563,6 +569,273 @@ public abstract class MailboxManagerTest {
         assertThat(mailboxManager.search(mailboxQuery, session2))
             .extracting(MailboxMetaData::getPath)
             .containsOnly(mailboxPath1);
+    }
+
+    @Test
+    @Ignore
+    public void searchForMessageShouldReturnMessagesFromAllMyMailboxesIfNoMailboxesArePrecised() throws MailboxException {
+        boolean isRecent = false;
+
+        session = mailboxManager.createSystemSession(USER_1);
+
+        MailboxPath cacahueteFolder = MailboxPath.forUser(USER_1, "CACAHUETE");
+        MailboxId cacahueteMailboxId = mailboxManager.createMailbox(cacahueteFolder, session).get();
+        MessageManager cacahueteMessageManager = mailboxManager.getMailbox(cacahueteMailboxId, session);
+        MessageId cacahueteMessageId = cacahueteMessageManager.appendMessage(
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
+            new Date(),
+            session,
+            isRecent,
+            new Flags())
+            .getMessageId();
+
+        MailboxPath pirouetteFilder = MailboxPath.forUser(USER_1, "PIROUETTE");
+        MailboxId pirouetteMailboxId = mailboxManager.createMailbox(pirouetteFilder, session).get();
+        MessageManager pirouetteMessageManager = mailboxManager.getMailbox(pirouetteMailboxId, session);
+
+        MessageId pirouetteMessageId = pirouetteMessageManager.appendMessage(
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
+            new Date(),
+            session,
+            isRecent,
+            new Flags())
+            .getMessageId();
+
+        MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
+            .from(new SearchQuery())
+            .build();
+
+
+        assertThat(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            .containsOnly(cacahueteMessageId, pirouetteMessageId);
+    }
+
+    @Test
+    @Ignore
+    public void searchForMessageShouldReturnMessagesFromMyDelegatedMailboxes() throws MailboxException {
+        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+
+        boolean isRecent = false;
+
+        session = mailboxManager.createSystemSession(USER_1);
+        MailboxSession sessionFromDelegater = mailboxManager.createSystemSession(USER_2);
+        MailboxPath delegatedMailboxPath = MailboxPath.forUser(USER_2, "SHARED");
+        MailboxId delegatedMailboxId = mailboxManager.createMailbox(delegatedMailboxPath, sessionFromDelegater).get();
+        MessageManager delegatedMessageManager = mailboxManager.getMailbox(delegatedMailboxId, sessionFromDelegater);
+
+        MessageId messageId = delegatedMessageManager.appendMessage(
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
+            new Date(),
+            sessionFromDelegater,
+            isRecent,
+            new Flags())
+            .getMessageId();
+
+        mailboxManager.setRights(delegatedMailboxPath,
+            MailboxACL.EMPTY.apply(MailboxACL.command()
+                .forUser(USER_1)
+                .rights(MailboxACL.Right.Read)
+                .asAddition()),
+            sessionFromDelegater);
+
+        MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
+            .from(new SearchQuery())
+            .build();
+
+        assertThat(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            .containsOnly(messageId);
+    }
+
+    @Test
+    @Ignore
+    public void searchForMessageShouldNotReturnMessagesFromMyDelegatedMailboxesICanNotRead() throws MailboxException {
+        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+
+        boolean isRecent = false;
+
+        session = mailboxManager.createSystemSession(USER_1);
+        MailboxSession sessionFromDelegater = mailboxManager.createSystemSession(USER_2);
+        MailboxPath delegatedMailboxPath = MailboxPath.forUser(USER_2, "SHARED");
+        MailboxId delegatedMailboxId = mailboxManager.createMailbox(delegatedMailboxPath, sessionFromDelegater).get();
+        MessageManager delegatedMessageManager = mailboxManager.getMailbox(delegatedMailboxId, sessionFromDelegater);
+
+        MessageId messageId = delegatedMessageManager.appendMessage(
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
+            new Date(),
+            sessionFromDelegater,
+            isRecent,
+            new Flags())
+            .getMessageId();
+
+        mailboxManager.setRights(delegatedMailboxPath,
+            MailboxACL.EMPTY.apply(MailboxACL.command()
+                .forUser(USER_1)
+                .rights(MailboxACL.Right.Lookup)
+                .asAddition()),
+            sessionFromDelegater);
+
+        MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
+            .from(new SearchQuery())
+            .build();
+
+        assertThat(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            .isEmpty();
+    }
+
+    @Test
+    @Ignore
+    public void searchForMessageShouldOnlySearchInMailboxICanRead() throws MailboxException {
+        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+
+        boolean isRecent = false;
+
+        session = mailboxManager.createSystemSession(USER_1);
+        MailboxSession sessionFromDelegater = mailboxManager.createSystemSession(USER_2);
+        MailboxPath otherMailboxPath = MailboxPath.forUser(USER_2, "OTHER_MAILBOX");
+        MailboxId otherMailboxId = mailboxManager.createMailbox(otherMailboxPath, sessionFromDelegater).get();
+        MessageManager otherMailboxManager = mailboxManager.getMailbox(otherMailboxId, sessionFromDelegater);
+
+        MessageId messageId = otherMailboxManager.appendMessage(
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
+            new Date(),
+            sessionFromDelegater,
+            isRecent,
+            new Flags())
+            .getMessageId();
+
+        MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
+            .from(new SearchQuery())
+            .build();
+
+        assertThat(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            .isEmpty();
+    }
+
+    @Test
+    @Ignore
+    public void searchForMessageShouldIgnoreMailboxThatICanNotRead() throws MailboxException {
+        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+        boolean isRecent = false;
+
+        session = mailboxManager.createSystemSession(USER_1);
+        MailboxSession sessionFromDelegater = mailboxManager.createSystemSession(USER_2);
+        MailboxPath otherMailboxPath = MailboxPath.forUser(USER_2, "SHARED");
+        MailboxId otherMailboxId = mailboxManager.createMailbox(otherMailboxPath, sessionFromDelegater).get();
+        MessageManager otherMessageManager = mailboxManager.getMailbox(otherMailboxId, sessionFromDelegater);
+
+        MessageId messageId = otherMessageManager.appendMessage(
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
+            new Date(),
+            sessionFromDelegater,
+            isRecent,
+            new Flags())
+            .getMessageId();
+
+        MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
+            .from(new SearchQuery())
+            .inMailboxes(otherMailboxId)
+            .build();
+
+        assertThat(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            .isEmpty();
+    }
+
+    @Test
+    @Ignore
+    public void searchForMessageShouldCorrectlyExcludeMailbox() throws MailboxException {
+        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+        boolean isRecent = false;
+
+        session = mailboxManager.createSystemSession(USER_1);
+        MailboxPath otherMailboxPath = MailboxPath.forUser(USER_1, "SHARED");
+        MailboxId otherMailboxId = mailboxManager.createMailbox(otherMailboxPath, session).get();
+        MessageManager otherMessageManager = mailboxManager.getMailbox(otherMailboxId, session);
+
+        MessageId messageId = otherMessageManager.appendMessage(
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
+            new Date(),
+            session,
+            isRecent,
+            new Flags())
+            .getMessageId();
+
+        MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
+            .from(new SearchQuery())
+            .notInMailboxes(otherMailboxId)
+            .build();
+
+        assertThat(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            .isEmpty();
+    }
+
+    @Test
+    @Ignore
+    public void searchForMessageShouldPriorizeExclusionFromInclusion() throws MailboxException {
+        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+        boolean isRecent = false;
+
+        session = mailboxManager.createSystemSession(USER_1);
+        MailboxPath otherMailboxPath = MailboxPath.forUser(USER_1, "SHARED");
+        MailboxId otherMailboxId = mailboxManager.createMailbox(otherMailboxPath, session).get();
+        MessageManager otherMessageManager = mailboxManager.getMailbox(otherMailboxId, session);
+
+        MessageId messageId = otherMessageManager.appendMessage(
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
+            new Date(),
+            session,
+            isRecent,
+            new Flags())
+            .getMessageId();
+
+        MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
+            .from(new SearchQuery())
+            .inMailboxes(otherMailboxId)
+            .notInMailboxes(otherMailboxId)
+            .build();
+
+        assertThat(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            .isEmpty();
+    }
+
+    @Test
+    @Ignore
+    public void searchForMessageShouldOnlySearchInGivenMailbox() throws MailboxException {
+        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+        boolean isRecent = false;
+
+        session = mailboxManager.createSystemSession(USER_1);
+
+        MailboxPath searchedMailboxPath = MailboxPath.forUser(USER_1, "WANTED");
+        MailboxId searchedMailboxId = mailboxManager.createMailbox(searchedMailboxPath, session).get();
+        MessageManager searchedMessageManager = mailboxManager.getMailbox(searchedMailboxId, session);
+
+        MailboxPath otherMailboxPath = MailboxPath.forUser(USER_1, "SHARED");
+        MailboxId otherMailboxId = mailboxManager.createMailbox(otherMailboxPath, session).get();
+        MessageManager otherMessageManager = mailboxManager.getMailbox(otherMailboxId, session);
+
+        otherMessageManager.appendMessage(
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
+            new Date(),
+            session,
+            isRecent,
+            new Flags())
+            .getMessageId();
+
+        MessageId messageId = searchedMessageManager.appendMessage(
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
+            new Date(),
+            session,
+            isRecent,
+            new Flags())
+            .getMessageId();
+
+        MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
+            .from(new SearchQuery())
+            .inMailboxes(searchedMailboxId)
+            .build();
+
+        assertThat(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+            .containsExactly(messageId);
     }
 
     @Test
