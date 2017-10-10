@@ -436,6 +436,29 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
+    public void searchShouldNotDuplicateMailboxWhenReportedAsUserMailboxesAndUserHasRightOnMailboxes() throws MailboxException {
+        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+        MailboxSession session1 = mailboxManager.createSystemSession(USER_1);
+        MailboxPath inbox1 = MailboxPath.inbox(session1);
+        mailboxManager.createMailbox(inbox1, session1);
+        mailboxManager.setRights(inbox1,
+            MailboxACL.EMPTY.apply(MailboxACL.command()
+                .forUser(USER_1)
+                .rights(MailboxACL.Right.Read, MailboxACL.Right.Lookup)
+                .asAddition()),
+            session1);
+
+        MailboxQuery mailboxQuery = MailboxQuery.builder()
+            .matchesAllMailboxNames()
+            .build();
+
+        assertThat(mailboxManager.search(mailboxQuery, session1))
+            .extracting(MailboxMetaData::getPath)
+            .hasSize(1)
+            .containsOnly(inbox1);
+    }
+
+    @Test
     public void searchShouldIncludeDelegatedMailboxes() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
         MailboxSession session1 = mailboxManager.createSystemSession(USER_1);
