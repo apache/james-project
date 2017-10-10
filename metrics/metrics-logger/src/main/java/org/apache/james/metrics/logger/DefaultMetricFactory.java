@@ -24,6 +24,8 @@ import org.apache.james.metrics.api.TimeMetric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.function.Supplier;
+
 public class DefaultMetricFactory implements MetricFactory {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(DefaultMetricFactory.class);
@@ -36,6 +38,16 @@ public class DefaultMetricFactory implements MetricFactory {
     @Override
     public TimeMetric timer(String name) {
         return new DefaultTimeMetric(name);
+    }
+
+    @Override
+    public <T> T withMetric(String name, Supplier<T> operation) {
+        TimeMetric timer = timer(name);
+        try {
+            return operation.get();
+        } finally {
+            timer.stopAndPublish();
+        }
     }
 
 }

@@ -26,11 +26,14 @@ import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 
 abstract public class AbstractChainedProcessor<M extends ImapMessage> implements ImapProcessor {
 
+    public static final Logger LOGGER = LoggerFactory.getLogger(AbstractChainedProcessor.class);
     private final ImapProcessor next;
     private final Class<M> acceptableClass;
 
@@ -58,7 +61,12 @@ abstract public class AbstractChainedProcessor<M extends ImapMessage> implements
         if (isAcceptable) {
             M acceptableMessage = (M) message;
             try (Closeable closeable = addContextToMDC(acceptableMessage)) {
-                doProcess(acceptableMessage, responder, session);
+                try {
+                    doProcess(acceptableMessage, responder, session);
+                } catch (RuntimeException e) {
+                    LOGGER.error("Error while processing IMAP request", e);
+                    throw e;
+                }
             } catch (IOException e) {
                 throw Throwables.propagate(e);
             }
