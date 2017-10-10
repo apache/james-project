@@ -71,14 +71,14 @@ public class GetVacationResponseMethod implements Method {
         Preconditions.checkArgument(request instanceof GetVacationRequest);
 
         return metricFactory.withMetric(JMAP_PREFIX + METHOD_NAME.getName(),
-            () -> MDCBuilder.withMdc(
-                MDCBuilder.create()
-                    .addContext(MDCBuilder.ACTION, "VACATION"),
-                () -> Stream.of(JmapResponse.builder()
-                    .clientId(clientId)
-                    .responseName(RESPONSE_NAME)
-                    .response(process(mailboxSession))
-                    .build())));
+            MDCBuilder.create()
+                .addContext(MDCBuilder.ACTION, "VACATION")
+                .wrapArround(
+                    () -> Stream.of(JmapResponse.builder()
+                        .clientId(clientId)
+                        .responseName(RESPONSE_NAME)
+                        .response(process(mailboxSession))
+                        .build())));
     }
 
     private GetVacationResponse process(MailboxSession mailboxSession) {

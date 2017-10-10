@@ -77,11 +77,11 @@ public class SetVacationResponseMethod implements Method {
         SetVacationRequest setVacationRequest = (SetVacationRequest) request;
 
         return metricFactory.withMetric(JMAP_PREFIX + METHOD_NAME.getName(),
-            () -> MDCBuilder.withMdc(
-                MDCBuilder.create()
-                    .addContext(MDCBuilder.ACTION, "SET_VACATION")
-                    .addContext("update", setVacationRequest.getUpdate()),
-                () -> process(clientId, mailboxSession, setVacationRequest)));
+            MDCBuilder.create()
+                .addContext(MDCBuilder.ACTION, "SET_VACATION")
+                .addContext("update", setVacationRequest.getUpdate())
+                .wrapArround(
+                    () -> process(clientId, mailboxSession, setVacationRequest)));
     }
 
     private Stream<JmapResponse> process(ClientId clientId, MailboxSession mailboxSession, SetVacationRequest setVacationRequest) {

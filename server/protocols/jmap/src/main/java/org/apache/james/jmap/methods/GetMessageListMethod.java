@@ -93,20 +93,19 @@ public class GetMessageListMethod implements Method {
 
         GetMessageListRequest messageListRequest = (GetMessageListRequest) request;
 
-        return metricFactory.withMetric(JMAP_PREFIX + METHOD_NAME.getName(),
-            () -> MDCBuilder.withMdc(
-                MDCBuilder.create()
-                    .addContext(MDCBuilder.ACTION, "GET_MESSAGE_LIST")
-                    .addContext("accountId", messageListRequest.getAccountId())
-                    .addContext("limit", messageListRequest.getLimit())
-                    .addContext("anchor", messageListRequest.getAnchor())
-                    .addContext("offset", messageListRequest.getAnchorOffset())
-                    .addContext("properties", messageListRequest.getFetchMessageProperties())
-                    .addContext("position", messageListRequest.getPosition())
-                    .addContext("filters", messageListRequest.getFilter())
-                    .addContext("sorts", messageListRequest.getSort())
-                    .addContext("isFetchMessage", messageListRequest.isFetchMessages())
-                    .addContext("isCollapseThread", messageListRequest.isCollapseThreads()),
+        return metricFactory.withMetric(JMAP_PREFIX + METHOD_NAME.getName(), MDCBuilder.create()
+            .addContext(MDCBuilder.ACTION, "GET_MESSAGE_LIST")
+            .addContext("accountId", messageListRequest.getAccountId())
+            .addContext("limit", messageListRequest.getLimit())
+            .addContext("anchor", messageListRequest.getAnchor())
+            .addContext("offset", messageListRequest.getAnchorOffset())
+            .addContext("properties", messageListRequest.getFetchMessageProperties())
+            .addContext("position", messageListRequest.getPosition())
+            .addContext("filters", messageListRequest.getFilter())
+            .addContext("sorts", messageListRequest.getSort())
+            .addContext("isFetchMessage", messageListRequest.isFetchMessages())
+            .addContext("isCollapseThread", messageListRequest.isCollapseThreads())
+            .wrapArround(
                 () -> process(clientId, mailboxSession, messageListRequest)));
     }
 

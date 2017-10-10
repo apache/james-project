@@ -63,18 +63,18 @@ public class SetMessagesMethod implements Method {
         SetMessagesRequest setMessagesRequest = (SetMessagesRequest) request;
 
         return metricFactory.withMetric(JMAP_PREFIX + METHOD_NAME.getName(),
-            () -> MDCBuilder.withMdc(
-                MDCBuilder.create()
-                    .addContext(MDCBuilder.ACTION, "SET_MESSAGES")
-                    .addContext("accountId", setMessagesRequest.getAccountId())
-                    .addContext("create", setMessagesRequest.getCreate())
-                    .addContext("destroy", setMessagesRequest.getDestroy())
-                    .addContext("ifInState", setMessagesRequest.getIfInState()),
-                () ->  Stream.of(
-                    JmapResponse.builder().clientId(clientId)
-                        .response(setMessagesResponse(setMessagesRequest, mailboxSession))
-                        .responseName(RESPONSE_NAME)
-                        .build())));
+            MDCBuilder.create()
+                .addContext(MDCBuilder.ACTION, "SET_MESSAGES")
+                .addContext("accountId", setMessagesRequest.getAccountId())
+                .addContext("create", setMessagesRequest.getCreate())
+                .addContext("destroy", setMessagesRequest.getDestroy())
+                .addContext("ifInState", setMessagesRequest.getIfInState())
+                .wrapArround(
+                    () ->  Stream.of(
+                        JmapResponse.builder().clientId(clientId)
+                            .response(setMessagesResponse(setMessagesRequest, mailboxSession))
+                            .responseName(RESPONSE_NAME)
+                            .build())));
     }
 
     private SetMessagesResponse setMessagesResponse(SetMessagesRequest request, MailboxSession mailboxSession) {

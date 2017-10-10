@@ -66,18 +66,19 @@ public class SetMailboxesMethod implements Method {
         Preconditions.checkArgument(request instanceof SetMailboxesRequest);
 
         SetMailboxesRequest setMailboxesRequest = (SetMailboxesRequest) request;
+
         return metricFactory.withMetric(JMAP_PREFIX + METHOD_NAME.getName(),
-            () -> MDCBuilder.withMdc(
-                MDCBuilder.create()
-                    .addContext(MDCBuilder.ACTION, "SET_MAILBOXES")
-                    .addContext("create", setMailboxesRequest.getCreate())
-                    .addContext("update", setMailboxesRequest.getUpdate())
-                    .addContext("destroy", setMailboxesRequest.getDestroy()),
-                () -> Stream.of(
-                    JmapResponse.builder().clientId(clientId)
-                        .response(setMailboxesResponse(setMailboxesRequest, mailboxSession))
-                        .responseName(RESPONSE_NAME)
-                        .build())));
+            MDCBuilder.create()
+                .addContext(MDCBuilder.ACTION, "SET_MAILBOXES")
+                .addContext("create", setMailboxesRequest.getCreate())
+                .addContext("update", setMailboxesRequest.getUpdate())
+                .addContext("destroy", setMailboxesRequest.getDestroy())
+                .wrapArround(
+                    () -> Stream.of(
+                        JmapResponse.builder().clientId(clientId)
+                            .response(setMailboxesResponse(setMailboxesRequest, mailboxSession))
+                            .responseName(RESPONSE_NAME)
+                            .build())));
     }
 
     private SetMailboxesResponse setMailboxesResponse(SetMailboxesRequest request, MailboxSession mailboxSession) {

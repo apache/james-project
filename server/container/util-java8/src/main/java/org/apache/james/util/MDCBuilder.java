@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +33,6 @@ import org.slf4j.MDC;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -115,6 +115,14 @@ public class MDCBuilder {
                 .collect(Guavate.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue)))
             .putAll(contextMap.build())
             .build();
+    }
+
+    public <T> T execute(Supplier<T> supplier) {
+        return MDCBuilder.withMdc(this, supplier);
+    }
+
+    public <T> Supplier<T> wrapArround(Supplier<T> supplier) {
+        return () -> execute(supplier);
     }
 
     public Closeable build() {
