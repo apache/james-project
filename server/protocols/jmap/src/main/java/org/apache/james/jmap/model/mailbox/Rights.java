@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.function.BinaryOperator;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
@@ -95,6 +96,10 @@ public class Rights {
     public static class Username {
         public static Username forMailboxPath(MailboxPath mailboxPath) {
             return new Username(mailboxPath.getUser());
+        }
+
+        public static Username fromSession(MailboxSession mailboxSession) {
+            return new Username(mailboxSession.getUser().getUserName());
         }
 
         private final String value;

@@ -107,7 +107,7 @@ public class MailboxFactory {
 
         Rights rights = Rights.fromACL(metaData.getACL())
             .removeEntriesFor(Username.forMailboxPath(messageManager.getMailboxPath()));
-        Username username = new Username(mailboxSession.getUser().getUserName());
+        Username username = Username.fromSession(mailboxSession);
 
         return Mailbox.builder()
             .id(messageManager.getId())
@@ -129,11 +129,10 @@ public class MailboxFactory {
     }
 
     private MailboxNamespace getNamespace(MailboxPath mailboxPath, boolean isOwner) {
-            String mailboxPathUser = mailboxPath.getUser();
         if (isOwner) {
             return MailboxNamespace.personal();
         }
-        return MailboxNamespace.delegated(mailboxPathUser);
+        return MailboxNamespace.delegated(mailboxPath.getUser());
     }
 
     private boolean isSameUser(MailboxSession mailboxSession, MailboxPath mailboxPath) {
