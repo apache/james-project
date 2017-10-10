@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexResponse;
@@ -38,6 +39,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 public class ElasticSearchIndexer {
+    private static int DEBUG_MAX_LENGTH_CONTENT = 1000;
 
     public static class UpdatedRepresentation {
         private final String id;
@@ -99,7 +101,9 @@ public class ElasticSearchIndexer {
     
     public IndexResponse indexMessage(String id, String content) {
         checkArgument(content);
-        LOGGER.debug("Indexing {}: {}", id, content);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Indexing {}: {}", id, StringUtils.left(content, DEBUG_MAX_LENGTH_CONTENT));
+        }
         return client.prepareIndex(indexName.getValue(), typeName.getValue(), id)
             .setSource(content)
             .get();
