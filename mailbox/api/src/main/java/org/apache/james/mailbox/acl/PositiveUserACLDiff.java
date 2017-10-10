@@ -23,16 +23,16 @@ import java.util.stream.Stream;
 
 import org.apache.james.mailbox.model.MailboxACL;
 
-public class ACLDiff {
+public class PositiveUserACLDiff {
 
-    public static ACLDiff from(MailboxACL oldACL, MailboxACL newACL) {
-        return new ACLDiff(oldACL, newACL);
+    public static PositiveUserACLDiff computeDiff(MailboxACL oldACL, MailboxACL newACL) {
+        return new PositiveUserACLDiff(oldACL, newACL);
     }
 
     private final MailboxACL oldACL;
     private final MailboxACL newACL;
 
-    private ACLDiff(MailboxACL oldACL, MailboxACL newACL) {
+    private PositiveUserACLDiff(MailboxACL oldACL, MailboxACL newACL) {
         this.oldACL = oldACL;
         this.newACL = newACL;
     }

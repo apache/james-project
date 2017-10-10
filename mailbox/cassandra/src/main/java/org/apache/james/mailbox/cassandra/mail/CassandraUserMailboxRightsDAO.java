@@ -30,7 +30,6 @@ import static org.apache.james.mailbox.cassandra.table.CassandraUserMailboxRight
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,8 +38,8 @@ import javax.inject.Inject;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
-import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.acl.PositiveUserACLChanged;
+import org.apache.james.mailbox.acl.PositiveUserACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -100,11 +99,11 @@ public class CassandraUserMailboxRightsDAO {
     }
 
     public CompletableFuture<Void> update(CassandraId cassandraId, PositiveUserACLChanged positiveUserAclChanged) {
-        ACLDiff aclDiff = ACLDiff.from(positiveUserAclChanged.getOldACL(), positiveUserAclChanged.getNewACL());
+        PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(positiveUserAclChanged.getOldACL(), positiveUserAclChanged.getNewACL());
         return CompletableFuture.allOf(
-            addAll(cassandraId, aclDiff.addedEntries()),
-            removeAll(cassandraId, aclDiff.removedEntries()),
-            addAll(cassandraId, aclDiff.changedEntries()));
+            addAll(cassandraId, positiveUserAclDiff.addedEntries()),
+            removeAll(cassandraId, positiveUserAclDiff.removedEntries()),
+            addAll(cassandraId, positiveUserAclDiff.changedEntries()));
     }
 
     private CompletableFuture<Stream<Void>> removeAll(CassandraId cassandraId, Stream<MailboxACL.Entry> removedEntries) {
