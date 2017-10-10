@@ -20,9 +20,12 @@
 package org.apache.james.mailbox.store.probe;
 
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxPath;
 
 public interface ACLProbe {
     void replaceRights(MailboxPath mailboxPath, String targetUser, Rfc4314Rights rights) throws MailboxException;
+
+    MailboxACL retrieveRights(MailboxPath mailboxPath) throws MailboxException;
 }

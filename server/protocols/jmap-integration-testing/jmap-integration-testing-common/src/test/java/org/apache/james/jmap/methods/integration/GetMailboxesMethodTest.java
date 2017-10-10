@@ -272,6 +272,27 @@ public abstract class GetMailboxesMethodTest {
     }
 
     @Test
+    public void getMailboxesShouldRemoveOwnerRight() throws Exception {
+        String mailboxName = "myMailbox";
+        String myMailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, mailboxName).serialize();
+        String targetUser1 = "toUser1@domain.com";
+        Mailbox myMailbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, alice, mailboxName);
+        aclProbe.replaceRights(myMailbox.generateAssociatedPath(), alice, new Rfc4314Rights(Right.Read, Right.Administer));
+        aclProbe.replaceRights(myMailbox.generateAssociatedPath(), targetUser1, new Rfc4314Rights(Right.Read, Right.Lookup));
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + myMailboxId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(FIRST_MAILBOX + ".name", equalTo(mailboxName))
+            .body(FIRST_MAILBOX + ".sharedWith", hasEntry(targetUser1, ImmutableList.of(LOOKUP, READ)));
+    }
+
+    @Test
     public void getMailboxShouldReturnEmptySharedWithWhenNoDelegation() throws Exception {
         String mailboxName = "myMailbox";
         String myMailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, mailboxName).serialize();

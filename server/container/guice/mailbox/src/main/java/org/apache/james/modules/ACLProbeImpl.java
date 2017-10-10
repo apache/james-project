@@ -23,6 +23,7 @@ import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.ACLCommand;
@@ -32,6 +33,7 @@ import org.apache.james.mailbox.store.probe.ACLProbe;
 import org.apache.james.utils.GuiceProbe;
 
 public class ACLProbeImpl implements GuiceProbe, ACLProbe {
+    private static final boolean RESET_RECENT = false;
     private final MailboxManager mailboxManager;
 
     @Inject
@@ -45,5 +47,14 @@ public class ACLProbeImpl implements GuiceProbe, ACLProbe {
 
         ACLCommand command = MailboxACL.command().forUser(targetUser).rights(rights).asReplacement();
         mailboxManager.applyRightsCommand(mailboxPath, command, mailboxSession);
+    }
+
+    @Override
+    public MailboxACL retrieveRights(MailboxPath mailboxPath) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(mailboxPath.getUser());
+
+        return mailboxManager.getMailbox(mailboxPath, mailboxSession)
+            .getMetaData(RESET_RECENT, mailboxSession, MessageManager.MetaData.FetchGroup.NO_COUNT)
+            .getACL();
     }
 }

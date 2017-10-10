@@ -44,11 +44,14 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.DefaultMailboxes;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
+import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
@@ -1464,6 +1467,36 @@ public abstract class SetMailboxesMethodTest {
             .body(NAME, equalTo("mailboxes"))
             .body(FIRST_MAILBOX + ".name", equalTo(myBox))
             .body(FIRST_MAILBOX + ".sharedWith", hasEntry(user2, ImmutableList.of(ADMINISTER, WRITE)));
+    }
+
+    @Test
+    public void updateShouldFilterOwnerACL() throws Exception {
+        String myBox = "myBox";
+        String user2 = "user2";
+        MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, myBox);
+
+        with()
+            .header("Authorization", accessToken.serialize())
+            .body("[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"update\": {" +
+                "        \"" + mailboxId.serialize() + "\" : {" +
+                "          \"sharedWith\" : {\"" + username + "\": [\"a\", \"w\"]," +
+                "                            \"" + user2 + "\": [\"a\", \"w\"]}" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]")
+            .post("/jmap");
+
+        MailboxACL acl = jmapServer.getProbe(ACLProbeImpl.class)
+            .retrieveRights(MailboxPath.forUser(username, myBox));
+
+        assertThat(acl.getEntries())
+            .doesNotContainKeys(MailboxACL.EntryKey.createUserEntryKey(username));
     }
 
     @Test

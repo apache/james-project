@@ -31,6 +31,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.util.GuavaUtils;
 import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
@@ -88,6 +89,10 @@ public class Rights {
     }
 
     public static class Username {
+        public static Username forMailboxPath(MailboxPath mailboxPath) {
+            return new Username(mailboxPath.getUser());
+        }
+
         private final String value;
 
         public Username(String value) {
@@ -206,7 +211,7 @@ public class Rights {
             rights.asMap()
                 .entrySet()
                 .stream()
-                .filter(entry -> entry.getKey().equals(username))
+                .filter(entry -> !entry.getKey().equals(username))
                 .flatMap(entry -> entry.getValue()
                     .stream()
                     .map(v -> Pair.of(entry.getKey(), v)))
