@@ -244,7 +244,7 @@ public abstract class AbstractMessageSearchIndexTest {
         List<MessageId> result = messageSearchIndex.search(session,
             ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
             searchQuery,
-            20);
+            LIMIT);
 
         assertThat(result)
             .hasSize(12)
@@ -276,7 +276,7 @@ public abstract class AbstractMessageSearchIndexTest {
         List<MessageId> result = messageSearchIndex.search(session,
             ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
             searchQuery,
-            20);
+            LIMIT);
 
         assertThat(result)
             .containsOnly(m1.getMessageId(),
@@ -308,13 +308,14 @@ public abstract class AbstractMessageSearchIndexTest {
 
         SearchQuery searchQuery = new SearchQuery();
 
+        int limit = 10;
         List<MessageId> result = messageSearchIndex.search(session,
             ImmutableList.of(mailbox2.getMailboxId(), mailbox.getMailboxId()),
             searchQuery,
-            10);
+            limit);
 
         assertThat(result)
-            .hasSize(10);
+            .hasSize(limit);
     }
 
     @Test
@@ -346,13 +347,14 @@ public abstract class AbstractMessageSearchIndexTest {
 
         await();
 
+        int limit = 13;
         List<MessageId> result = messageSearchIndex.search(session,
             ImmutableList.of(mailbox2.getMailboxId(), mailbox.getMailboxId()),
             searchQuery,
-            13);
+            limit);
 
         assertThat(result)
-                .hasSize(13);
+                .hasSize(limit);
     }
 
     @Test(expected = IllegalArgumentException.class)
