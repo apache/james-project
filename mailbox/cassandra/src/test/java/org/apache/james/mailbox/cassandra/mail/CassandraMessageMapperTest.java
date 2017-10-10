@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.ContainerLifecycleConfiguration;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
@@ -40,11 +41,21 @@ import org.apache.james.mailbox.store.mail.model.MessageMapperTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.rules.TestRule;
 
 public class CassandraMessageMapperTest extends MessageMapperTest {
     
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
+
+    public static ContainerLifecycleConfiguration cassandraLifecycleConfiguration = ContainerLifecycleConfiguration.builder()
+        .iterationsBetweenRestart(20)
+        .container(cassandraServer.getRawContainer())
+        .build();
+
+    @Rule
+    public TestRule cassandraLifecycleTestRule = cassandraLifecycleConfiguration.asTestRule();
+
     private CassandraCluster cassandra;
 
     @Before
