@@ -210,7 +210,11 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
         MailboxPath originMailboxPath = mailboxManager.getMailbox(mailbox.getId(), mailboxSession).getMailboxPath();
         MailboxPath destinationMailboxPath = computeNewMailboxPath(mailbox, originMailboxPath, updateRequest, mailboxSession);
         if (updateRequest.getSharedWith().isPresent()) {
-            mailboxManager.setRights(originMailboxPath, updateRequest.getSharedWith().get().toMailboxAcl(), mailboxSession);
+            mailboxManager.setRights(originMailboxPath,
+                updateRequest.getSharedWith()
+                    .get()
+                    .toMailboxAcl(),
+                mailboxSession);
         }
         if (!originMailboxPath.equals(destinationMailboxPath)) {
             mailboxManager.renameMailbox(originMailboxPath, destinationMailboxPath, mailboxSession);

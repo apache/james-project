@@ -35,6 +35,8 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 public class RightsTest {
 
     public static final boolean NEGATIVE = true;
+    public static final Rights.Username USERNAME = new Rights.Username("username");
+    public static final Rights.Username OTHER_USERNAME = new Rights.Username("otherUsername");
 
     @Test
     public void rightsShouldMatchBeanContract() {
@@ -161,4 +163,33 @@ public class RightsTest {
                 new Entry(user2, MailboxACL.Right.PerformExpunge, MailboxACL.Right.Lookup)));
     }
 
+    @Test
+    public void removeEntriesForShouldNotModifyEmptyRights() {
+        assertThat(Rights.EMPTY.removeEntriesFor(USERNAME))
+            .isEqualTo(Rights.EMPTY);
+    }
+
+    @Test
+    public void removeEntriesForShouldRemoveUsernameEntryWhenPresent() {
+        Rights rights = Rights.builder()
+            .delegateTo(USERNAME, Rights.Right.Lookup)
+            .build();
+        assertThat(rights.removeEntriesFor(USERNAME))
+            .isEqualTo(Rights.EMPTY);
+    }
+
+    @Test
+    public void removeEntriesForShouldOnlyRemoveSpecifiedUsername() {
+        Rights rights = Rights.builder()
+            .delegateTo(USERNAME, Rights.Right.Lookup)
+            .delegateTo(OTHER_USERNAME, Rights.Right.Lookup)
+            .build();
+
+        Rights expected = Rights.builder()
+            .delegateTo(OTHER_USERNAME, Rights.Right.Lookup)
+            .build();
+
+        assertThat(rights.removeEntriesFor(USERNAME))
+            .isEqualTo(expected);
+    }
 }

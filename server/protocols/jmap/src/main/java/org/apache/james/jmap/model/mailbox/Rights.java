@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
@@ -198,6 +199,18 @@ public class Rights {
     @JsonAnyGetter
     public Map<Username, Collection<Right>> getRights() {
         return rights.asMap();
+    }
+
+    public Rights removeEntriesFor(Username username) {
+        return new Rights(
+            rights.asMap()
+                .entrySet()
+                .stream()
+                .filter(entry -> entry.getKey().equals(username))
+                .flatMap(entry -> entry.getValue()
+                    .stream()
+                    .map(v -> Pair.of(entry.getKey(), v)))
+                .collect(Guavate.toImmutableListMultimap(Pair::getKey, Pair::getValue)));
     }
 
     public MailboxACL toMailboxAcl() {
