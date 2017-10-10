@@ -28,10 +28,8 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -49,12 +47,11 @@ public class QueryConverter {
         this.criterionConverter = criterionConverter;
     }
 
-    public QueryBuilder from(List<User> users, MultimailboxesSearchQuery query) {
+    public QueryBuilder from(Collection<MailboxId> mailboxIds, SearchQuery query) {
         BoolQueryBuilder boolQueryBuilder = boolQuery()
-            .must(generateQueryBuilder(query.getSearchQuery()))
-            .filter(usersQuery(users));
-        mailboxesQuery(query.getInMailboxes()).map(boolQueryBuilder::filter);
-        mailboxesQuery(query.getNotInMailboxes()).map(boolQueryBuilder::mustNot);
+            .must(generateQueryBuilder(query));
+
+        mailboxesQuery(mailboxIds).map(boolQueryBuilder::filter);
         return boolQueryBuilder;
     }
 
@@ -67,13 +64,6 @@ public class QueryConverter {
         } else {
             return criterionConverter.convertCriterion(new SearchQuery.ConjunctionCriterion(SearchQuery.Conjunction.AND, criteria));
         }
-    }
-
-    private QueryBuilder usersQuery(List<User> users) {
-        ImmutableList<String> usernames = users.stream()
-                .map(User::getUserName)
-                .collect(Guavate.toImmutableList());
-        return termsQuery(JsonMessageConstants.USERS, usernames);
     }
 
     private Optional<QueryBuilder> mailboxesQuery(Collection<MailboxId> mailboxIds) {

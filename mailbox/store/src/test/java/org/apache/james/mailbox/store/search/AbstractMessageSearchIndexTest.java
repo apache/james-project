@@ -8,6 +8,7 @@
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
  *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ m10 = otherInboxMessageManager.appendMessage(
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -36,6 +37,8 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
@@ -95,6 +98,8 @@ public abstract class AbstractMessageSearchIndexTest {
     private ComposedMessageId mailWithInlinedAttachment;
     private ComposedMessageId m10;
     private StoreMessageManager myFolderMessageManager;
+    private MailboxPath inboxPath;
+    private MailboxPath otherInboxPath;
 
 
     @Before
@@ -104,8 +109,8 @@ public abstract class AbstractMessageSearchIndexTest {
         session = storeMailboxManager.createSystemSession(USERNAME);
         otherSession = storeMailboxManager.createSystemSession(OTHERUSER);
 
-        MailboxPath inboxPath = MailboxPath.forUser(USERNAME, INBOX);
-        MailboxPath otherInboxPath = MailboxPath.forUser(OTHERUSER, INBOX);
+        inboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        otherInboxPath = MailboxPath.forUser(OTHERUSER, INBOX);
 
         storeMailboxManager.createMailbox(inboxPath, session);
         storeMailboxManager.createMailbox(otherInboxPath, otherSession);
@@ -236,10 +241,12 @@ public abstract class AbstractMessageSearchIndexTest {
 
         SearchQuery searchQuery = new SearchQuery();
 
-        assertThat(messageSearchIndex.search(session,
-            MultimailboxesSearchQuery.from(searchQuery)
-                .inMailboxes(mailbox.getMailboxId(), mailbox2.getMailboxId())
-                .build(), 20))
+        List<MessageId> result = messageSearchIndex.search(session,
+            ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
+            searchQuery,
+            20);
+
+        assertThat(result)
             .hasSize(12)
             .containsOnly(m1.getMessageId(),
                 m2.getMessageId(),
@@ -266,10 +273,12 @@ public abstract class AbstractMessageSearchIndexTest {
 
         SearchQuery searchQuery = new SearchQuery();
 
-        assertThat(messageSearchIndex.search(session,
-            MultimailboxesSearchQuery.from(searchQuery)
-                .inMailboxes(mailbox.getMailboxId(), mailbox2.getMailboxId())
-                .build(), 20))
+        List<MessageId> result = messageSearchIndex.search(session,
+            ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
+            searchQuery,
+            20);
+
+        assertThat(result)
             .containsOnly(m1.getMessageId(),
                 m2.getMessageId(),
                 m3.getMessageId(),
@@ -299,11 +308,26 @@ public abstract class AbstractMessageSearchIndexTest {
 
         SearchQuery searchQuery = new SearchQuery();
 
-        assertThat(messageSearchIndex.search(session,
-            MultimailboxesSearchQuery.from(searchQuery)
-                .inMailboxes(mailbox2.getMailboxId(), mailbox.getMailboxId())
-                .build(), 10))
+        List<MessageId> result = messageSearchIndex.search(session,
+            ImmutableList.of(mailbox2.getMailboxId(), mailbox.getMailboxId()),
+            searchQuery,
+            10);
+
+        assertThat(result)
             .hasSize(10);
+    }
+
+    @Test
+    public void whenEmptyListOfMailboxGivenSearchShouldReturnEmpty() throws MailboxException {
+        SearchQuery searchQuery = new SearchQuery();
+
+        List<MessageId> result = messageSearchIndex.search(session,
+            ImmutableList.of(),
+            searchQuery,
+            LIMIT);
+
+        assertThat(result)
+            .isEmpty();
     }
 
     @Test
@@ -322,10 +346,12 @@ public abstract class AbstractMessageSearchIndexTest {
 
         await();
 
-        assertThat(messageSearchIndex.search(session,
-                MultimailboxesSearchQuery.from(searchQuery)
-                        .inMailboxes(mailbox2.getMailboxId(), mailbox.getMailboxId())
-                        .build(), 13))
+        List<MessageId> result = messageSearchIndex.search(session,
+            ImmutableList.of(mailbox2.getMailboxId(), mailbox.getMailboxId()),
+            searchQuery,
+            13);
+
+        assertThat(result)
                 .hasSize(13);
     }
 
@@ -334,15 +360,6 @@ public abstract class AbstractMessageSearchIndexTest {
         SearchQuery searchQuery = new SearchQuery();
         MailboxSession session = null;
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
-            .isEmpty();
-    }
-
-    @Test
-    public void searchShouldReturnEmptyWhenUserDontMatch() throws MailboxException {
-        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.MultimailboxSearch));
-        MailboxSession otherUserSession = storeMailboxManager.createSystemSession("otherUser");
-        SearchQuery searchQuery = new SearchQuery();
-        assertThat(messageSearchIndex.search(otherUserSession, mailbox, searchQuery))
             .isEmpty();
     }
 
@@ -450,7 +467,11 @@ public abstract class AbstractMessageSearchIndexTest {
     public void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInAllMailboxes() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsSet(Flags.Flag.SEEN));
 
-        List<MessageId> actual = messageSearchIndex.search(session, MultimailboxesSearchQuery.from(searchQuery).build(), LIMIT);
+        List<MessageId> actual = messageSearchIndex.search(
+            session,
+            ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
+            searchQuery,
+            LIMIT);
 
         assertThat(actual).containsOnly(mOther.getMessageId(), m6.getMessageId());
     }
@@ -458,13 +479,8 @@ public abstract class AbstractMessageSearchIndexTest {
     @Test
     public void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInOneMailbox() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsSet(Flags.Flag.SEEN));
-        MultimailboxesSearchQuery query = 
-                MultimailboxesSearchQuery
-                    .from(searchQuery)
-                    .inMailboxes(mailbox.getMailboxId())
-                    .build();
 
-        List<MessageId> actual = messageSearchIndex.search(session, query, LIMIT);
+        List<MessageId> actual = messageSearchIndex.search(session, ImmutableList.of(mailbox.getMailboxId()), searchQuery, LIMIT);
 
         assertThat(actual).containsOnly(m6.getMessageId());
     }
@@ -472,25 +488,12 @@ public abstract class AbstractMessageSearchIndexTest {
     @Test
     public void multimailboxSearchShouldReturnUidOfMessageWithExpectedFromInTwoMailboxes() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.address(AddressType.From, "murari"));
-        MultimailboxesSearchQuery query = 
-                MultimailboxesSearchQuery
-                    .from(searchQuery)
-                    .inMailboxes(mailbox.getMailboxId(), mailbox2.getMailboxId())
-                    .build();
-        List<MessageId> actual = messageSearchIndex.search(session, query, LIMIT);
 
-        assertThat(actual).containsOnly(mOther.getMessageId(), m8.getMessageId());
-    }
-
-    @Test
-    public void multimailboxSearchShouldReturnUidOfMessageWithExpectedFromInAllMailboxes() throws MailboxException {
-        SearchQuery searchQuery = new SearchQuery(SearchQuery.address(AddressType.From, "murari"));
-        MultimailboxesSearchQuery query = 
-                MultimailboxesSearchQuery
-                    .from(searchQuery)
-                    .build();
-
-        List<MessageId> actual = messageSearchIndex.search(session, query, LIMIT);
+        List<MessageId> actual = messageSearchIndex.search(
+            session,
+            ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
+            searchQuery,
+            LIMIT);
 
         assertThat(actual).containsOnly(mOther.getMessageId(), m8.getMessageId());
     }
@@ -498,13 +501,12 @@ public abstract class AbstractMessageSearchIndexTest {
     @Test
     public void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInTwoMailboxes() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsSet(Flags.Flag.SEEN));
-        MultimailboxesSearchQuery query = 
-                MultimailboxesSearchQuery
-                    .from(searchQuery)
-                    .inMailboxes(mailbox.getMailboxId(), mailbox2.getMailboxId())
-                    .build();
 
-        List<MessageId> actual = messageSearchIndex.search(session, query, LIMIT);
+        List<MessageId> actual = messageSearchIndex.search(
+            session,
+            ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
+            searchQuery,
+            LIMIT);
 
         assertThat(actual).containsOnly(mOther.getMessageId(), m6.getMessageId());
     }
@@ -512,17 +514,31 @@ public abstract class AbstractMessageSearchIndexTest {
     @Test
     public void multimailboxSearchShouldLimitTheSize() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsSet(Flags.Flag.SEEN));
-        MultimailboxesSearchQuery query =
-            MultimailboxesSearchQuery
-                .from(searchQuery)
-                .inMailboxes(mailbox.getMailboxId(), mailbox2.getMailboxId())
-                .build();
 
         long limit = 1;
-        List<MessageId> actual = messageSearchIndex.search(session, query, limit);
+        List<MessageId> actual = messageSearchIndex.search(
+            session,
+            ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
+            searchQuery,
+            limit);
         // Two messages matches this query : mOther and m6
 
         assertThat(actual).hasSize(1);
+    }
+
+    @Test
+    public void multimailboxSearchShouldWorkWithOtherUserMailbox() throws  MailboxException {
+        Assume.assumeTrue(storeMailboxManager.hasCapability(MailboxManager.MailboxCapabilities.ACL));
+        SearchQuery searchQuery = new SearchQuery();
+
+        long limit = 256;
+        List<MessageId> actual = messageSearchIndex.search(
+            session,
+            ImmutableList.of(otherMailbox.getMailboxId()),
+            searchQuery,
+            limit);
+
+        assertThat(actual).contains(m10.getMessageId());
     }
 
 
@@ -1183,45 +1199,14 @@ public abstract class AbstractMessageSearchIndexTest {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.all());
         searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Arrival)));
 
-        List<MessageId> actual = messageSearchIndex.search(session, MultimailboxesSearchQuery.from(searchQuery).build(), LIMIT);
+        List<MessageId> actual = messageSearchIndex.search(
+            session,
+            ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
+            searchQuery,
+            LIMIT);
 
         assertThat(actual).containsOnly(m1.getMessageId(), m2.getMessageId(), m3.getMessageId(), m4.getMessageId(), m5.getMessageId(),
             m6.getMessageId(), m7.getMessageId(), m8.getMessageId(), m9.getMessageId(), mOther.getMessageId(), mailWithAttachment.getMessageId(), mailWithInlinedAttachment.getMessageId());
-    }
-
-    @Test
-    public void searchInMultiMailboxShouldReturnMessagesBelongingToUserSession() throws Exception {
-        SearchQuery query = new SearchQuery(SearchQuery.all());
-
-        MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery.from(query).build();
-
-        assertThat(messageSearchIndex.search(otherSession, multiMailboxesQuery, LIMIT))
-            .hasSize(1)
-            .containsOnly(m10.getMessageId());
-    }
-
-    @Test
-    public void searchInMultiMailboxShouldNotReturnMessagesBelongingToAnotherUserSession() throws Exception {
-        SearchQuery query = new SearchQuery(SearchQuery.all());
-
-        MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery.from(query).build();
-
-        assertThat(messageSearchIndex.search(session, multiMailboxesQuery, LIMIT))
-            .doesNotContain(m10.getMessageId());
-    }
-
-    @Test
-    public void searchShouldFilterMailboxBelongingToMailboxSession() throws Exception {
-        SearchQuery searchQuery = new SearchQuery();
-
-        assertThat(messageSearchIndex.search(otherSession, otherMailbox, searchQuery)).containsOnly(m10.getUid());
-    }
-
-    @Test
-    public void searchShouldReturnEmptyWhenMailboxBelongingToAnotherMailboxSession() throws Exception {
-        SearchQuery searchQuery = new SearchQuery();
-
-        assertThat(messageSearchIndex.search(otherSession, mailbox, searchQuery)).isEmpty();
     }
 
     @Test

@@ -50,7 +50,6 @@ import org.apache.james.mailbox.exception.UnsupportedSearchException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AllCriterion;
 import org.apache.james.mailbox.model.SearchQuery.AttachmentCriterion;
@@ -102,10 +101,8 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.NumericRangeQuery;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
@@ -126,7 +123,6 @@ import org.slf4j.LoggerFactory;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * Lucene based {@link ListeningMessageSearchIndex} which offers message searching via a Lucene index
@@ -364,13 +360,19 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private final MailboxId.Factory mailboxIdFactory;
     private final MessageId.Factory messageIdFactory;
     private final IndexWriter writer;
-    
+
     private int maxQueryResults = DEFAULT_MAX_QUERY_RESULTS;
 
     private boolean suffixMatch = false;
 
     @Inject
-    public LuceneMessageSearchIndex(MessageMapperFactory factory, MailboxId.Factory mailboxIdFactory, Directory directory, MessageId.Factory messageIdFactory, MailboxManager mailboxManager) throws CorruptIndexException, LockObtainFailedException, IOException {
+    public LuceneMessageSearchIndex(
+        MessageMapperFactory factory,
+        MailboxId.Factory mailboxIdFactory,
+        Directory directory,
+        MessageId.Factory messageIdFactory,
+        MailboxManager mailboxManager
+    ) throws CorruptIndexException, LockObtainFailedException, IOException {
         this(factory, mailboxIdFactory, directory, false, true, messageIdFactory);
     }
 
@@ -380,8 +382,8 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             Directory directory,
             boolean dropIndexOnStart,
             boolean lenient,
-            MessageId.Factory messageIdFactory)
-                    throws CorruptIndexException, LockObtainFailedException, IOException {
+            MessageId.Factory messageIdFactory
+    ) throws CorruptIndexException, LockObtainFailedException, IOException {
         super(factory);
         this.mailboxIdFactory = mailboxIdFactory;
         this.messageIdFactory = messageIdFactory;
@@ -461,22 +463,21 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     @Override
     public Iterator<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
-        MailboxId mailboxId = mailbox.getMailboxId();
-        MultimailboxesSearchQuery multimailboxesSearchQuery = MultimailboxesSearchQuery
-            .from(searchQuery)
-            .inMailboxes(mailboxId)
-            .build();
 
-        return searchMultimap(multimailboxesSearchQuery, session)
+        return searchMultimap(ImmutableList.of(mailbox.getMailboxId()), searchQuery)
             .stream()
             .map(SearchResult::getMessageUid)
             .iterator();
     }
 
     @Override
-    public List<MessageId> search(MailboxSession session, MultimailboxesSearchQuery searchQuery, long limit) throws MailboxException {
+    public List<MessageId> search(MailboxSession session, Collection<MailboxId> mailboxIds, SearchQuery searchQuery, long limit) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
-        return searchMultimap(searchQuery, session)
+        if (mailboxIds.isEmpty()) {
+            return ImmutableList.of();
+        }
+
+        return searchMultimap(mailboxIds, searchQuery)
             .stream()
             .map(searchResult -> searchResult.getMessageId().get())
             .filter(SearchUtil.distinct())
@@ -484,11 +485,11 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             .collect(Guavate.toImmutableList());
     }
     
-    private List<SearchResult> searchMultimap(MultimailboxesSearchQuery searchQuery, MailboxSession session) throws MailboxException {
+    private List<SearchResult> searchMultimap(Collection<MailboxId> mailboxIds, SearchQuery searchQuery) throws MailboxException {
         ImmutableList.Builder<SearchResult> results = ImmutableList.builder();
         IndexSearcher searcher = null;
 
-        Query inMailboxes = buildQueryFromMailboxes(searchQuery.getInMailboxes());
+        Query inMailboxes = buildQueryFromMailboxes(mailboxIds);
         
         try {
             searcher = new IndexSearcher(IndexReader.open(writer, true));
@@ -496,14 +497,14 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             query.add(inMailboxes, BooleanClause.Occur.MUST);
             // Not return flags documents
             query.add(new PrefixQuery(new Term(FLAGS_FIELD, "")), BooleanClause.Occur.MUST_NOT);
-            query.add(new TermQuery(new Term(USERS, session.getUser().getUserName().toUpperCase(Locale.US))), Occur.MUST);
-            List<Criterion> crits = searchQuery.getSearchQuery().getCriterias();
+
+            List<Criterion> crits = searchQuery.getCriterias();
             for (Criterion crit : crits) {
-                query.add(createQuery(crit, inMailboxes, searchQuery.getSearchQuery().getRecentMessageUids()), BooleanClause.Occur.MUST);
+                query.add(createQuery(crit, inMailboxes, searchQuery.getRecentMessageUids()), BooleanClause.Occur.MUST);
             }
 
             // query for all the documents sorted as specified in the SearchQuery
-            TopDocs docs = searcher.search(query, null, maxQueryResults, createSort(searchQuery.getSearchQuery().getSorts()));
+            TopDocs docs = searcher.search(query, null, maxQueryResults, createSort(searchQuery.getSorts()));
             ScoreDoc[] sDocs = docs.scoreDocs;
             for (ScoreDoc sDoc : sDocs) {
                 Document doc = searcher.doc(sDoc.doc);
@@ -533,10 +534,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         return Optional.empty();
     }
 
-    private Query buildQueryFromMailboxes(ImmutableSet<MailboxId> mailboxIds) {
-        if (mailboxIds.isEmpty()) {
-            return new MatchAllDocsQuery();
-        }
+    private Query buildQueryFromMailboxes(Collection<MailboxId> mailboxIds) {
         BooleanQuery query = new BooleanQuery();
         for (MailboxId id: mailboxIds) {
             String idAsString = id.serialize();

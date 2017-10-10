@@ -18,30 +18,33 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.search;
 
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import com.github.fge.lambdas.Throwing;
 import org.apache.james.mailbox.MailboxManager.MessageCapabilities;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.ConjunctionCriterion;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
 import org.apache.james.mailbox.model.SearchQuery.UidCriterion;
 import org.apache.james.mailbox.model.SearchQuery.UidRange;
+import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
@@ -63,8 +66,6 @@ import com.google.common.collect.ImmutableList;
  *
  */
 public class SimpleMessageSearchIndex implements MessageSearchIndex {
-    private static final String WILDCARD = "%";
-
     private final MessageMapperFactory messageMapperFactory;
     private final MailboxMapperFactory mailboxMapperFactory;
     private final TextExtractor textExtractor;
@@ -117,9 +118,6 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     }
 
     private List<SearchResult> searchResults(MailboxSession session, Mailbox mailbox, SearchQuery query) throws MailboxException {
-        if (!isMatchingUser(session, mailbox)) {
-            return ImmutableList.of();
-        }
         MessageMapper mapper = messageMapperFactory.getMessageMapper(session);
 
         final SortedSet<MailboxMessage> hitSet = new TreeSet<>();
@@ -146,25 +144,15 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
         return ImmutableList.copyOf(new MessageSearches(hitSet.iterator(), query, textExtractor).iterator());
     }
 
-    private boolean isMatchingUser(MailboxSession session, Mailbox mailbox) {
-        return mailbox.getUser().equals(session.getUser().getUserName());
-    }
-
     @Override
-    public List<MessageId> search(MailboxSession session, final MultimailboxesSearchQuery searchQuery, long limit) throws MailboxException {
-        List<Mailbox> allUserMailboxes = mailboxMapperFactory.getMailboxMapper(session)
-                .findMailboxWithPathLike(new MailboxPath(session.getPersonalSpace(), session.getUser().getUserName(), WILDCARD));
-        Stream<Mailbox> filteredMailboxes = allUserMailboxes.stream()
-            .filter(mailbox -> !searchQuery.getNotInMailboxes().contains(mailbox.getMailboxId()));
+    public List<MessageId> search(MailboxSession session, final Collection<MailboxId> mailboxIds, SearchQuery searchQuery, long limit) throws MailboxException {
+        MailboxMapper mailboxManager = mailboxMapperFactory.getMailboxMapper(session);
 
-        if (searchQuery.getInMailboxes().isEmpty()) {
-            return getAsMessageIds(searchResults(session, filteredMailboxes, searchQuery.getSearchQuery()), limit);
-        }
-        List<Mailbox> queriedMailboxes = filteredMailboxes
-            .filter(mailbox -> searchQuery.getInMailboxes().contains(mailbox.getMailboxId()))
-            .collect(Guavate.toImmutableList());
+        Stream<Mailbox> filteredMailboxes = mailboxIds
+            .stream()
+            .map(Throwing.function(mailboxManager::findMailboxById).sneakyThrow());
 
-        return getAsMessageIds(searchResults(session, queriedMailboxes.stream(), searchQuery.getSearchQuery()), limit);
+        return getAsMessageIds(searchResults(session, filteredMailboxes, searchQuery), limit);
     }
 
     private List<SearchResult> searchResults(MailboxSession session, Stream<Mailbox> mailboxes, SearchQuery query) throws MailboxException {

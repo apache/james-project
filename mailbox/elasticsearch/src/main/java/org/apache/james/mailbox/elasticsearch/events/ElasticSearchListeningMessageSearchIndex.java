@@ -20,6 +20,7 @@ package org.apache.james.mailbox.elasticsearch.events;
 
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
@@ -39,7 +40,6 @@ import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
@@ -85,20 +85,23 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     @Override
     public Iterator<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
-        MailboxId mailboxId = mailbox.getMailboxId();
-        MultimailboxesSearchQuery query = MultimailboxesSearchQuery.from(searchQuery).inMailboxes(mailboxId).build();
         Optional<Long> noLimit = Optional.empty();
         return searcher
-                .search(ImmutableList.of(session.getUser()), query, noLimit)
+                .search(ImmutableList.of(mailbox.getMailboxId()), searchQuery, noLimit)
                 .map(SearchResult::getMessageUid)
                 .iterator();
     }
     
     @Override
-    public List<MessageId> search(MailboxSession session, MultimailboxesSearchQuery searchQuery, long limit)
+    public List<MessageId> search(MailboxSession session, Collection<MailboxId> mailboxIds, SearchQuery searchQuery, long limit)
             throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
-        return searcher.search(ImmutableList.of(session.getUser()), searchQuery, Optional.empty())
+
+        if (mailboxIds.isEmpty()) {
+            return ImmutableList.of();
+        }
+
+        return searcher.search(mailboxIds, searchQuery, Optional.empty())
             .peek(this::logIfNoMessageId)
             .map(SearchResult::getMessageId)
             .map(Optional::get)

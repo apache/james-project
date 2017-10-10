@@ -45,7 +45,6 @@ import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.junit.Assume;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -572,8 +571,11 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    @Ignore
-    public void searchForMessageShouldReturnMessagesFromAllMyMailboxesIfNoMailboxesArePrecised() throws MailboxException {
+    public void searchForMessageShouldReturnMessagesFromAllMyMailboxesIfNoMailboxesAreSpecified() throws MailboxException {
+        Assume.assumeTrue(mailboxManager
+            .getSupportedMessageCapabilities()
+            .contains(MailboxManager.MessageCapabilities.UniqueID));
+
         boolean isRecent = false;
 
         session = mailboxManager.createSystemSession(USER_1);
@@ -611,7 +613,6 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    @Ignore
     public void searchForMessageShouldReturnMessagesFromMyDelegatedMailboxes() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
 
@@ -634,7 +635,7 @@ public abstract class MailboxManagerTest {
         mailboxManager.setRights(delegatedMailboxPath,
             MailboxACL.EMPTY.apply(MailboxACL.command()
                 .forUser(USER_1)
-                .rights(MailboxACL.Right.Read)
+                .rights(MailboxACL.Right.Read, MailboxACL.Right.Lookup)
                 .asAddition()),
             sessionFromDelegater);
 
@@ -647,7 +648,6 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    @Ignore
     public void searchForMessageShouldNotReturnMessagesFromMyDelegatedMailboxesICanNotRead() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
 
@@ -683,7 +683,6 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    @Ignore
     public void searchForMessageShouldOnlySearchInMailboxICanRead() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
 
@@ -712,7 +711,6 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    @Ignore
     public void searchForMessageShouldIgnoreMailboxThatICanNotRead() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
         boolean isRecent = false;
@@ -741,7 +739,6 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    @Ignore
     public void searchForMessageShouldCorrectlyExcludeMailbox() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
         boolean isRecent = false;
@@ -769,7 +766,6 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    @Ignore
     public void searchForMessageShouldPriorizeExclusionFromInclusion() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
         boolean isRecent = false;
@@ -798,7 +794,6 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    @Ignore
     public void searchForMessageShouldOnlySearchInGivenMailbox() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
         boolean isRecent = false;

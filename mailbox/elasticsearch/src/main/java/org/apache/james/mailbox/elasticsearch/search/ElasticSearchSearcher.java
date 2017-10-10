@@ -19,13 +19,13 @@
 
 package org.apache.james.mailbox.elasticsearch.search;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Stream;
+
 import javax.inject.Inject;
 
 import org.apache.james.backends.es.search.ScrollIterable;
-import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticsearchConstants;
 import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
@@ -34,7 +34,7 @@ import org.apache.james.mailbox.elasticsearch.query.SortConverter;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
+import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.util.streams.Iterators;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -50,7 +50,7 @@ public class ElasticSearchSearcher {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchSearcher.class);
     private static final TimeValue TIMEOUT = new TimeValue(60000);
-    public static final int DEFAULT_SIZE = 100;
+    private static final int DEFAULT_SIZE = 100;
 
     private final Client client;
     private final QueryConverter queryConverter;
@@ -70,16 +70,20 @@ public class ElasticSearchSearcher {
         this.mailboxIdFactory = mailboxIdFactory;
         this.messageIdFactory = messageIdFactory;
     }
-    
-    public Stream<MessageSearchIndex.SearchResult> search(List<User> users, MultimailboxesSearchQuery query, Optional<Long> limit) throws MailboxException {
-        Stream<MessageSearchIndex.SearchResult> pairStream = new ScrollIterable(client, getSearchRequestBuilder(client, users, query, limit)).stream()
+
+    public Stream<MessageSearchIndex.SearchResult> search(Collection<MailboxId> mailboxIds, SearchQuery query,
+                                                          Optional<Long> limit) throws MailboxException {
+        SearchRequestBuilder searchRequestBuilder = getSearchRequestBuilder(client, mailboxIds, query, limit);
+        Stream<MessageSearchIndex.SearchResult> pairStream = new ScrollIterable(client, searchRequestBuilder).stream()
             .flatMap(this::transformResponseToUidStream);
+
         return limit.map(pairStream::limit)
             .orElse(pairStream);
     }
-    
-    private SearchRequestBuilder getSearchRequestBuilder(Client client, List<User> users, MultimailboxesSearchQuery query, Optional<Long> limit) {
-        return query.getSearchQuery().getSorts()
+
+    private SearchRequestBuilder getSearchRequestBuilder(Client client, Collection<MailboxId> users,
+                                                         SearchQuery query, Optional<Long> limit) {
+        return query.getSorts()
             .stream()
             .reduce(
                 client.prepareSearch(MailboxElasticsearchConstants.MAILBOX_INDEX.getValue())

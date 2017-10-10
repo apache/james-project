@@ -233,11 +233,6 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
 
     @Ignore
     @Override
-    public void multimailboxSearchShouldReturnUidOfMessageWithExpectedFromInAllMailboxes() throws MailboxException {
-    }
-
-    @Ignore
-    @Override
     public void searchWithTextShouldReturnMailsWhenHtmlBodyMatchesAndNonContinuousWords() throws Exception {
     }
 

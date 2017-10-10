@@ -90,6 +90,7 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 /**
@@ -429,7 +430,7 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public MailboxSession login(String userid, String passwd) throws BadCredentialsException, MailboxException {
+    public MailboxSession login(String userid, String passwd) throws MailboxException {
         if (isValidLogin(userid, passwd)) {
             return createSession(userid, passwd, SessionType.User);
         } else {
@@ -754,7 +755,26 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public List<MessageId> search(MultimailboxesSearchQuery expression, MailboxSession session, long limit) throws MailboxException {
-        return index.search(session, expression, limit);
+        ImmutableSet<MailboxId> wantedMailboxesId =
+            getInMailboxes(expression.getInMailboxes(), session)
+                .filter(id -> !expression.getNotInMailboxes().contains(id))
+                .collect(Guavate.toImmutableSet());
+
+        return index.search(session, wantedMailboxesId, expression.getSearchQuery(), limit);
+    }
+
+    private Stream<MailboxId> getInMailboxes(ImmutableSet<MailboxId> inMailboxes, MailboxSession session) throws MailboxException {
+       if (inMailboxes.isEmpty()) {
+            return getAllReadableMailbox(session);
+        } else {
+            return getAllReadableMailbox(session).filter(inMailboxes::contains);
+        }
+    }
+
+    private Stream<MailboxId> getAllReadableMailbox(MailboxSession session) throws MailboxException {
+        return search(MailboxQuery.builder().matchesAllMailboxNames().build(), session)
+            .stream()
+            .map(MailboxMetaData::getId);
     }
 
     @Override
