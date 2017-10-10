@@ -94,7 +94,6 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Field.Index;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.NumericField;
-import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -114,7 +113,6 @@ import org.apache.lucene.search.TermRangeQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.util.IOUtils;
 import org.apache.lucene.util.Version;
 import org.slf4j.Logger;
@@ -148,181 +146,178 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     /**
      * Default max query results
      */
-    public final static int DEFAULT_MAX_QUERY_RESULTS = 100000;
+    private final static int DEFAULT_MAX_QUERY_RESULTS = 100000;
     
     /**
      * {@link Field} which will contain the unique index of the {@link Document}
      */
-    public final static String ID_FIELD ="id";
+    private final static String ID_FIELD ="id";
     
     
     /**
      * {@link Field} which will contain uid of the {@link MailboxMessage}
      */
-    public final static String UID_FIELD = "uid";
+    private final static String UID_FIELD = "uid";
     
     /**
      * {@link Field} boolean field that say if the message as an attachment or not
      */
-    public final static String HAS_ATTACHMENT_FIELD = "hasAttachment";
+    private final static String HAS_ATTACHMENT_FIELD = "hasAttachment";
 
     /**
      * {@link Field} which will contain the {@link Flags} of the {@link MailboxMessage}
      */
-    public final static String FLAGS_FIELD = "flags";
+    private final static String FLAGS_FIELD = "flags";
   
     /**
      * {@link Field} which will contain the size of the {@link MailboxMessage}
      */
-    public final static String SIZE_FIELD = "size";
+    private final static String SIZE_FIELD = "size";
 
     /**
      * {@link Field} which will contain the body of the {@link MailboxMessage}
      */
-    public final static String BODY_FIELD = "body";
+    private final static String BODY_FIELD = "body";
     
     
     /**
      * Prefix which will be used for each message header to store it also in a seperate {@link Field}
      */
-    public final static String PREFIX_HEADER_FIELD ="header_";
+    private final static String PREFIX_HEADER_FIELD ="header_";
     
     /**
      * {@link Field} which will contain the whole message header of the {@link MailboxMessage}
      */
-    public final static String HEADERS_FIELD ="headers";
+    private final static String HEADERS_FIELD ="headers";
 
     /**
      * {@link Field} which will contain the mod-sequence of the message
      */
-    public final static String MODSEQ_FIELD = "modSeq";
+    private final static String MODSEQ_FIELD = "modSeq";
 
     /**
      * {@link Field} which will contain the TO-Address of the message
      */
-    public final static String TO_FIELD ="to";
+    private final static String TO_FIELD ="to";
     
-    public final static String FIRST_TO_MAILBOX_NAME_FIELD ="firstToMailboxName";
-    public final static String FIRST_TO_MAILBOX_DISPLAY_FIELD ="firstToMailboxDisplay";
+    private final static String FIRST_TO_MAILBOX_NAME_FIELD ="firstToMailboxName";
+    private final static String FIRST_TO_MAILBOX_DISPLAY_FIELD ="firstToMailboxDisplay";
 
     /**
      * {@link Field} which will contain the CC-Address of the message
      */
-    public final static String CC_FIELD ="cc";
+    private final static String CC_FIELD ="cc";
 
-    public final static String FIRST_CC_MAILBOX_NAME_FIELD ="firstCcMailboxName";
+    private final static String FIRST_CC_MAILBOX_NAME_FIELD ="firstCcMailboxName";
     
 
     /**
      * {@link Field} which will contain the FROM-Address of the message
      */
-    public final static String FROM_FIELD ="from";
+    private final static String FROM_FIELD ="from";
     
-    public final static String FIRST_FROM_MAILBOX_NAME_FIELD ="firstFromMailboxName";
-    public final static String FIRST_FROM_MAILBOX_DISPLAY_FIELD ="firstFromMailboxDisplay";
+    private final static String FIRST_FROM_MAILBOX_NAME_FIELD ="firstFromMailboxName";
+    private final static String FIRST_FROM_MAILBOX_DISPLAY_FIELD ="firstFromMailboxDisplay";
 
     /**
      * {@link Field} which will contain the BCC-Address of the message
      */
-    public final static String BCC_FIELD ="bcc";
+    private final static String BCC_FIELD ="bcc";
     
     
-    public final static String BASE_SUBJECT_FIELD = "baseSubject";
+    private final static String BASE_SUBJECT_FIELD = "baseSubject";
     
     /**
      * {@link Field} which contain the internalDate of the message with YEAR-Resolution
      */
-    public final static String INTERNAL_DATE_FIELD_YEAR_RESOLUTION ="internaldateYearResolution";
+    private final static String INTERNAL_DATE_FIELD_YEAR_RESOLUTION ="internaldateYearResolution";
     
     
     /**
      * {@link Field} which contain the internalDate of the message with MONTH-Resolution
      */
-    public final static String INTERNAL_DATE_FIELD_MONTH_RESOLUTION ="internaldateMonthResolution";
+    private final static String INTERNAL_DATE_FIELD_MONTH_RESOLUTION ="internaldateMonthResolution";
     
     /**
      * {@link Field} which contain the internalDate of the message with DAY-Resolution
      */
-    public final static String INTERNAL_DATE_FIELD_DAY_RESOLUTION ="internaldateDayResolution";
+    private final static String INTERNAL_DATE_FIELD_DAY_RESOLUTION ="internaldateDayResolution";
     
     /**
      * {@link Field} which contain the internalDate of the message with HOUR-Resolution
      */
-    public final static String INTERNAL_DATE_FIELD_HOUR_RESOLUTION ="internaldateHourResolution";
+    private final static String INTERNAL_DATE_FIELD_HOUR_RESOLUTION ="internaldateHourResolution";
     
     /**
      * {@link Field} which contain the internalDate of the message with MINUTE-Resolution
      */
-    public final static String INTERNAL_DATE_FIELD_MINUTE_RESOLUTION ="internaldateMinuteResolution";
+    private final static String INTERNAL_DATE_FIELD_MINUTE_RESOLUTION ="internaldateMinuteResolution";
     
     /**
      * {@link Field} which contain the internalDate of the message with SECOND-Resolution
      */
-    public final static String INTERNAL_DATE_FIELD_SECOND_RESOLUTION ="internaldateSecondResolution";
+    private final static String INTERNAL_DATE_FIELD_SECOND_RESOLUTION ="internaldateSecondResolution";
     
     
     /**
      * {@link Field} which contain the internalDate of the message with MILLISECOND-Resolution
      */
-    public final static String INTERNAL_DATE_FIELD_MILLISECOND_RESOLUTION ="internaldateMillisecondResolution";
+    private final static String INTERNAL_DATE_FIELD_MILLISECOND_RESOLUTION ="internaldateMillisecondResolution";
 
     /**
      * {@link Field} which will contain the id of the {@link Mailbox}
      */
-    public final static String MAILBOX_ID_FIELD ="mailboxid";
+    private final static String MAILBOX_ID_FIELD ="mailboxid";
 
     /**
      * {@link Field} which will contain the user of the {@link MailboxSession}
      */
-    public final static String USERS = "userSession";
+    private final static String USERS = "userSession";
     /**
      * {@link Field} which will contain the id of the {@link MessageId}
      */
-    public final static String MESSAGE_ID_FIELD ="messageid";
+    private final static String MESSAGE_ID_FIELD ="messageid";
 
     /**
      * {@link Field} which contain the Date header of the message with YEAR-Resolution
      */
-    public final static String SENT_DATE_FIELD_YEAR_RESOLUTION ="sentdateYearResolution";
+    private final static String SENT_DATE_FIELD_YEAR_RESOLUTION ="sentdateYearResolution";
     
     
     /**
      * {@link Field} which contain the Date header of the message with MONTH-Resolution
      */
-    public final static String SENT_DATE_FIELD_MONTH_RESOLUTION ="sentdateMonthResolution";
+    private final static String SENT_DATE_FIELD_MONTH_RESOLUTION ="sentdateMonthResolution";
     
     /**
      * {@link Field} which contain the Date header of the message with DAY-Resolution
      */
-    public final static String SENT_DATE_FIELD_DAY_RESOLUTION ="sentdateDayResolution";
+    private final static String SENT_DATE_FIELD_DAY_RESOLUTION ="sentdateDayResolution";
     
     /**
      * {@link Field} which contain the Date header of the message with HOUR-Resolution
      */
-    public final static String SENT_DATE_FIELD_HOUR_RESOLUTION ="sentdateHourResolution";
+    private final static String SENT_DATE_FIELD_HOUR_RESOLUTION ="sentdateHourResolution";
     
     /**
      * {@link Field} which contain the Date header of the message with MINUTE-Resolution
      */
-    public final static String SENT_DATE_FIELD_MINUTE_RESOLUTION ="sentdateMinuteResolution";
+    private final static String SENT_DATE_FIELD_MINUTE_RESOLUTION ="sentdateMinuteResolution";
     
     /**
      * {@link Field} which contain the Date header of the message with SECOND-Resolution
      */
-    public final static String SENT_DATE_FIELD_SECOND_RESOLUTION ="sentdateSecondResolution";
+    private final static String SENT_DATE_FIELD_SECOND_RESOLUTION ="sentdateSecondResolution";
     
     
     /**
      * {@link Field} which contain the Date header of the message with MILLISECOND-Resolution
      */
-    public final static String SENT_DATE_FIELD_MILLISECOND_RESOLUTION ="sentdateMillisecondResolution";
+    private final static String SENT_DATE_FIELD_MILLISECOND_RESOLUTION ="sentdateMillisecondResolution";
 
-    public final static String SENT_DATE_SORT_FIELD_MILLISECOND_RESOLUTION ="sentdateSort";
+    private final static String SENT_DATE_SORT_FIELD_MILLISECOND_RESOLUTION ="sentdateSort";
 
-    public final static String NON_EXIST_FIELD ="nonExistField";
-
-    
-    private final static String MEDIA_TYPE_TEXT = "text"; 
+    private final static String MEDIA_TYPE_TEXT = "text";
     private final static String MEDIA_TYPE_MESSAGE = "message"; 
     private final static String DEFAULT_ENCODING = "US-ASCII";
     
@@ -370,9 +365,8 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         MessageMapperFactory factory,
         MailboxId.Factory mailboxIdFactory,
         Directory directory,
-        MessageId.Factory messageIdFactory,
-        MailboxManager mailboxManager
-    ) throws CorruptIndexException, LockObtainFailedException, IOException {
+        MessageId.Factory messageIdFactory
+    ) throws IOException {
         this(factory, mailboxIdFactory, directory, false, true, messageIdFactory);
     }
 
@@ -383,7 +377,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             boolean dropIndexOnStart,
             boolean lenient,
             MessageId.Factory messageIdFactory
-    ) throws CorruptIndexException, LockObtainFailedException, IOException {
+    ) throws IOException {
         super(factory);
         this.mailboxIdFactory = mailboxIdFactory;
         this.messageIdFactory = messageIdFactory;
@@ -960,7 +954,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         }
     }
     
-    private Query createAttachmentQuery(boolean isSet, Query inMailboxes) throws MailboxException, UnsupportedSearchException {
+    private Query createAttachmentQuery(boolean isSet) throws MailboxException {
         return new TermQuery(new Term(HAS_ATTACHMENT_FIELD, Boolean.toString(isSet)));
     }
 
@@ -969,9 +963,9 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * as it will do a search for the flags in this method and 
      *
      * @return query
-     * @throws UnsupportedSearchException
+     * @throws MailboxException
      */
-    private Query createFlagQuery(String flag, boolean isSet, Query inMailboxes, Collection<MessageUid> recentUids) throws MailboxException, UnsupportedSearchException {
+    private Query createFlagQuery(String flag, boolean isSet, Query inMailboxes, Collection<MessageUid> recentUids) throws MailboxException {
         BooleanQuery query = new BooleanQuery();
         
         if (isSet) {   
@@ -1217,7 +1211,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * @return query
      * @throws UnsupportedSearchException
      */
-    private Query createQuery(Criterion criterion, Query inMailboxes, Collection<MessageUid> recentUids) throws UnsupportedSearchException, MailboxException {
+    private Query createQuery(Criterion criterion, Query inMailboxes, Collection<MessageUid> recentUids) throws MailboxException {
         if (criterion instanceof SearchQuery.InternalDateCriterion) {
             SearchQuery.InternalDateCriterion crit = (SearchQuery.InternalDateCriterion) criterion;
             return createInternalDateQuery(crit);
@@ -1235,7 +1229,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             return createFlagQuery(toString(crit.getFlag()), crit.getOperator().isSet(), inMailboxes, recentUids);
         } else if (criterion instanceof SearchQuery.AttachmentCriterion) {
             AttachmentCriterion crit = (AttachmentCriterion) criterion;
-            return createAttachmentQuery(crit.getOperator().isSet(), inMailboxes);
+            return createAttachmentQuery(crit.getOperator().isSet());
         } else if (criterion instanceof SearchQuery.CustomFlagCriterion) {
             CustomFlagCriterion crit = (CustomFlagCriterion) criterion;
             return createFlagQuery(crit.getFlag(), crit.getOperator().isSet(), inMailboxes, recentUids);

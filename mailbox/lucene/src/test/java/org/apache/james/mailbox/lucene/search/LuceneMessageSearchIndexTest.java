@@ -56,7 +56,7 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
             new MessageParser(),
             messageIdFactory);
         messageIdManager = new InMemoryMessageIdManager(storeMailboxManager);
-        messageSearchIndex = new LuceneMessageSearchIndex(mapperFactory, new InMemoryId.Factory(), new RAMDirectory(), messageIdFactory, storeMailboxManager);
+        messageSearchIndex = new LuceneMessageSearchIndex(mapperFactory, new InMemoryId.Factory(), new RAMDirectory(), messageIdFactory);
         storeMailboxManager.setMessageSearchIndex(messageSearchIndex);
         storeMailboxManager.init();
     }
