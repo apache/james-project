@@ -44,6 +44,7 @@ import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
 import org.apache.james.mailbox.jpa.quota.JPAPerUserMaxQuotaManager;
 import org.apache.james.mailbox.jpa.quota.JpaCurrentQuotaManager;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
@@ -156,5 +157,15 @@ public class JPAHostSystem extends JamesImapHostSystem {
     public void setQuotaLimits(long maxMessageQuota, long maxStorageQuota) throws MailboxException {
         maxQuotaManager.setDefaultMaxMessage(maxMessageQuota);
         maxQuotaManager.setDefaultMaxStorage(maxStorageQuota);
+    }
+
+    @Override
+    public void grantRights(MailboxPath mailboxPath, String userName, MailboxACL.Rfc4314Rights rights) throws Exception {
+        mailboxManager.setRights(mailboxPath,
+            MailboxACL.EMPTY.apply(MailboxACL.command()
+                .forUser(userName)
+                .rights(rights)
+                .asAddition()),
+            mailboxManager.createSystemSession(userName));
     }
 }

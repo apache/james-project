@@ -20,6 +20,7 @@
 package org.apache.james.mpt.host;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
@@ -110,6 +111,11 @@ public class ExternalHostSystem extends ExternalSessionFactory implements ImapHo
 
     @Override
     public void setQuotaLimits(long maxMessageQuota, long maxStorageQuota) throws Exception {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void grantRights(MailboxPath mailboxPath, String userName, MailboxACL.Rfc4314Rights rights) throws Exception {
         throw new NotImplementedException();
     }
 }

@@ -29,6 +29,7 @@ import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.decode.main.ImapRequestStreamHandler;
 import org.apache.james.imap.encode.ImapEncoder;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
@@ -36,12 +37,13 @@ import org.apache.james.mpt.api.Continuation;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.helper.ByteBufferInputStream;
 import org.apache.james.mpt.helper.ByteBufferOutputStream;
+import org.apache.james.mpt.imapmailbox.GrantRightsOnHost;
 import org.apache.james.mpt.session.ImapSessionImpl;
 import org.apache.james.user.memory.MemoryUsersRepository;
 
 import com.google.common.base.Throwables;
 
-public abstract class JamesImapHostSystem implements ImapHostSystem {
+public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRightsOnHost {
 
     private MemoryUsersRepository memoryUsersRepository;
     protected Authorizator authorizator;
@@ -88,6 +90,8 @@ public abstract class JamesImapHostSystem implements ImapHostSystem {
     }
     
     public abstract void createMailbox(MailboxPath mailboxPath) throws Exception;
+
+    public abstract void grantRights(MailboxPath mailboxPath, String userName, MailboxACL.Rfc4314Rights rights) throws Exception;
 
     class Session implements org.apache.james.mpt.api.Session {
         ByteBufferOutputStream out;

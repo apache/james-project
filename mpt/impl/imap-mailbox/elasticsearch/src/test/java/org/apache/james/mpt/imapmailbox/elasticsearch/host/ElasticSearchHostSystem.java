@@ -52,6 +52,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.StoreMailboxManager;
@@ -150,5 +151,15 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
     @Override
     public void setQuotaLimits(long maxMessageQuota, long maxStorageQuota) throws Exception {
         throw new NotImplementedException();
+    }
+
+    @Override
+    public void grantRights(MailboxPath mailboxPath, String userName, MailboxACL.Rfc4314Rights rights) throws Exception {
+        mailboxManager.setRights(mailboxPath,
+            MailboxACL.EMPTY.apply(MailboxACL.command()
+                .forUser(userName)
+                .rights(rights)
+                .asAddition()),
+            mailboxManager.createSystemSession(userName));
     }
 }

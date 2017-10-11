@@ -47,6 +47,7 @@ import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
 import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
@@ -159,4 +160,13 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
         throw new NotImplementedException();
     }
 
+    @Override
+    public void grantRights(MailboxPath mailboxPath, String userName, MailboxACL.Rfc4314Rights rights) throws Exception {
+        mailboxManager.setRights(mailboxPath,
+            MailboxACL.EMPTY.apply(MailboxACL.command()
+                .forUser(userName)
+                .rights(rights)
+                .asAddition()),
+            mailboxManager.createSystemSession(userName));
+    }
 }

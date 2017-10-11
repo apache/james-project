@@ -40,6 +40,7 @@ import org.apache.james.mailbox.hbase.HBaseMailboxManager;
 import org.apache.james.mailbox.hbase.HBaseMailboxSessionMapperFactory;
 import org.apache.james.mailbox.hbase.mail.HBaseModSeqProvider;
 import org.apache.james.mailbox.hbase.mail.HBaseUidProvider;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
@@ -167,5 +168,15 @@ public class HBaseHostSystem extends JamesImapHostSystem {
     @Override
     public void setQuotaLimits(long maxMessageQuota, long maxStorageQuota) throws Exception {
         throw new NotImplementedException();
+    }
+
+    @Override
+    public void grantRights(MailboxPath mailboxPath, String userName, MailboxACL.Rfc4314Rights rights) throws Exception {
+        mailboxManager.setRights(mailboxPath,
+            MailboxACL.EMPTY.apply(MailboxACL.command()
+                .forUser(userName)
+                .rights(rights)
+                .asAddition()),
+            mailboxManager.createSystemSession(userName));
     }
 }
