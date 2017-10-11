@@ -47,6 +47,8 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.util.OptionalUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
@@ -58,6 +60,7 @@ import com.google.common.collect.Sets.SetView;
 
 public class InMemoryMessageIdManager implements MessageIdManager {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(InMemoryMessageIdManager.class);
     private final MailboxManager mailboxManager;
 
     @Inject
@@ -161,7 +164,8 @@ public class InMemoryMessageIdManager implements MessageIdManager {
             .findAny();
 
         if (mailboxForbidden.isPresent()) {
-            throw new MailboxNotFoundException("Mailbox " + mailboxForbidden.get() + " does not belong to session");
+            LOGGER.info("Mailbox with Id " + mailboxForbidden.get() + " does not belong to " + mailboxSession.getUser().getUserName());
+            throw new MailboxNotFoundException(mailboxForbidden.get());
         }
     }
 

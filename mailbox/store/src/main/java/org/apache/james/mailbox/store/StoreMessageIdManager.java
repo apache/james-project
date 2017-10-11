@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
+
 import javax.inject.Inject;
 import javax.mail.Flags;
 import javax.mail.internet.SharedInputStream;
@@ -295,7 +296,8 @@ public class StoreMessageIdManager implements MessageIdManager {
             .findFirst();
 
         if (mailboxForbidden.isPresent()) {
-            throw new MailboxNotFoundException("Mailbox with Id " + mailboxForbidden.get() + " does not belong to session");
+            LOGGER.info("Mailbox with Id " + mailboxForbidden.get() + " does not belong to " + mailboxSession.getUser().getUserName());
+            throw new MailboxNotFoundException(mailboxForbidden.get());
         }
     }
 
