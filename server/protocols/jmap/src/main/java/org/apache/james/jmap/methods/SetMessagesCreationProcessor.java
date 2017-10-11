@@ -20,12 +20,14 @@
 package org.apache.james.jmap.methods;
 
 import static org.apache.james.jmap.methods.Method.JMAP_PREFIX;
+
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import javax.inject.Inject;
 import javax.mail.Flags;
 import javax.mail.MessagingException;
@@ -69,7 +71,6 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.util.OptionalUtils;
 import org.apache.mailet.Mail;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -164,7 +165,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
             responseBuilder.notCreated(create.getCreationId(), 
                     SetError.builder()
                         .type("error")
-                        .description(e.getMailboxName() + " can't be found")
+                        .description(e.getMessage())
                         .build());
 
         } catch (MailboxException | MessagingException e) {

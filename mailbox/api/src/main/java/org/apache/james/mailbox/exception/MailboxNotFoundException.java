@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.exception;
 
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 
 /**
@@ -29,14 +30,16 @@ public class MailboxNotFoundException extends MailboxException {
 
     private static final long serialVersionUID = -8493370806722264915L;
 
-    private final String mailboxName;
-
     /**
      * @param mailboxName
      *            name of the mailbox, not null
      */
-    public MailboxNotFoundException(String mailboxName) {
-        this.mailboxName = mailboxName;
+    public MailboxNotFoundException(String message) {
+        super(message);
+    }
+
+    public MailboxNotFoundException(MailboxId mailboxId) {
+        super(mailboxId.serialize() + " can not be found");
     }
 
     /**
@@ -45,16 +48,6 @@ public class MailboxNotFoundException extends MailboxException {
      */
     public MailboxNotFoundException(MailboxPath mailboxPath) {
         super(mailboxPath + " can not be found");
-        this.mailboxName = mailboxPath.toString();
-    }
-
-    /**
-     * Gets the name of the mailbox which cannot be found.
-     * 
-     * @return name or null when only mailbox ID is known
-     */
-    public final String getMailboxName() {
-        return mailboxName;
     }
 
 }

@@ -517,12 +517,12 @@ public class StoreMailboxManager implements MailboxManager {
 
         if (mailboxRow == null) {
             LOGGER.info("Mailbox '" + mailboxId.serialize() + "' not found.");
-            throw new MailboxNotFoundException(mailboxId.serialize());
+            throw new MailboxNotFoundException(mailboxId);
         }
 
         if (! assertUserHasAccessTo(mailboxRow, session)) {
             LOGGER.info("Mailbox '" + mailboxId.serialize() + "' does not belong to user '" + session.getUser() + "' but to '" + mailboxRow.getUser());
-            throw new MailboxNotFoundException(mailboxId.serialize());
+            throw new MailboxNotFoundException(mailboxId);
         }
 
         LOGGER.debug("Loaded mailbox " + mailboxId.serialize());
@@ -588,7 +588,7 @@ public class StoreMailboxManager implements MailboxManager {
         Mailbox mailbox = mapper.execute((Mapper.Transaction<Mailbox>) () -> {
             final Mailbox mailbox1 = mapper.findMailboxByPath(mailboxPath);
             if (mailbox1 == null) {
-                throw new MailboxNotFoundException("Mailbox not found");
+                throw new MailboxNotFoundException(mailboxPath);
             }
 
             // We need to create a copy of the mailbox as maybe we can not refer to the real

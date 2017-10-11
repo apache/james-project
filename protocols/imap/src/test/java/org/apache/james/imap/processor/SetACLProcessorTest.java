@@ -196,7 +196,7 @@ public class SetACLProcessorTest {
         Expectations expectations = prepareRightsExpectations();
         
         expectations.allowing(mailboxManagerStub).getMailbox(expectations.with(Expectations.any(MailboxPath.class)), expectations.with(Expectations.any(MailboxSession.class)));
-        expectations.will(Expectations.throwException(new MailboxNotFoundException(MAILBOX_NAME)));
+        expectations.will(Expectations.throwException(new MailboxNotFoundException(path)));
 
         mockery.checking(expectations);
 

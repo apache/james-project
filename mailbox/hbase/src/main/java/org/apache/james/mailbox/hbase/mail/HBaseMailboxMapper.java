@@ -138,7 +138,7 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
             Get get = new Get(mailboxId.toBytes());
             Result result = mailboxes.get(get);
             if (result == null) {
-                throw new MailboxNotFoundException(mailboxId.serialize());
+                throw new MailboxNotFoundException(mailboxId);
             }
             return mailboxFromResult(result);
         } catch (IOException ex) {

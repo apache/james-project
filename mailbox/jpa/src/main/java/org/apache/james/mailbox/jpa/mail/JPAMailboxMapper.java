@@ -138,7 +138,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
                 .setParameter("idParam", mailboxId.getRawId())
                 .getSingleResult();
         } catch (NoResultException e) {
-            throw new MailboxNotFoundException(mailboxId.serialize());
+            throw new MailboxNotFoundException(mailboxId);
         } catch (PersistenceException e) {
             throw new MailboxException("Search of mailbox " + mailboxId.serialize() + " failed", e);
         } 

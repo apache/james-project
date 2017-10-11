@@ -92,7 +92,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
             }
         }
         else
-            throw new MailboxNotFoundException(mailbox.getName());
+            throw new MailboxNotFoundException(mailbox.generateAssociatedPath());
     }
 
     private void delete(File...files) {
@@ -295,7 +295,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
         try {
             return mailboxCache.get(mailboxId.getRawId());
         } catch (IndexOutOfBoundsException e) {
-            throw new MailboxNotFoundException(String.valueOf(mailboxId));
+            throw new MailboxNotFoundException(mailboxId);
         }
     }
     

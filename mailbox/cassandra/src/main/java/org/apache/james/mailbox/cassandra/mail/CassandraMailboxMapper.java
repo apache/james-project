@@ -114,7 +114,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
         CassandraId mailboxId = (CassandraId) id;
         return retrieveMailbox(mailboxId)
             .join()
-            .orElseThrow(() -> new MailboxNotFoundException(id.serialize()));
+            .orElseThrow(() -> new MailboxNotFoundException(id));
     }
 
     private CompletableFuture<Optional<SimpleMailbox>> retrieveMailbox(CassandraId mailboxId) {

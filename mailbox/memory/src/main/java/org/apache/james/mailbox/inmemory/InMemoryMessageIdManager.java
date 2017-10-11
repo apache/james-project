@@ -156,11 +156,12 @@ public class InMemoryMessageIdManager implements MessageIdManager {
     }
 
     private void filterOnMailboxSession(List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxNotFoundException {
-        boolean isForbidden = mailboxIds.stream()
-            .anyMatch(findMailboxBelongsToAnotherSession(mailboxSession));
+        Optional<MailboxId> mailboxForbidden = mailboxIds.stream()
+            .filter(findMailboxBelongsToAnotherSession(mailboxSession))
+            .findAny();
 
-        if (isForbidden) {
-            throw new MailboxNotFoundException("Mailbox does not belong to session");
+        if (mailboxForbidden.isPresent()) {
+            throw new MailboxNotFoundException("Mailbox " + mailboxForbidden.get() + " does not belong to session");
         }
     }
 

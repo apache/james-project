@@ -154,7 +154,7 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
                 .id(mailboxId)
                 .session(mailboxSession)
                 .build()
-                .orElseThrow(() -> new MailboxNotFoundException(mailboxId.serialize()));
+                .orElseThrow(() -> new MailboxNotFoundException(mailboxId));
     }
 
     private void validateMailboxName(MailboxUpdateRequest updateRequest, MailboxSession mailboxSession) throws MailboxNameException {

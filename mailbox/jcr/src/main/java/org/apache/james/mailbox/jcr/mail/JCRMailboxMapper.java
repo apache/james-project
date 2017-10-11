@@ -118,7 +118,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
             Node node = getSession().getNodeByIdentifier(id.serialize());
             return new JCRMailbox(node);
         } catch (PathNotFoundException e) {
-            throw new MailboxNotFoundException(id.serialize());
+            throw new MailboxNotFoundException(id);
         } catch (RepositoryException e) {
             throw new MailboxException("Unable to find mailbox " + id.serialize(), e);
         }

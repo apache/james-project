@@ -80,7 +80,7 @@ public class InMemoryMailboxMapper implements MailboxMapper {
                 return new SimpleMailbox(mailbox);
             }
         }
-        throw new MailboxNotFoundException(mailboxId.serialize());
+        throw new MailboxNotFoundException(mailboxId);
     }
 
     /**
