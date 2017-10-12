@@ -118,7 +118,10 @@ public class GlobalQuotaRoutes implements Routes {
     }
 
     @GET
-    @ApiOperation(value = "Reading count and size at the same time")
+    @ApiOperation(
+        value = "Reading count and size at the same time",
+        notes = "If there is no limitation for count and/or size, the returned value will be -1"
+	)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK", response = QuotaDTO.class),
             @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
