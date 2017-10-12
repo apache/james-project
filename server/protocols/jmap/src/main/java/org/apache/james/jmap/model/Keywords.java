@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.model;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -83,6 +84,11 @@ public class Keywords {
 
             return new Keywords(setKeywords.stream()
                 .filter(filter.orElse(keyword -> true))
+                .collect(Guavate.toImmutableSet()));
+        }
+
+        public Keywords from(Keyword... keywords) {
+            return fromSet(Arrays.stream(keywords)
                 .collect(Guavate.toImmutableSet()));
         }
 
