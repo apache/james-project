@@ -26,17 +26,17 @@ import static org.mockito.Mockito.when;
 import java.time.Instant;
 import java.util.Collection;
 
-import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.jmap.model.Keyword;
+import org.apache.james.jmap.model.Keywords;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
 import org.apache.james.mailbox.BlobManager;
-import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
@@ -71,7 +71,7 @@ public class MailFactoryTest {
         
         message = MetaDataWithContent.builder()
                 .uid(MessageUid.of(2))
-                .flags(new FlagsBuilder().add(Flags.Flag.SEEN).build())
+                .keywords(Keywords.factory().from(Keyword.SEEN))
                 .size(content.length())
                 .internalDate(Instant.now())
                 .sharedContent(new SharedByteArrayInputStream(content.getBytes(Charsets.UTF_8)))

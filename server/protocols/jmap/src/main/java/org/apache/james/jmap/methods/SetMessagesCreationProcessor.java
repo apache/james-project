@@ -29,7 +29,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-import javax.mail.Flags;
 import javax.mail.MessagingException;
 import javax.mail.util.SharedByteArrayInputStream;
 
@@ -293,16 +292,16 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         SharedByteArrayInputStream content = new SharedByteArrayInputStream(messageContent);
         Date internalDate = Date.from(createdEntry.getValue().getDate().toInstant());
 
-        Flags flags = createdEntry.getValue()
+        Keywords keywords = createdEntry.getValue()
             .getKeywords()
-            .map(Keywords::asFlags)
-            .orElse(new Flags());
+            .orElse(Keywords.DEFAULT_VALUE);
+        boolean notRecent = false;
 
-        ComposedMessageId message = outbox.appendMessage(content, internalDate, session, flags.contains(Flags.Flag.RECENT), flags);
+        ComposedMessageId message = outbox.appendMessage(content, internalDate, session, notRecent, keywords.asFlags());
 
         return MetaDataWithContent.builder()
                 .uid(message.getUid())
-                .flags(flags)
+                .keywords(keywords)
                 .internalDate(internalDate.toInstant())
                 .sharedContent(content)
                 .size(messageContent.length)

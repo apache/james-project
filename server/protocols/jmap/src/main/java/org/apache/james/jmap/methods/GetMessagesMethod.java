@@ -32,6 +32,7 @@ import org.apache.james.jmap.json.FieldNamePropertyFilter;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMessagesRequest;
 import org.apache.james.jmap.model.GetMessagesResponse;
+import org.apache.james.jmap.model.Keywords;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
@@ -65,6 +66,7 @@ public class GetMessagesMethod implements Method {
     private final MessageFactory messageFactory;
     private final MessageIdManager messageIdManager;
     private final MetricFactory metricFactory;
+    private final Keywords.KeywordsFactory keywordsFactory;
 
     @Inject
     @VisibleForTesting GetMessagesMethod(
@@ -74,6 +76,8 @@ public class GetMessagesMethod implements Method {
         this.messageFactory = messageFactory;
         this.messageIdManager = messageIdManager;
         this.metricFactory = metricFactory;
+        this.keywordsFactory = Keywords.factory()
+            .filterImapNonExposedKeywords();
     }
     
     @Override
@@ -167,6 +171,7 @@ public class GetMessagesMethod implements Method {
                     MetaDataWithContent.builderFromMessageResult(firstMessageResult)
                         .messageId(firstMessageResult.getMessageId())
                         .mailboxIds(mailboxIds)
+                        .keywords(keywordsFactory.fromFlags(firstMessageResult.getFlags()))
                         .build());
             } catch (Exception e) {
                 LOGGER.error("Can not convert MessageResults to MetaData with content for messageId " + firstMessageResult.getMessageId() + " in " + mailboxIds, e);

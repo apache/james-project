@@ -32,7 +32,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-import javax.mail.Flags;
 import javax.mail.internet.SharedInputStream;
 
 import org.apache.james.jmap.utils.HtmlTextExtractor;
@@ -99,7 +98,7 @@ public class MessageFactory {
                 .threadId(message.getMessageId().serialize())
                 .mailboxIds(message.getMailboxIds())
                 .inReplyToMessageId(getHeader(mimeMessage, "in-reply-to"))
-                .flags(message.getFlags())
+                .keywords(message.getKeywords())
                 .subject(Strings.nullToEmpty(mimeMessage.getSubject()).trim())
                 .headers(toMap(mimeMessage.getHeader().getFields()))
                 .from(firstFromMailboxList(mimeMessage.getFrom()))
@@ -240,7 +239,6 @@ public class MessageFactory {
             Builder builder = builder()
                 .uid(messageResult.getUid())
                 .modSeq(messageResult.getModSeq())
-                .flags(messageResult.getFlags())
                 .size(messageResult.getSize())
                 .internalDate(messageResult.getInternalDate().toInstant())
                 .attachments(messageResult.getAttachments())
@@ -255,7 +253,7 @@ public class MessageFactory {
         public static class Builder {
             private MessageUid uid;
             private Long modSeq;
-            private Flags flags;
+            private Keywords keywords;
             private Long size;
             private Instant internalDate;
             private InputStream content;
@@ -274,11 +272,11 @@ public class MessageFactory {
                 return this;
             }
             
-            public Builder flags(Flags flags) {
-                this.flags = flags;
+            public Builder keywords(Keywords keywords) {
+                this.keywords = keywords;
                 return this;
             }
-            
+
             public Builder size(long size) {
                 this.size = size;
                 return this;
@@ -324,20 +322,20 @@ public class MessageFactory {
                 if (modSeq == null) {
                     modSeq = -1L;
                 }
-                Preconditions.checkArgument(flags != null);
+                Preconditions.checkArgument(keywords != null);
                 Preconditions.checkArgument(size != null);
                 Preconditions.checkArgument(internalDate != null);
                 Preconditions.checkArgument(content != null ^ sharedContent != null);
                 Preconditions.checkArgument(attachments != null);
                 Preconditions.checkArgument(mailboxIds != null);
                 Preconditions.checkArgument(messageId != null);
-                return new MetaDataWithContent(uid, modSeq, flags, size, internalDate, content, sharedContent, attachments, mailboxIds, messageId);
+                return new MetaDataWithContent(uid, modSeq, keywords, size, internalDate, content, sharedContent, attachments, mailboxIds, messageId);
             }
         }
 
         private final MessageUid uid;
         private final long modSeq;
-        private final Flags flags;
+        private final Keywords keywords;
         private final long size;
         private final Instant internalDate;
         private final InputStream content;
@@ -348,7 +346,7 @@ public class MessageFactory {
 
         private MetaDataWithContent(MessageUid uid,
                                     long modSeq,
-                                    Flags flags,
+                                    Keywords keywords,
                                     long size,
                                     Instant internalDate,
                                     InputStream content,
@@ -358,7 +356,7 @@ public class MessageFactory {
                                     MessageId messageId) {
             this.uid = uid;
             this.modSeq = modSeq;
-            this.flags = flags;
+            this.keywords = keywords;
             this.size = size;
             this.internalDate = internalDate;
             this.content = content;
@@ -376,8 +374,8 @@ public class MessageFactory {
             return modSeq;
         }
 
-        public Flags getFlags() {
-            return flags;
+        public Keywords getKeywords() {
+            return keywords;
         }
 
         public long getSize() {

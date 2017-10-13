@@ -27,16 +27,12 @@ import java.io.ByteArrayInputStream;
 import java.time.Instant;
 import java.util.Optional;
 
-import javax.mail.Flags;
-import javax.mail.Flags.Flag;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
 import org.apache.james.jmap.utils.JsoupHtmlTextExtractor;
 import org.apache.james.mailbox.BlobManager;
-import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.AttachmentId;
@@ -58,14 +54,12 @@ public class MessageFactoryTest {
     private static final Instant INTERNAL_DATE = Instant.parse("2012-02-03T14:30:42Z");
 
     private MessageFactory messageFactory;
-    private MessagePreviewGenerator messagePreview ;
-    private HtmlTextExtractor htmlTextExtractor;
-    
+
     @Before
     public void setUp() {
-        htmlTextExtractor = new JsoupHtmlTextExtractor();
+        HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();
 
-        messagePreview = new MessagePreviewGenerator();
+        MessagePreviewGenerator messagePreview = new MessagePreviewGenerator();
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
 
         BlobManager blobManager = mock(BlobManager.class);
@@ -77,7 +71,7 @@ public class MessageFactoryTest {
     public void emptyMailShouldBeLoadedIntoMessage() throws Exception {
         MetaDataWithContent testMail = MetaDataWithContent.builder()
                 .uid(MessageUid.of(2))
-                .flags(new Flags(Flag.SEEN))
+                .keywords(Keywords.factory().from(Keyword.SEEN))
                 .size(0)
                 .internalDate(INTERNAL_DATE)
                 .content(new ByteArrayInputStream("".getBytes(Charsets.UTF_8)))
@@ -94,13 +88,9 @@ public class MessageFactoryTest {
 
     @Test
     public void flagsShouldBeSetIntoMessage() throws Exception {
-        Flags flags = new Flags();
-        flags.add(Flag.ANSWERED);
-        flags.add(Flag.FLAGGED);
-        flags.add(Flag.DRAFT);
         MetaDataWithContent testMail = MetaDataWithContent.builder()
                 .uid(MessageUid.of(2))
-                .flags(flags)
+                .keywords(Keywords.factory().from(Keyword.ANSWERED, Keyword.FLAGGED, Keyword.DRAFT))
                 .size(0)
                 .internalDate(INTERNAL_DATE)
                 .content(new ByteArrayInputStream("".getBytes(Charsets.UTF_8)))
@@ -116,7 +106,7 @@ public class MessageFactoryTest {
 
     @Test
     public void headersShouldBeSetIntoMessage() throws Exception {
-        Flags flags = new Flags(Flag.SEEN);
+        Keywords keywords = Keywords.factory().from(Keyword.SEEN);
         String headers = "From: user <user@domain>\n"
                 + "Subject: test subject\n"
                 + "To: user1 <user1@domain>, user2 <user2@domain>\n"
@@ -128,7 +118,7 @@ public class MessageFactoryTest {
                 + "Other-header: other header value";
         MetaDataWithContent testMail = MetaDataWithContent.builder()
                 .uid(MessageUid.of(2))
-                .flags(flags)
+                .keywords(keywords)
                 .size(headers.length())
                 .internalDate(INTERNAL_DATE)
                 .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
@@ -175,14 +165,14 @@ public class MessageFactoryTest {
                 .preview("(Empty)")
                 .textBody(Optional.of(""))
                 .htmlBody(Optional.empty())
-                .flags(flags)
+                .keywords(keywords)
                 .build();
         assertThat(testee).isEqualToComparingFieldByField(expected);
     }
 
     @Test
     public void headersShouldBeUnfoldedAndDecoded() throws Exception {
-        Flags flags = new Flags(Flag.SEEN);
+        Keywords keywords = Keywords.factory().from(Keyword.SEEN);
         String headers = "From: user <user@domain>\n"
             + "Subject: test subject\n"
             + "To: user1 <user1@domain>,\r\n"
@@ -190,7 +180,7 @@ public class MessageFactoryTest {
             + "Cc: =?UTF-8?Q?Beno=c3=aet_TELLIER?= <tellier@linagora.com>";
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
-            .flags(flags)
+            .keywords(keywords)
             .size(headers.length())
             .internalDate(INTERNAL_DATE)
             .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
@@ -226,7 +216,7 @@ public class MessageFactoryTest {
             .preview("(Empty)")
             .textBody(Optional.of(""))
             .htmlBody(Optional.empty())
-            .flags(flags)
+            .keywords(keywords)
             .build();
 
         assertThat(testee).isEqualToComparingFieldByField(expected);
@@ -234,7 +224,7 @@ public class MessageFactoryTest {
 
     @Test
     public void multivaluedHeadersShouldBeSeparatedByLineFeed() throws Exception {
-        Flags flags = new Flags(Flag.SEEN);
+        Keywords keywords = Keywords.factory().from(Keyword.SEEN);
         String headers = "From: user <user@domain>\n"
             + "Subject: test subject\n"
             + "Multi-header: first value\n"
@@ -242,7 +232,7 @@ public class MessageFactoryTest {
             + "Multi-header: second value\n";
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
-            .flags(flags)
+            .keywords(keywords)
             .size(headers.length())
             .internalDate(INTERNAL_DATE)
             .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
@@ -275,7 +265,7 @@ public class MessageFactoryTest {
             .preview("(Empty)")
             .textBody(Optional.of(""))
             .htmlBody(Optional.empty())
-            .flags(flags)
+            .keywords(keywords)
             .build();
 
         assertThat(testee).isEqualToComparingFieldByField(expected);
@@ -283,12 +273,13 @@ public class MessageFactoryTest {
 
     @Test
     public void textBodyShouldBeSetIntoMessage() throws Exception {
+        Keywords keywords = Keywords.factory().from(Keyword.SEEN);
         String headers = "Subject: test subject\n";
         String body = "Mail body";
         String mail = headers + "\n" + body;
         MetaDataWithContent testMail = MetaDataWithContent.builder()
                 .uid(MessageUid.of(2))
-                .flags(new Flags(Flag.SEEN))
+                .keywords(keywords)
                 .size(mail.length())
                 .internalDate(INTERNAL_DATE)
                 .content(new ByteArrayInputStream(mail.getBytes(Charsets.UTF_8)))
@@ -321,7 +312,7 @@ public class MessageFactoryTest {
 
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
-            .flags(new Flags(Flag.SEEN))
+            .keywords(Keywords.factory().from(Keyword.SEEN))
             .internalDate(INTERNAL_DATE)
             .size(1000)
             .content(messageContent)
@@ -350,7 +341,7 @@ public class MessageFactoryTest {
         String mail = headers + "\n" + body300;
         MetaDataWithContent testMail = MetaDataWithContent.builder()
                 .uid(MessageUid.of(2))
-                .flags(new Flags(Flag.SEEN))
+            .keywords(Keywords.factory().from(Keyword.SEEN))
                 .size(mail.length())
                 .internalDate(INTERNAL_DATE)
                 .content(new ByteArrayInputStream(mail.getBytes(Charsets.UTF_8)))
@@ -366,7 +357,7 @@ public class MessageFactoryTest {
     public void attachmentsShouldBeEmptyWhenNone() throws Exception {
         MetaDataWithContent testMail = MetaDataWithContent.builder()
                 .uid(MessageUid.of(2))
-                .flags(new Flags(Flag.SEEN))
+            .keywords(Keywords.factory().from(Keyword.SEEN))
                 .size(0)
                 .internalDate(INTERNAL_DATE)
                 .content(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("spamMail.eml"))))
@@ -392,7 +383,7 @@ public class MessageFactoryTest {
                 .build();
         MetaDataWithContent testMail = MetaDataWithContent.builder()
                 .uid(MessageUid.of(2))
-                .flags(new Flags(Flag.SEEN))
+            .keywords(Keywords.factory().from(Keyword.SEEN))
                 .size(0)
                 .internalDate(INTERNAL_DATE)
                 .content(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("spamMail.eml"))))
@@ -424,7 +415,7 @@ public class MessageFactoryTest {
             + "Subject: test subject\n";
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
-            .flags(new Flags(Flag.SEEN))
+            .keywords(Keywords.factory().from(Keyword.SEEN))
             .size(headers.length())
             .internalDate(INTERNAL_DATE)
             .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
@@ -453,7 +444,7 @@ public class MessageFactoryTest {
             + "Subject: test subject\n";
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
-            .flags(new Flags(Flag.SEEN))
+            .keywords(Keywords.factory().from(Keyword.SEEN))
             .size(headers.length())
             .internalDate(INTERNAL_DATE)
             .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
@@ -478,7 +469,7 @@ public class MessageFactoryTest {
 
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
-            .flags(new Flags(Flag.SEEN))
+            .keywords(Keywords.factory().from(Keyword.SEEN))
             .size(headers.length())
             .internalDate(INTERNAL_DATE)
             .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
@@ -504,7 +495,7 @@ public class MessageFactoryTest {
 
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
-            .flags(new Flags(Flag.SEEN))
+            .keywords(Keywords.factory().from(Keyword.SEEN))
             .size(headers.length())
             .internalDate(INTERNAL_DATE)
             .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
@@ -529,7 +520,7 @@ public class MessageFactoryTest {
 
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
-            .flags(new Flags(Flag.SEEN))
+            .keywords(Keywords.factory().from(Keyword.SEEN))
             .size(headers.length())
             .internalDate(INTERNAL_DATE)
             .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
@@ -547,7 +538,7 @@ public class MessageFactoryTest {
     public void mailWithBigLinesShouldBeLoadedIntoMessage() throws Exception {
         MetaDataWithContent testMail = MetaDataWithContent.builder()
                 .uid(MessageUid.of(2))
-                .flags(new Flags(Flag.SEEN))
+            .keywords(Keywords.factory().from(Keyword.SEEN))
                 .size(1010)
                 .internalDate(INTERNAL_DATE)
                 .content(new ByteArrayInputStream((StringUtils.repeat("0123456789", 101).getBytes(Charsets.UTF_8))))
@@ -570,7 +561,7 @@ public class MessageFactoryTest {
             + "my <b>HTML</b> message").getBytes(Charsets.UTF_8));
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
-            .flags(new Flags(Flag.SEEN))
+            .keywords(Keywords.factory().from(Keyword.SEEN))
             .size(messageContent.read())
             .internalDate(INTERNAL_DATE)
             .content(messageContent)
@@ -591,7 +582,7 @@ public class MessageFactoryTest {
             + "Subject: message 1 subject\r\n").getBytes(Charsets.UTF_8));
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
-            .flags(new Flags(Flag.SEEN))
+            .keywords(Keywords.factory().from(Keyword.SEEN))
             .size(messageContent.read())
             .internalDate(INTERNAL_DATE)
             .content(messageContent)
@@ -623,7 +614,7 @@ public class MessageFactoryTest {
 
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
-            .flags(new Flags(Flag.SEEN))
+            .keywords(Keywords.factory().from(Keyword.SEEN))
             .size(messageContent.read())
             .internalDate(INTERNAL_DATE)
             .content(messageContent)
@@ -645,7 +636,7 @@ public class MessageFactoryTest {
 
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
-            .flags(new Flags(Flag.SEEN))
+            .keywords(Keywords.factory().from(Keyword.SEEN))
             .size(messageContent.read())
             .internalDate(INTERNAL_DATE)
             .content(messageContent)
@@ -664,7 +655,7 @@ public class MessageFactoryTest {
 
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
-            .flags(new Flags(Flag.SEEN))
+            .keywords(Keywords.factory().from(Keyword.SEEN))
             .size(messageContent.read())
             .internalDate(INTERNAL_DATE)
             .content(messageContent)
@@ -688,7 +679,7 @@ public class MessageFactoryTest {
 
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
-            .flags(new Flags(Flag.SEEN))
+            .keywords(Keywords.factory().from(Keyword.SEEN))
             .size(messageContent.read())
             .internalDate(INTERNAL_DATE)
             .content(messageContent)
@@ -724,7 +715,7 @@ public class MessageFactoryTest {
 
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
-            .flags(new Flags(Flag.SEEN))
+            .keywords(Keywords.factory().from(Keyword.SEEN))
             .size(messageContent.read())
             .internalDate(INTERNAL_DATE)
             .content(messageContent)
@@ -741,16 +732,11 @@ public class MessageFactoryTest {
 
     @Test
     public void keywordShouldBeSetIntoMessage() throws Exception {
-        Flags flags = FlagsBuilder.builder()
-            .add(Flag.ANSWERED, Flag.DRAFT)
-            .build();
-        ImmutableMap<String, Boolean> keywords = Keywords.factory()
-            .fromFlags(flags)
-            .asMap();
+        Keywords keywords = Keywords.factory().from(Keyword.SEEN, Keyword.DRAFT);
 
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
-            .flags(flags)
+            .keywords(keywords)
             .size(0)
             .internalDate(INTERNAL_DATE)
             .content(new ByteArrayInputStream("".getBytes(Charsets.UTF_8)))
@@ -759,21 +745,16 @@ public class MessageFactoryTest {
             .messageId(TestMessageId.of(2))
             .build();
         Message testee = messageFactory.fromMetaDataWithContent(testMail);
-        assertThat(testee.getKeywords()).containsAllEntriesOf(keywords);
+        assertThat(testee.getKeywords()).containsAllEntriesOf(keywords.asMap());
     }
 
     @Test
     public void keywordWithUserFlagShouldBeSetIntoMessage() throws Exception {
-        Flags flags = FlagsBuilder.builder()
-            .add(Flag.ANSWERED)
-            .add(FORWARDED)
-            .build();
-        ImmutableMap<String, Boolean> keywords = Keywords.factory()
-            .fromFlags(flags)
-            .asMap();
+        Keywords keywords = Keywords.factory().from(Keyword.ANSWERED, new Keyword(FORWARDED));
+
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
-            .flags(flags)
+            .keywords(keywords)
             .size(0)
             .internalDate(INTERNAL_DATE)
             .content(new ByteArrayInputStream("".getBytes(Charsets.UTF_8)))
@@ -782,31 +763,6 @@ public class MessageFactoryTest {
             .messageId(TestMessageId.of(2))
             .build();
         Message testee = messageFactory.fromMetaDataWithContent(testMail);
-        assertThat(testee.getKeywords()).containsAllEntriesOf(keywords);
-    }
-
-    @Test
-    public void fromMetaDataWithContentShouldRemoveUnsupportedKeyword() throws Exception {
-        Flags flags = FlagsBuilder.builder()
-            .add(Flag.ANSWERED, Flag.DELETED, Flag.RECENT)
-            .add(FORWARDED)
-            .build();
-        ImmutableMap<String, Boolean> keywords = Keywords.factory()
-            .filterImapNonExposedKeywords()
-            .fromFlags(flags)
-            .asMap();
-
-        MetaDataWithContent testMail = MetaDataWithContent.builder()
-            .uid(MessageUid.of(2))
-            .flags(flags)
-            .size(0)
-            .internalDate(INTERNAL_DATE)
-            .content(new ByteArrayInputStream("".getBytes(Charsets.UTF_8)))
-            .attachments(ImmutableList.of())
-            .mailboxId(MAILBOX_ID)
-            .messageId(TestMessageId.of(2))
-            .build();
-        Message testee = messageFactory.fromMetaDataWithContent(testMail);
-        assertThat(testee.getKeywords()).containsAllEntriesOf(keywords);
+        assertThat(testee.getKeywords()).containsAllEntriesOf(keywords.asMap());
     }
 }

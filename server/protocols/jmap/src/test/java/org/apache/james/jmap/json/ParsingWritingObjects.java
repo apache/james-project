@@ -27,6 +27,7 @@ import javax.mail.Flags;
 import org.apache.james.jmap.model.BlobId;
 import org.apache.james.jmap.model.Emailer;
 import org.apache.james.jmap.model.Keyword;
+import org.apache.james.jmap.model.Keywords;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.SubMessage;
 import org.apache.james.mailbox.FlagsBuilder;
@@ -41,7 +42,7 @@ import com.google.common.collect.ImmutableSet;
 
 public interface ParsingWritingObjects {
 
-    public interface Common {
+    interface Common {
         MessageId MESSAGE_ID = TestMessageId.of(1);
         BlobId BLOB_ID = BlobId.of("myBlobId");
         String THREAD_ID = "myThreadId";
@@ -76,7 +77,7 @@ public interface ParsingWritingObjects {
             .threadId(Common.THREAD_ID)
             .mailboxIds(Common.MAILBOX_IDS)
             .inReplyToMessageId(Common.IN_REPLY_TO_MESSAGE_ID)
-            .flags(Common.FLAGS)
+            .keywords(Keywords.factory().fromSet(Common.KEYWORDS))
             .headers(Common.HEADERS)
             .from(Common.FROM)
             .to(Common.TO)

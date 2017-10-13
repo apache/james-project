@@ -248,7 +248,7 @@ public class GetMessagesMethodStepdefs {
 
     @Given("^the user has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with flags \"([^\"]*)\"$")
     public void appendMessageWithFlags(String messageName, String mailbox, List<String> flagList) throws Exception {
-        appendMessage(messageName, FlagListToFlags.fromFlagList(flagList));
+        appendMessage(messageName, StringListToFlags.fromFlagList(flagList));
     }
 
     private void appendMessage(String messageName, Flags flags) throws Exception {

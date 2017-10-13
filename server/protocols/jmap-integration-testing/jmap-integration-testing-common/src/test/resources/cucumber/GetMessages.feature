@@ -349,6 +349,17 @@ Feature: GetMessages method
             |flags                          |keyword                        |
             |"$Flagged,$Answered,$Draft"    |$Flagged,$Answered,$Draft      |
 
+  Scenario Outline: GetMessages should filter invalid keywords
+    Given the user has a message "m1" in the "inbox" mailbox with flags <flags>
+    When the user ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the keywords of the message is <keyword>
+
+    Examples:
+      |flags                               |keyword                |
+      |"$Draft,@ert,t^a,op§,$user_flag"    |$Draft,$user_flag      |
+
   Scenario Outline: Retrieving message should display keywords without unsupported jmap flag
     Given the user has a message "m1" in the "inbox" mailbox with flags <flags>
     When the user ask for messages "m1"
