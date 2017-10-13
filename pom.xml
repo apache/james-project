@@ -1419,6 +1419,11 @@
                 <version>2.6.3</version>
             </dependency>
             <dependency>
+                <groupId>com.github.dpaukov</groupId>
+                <artifactId>combinatoricslib3</artifactId>
+                <version>3.2.0</version>
+            </dependency>
+            <dependency>
                 <groupId>com.github.fge</groupId>
                 <artifactId>throwing-lambdas</artifactId>
                 <version>0.5.0</version>
