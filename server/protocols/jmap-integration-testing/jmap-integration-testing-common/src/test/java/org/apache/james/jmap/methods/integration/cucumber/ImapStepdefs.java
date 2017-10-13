@@ -41,11 +41,13 @@ public class ImapStepdefs {
     private static final String LOCALHOST = "127.0.0.1";
 
     private final UserStepdefs userStepdefs;
+    private final MainStepdefs mainStepdefs;
     private final Map<String, IMAPMessageReader> imapConnections;
 
     @Inject
-    private ImapStepdefs(UserStepdefs userStepdefs) {
+    private ImapStepdefs(UserStepdefs userStepdefs, MainStepdefs mainStepdefs) {
         this.userStepdefs = userStepdefs;
+        this.mainStepdefs = mainStepdefs;
         this.imapConnections = Maps.newHashMap();
     }
 
@@ -93,6 +95,13 @@ public class ImapStepdefs {
         imapConnections.put(mailbox, imapMessageReader);
     }
 
+    @Then("^the user set flags via IMAP to \"([^\"]*)\" for all messages in mailbox \"([^\"]*)\"$")
+    public void setFlagsViaIMAPInMailbox(String flags, String mailbox) throws Throwable {
+        IMAPMessageReader imapMessageReader = imapConnections.get(mailbox);
+        imapMessageReader.setFlagsForAllMessagesInMailbox(flags);
+        mainStepdefs.awaitMethod.run();
+    }
+
     @Then("^the user has a IMAP RECENT and a notification about (\\d+) new messages on connection for mailbox \"([^\"]*)\"$")
     public void checkNotificationForNewMessageOnActiveConnection(int numberOfMessages, String mailbox) throws Throwable {
         IMAPMessageReader imapMessageReader = imapConnections.get(mailbox);
@@ -110,6 +119,7 @@ public class ImapStepdefs {
         imapMessageReader.connectAndSelect(login, password, srcMailbox);
         assertThat(imapMessageReader).isNotNull();
         imapMessageReader.copyFirstMessage(destMailbox);
+        mainStepdefs.awaitMethod.run();
     }
 
     @Then("^the user has IMAP EXPUNGE and a notification for (\\d+) message sequence number on connection for mailbox \"([^\"]*)\"$")

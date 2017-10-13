@@ -19,8 +19,12 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import javax.inject.Inject;
 
+import org.apache.http.entity.ContentType;
 import org.apache.http.client.fluent.Request;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
@@ -66,9 +70,10 @@ public class SetMessagesMethodStepdefs {
             "]";
         Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
             .addHeader("Authorization", userStepdefs.tokenByUser.get(username).serialize())
-            .bodyString(requestBody, org.apache.http.entity.ContentType.APPLICATION_JSON)
+            .bodyString(requestBody, ContentType.APPLICATION_JSON)
             .execute()
             .discardContent();
+        mainStepdefs.awaitMethod.run();
     }
 
     @When("^the user copy \"([^\"]*)\" from mailbox \"([^\"]*)\" to mailbox \"([^\"]*)\"")
@@ -97,8 +102,37 @@ public class SetMessagesMethodStepdefs {
             "]";
         Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
             .addHeader("Authorization", userStepdefs.tokenByUser.get(username).serialize())
-            .bodyString(requestBody, org.apache.http.entity.ContentType.APPLICATION_JSON)
+            .bodyString(requestBody, ContentType.APPLICATION_JSON)
             .execute()
             .discardContent();
+        mainStepdefs.awaitMethod.run();
+    }
+
+    @When("^the user set flags on \"([^\"]*)\" to \"([^\"]*)\"")
+    public void setFlags(String message, List<String> keywords) throws Throwable {
+        String username = userStepdefs.lastConnectedUser;
+        MessageId messageId = getMessagesMethodStepdefs.getMessageId(message);
+        String keywordString = keywords
+            .stream()
+            .map(value -> "\"" + value + "\" : true")
+            .collect(Collectors.joining(","));
+
+        Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
+            .addHeader("Authorization", userStepdefs.tokenByUser.get(username).serialize())
+            .bodyString("[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"update\": { \"" + messageId.serialize() + "\" : {" +
+                "        \"keywords\": {" + keywordString + "}" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]",
+                ContentType.APPLICATION_JSON)
+            .execute()
+            .discardContent();
+        mainStepdefs.awaitMethod.run();
     }
 }

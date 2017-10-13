@@ -108,6 +108,7 @@ public class GetMessagesMethodStepdefs {
 
         mainStepdefs.jmapServer.getProbe(JmapGuiceProbe.class).setInMailboxes(id, userStepdefs.lastConnectedUser, mailboxId1, mailboxId2);
         messageIdsByName.put(messageName, id);
+        mainStepdefs.awaitMethod.run();
     }
 
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with subject \"([^\"]*)\", content \"([^\"]*)\"$")
@@ -143,14 +144,19 @@ public class GetMessagesMethodStepdefs {
                     Date.from(dateTime.toInstant()), false, new Flags())
                 .getMessageId();
         messageIdsByName.put(messageName, id);
+        mainStepdefs.awaitMethod.run();
     }
 
     private MessageId appendMessage(String mailbox, ContentType contentType, String subject, String content, Optional<Map<String, String>> headers) throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
-        return mainStepdefs.mailboxProbe.appendMessage(userStepdefs.lastConnectedUser,
+        try {
+            return mainStepdefs.mailboxProbe.appendMessage(userStepdefs.lastConnectedUser,
                 MailboxPath.forUser(userStepdefs.lastConnectedUser, mailbox),
                 new ByteArrayInputStream(message(contentType, subject, content, headers).getBytes(Charsets.UTF_8)),
                 Date.from(dateTime.toInstant()), false, new Flags()).getMessageId();
+        } finally {
+            mainStepdefs.awaitMethod.run();
+        }
     }
 
     private String message(ContentType contentType, String subject, String content, Optional<Map<String,String>> headers) {

@@ -95,6 +95,11 @@ public class IMAPMessageReader implements Closeable {
         return readFirstMessageInMailbox(user, password, "(RFC822.HEADER)", INBOX);
     }
 
+    public String setFlagsForAllMessagesInMailbox(String flag) throws IOException {
+        imapClient.store("1:*", "+FLAGS", flag);
+        return imapClient.getReplyString();
+    }
+
     private String readFirstMessageInMailbox(String user, String password, String parameters, String mailboxName) throws IOException {
         imapClient.login(user, password);
         imapClient.select(mailboxName);
