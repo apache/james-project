@@ -42,7 +42,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.apache.james.jmap.DefaultMailboxes;
 import org.apache.james.jmap.methods.integration.cucumber.util.TableRow;
-import org.apache.james.jmap.model.Keywords;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
@@ -248,11 +247,8 @@ public class GetMessagesMethodStepdefs {
     }
 
     @Given("^the user has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with flags \"([^\"]*)\"$")
-    public void appendMessageWithFlags(String messageName, String mailbox, List<String> keywords) throws Exception {
-        Flags flags = Keywords.factory()
-            .fromList(keywords)
-            .asFlags();
-        appendMessage(messageName, flags);
+    public void appendMessageWithFlags(String messageName, String mailbox, List<String> flagList) throws Exception {
+        appendMessage(messageName, FlagListToFlags.fromFlagList(flagList));
     }
 
     private void appendMessage(String messageName, Flags flags) throws Exception {
