@@ -25,6 +25,7 @@ Feature: Download GET
     Given a domain named "domain.tld"
     And a connected user "username@domain.tld"
     And "username@domain.tld" has a mailbox "INBOX"
+    And "username@domain.tld" has a mailbox "sharedMailbox"
 
   Scenario: Getting an attachment previously stored
     Given "username@domain.tld" mailbox "INBOX" contains a message "1" with an attachment "2"
@@ -81,3 +82,21 @@ Feature: Download GET
     And "username1@domain.tld" has a mailbox "INBOX"
     When "username1@domain.tld" downloads "1"
     Then the user should receive a not found response
+
+  Scenario: User can download attachment of another user when shared mailbox
+    Given "username@domain.tld" mailbox "sharedMailbox" contains a message "1" with an attachment "2"
+    And "username@domain.tld" shares its mailbox "sharedMailbox" with "username1@domain.tld"
+    And a connected user "username1@domain.tld"
+    And "username1@domain.tld" has a mailbox "sharedMailbox"
+    When "username1@domain.tld" downloads "2"
+    Then the user should receive that blob
+    And the blob size is 3071
+
+  Scenario: User can download message blob of another user when shared mailbox
+    Given "username@domain.tld" mailbox "sharedMailbox" contains a message "1" with an attachment "2"
+    And "username@domain.tld" shares its mailbox "sharedMailbox" with "username1@domain.tld"
+    And a connected user "username1@domain.tld"
+    And "username1@domain.tld" has a mailbox "sharedMailbox"
+    When "username1@domain.tld" downloads "1"
+    Then the user should receive that blob
+    And the blob size is 4963

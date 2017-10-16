@@ -105,9 +105,10 @@ public class DownloadStepdefs {
     public void appendMessageWithAttachmentToMailbox(String user, String mailbox, String messageId, String attachmentId) throws Throwable {
         MailboxPath mailboxPath = MailboxPath.forUser(user, mailbox);
 
-        mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
+        ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
                 ClassLoader.getSystemResourceAsStream("eml/oneAttachment.eml"), new Date(), false, new Flags());
-        
+
+        inputToMessageId.put(messageId, composedMessageId.getMessageId());
         attachmentsByMessageId.put(messageId, attachmentId);
         blobIdByAttachmentId.put(attachmentId, ONE_ATTACHMENT_EML_ATTACHMENT_BLOB_ID);
     }
