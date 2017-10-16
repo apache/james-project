@@ -22,7 +22,9 @@ package org.apache.james.jmap.methods.integration.cucumber;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.store.probe.ACLProbe;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
+import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
@@ -38,6 +40,7 @@ public class MainStepdefs {
     public GuiceJamesServer jmapServer;
     public DataProbe dataProbe;
     public MailboxProbe mailboxProbe;
+    public ACLProbe aclProbe;
     public Runnable awaitMethod = () -> {};
     public MessageId.Factory messageIdFactory;
     
@@ -45,6 +48,7 @@ public class MainStepdefs {
         jmapServer.start();
         dataProbe = jmapServer.getProbe(DataProbeImpl.class);
         mailboxProbe = jmapServer.getProbe(MailboxProbeImpl.class);
+        aclProbe = jmapServer.getProbe(ACLProbeImpl.class);
     }
     
 
