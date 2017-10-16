@@ -224,6 +224,10 @@ public class MailboxACL {
             return value.contains(right);
         }
 
+        public boolean contains(Right... rights) {
+            return value.containsAll(Arrays.asList(rights));
+        }
+
         public boolean equals(Object o) {
             if (o instanceof Rfc4314Rights) {
                 Rfc4314Rights that = (Rfc4314Rights) o;
