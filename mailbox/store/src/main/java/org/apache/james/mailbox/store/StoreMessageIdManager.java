@@ -161,7 +161,7 @@ public class StoreMessageIdManager implements MessageIdManager {
 
         allowOnMailboxSession(mailboxIds, mailboxSession, mailboxMapper);
 
-        List<MailboxMessage> mailboxMessages = messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Full)
+        List<MailboxMessage> mailboxMessages = messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata)
             .stream()
             .filter(messageBelongsToUser(mailboxSession, mailboxMapper))
             .collect(Guavate.toImmutableList());
