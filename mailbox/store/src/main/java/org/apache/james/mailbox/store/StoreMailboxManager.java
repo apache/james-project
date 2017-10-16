@@ -48,6 +48,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.NotAdminException;
+import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
@@ -846,6 +847,17 @@ public class StoreMailboxManager implements MailboxManager {
     public Rfc4314Rights myRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
+        return myRights(session, mailbox);
+    }
+
+    @Override
+    public Rfc4314Rights myRights(MailboxId mailboxId, MailboxSession session) throws MailboxException {
+        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        Mailbox mailbox = mapper.findMailboxById(mailboxId);
+        return myRights(session, mailbox);
+    }
+
+    private Rfc4314Rights myRights(MailboxSession session, Mailbox mailbox) throws UnsupportedRightException {
         MailboxSession.User user = session.getUser();
         if (user != null) {
             return aclResolver.resolveRights(user.getUserName(), groupMembershipResolver, mailbox.getACL(), mailbox.getUser(), new GroupFolderResolver(session).isGroupFolder(mailbox));

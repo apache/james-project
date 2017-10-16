@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -195,20 +196,27 @@ public class DefaultMailboxesProvisioningFilterThreadTest {
 
         @Override
         public MailboxACL.Rfc4314Rights myRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
-            return null;
+            throw new NotImplementedException();
+        }
+
+        @Override
+        public MailboxACL.Rfc4314Rights myRights(MailboxId mailboxId, MailboxSession session) throws MailboxException {
+            throw new NotImplementedException();
         }
 
         @Override
         public MailboxACL.Rfc4314Rights[] listRigths(MailboxPath mailboxPath, MailboxACL.EntryKey identifier, MailboxSession session) throws MailboxException {
-            return null;
+            throw new NotImplementedException();
         }
 
         @Override
         public void applyRightsCommand(MailboxPath mailboxPath, MailboxACL.ACLCommand mailboxACLCommand, MailboxSession session) throws MailboxException {
+            throw new NotImplementedException();
         }
 
         @Override
         public void setRights(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
+            throw new NotImplementedException();
         }
 
         @Override

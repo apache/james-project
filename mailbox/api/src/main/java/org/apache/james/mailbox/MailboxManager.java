@@ -363,6 +363,8 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      */
     MailboxACL.Rfc4314Rights myRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 
+    MailboxACL.Rfc4314Rights myRights(MailboxId mailboxId, MailboxSession session) throws MailboxException;
+
     /**
      * Computes a result suitable for the LISTRIGHTS IMAP command. The result is
      * computed for this mailbox and the given {@code identifier}.
