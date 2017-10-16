@@ -22,7 +22,6 @@ package org.apache.james.mailbox.store;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
@@ -690,7 +689,7 @@ public class StoreMailboxManager implements MailboxManager {
         List<Mailbox> mailboxes = Stream.concat(baseMailboxes,
                 delegatedMailboxes)
             .distinct()
-            .filter(Throwing.predicate(mailbox -> hasRightForCurrentUser(session, mailbox, right)))
+            .filter(Throwing.predicate(mailbox -> hasRight(mailbox, right, session)))
             .collect(Guavate.toImmutableList());
 
         return mailboxes
@@ -721,20 +720,6 @@ public class StoreMailboxManager implements MailboxManager {
             return Stream.of();
         }
         return mailboxMapper.findNonPersonalMailboxes(session.getUser().getUserName(), Right.Lookup).stream();
-    }
-
-    private boolean hasRightForCurrentUser(MailboxSession session, Mailbox mailbox,
-                                           Right right) throws MailboxException {
-        return (isSameUser(session, mailbox) && isUserNamespace(mailbox))
-                || hasRight(mailbox, right, session);
-    }
-
-    private boolean isSameUser(MailboxSession session, Mailbox mailbox) {
-        return Objects.equals(mailbox.getUser(), session.getUser().getUserName());
-    }
-
-    private boolean isUserNamespace(Mailbox mailbox) {
-        return Objects.equals(mailbox.getNamespace(), MailboxConstants.USER_NAMESPACE);
     }
 
     private SimpleMailboxMetaData toMailboxMetadata(MailboxSession session, List<Mailbox> mailboxes, Mailbox mailbox) {
