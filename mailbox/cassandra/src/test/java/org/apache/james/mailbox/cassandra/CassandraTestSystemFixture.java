@@ -58,8 +58,10 @@ public class CassandraTestSystemFixture {
         return cassandraMailboxManager;
     }
 
-    public static StoreMessageIdManager createMessageIdManager(CassandraMailboxSessionMapperFactory mapperFactory, QuotaManager quotaManager, MailboxEventDispatcher dispatcher) {
-        return new StoreMessageIdManager(mapperFactory,
+    public static StoreMessageIdManager createMessageIdManager(CassandraMailboxSessionMapperFactory mapperFactory, QuotaManager quotaManager, MailboxEventDispatcher dispatcher) throws Exception {
+        return new StoreMessageIdManager(
+            createMailboxManager(mapperFactory),
+            mapperFactory,
             dispatcher,
             new CassandraMessageId.Factory(),
             quotaManager,

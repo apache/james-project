@@ -19,7 +19,15 @@
 
 package org.apache.james.mailbox.store;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -39,7 +47,12 @@ public class StoreMessageIdManagerSideEffectTest extends AbstractMessageIdManage
 
         TestMailboxSessionMapperFactory testMailboxSessionMapperFactory = new TestMailboxSessionMapperFactory();
         MessageId.Factory messageIdFactory = new TestMessageId.Factory();
-        MessageIdManager messageIdManager = new StoreMessageIdManager(testMailboxSessionMapperFactory, dispatcher, messageIdFactory,
+        MailboxManager mailboxManager = mock(MailboxManager.class);
+        when(mailboxManager.myRights(any(MailboxId.class), any(MailboxSession.class)))
+            .thenReturn(MailboxACL.FULL_RIGHTS);
+
+        MessageIdManager messageIdManager = new StoreMessageIdManager(mailboxManager,
+            testMailboxSessionMapperFactory, dispatcher, messageIdFactory,
             quotaManager, new DefaultQuotaRootResolver(testMailboxSessionMapperFactory));
 
         return new StoreMessageIdManagerTestSystem(messageIdManager,

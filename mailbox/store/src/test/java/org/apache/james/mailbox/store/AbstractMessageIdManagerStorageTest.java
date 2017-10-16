@@ -20,9 +20,11 @@
 package org.apache.james.mailbox.store;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import javax.mail.Flags;
@@ -36,6 +38,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.fixture.MailboxFixture;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
@@ -534,4 +537,370 @@ public abstract class AbstractMessageIdManagerStorageTest {
         return messageResult -> messageResult.getMailboxId().equals(mailboxId);
     }
 
+    @Test
+    public void getMessagesShouldReturnMessagesWhenReadDelegated() throws Exception {
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(MailboxFixture.OTHER_USER)
+                    .rights(new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
+
+        List<MessageResult> messages = messageIdManager.getMessages(ImmutableList.of(messageId),
+            FetchGroupImpl.MINIMAL, bobSession);
+
+        assertThat(messages)
+            .extracting(MessageResult::getMessageId)
+            .containsOnly(messageId);
+    }
+
+    @Test
+    public void getMessagesShouldNotReturnMessagesWhenNotReadDelegated() throws Exception {
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(MailboxFixture.OTHER_USER)
+                    .rights(MailboxACL.Rfc4314Rights.allExcept(MailboxACL.Right.Read))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
+
+        List<MessageResult> messages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, bobSession);
+
+        assertThat(messages)
+            .isEmpty();
+    }
+
+    @Test
+    public void setFlagsShouldUpdateFlagsWhenWriteDelegated() throws Exception {
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(MailboxFixture.OTHER_USER)
+                    .rights(new MailboxACL.Rfc4314Rights(MailboxACL.Right.Write))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
+
+        Flags newFlags = new Flags(Flags.Flag.SEEN);
+        messageIdManager.setFlags(newFlags, MessageManager.FlagsUpdateMode.REPLACE,
+            messageId, ImmutableList.of(aliceMailbox1.getMailboxId()), bobSession);
+
+        List<MessageResult> messages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, aliceSession);
+        assertThat(messages)
+            .extracting(MessageResult::getFlags)
+            .containsOnly(newFlags);
+    }
+
+    @Test
+    public void setFlagsShouldNotUpdateFlagsWhenNotWriteDelegated() throws Exception {
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(MailboxFixture.OTHER_USER)
+                    .rights(MailboxACL.Rfc4314Rights.allExcept(MailboxACL.Right.Write))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
+
+        assertThatThrownBy(() ->
+            messageIdManager.setFlags(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.REPLACE,
+                messageId, ImmutableList.of(aliceMailbox1.getMailboxId()), bobSession))
+            .isInstanceOf(MailboxNotFoundException.class);
+
+        List<MessageResult> messages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, aliceSession);
+        assertThat(messages)
+            .extracting(MessageResult::getFlags)
+            .containsOnly(FLAGS);
+    }
+
+    @Test
+    public void setInMailboxesShouldAllowCopyingMessageFromReadOnlySharedMailbox() throws Exception {
+        //Given
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(MailboxFixture.OTHER_USER)
+                    .rights(new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
+
+        //When
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(aliceMailbox1.getMailboxId(), bobMailbox1.getMailboxId()), bobSession);
+
+        //Then
+        List<MessageResult> messages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, bobSession);
+        assertThat(messages)
+            .extracting(MessageResult::getMessageId)
+            .containsOnly(messageId, messageId);
+        assertThat(messages)
+            .extracting(MessageResult::getMailboxId)
+            .containsOnly(aliceMailbox1.getMailboxId(), bobMailbox1.getMailboxId());
+    }
+
+    @Test
+    public void setInMailboxesShouldDenyCopyingMessageFromNotReadSharedMailbox() throws Exception {
+        //Given
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(MailboxFixture.OTHER_USER)
+                    .rights(MailboxACL.Rfc4314Rights.allExcept(MailboxACL.Right.Read))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
+
+        //When
+        assertThatThrownBy(() ->
+            messageIdManager.setInMailboxes(messageId,
+                ImmutableList.of(aliceMailbox1.getMailboxId(), bobMailbox1.getMailboxId()),
+                bobSession))
+            .isInstanceOf(MailboxNotFoundException.class);
+
+        //Then
+        List<MessageResult> messages = messageIdManager.getMessages(
+            ImmutableList.of(messageId),
+            FetchGroupImpl.MINIMAL,
+            bobSession);
+        assertThat(messages)
+            .isEmpty();
+    }
+
+    @Test
+    public void setInMailboxesShouldAllowCopyingToAInsertSharedMailbox() throws Exception {
+        //Given
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(MailboxFixture.OTHER_USER)
+                    .rights(new MailboxACL.Rfc4314Rights(MailboxACL.Right.Insert, MailboxACL.Right.Read))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(bobMailbox1.getMailboxId(), messageUid1, FLAGS, bobSession);
+
+        //When
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(aliceMailbox1.getMailboxId(), bobMailbox1.getMailboxId()), bobSession);
+
+        //Then
+        List<MessageResult> messages = messageIdManager.getMessages(
+            ImmutableList.of(messageId),
+            FetchGroupImpl.MINIMAL,
+            aliceSession);
+        assertThat(messages)
+            .extracting(MessageResult::getMessageId)
+            .containsOnly(messageId);
+        assertThat(messages)
+            .extracting(MessageResult::getMailboxId)
+            .containsOnly(aliceMailbox1.getMailboxId());
+    }
+
+    @Test
+    public void setInMailboxesShouldDenyCopyingToANonInsertSharedMailbox() throws Exception {
+        //Given
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(MailboxFixture.OTHER_USER)
+                    .rights(MailboxACL.Rfc4314Rights.allExcept(MailboxACL.Right.Insert))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(bobMailbox1.getMailboxId(), messageUid1, FLAGS, bobSession);
+
+        //When
+        assertThatThrownBy(() ->
+            messageIdManager.setInMailboxes(messageId,
+                ImmutableList.of(aliceMailbox1.getMailboxId(), bobMailbox1.getMailboxId()),
+                bobSession))
+            .isInstanceOf(MailboxNotFoundException.class);
+
+        //Then
+        List<MessageResult> messages = messageIdManager.getMessages(
+            ImmutableList.of(messageId),
+            FetchGroupImpl.MINIMAL,
+            bobSession);
+        assertThat(messages)
+            .extracting(MessageResult::getMessageId)
+            .containsOnly(messageId);
+        assertThat(messages)
+            .extracting(MessageResult::getMailboxId)
+            .containsOnly(bobMailbox1.getMailboxId());
+    }
+
+    @Test
+    public void setInMailboxesShouldAllowMovingMessagesFromASharedMailboxWhenDeleteRight() throws Exception {
+        //Given
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(MailboxFixture.OTHER_USER)
+                    .rights(new MailboxACL.Rfc4314Rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read, MailboxACL.Right.DeleteMessages))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
+
+        //When
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(bobMailbox1.getMailboxId()), bobSession);
+
+        //Then
+        List<MessageResult> messages = messageIdManager.getMessages(
+            ImmutableList.of(messageId),
+            FetchGroupImpl.MINIMAL,
+            bobSession);
+        assertThat(messages)
+            .extracting(MessageResult::getMessageId)
+            .containsOnly(messageId);
+        assertThat(messages)
+            .extracting(MessageResult::getMailboxId)
+            .containsOnly(bobMailbox1.getMailboxId());
+    }
+
+    @Test
+    public void setInMailboxesShouldDenyMovingMessagesFromASharedMailboxWhenNoDeleteRight() throws Exception {
+        //Given
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(MailboxFixture.OTHER_USER)
+                    .rights(MailboxACL.Rfc4314Rights.allExcept(MailboxACL.Right.DeleteMessages))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
+
+        //When
+        assertThatThrownBy(() ->
+            messageIdManager.setInMailboxes(messageId,
+                ImmutableList.of(bobMailbox1.getMailboxId()),
+                bobSession))
+            .isInstanceOf(MailboxNotFoundException.class);
+
+        //Then
+        List<MessageResult> messages = messageIdManager.getMessages(
+            ImmutableList.of(messageId),
+            FetchGroupImpl.MINIMAL,
+            bobSession);
+        assertThat(messages)
+            .extracting(MessageResult::getMessageId)
+            .containsOnly(messageId);
+        assertThat(messages)
+            .extracting(MessageResult::getMailboxId)
+            .containsOnly(aliceMailbox1.getMailboxId());
+    }
+
+    @Test
+    public void setInMailboxShouldAllowDistinctMailboxSetForShareeAndOwner() throws Exception {
+        //Given
+        testingData.setACL(aliceMailbox2.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(MailboxFixture.OTHER_USER)
+                    .rights(MailboxACL.FULL_RIGHTS)
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(aliceMailbox1.getMailboxId(), aliceMailbox2.getMailboxId()), aliceSession);
+
+        //When
+        messageIdManager.setInMailboxes(messageId,
+            ImmutableList.of(bobMailbox1.getMailboxId(), aliceMailbox2.getMailboxId()),
+            bobSession);
+
+        //Then
+        List<MessageResult> messagesForSharee = messageIdManager.getMessages(
+            ImmutableList.of(messageId),
+            FetchGroupImpl.MINIMAL,
+            bobSession);
+        assertThat(messagesForSharee)
+            .extracting(MessageResult::getMessageId)
+            .containsOnly(messageId, messageId);
+        assertThat(messagesForSharee)
+            .extracting(MessageResult::getMailboxId)
+            .containsOnly(aliceMailbox2.getMailboxId(), bobMailbox1.getMailboxId());
+
+        List<MessageResult> messagesForOwner = messageIdManager.getMessages(
+            ImmutableList.of(messageId),
+            FetchGroupImpl.MINIMAL,
+            aliceSession);
+        assertThat(messagesForOwner)
+            .extracting(MessageResult::getMessageId)
+            .containsOnly(messageId, messageId);
+        assertThat(messagesForOwner)
+            .extracting(MessageResult::getMailboxId)
+            .containsOnly(aliceMailbox1.getMailboxId(), aliceMailbox2.getMailboxId());
+    }
+
+    @Test
+    public void deleteShouldRemoveMessagesFromSharedMailboxWhenAllowed() throws Exception {
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(MailboxFixture.OTHER_USER)
+                    .rights(new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read, MailboxACL.Right.Lookup, MailboxACL.Right.DeleteMessages))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
+
+        messageIdManager.delete(messageId, ImmutableList.of(aliceMailbox1.getMailboxId()), bobSession);
+
+        List<MessageResult> messages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, aliceSession);
+        assertThat(messages)
+            .isEmpty();
+    }
+
+    @Test
+    public void deleteShouldNotRemoveMessagesFromSharedMailboxWhenNotAllowed() throws Exception {
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(MailboxFixture.OTHER_USER)
+                    .rights(MailboxACL.Rfc4314Rights.allExcept(MailboxACL.Right.DeleteMessages))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
+
+        assertThatThrownBy(() ->
+            messageIdManager.delete(messageId, ImmutableList.of(aliceMailbox1.getMailboxId()), bobSession))
+            .isInstanceOf(MailboxNotFoundException.class);
+
+        List<MessageResult> messages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, aliceSession);
+        assertThat(messages)
+            .extracting(MessageResult::getMessageId)
+            .containsOnly(messageId);
+    }
+
+    @Test
+    public void accessibleMessagesShouldReturnMessagesWhenReadDelegated() throws Exception {
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(MailboxFixture.OTHER_USER)
+                    .rights(new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read, MailboxACL.Right.Lookup))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
+
+        Set<MessageId> messages = messageIdManager.accessibleMessages(ImmutableList.of(messageId), bobSession);
+
+        assertThat(messages)
+            .containsOnly(messageId);
+    }
+
+    @Test
+    public void accessibleMessagesShouldNotReturnMessagesWhenNotReadDelegated() throws Exception {
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(MailboxFixture.OTHER_USER)
+                    .rights(MailboxACL.Rfc4314Rights.allExcept(MailboxACL.Right.Read))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
+
+        Set<MessageId> messages = messageIdManager.accessibleMessages(ImmutableList.of(messageId), bobSession);
+
+        assertThat(messages)
+            .isEmpty();
+    }
 }

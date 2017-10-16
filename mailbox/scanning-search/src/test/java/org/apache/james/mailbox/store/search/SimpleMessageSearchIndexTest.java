@@ -62,6 +62,7 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
         storeMailboxManager.setDelegatingMailboxListener(delegatingListener);
 
         messageIdManager = new StoreMessageIdManager(
+            storeMailboxManager,
             storeMailboxManager.getMapperFactory(),
             mailboxEventDispatcher,
             messageIdFactory,

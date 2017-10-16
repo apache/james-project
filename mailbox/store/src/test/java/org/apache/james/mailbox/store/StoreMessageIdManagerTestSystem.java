@@ -34,6 +34,7 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
@@ -102,6 +103,11 @@ public class StoreMessageIdManagerTestSystem extends MessageIdManagerTestSystem 
 
     @Override
     public int getConstantMessageSize() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void setACL(MailboxId mailboxId, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
         throw new NotImplementedException();
     }
 }

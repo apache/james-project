@@ -72,6 +72,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
     @Override
     public MessageIdManager createMessageIdManager(StoreMailboxManager mailboxManager) {
         return new StoreMessageIdManager(
+            mailboxManager,
             mailboxManager.getMapperFactory(),
             mailboxManager.getEventDispatcher(),
             new InMemoryMessageId.Factory(),
