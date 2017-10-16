@@ -56,15 +56,19 @@ import org.apache.james.jmap.utils.HtmlTextExtractor;
 import org.apache.james.jmap.utils.SystemMailboxesProvider;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.BlobManager;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxId.Factory;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
@@ -113,6 +117,8 @@ public class SetMessagesCreationProcessorTest {
     private MockMailboxSession session;
     private MIMEMessageConverter mimeMessageConverter;
     private AttachmentManager mockedAttachmentManager;
+    private MailboxManager mockedMailboxManager;
+    private Factory mockedMailboxIdFactory;
     private SetMessagesCreationProcessor sut;
     private MessageManager outbox;
     private MessageManager drafts;
@@ -121,6 +127,7 @@ public class SetMessagesCreationProcessorTest {
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
+
     @Before
     public void setUp() throws MailboxException {
         HtmlTextExtractor htmlTextExtractor = mock(HtmlTextExtractor.class);
@@ -133,13 +140,20 @@ public class SetMessagesCreationProcessorTest {
         mockedMailSpool = mock(MailSpool.class);
         mockedMailFactory = mock(MailFactory.class);
         mockedAttachmentManager = mock(AttachmentManager.class);
+        mockedMailboxManager = mock(MailboxManager.class);
+        mockedMailboxIdFactory = mock(MailboxId.Factory.class);
         
         fakeSystemMailboxesProvider = new TestSystemMailboxesProvider(() -> optionalOutbox, () -> optionalDrafts);
         session = new MockMailboxSession(USER);
         mimeMessageConverter = new MIMEMessageConverter();
-        sut = new SetMessagesCreationProcessor(mimeMessageConverter, mockedMailSpool, mockedMailFactory, messageFactory, fakeSystemMailboxesProvider, mockedAttachmentManager, new NoopMetricFactory());
+        sut = new SetMessagesCreationProcessor(mimeMessageConverter, mockedMailSpool, mockedMailFactory, messageFactory, fakeSystemMailboxesProvider, mockedAttachmentManager, new NoopMetricFactory(), mockedMailboxManager, mockedMailboxIdFactory);
         
         outbox = mock(MessageManager.class);
+        when(mockedMailboxIdFactory.fromString(OUTBOX_ID.serialize()))
+            .thenReturn(OUTBOX_ID);
+        when(mockedMailboxManager.getMailbox(OUTBOX_ID, session))
+            .thenReturn(outbox);
+        
         when(outbox.getId()).thenReturn(OUTBOX_ID);
         when(outbox.getMailboxPath()).thenReturn(MailboxPath.forUser(USER, OUTBOX));
         
@@ -216,7 +230,7 @@ public class SetMessagesCreationProcessorTest {
     @Test
     public void processShouldReturnNonEmptyCreatedWhenRequestHasNonEmptyCreate() throws MailboxException {
         // Given
-        sut = new SetMessagesCreationProcessor(mimeMessageConverter, mockedMailSpool, mockedMailFactory, messageFactory, fakeSystemMailboxesProvider, mockedAttachmentManager, new NoopMetricFactory());
+        sut = new SetMessagesCreationProcessor(mimeMessageConverter, mockedMailSpool, mockedMailFactory, messageFactory, fakeSystemMailboxesProvider, mockedAttachmentManager, new NoopMetricFactory(), mockedMailboxManager, mockedMailboxIdFactory);
 
         // When
         SetMessagesResponse result = sut.process(createMessageInOutbox, session);
@@ -231,7 +245,7 @@ public class SetMessagesCreationProcessorTest {
     public void processShouldReturnErrorWhenOutboxNotFound() {
         // Given
         TestSystemMailboxesProvider doNotProvideOutbox = new TestSystemMailboxesProvider(Optional::empty, () -> optionalDrafts);
-        SetMessagesCreationProcessor sut = new SetMessagesCreationProcessor(mimeMessageConverter, mockedMailSpool, mockedMailFactory, messageFactory, doNotProvideOutbox, mockedAttachmentManager, new NoopMetricFactory());
+        SetMessagesCreationProcessor sut = new SetMessagesCreationProcessor(mimeMessageConverter, mockedMailSpool, mockedMailFactory, messageFactory, doNotProvideOutbox, mockedAttachmentManager, new NoopMetricFactory(), mockedMailboxManager, mockedMailboxIdFactory);
         // When
         SetMessagesResponse actual = sut.process(createMessageInOutbox, session);
         
@@ -346,6 +360,73 @@ public class SetMessagesCreationProcessorTest {
                 session))
             .isInstanceOf(AttachmentsNotFoundException.class)
             .matches(e -> ((AttachmentsNotFoundException)e).getAttachmentIds().containsAll(ImmutableSet.of(unknownBlobId1, unknownBlobId2)));
+    }
+
+    @Test
+    public void validateIsUserOwnerOfMailboxesShouldThrowWhenMailboxIdDoesntExist() throws Exception {
+        InMemoryId mailboxId = InMemoryId.of(6789);
+        when(mockedMailboxManager.getMailbox(mailboxId, session))
+            .thenThrow(new MailboxNotFoundException(mailboxId));
+        when(mockedMailboxIdFactory.fromString(mailboxId.serialize()))
+            .thenReturn(mailboxId);
+        CreationMessageId creationMessageId = CreationMessageId.of("anything-really");
+        CreationMessageEntry entry = new CreationMessageEntry(creationMessageId, creationMessageBuilder.mailboxId(mailboxId.serialize()).build());
+
+        assertThatThrownBy(() -> sut.validateIsUserOwnerOfMailboxes(entry, session));
+    }
+
+    @Test
+    public void validateIsUserOwnerOfMailboxesShouldThrowWhenRetrievingMailboxPathFails() throws Exception {
+        CreationMessageId creationMessageId = CreationMessageId.of("anything-really");
+        InMemoryId mailboxId = InMemoryId.of(6789);
+        MessageManager mailbox = mock(MessageManager.class);
+        when(mockedMailboxManager.getMailbox(mailboxId, session))
+            .thenReturn(mailbox);
+        when(mockedMailboxIdFactory.fromString(mailboxId.serialize()))
+            .thenReturn(mailboxId);
+        when(mailbox.getMailboxPath())
+            .thenThrow(new MailboxException());
+
+        CreationMessageEntry entry = new CreationMessageEntry(creationMessageId, creationMessageBuilder.mailboxId(mailboxId.serialize()).build());
+
+        assertThatThrownBy(() -> sut.validateIsUserOwnerOfMailboxes(entry, session));
+    }
+
+    @Test
+    public void validateIsUserOwnerOfMailboxesShouldThrowWhenUserIsNotTheOwnerOfTheMailbox() throws Exception {
+        CreationMessageId creationMessageId = CreationMessageId.of("anything-really");
+        InMemoryId mailboxId = InMemoryId.of(6789);
+        MessageManager mailbox = mock(MessageManager.class);
+        when(mockedMailboxManager.getMailbox(mailboxId, session))
+            .thenReturn(mailbox);
+        when(mockedMailboxIdFactory.fromString(mailboxId.serialize()))
+            .thenReturn(mailboxId);
+        when(mailbox.getMailboxPath())
+            .thenReturn(MailboxPath.forUser("otheruser@example.com", mailboxId.serialize()));
+
+
+        CreationMessageEntry entry = new CreationMessageEntry(creationMessageId, creationMessageBuilder.mailboxId(mailboxId.serialize()).build());
+
+        assertThatThrownBy(() -> sut.validateIsUserOwnerOfMailboxes(entry, session))
+            .isInstanceOf(MailboxRightsException.class);
+    }
+
+    @Test
+    public void validateIsUserOwnerOfMailboxesShouldNotThrowWhenUserIsTheOwnerOfTheMailbox() throws Exception {
+        CreationMessageId creationMessageId = CreationMessageId.of("anything-really");
+        InMemoryId mailboxId = InMemoryId.of(6789);
+        MessageManager mailbox = mock(MessageManager.class);
+        when(mockedMailboxManager.getMailbox(mailboxId, session))
+            .thenReturn(mailbox);
+        when(mockedMailboxIdFactory.fromString(mailboxId.serialize()))
+            .thenReturn(mailboxId);
+        when(mailbox.getMailboxPath())
+            .thenReturn(MailboxPath.forUser(USER, mailboxId.serialize()));
+
+
+        CreationMessageEntry entry = new CreationMessageEntry(creationMessageId, creationMessageBuilder.mailboxId(mailboxId.serialize()).build());
+
+        sut.validateIsUserOwnerOfMailboxes(entry, session);
     }
     
     public static class TestSystemMailboxesProvider implements SystemMailboxesProvider {

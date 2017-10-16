@@ -57,6 +57,7 @@ import org.apache.james.jmap.send.MailSpool;
 import org.apache.james.jmap.utils.SystemMailboxesProvider;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailbox.AttachmentManager;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
@@ -65,6 +66,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
@@ -93,6 +95,8 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     private final SystemMailboxesProvider systemMailboxesProvider;
     private final AttachmentManager attachmentManager;
     private final MetricFactory metricFactory;
+    private final MailboxManager mailboxManager;
+    private final MailboxId.Factory mailboxIdFactory;
     
     @VisibleForTesting @Inject
     SetMessagesCreationProcessor(MIMEMessageConverter mimeMessageConverter,
@@ -100,7 +104,10 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                                  MailFactory mailFactory,
                                  MessageFactory messageFactory,
                                  SystemMailboxesProvider systemMailboxesProvider,
-                                 AttachmentManager attachmentManager, MetricFactory metricFactory) {
+                                 AttachmentManager attachmentManager, 
+                                 MetricFactory metricFactory,
+                                 MailboxManager mailboxManager,
+                                 MailboxId.Factory mailboxIdFactory) {
         this.mimeMessageConverter = mimeMessageConverter;
         this.mailSpool = mailSpool;
         this.mailFactory = mailFactory;
@@ -108,6 +115,8 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         this.systemMailboxesProvider = systemMailboxesProvider;
         this.attachmentManager = attachmentManager;
         this.metricFactory = metricFactory;
+        this.mailboxManager = mailboxManager;
+        this.mailboxIdFactory = mailboxIdFactory;
     }
 
     @Override
@@ -167,6 +176,14 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                         .description(e.getMessage())
                         .build());
 
+        } catch (MailboxRightsException e) {
+            LOG.error("Appending message in an unknown mailbox", e);
+            responseBuilder.notCreated(create.getCreationId(), 
+                    SetError.builder()
+                        .type("error")
+                        .description("MailboxId invalid")
+                        .build());
+
         } catch (MailboxException | MessagingException e) {
             LOG.error("Unexpected error while creating message", e);
             responseBuilder.notCreated(create.getCreationId(), 
@@ -223,7 +240,12 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         return AttachmentId.from(attachment.getBlobId().getRawValue());
     }
 
-    private void validateRights(CreationMessageEntry entry, MailboxSession session) throws MailboxSendingNotAllowedException {
+    private void validateRights(CreationMessageEntry entry, MailboxSession session) throws MailboxSendingNotAllowedException, MailboxRightsException {
+        validateUserIsInSenders(entry, session);
+        validateIsUserOwnerOfMailboxes(entry, session);
+    }
+
+    private void validateUserIsInSenders(CreationMessageEntry entry, MailboxSession session) throws MailboxSendingNotAllowedException {
         List<String> allowedSenders = ImmutableList.of(session.getUser().getUserName());
         if (!isAllowedFromAddress(entry.getValue(), allowedSenders)) {
             throw new MailboxSendingNotAllowedException(allowedSenders);
@@ -238,7 +260,20 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                 .orElse(false);
     }
 
-    
+    @VisibleForTesting void validateIsUserOwnerOfMailboxes(CreationMessageEntry entry, MailboxSession session) throws MailboxRightsException {
+        if (containsMailboxNotOwn(entry.getValue().getMailboxIds(), session)) {
+            throw new MailboxRightsException();
+        }
+    }
+
+    private boolean containsMailboxNotOwn(List<String> mailboxIds, MailboxSession session) {
+        return mailboxIds.stream()
+            .map(mailboxIdFactory::fromString)
+            .map(Throwing.function(mailboxId -> mailboxManager.getMailbox(mailboxId, session)))
+            .map(Throwing.function(MessageManager::getMailboxPath))
+            .anyMatch(path -> !session.getUser().isSameUser(path.getUser()));
+    }
+
     private MessageWithId handleOutboxMessages(CreationMessageEntry entry, MailboxSession session) throws MailboxException, MessagingException {
         MessageManager outbox = getMailboxWithRole(session, Role.OUTBOX).orElseThrow(() -> new MailboxNotFoundException(Role.OUTBOX.serialize()));
         if (!isRequestForSending(entry.getValue(), session)) {
