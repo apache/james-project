@@ -81,7 +81,9 @@ public abstract class GetMessageListMethodTest {
     protected abstract void await();
 
     private AccessToken aliceAccessToken;
+    private AccessToken bobAccessToken;
     private String alice;
+    private String bob;
     private String domain;
     private GuiceJamesServer jmapServer;
     private MailboxProbe mailboxProbe;
@@ -102,11 +104,17 @@ public abstract class GetMessageListMethodTest {
                 .build();
 
         this.domain = "domain.tld";
+
         this.alice = "alice@" + domain;
-        String password = "password";
         dataProbe.addDomain(domain);
-        dataProbe.addUser(alice, password);
-        this.aliceAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), alice, password);
+        String alicePassword = "alicePassword";
+        dataProbe.addUser(alice, alicePassword);
+        this.aliceAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), alice, alicePassword);
+
+        this.bob = "bob@" + domain;
+        String bobPassword = "bobPassword";
+        dataProbe.addUser(bob, bobPassword);
+        this.bobAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), bob, bobPassword);
     }
 
     private URIBuilder baseUri() {
