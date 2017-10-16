@@ -24,6 +24,7 @@ Feature: GetMessages method
   Background:
     Given a domain named "domain.tld"
     And a connected user "alice@domain.tld"
+    And a user "bob@domain.tld"
     And "alice@domain.tld" has a mailbox "INBOX"
 
   Scenario: Retrieving a message in several mailboxes should return a single message in these mailboxes
