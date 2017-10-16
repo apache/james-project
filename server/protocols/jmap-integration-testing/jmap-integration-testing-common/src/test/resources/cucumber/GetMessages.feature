@@ -23,11 +23,11 @@ Feature: GetMessages method
 
   Background:
     Given a domain named "domain.tld"
-    And a connected user "username@domain.tld"
-    And "username@domain.tld" has a mailbox "INBOX"
+    And a connected user "alice@domain.tld"
+    And "alice@domain.tld" has a mailbox "INBOX"
 
   Scenario: Retrieving a message in several mailboxes should return a single message in these mailboxes
-    Given "username@domain.tld" has a mailbox "custom"
+    Given "alice@domain.tld" has a mailbox "custom"
     And the user has a message "m1" in "INBOX" and "custom" mailboxes with subject "my test subject", content "testmail"
     When the user ask for messages "m1"
     Then no error is returned
