@@ -392,6 +392,11 @@ public class MailboxEventAnalyserTest {
         }
 
         @Override
+        public void setRights(MailboxId mailboxId, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
+            throw new NotImplementedException("Not implemented");
+        }
+
+        @Override
         public List<MailboxAnnotation> getAllAnnotations(MailboxPath mailboxPath, MailboxSession session)
                 throws MailboxException {
             return null;

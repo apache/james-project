@@ -215,6 +215,11 @@ public class DefaultMailboxesProvisioningFilterThreadTest {
         }
 
         @Override
+        public void setRights(MailboxId mailboxId, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
+            throw new NotImplementedException();
+        }
+
+        @Override
         public void setRights(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
             throw new NotImplementedException();
         }

@@ -883,6 +883,17 @@ public class StoreMailboxManager implements MailboxManager {
     public void setRights(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
+        setRights(mailbox, mailboxACL, mapper);
+    }
+
+    @Override
+    public void setRights(MailboxId mailboxId, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
+        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        Mailbox mailbox = mapper.findMailboxById(mailboxId);
+        setRights(mailbox, mailboxACL, mapper);
+    }
+
+    public void setRights(Mailbox mailbox, MailboxACL mailboxACL, MailboxMapper mapper) throws MailboxException {
         mapper.execute(Mapper.toTransaction(() -> mapper.setACL(mailbox, mailboxACL)));
     }
 

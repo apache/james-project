@@ -406,6 +406,8 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      */
     void setRights(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException;
 
+    void setRights(MailboxId mailboxId, MailboxACL mailboxACL, MailboxSession session) throws MailboxException;
+
     /**
      * Return a unmodifiable {@link List} of {@link MailboxPath} objects
      * 
