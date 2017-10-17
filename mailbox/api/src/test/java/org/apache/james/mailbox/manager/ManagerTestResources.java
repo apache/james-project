@@ -41,14 +41,14 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
 /**
  * Provide an initialized Mailbox environment where we can run managers tests
  */
-public class ManagerTestResources {
+public class ManagerTestResources<T extends MailboxManager> {
 
     public static final String USER = "user@domain.org";
     public static final String USER_PASS = "pass";
     public static final String OTHER_USER = "otherUser@domain.org";
     public static final String OTHER_USER_PASS = "otherPass";
 
-    private MailboxManager mailboxManager;
+    private T mailboxManager;
 
     private MailboxPath inbox;
     private MessageManager messageManager;
@@ -61,9 +61,9 @@ public class ManagerTestResources {
     private GroupMembershipResolver groupMembershipResolver;
     private QuotaRootResolver quotaRootResolver;
 
-    private IntegrationResources integrationResources;
+    private IntegrationResources<T> integrationResources;
 
-    public ManagerTestResources(IntegrationResources integrationResources) throws Exception {
+    public ManagerTestResources(IntegrationResources<T> integrationResources) throws Exception {
         this.integrationResources = integrationResources;
         maxQuotaManager = integrationResources.createMaxQuotaManager();
         groupMembershipResolver = integrationResources.createGroupMembershipResolver();
@@ -121,7 +121,7 @@ public class ManagerTestResources {
         return session;
     }
 
-    public IntegrationResources getIntegrationResources() {
+    public IntegrationResources<T> getIntegrationResources() {
         return integrationResources;
     }
 

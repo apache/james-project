@@ -41,9 +41,9 @@ import javax.mail.Flags;
  * Tests are performed with sufficient rights to ensure all underlying functions behave well.
  * Quota are adjusted and we check that exceptions are well thrown.
  */
-public abstract class QuotaMessageManagerTest {
+public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
 
-    private ManagerTestResources resources;
+    private ManagerTestResources<T> resources;
 
     private MessageManager messageManager;
     private MailboxManager mailboxManager;
@@ -54,7 +54,7 @@ public abstract class QuotaMessageManagerTest {
     private MailboxPath inbox;
     private MailboxPath subFolder;
 
-    protected abstract ManagerTestResources createResources() throws Exception;
+    protected abstract ManagerTestResources<T> createResources() throws Exception;
 
     @Before
     public void setUp() throws Exception {

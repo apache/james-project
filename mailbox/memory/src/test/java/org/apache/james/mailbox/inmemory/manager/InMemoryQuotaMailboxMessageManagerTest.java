@@ -20,6 +20,7 @@ package org.apache.james.mailbox.inmemory.manager;
 
 import org.apache.james.mailbox.manager.ManagerTestResources;
 import org.apache.james.mailbox.manager.QuotaMessageManagerTest;
+import org.apache.james.mailbox.store.StoreMailboxManager;
 
 /**
  * Test for quota support upon basic MailboxMessage manager operation.
@@ -27,11 +28,11 @@ import org.apache.james.mailbox.manager.QuotaMessageManagerTest;
  * Tests are performed with sufficient rights to ensure all underlying functions behave well.
  * Quota are adjusted and we check that exceptions are well thrown.
  */
-public class InMemoryQuotaMailboxMessageManagerTest extends QuotaMessageManagerTest {
+public class InMemoryQuotaMailboxMessageManagerTest extends QuotaMessageManagerTest<StoreMailboxManager> {
 
     @Override
-    protected ManagerTestResources createResources() throws Exception {
-        return new ManagerTestResources(new InMemoryIntegrationResources());
+    protected ManagerTestResources<StoreMailboxManager> createResources() throws Exception {
+        return new ManagerTestResources<StoreMailboxManager>(new InMemoryIntegrationResources());
     }
 
 }
