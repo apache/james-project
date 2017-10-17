@@ -45,7 +45,7 @@ import com.google.common.collect.Iterators;
  */
 public abstract class AbstractMessageMapper extends TransactionalMapper implements MessageMapper {
 
-    private static final int UNLIMITED = -1;
+    public static final int UNLIMITED = -1;
 
     protected final MailboxSession mailboxSession;
     private final UidProvider uidProvider;

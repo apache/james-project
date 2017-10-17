@@ -29,6 +29,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -92,6 +93,18 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
         } catch (MailboxException e) {
             Throwables.propagate(e);
         }
+    }
+
+
+    @Override
+    public void addRights(MailboxId mailboxId, MailboxACL.Rfc4314Rights rights, String targetUser, MailboxSession session) throws MailboxException {
+        MessageManager mailbox = mailboxManager.getMailbox(mailboxId, session);
+        mailboxManager.applyRightsCommand(mailbox.getMailboxPath(),
+            MailboxACL.command()
+                .rights(rights)
+                .forUser(targetUser)
+                .asAddition(),
+            session);
     }
 
     private Optional<MailboxMetaData> retrieveMailbox(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
