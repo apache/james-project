@@ -41,7 +41,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
-import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
@@ -96,7 +96,7 @@ public class StoreMessageIdManager implements MessageIdManager {
     public void setFlags(Flags newState, MessageManager.FlagsUpdateMode replace, MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
 
-        assertRightsOnMailboxes(mailboxIds, mailboxSession, MailboxACL.Right.Write);
+        assertRightsOnMailboxes(mailboxIds, mailboxSession, Right.Write);
 
         Map<MailboxId, UpdatedFlags> updatedFlags = messageIdMapper.setFlags(messageId, mailboxIds, newState, replace);
         for (Map.Entry<MailboxId, UpdatedFlags> entry : updatedFlags.entrySet()) {
@@ -109,7 +109,7 @@ public class StoreMessageIdManager implements MessageIdManager {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
         List<MailboxMessage> messageList = messageIdMapper.find(messageIds, MessageMapper.FetchType.Metadata);
         return messageList.stream()
-            .filter(hasRightsOn(mailboxSession, MailboxACL.Right.Read))
+            .filter(hasRightsOn(mailboxSession, Right.Read))
             .map(message -> message.getComposedMessageIdWithMetaData().getComposedMessageId().getMessageId())
             .collect(Guavate.toImmutableSet());
     }
@@ -123,7 +123,7 @@ public class StoreMessageIdManager implements MessageIdManager {
             ImmutableSet<MailboxId> allowedMailboxIds = messageList.stream()
                 .map(MailboxMessage::getMailboxId)
                 .distinct()
-                .filter(hasRightsOnMailbox(mailboxSession, MailboxACL.Right.Read))
+                .filter(hasRightsOnMailbox(mailboxSession, Right.Read))
                 .collect(Guavate.toImmutableSet());
 
             return messageList.stream()
@@ -140,7 +140,7 @@ public class StoreMessageIdManager implements MessageIdManager {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
 
-        assertRightsOnMailboxes(mailboxIds, mailboxSession, MailboxACL.Right.DeleteMessages);
+        assertRightsOnMailboxes(mailboxIds, mailboxSession, Right.DeleteMessages);
 
         ImmutableList<MetadataWithMailboxId> metadatasWithMailbox = messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata)
             .stream()
@@ -162,11 +162,11 @@ public class StoreMessageIdManager implements MessageIdManager {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
 
-        assertRightsOnMailboxes(mailboxIds, mailboxSession, MailboxACL.Right.Read);
+        assertRightsOnMailboxes(mailboxIds, mailboxSession, Right.Read);
         
         List<MailboxMessage> mailboxMessages = messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata)
             .stream()
-            .filter(hasRightsOn(mailboxSession, MailboxACL.Right.Read))
+            .filter(hasRightsOn(mailboxSession, Right.Read))
             .collect(Guavate.toImmutableList());
 
         if (!mailboxMessages.isEmpty()) {
@@ -178,8 +178,8 @@ public class StoreMessageIdManager implements MessageIdManager {
             List<MailboxId> mailboxesToRemove = ImmutableList.copyOf(Sets.difference(currentMailboxes, targetMailboxes));
             SetView<MailboxId> mailboxesToAdd = Sets.difference(targetMailboxes, currentMailboxes);
 
-            assertRightsOnMailboxes(mailboxesToAdd, mailboxSession, MailboxACL.Right.Insert);
-            assertRightsOnMailboxes(mailboxesToRemove, mailboxSession, MailboxACL.Right.DeleteMessages);
+            assertRightsOnMailboxes(mailboxesToAdd, mailboxSession, Right.Insert);
+            assertRightsOnMailboxes(mailboxesToRemove, mailboxSession, Right.DeleteMessages);
 
             MailboxMessage mailboxMessage = mailboxMessages.get(0);
             validateQuota(mailboxesToAdd, mailboxesToRemove, mailboxSession, mailboxMessage);
@@ -279,16 +279,16 @@ public class StoreMessageIdManager implements MessageIdManager {
         return mailboxMessage -> mailboxIds.contains(mailboxMessage.getMailboxId());
     }
 
-    private Predicate<MailboxMessage> hasRightsOn(MailboxSession session, MailboxACL.Right... rights) {
+    private Predicate<MailboxMessage> hasRightsOn(MailboxSession session, Right... rights) {
         return message -> hasRightsOnMailbox(session, rights).test(message.getMailboxId());
     }
 
-    private Predicate<MailboxId> hasRightsOnMailbox(MailboxSession session, MailboxACL.Right... rights) {
+    private Predicate<MailboxId> hasRightsOnMailbox(MailboxSession session, Right... rights) {
         return Throwing.predicate((MailboxId mailboxId) -> mailboxManager.myRights(mailboxId, session).contains(rights))
             .fallbackTo(any -> false);
     }
 
-    private void assertRightsOnMailboxes(Collection<MailboxId> mailboxIds, MailboxSession mailboxSession, MailboxACL.Right... rights) throws MailboxNotFoundException {
+    private void assertRightsOnMailboxes(Collection<MailboxId> mailboxIds, MailboxSession mailboxSession, Right... rights) throws MailboxNotFoundException {
         Optional<MailboxId> mailboxForbidden = mailboxIds.stream()
             .filter(hasRightsOnMailbox(mailboxSession, rights).negate())
             .findFirst();
