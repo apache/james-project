@@ -24,9 +24,6 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mime4j.dom.address.Mailbox;
-
-import javax.mail.Flags;
 
 public interface RightManager {
     /**

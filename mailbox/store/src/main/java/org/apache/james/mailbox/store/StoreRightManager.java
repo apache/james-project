@@ -67,7 +67,10 @@ public class StoreRightManager implements RightManager {
     public boolean hasRight(Mailbox mailbox, Right right, MailboxSession session) throws MailboxException {
         MailboxSession.User user = session.getUser();
         String userName = user != null ? user.getUserName() : null;
-        return aclResolver.hasRight(userName, groupMembershipResolver, right, mailbox.getACL(), mailbox.getUser(), new GroupFolderResolver(session).isGroupFolder(mailbox));
+        boolean resourceOwnerIsGroup = new GroupFolderResolver(session).isGroupFolder(mailbox);
+
+        return aclResolver.hasRight(userName, groupMembershipResolver, right, mailbox.getACL(), mailbox.getUser(),
+                                    resourceOwnerIsGroup);
     }
 
     @Override
