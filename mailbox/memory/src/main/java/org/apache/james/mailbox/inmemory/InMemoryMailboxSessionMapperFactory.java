@@ -24,6 +24,7 @@ import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.inmemory.mail.InMemoryAnnotationMapper;
 import org.apache.james.mailbox.inmemory.mail.InMemoryAttachmentMapper;
 import org.apache.james.mailbox.inmemory.mail.InMemoryMailboxMapper;
+import org.apache.james.mailbox.inmemory.mail.InMemoryMessageIdMapper;
 import org.apache.james.mailbox.inmemory.mail.InMemoryMessageMapper;
 import org.apache.james.mailbox.inmemory.mail.InMemoryModSeqProvider;
 import org.apache.james.mailbox.inmemory.mail.InMemoryUidProvider;
@@ -42,6 +43,7 @@ public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFac
 
     private final MailboxMapper mailboxMapper;
     private final InMemoryMessageMapper messageMapper;
+    private final InMemoryMessageIdMapper messageIdMapper;
     private final SubscriptionMapper subscriptionMapper;
     private final AttachmentMapper attachmentMapper;
     private final AnnotationMapper annotationMapper;
@@ -53,6 +55,8 @@ public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFac
         uidProvider = new InMemoryUidProvider();
         modSeqProvider = new InMemoryModSeqProvider();
         messageMapper = new InMemoryMessageMapper(null, uidProvider, modSeqProvider);
+        messageIdMapper = new InMemoryMessageIdMapper(mailboxMapper, messageMapper);
+
         subscriptionMapper = new InMemorySubscriptionMapper();
         attachmentMapper = new InMemoryAttachmentMapper();
         annotationMapper = new InMemoryAnnotationMapper();
@@ -70,7 +74,7 @@ public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFac
 
     @Override
     public MessageIdMapper createMessageIdMapper(MailboxSession session) {
-        return null;
+        return messageIdMapper;
     }
 
     @Override

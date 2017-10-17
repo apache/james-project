@@ -38,23 +38,16 @@ import java.util.Map;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
-import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
+import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.search.MailboxQuery;
-import org.apache.james.mailbox.store.FakeAuthorizator;
-import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.SimpleMailboxMetaData;
-import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
@@ -111,18 +104,9 @@ public class UserMailboxesRoutesTest {
 
         @Before
         public void setUp() throws Exception {
-            MessageId.Factory messageIdFactory = new DefaultMessageId.Factory();
-            InMemoryMailboxManager mailboxManager = new InMemoryMailboxManager(new InMemoryMailboxSessionMapperFactory(),
-                (userid, passwd) -> true,
-                FakeAuthorizator.defaultReject(),
-                new JVMMailboxPathLocker(),
-                new UnionMailboxACLResolver(),
-                new SimpleGroupMembershipResolver(),
-                new MessageParser(),
-                messageIdFactory);
-            mailboxManager.init();
+            InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
 
-            createServer(mailboxManager);
+            createServer(inMemoryIntegrationResources.createMailboxManager(new SimpleGroupMembershipResolver()));
         }
 
         @Test

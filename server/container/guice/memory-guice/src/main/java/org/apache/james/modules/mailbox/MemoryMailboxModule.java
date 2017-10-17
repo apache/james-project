@@ -39,7 +39,6 @@ import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
-import org.apache.james.mailbox.inmemory.InMemoryMessageIdManager;
 import org.apache.james.mailbox.inmemory.JsoupTextExtractor;
 import org.apache.james.mailbox.inmemory.mail.InMemoryModSeqProvider;
 import org.apache.james.mailbox.inmemory.mail.InMemoryUidProvider;
@@ -53,6 +52,7 @@ import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreAttachmentManager;
 import org.apache.james.mailbox.store.StoreBlobManager;
+import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
@@ -98,7 +98,7 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(Authenticator.class).to(UserRepositoryAuthenticator.class);
         bind(Authorizator.class).to(UserRepositoryAuthorizator.class);
         bind(MailboxManager.class).to(InMemoryMailboxManager.class);
-        bind(MessageIdManager.class).to(InMemoryMessageIdManager.class);
+        bind(MessageIdManager.class).to(StoreMessageIdManager.class);
         bind(MailboxACLResolver.class).to(UnionMailboxACLResolver.class);
         bind(GroupMembershipResolver.class).to(SimpleGroupMembershipResolver.class);
         bind(AttachmentManager.class).to(StoreAttachmentManager.class);
@@ -118,7 +118,7 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(UnionMailboxACLResolver.class).in(Scopes.SINGLETON);
         bind(SimpleGroupMembershipResolver.class).in(Scopes.SINGLETON);
         bind(InMemoryMessageId.Factory.class).in(Scopes.SINGLETON);
-        bind(InMemoryMessageIdManager.class).in(Scopes.SINGLETON);
+        bind(StoreMessageIdManager.class).in(Scopes.SINGLETON);
         bind(MailboxEventDispatcher.class).in(Scopes.SINGLETON);
         bind(StoreAttachmentManager.class).in(Scopes.SINGLETON);
 

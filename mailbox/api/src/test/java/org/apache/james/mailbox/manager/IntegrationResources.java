@@ -21,28 +21,28 @@ package org.apache.james.mailbox.manager;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MessageIdManager;
-import org.apache.james.mailbox.quota.MaxQuotaManager;
-import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 
 /**
  * Provides empty resources for integration tests.
  */
-public interface IntegrationResources {
+public interface IntegrationResources<T extends MailboxManager> {
 
-    MailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver) throws MailboxException;
+    T createMailboxManager(GroupMembershipResolver groupMembershipResolver) throws MailboxException;
 
-    QuotaManager createQuotaManager(MaxQuotaManager maxQuotaManager, MailboxManager mailboxManager) throws Exception;
+    QuotaManager createQuotaManager(MaxQuotaManager maxQuotaManager, T mailboxManager) throws Exception;
 
     MaxQuotaManager createMaxQuotaManager() throws Exception;
 
-    QuotaRootResolver createQuotaRootResolver(MailboxManager mailboxManager) throws Exception;
+    QuotaRootResolver createQuotaRootResolver(T mailboxManager) throws Exception;
 
     GroupMembershipResolver createGroupMembershipResolver() throws Exception;
 
-    MessageIdManager createMessageIdManager(MailboxManager mailboxManager);
+    MessageIdManager createMessageIdManager(T mailboxManager);
     
     /**
      * Init you will want to perform before tests
