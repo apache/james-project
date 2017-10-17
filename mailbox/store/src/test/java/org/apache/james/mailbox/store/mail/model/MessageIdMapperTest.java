@@ -236,15 +236,18 @@ public abstract class MessageIdMapperTest {
         message1.setUid(mapperProvider.generateMessageUid());
         message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
         sut.save(message1);
-        SimpleMailboxMessage copiedMessage = SimpleMailboxMessage.copy(message1.getMailboxId(), message1);
+        SimpleMailboxMessage copiedMessage = SimpleMailboxMessage.copy(benwaWorkMailbox.getMailboxId(), message1);
         copiedMessage.setUid(mapperProvider.generateMessageUid());
-        copiedMessage.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+        copiedMessage.setModSeq(mapperProvider.generateModSeq(benwaWorkMailbox));
 
         sut.copyInMailbox(copiedMessage);
         sut.copyInMailbox(copiedMessage);
 
         List<MailboxId> mailboxes = sut.findMailboxes(message1.getMessageId());
-        assertThat(mailboxes).isEqualTo(ImmutableList.of(benwaInboxMailbox.getMailboxId(), benwaInboxMailbox.getMailboxId()));
+        assertThat(mailboxes)
+            .containsOnly(
+                benwaInboxMailbox.getMailboxId(),
+                benwaWorkMailbox.getMailboxId());
     }
 
     @Test
