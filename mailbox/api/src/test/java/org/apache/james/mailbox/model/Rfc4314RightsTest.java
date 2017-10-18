@@ -232,4 +232,58 @@ public class Rfc4314RightsTest {
     public void containsShouldReturnTrueWhenNonRightsPresent() throws UnsupportedRightException {
         assertThat(lprs.contains()).isTrue();
     }
+
+    @Test
+    public void allExceptShouldReturnFullWhenProvidedEmpty() throws UnsupportedRightException {
+        assertThat(Rfc4314Rights.allExcept()).isEqualTo(MailboxACL.FULL_RIGHTS);
+    }
+
+    @Test
+    public void allExceptShouldReturnAllButProvidedRight() throws UnsupportedRightException {
+        assertThat(Rfc4314Rights.allExcept(Lookup))
+            .isEqualTo(new Rfc4314Rights(
+                DeleteMessages,
+                Insert,
+                Read,
+                Administer,
+                Write,
+                WriteSeenFlag,
+                PerformExpunge,
+                CreateMailbox,
+                Post,
+                DeleteMailbox));
+    }
+
+    @Test
+    public void allExceptShouldReturnAllButProvidedRights() throws UnsupportedRightException {
+        assertThat(Rfc4314Rights.allExcept(Lookup, Read))
+            .isEqualTo(new Rfc4314Rights(
+                DeleteMessages,
+                Insert,
+                Administer,
+                Write,
+                WriteSeenFlag,
+                PerformExpunge,
+                CreateMailbox,
+                Post,
+                DeleteMailbox));
+    }
+
+    @Test
+    public void allExceptShouldReturnEmptyWhenProvidedAllRights() throws UnsupportedRightException {
+        assertThat(
+            Rfc4314Rights.allExcept(
+                Lookup,
+                Read,
+                DeleteMessages,
+                Insert,
+                Administer,
+                Write,
+                WriteSeenFlag,
+                PerformExpunge,
+                CreateMailbox,
+                Post,
+                DeleteMailbox))
+            .isEqualTo(new Rfc4314Rights());
+    }
 }

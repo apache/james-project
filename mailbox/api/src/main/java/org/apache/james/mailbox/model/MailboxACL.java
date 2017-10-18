@@ -170,6 +170,11 @@ public class MailboxACL {
      * MailboxACLRights are initialized.
      */
     public static class Rfc4314Rights {
+        public static Rfc4314Rights allExcept(Right... rights) throws UnsupportedRightException {
+            return MailboxACL.FULL_RIGHTS
+                .except(new Rfc4314Rights(rights));
+        }
+
         private static final char c_ObsoleteCreate = 'c';
         private static final char d_ObsoleteDelete = 'd';
 
