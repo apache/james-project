@@ -48,13 +48,11 @@ import org.apache.james.jmap.utils.HtmlTextExtractor;
 import org.apache.james.jmap.utils.JsoupHtmlTextExtractor;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.FlagsBuilder;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.inmemory.InMemoryMessageIdManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.BlobId;
@@ -62,6 +60,7 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.assertj.core.api.Condition;
@@ -119,7 +118,7 @@ public class GetMessagesMethodTest {
     
     private static final User ROBERT = new User("robert", "secret");
 
-    private MailboxManager mailboxManager;
+    private StoreMailboxManager mailboxManager;
     private GetMessagesMethod testee;
 
     private MailboxSession session;
@@ -453,7 +452,7 @@ public class GetMessagesMethodTest {
             + "HEADer2: Header2Content\r\n"
             + "Subject: message 1 subject\r\n\r\nmy message").getBytes(Charsets.UTF_8));
         ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
-        MessageIdManager messageIdManager = new InMemoryMessageIdManager(mailboxManager);
+
         MailboxId customMailboxId = mailboxManager.getMailbox(customMailboxPath, session).getId();
         messageIdManager.setInMailboxes(message1.getMessageId(),
             ImmutableList.of(message1.getMailboxId(), customMailboxId),

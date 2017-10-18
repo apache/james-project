@@ -657,7 +657,7 @@ public abstract class MailboxManagerTest {
         MailboxId delegatedMailboxId = mailboxManager.createMailbox(delegatedMailboxPath, sessionFromDelegater).get();
         MessageManager delegatedMessageManager = mailboxManager.getMailbox(delegatedMailboxId, sessionFromDelegater);
 
-        MessageId messageId = delegatedMessageManager.appendMessage(
+        delegatedMessageManager.appendMessage(
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
             new Date(),
             sessionFromDelegater,
@@ -692,7 +692,7 @@ public abstract class MailboxManagerTest {
         MailboxId otherMailboxId = mailboxManager.createMailbox(otherMailboxPath, sessionFromDelegater).get();
         MessageManager otherMailboxManager = mailboxManager.getMailbox(otherMailboxId, sessionFromDelegater);
 
-        MessageId messageId = otherMailboxManager.appendMessage(
+        otherMailboxManager.appendMessage(
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
             new Date(),
             sessionFromDelegater,
@@ -719,7 +719,7 @@ public abstract class MailboxManagerTest {
         MailboxId otherMailboxId = mailboxManager.createMailbox(otherMailboxPath, sessionFromDelegater).get();
         MessageManager otherMessageManager = mailboxManager.getMailbox(otherMailboxId, sessionFromDelegater);
 
-        MessageId messageId = otherMessageManager.appendMessage(
+        otherMessageManager.appendMessage(
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
             new Date(),
             sessionFromDelegater,
@@ -746,7 +746,7 @@ public abstract class MailboxManagerTest {
         MailboxId otherMailboxId = mailboxManager.createMailbox(otherMailboxPath, session).get();
         MessageManager otherMessageManager = mailboxManager.getMailbox(otherMailboxId, session);
 
-        MessageId messageId = otherMessageManager.appendMessage(
+        otherMessageManager.appendMessage(
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
             new Date(),
             session,
@@ -773,7 +773,7 @@ public abstract class MailboxManagerTest {
         MailboxId otherMailboxId = mailboxManager.createMailbox(otherMailboxPath, session).get();
         MessageManager otherMessageManager = mailboxManager.getMailbox(otherMailboxId, session);
 
-        MessageId messageId = otherMessageManager.appendMessage(
+        otherMessageManager.appendMessage(
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
             new Date(),
             session,

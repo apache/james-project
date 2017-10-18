@@ -35,7 +35,6 @@ import javax.mail.Flags;
 import org.apache.james.jmap.DefaultMailboxes;
 import org.apache.james.jmap.exceptions.MailboxRoleNotFoundException;
 import org.apache.james.jmap.utils.SystemMailboxesProviderImpl;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
@@ -51,6 +50,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
+import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
 import org.apache.mailet.Mail;
@@ -68,7 +68,7 @@ public class PostDequeueDecoratorTest {
     private static final MailboxPath OUTBOX_MAILBOX_PATH = MailboxPath.forUser(USERNAME, OUTBOX);
     private static final MailboxPath SENT_MAILBOX_PATH = MailboxPath.forUser(USERNAME, SENT);
     
-    private MailboxManager mailboxManager;
+    private StoreMailboxManager mailboxManager;
     private MailQueueItem mockedMailQueueItem;
     private Mail mail;
     private PostDequeueDecorator testee;

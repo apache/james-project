@@ -183,7 +183,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
     }
 
     @Override
-    protected MessageMetaData save(Mailbox mailbox, MailboxMessage message) throws MailboxException {
+    public MessageMetaData save(Mailbox mailbox, MailboxMessage message) throws MailboxException {
         SimpleMailboxMessage copy = SimpleMailboxMessage.copy(mailbox.getMailboxId(), message);
         copy.setUid(message.getUid());
         copy.setModSeq(message.getModSeq());

@@ -26,15 +26,19 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
+import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 
@@ -42,6 +46,14 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 
 public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSystem {
+
+    public static InMemoryMessageIdManagerTestSystem create() throws MailboxException {
+        InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
+        StoreMailboxManager mailboxManager = inMemoryIntegrationResources.createMailboxManager(new SimpleGroupMembershipResolver());
+        return new InMemoryMessageIdManagerTestSystem(
+            inMemoryIntegrationResources.createMessageIdManager(mailboxManager),
+            mailboxManager);
+    }
 
     private static final MessageId FIRST_MESSAGE_ID = InMemoryMessageId.of(1);
     private static final long ONE_HUNDRED = 100;
@@ -51,8 +63,8 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
     private final MailboxManager mailboxManager;
     private Optional<MessageId> lastMessageIdUsed;
 
-    public InMemoryMessageIdManagerTestSystem(MailboxManager mailboxManager) {
-        super(new InMemoryMessageIdManager(mailboxManager));
+    private InMemoryMessageIdManagerTestSystem(MessageIdManager messageIdManager, MailboxManager mailboxManager) {
+        super(messageIdManager);
         this.mailboxManager = mailboxManager;
         this.lastMessageIdUsed = Optional.empty();
     }

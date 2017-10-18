@@ -22,7 +22,6 @@ package org.apache.james.mailbox.inmemory.mail;
 import java.util.List;
 import java.util.Random;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
@@ -43,6 +42,8 @@ import com.google.common.collect.ImmutableList;
 
 public class InMemoryMapperProvider implements MapperProvider {
 
+    private static final MockMailboxSession MAILBOX_SESSION = new MockMailboxSession("user");
+
     private final Random random;
     private final MessageId.Factory messageIdFactory;
     private final MessageUidProvider messageUidProvider;
@@ -58,7 +59,7 @@ public class InMemoryMapperProvider implements MapperProvider {
 
     @Override
     public MailboxMapper createMailboxMapper() throws MailboxException {
-        return inMemoryMailboxSessionMapperFactory.createMailboxMapper(new MockMailboxSession("user"));
+        return inMemoryMailboxSessionMapperFactory.createMailboxMapper(MAILBOX_SESSION);
     }
 
     @Override
@@ -68,12 +69,14 @@ public class InMemoryMapperProvider implements MapperProvider {
 
     @Override
     public MessageIdMapper createMessageIdMapper() throws MailboxException {
-        throw new NotImplementedException();
+        return new InMemoryMessageIdMapper(
+            inMemoryMailboxSessionMapperFactory.createMailboxMapper(MAILBOX_SESSION),
+            inMemoryMailboxSessionMapperFactory.createMessageMapper(MAILBOX_SESSION));
     }
 
     @Override
     public AttachmentMapper createAttachmentMapper() throws MailboxException {
-        return inMemoryMailboxSessionMapperFactory.createAttachmentMapper(new MockMailboxSession("user"));
+        return inMemoryMailboxSessionMapperFactory.createAttachmentMapper(MAILBOX_SESSION);
     }
 
     @Override
@@ -98,7 +101,7 @@ public class InMemoryMapperProvider implements MapperProvider {
 
     @Override
     public AnnotationMapper createAnnotationMapper() throws MailboxException {
-        return inMemoryMailboxSessionMapperFactory.createAnnotationMapper(new MockMailboxSession("user"));
+        return inMemoryMailboxSessionMapperFactory.createAnnotationMapper(MAILBOX_SESSION);
     }
     
     @Override
@@ -114,19 +117,20 @@ public class InMemoryMapperProvider implements MapperProvider {
             Capabilities.ATTACHMENT,
             Capabilities.ANNOTATION,
             Capabilities.MOVE,
-            Capabilities.ACL_STORAGE);
+            Capabilities.ACL_STORAGE,
+            Capabilities.UNIQUE_MESSAGE_ID);
     }
 
     @Override
     public long generateModSeq(Mailbox mailbox) throws MailboxException {
         return inMemoryMailboxSessionMapperFactory.getModSeqProvider()
-                .nextModSeq(new MockMailboxSession("user"), mailbox);
+                .nextModSeq(MAILBOX_SESSION, mailbox);
     }
 
     @Override
     public long highestModSeq(Mailbox mailbox) throws MailboxException {
         return inMemoryMailboxSessionMapperFactory.getModSeqProvider()
-            .highestModSeq(new MockMailboxSession("user"), mailbox);
+            .highestModSeq(MAILBOX_SESSION, mailbox);
     }
 
 }

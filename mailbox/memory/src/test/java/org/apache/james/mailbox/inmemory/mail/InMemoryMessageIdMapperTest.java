@@ -16,23 +16,23 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.inmemory.manager;
 
-import org.apache.james.mailbox.manager.ManagerTestResources;
-import org.apache.james.mailbox.manager.QuotaMessageManagerTest;
-import org.apache.james.mailbox.store.StoreMailboxManager;
+package org.apache.james.mailbox.inmemory.mail;
 
-/**
- * Test for quota support upon basic MailboxMessage manager operation.
- *
- * Tests are performed with sufficient rights to ensure all underlying functions behave well.
- * Quota are adjusted and we check that exceptions are well thrown.
- */
-public class InMemoryQuotaMailboxMessageManagerTest extends QuotaMessageManagerTest<StoreMailboxManager> {
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.store.mail.model.MapperProvider;
+import org.apache.james.mailbox.store.mail.model.MessageIdMapperTest;
+import org.junit.Before;
 
-    @Override
-    protected ManagerTestResources<StoreMailboxManager> createResources() throws Exception {
-        return new ManagerTestResources<StoreMailboxManager>(new InMemoryIntegrationResources());
+public class InMemoryMessageIdMapperTest extends MessageIdMapperTest{
+
+    @Before
+    public void setUp() throws MailboxException {
+        super.setUp();
     }
 
+    @Override
+    protected MapperProvider provideMapper() {
+        return new InMemoryMapperProvider();
+    }
 }

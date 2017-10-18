@@ -33,6 +33,7 @@ public class MailboxNamespace {
         Delegated("Delegated"),
         Personal("Personal");
 
+        @SuppressWarnings("unused")
         private final String type;
 
         Type(String type) {
