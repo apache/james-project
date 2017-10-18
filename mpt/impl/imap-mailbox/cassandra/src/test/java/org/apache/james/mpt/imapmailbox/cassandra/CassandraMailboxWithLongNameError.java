@@ -25,10 +25,12 @@ import org.apache.james.mpt.imapmailbox.suite.MailboxWithLongNameError;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
+@Ignore
 public class CassandraMailboxWithLongNameError extends MailboxWithLongNameError {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
