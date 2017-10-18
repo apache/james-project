@@ -30,7 +30,7 @@
 <!-- By setting the mappingLimit you can specify how much mapping will get processed -->
 <!-- before a bounce will send. This avoid infinity loops. Default 10.  -->
 <!--
-<recipientrewritetable  class="org.apache.james.rrt.xml.XMLRecipientRewriteTable">
+<recipientrewritetable class="org.apache.james.rrt.file.XMLRecipientRewriteTable">
    <recursiveMapping>true</recursiveMapping>
    <mappingLimit>10</mappingLimit>
     
