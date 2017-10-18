@@ -50,10 +50,10 @@ public class DockerCassandra {
         int cassandraMemory = 1000;
         long cassandraContainerMemory = Float.valueOf(cassandraMemory * 1.2f * 1024 * 1024L).longValue();
         cassandraContainer = new GenericContainer<>(
-            new ImageFromDockerfile("cassandra_2_2_12", deleteOnExit)
+            new ImageFromDockerfile("cassandra_3_11_1", deleteOnExit)
                 .withDockerfileFromBuilder(builder ->
                     builder
-                        .from("cassandra:2.2.12")
+                        .from("cassandra:3.11.1")
                         .env("ENV CASSANDRA_CONFIG", "/etc/cassandra")
                         .run("echo \"-Xms" + cassandraMemory + "M\" >> " + JVM_OPTIONS)
                         .run("echo \"-Xmx" + cassandraMemory + "M\" >> " + JVM_OPTIONS)
