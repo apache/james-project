@@ -164,7 +164,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
                         Mappings childMappings = getMappings(userName, domainName, mappingLimit - 1);
 
-                        if (childMappings == null) {
+                        if (childMappings == null || childMappings.isEmpty()) {
                             // add mapping
                             mappings.add(target);
                         } else {
