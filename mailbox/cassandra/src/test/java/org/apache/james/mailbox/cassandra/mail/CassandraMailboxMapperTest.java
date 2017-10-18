@@ -44,6 +44,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class CassandraMailboxMapperTest {
@@ -101,6 +102,7 @@ public class CassandraMailboxMapperTest {
         cassandra.closeCluster();
     }
 
+    @Ignore("JAMES-2514 Cassandra 3 supports long mailbox names. Hence we can not rely on this for failing")
     @Test
     public void saveShouldNotRemoveOldMailboxPathWhenCreatingTheNewMailboxPathFails() throws Exception {
         testee.save(new SimpleMailbox(MAILBOX_PATH, UID_VALIDITY));

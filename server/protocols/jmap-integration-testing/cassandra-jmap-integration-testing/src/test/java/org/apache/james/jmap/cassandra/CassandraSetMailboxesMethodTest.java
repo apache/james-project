@@ -48,13 +48,21 @@ public class CassandraSetMailboxesMethodTest extends SetMailboxesMethodTest {
     }
 
     @Override
-    @Ignore
-    public void setMailboxesShouldCreateWhenOverLimitName() throws Exception {
+    @Ignore("JAMES-2514 Cassandra 3.0 supports long mailbox names")
+    public void setMailboxesShouldCreateWhenOverLimitName() {
+    }
+
+    @Override
+    @Ignore("JAMES-2514 Cassandra 3.0 supports long mailbox names")
+    public void setMailboxesShouldUpdateMailboxWhenOverLimitName() {
     }
 
     @Override
     @Ignore
-    public void setMailboxesShouldUpdateMailboxWhenOverLimitName() throws Exception {
-    }
+    public void setMailboxesShouldNotUpdateMailboxWhenOverLimitName() {}
+
+    @Override
+    @Ignore
+    public void setMailboxesShouldNotCreateWhenOverLimitName() {}
 
 }
