@@ -205,7 +205,7 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
             }
 
             @Override
-            public void delete(MessageId messageId, List<MailboxId> mailboxIds) {
+            public void delete(MessageId messageId, Collection<MailboxId> mailboxIds) {
                 messages.removeAll(
                     messages.stream()
                         .filter(withMessageId(messageId))
@@ -301,7 +301,7 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
         return mailboxMessage -> messageIds.contains(mailboxMessage.getMessageId());
     }
 
-    private Predicate<MailboxMessage> inMailboxes(List<MailboxId> mailboxIds) {
+    private Predicate<MailboxMessage> inMailboxes(Collection<MailboxId> mailboxIds) {
         return mailboxMessage -> mailboxIds.contains(mailboxMessage.getMailboxId());
     }
 

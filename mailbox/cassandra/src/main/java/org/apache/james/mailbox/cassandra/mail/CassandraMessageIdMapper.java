@@ -176,7 +176,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     }
 
     @Override
-    public void delete(MessageId messageId, List<MailboxId> mailboxIds) {
+    public void delete(MessageId messageId, Collection<MailboxId> mailboxIds) {
         CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId;
         mailboxIds.stream()
             .map(mailboxId -> retrieveAndDeleteIndices(cassandraMessageId, Optional.of((CassandraId) mailboxId)))
