@@ -137,31 +137,6 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    public void getMessageListShouldListMessagesWhenReadAndLookupRight() throws Exception {
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, "delegated");
-        MailboxPath delegatedMailboxPath = MailboxPath.forUser(bob, "delegated");
-        ComposedMessageId message = mailboxProbe.appendMessage(bob, delegatedMailboxPath,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-
-        await();
-
-        aclProbe.replaceRights(delegatedMailboxPath,
-            alice,
-            new Rfc4314Rights(Right.Read, Right.Lookup));
-
-        given()
-            .header("Authorization", aliceAccessToken.serialize())
-            .body("[[\"getMessageList\", {}, \"#0\"]]")
-        .when()
-            .post("/jmap")
-        .then()
-            .statusCode(200)
-            .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds", hasSize(1))
-            .body(ARGUMENTS + ".messageIds", contains(message.getMessageId().serialize()));
-    }
-
-    @Test
     public void getMessageListShouldNotListMessageIfTheUserHasOnlyLookupRight() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, "delegated");
         MailboxPath delegatedMailboxPath = MailboxPath.forUser(bob, "delegated");
@@ -185,10 +160,11 @@ public abstract class GetMessageListMethodTest {
             .body(ARGUMENTS + ".messageIds", empty());
     }
 
-    public void getMessageListShouldNotListMessageIfTheUserHasOnlyReadRight() throws Exception {
+    @Test
+    public void getMessageListShouldListMessageWhenTheUserHasOnlyReadRight() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, "delegated");
         MailboxPath delegatedMailboxPath = MailboxPath.forUser(bob, "delegated");
-        mailboxProbe.appendMessage(bob, delegatedMailboxPath,
+        ComposedMessageId message = mailboxProbe.appendMessage(bob, delegatedMailboxPath,
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
 
         await();
@@ -205,7 +181,7 @@ public abstract class GetMessageListMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds", empty());
+            .body(ARGUMENTS + ".messageIds", contains(message.getMessageId().serialize()));
     }
 
     @Test

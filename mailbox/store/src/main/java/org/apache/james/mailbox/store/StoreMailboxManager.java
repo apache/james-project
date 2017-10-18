@@ -685,7 +685,7 @@ public class StoreMailboxManager implements MailboxManager {
         Stream<Mailbox> baseMailboxes = mailboxMapper
             .findMailboxWithPathLike(getPathLike(mailboxExpression, session))
             .stream();
-        Stream<Mailbox> delegatedMailboxes = getDelegatedMailboxes(mailboxMapper, mailboxExpression, session);
+        Stream<Mailbox> delegatedMailboxes = getDelegatedMailboxes(mailboxMapper, mailboxExpression, right, session);
         List<Mailbox> mailboxes = Stream.concat(baseMailboxes,
                 delegatedMailboxes)
             .distinct()
@@ -715,11 +715,11 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     private Stream<Mailbox> getDelegatedMailboxes(MailboxMapper mailboxMapper, MailboxQuery mailboxQuery,
-                                                  MailboxSession session) throws MailboxException {
+                                                  Right right, MailboxSession session) throws MailboxException {
         if (mailboxQuery.isPrivateMailboxes(session)) {
             return Stream.of();
         }
-        return mailboxMapper.findNonPersonalMailboxes(session.getUser().getUserName(), Right.Lookup).stream();
+        return mailboxMapper.findNonPersonalMailboxes(session.getUser().getUserName(), right).stream();
     }
 
     private SimpleMailboxMetaData toMailboxMetadata(MailboxSession session, List<Mailbox> mailboxes, Mailbox mailbox) {
