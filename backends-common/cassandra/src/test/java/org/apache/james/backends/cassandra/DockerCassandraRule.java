@@ -72,7 +72,7 @@ public class DockerCassandraRule implements TestRule {
             new ImageFromDockerfile("cassandra_2_2_10", deleteOnExit)
                 .withDockerfileFromBuilder(builder ->
                     builder
-                        .from("cassandra:2.2.10")
+                        .from("cassandra:3.11.1")
                         .env("ENV CASSANDRA_CONFIG", "/etc/cassandra")
                         //avoiding token range computation helps starting faster
                         .run("echo \"JVM_OPTS=\\\"\\$JVM_OPTS -Dcassandra.initial_token=0\\\"\" >> " + CASSANDRA_ENV)
