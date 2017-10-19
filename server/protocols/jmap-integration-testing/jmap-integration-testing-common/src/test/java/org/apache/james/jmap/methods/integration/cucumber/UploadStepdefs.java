@@ -107,9 +107,15 @@ public class UploadStepdefs {
         AccessToken accessToken = userStepdefs.getTokenForUser(username);
         Request request = Request.Post(uploadUri)
             .bodyStream(new BufferedInputStream(new ZeroedInputStream(_1M), _1M), org.apache.http.entity.ContentType.DEFAULT_BINARY);
-        if (accessToken != null) {
-            request.addHeader("Authorization", accessToken.serialize());
-        }
+
+        request.addHeader("Authorization", accessToken.serialize());
+        response = Executor.newInstance(HttpClientBuilder.create().disableAutomaticRetries().build()).execute(request).returnResponse();
+    }
+
+    @When("^someone upload a content without authentification$")
+    public void userUploadContentWithoutAuthentification() throws Throwable {
+        Request request = Request.Post(uploadUri)
+            .bodyStream(new BufferedInputStream(new ZeroedInputStream(_1M), _1M), org.apache.http.entity.ContentType.DEFAULT_BINARY);
         response = Executor.newInstance(HttpClientBuilder.create().disableAutomaticRetries().build()).execute(request).returnResponse();
     }
 
@@ -139,9 +145,12 @@ public class UploadStepdefs {
     public void optionUpload(String username) throws Throwable {
         AccessToken accessToken = userStepdefs.getTokenForUser(username);
         Request request = Request.Options(uploadUri);
-        if (accessToken != null) {
-            request.addHeader("Authorization", accessToken.serialize());
-        }
+        response = request.execute().returnResponse();
+    }
+
+    @When("^someone checks without authentification for the availability of the upload endpoint$")
+    public void optionUploadWithoutAuthentification() throws Throwable {
+        Request request = Request.Options(uploadUri);
         response = request.execute().returnResponse();
     }
 
