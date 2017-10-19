@@ -360,7 +360,7 @@ public class DownloadStepdefs {
         assertThat(response.getStatusLine().getStatusCode()).isEqualTo(400);
     }
 
-    @Then("^the user should receive that blob")
+    @Then("^the user can read that blob")
     public void httpOkStatusAndExpectedContent() throws IOException {
         assertThat(response.getStatusLine().getStatusCode()).isEqualTo(200);
         assertThat(IOUtils.toString(response.getEntity().getContent(), Charsets.UTF_8)).isNotEmpty();
