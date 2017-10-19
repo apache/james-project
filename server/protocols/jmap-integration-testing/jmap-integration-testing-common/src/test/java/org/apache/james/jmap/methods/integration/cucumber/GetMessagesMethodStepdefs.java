@@ -55,6 +55,7 @@ import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.jayway.jsonpath.Configuration;
@@ -209,7 +210,7 @@ public class GetMessagesMethodStepdefs {
 
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with two attachments$")
     public void appendHtmlMessageWithTwoAttachments(String messageName, String mailbox) throws Exception {
-        appendMessage(messageName, "eml/twoAttachments.eml");
+        appendMessage(messageName, mailbox, "eml/twoAttachments.eml");
     }
 
     @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with two attachments$")
@@ -224,7 +225,7 @@ public class GetMessagesMethodStepdefs {
 
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with two attachments in text$")
     public void appendTextMessageWithTwoAttachments(String messageName, String mailbox) throws Exception {
-        appendMessage(messageName, "eml/twoAttachmentsTextPlain.eml");
+        appendMessage(messageName, mailbox, "eml/twoAttachmentsTextPlain.eml");
     }
 
     @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with two same attachments in text$")
@@ -234,17 +235,17 @@ public class GetMessagesMethodStepdefs {
 
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with two same attachments in text$")
     public void appendTextMessageWithTwoSameAttachments(String messageName, String mailbox) throws Exception {
-        appendMessage(messageName, "eml/twoSameAttachments.eml");
+        appendMessage(messageName, mailbox, "eml/twoSameAttachments.eml");
     }
 
     @Given("^\"([^\"]*)\" has a multipart message \"([^\"]*)\" in \"([^\"]*)\" mailbox$")
-    public void appendMultipartMessageWithOneAttachments(String username, String messageName, String arg1) throws Throwable {
-        userStepdefs.execWithUser(username, () -> appendMultipartMessageWithOneAttachments(messageName, arg1));
+    public void appendMultipartMessageWithOneAttachments(String username, String messageName, String mailbox) throws Throwable {
+        userStepdefs.execWithUser(username, () -> appendMultipartMessageWithOneAttachments(messageName, mailbox));
     }
 
     @Given("^the user has a multipart message \"([^\"]*)\" in \"([^\"]*)\" mailbox$")
-    public void appendMultipartMessageWithOneAttachments(String messageName, String arg1) throws Exception {
-        appendMessage(messageName, "eml/htmlAndTextMultipartWithOneAttachment.eml");
+    public void appendMultipartMessageWithOneAttachments(String messageName, String mailbox) throws Exception {
+        appendMessage(messageName, mailbox, "eml/htmlAndTextMultipartWithOneAttachment.eml");
     }
 
     @Given("\"([^\"]*)\" has a multipart/related message \"([^\"]*)\" in \"([^\"]*)\" mailbox$")
@@ -254,7 +255,7 @@ public class GetMessagesMethodStepdefs {
 
     @Given("^the user has a multipart/related message \"([^\"]*)\" in \"([^\"]*)\" mailbox$")
     public void appendMultipartRelated(String messageName, String mailbox) throws Exception {
-        appendMessage(messageName, "eml/multipartRelated.eml");
+        appendMessage(messageName, mailbox, "eml/multipartRelated.eml");
     }
 
     @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox beginning by a long line$")
@@ -264,7 +265,7 @@ public class GetMessagesMethodStepdefs {
 
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox beginning by a long line$")
     public void appendMessageBeginningByALongLine(String messageName, String mailbox) throws Exception {
-        appendMessage(messageName, "eml/longLine.eml");
+        appendMessage(messageName, mailbox, "eml/longLine.eml");
     }
 
     @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with plain/text inline attachment$")
@@ -274,7 +275,7 @@ public class GetMessagesMethodStepdefs {
 
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with plain/text inline attachment$")
     public void appendMessageWithPlainTextInlineAttachment(String messageName, String mailbox) throws Exception {
-        appendMessage(messageName, "eml/embeddedMultipartWithInlineTextAttachment.eml");
+        appendMessage(messageName, mailbox, "eml/embeddedMultipartWithInlineTextAttachment.eml");
     }
 
 
@@ -285,7 +286,7 @@ public class GetMessagesMethodStepdefs {
 
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with text in main multipart and html in inner multipart$")
     public void appendMessageWithTextInMainMultipartAndHtmlInInnerMultipart(String messageName, String mailbox) throws Exception {
-        appendMessage(messageName, "eml/textInMainMultipartHtmlInInnerMultipart.eml");
+        appendMessage(messageName, mailbox, "eml/textInMainMultipartHtmlInInnerMultipart.eml");
     }
 
     @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with html body and no text body$")
@@ -295,7 +296,7 @@ public class GetMessagesMethodStepdefs {
 
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with html body and no text body$")
     public void appendMessageWithNoTextButHtml(String messageName, String mailbox) throws Exception {
-        appendMessage(messageName, "eml/noTextBodyButHtmlBody.eml");
+        appendMessage(messageName, mailbox, "eml/noTextBodyButHtmlBody.eml");
     }
 
     @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with inline attachment but no CID$")
@@ -305,7 +306,7 @@ public class GetMessagesMethodStepdefs {
 
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with inline attachment but no CID$")
     public void appendMessageWithInlineAttachmentButNoCid(String messageName, String mailbox) throws Exception {
-        appendMessage(messageName, "eml/mailWithInlinedAttachmentButNoCid.eml");
+        appendMessage(messageName, mailbox, "eml/mailWithInlinedAttachmentButNoCid.eml");
     }
 
     @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with inline attachment and blank CID$")
@@ -315,7 +316,7 @@ public class GetMessagesMethodStepdefs {
 
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with inline attachment and blank CID$")
     public void appendMessageWithInlineAttachmentAndBlankCid(String messageName, String mailbox) throws Throwable {
-        appendMessage(messageName, "eml/mailWithInlinedAttachmentAndBlankCid.eml");
+        appendMessage(messageName, mailbox, "eml/mailWithInlinedAttachmentAndBlankCid.eml");
     }
 
     @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with HTML body with many empty tags$")
@@ -325,7 +326,7 @@ public class GetMessagesMethodStepdefs {
 
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with HTML body with many empty tags$")
     public void appendMessageWithNoPreview(String messageName, String mailbox) throws Exception {
-        appendMessage(messageName, "eml/htmlBodyWithManyEmptyTags.eml");
+        appendMessage(messageName, mailbox, "eml/htmlBodyWithManyEmptyTags.eml");
     }
 
     @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with multiple same inlined attachments \"([^\"]*)\"$")
@@ -335,7 +336,7 @@ public class GetMessagesMethodStepdefs {
 
     @Given("^the user has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with multiple same inlined attachments \"([^\"]*)\"$")
     public void appendMessageWithSameInlinedAttachmentsToMailbox(String messageName, String mailbox, String attachmentId) throws Exception {
-        appendMessage(messageName, "eml/sameInlinedImages.eml");
+        appendMessage(messageName, mailbox, "eml/sameInlinedImages.eml");
     }
 
     @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with specific charset$")
@@ -345,7 +346,7 @@ public class GetMessagesMethodStepdefs {
 
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with specific charset$")
     public void appendMessageWithSpecificCharset(String messageName, String mailbox) throws Exception {
-        appendMessage(messageName, "eml/windows1252charset.eml");
+        appendMessage(messageName, mailbox, "eml/windows1252charset.eml");
     }
 
     @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with long and complicated HTML content$")
@@ -355,7 +356,7 @@ public class GetMessagesMethodStepdefs {
 
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with long and complicated HTML content$")
     public void appendMessageWithSpecialCase(String messageName, String mailbox) throws Exception {
-        appendMessage(messageName, "eml/htmlWithLongAndComplicatedContent.eml");
+        appendMessage(messageName, mailbox, "eml/htmlWithLongAndComplicatedContent.eml");
     }
 
     @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with flags \"([^\"]*)\"$")
@@ -379,13 +380,15 @@ public class GetMessagesMethodStepdefs {
         messageIdsByName.put(messageName, id);
     }
 
-    private void appendMessage(String messageName, String emlFileName) throws Exception {
+    private void appendMessage(String messageName, String mailbox, String emlFileName) throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
+
         MessageId id = mainStepdefs.mailboxProbe.appendMessage(userStepdefs.getConnectedUser(),
-            MailboxPath.forUser(userStepdefs.getConnectedUser(), DefaultMailboxes.INBOX),
-            ClassLoader.getSystemResourceAsStream(emlFileName),
-            Date.from(dateTime.toInstant()), false, new Flags())
-            .getMessageId();
+            MailboxPath.forUser(userStepdefs.getConnectedUser(), mailbox),
+                ClassLoader.getSystemResourceAsStream(emlFileName),
+                Date.from(dateTime.toInstant()), false, new Flags())
+                    .getMessageId();
+
         messageIdsByName.put(messageName, id);
     }
 
@@ -503,7 +506,9 @@ public class GetMessagesMethodStepdefs {
             .bodyString(requestBody, org.apache.http.entity.ContentType.APPLICATION_JSON)
             .execute()
             .returnResponse();
-        jsonPath = JsonPath.using(Configuration.defaultConfiguration().addOptions(Option.SUPPRESS_EXCEPTIONS)).parse(response.getEntity().getContent());
+        jsonPath = JsonPath.using(Configuration.defaultConfiguration()
+            .addOptions(Option.SUPPRESS_EXCEPTIONS))
+            .parse(response.getEntity().getContent());
     }
 
     @Then("^an error \"([^\"]*)\" is returned$")
@@ -558,9 +563,9 @@ public class GetMessagesMethodStepdefs {
     }
 
     @Then("^the message is in \"([^\"]*)\" mailboxes")
-    public void assertMailboxIdsOfTheFirstMessage(String mailboxIds) throws Exception {
+    public void assertMailboxNamesOfTheFirstMessage(String mailboxNames) throws Exception {
         List<String> values = Splitter.on(",")
-            .splitToList(mailboxIds).stream()
+            .splitToList(mailboxNames).stream()
             .map(Throwing.function(name -> mainStepdefs.jmapServer
                 .getProbe(MailboxProbeImpl.class)
                 .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.getConnectedUser(), name)
@@ -569,7 +574,25 @@ public class GetMessagesMethodStepdefs {
             .distinct()
             .collect(Guavate.toImmutableList());
         assertThat(jsonPath.<JSONArray>read(FIRST_MESSAGE + ".mailboxIds"))
-            .hasSize(2)
+            .hasSize(values.size())
+            .containsOnlyElementsOf(values);
+    }
+
+    @Then("^the message is in \"([^\"]*)\" user mailboxes")
+    public void assertMailboxNamesOfTheFirstMessageWithUser(String mailboxIds) throws Exception {
+        List<String> values = Splitter.on(",")
+            .splitToList(mailboxIds).stream()
+            .map(name -> Splitter.on(':').omitEmptyStrings().splitToList(name))
+            .peek(nameParts -> Preconditions.checkArgument(nameParts.size() == 2))
+            .map(Throwing.function(nameParts -> mainStepdefs.jmapServer
+                .getProbe(MailboxProbeImpl.class)
+                .getMailbox(MailboxConstants.USER_NAMESPACE, nameParts.get(0), nameParts.get(1))
+                .getMailboxId()
+                .serialize()))
+            .distinct()
+            .collect(Guavate.toImmutableList());
+        assertThat(jsonPath.<JSONArray>read(FIRST_MESSAGE + ".mailboxIds"))
+            .hasSize(values.size())
             .containsOnlyElementsOf(values);
     }
 
