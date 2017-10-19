@@ -79,12 +79,10 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
     private final MessageIdMapper messageIdMapper;
 
     public TestMailboxSessionMapperFactory() {
-
-
-        mailbox1 = new SimpleMailbox(MailboxFixture.MAILBOX_PATH1, UID_VALIDITY, TestId.of(36));
-        mailbox2 = new SimpleMailbox(MailboxFixture.MAILBOX_PATH2, UID_VALIDITY, TestId.of(46));
-        mailbox3 = new SimpleMailbox(MailboxFixture.MAILBOX_PATH3, UID_VALIDITY, TestId.of(56));
-        mailbox4 = new SimpleMailbox(MailboxFixture.MAILBOX_PATH4, UID_VALIDITY, TestId.of(66));
+        mailbox1 = new SimpleMailbox(MailboxFixture.INBOX_ALICE, UID_VALIDITY, TestId.of(36));
+        mailbox2 = new SimpleMailbox(MailboxFixture.OUTBOX_ALICE, UID_VALIDITY, TestId.of(46));
+        mailbox3 = new SimpleMailbox(MailboxFixture.SENT_ALICE, UID_VALIDITY, TestId.of(56));
+        mailbox4 = new SimpleMailbox(MailboxFixture.INBOX_BOB, UID_VALIDITY, TestId.of(66));
 
         mailboxMapper = new MailboxMapper() {
             @Override
@@ -100,19 +98,19 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
 
             @Override
             public Mailbox findMailboxByPath(MailboxPath mailboxName) throws MailboxException {
-                if (mailboxName.equals(MailboxFixture.MAILBOX_PATH1)) {
+                if (mailboxName.equals(MailboxFixture.INBOX_ALICE)) {
                     return mailbox1;
                 }
-                if (mailboxName.equals(MailboxFixture.MAILBOX_PATH2)) {
+                if (mailboxName.equals(MailboxFixture.OUTBOX_ALICE)) {
                     return mailbox2;
                 }
-                if (mailboxName.equals(MailboxFixture.MAILBOX_PATH3)) {
+                if (mailboxName.equals(MailboxFixture.SENT_ALICE)) {
                     return mailbox3;
                 }
                 throw new IllegalArgumentException("Unknown mailbox : " + mailboxName + " must be one of "
-                    + MailboxFixture.MAILBOX_PATH1 + " "
-                    + MailboxFixture.MAILBOX_PATH2 + " "
-                    + MailboxFixture.MAILBOX_PATH3);
+                    + MailboxFixture.INBOX_ALICE + " "
+                    + MailboxFixture.OUTBOX_ALICE + " "
+                    + MailboxFixture.SENT_ALICE);
             }
 
             @Override

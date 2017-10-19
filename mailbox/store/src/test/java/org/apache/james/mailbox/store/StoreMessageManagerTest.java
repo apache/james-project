@@ -19,10 +19,10 @@
 
 package org.apache.james.mailbox.store;
 
-import static org.apache.james.mailbox.fixture.MailboxFixture.MAILBOX_PATH1;
-import static org.apache.james.mailbox.fixture.MailboxFixture.OTHER_USER;
-import static org.apache.james.mailbox.fixture.MailboxFixture.THIRD_USER;
-import static org.apache.james.mailbox.fixture.MailboxFixture.USER;
+import static org.apache.james.mailbox.fixture.MailboxFixture.ALICE;
+import static org.apache.james.mailbox.fixture.MailboxFixture.BOB;
+import static org.apache.james.mailbox.fixture.MailboxFixture.CEDRIC;
+import static org.apache.james.mailbox.fixture.MailboxFixture.INBOX_ALICE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.exception.UnsupportedRightException;
@@ -39,30 +39,30 @@ public class StoreMessageManagerTest {
     @Test
     public void filteredForSessionShouldBeIdentityWhenOwner() throws UnsupportedRightException {
         MailboxACL acl = new MailboxACL()
-            .apply(MailboxACL.command().rights(Right.Read, Right.Write).forUser(OTHER_USER).asAddition())
-            .apply(MailboxACL.command().rights(Right.Read, Right.Write, Right.Administer).forUser(THIRD_USER).asAddition());
+            .apply(MailboxACL.command().rights(Right.Read, Right.Write).forUser(BOB).asAddition())
+            .apply(MailboxACL.command().rights(Right.Read, Right.Write, Right.Administer).forUser(CEDRIC).asAddition());
         MailboxACL actual = StoreMessageManager.filteredForSession(
-            new SimpleMailbox(MAILBOX_PATH1, UID_VALIDITY), acl, new MockMailboxSession(USER));
+            new SimpleMailbox(INBOX_ALICE, UID_VALIDITY), acl, new MockMailboxSession(ALICE));
         assertThat(actual).isEqualTo(acl);
     }
 
     @Test
     public void filteredForSessionShouldBeIdentityWhenAdmin() throws UnsupportedRightException {
         MailboxACL acl = new MailboxACL()
-            .apply(MailboxACL.command().rights(Right.Read, Right.Write).forUser(OTHER_USER).asAddition())
-            .apply(MailboxACL.command().rights(Right.Read, Right.Write, Right.Administer).forUser(THIRD_USER).asAddition());
+            .apply(MailboxACL.command().rights(Right.Read, Right.Write).forUser(BOB).asAddition())
+            .apply(MailboxACL.command().rights(Right.Read, Right.Write, Right.Administer).forUser(CEDRIC).asAddition());
         MailboxACL actual = StoreMessageManager.filteredForSession(
-            new SimpleMailbox(MAILBOX_PATH1, UID_VALIDITY), acl, new MockMailboxSession(THIRD_USER));
+            new SimpleMailbox(INBOX_ALICE, UID_VALIDITY), acl, new MockMailboxSession(CEDRIC));
         assertThat(actual).isEqualTo(acl);
     }
 
     @Test
     public void filteredForSessionShouldContainOnlyLoggedUserWhenReadWriteAccess() throws UnsupportedRightException {
         MailboxACL acl = new MailboxACL()
-            .apply(MailboxACL.command().rights(Right.Read, Right.Write).forUser(OTHER_USER).asAddition())
-            .apply(MailboxACL.command().rights(Right.Read, Right.Write, Right.Administer).forUser(THIRD_USER).asAddition());
+            .apply(MailboxACL.command().rights(Right.Read, Right.Write).forUser(BOB).asAddition())
+            .apply(MailboxACL.command().rights(Right.Read, Right.Write, Right.Administer).forUser(CEDRIC).asAddition());
         MailboxACL actual = StoreMessageManager.filteredForSession(
-            new SimpleMailbox(MAILBOX_PATH1, UID_VALIDITY), acl, new MockMailboxSession(OTHER_USER));
-        assertThat(actual.getEntries()).containsKey(MailboxACL.EntryKey.createUserEntryKey(OTHER_USER));
+            new SimpleMailbox(INBOX_ALICE, UID_VALIDITY), acl, new MockMailboxSession(BOB));
+        assertThat(actual.getEntries()).containsKey(MailboxACL.EntryKey.createUserEntryKey(BOB));
     }
 }
