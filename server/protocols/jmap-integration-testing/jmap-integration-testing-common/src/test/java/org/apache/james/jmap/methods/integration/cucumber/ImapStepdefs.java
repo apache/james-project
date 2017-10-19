@@ -56,7 +56,7 @@ public class ImapStepdefs {
         try (IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST, IMAP_PORT);) {
             assertThat(
                 imapMessageReader.userReceivedMessageInMailbox(userStepdefs.getConnectedUser(),
-                    userStepdefs.passwordByUser.get(userStepdefs.getConnectedUser()),
+                    userStepdefs.getUserPassword(userStepdefs.getConnectedUser()),
                     mailbox))
                 .isTrue();
         }
@@ -67,7 +67,7 @@ public class ImapStepdefs {
         try (IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST, IMAP_PORT);) {
             assertThat(
                 imapMessageReader.userGetNotifiedForNewMessagesWhenSelectingMailbox(userStepdefs.getConnectedUser(),
-                    userStepdefs.passwordByUser.get(userStepdefs.getConnectedUser()),
+                    userStepdefs.getUserPassword(userStepdefs.getConnectedUser()),
                     numOfNewMessage, mailbox))
                 .isTrue();
         }
@@ -78,7 +78,7 @@ public class ImapStepdefs {
         try (IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST, IMAP_PORT);) {
             assertThat(
                 imapMessageReader.userDoesNotReceiveMessageInMailbox(userStepdefs.getConnectedUser(),
-                    userStepdefs.passwordByUser.get(userStepdefs.getConnectedUser()),
+                    userStepdefs.getUserPassword(userStepdefs.getConnectedUser()),
                     mailbox))
                 .isTrue();
         }
@@ -89,7 +89,7 @@ public class ImapStepdefs {
         IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST, IMAP_PORT);
 
         String login = userStepdefs.getConnectedUser();
-        String password = userStepdefs.passwordByUser.get(login);
+        String password = userStepdefs.getUserPassword(login);
 
         imapMessageReader.connectAndSelect(login, password, mailbox);
         imapConnections.put(mailbox, imapMessageReader);
@@ -114,7 +114,7 @@ public class ImapStepdefs {
         IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST, IMAP_PORT);
 
         String login = userStepdefs.getConnectedUser();
-        String password = userStepdefs.passwordByUser.get(login);
+        String password = userStepdefs.getUserPassword(login);
 
         imapMessageReader.connectAndSelect(login, password, srcMailbox);
         assertThat(imapMessageReader).isNotNull();

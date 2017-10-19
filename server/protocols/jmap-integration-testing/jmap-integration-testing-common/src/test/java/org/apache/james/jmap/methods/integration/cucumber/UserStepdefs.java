@@ -49,10 +49,10 @@ public class UserStepdefs {
 
     private final MainStepdefs mainStepdefs;
     
-    protected Map<String, String> passwordByUser;
-    protected Set<String> domains;
+    private Map<String, String> passwordByUser;
+    private Set<String> domains;
     private Map<String, AccessToken> tokenByUser;
-    protected Optional<String> lastConnectedUser;
+    private Optional<String> lastConnectedUser;
     
     @Inject
     private UserStepdefs(MainStepdefs mainStepdefs) {
@@ -77,6 +77,12 @@ public class UserStepdefs {
         Preconditions.checkArgument(lastConnectedUser.isPresent(), "No user is connected");
 
         return lastConnectedUser.get();
+    }
+
+    public String getUserPassword(String user) {
+        Preconditions.checkArgument(passwordByUser.containsKey(user), "User has no password created yet");
+
+        return passwordByUser.get(user);
     }
 
     @Given("^a domain named \"([^\"]*)\"$")
