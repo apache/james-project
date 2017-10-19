@@ -98,7 +98,7 @@ public class SetMailboxesMethodStepdefs {
                     "  ]" +
                     "]";
         Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
-            .addHeader("Authorization", userStepdefs.tokenByUser.get(username).serialize())
+            .addHeader("Authorization", userStepdefs.getTokenForUser(username).serialize())
             .bodyString(requestBody, ContentType.APPLICATION_JSON)
             .execute()
             .discardContent();
@@ -127,7 +127,7 @@ public class SetMailboxesMethodStepdefs {
                     "]";
 
         Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
-            .addHeader("Authorization", userStepdefs.tokenByUser.get(username).serialize())
+            .addHeader("Authorization", userStepdefs.getTokenForUser(username).serialize())
             .bodyString(requestBody, ContentType.APPLICATION_JSON)
             .execute()
             .discardContent();
@@ -142,7 +142,7 @@ public class SetMailboxesMethodStepdefs {
 
         Awaitility.await().atMost(Duration.FIVE_SECONDS).pollDelay(slowPacedPollInterval).pollInterval(slowPacedPollInterval).until(() -> {
             HttpResponse response = Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
-                    .addHeader("Authorization", userStepdefs.tokenByUser.get(username).serialize())
+                    .addHeader("Authorization", userStepdefs.getTokenForUser(username).serialize())
                     .bodyString("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]", ContentType.APPLICATION_JSON)
                     .execute().returnResponse();
 

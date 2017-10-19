@@ -27,6 +27,10 @@ Feature: Download endpoint
     And "usera@domain.tld" has a mailbox "INBOX"
     And "usera@domain.tld" mailbox "INBOX" contains a message "m1" with an attachment "a1"
 
+  Scenario: An unauthenticated user should not have access to the download endpoint
+    When un-authenticated user downloads "a1"
+    Then the user should not be authorized
+
   Scenario: An authenticated user should initiate the access to the download endpoint
     Given "usera@domain.tld" is connected
     When "usera@domain.tld" checks for the availability of the attachment endpoint
@@ -35,10 +39,6 @@ Feature: Download endpoint
   Scenario: An unauthenticated user should initiate the access to the download endpoint
     When "usera@domain.tld" checks for the availability of the attachment endpoint
     Then the user should be authorized
-
-  Scenario: An unauthenticated user should not have access to the download endpoint
-    When "usera@domain.tld" downloads "a1"
-    Then the user should not be authorized
 
   Scenario: A user should not have access to the download endpoint without the authentication token
     When "usera@domain.tld" downloads "a1" without any authentication token

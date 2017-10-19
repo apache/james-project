@@ -69,7 +69,7 @@ public class SetMessagesMethodStepdefs {
             "  ]" +
             "]";
         Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
-            .addHeader("Authorization", userStepdefs.tokenByUser.get(username).serialize())
+            .addHeader("Authorization", userStepdefs.getTokenForUser(username).serialize())
             .bodyString(requestBody, ContentType.APPLICATION_JSON)
             .execute()
             .discardContent();
@@ -101,7 +101,7 @@ public class SetMessagesMethodStepdefs {
             "  ]" +
             "]";
         Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
-            .addHeader("Authorization", userStepdefs.tokenByUser.get(username).serialize())
+            .addHeader("Authorization", userStepdefs.getTokenForUser(username).serialize())
             .bodyString(requestBody, ContentType.APPLICATION_JSON)
             .execute()
             .discardContent();
@@ -118,7 +118,7 @@ public class SetMessagesMethodStepdefs {
             .collect(Collectors.joining(","));
 
         Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
-            .addHeader("Authorization", userStepdefs.tokenByUser.get(username).serialize())
+            .addHeader("Authorization", userStepdefs.getTokenForUser(username).serialize())
             .bodyString("[" +
                 "  [" +
                 "    \"setMessages\","+

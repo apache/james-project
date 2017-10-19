@@ -51,7 +51,7 @@ public class UserStepdefs {
     
     protected Map<String, String> passwordByUser;
     protected Set<String> domains;
-    protected Map<String, AccessToken> tokenByUser;
+    private Map<String, AccessToken> tokenByUser;
     protected Optional<String> lastConnectedUser;
     
     @Inject
@@ -117,11 +117,18 @@ public class UserStepdefs {
     
     @Given("^\"([^\"]*)\" is connected$")
     public void connectUser(String username) throws Throwable {
-        String password = passwordByUser.get(username);
-        Preconditions.checkState(password != null, "unknown user " + username);
-        AccessToken accessToken = HttpJmapAuthentication.authenticateJamesUser(mainStepdefs.baseUri(), username, password);
+        AccessToken accessToken = getTokenForUser(username);
         tokenByUser.put(username, accessToken);
         lastConnectedUser = Optional.of(username);
+    }
+
+    public AccessToken getTokenForUser(String username) {
+        return tokenByUser.computeIfAbsent(username, (user) -> {
+            String password = passwordByUser.get(user);
+            Preconditions.checkState(password != null, "unknown user " + user);
+
+            return HttpJmapAuthentication.authenticateJamesUser(mainStepdefs.baseUri(), user, password);
+        });
     }
     
     @Given("^\"([^\"]*)\" shares its mailbox \"([^\"]*)\" with \"([^\"]*)\"$")
