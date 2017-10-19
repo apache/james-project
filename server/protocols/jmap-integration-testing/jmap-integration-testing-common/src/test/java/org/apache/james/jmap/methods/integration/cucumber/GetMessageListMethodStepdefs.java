@@ -63,7 +63,7 @@ public class GetMessageListMethodStepdefs {
     public void getMessageList(String mailbox, String flag) throws Exception {
         MailboxId mailboxId = mainStepdefs.jmapServer
             .getProbe(MailboxProbeImpl.class)
-            .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, mailbox)
+            .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.getConnectedUser(), mailbox)
             .getMailboxId();
 
         post(String.format(
@@ -105,7 +105,7 @@ public class GetMessageListMethodStepdefs {
 
     private void post(String requestBody) throws Exception {
         response = Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
-            .addHeader("Authorization", userStepdefs.tokenByUser.get(userStepdefs.lastConnectedUser).serialize())
+            .addHeader("Authorization", userStepdefs.tokenByUser.get(userStepdefs.getConnectedUser()).serialize())
             .addHeader("Accept", org.apache.http.entity.ContentType.APPLICATION_JSON.getMimeType())
             .bodyString(requestBody, org.apache.http.entity.ContentType.APPLICATION_JSON)
             .execute()

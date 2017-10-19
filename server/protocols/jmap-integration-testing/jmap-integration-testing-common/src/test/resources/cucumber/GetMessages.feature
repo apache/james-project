@@ -23,14 +23,14 @@ Feature: GetMessages method
 
   Background:
     Given a domain named "domain.tld"
-    And a connected user "alice@domain.tld"
+    And a user "alice@domain.tld"
     And a user "bob@domain.tld"
     And "alice@domain.tld" has a mailbox "INBOX"
 
   Scenario: Retrieving a message in several mailboxes should return a single message in these mailboxes
     Given "alice@domain.tld" has a mailbox "custom"
-    And the user has a message "m1" in "INBOX" and "custom" mailboxes with subject "my test subject", content "testmail"
-    When the user ask for messages "m1"
+    And "alice@domain.tld" has a message "m1" in "INBOX" and "custom" mailboxes with subject "my test subject", content "testmail"
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the id of the message is "m1"
@@ -38,50 +38,48 @@ Feature: GetMessages method
 
   Scenario: Retrieving a message in a mailbox delegated to me
     Given "alice@domain.tld" has a mailbox "shared"
-    Given "alice@domain.tld" shares its mailbox "shared" with "bob@domain.tld"
-    And the user has a message "m1" in "shared" mailbox with subject "my test subject", content "testmail"
-    Given "bob@domain.tld" is connected
-    When the user ask for messages "m1"
+    And "alice@domain.tld" shares its mailbox "shared" with "bob@domain.tld"
+    And "alice@domain.tld" has a message "m1" in "shared" mailbox with subject "my test subject", content "testmail"
+    When "bob@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the id of the message is "m1"
 
   Scenario: Retrieving a message in a mailbox not delegated to me
     Given "alice@domain.tld" has a mailbox "notShared"
-    And the user has a message "m1" in "notShared" mailbox with subject "my test subject", content "testmail"
-    Given "bob@domain.tld" is connected
-    When the user ask for messages "m1"
+    And "alice@domain.tld" has a message "m1" in "notShared" mailbox with subject "my test subject", content "testmail"
+    When "bob@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 0 message
 
   Scenario: Retrieving messages with a non null accountId should return a NotSupported error
-    When the user ask for messages using its accountId
+    When "alice@domain.tld" ask for messages using its accountId
     Then an error "Not yet implemented" is returned
 
   Scenario: Unknown arguments should be ignored when retrieving messages
-    When the user ask for messages using unknown arguments
+    When "alice@domain.tld" ask for messages using unknown arguments
     Then no error is returned
     And the list of unknown messages is empty
     And the list of messages is empty
 
   Scenario: Retrieving messages with invalid argument should return an InvalidArguments error
-    When the user ask for messages using invalid argument
+    When "alice@domain.tld" ask for messages using invalid argument
     Then an error "invalidArguments" is returned
     And the description is "N/A (through reference chain: org.apache.james.jmap.model.Builder["ids"])"
 
   Scenario: Retrieving messages should return empty list when no message
-    When the user ask for messages
+    When "alice@domain.tld" ask for messages
     Then no error is returned
     And the list of messages is empty
 
   Scenario: Retrieving message should return not found when message doesn't exist
-    When the user ask for an unknown message
+    When "alice@domain.tld" ask for an unknown message
     Then no error is returned
     And the notFound list should contain the requested message id
 
   Scenario: Retrieving message should return messages when exists
-    Given the user has a message "m1" in "INBOX" mailbox with subject "my test subject", content "testmail"
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with subject "my test subject", content "testmail"
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the id of the message is "m1"
@@ -97,8 +95,8 @@ Feature: GetMessages method
     And the list of attachments of the message is empty
 
   Scenario Outline: Retrieving message should return messages when exists and is a html message
-    Given the user has a message "m1" in <mailbox> mailbox with content-type <content-type> subject <subject>, content <content>
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in <mailbox> mailbox with content-type <content-type> subject <subject>, content <content>
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the id of the message is "m1"
@@ -119,8 +117,8 @@ Feature: GetMessages method
       |"INBOX" |"text/html"  |"my test subject" |my test subject |"This is a <ganan>HTML</b> mail"                                                                                                |"This is a HTML mail"                                                                        |
 
   Scenario Outline: Retrieving message should return preview with tags when text message
-    Given the user has a message "m1" in <mailbox> mailbox with content-type <content-type> subject <subject>, content <content>
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in <mailbox> mailbox with content-type <content-type> subject <subject>, content <content>
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the preview of the message is <preview>
@@ -130,8 +128,8 @@ Feature: GetMessages method
       |"INBOX" |"text/plain" |"my test subject" |"Here is a listing of HTML tags : <b>jfjfjfj</b>, <i>jfhdgdgdfj</i>, <u>jfjaaafj</u>" |"Here is a listing of HTML tags : <b>jfjfjfj</b>, <i>jfhdgdgdfj</i>, <u>jfjaaafj</u>" |
 
   Scenario: Retrieving message should filter properties
-    Given the user has a message "m1" in "INBOX" mailbox with subject "my test subject", content "testmail"
-    When the user is getting messages "m1" with properties "id, subject"
+    Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with subject "my test subject", content "testmail"
+    When "alice@domain.tld" is getting messages "m1" with properties "id, subject"
     Then no error is returned
     And the list should contain 1 message
     And the id of the message is "m1"
@@ -143,11 +141,11 @@ Feature: GetMessages method
     And the property "date" of the message is null
 
   Scenario: Retrieving message should filter header properties
-    Given the user has a message "m1" in "INBOX" mailbox with subject "my test subject", content "testmail", headers
+    Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with subject "my test subject", content "testmail", headers
       |From    |user@domain.tld |
       |header1 |Header1Content  |
       |HEADer2 |Header2Content  |
-    When the user is getting messages "m1" with properties "headers.from, headers.heADER2"
+    When "alice@domain.tld" is getting messages "m1" with properties "headers.from, headers.heADER2"
     Then no error is returned
     And the list should contain 1 message
     And the id of the message is "m1"
@@ -161,23 +159,23 @@ Feature: GetMessages method
     And the property "date" of the message is null
 
   Scenario: Retrieving message should return not found when id does not match
-    Given the user has a message "m1" in "INBOX" mailbox with subject "my test subject", content "testmail"
-    When the user ask for an unknown message
+    Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with subject "my test subject", content "testmail"
+    When "alice@domain.tld" ask for an unknown message
     Then no error is returned
     And the list of messages is empty
     And the notFound list should contain the requested message id
 
   Scenario: Retrieving message should return mandatory properties when not asked
-    Given the user has a message "m1" in "INBOX" mailbox with subject "my test subject", content "testmail"
-    When the user is getting messages "m1" with properties "subject"
+    Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with subject "my test subject", content "testmail"
+    When "alice@domain.tld" is getting messages "m1" with properties "subject"
     Then no error is returned
     And the list should contain 1 message
     And the id of the message is "m1"
     And the subject of the message is "my test subject"
 
   Scenario: Retrieving message should return attachments when some
-    Given the user has a message "m1" in "INBOX" mailbox with two attachments
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with two attachments
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the hasAttachment of the message is "true"
@@ -198,8 +196,8 @@ Feature: GetMessages method
       |isInline |true                                       |
 
   Scenario: Retrieving message should return attachments and html body when some attachments and html message
-    Given the user has a message "m1" in "INBOX" mailbox with two attachments
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with two attachments
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the hasAttachment of the message is "true"
@@ -209,8 +207,8 @@ Feature: GetMessages method
     And the htmlBody of the message is "<b>html</b>\n"
 
   Scenario: Retrieving message should return attachments and text body when some attachments and text message
-    Given the user has a message "m1" in "INBOX" mailbox with two attachments in text
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with two attachments in text
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the hasAttachment of the message is "true"
@@ -220,8 +218,8 @@ Feature: GetMessages method
     And the property "htmlBody" of the message is null
 
   Scenario: Retrieving message should return attachments and both html/text body when some attachments and both html/text message
-    Given the user has a multipart message "m1" in "INBOX" mailbox
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a multipart message "m1" in "INBOX" mailbox
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the hasAttachment of the message is "true"
@@ -231,8 +229,8 @@ Feature: GetMessages method
     And the htmlBody of the message is "<i>blabla</i>\n<b>bloblo</b>\n"
 
   Scenario: Retrieving message should return image and html body when multipart/alternative where first part is multipart/related with html and image
-    Given the user has a multipart/related message "m1" in "INBOX" mailbox
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a multipart/related message "m1" in "INBOX" mailbox
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the hasAttachment of the message is "true"
@@ -242,29 +240,29 @@ Feature: GetMessages method
     And the htmlBody of the message is "<html>multipart/related content</html>\n"
 
   Scenario: Retrieving message should return textBody and htmlBody when incoming mail have an inlined HTML and text body without Content-ID
-    Given the user has a message "m1" in "INBOX" mailbox, composed of a multipart with inlined text part and inlined html part
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox, composed of a multipart with inlined text part and inlined html part
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the textBody of the message is "Hello text body\n"
     And the htmlBody of the message is "<html>Hello html body</html>\n"
 
   Scenario: Retrieving message with more than 1000 char by line should return message when exists
-    Given the user has a message "m1" in "INBOX" mailbox beginning by a long line
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox beginning by a long line
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the id of the message is "m1"
 
   Scenario:
-    Given the user has a message "m1" in "INBOX" mailbox with two same attachments in text
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with two same attachments in text
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list of attachments of the message contains 2 attachments
 
   Scenario: Retrieving message should read content from multipart when some inline attachment and both html/text multipart
-    Given the user has a message "m1" in "INBOX" mailbox with plain/text inline attachment
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with plain/text inline attachment
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the hasAttachment of the message is "false"
@@ -272,24 +270,24 @@ Feature: GetMessages method
     And the htmlBody of the message is "<i>blabla</i>\n<b>bloblo</b>\n"
 
   Scenario: Retrieving message should find html body when text in main multipart and html in inner multipart
-    Given the user has a message "m1" in "INBOX" mailbox with text in main multipart and html in inner multipart
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with text in main multipart and html in inner multipart
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the textBody of the message is "/blabla/\r\n*bloblo*\r\n"
     And the htmlBody of the message is "<i>blabla</i>\r\n<b>bloblo</b>\r\n"
 
   Scenario: Retrieving message should compute text body from html body
-    Given the user has a message "m1" in "INBOX" mailbox with html body and no text body
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with html body and no text body
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the textBody of the message is "The Test User created an issue"
     And the htmlBody of the message is "<a>The Test User</a> <strong>created</strong> an issue"
 
   Scenario: Retrieving message with inline attachment but no CID should convert that inlined attachment to normal attachment
-    Given the user has a message "m1" in "INBOX" mailbox with inline attachment but no CID
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with inline attachment but no CID
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the hasAttachment of the message is "true"
@@ -301,8 +299,8 @@ Feature: GetMessages method
       |isInline |true                                      |
 
   Scenario: Retrieving message with inline attachment and blank CID should convert that inlined attachment to normal attachment
-    Given the user has a message "m1" in "INBOX" mailbox with inline attachment and blank CID
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with inline attachment and blank CID
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the hasAttachment of the message is "true"
@@ -314,23 +312,23 @@ Feature: GetMessages method
         |isInline |true              |
 
   Scenario: Preview should be computed even when HTML body contains many tags without content
-    Given the user has a message "m1" in "INBOX" mailbox with HTML body with many empty tags
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with HTML body with many empty tags
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the preview of the message is not empty
 
   Scenario: Retrieving message which contains multiple same inlined attachments
-    Given the user has a message "m1" in the "inbox" mailbox with multiple same inlined attachments "ia1"
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in the "inbox" mailbox with multiple same inlined attachments "ia1"
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the hasAttachment of the message is "false"
     And the list of attachments of the message contains only one attachment with cid "1482981567586480bfca67b793175279@linagora.com"
 
   Scenario: Preview and bodies should respect given charset
-    Given the user has a message "m1" in "INBOX" mailbox with specific charset
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with specific charset
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the preview of the message is "àààà éééé èèèè"
@@ -338,17 +336,17 @@ Feature: GetMessages method
     And the htmlBody of the message is "<html>\r\n  <p>àààà</p>\r\n  <p>éééé</p>\r\n  <p>èèèè</p>\r\n</html>\r\n"
 
   Scenario: Preview should be normalized in case of long and complicated HTML content
-    Given the user has a message "m1" in "INBOX" mailbox with long and complicated HTML content
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with long and complicated HTML content
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the preview of the message is not empty
     And the preview should not contain consecutive spaces or blank characters
 
   Scenario Outline: Preview should display printable characters with charset
-    Given the user has a message "m1" in "INBOX" mailbox with content-type <content-type> subject "Subject", content <content>, headers
+    Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with content-type <content-type> subject "Subject", content <content>, headers
         |Content-Transfer-Encoding    |<tranfer-encoding> |
-    When the user ask for messages "m1"
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the preview of the message contains: <preview>
@@ -358,8 +356,8 @@ Feature: GetMessages method
             |"text/html; charset=iso-8859-1"                    |quoted-printable   |"Dans le cadre du stage effectu=E9 Mlle 2017, =E0 sign=E9e d=E8s que possible, =E0, tr=E8s, journ=E9e.."    |effectué, à, signée dès, très, journée                                                                        |
 
   Scenario Outline: Retrieving message should display keywords as jmap flag
-    Given the user has a message "m1" in the "inbox" mailbox with flags <flags>
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in the "inbox" mailbox with flags <flags>
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the keywords of the message is <keyword>
@@ -369,8 +367,8 @@ Feature: GetMessages method
             |"$Flagged,$Answered,$Draft"    |$Flagged,$Answered,$Draft      |
 
   Scenario Outline: GetMessages should filter invalid keywords
-    Given the user has a message "m1" in the "inbox" mailbox with flags <flags>
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in the "inbox" mailbox with flags <flags>
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the keywords of the message is <keyword>
@@ -380,8 +378,8 @@ Feature: GetMessages method
       |"$Draft,@ert,t^a,op§,$user_flag"    |$Draft,$user_flag      |
 
   Scenario Outline: Retrieving message should display keywords without unsupported jmap flag
-    Given the user has a message "m1" in the "inbox" mailbox with flags <flags>
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in the "inbox" mailbox with flags <flags>
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the keywords of the message is <keyword>
@@ -391,8 +389,8 @@ Feature: GetMessages method
             |"$Flagged,$Answered,$Deleted,$Recent"  |$Flagged,$Answered      |
 
   Scenario Outline: Retrieving message should display keywords with custom user jmap flag
-    Given the user has a message "m1" in the "inbox" mailbox with flags <flags>
-    When the user ask for messages "m1"
+    Given "alice@domain.tld" has a message "m1" in the "inbox" mailbox with flags <flags>
+    When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the keywords of the message is <keyword>

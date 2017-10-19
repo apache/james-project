@@ -64,8 +64,8 @@ public class SetMailboxesMethodStepdefs {
 
     @Given("^mailbox \"([^\"]*)\" with (\\d+) messages$")
     public void mailboxWithMessages(String mailboxName, int messageCount) throws Throwable {
-        mainStepdefs.mailboxProbe.createMailbox("#private", userStepdefs.lastConnectedUser, mailboxName);
-        MailboxPath mailboxPath = MailboxPath.forUser(userStepdefs.lastConnectedUser, mailboxName);
+        mainStepdefs.mailboxProbe.createMailbox("#private", userStepdefs.getConnectedUser(), mailboxName);
+        MailboxPath mailboxPath = MailboxPath.forUser(userStepdefs.getConnectedUser(), mailboxName);
         IntStream
             .range(0, messageCount)
             .forEach(Throwing.intConsumer(i -> appendMessage(mailboxPath, i)));
@@ -75,14 +75,14 @@ public class SetMailboxesMethodStepdefs {
     private void appendMessage(MailboxPath mailboxPath, int i) throws MailboxException {
         String content = "Subject: test" + i + "\r\n\r\n"
                 + "testBody" + i;
-        mainStepdefs.mailboxProbe.appendMessage(userStepdefs.lastConnectedUser, mailboxPath,
+        mainStepdefs.mailboxProbe.appendMessage(userStepdefs.getConnectedUser(), mailboxPath,
                 new ByteArrayInputStream(content.getBytes()), new Date(), false, new Flags());
     }
 
     @When("^renaming mailbox \"([^\"]*)\" to \"([^\"]*)\"")
     public void renamingMailbox(String actualMailboxName, String newMailboxName) throws Throwable {
-        String username = userStepdefs.lastConnectedUser;
-        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", userStepdefs.lastConnectedUser, actualMailboxName);
+        String username = userStepdefs.getConnectedUser();
+        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", userStepdefs.getConnectedUser(), actualMailboxName);
         String mailboxId = mailbox.getMailboxId().serialize();
         String requestBody =
                 "[" +
@@ -106,7 +106,7 @@ public class SetMailboxesMethodStepdefs {
 
     @When("^moving mailbox \"([^\"]*)\" to \"([^\"]*)\"$")
     public void movingMailbox(String actualMailboxPath, String newParentMailboxPath) throws Throwable {
-        String username = userStepdefs.lastConnectedUser;
+        String username = userStepdefs.getConnectedUser();
         Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", username, actualMailboxPath);
         String mailboxId = mailbox.getMailboxId().serialize();
         Mailbox parent = mainStepdefs.mailboxProbe.getMailbox("#private", username, newParentMailboxPath);
@@ -136,7 +136,7 @@ public class SetMailboxesMethodStepdefs {
     @Then("^mailbox \"([^\"]*)\" contains (\\d+) messages$")
     public void mailboxContainsMessages(String mailboxName, int messageCount) throws Throwable {
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        String username = userStepdefs.lastConnectedUser;
+        String username = userStepdefs.getConnectedUser();
         Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", username, mailboxName);
         String mailboxId = mailbox.getMailboxId().serialize();
 

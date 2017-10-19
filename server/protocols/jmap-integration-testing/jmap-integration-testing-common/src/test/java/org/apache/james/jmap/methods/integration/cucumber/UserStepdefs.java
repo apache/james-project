@@ -23,10 +23,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.inject.Inject;
 
+import com.github.fge.lambdas.runnable.ThrowingRunnable;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -50,7 +52,7 @@ public class UserStepdefs {
     protected Map<String, String> passwordByUser;
     protected Set<String> domains;
     protected Map<String, AccessToken> tokenByUser;
-    protected String lastConnectedUser;
+    protected Optional<String> lastConnectedUser;
     
     @Inject
     private UserStepdefs(MainStepdefs mainStepdefs) {
@@ -58,6 +60,23 @@ public class UserStepdefs {
         this.domains = new HashSet<>();
         this.passwordByUser = new HashMap<>();
         this.tokenByUser = new HashMap<>();
+        this.lastConnectedUser = Optional.empty();
+    }
+
+    public void execWithUser(String user, ThrowingRunnable sideEffect) throws Throwable {
+        Optional<String> previousConnectedUser = lastConnectedUser;
+        connectUser(user);
+        try {
+            sideEffect.run();
+        } finally {
+            previousConnectedUser.ifPresent(Throwing.consumer(this::connectUser));
+        }
+    }
+
+    public String getConnectedUser() {
+        Preconditions.checkArgument(lastConnectedUser.isPresent(), "No user is connected");
+
+        return lastConnectedUser.get();
     }
 
     @Given("^a domain named \"([^\"]*)\"$")
@@ -102,7 +121,7 @@ public class UserStepdefs {
         Preconditions.checkState(password != null, "unknown user " + username);
         AccessToken accessToken = HttpJmapAuthentication.authenticateJamesUser(mainStepdefs.baseUri(), username, password);
         tokenByUser.put(username, accessToken);
-        lastConnectedUser = username;
+        lastConnectedUser = Optional.of(username);
     }
     
     @Given("^\"([^\"]*)\" shares its mailbox \"([^\"]*)\" with \"([^\"]*)\"$")

@@ -50,11 +50,11 @@ public class SetMessagesMethodStepdefs {
 
     @When("^the user move \"([^\"]*)\" to mailbox \"([^\"]*)\"")
     public void moveMessageToMailbox(String message, String mailbox) throws Throwable {
-        String username = userStepdefs.lastConnectedUser;
+        String username = userStepdefs.getConnectedUser();
         MessageId messageId = getMessagesMethodStepdefs.getMessageId(message);
         MailboxId mailboxId = mainStepdefs.jmapServer
             .getProbe(MailboxProbeImpl.class)
-            .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, mailbox)
+            .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.getConnectedUser(), mailbox)
             .getMailboxId();
 
         String requestBody = "[" +
@@ -78,15 +78,15 @@ public class SetMessagesMethodStepdefs {
 
     @When("^the user copy \"([^\"]*)\" from mailbox \"([^\"]*)\" to mailbox \"([^\"]*)\"")
     public void copyMessageToMailbox(String message, String sourceMailbox, String destinationMailbox) throws Throwable {
-        String username = userStepdefs.lastConnectedUser;
+        String username = userStepdefs.getConnectedUser();
         MessageId messageId = getMessagesMethodStepdefs.getMessageId(message);
         MailboxId sourceMailboxId = mainStepdefs.jmapServer
             .getProbe(MailboxProbeImpl.class)
-            .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, sourceMailbox)
+            .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.getConnectedUser(), sourceMailbox)
             .getMailboxId();
         MailboxId destinationMailboxId = mainStepdefs.jmapServer
             .getProbe(MailboxProbeImpl.class)
-            .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, destinationMailbox)
+            .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.getConnectedUser(), destinationMailbox)
             .getMailboxId();
 
         String requestBody = "[" +
@@ -110,7 +110,7 @@ public class SetMessagesMethodStepdefs {
 
     @When("^the user set flags on \"([^\"]*)\" to \"([^\"]*)\"")
     public void setFlags(String message, List<String> keywords) throws Throwable {
-        String username = userStepdefs.lastConnectedUser;
+        String username = userStepdefs.getConnectedUser();
         MessageId messageId = getMessagesMethodStepdefs.getMessageId(message);
         String keywordString = keywords
             .stream()
