@@ -52,7 +52,7 @@
         <commons-net.version>3.2</commons-net.version>
         <commons-lang.version>2.6</commons-lang.version>
         <commons-codec.version>1.7</commons-codec.version>
-        <commons-collections.version>3.2.1</commons-collections.version>
+        <commons-collections.version>3.2.2</commons-collections.version>
         <apache-commons-io.version>1.3.2</apache-commons-io.version>
         <jmock.version>2.5.1</jmock.version>
         <jutf7.version>1.0.0</jutf7.version>
