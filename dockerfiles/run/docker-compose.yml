@@ -7,17 +7,17 @@ services:
       - elasticsearch
       - cassandra
     entrypoint: bash -c "java -Dworking.directory=/root/ -jar james-server.jar"
-    image: linagora/james-project:latest
+    image: test_james
     container_name: james
     hostname: james.local
     ports:
-      - "80:80"
-      - "25:25"
-      - "110:110"
-      - "143:143"
-      - "465:465"
-      - "587:587"
-      - "993:993"
+      - "1080:80"
+      - "1025:25"
+      - "1110:110"
+      - "1143:143"
+      - "1465:465"
+      - "1587:587"
+      - "1993:993"
 
   elasticsearch:
     image: elasticsearch:2.2.1
