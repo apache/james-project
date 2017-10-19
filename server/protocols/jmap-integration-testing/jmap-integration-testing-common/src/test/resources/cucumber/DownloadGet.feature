@@ -83,26 +83,26 @@ Feature: Download GET
 
   Scenario: User can download attachment of another user when shared mailbox
     Given "alice@domain.tld" mailbox "sharedMailbox" contains a message "1" with an attachment "2"
-    And "alice@domain.tld" shares its mailbox "sharedMailbox" with "bob@domain.tld"
+    And "alice@domain.tld" shares her mailbox "sharedMailbox" with "bob@domain.tld" with "lr" rights
     When "bob@domain.tld" downloads "2"
     Then he can read that blob
     And the blob size is 3071
 
   Scenario: User can download message blob of another user when shared mailbox
     Given "alice@domain.tld" mailbox "sharedMailbox" contains a message "1" with an attachment "2"
-    And "alice@domain.tld" shares its mailbox "sharedMailbox" with "bob@domain.tld"
+    And "alice@domain.tld" shares her mailbox "sharedMailbox" with "bob@domain.tld" with "lr" rights
     When "bob@domain.tld" downloads "1"
     Then he can read that blob
     And the blob size is 4963
 
   Scenario: Attachment read delegation should be user specific
     Given "alice@domain.tld" mailbox "sharedMailbox" contains a message "1" with an attachment "2"
-    And "alice@domain.tld" shares its mailbox "sharedMailbox" with "bob@domain.tld"
+    And "alice@domain.tld" shares her mailbox "sharedMailbox" with "bob@domain.tld" with "lr" rights
     When "cedric@domain.tld" downloads "1"
     Then "cedric@domain.tld" should receive a not found response
 
   Scenario: Message download read delegation should be user specific
     Given "alice@domain.tld" mailbox "sharedMailbox" contains a message "1" with an attachment "2"
-    And "alice@domain.tld" shares its mailbox "sharedMailbox" with "bob@domain.tld"
+    And "alice@domain.tld" shares her mailbox "sharedMailbox" with "bob@domain.tld" with "lr" rights
     When "cedric@domain.tld" downloads "2"
     Then "cedric@domain.tld" should receive a not found response

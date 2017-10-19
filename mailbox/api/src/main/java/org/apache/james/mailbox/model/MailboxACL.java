@@ -198,7 +198,7 @@ public class MailboxACL {
             return new Rfc4314Rights(rightListFromSerializedRfc4314Rights(serializedRfc4314Rights));
         }
 
-        private static List<Right> rightListFromSerializedRfc4314Rights(String serializedRfc4314Rights) throws UnsupportedRightException {
+        public static List<Right> rightListFromSerializedRfc4314Rights(String serializedRfc4314Rights) throws UnsupportedRightException {
             return serializedRfc4314Rights.chars()
                 .mapToObj(i -> (char) i)
                 .flatMap(Throwing.function(Rfc4314Rights::convert).sneakyThrow())

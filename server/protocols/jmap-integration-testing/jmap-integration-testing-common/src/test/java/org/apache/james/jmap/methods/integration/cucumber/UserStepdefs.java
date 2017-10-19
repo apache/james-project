@@ -110,7 +110,7 @@ public class UserStepdefs {
         createUser(username);
         connectUser(username);
     }
-    
+
     @Given("^\"([^\"]*)\" is connected$")
     public void connectUser(String username) throws Throwable {
         AccessToken accessToken = authenticate(username);

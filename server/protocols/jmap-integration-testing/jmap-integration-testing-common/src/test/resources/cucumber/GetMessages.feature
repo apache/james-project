@@ -39,7 +39,7 @@ Feature: GetMessages method
 
   Scenario: Retrieving a message in a mailbox delegated to me
     Given "alice@domain.tld" has a mailbox "shared"
-    And "alice@domain.tld" shares its mailbox "shared" with "bob@domain.tld"
+    And "alice@domain.tld" shares her mailbox "shared" with "bob@domain.tld" with "lr" rights
     And "alice@domain.tld" has a message "m1" in "shared" mailbox with subject "my test subject", content "testmail"
     When "bob@domain.tld" ask for messages "m1"
     Then no error is returned
@@ -48,7 +48,7 @@ Feature: GetMessages method
 
   Scenario: Retrieving a message in a mailbox delegated to someone else
     Given "alice@domain.tld" has a mailbox "shared"
-    And "alice@domain.tld" shares its mailbox "shared" with "bob@domain.tld"
+    And "alice@domain.tld" shares her mailbox "shared" with "bob@domain.tld" with "lr" rights
     And "alice@domain.tld" has a message "m1" in "shared" mailbox with subject "my test subject", content "testmail"
     When "cedric@domain.tld" ask for messages "m1"
     Then no error is returned
