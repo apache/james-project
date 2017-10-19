@@ -59,7 +59,7 @@ public class UserStepdefs {
         this.lastConnectedUser = Optional.empty();
     }
 
-    public void execWithUser(String user, ThrowingRunnable sideEffect) throws Throwable {
+    public void execWithUser(String user, ThrowingRunnable sideEffect) throws Exception {
         Optional<String> previousConnectedUser = lastConnectedUser;
         connectUser(user);
         try {
@@ -106,13 +106,13 @@ public class UserStepdefs {
     }
 
     @Given("^a connected user \"([^\"]*)\"$")
-    public void createConnectedUser(String username) throws Throwable {
+    public void createConnectedUser(String username) throws Exception {
         createUser(username);
         connectUser(username);
     }
 
     @Given("^\"([^\"]*)\" is connected$")
-    public void connectUser(String username) throws Throwable {
+    public void connectUser(String username) throws Exception {
         AccessToken accessToken = authenticate(username);
         tokenByUser.put(username, accessToken);
         lastConnectedUser = Optional.of(username);

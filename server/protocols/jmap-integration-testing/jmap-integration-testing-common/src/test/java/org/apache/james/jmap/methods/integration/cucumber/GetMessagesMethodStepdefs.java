@@ -53,7 +53,6 @@ import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
@@ -561,15 +560,14 @@ public class GetMessagesMethodStepdefs {
             .containsOnlyElementsOf(values);
     }
 
-    @Then("^the message is in \"([^\"]*)\" user mailboxes")
-    public void assertMailboxNamesOfTheFirstMessageWithUser(String mailboxIds) throws Exception {
-        List<String> values = Splitter.on(",")
-            .splitToList(mailboxIds).stream()
-            .map(name -> Splitter.on(':').omitEmptyStrings().splitToList(name))
-            .peek(nameParts -> Preconditions.checkArgument(nameParts.size() == 2))
-            .map(Throwing.function(nameParts -> mainStepdefs.jmapServer
+    @Then("^\"([^\"]*)\" should see message \"([^\"]*)\" in mailboxes:$")
+    public void assertMailboxesOfMessage(String user, String messageId, DataTable userMailboxes) throws Exception {
+        userStepdefs.execWithUser(user, () -> postWithAListOfIds(ImmutableList.of(messageId)));
+
+        List<String> values = userMailboxes.asMap(String.class, String.class).entrySet().stream()
+            .map(Throwing.function(userMailbox -> mainStepdefs.jmapServer
                 .getProbe(MailboxProbeImpl.class)
-                .getMailbox(MailboxConstants.USER_NAMESPACE, nameParts.get(0), nameParts.get(1))
+                .getMailbox(MailboxConstants.USER_NAMESPACE, userMailbox.getKey(), userMailbox.getValue())
                 .getMailboxId()
                 .serialize()))
             .distinct()
@@ -687,6 +685,22 @@ public class GetMessagesMethodStepdefs {
     public void assertMessageHasNoKeyword() throws Exception {
         assertThat(httpStepDefs.jsonPath.<Map<String, Boolean>>read(FIRST_MESSAGE + ".keywords"))
             .isNullOrEmpty();
+    }
+
+    @Then("^\"([^\"]*)\" should see message \"([^\"]*)\" with keywords (.*)$")
+    public void assertKeywordsOfMessage(String user, String messageId, List<String> keywords) throws Exception {
+        userStepdefs.execWithUser(user, () -> postWithAListOfIds(ImmutableList.of(messageId)));
+
+        assertThat(httpStepDefs.jsonPath.<Map<String, Boolean>>read(FIRST_MESSAGE + ".keywords").keySet())
+            .containsOnlyElementsOf(keywords);
+    }
+
+    @Then("^\"([^\"]*)\" should see message \"([^\"]*)\" without keywords$")
+    public void assertKeywordsEmpty(String user, String messageId) throws Exception {
+        userStepdefs.execWithUser(user, () -> postWithAListOfIds(ImmutableList.of(messageId)));
+
+        assertThat(httpStepDefs.jsonPath.<Map<String, Boolean>>read(FIRST_MESSAGE + ".keywords").keySet())
+            .isEmpty();
     }
 
     private void assertAttachment(String attachment, DataTable attachmentProperties) {

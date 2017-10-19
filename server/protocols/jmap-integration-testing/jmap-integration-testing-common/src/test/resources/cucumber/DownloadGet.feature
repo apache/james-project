@@ -16,7 +16,6 @@
 # specific language governing permissions and limitations      *
 # under the License.                                           *
 # **************************************************************/
-
 Feature: Download GET
   As a James user
   I want to retrieve my blobs (attachments and messages)

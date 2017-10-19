@@ -16,7 +16,6 @@
 # specific language governing permissions and limitations      *
 # under the License.                                           *
 # **************************************************************/
-
 Feature: GetMessages method
   As a James user
   I want to be able to retrieve my messages
