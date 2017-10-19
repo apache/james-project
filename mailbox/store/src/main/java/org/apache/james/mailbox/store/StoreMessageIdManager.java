@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 import javax.inject.Inject;
@@ -63,6 +62,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -99,18 +99,6 @@ public class StoreMessageIdManager implements MessageIdManager {
         public MetadataWithMailboxId(MessageMetaData messageMetaData, MailboxId mailboxId) {
             this.messageMetaData = messageMetaData;
             this.mailboxId = mailboxId;
-        }
-    }
-
-    private static class WrappedException extends RuntimeException {
-        private final MailboxException cause;
-
-        public WrappedException(MailboxException cause) {
-            this.cause = cause;
-        }
-
-        public MailboxException unwrap() throws MailboxException {
-            throw cause;
         }
     }
 
@@ -163,23 +151,19 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     @Override
     public List<MessageResult> getMessages(List<MessageId> messageIds, MessageResult.FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
-        try {
-            MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
-            List<MailboxMessage> messageList = messageIdMapper.find(messageIds, MessageMapper.FetchType.Full);
+        MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
+        List<MailboxMessage> messageList = messageIdMapper.find(messageIds, MessageMapper.FetchType.Full);
 
-            ImmutableSet<MailboxId> allowedMailboxIds = messageList.stream()
-                .map(MailboxMessage::getMailboxId)
-                .distinct()
-                .filter(hasRightsOnMailbox(mailboxSession, Right.Read))
-                .collect(Guavate.toImmutableSet());
+        ImmutableSet<MailboxId> allowedMailboxIds = messageList.stream()
+            .map(MailboxMessage::getMailboxId)
+            .distinct()
+            .filter(hasRightsOnMailbox(mailboxSession, Right.Read))
+            .collect(Guavate.toImmutableSet());
 
-            return messageList.stream()
-                .filter(inMailboxes(allowedMailboxIds))
-                .map(messageResultConverter(fetchGroup))
-                .collect(Guavate.toImmutableList());
-        } catch (WrappedException wrappedException) {
-            throw wrappedException.unwrap();
-        }
+        return messageList.stream()
+            .filter(inMailboxes(allowedMailboxIds))
+            .map(Throwing.function(messageResultConverter(fetchGroup)).sneakyThrow())
+            .collect(Guavate.toImmutableList());
     }
 
     @Override
@@ -325,14 +309,8 @@ public class StoreMessageIdManager implements MessageIdManager {
         messageIdMapper.copyInMailbox(mailboxMessage);
     }
 
-    private Function<MailboxMessage, MessageResult> messageResultConverter(MessageResult.FetchGroup fetchGroup) {
-        return input -> {
-            try {
-                return ResultUtils.loadMessageResult(input, fetchGroup);
-            } catch (MailboxException e) {
-                throw new WrappedException(e);
-            }
-        };
+    private ThrowingFunction<MailboxMessage, MessageResult> messageResultConverter(MessageResult.FetchGroup fetchGroup) {
+        return input -> ResultUtils.loadMessageResult(input, fetchGroup);
     }
 
     private Predicate<MailboxMessage> inMailboxes(Collection<MailboxId> mailboxIds) {
