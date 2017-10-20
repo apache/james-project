@@ -77,8 +77,7 @@ public class SendMailHandler implements JamesMessageHook {
                 recipientString = theRecipients.toString();
             }
             if (LOGGER.isInfoEnabled()) {
-                String infoBuffer = "Successfully spooled mail " + mail.getName() + " from " + mail.getSender() + " on " + session.getRemoteAddress().getAddress().toString() + " for " + recipientString;
-                LOGGER.info(infoBuffer.toString());
+                LOGGER.info("Successfully spooled mail " + mail.getName() + " from " + mail.getSender() + " on " + session.getRemoteAddress().getAddress().toString() + " for " + recipientString);
             }
         } catch (MessagingException me) {
             LOGGER.error("Unknown error occurred while processing DATA.", me);
