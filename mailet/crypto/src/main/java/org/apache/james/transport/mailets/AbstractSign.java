@@ -455,14 +455,7 @@ public abstract class AbstractSign extends GenericMailet {
             throw new MessagingException("Exception thrown", e);
         } finally {
             if (isDebug()) {
-                StringBuilder logBuffer =
-                new StringBuilder(1024)
-                .append("Other parameters:")
-                .append(", signerName=").append(getSignerName())
-                .append(", postmasterSigns=").append(postmasterSigns)
-                .append(", rebuildFrom=").append(rebuildFrom)
-                .append(" ");
-                LOGGER.debug(logBuffer.toString());
+                LOGGER.debug("Other parameters: signerName={}, postmasterSigns={}, rebuildFrom={}", getSignerName(), postmasterSigns, rebuildFrom);
             }
         }
         
