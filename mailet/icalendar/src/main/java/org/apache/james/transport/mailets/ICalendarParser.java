@@ -21,7 +21,7 @@ package org.apache.james.transport.mailets;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Serializable;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -137,28 +137,23 @@ public class ICalendarParser extends GenericMailet {
             return Stream.of(Pair.of(key, builder.build(inputStream)));
         } catch (IOException e) {
             if (LOGGER.isErrorEnabled()) {
-                String icsContentAsString;
-                try {
-                    icsContentAsString = new String(icsContent, Charset.forName("UTF-8"));
-                } catch (Throwable t) {
-                    LOGGER.error("Error while decoding ics content", t);
-                    icsContentAsString = new String(Hex.encodeHex(icsContent));
-                }
-                LOGGER.error("Error while reading input: " + icsContentAsString, e);
+                LOGGER.error("Error while reading input: " + icsContentToString(icsContent), e);
             }
             return Stream.of();
         } catch (ParserException e) {
             if (LOGGER.isErrorEnabled()) {
-                String icsContentAsString;
-                try {
-                    icsContentAsString = new String(icsContent, Charset.forName("UTF-8"));
-                } catch (Throwable t) {
-                    LOGGER.error("Error while decoding ics content", t);
-                    icsContentAsString = new String(Hex.encodeHex(icsContent));
-                }
-                LOGGER.error("Error while parsing ICal object: " + icsContentAsString, e);
+                LOGGER.error("Error while parsing ICal object: " + icsContentToString(icsContent), e);
             }
             return Stream.of();
         }
+    }
+
+    private static String icsContentToString(byte[] icsContent) {
+        try {
+            return new String(icsContent, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            LOGGER.error("Error while decoding ics content", e);
+        }
+        return new String(Hex.encodeHex(icsContent));
     }
 }
