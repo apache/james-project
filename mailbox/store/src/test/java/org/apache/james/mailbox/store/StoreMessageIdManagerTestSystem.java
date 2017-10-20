@@ -27,7 +27,7 @@ import java.io.IOException;
 
 import javax.mail.Flags;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSession.SessionType;
 import org.apache.james.mailbox.MessageIdManager;
@@ -78,7 +78,7 @@ public class StoreMessageIdManagerTestSystem extends MessageIdManagerTestSystem 
 
     @Override
     public void deleteMailbox(MailboxId mailboxId, MailboxSession mailboxSession) {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
     }
 
     @Override
@@ -103,11 +103,11 @@ public class StoreMessageIdManagerTestSystem extends MessageIdManagerTestSystem 
 
     @Override
     public int getConstantMessageSize() {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
     }
 
     @Override
     public void setACL(MailboxId mailboxId, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
     }
 }

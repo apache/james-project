@@ -22,7 +22,7 @@ package org.apache.james.imap.api;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;

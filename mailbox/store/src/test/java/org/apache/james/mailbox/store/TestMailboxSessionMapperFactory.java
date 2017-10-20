@@ -33,7 +33,7 @@ import java.util.function.Predicate;
 
 import javax.mail.Flags;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
@@ -87,12 +87,12 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
         mailboxMapper = new MailboxMapper() {
             @Override
             public MailboxId save(Mailbox mailbox) throws MailboxException {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not implemented");
             }
 
             @Override
             public void delete(Mailbox mailbox) throws MailboxException {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not implemented");
 
             }
 
@@ -129,42 +129,42 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
 
             @Override
             public List<Mailbox> findMailboxWithPathLike(MailboxPath mailboxPath) throws MailboxException {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not implemented");
             }
 
             @Override
             public boolean hasChildren(Mailbox mailbox, char delimiter) throws MailboxException {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not implemented");
             }
 
             @Override
             public void updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not implemented");
             }
 
             @Override
             public void setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not implemented");
             }
 
             @Override
             public List<Mailbox> list() throws MailboxException {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not implemented");
             }
 
             @Override
             public void endRequest() {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not implemented");
             }
 
             @Override
             public <T> T execute(Transaction<T> transaction) throws MailboxException {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not implemented");
             }
 
             @Override
             public List<Mailbox> findNonPersonalMailboxes(String userName, Right right) throws MailboxException {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not implemented");
             }
         };
         messageIdMapper = new MessageIdMapper() {
@@ -268,12 +268,12 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
 
     @Override
     public AnnotationMapper createAnnotationMapper(MailboxSession session) throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
     }
 
     @Override
     public MessageMapper createMessageMapper(MailboxSession session) throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
     }
 
     @Override
@@ -288,7 +288,7 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
 
     @Override
     public SubscriptionMapper createSubscriptionMapper(MailboxSession session) throws SubscriptionException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
     }
 
     public void clean() {

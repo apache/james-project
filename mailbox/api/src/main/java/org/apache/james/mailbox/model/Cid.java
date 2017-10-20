@@ -22,7 +22,7 @@ package org.apache.james.mailbox.model;
 
 import java.util.Optional;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;

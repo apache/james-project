@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Locale;
 import java.util.Optional;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
@@ -36,7 +37,6 @@ import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
-import org.apache.commons.lang.NotImplementedException;
 
 public class MaildirStore implements UidProvider, ModSeqProvider {
 
@@ -301,11 +301,11 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
 
     @Override
     public MessageUid nextUid(MailboxSession session, MailboxId mailboxId) throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
     }
 
     @Override
     public long highestModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
     }
 }

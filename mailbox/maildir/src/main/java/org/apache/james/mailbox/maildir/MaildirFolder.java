@@ -42,7 +42,7 @@ import java.util.TreeMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
 import org.apache.james.mailbox.MailboxSession;
@@ -469,7 +469,7 @@ public class MaildirFolder {
                     String[] curFiles = curFolder.list();
                     String[] newFiles = newFolder.list();
                     messageCount = curFiles.length + newFiles.length;
-                    String[] allFiles = (String[]) ArrayUtils.addAll(curFiles, newFiles);
+                    String[] allFiles = ArrayUtils.addAll(curFiles, newFiles);
                     for (String file : allFiles)
                         lines.add(String.valueOf(getNextUid().asLong()) + " " + file);
                     PrintWriter pw = new PrintWriter(uidList);

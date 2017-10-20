@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.store;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -28,9 +29,11 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
+
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxCounters;
@@ -45,7 +48,6 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
-import org.apache.commons.lang.NotImplementedException;
 import org.junit.Test;
 
 import com.google.common.collect.Iterables;
@@ -185,7 +187,7 @@ public class StoreMailboxMessageResultIteratorTest {
 
         @Override
         public Flags getApplicableFlag(Mailbox mailbox) throws MailboxException {
-            throw new NotImplementedException();
+            throw new NotImplementedException("Not implemented");
         }
     }
 
