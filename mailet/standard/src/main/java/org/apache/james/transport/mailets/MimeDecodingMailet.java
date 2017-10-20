@@ -83,9 +83,8 @@ public class MimeDecodingMailet extends GenericMailet {
     private Map<String, byte[]> getAttributeContent(Mail mail) throws MailetException {
         Serializable attributeContent = mail.getAttribute(attribute);
         if (! (attributeContent instanceof Map)) {
-            LOGGER.debug("Invalid attribute found into attribute "
-                    + "{} class Map expected but "
-                    + "{} found.", attribute, attributeContent.getClass());
+            LOGGER.debug("Invalid attribute found into attribute {} class Map expected but {} found.",
+                    attribute, attributeContent.getClass());
             return ImmutableMap.of();
         }
         return (Map<String, byte[]>) attributeContent;
