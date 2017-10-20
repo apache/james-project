@@ -20,12 +20,10 @@
 package org.apache.james.mailbox;
 
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mime4j.dom.address.Mailbox;
 
 public interface RightManager {
     /**

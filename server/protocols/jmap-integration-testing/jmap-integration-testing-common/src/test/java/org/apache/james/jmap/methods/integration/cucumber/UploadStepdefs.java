@@ -73,7 +73,7 @@ public class UploadStepdefs {
 
     @Given("^\"([^\"]*)\" is starting uploading a content$")
     public void userStartUploadContent(String username) throws Throwable {
-        AccessToken accessToken = userStepdefs.getTokenForUser(username);
+        AccessToken accessToken = userStepdefs.authenticate(username);
 
         CountDownLatch startSignal = new CountDownLatch(2);
         CountDownConsumeInputStream bodyStream = new CountDownConsumeInputStream(startSignal);
@@ -104,7 +104,7 @@ public class UploadStepdefs {
 
     @When("^\"([^\"]*)\" upload a content$")
     public void userUploadContent(String username) throws Throwable {
-        AccessToken accessToken = userStepdefs.getTokenForUser(username);
+        AccessToken accessToken = userStepdefs.authenticate(username);
         Request request = Request.Post(uploadUri)
             .bodyStream(new BufferedInputStream(new ZeroedInputStream(_1M), _1M), org.apache.http.entity.ContentType.DEFAULT_BINARY);
 
@@ -121,7 +121,7 @@ public class UploadStepdefs {
 
     @When("^\"([^\"]*)\" upload a content without content type$")
     public void userUploadContentWithoutContentType(String username) throws Throwable {
-        AccessToken accessToken = userStepdefs.getTokenForUser(username);
+        AccessToken accessToken = userStepdefs.authenticate(username);
         Request request = Request.Post(uploadUri)
                 .bodyByteArray("some text".getBytes(Charsets.UTF_8));
         if (accessToken != null) {
@@ -132,7 +132,7 @@ public class UploadStepdefs {
 
     @When("^\"([^\"]*)\" upload a too big content$")
     public void userUploadTooBigContent(String username) throws Throwable {
-        AccessToken accessToken = userStepdefs.getTokenForUser(username);
+        AccessToken accessToken = userStepdefs.authenticate(username);
         Request request = Request.Post(uploadUri)
                 .bodyStream(new BufferedInputStream(new ZeroedInputStream(_10M), _10M), org.apache.http.entity.ContentType.DEFAULT_BINARY);
         if (accessToken != null) {
@@ -143,7 +143,7 @@ public class UploadStepdefs {
 
     @When("^\"([^\"]*)\" checks for the availability of the upload endpoint$")
     public void optionUpload(String username) throws Throwable {
-        userStepdefs.getTokenForUser(username);
+        userStepdefs.authenticate(username);
         Request request = Request.Options(uploadUri);
         response = request.execute().returnResponse();
     }
@@ -203,7 +203,7 @@ public class UploadStepdefs {
 
     @Then("^\"([^\"]*)\" should be able to retrieve the content$")
     public void contentShouldBeRetrievable(String username) throws Exception {
-        AccessToken accessToken = userStepdefs.getTokenForUser(username);
+        AccessToken accessToken = userStepdefs.authenticate(username);
         Request request = Request.Get(mainStepdefs.baseUri().setPath("/download/" + _1M_ZEROED_FILE_BLOB_ID).build());
         if (accessToken != null) {
             request.addHeader("Authorization", accessToken.serialize());

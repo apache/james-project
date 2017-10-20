@@ -118,7 +118,6 @@ public abstract class GetMessageListMethodTest {
         this.bob = "bob@" + domain;
         String bobPassword = "bobPassword";
         dataProbe.addUser(bob, bobPassword);
-        HttpJmapAuthentication.authenticateJamesUser(baseUri(), bob, bobPassword);
     }
 
     private URIBuilder baseUri() {

@@ -20,8 +20,6 @@
 
 package org.apache.james.mailbox.acl;
 
-import javax.mail.Flags;
-
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 

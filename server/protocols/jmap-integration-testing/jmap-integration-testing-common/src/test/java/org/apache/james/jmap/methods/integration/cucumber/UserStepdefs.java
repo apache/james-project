@@ -113,12 +113,12 @@ public class UserStepdefs {
     
     @Given("^\"([^\"]*)\" is connected$")
     public void connectUser(String username) throws Throwable {
-        AccessToken accessToken = getTokenForUser(username);
+        AccessToken accessToken = authenticate(username);
         tokenByUser.put(username, accessToken);
         lastConnectedUser = Optional.of(username);
     }
 
-    public AccessToken getTokenForUser(String username) {
+    public AccessToken authenticate(String username) {
         return tokenByUser.computeIfAbsent(username, (user) -> {
             String password = passwordByUser.get(user);
             Preconditions.checkState(password != null, "unknown user " + user);

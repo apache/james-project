@@ -19,10 +19,11 @@
 
 package org.apache.james.mailbox.store;
 
+import java.util.Optional;
+
 import javax.inject.Inject;
 import javax.mail.Flags;
 
-import com.github.fge.lambdas.Throwing;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.RightManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
@@ -40,11 +41,9 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.transaction.Mapper;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-
-import java.util.Optional;
-import java.util.function.Function;
 
 public class StoreRightManager implements RightManager {
 

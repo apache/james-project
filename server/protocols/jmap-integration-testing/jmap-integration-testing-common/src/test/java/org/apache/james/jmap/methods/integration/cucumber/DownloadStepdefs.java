@@ -137,7 +137,7 @@ public class DownloadStepdefs {
 
     @When("^\"([^\"]*)\" checks for the availability of the attachment endpoint$")
     public void optionDownload(String username) throws Throwable {
-        AccessToken accessToken = userStepdefs.getTokenForUser(username);
+        AccessToken accessToken = userStepdefs.authenticate(username);
         URI target = mainStepdefs.baseUri().setPath("/download/" + ONE_ATTACHMENT_EML_ATTACHMENT_BLOB_ID).build();
         Request request = Request.Options(target);
         if (accessToken != null) {
@@ -182,7 +182,7 @@ public class DownloadStepdefs {
     }
 
     private Request authenticatedDownloadRequest(URIBuilder uriBuilder, String blobId, String username) throws URISyntaxException {
-        AccessToken accessToken = userStepdefs.getTokenForUser(username);
+        AccessToken accessToken = userStepdefs.authenticate(username);
         AttachmentAccessTokenKey key = new AttachmentAccessTokenKey(username, blobId);
         if (attachmentAccessTokens.containsKey(key)) {
             uriBuilder.addParameter("access_token", attachmentAccessTokens.get(key).serialize());
@@ -237,7 +237,7 @@ public class DownloadStepdefs {
 
     private void trustForBlobId(String blobId, String username) throws Exception {
         Response tokenGenerationResponse = Request.Post(mainStepdefs.baseUri().setPath("/download/" + blobId).build())
-            .addHeader("Authorization", userStepdefs.getTokenForUser(username).serialize())
+            .addHeader("Authorization", userStepdefs.authenticate(username).serialize())
             .execute();
         String serializedAttachmentAccessToken = tokenGenerationResponse.returnContent().asString();
         attachmentAccessTokens.put(
@@ -252,7 +252,7 @@ public class DownloadStepdefs {
         userStepdefs.execWithUser(username, () -> {
             URIBuilder uriBuilder = mainStepdefs.baseUri().setPath("/download/badblobId");
             response = Request.Get(uriBuilder.build())
-                .addHeader("Authorization", userStepdefs.getTokenForUser(username).serialize())
+                .addHeader("Authorization", userStepdefs.authenticate(username).serialize())
                 .execute()
                 .returnResponse();
 
@@ -332,7 +332,7 @@ public class DownloadStepdefs {
     @When("^\"([^\"]*)\" asks for a token for attachment \"([^\"]*)\"$")
     public void postDownload(String username, String attachmentId) throws Throwable {
         String blobId = blobIdByAttachmentId.get(attachmentId);
-        AccessToken accessToken = userStepdefs.getTokenForUser(username);
+        AccessToken accessToken = userStepdefs.authenticate(username);
         response = Request.Post(mainStepdefs.baseUri().setPath("/download/" + blobId).build())
                 .addHeader("Authorization", accessToken.serialize())
                 .execute()

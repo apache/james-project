@@ -127,7 +127,7 @@ public class GetMessageListMethodStepdefs {
 
     private void post(String requestBody) throws Exception {
         response = Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
-            .addHeader("Authorization", userStepdefs.getTokenForUser(userStepdefs.getConnectedUser()).serialize())
+            .addHeader("Authorization", userStepdefs.authenticate(userStepdefs.getConnectedUser()).serialize())
             .addHeader("Accept", org.apache.http.entity.ContentType.APPLICATION_JSON.getMimeType())
             .bodyString(requestBody, org.apache.http.entity.ContentType.APPLICATION_JSON)
             .execute()
