@@ -19,7 +19,7 @@
 
 package org.apache.james;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.text.RandomStringGenerator;
 import org.apache.james.backends.cassandra.init.CassandraSessionConfiguration;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -55,7 +55,7 @@ public class DockerCassandraRule implements GuiceModuleTestRule {
 
     @Override
     public Module getModule() {
-        String keyspace = RandomStringUtils.randomAlphabetic(12);
+        String keyspace = new RandomStringGenerator.Builder().withinRange('a', 'z').build().generate(12);
         return (binder) -> binder.bind(CassandraSessionConfiguration.class).toInstance(() -> getCassandraConfigurationForDocker(keyspace));
     }
 

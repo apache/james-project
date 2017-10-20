@@ -26,7 +26,7 @@ import javax.inject.Named;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.text.RandomStringGenerator;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraSessionConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
@@ -66,7 +66,7 @@ public final class CassandraCluster implements AutoCloseable {
                 .host(host)
                 .port(port)
                 .build();
-            keyspace = RandomStringUtils.randomAlphabetic(10);
+            keyspace = new RandomStringGenerator.Builder().withinRange('a', 'z').build().generate(10);
             cassandraSessionConfiguration = () -> {
                 PropertiesConfiguration conf = new PropertiesConfiguration();
                 conf.addProperty("cassandra.nodes", host + ":" + port);
