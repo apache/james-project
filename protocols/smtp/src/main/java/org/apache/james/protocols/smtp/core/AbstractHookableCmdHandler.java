@@ -71,12 +71,12 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
         TimeMetric timeMetric = metricFactory.timer("SMTP-" + request.getCommand().toLowerCase(Locale.US));
         String command = request.getCommand();
         String parameters = request.getArgument();
-        Response response = doFilterChecks(session, command, parameters);
 
         try (Closeable closeable =
                  MDCBuilder.create()
                      .addContext(MDCBuilder.ACTION, command)
                      .build()) {
+            Response response = doFilterChecks(session, command, parameters);
             if (response == null) {
 
                 response = processHooks(session, command, parameters);
