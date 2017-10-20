@@ -56,7 +56,6 @@ import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
-import org.apache.mailet.base.StringUtils;
 import org.apache.mailet.base.mail.MimeMultipartReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -248,9 +247,9 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
             newMail.setRemoteAddr(getRemoteAddr());
             newMail.setRecipients(getSenderAsList(originalMail));
        
-            if (getInitParameters().isDebug() && LOGGER.isDebugEnabled()) {
-                LOGGER.debug("New mail - sender: " + newMail.getSender() + ", recipients: " + StringUtils.arrayToString(newMail.getRecipients().toArray()) + ", name: " + newMail.getName() + ", remoteHost: " + newMail.getRemoteHost() + ", remoteAddr: " + newMail.getRemoteAddr() + ", state: " + newMail.getState()
-                        + ", lastUpdated: " + newMail.getLastUpdated() + ", errorMessage: " + newMail.getErrorMessage());
+            if (getInitParameters().isDebug()) {
+                LOGGER.debug("New mail - sender: {}, recipients: {}, name: {}, remoteHost: {}, remoteAddr: {}, state: {}, lastUpdated: {}, errorMessage: {}",
+                        newMail.getSender(), newMail.getRecipients(), newMail.getName(), newMail.getRemoteHost(), newMail.getRemoteAddr(), newMail.getState(), newMail.getLastUpdated(), newMail.getErrorMessage());
             }
        
             newMail.setMessage(createBounceMessage(originalMail));
