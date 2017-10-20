@@ -20,13 +20,17 @@
 package org.apache.james.utils;
 
 import java.util.List;
+
 import javax.inject.Inject;
+import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 
@@ -46,5 +50,11 @@ public class MessageIdProbe implements GuiceProbe {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(user);
 
         return messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.FULL_CONTENT, mailboxSession);
+    }
+
+    public void updateNewFlags(String user, Flags newFlags, MessageId messageId, List<MailboxId> mailboxIds) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(user);
+
+        messageIdManager.setFlags(newFlags, FlagsUpdateMode.REPLACE, messageId, mailboxIds, mailboxSession);
     }
 }
