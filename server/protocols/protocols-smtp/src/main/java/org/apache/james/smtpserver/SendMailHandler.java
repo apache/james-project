@@ -19,8 +19,6 @@
 
 package org.apache.james.smtpserver;
 
-import java.util.Collection;
-
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
@@ -33,7 +31,6 @@ import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,14 +68,7 @@ public class SendMailHandler implements JamesMessageHook {
 
         try {
             queue.enQueue(mail);
-            Collection<MailAddress> theRecipients = mail.getRecipients();
-            String recipientString = "";
-            if (theRecipients != null) {
-                recipientString = theRecipients.toString();
-            }
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Successfully spooled mail " + mail.getName() + " from " + mail.getSender() + " on " + session.getRemoteAddress().getAddress().toString() + " for " + recipientString);
-            }
+            LOGGER.info("Successfully spooled mail {} from {} on {} for {}", mail.getName(), mail.getSender(), session.getRemoteAddress().getAddress(), mail.getRecipients());
         } catch (MessagingException me) {
             LOGGER.error("Unknown error occurred while processing DATA.", me);
             return new HookResult(HookReturnCode.DENYSOFT, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.UNDEFINED_STATUS) + " Error processing message.");
