@@ -411,7 +411,7 @@ public class StripAttachment extends GenericMailet {
         boolean result = isMatchingPattern(name, regExPattern).orElse(false)
                 || !isMatchingPattern(name, notRegExPattern).orElse(true);
 
-        LOGGER.debug("attachment {} {}", name, (result) ? "matches" : "does not match");
+        LOGGER.debug("attachment {} {}", name, result ? "matches" : "does not match");
         return result;
     }
 
