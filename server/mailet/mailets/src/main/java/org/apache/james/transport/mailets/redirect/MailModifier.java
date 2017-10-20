@@ -19,6 +19,7 @@
 package org.apache.james.transport.mailets.redirect;
 
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -122,7 +123,7 @@ public class MailModifier {
             InternetAddress[] internetAddresses = MailAddressUtils.toInternetAddressArray(mailAddresses);
             mail.getMessage().setRecipients(Message.RecipientType.TO, internetAddresses);
             if (mailet.getInitParameters().isDebug()) {
-                LOGGER.debug("apparentlyTo set to: {}", (Object) internetAddresses);
+                LOGGER.debug("apparentlyTo set to: {}", Arrays.asList(internetAddresses));
             }
         }
     }
