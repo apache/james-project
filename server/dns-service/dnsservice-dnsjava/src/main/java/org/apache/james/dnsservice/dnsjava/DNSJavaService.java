@@ -323,8 +323,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             // If we found no results, we'll add the original domain name if
             // it's a valid DNS entry
             if (servers.size() == 0) {
-                StringBuffer logBuffer = new StringBuffer(128).append("Couldn't resolve MX records for domain ").append(hostname).append(".");
-                LOGGER.info(logBuffer.toString());
+                LOGGER.info("Couldn't resolve MX records for domain {}.", hostname);
                 try {
                     getByName(hostname);
                     servers.add(hostname);
@@ -332,8 +331,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                     // The original domain name is not a valid host,
                     // so we can't add it to the server list. In this
                     // case we return an empty list of servers
-                    logBuffer = new StringBuffer(128).append("Couldn't resolve IP address for host ").append(hostname).append(".");
-                    LOGGER.error(logBuffer.toString(), uhe);
+                    LOGGER.error("Couldn't resolve IP address for host {}.", hostname, uhe);
                 }
             }
             timeMetric.stopAndPublish();

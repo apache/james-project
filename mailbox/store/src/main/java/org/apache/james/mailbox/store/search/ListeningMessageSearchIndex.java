@@ -121,8 +121,8 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
                     .findInMailbox(mailbox, MessageRange.one(next), FetchType.Full, UNLIMITED)
                     .next());
             } catch (Exception e) {
-                LOGGER.error(String.format("Could not retrieve message %d in mailbox %s",
-                    next, mailbox.getMailboxId().serialize()), e);
+                LOGGER.error("Could not retrieve message {} in mailbox {}",
+                    next, mailbox.getMailboxId().serialize(), e);
                 return Optional.empty();
             }
         }

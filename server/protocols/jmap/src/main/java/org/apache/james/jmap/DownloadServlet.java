@@ -74,7 +74,7 @@ public class DownloadServlet extends HttpServlet {
         try {
             respondAttachmentAccessToken(getMailboxSession(req), DownloadPath.from(pathInfo), resp);
         } catch (IllegalArgumentException e) {
-            LOGGER.error(String.format("Error while generating attachment access token '%s'", pathInfo), e);
+            LOGGER.error("Error while generating attachment access token '{}'", pathInfo, e);
             resp.setStatus(SC_BAD_REQUEST);
         } finally {
             timeMetric.stopAndPublish();
@@ -115,7 +115,7 @@ public class DownloadServlet extends HttpServlet {
         try {
             download(getMailboxSession(req), DownloadPath.from(pathInfo), resp);
         } catch (IllegalArgumentException e) {
-            LOGGER.error(String.format("Error while downloading '%s'", pathInfo), e);
+            LOGGER.error("Error while downloading '{}'", pathInfo, e);
             resp.setStatus(SC_BAD_REQUEST);
         }
     }
@@ -131,7 +131,7 @@ public class DownloadServlet extends HttpServlet {
             resp.setHeader("Content-Length", String.valueOf(blob.getSize()));
             resp.setStatus(SC_OK);
         } catch (BlobNotFoundException e) {
-            LOGGER.info(String.format("Attachment '%s' not found", blobId), e);
+            LOGGER.info("Attachment '{}' not found", blobId, e);
             resp.setStatus(SC_NOT_FOUND);
         } catch (MailboxException | IOException e) {
             LOGGER.error("Error while downloading", e);
