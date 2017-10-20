@@ -221,7 +221,9 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
             }
             taggedBad(imapCommand, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            LOGGER.error("Store failed for mailbox " + session.getSelected().getPath() + " and sequence-set " + ImmutableList.copyOf(idSet), e);
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.error("Store failed for mailbox " + session.getSelected().getPath() + " and sequence-set " + ImmutableList.copyOf(idSet), e);
+            }
             no(imapCommand, tag, responder, HumanReadableText.SAVE_FAILED);
         }
     }

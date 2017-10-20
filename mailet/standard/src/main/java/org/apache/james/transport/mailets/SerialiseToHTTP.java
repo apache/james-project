@@ -99,14 +99,16 @@ public class SerialiseToHTTP extends GenericMailet {
         }
 
         // record the result
-        LOGGER.debug("I will attempt to deliver serialised messages to "
-                + targetUrl
-                + " as "
-                + messageKeyName
-                + ". "
-                + (parameterKey==null || parameterKey.length()<2 ? "I will not add any fields to the post. " : "I will prepend: "	+ parameterKey + "=" + parameterValue + ". ")
-                + (passThrough ? "Messages will pass through."
-                        : "Messages will be ghosted."));
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("I will attempt to deliver serialised messages to "
+                    + targetUrl
+                    + " as "
+                    + messageKeyName
+                    + ". "
+                    + (parameterKey==null || parameterKey.length()<2 ? "I will not add any fields to the post. " : "I will prepend: "	+ parameterKey + "=" + parameterValue + ". ")
+                    + (passThrough ? "Messages will pass through."
+                            : "Messages will be ghosted."));
+        }
     }
 
     /**

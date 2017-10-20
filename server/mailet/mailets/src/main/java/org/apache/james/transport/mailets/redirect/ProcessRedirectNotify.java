@@ -57,7 +57,7 @@ public class ProcessRedirectNotify {
             mailModifier.setRemoteAddr();
             mailModifier.setRemoteHost();
 
-            if (mailet.getInitParameters().isDebug()) {
+            if (mailet.getInitParameters().isDebug() && LOGGER.isDebugEnabled()) {
                 LOGGER.debug("New mail - sender: " + newMail.getSender() + ", recipients: " + StringUtils.arrayToString(newMail.getRecipients().toArray()) + ", name: " + newMail.getName() + ", remoteHost: " + newMail.getRemoteHost() + ", remoteAddr: " + newMail.getRemoteAddr() + ", state: " + newMail.getState()
                         + ", lastUpdated: " + newMail.getLastUpdated() + ", errorMessage: " + newMail.getErrorMessage());
             }

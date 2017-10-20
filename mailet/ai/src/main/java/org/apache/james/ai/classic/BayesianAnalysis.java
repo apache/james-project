@@ -321,7 +321,9 @@ public class BayesianAnalysis extends GenericMailet {
             }
             if (probability > 0.1) {
                 final Collection<MailAddress> recipients = mail.getRecipients();
-                LOGGER.debug(headerName + ": " + probabilityString + "; From: " + senderString + "; Recipient(s): " + getAddressesString(recipients));
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug(headerName + ": " + probabilityString + "; From: " + senderString + "; Recipient(s): " + getAddressesString(recipients));
+                }
 
                 // Check if we should tag the subject
                 if (tagSubject) {

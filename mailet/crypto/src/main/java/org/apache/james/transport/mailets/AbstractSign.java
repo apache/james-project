@@ -227,7 +227,7 @@ public abstract class AbstractSign extends GenericMailet {
      */
     protected void initExplanationText() {
         setExplanationText(getInitParameter("explanationText"));
-        if (isDebug()) {
+        if (isDebug() && LOGGER.isDebugEnabled()) {
             LOGGER.debug("Explanation text:\r\n" + getExplanationText());
         }
     }
