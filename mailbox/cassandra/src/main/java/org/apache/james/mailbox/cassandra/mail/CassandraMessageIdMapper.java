@@ -256,7 +256,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         try {
             return updateFlags(mailboxId, messageId, newState, updateMode);
         } catch (MailboxException e) {
-            LOGGER.error("Error while updating flags on mailbox: ", mailboxId);
+            LOGGER.error("Error while updating flags on mailbox: {}", mailboxId);
             return Optional.empty();
         }
     }
