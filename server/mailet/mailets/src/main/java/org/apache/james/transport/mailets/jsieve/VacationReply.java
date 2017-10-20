@@ -135,7 +135,7 @@ public class VacationReply {
             try {
                 return new MailAddress(address);
             } catch (AddressException e) {
-                LOGGER.warn("Mail address " + address + " was not well formatted : " + e.getLocalizedMessage());
+                LOGGER.warn("Mail address {} was not well formatted : {}", address, e.getLocalizedMessage());
                 return null;
             }
         }

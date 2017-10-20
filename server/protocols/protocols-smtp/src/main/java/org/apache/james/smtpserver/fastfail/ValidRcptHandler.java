@@ -108,7 +108,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
             } else {
 
                 if (useVut) {
-                    LOGGER.debug("Unknown user " + username + " check if its an alias");
+                    LOGGER.debug("Unknown user {} check if it's an alias", username);
 
                     try {
                         Mappings targetString = vut.getMappings(recipient.getLocalPart(), recipient.getDomain());

@@ -137,7 +137,7 @@ public class SpecialAddressesUtils {
             try {
                 builder.add(new MailAddress(replyTo));
             } catch (ParseException pe) {
-                LOGGER.warn("Unable to parse a \"REPLY_TO\" header address in the original message: " + replyTo + "; ignoring.");
+                LOGGER.warn("Unable to parse a \"REPLY_TO\" header address in the original message: {}; ignoring.", replyTo);
             }
         }
         return builder.build();
@@ -236,7 +236,7 @@ public class SpecialAddressesUtils {
                         InternetAddress[] originalToInternetAddresses = InternetAddress.parse(toHeader, false);
                         return MailAddressUtils.from(originalToInternetAddresses);
                     } catch (MessagingException ae) {
-                        LOGGER.warn("Unable to parse a \"TO\" header address in the original message: " + toHeader + "; ignoring.");
+                        LOGGER.warn("Unable to parse a \"TO\" header address in the original message: {}; ignoring.", toHeader);
                     }
                 }
             }

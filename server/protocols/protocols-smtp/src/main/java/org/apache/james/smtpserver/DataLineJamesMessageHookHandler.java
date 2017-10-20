@@ -166,7 +166,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
                 OutputStream out;
                 out = mmiss.getWritableOutputStream();
                 for (MessageHook rawHandler : mHandlers) {
-                    LOGGER.debug("executing james message handler " + rawHandler);
+                    LOGGER.debug("executing james message handler {}", rawHandler);
                     long start = System.currentTimeMillis();
 
                     HookResult hRes = rawHandler.onMessage(session, new MailToMailEnvelopeWrapper(mail, out));
@@ -174,7 +174,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
 
                     if (rHooks != null) {
                         for (HookResultHook rHook : rHooks) {
-                            LOGGER.debug("executing hook " + rHook);
+                            LOGGER.debug("executing hook {}", rHook);
                             hRes = rHook.onHookResult(session, hRes, executionTime, rawHandler);
                         }
                     }
@@ -189,13 +189,13 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
                 }
 
                 for (JamesMessageHook messageHandler : messageHandlers) {
-                    LOGGER.debug("executing james message handler " + messageHandler);
+                    LOGGER.debug("executing james message handler {}", messageHandler);
                     long start = System.currentTimeMillis();
                     HookResult hRes = messageHandler.onMessage(session, mail);
                     long executionTime = System.currentTimeMillis() - start;
                     if (rHooks != null) {
                         for (HookResultHook rHook : rHooks) {
-                            LOGGER.debug("executing hook " + rHook);
+                            LOGGER.debug("executing hook {}", rHook);
                             hRes = rHook.onHookResult(session, hRes, executionTime, messageHandler);
                         }
                     }

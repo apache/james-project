@@ -107,7 +107,7 @@ public class WebAdminServer implements Configurable {
         if (configuration.isEnabled()) {
             service.before(new CORSFilter(configuration.getUrlCORSOrigin()));
             new CORSRoute().define(service);
-            LOGGER.info("Web admin set up to enable CORS from " + configuration.getUrlCORSOrigin());
+            LOGGER.info("Web admin set up to enable CORS from {}", configuration.getUrlCORSOrigin());
         }
     }
 

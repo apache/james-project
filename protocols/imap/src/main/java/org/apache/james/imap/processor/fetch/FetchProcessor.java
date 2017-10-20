@@ -186,7 +186,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                     // So we just skip it 
                     //
                     // See IMAP-347
-                    LOGGER.error("Unable to fetch message with uid " + result.getUid() + ", so skip it", e);
+                    LOGGER.error("Unable to fetch message with uid {}, so skip it", result.getUid(), e);
                 }
             }
 

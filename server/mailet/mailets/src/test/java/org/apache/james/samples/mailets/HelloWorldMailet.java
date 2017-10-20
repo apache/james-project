@@ -56,6 +56,6 @@ public class HelloWorldMailet implements Mailet {
     @Override
     public void service(Mail mail) throws MessagingException {
         LOGGER.info("Hello, World!");
-        LOGGER.info( "You have mail from " + mail.getSender().getLocalPart());
+        LOGGER.info("You have mail from {}", mail.getSender().getLocalPart());
     }
 }

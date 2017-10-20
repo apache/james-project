@@ -86,7 +86,7 @@ public abstract class AbstractStateCompositeProcessor implements MailProcessor, 
         MailProcessor processor = getProcessor(mail.getState());
 
         if (processor != null) {
-            LOGGER.debug("Call MailProcessor " + mail.getState());
+            LOGGER.debug("Call MailProcessor {}", mail.getState());
             try {
                 processor.service(mail);
 

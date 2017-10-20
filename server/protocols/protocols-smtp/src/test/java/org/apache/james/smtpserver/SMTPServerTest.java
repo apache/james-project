@@ -629,12 +629,12 @@ public class SMTPServerTest {
 
                 @Override
                 public void protocolCommandSent(ProtocolCommandEvent event) {
-                    LOGGER.debug("> " + event.getMessage().trim());
+                    LOGGER.debug("> {}", event.getMessage().trim());
                 }
 
                 @Override
                 public void protocolReplyReceived(ProtocolCommandEvent event) {
-                    LOGGER.debug("< " + event.getMessage().trim());
+                    LOGGER.debug("< {}", event.getMessage().trim());
                 }
             });
         }

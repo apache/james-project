@@ -90,7 +90,7 @@ public class SPF extends GenericMailet {
             mail.setAttribute(EXPLANATION_ATTRIBUTE, result.getExplanation());
             mail.setAttribute(RESULT_ATTRIBUTE, result.getResult());
 
-            LOGGER.debug("ip:" + remoteAddr + " from:" + sender + " helo:" + helo + " = " + result.getResult());
+            LOGGER.debug("ip:{} from:{} helo:{} = {}", remoteAddr, sender, helo, result.getResult());
             if (addHeader) {
                 try {
                     MimeMessage msg = mail.getMessage();

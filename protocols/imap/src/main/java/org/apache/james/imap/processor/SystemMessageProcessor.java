@@ -54,7 +54,7 @@ public class SystemMessageProcessor extends AbstractChainedProcessor<SystemMessa
                 forceLogout(session);
                 break;
             default:
-                LOGGER.info("Unknown system message " + message);
+                LOGGER.info("Unknown system message {}", message);
                 break;
             }
         } catch (MailboxException e) {

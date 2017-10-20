@@ -113,7 +113,7 @@ public class James23Importer {
             String userName23 = j23uIt.next();
             String userName30 = convert23UserTo30(userName23);
             james30UsersRepository.addUser(userName30, defaultPassword);
-            LOGGER.info("New user is copied from 2.3 to 3.0 with username=" + userName30);
+            LOGGER.info("New user is copied from 2.3 to 3.0 with username={}", userName30);
         }
     }
 

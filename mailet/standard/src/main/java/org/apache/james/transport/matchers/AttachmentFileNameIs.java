@@ -201,7 +201,7 @@ public class AttachmentFileNameIs extends GenericMatcher {
                 // check the file name
                 if (matchFound(fileName)) {
                     if (isDebug) {
-                        LOGGER.debug("matched " + fileName);
+                        LOGGER.debug("matched {}", fileName);
                     }
                     return true;
                 }
@@ -257,7 +257,7 @@ public class AttachmentFileNameIs extends GenericMatcher {
                 String fileName = zipEntry.getName();
                 if (matchFound(fileName)) {
                     if (isDebug) {
-                        LOGGER.debug("matched " + part.getFileName() + "(" + fileName + ")");
+                        LOGGER.debug("matched {}({})", part.getFileName(), fileName);
                     }
                     return true;
                 }

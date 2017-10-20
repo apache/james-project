@@ -133,7 +133,7 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
         if (mail != null && messageHandlers != null) {
             for (Object messageHandler : messageHandlers) {
                 MessageHook rawHandler = (MessageHook) messageHandler;
-                LOGGER.debug("executing message handler " + rawHandler);
+                LOGGER.debug("executing message handler {}", rawHandler);
 
                 long start = System.currentTimeMillis();
                 HookResult hRes = rawHandler.onMessage(session, mail);
@@ -141,7 +141,7 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
 
                 if (rHooks != null) {
                     for (Object rHook : rHooks) {
-                        LOGGER.debug("executing hook " + rHook);
+                        LOGGER.debug("executing hook {}", rHook);
                         hRes = ((HookResultHook) rHook).onHookResult(session, hRes, executionTime, rawHandler);
                     }
                 }

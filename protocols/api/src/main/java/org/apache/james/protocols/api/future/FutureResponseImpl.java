@@ -155,7 +155,7 @@ public class FutureResponseImpl implements FutureResponse{
                 try {
                     listener.onResponse(this);
                 } catch (Throwable e) {
-                    logger.warn("An exception was thrown by the listener " + listener, e);
+                    logger.warn("An exception was thrown by the listener {}", listener, e);
                 }
             }
             listeners = null;

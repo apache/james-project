@@ -131,7 +131,7 @@ public class ElasticSearchSearcher {
                     mailboxIdFactory.fromString(mailboxId.getValue()),
                     MessageUid.of(uidAsNumber.longValue())));
         } else {
-            LOGGER.warn("Can not extract UID, MessageID and/or MailboxId for search result " + hit.getId());
+            LOGGER.warn("Can not extract UID, MessageID and/or MailboxId for search result {}", hit.getId());
             return Optional.empty();
         }
     }

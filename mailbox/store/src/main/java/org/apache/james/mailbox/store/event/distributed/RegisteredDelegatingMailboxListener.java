@@ -109,7 +109,7 @@ public class RegisteredDelegatingMailboxListener implements DistributedDelegatin
             deliverToMailboxPathRegisteredListeners(event);
             sendToRemoteJames(event);
         } catch (Throwable t) {
-            LOGGER.error("Error while delegating event " + event.getClass().getCanonicalName(), t);
+            LOGGER.error("Error while delegating event {}", event.getClass().getCanonicalName(), t);
         }
     }
 
@@ -158,14 +158,14 @@ public class RegisteredDelegatingMailboxListener implements DistributedDelegatin
         try {
             serializedEvent = eventSerializer.serializeEvent(event);
         } catch (Exception e) {
-            LOGGER.error("Unable to serialize " + event.getClass().getCanonicalName(), e);
+            LOGGER.error("Unable to serialize {}", event.getClass().getCanonicalName(), e);
             return;
         }
         for (Topic topic : topics) {
             try {
                 publisher.publish(topic, serializedEvent);
             } catch (Throwable t) {
-                LOGGER.error("Unable to send serialized event to topic " + topic);
+                LOGGER.error("Unable to send serialized event to topic {}", topic);
             }
         }
     }

@@ -69,7 +69,7 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
     }
 
     public void init() throws Exception {
-        LOGGER.info("JamesMailStore init... " + this);
+        LOGGER.info("JamesMailStore init... {}", this);
         List<HierarchicalConfiguration> registeredClasses = retrieveRegisteredClassConfiguration();
         for (HierarchicalConfiguration registeredClass : registeredClasses) {
             readConfigurationEntry(registeredClass);

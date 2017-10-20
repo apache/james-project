@@ -150,7 +150,7 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
         } catch (MailboxNotFoundException e) {
             no(command, tag, responder, HumanReadableText.MAILBOX_NOT_FOUND);
         } catch (MailboxException e) {
-            LOGGER.error(command.getName() + " failed for mailbox " + mailboxName, e);
+            LOGGER.error("{} failed for mailbox {}", command.getName(), mailboxName, e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
 

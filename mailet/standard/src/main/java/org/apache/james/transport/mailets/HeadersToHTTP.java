@@ -109,10 +109,10 @@ public class HeadersToHTTP extends GenericMailet {
      */
     public void service(Mail mail) {
         try {
-            LOGGER.debug(mail.getName() + "HeadersToHTTP: Starting");
+            LOGGER.debug("{} HeadersToHTTP: Starting", mail.getName());
             MimeMessage message = mail.getMessage();
             HashSet<NameValuePair> pairs = getNameValuePairs(message);
-            LOGGER.debug(mail.getName() + "HeadersToHTTP: " + pairs.size() + " named value pairs found");
+            LOGGER.debug("{} HeadersToHTTP: {} named value pairs found", mail.getName(), pairs.size());
             String result = httpPost(pairs);
             if (passThrough) {
                 addHeader(mail, true, result);
@@ -147,7 +147,7 @@ public class HeadersToHTTP extends GenericMailet {
             HttpUriRequest request = RequestBuilder.post(url).addParameters(pairs.toArray(new NameValuePair[0])).build();
             clientResponse = client.execute(request);
             String result = clientResponse.getStatusLine().getStatusCode() + ": " + clientResponse.getStatusLine();
-            LOGGER.debug("HeadersToHTTP: " + result);
+            LOGGER.debug("HeadersToHTTP: {}", result);
             return result;
         } finally {
             IOUtils.closeQuietly(clientResponse);

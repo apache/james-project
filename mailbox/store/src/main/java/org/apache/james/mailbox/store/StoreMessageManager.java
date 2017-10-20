@@ -448,7 +448,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         try {
             return messageParser.retrieveAttachments(contentIn);
         } catch (Exception e) {
-            LOG.warn("Error while parsing mail's attachments: " + e.getMessage(), e);
+            LOG.warn("Error while parsing mail's attachments: {}", e.getMessage(), e);
             return ImmutableList.of();
         }
     }

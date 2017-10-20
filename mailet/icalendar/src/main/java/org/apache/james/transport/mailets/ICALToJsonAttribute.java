@@ -143,7 +143,7 @@ public class ICALToJsonAttribute extends GenericMailet {
         }
         Optional<String> sender = retrieveSender(mail);
         if (!sender.isPresent()) {
-            LOGGER.info("Skipping " + mail.getName() + " because no sender and no from");
+            LOGGER.info("Skipping {} because no sender and no from", mail.getName());
             return;
         }
         try {
@@ -155,7 +155,7 @@ public class ICALToJsonAttribute extends GenericMailet {
                 .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue));
             mail.setAttribute(destinationAttributeName, (Serializable) jsonsInByteForm);
         } catch (ClassCastException e) {
-            LOGGER.error("Received a mail with " + sourceAttributeName + " not being an ICAL object for mail " + mail.getName(), e);
+            LOGGER.error("Received a mail with {} not being an ICAL object for mail {}", sourceAttributeName, mail.getName(), e);
         }
     }
 
@@ -181,10 +181,10 @@ public class ICALToJsonAttribute extends GenericMailet {
         try {
             return Stream.of(objectMapper.writeValueAsString(ical));
         } catch (JsonProcessingException e) {
-            LOGGER.error("Error while serializing Calendar for mail " + mailName, e);
+            LOGGER.error("Error while serializing Calendar for mail {}", mailName, e);
             return Stream.of();
         } catch (Exception e) {
-            LOGGER.error("Exception caught while attaching ICAL to the email as JSON for mail " + mailName, e);
+            LOGGER.error("Exception caught while attaching ICAL to the email as JSON for mail {}", mailName, e);
             return Stream.of();
         }
     }
@@ -193,7 +193,7 @@ public class ICALToJsonAttribute extends GenericMailet {
         Calendar calendar = entry.getValue();
         byte[] rawICal = rawCalendars.get(entry.getKey());
         if (rawICal == null) {
-            LOGGER.debug("Cannot find matching raw ICAL from key: " + entry.getKey());
+            LOGGER.debug("Cannot find matching raw ICAL from key: {}", entry.getKey());
             return Stream.of();
         }
         try {

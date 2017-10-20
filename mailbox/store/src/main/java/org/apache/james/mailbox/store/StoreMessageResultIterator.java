@@ -73,7 +73,7 @@ public class StoreMessageResultIterator implements MessageResultIterator {
         this.batchSizes = batchSizes;
         this.type = range.getType();
         this.ftype = getFetchType(group);
-        LOGGER.debug("batchSizes used: " + batchSizes);
+        LOGGER.debug("batchSizes used: {}", batchSizes);
     }
 
     /**

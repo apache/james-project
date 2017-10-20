@@ -217,7 +217,7 @@ public class HBaseMailboxMessageMapperTest {
         LOG.info("add");
         // The tables should be deleted every time the tests run.
         long msgCount = messageMapper.countMessagesInMailbox(MBOXES.get(1));
-        LOG.info(msgCount + " " + MESSAGE_NO.size());
+        LOG.info("{} {}", msgCount, MESSAGE_NO.size());
         assertEquals(MESSAGE_NO.size(), msgCount);
     }
 

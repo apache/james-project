@@ -86,7 +86,7 @@ public class ToSenderFolder extends GenericMailet {
 
         mailboxAppender.append(mail.getMessage(), username, folder);
 
-        LOGGER.error("Local delivery with ToSenderFolder mailet for mail " + mail.getName() + " with sender " + sender.toString() + " in folder " + folder);
+        LOGGER.error("Local delivery with ToSenderFolder mailet for mail {} with sender {} in folder {}", mail.getName(), sender, folder);
     }
 
     private String retrieveUser(MailAddress sender) throws MessagingException {

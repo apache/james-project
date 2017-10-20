@@ -159,7 +159,7 @@ public class SerialiseToHTTP extends GenericMailet {
 
         if( data.length>1 && data[1]!=null ) {
             requestBuilder.addParameter(data[1].getName(),data[1].getValue());
-            LOGGER.debug( data[1].getName() + "::" + data[1].getValue() );
+            LOGGER.debug("{}::{}", data[1].getName(), data[1].getValue());
         }
 
         CloseableHttpClient client = HttpClientBuilder.create().build();
@@ -168,7 +168,7 @@ public class SerialiseToHTTP extends GenericMailet {
             clientResponse = client.execute(requestBuilder.build());
 
             if (clientResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                LOGGER.debug("POST failed: " + clientResponse.getStatusLine());
+                LOGGER.debug("POST failed: {}", clientResponse.getStatusLine());
                 return clientResponse.getStatusLine().toString();
             }
             return null;

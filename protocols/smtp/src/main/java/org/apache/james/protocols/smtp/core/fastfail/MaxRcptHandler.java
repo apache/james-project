@@ -57,7 +57,7 @@ public class MaxRcptHandler implements RcptHook {
      */
     public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
         if ((session.getRcptCount() + 1) > maxRcpt) {
-            LOGGER.info("Maximum recipients of " + maxRcpt + " reached");
+            LOGGER.info("Maximum recipients of {} reached", maxRcpt);
             
             return MAX_RCPT;
         } else {

@@ -315,7 +315,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     private List<MailAddress> getSenderAsList(Mail originalMail) {
         MailAddress reversePath = originalMail.getSender();
         if (getInitParameters().isDebug()) {
-            LOGGER.debug("Processing a bounce request for a message with a reverse path.  The bounce will be sent to " + reversePath);
+            LOGGER.debug("Processing a bounce request for a message with a reverse path.  The bounce will be sent to {}", reversePath);
         }
 
         return ImmutableList.of(reversePath);

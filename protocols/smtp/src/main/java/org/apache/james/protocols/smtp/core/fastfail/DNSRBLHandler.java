@@ -122,7 +122,7 @@ public class DNSRBLHandler implements RcptHook {
          * This whould make no sense.
          */
         if (session.isRelayingAllowed()) {
-            LOGGER.info("Ipaddress " + session.getRemoteAddress().getAddress() + " is allowed to relay. Don't check it");
+            LOGGER.info("Ipaddress {} is allowed to relay. Don't check it", session.getRemoteAddress().getAddress());
             return;
         }
         

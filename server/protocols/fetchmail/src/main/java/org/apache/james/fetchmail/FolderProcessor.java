@@ -75,7 +75,7 @@ public class FolderProcessor extends ProcessorAbstract {
             try {
                 open();
             } catch (MessagingException ex) {
-                LOGGER.error(getFetchTaskName() + " Failed to open folder!");
+                LOGGER.error("{} Failed to open folder!", getFetchTaskName());
                 throw ex;
             }
 

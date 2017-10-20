@@ -72,7 +72,7 @@ public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
             }
             taggedBad(command, tag, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
         } catch (MailboxException e) {
-            LOGGER.error("Create failed for mailbox " + mailboxPath, e);
+            LOGGER.error("Create failed for mailbox {}", mailboxPath, e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

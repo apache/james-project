@@ -72,7 +72,7 @@ public class JwtTokenVerifier {
                 .parseClaimsJws(token);
             return true;
         } catch (JwtException e) {
-            LOGGER.info("Jwt validation failed for claim " + attributeName + " to " + expectedValue, e);
+            LOGGER.info("Jwt validation failed for claim {} to {}", attributeName, expectedValue, e);
             return false;
         }
     }

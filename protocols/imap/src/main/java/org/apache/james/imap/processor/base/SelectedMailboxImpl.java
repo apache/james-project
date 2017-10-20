@@ -123,7 +123,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
         try {
             mailboxManager.removeListener(path, this, mailboxSession);
         } catch (MailboxException e) {
-            LOGGER.error("Unable to remove listener " + this + " from mailbox while closing it", e);
+            LOGGER.error("Unable to remove listener {} from mailbox while closing it", this, e);
         }
         
         uidMsnConverter.clear();

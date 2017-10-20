@@ -344,7 +344,7 @@ public class MaildirFolder {
                         int gap = line.indexOf(" ");
                         if (gap == -1) {
                             // there must be some issues in the file if no gap can be found
-                            LOGGER.info("Corrupted entry in uid-file " + uidList + " line " + lineNumber++);
+                            LOGGER.info("Corrupted entry in uid-file {} line {}", uidList, lineNumber++);
                             continue;
                         }
 
@@ -510,7 +510,7 @@ public class MaildirFolder {
                         if (gap == -1) {
                             // there must be some issues in the file if no gap can be found
                             // there must be some issues in the file if no gap can be found
-                            LOGGER.info("Corrupted entry in uid-file " + uidList + " line " + lines.size());
+                            LOGGER.info("Corrupted entry in uid-file {} line {}", uidList, lines.size());
                             continue;
                         }
 
@@ -637,7 +637,7 @@ public class MaildirFolder {
 
                     if (gap == -1) {
                         // there must be some issues in the file if no gap can be found
-                    	LOGGER.info("Corrupted entry in uid-file " + uidList + " line " + lineNumber++);
+                    	LOGGER.info("Corrupted entry in uid-file {} line {}", uidList, lineNumber++);
                         continue;
                     }
                     
@@ -861,7 +861,7 @@ public class MaildirFolder {
                     int gap = line.indexOf(" ");
                     if (gap == -1) {
                         // there must be some issues in the file if no gap can be found
-                        LOGGER.info("Corrupted entry in uid-file " + uidList + " line " + lineNumber++);
+                        LOGGER.info("Corrupted entry in uid-file {} line {}", uidList, lineNumber++);
                         continue;
                     }
 

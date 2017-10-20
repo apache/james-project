@@ -78,7 +78,7 @@ public final class HBaseClusterSingleton {
                 int permBits = 0777 & ~umaskBits;
                 String perms = Integer.toString(permBits, 8);
                 
-                LOG.info("Setting dfs.datanode.data.dir.perm to " + perms);
+                LOG.info("Setting dfs.datanode.data.dir.perm to {}", perms);
                 htu.getConfiguration().set("dfs.datanode.data.dir.perm", perms);
             } else {
                 LOG.warn("Failed running umask command in a shell, nonzero return value");

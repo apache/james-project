@@ -79,8 +79,7 @@ public class RecoverAttachment extends GenericMailet {
                     + " is a mandatory parameter");
         }
 
-        LOGGER.debug("RecoverAttachment is initialised with attribute [" + attributeName
-                + "]");
+        LOGGER.debug("RecoverAttachment is initialised with attribute [{}]", attributeName);
     }
 
     /**

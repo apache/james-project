@@ -251,9 +251,9 @@ public class URIScanner {
         mat = emailAddrPattern.matcher(content);
         while (mat.find()) {
             String found = mat.group();
-            LOGGER.debug("******** mailfound=\"" + found + "\"");
+            LOGGER.debug("******** mailfound=\"{}\"", found);
             found = "mailto://" + found;
-            LOGGER.debug("*******6 mailfoundfound=\"" + found + "\" after cleanup 6");
+            LOGGER.debug("*******6 mailfoundfound=\"{}\" after cleanup 6", found);
 
             String host = hostFromUriStr(found);
             if (null != host) {
@@ -278,7 +278,7 @@ public class URIScanner {
      *         could be found
      */
     static protected String hostFromUriStr(String uriStr) {
-        LOGGER.debug("hostFromUriStr(\"" + uriStr + "\")");
+        LOGGER.debug("hostFromUriStr(\"{}\")", uriStr);
         String host = null;
         URI uri;
         try {
@@ -304,7 +304,7 @@ public class URIScanner {
      * @return the registrar domain portion of the supplied host string
      */
     static protected String domainFromHost(String host) {
-        LOGGER.debug("domainFromHost(\"" + host + "\")");
+        LOGGER.debug("domainFromHost(\"{}\")", host);
         String domain = null;
         Matcher mat;
 
@@ -313,7 +313,7 @@ public class URIScanner {
         if (mat.find()) {
             // reverse the octets now
             domain = mat.group(5) + "." + mat.group(4) + "." + mat.group(3) + "." + mat.group(2);
-            LOGGER.debug("domain=\"" + domain + "\"");
+            LOGGER.debug("domain=\"{}\"", domain);
             return domain;
         }
 
@@ -323,7 +323,7 @@ public class URIScanner {
             String tld = mat.group(2);
             if (TLDLookup.isThreePartTLD(tld)) {
                 domain = mat.group(1);
-                LOGGER.debug("domain=\"" + domain + ", tld=\"" + tld + "\"");
+                LOGGER.debug("domain=\"{}, tld=\"{}\"", domain, tld);
                 return domain;
             }
         }
@@ -334,7 +334,7 @@ public class URIScanner {
             String tld = mat.group(2);
             if (TLDLookup.isTwoPartTLD(tld)) {
                 domain = mat.group(1);
-                LOGGER.debug("domain=\"" + domain + ", tld=\"" + tld + "\"");
+                LOGGER.debug("domain=\"{}, tld=\"{}\"", domain, tld);
                 return domain;
             }
         }
@@ -344,7 +344,7 @@ public class URIScanner {
         if (mat.find()) {
             String tld = mat.group(2);
             domain = mat.group(1);
-            LOGGER.debug("domain=\"" + domain + ", tld=\"" + tld + "\"");
+            LOGGER.debug("domain=\"{}, tld=\"{}\"", domain, tld);
             return domain;
         }
         return domain;

@@ -137,7 +137,7 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
         } else {
             try {
                 Optional<MailboxId> mailboxId = mailboxManager.createMailbox(inboxPath, mailboxSession);
-                LOGGER.info("Provisioning INBOX. " + mailboxId + " created.");
+                LOGGER.info("Provisioning INBOX. {} created.", mailboxId);
             } catch (MailboxExistsException e) {
                 LOGGER.warn("Mailbox INBOX created by concurrent call. Safe to ignore this exception.");
             }

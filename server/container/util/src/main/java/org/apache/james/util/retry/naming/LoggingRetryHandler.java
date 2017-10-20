@@ -50,9 +50,7 @@ abstract public class LoggingRetryHandler extends NamingExceptionRetryHandler {
     @Override
     public void postFailure(NamingException ex, int retryCount) {
         super.postFailure(ex, retryCount);
-        LOGGER.info(
-                "Retry failure: " + ex.getLocalizedMessage() + "\n Retrying in " + getRetryInterval(retryCount) / 1000 + " seconds"
-                );
+        LOGGER.info("Retry failure: {}\n Retrying in {} seconds", ex.getLocalizedMessage(), getRetryInterval(retryCount) / 1000);
     }
 
 }

@@ -91,7 +91,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
                     try {
                         delete(session, expunged.getMailbox(), expunged.getUids());
                     } catch (MailboxException e) {
-                        LOGGER.error("Unable to deleted messages " + expunged.getUids() + " from index for mailbox " + expunged.getMailbox(), e);
+                        LOGGER.error("Unable to deleted messages {} from index for mailbox {}", expunged.getUids(), expunged.getMailbox(), e);
                     }
                 } else if (event instanceof EventFactory.FlagsUpdatedImpl) {
                     EventFactory.FlagsUpdatedImpl flagsUpdated = (EventFactory.FlagsUpdatedImpl) event;
@@ -100,7 +100,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
                     try {
                         update(session, mailbox, flagsUpdated.getUpdatedFlags());
                     } catch (MailboxException e) {
-                        LOGGER.error("Unable to update flags in index for mailbox " + mailbox, e);
+                        LOGGER.error("Unable to update flags in index for mailbox {}", mailbox, e);
                     }
                 }
             } else if (event instanceof EventFactory.MailboxDeletionImpl) {
@@ -132,7 +132,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
         try {
             add(session, mailbox, message);
         } catch (MailboxException e) {
-            LOGGER.error("Unable to index message " + message.getUid() + " for mailbox " + mailbox, e);
+            LOGGER.error("Unable to index message {} for mailbox {}", message.getUid(), mailbox, e);
         }
     }
 

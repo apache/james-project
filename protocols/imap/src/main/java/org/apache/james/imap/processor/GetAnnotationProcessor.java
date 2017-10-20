@@ -74,7 +74,7 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
             LOGGER.info("The command: {} is failed because not found mailbox {}", command.getName(), message.getMailboxName());
             no(command, tag, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, ResponseCode.tryCreate());
         } catch (MailboxException e) {
-            LOGGER.error("GetAnnotation on mailbox " + message.getMailboxName() + " failed for user " + ImapSessionUtils.getUserName(session), e);
+            LOGGER.error("GetAnnotation on mailbox {} failed for user {}", message.getMailboxName(), ImapSessionUtils.getUserName(session), e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

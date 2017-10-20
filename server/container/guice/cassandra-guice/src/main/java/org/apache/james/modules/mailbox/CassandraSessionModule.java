@@ -118,7 +118,7 @@ public class CassandraSessionModule extends AbstractModule {
                     .copyBatchSize(configuration.getInt("copy", BatchSizes.DEFAULT_BATCH_SIZE))
                     .moveBatchSize(configuration.getInt("move", BatchSizes.DEFAULT_BATCH_SIZE))
                     .build();
-            LOGGER.debug("BatchSize configuration: " + batchSizes);
+            LOGGER.debug("BatchSize configuration: {}", batchSizes);
             return batchSizes;
         } catch (FileNotFoundException | ConfigurationException e) {
             LOGGER.warn("Could not locate batchsizes configuration file. Using default values.");

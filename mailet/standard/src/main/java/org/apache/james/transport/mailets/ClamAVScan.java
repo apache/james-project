@@ -301,7 +301,7 @@ public class ClamAVScan extends GenericMailet {
     protected void initHost() throws UnknownHostException {
         setHost(getInitParameter("host"));
         if (isDebug()) {
-            LOGGER.debug("host: " + getHost());
+            LOGGER.debug("host: {}", getHost());
         }
     }
 
@@ -340,7 +340,7 @@ public class ClamAVScan extends GenericMailet {
         String portParam = getInitParameter("port");
         setPort((portParam == null) ? DEFAULT_PORT : Integer.parseInt(portParam));
         if (isDebug()) {
-            LOGGER.debug("port: " + getPort());
+            LOGGER.debug("port: {}", getPort());
         }
     }
 
@@ -371,7 +371,7 @@ public class ClamAVScan extends GenericMailet {
         String maxPingsParam = getInitParameter("maxPings");
         setMaxPings((maxPingsParam == null) ? DEFAULT_MAX_PINGS : Integer.parseInt(maxPingsParam));
         if (isDebug()) {
-            LOGGER.debug("maxPings: " + getMaxPings());
+            LOGGER.debug("maxPings: {}", getMaxPings());
         }
     }
 
@@ -402,7 +402,7 @@ public class ClamAVScan extends GenericMailet {
         String pingIntervalMilliParam = getInitParameter("pingIntervalMilli");
         setPingIntervalMilli((pingIntervalMilliParam == null) ? DEFAULT_PING_INTERVAL_MILLI : Integer.parseInt(pingIntervalMilliParam));
         if (isDebug()) {
-            LOGGER.debug("pingIntervalMilli: " + getPingIntervalMilli());
+            LOGGER.debug("pingIntervalMilli: {}", getPingIntervalMilli());
         }
     }
 
@@ -433,7 +433,7 @@ public class ClamAVScan extends GenericMailet {
         String streamBufferSizeParam = getInitParameter("streamBufferSize");
         setStreamBufferSize((streamBufferSizeParam == null) ? DEFAULT_STREAM_BUFFER_SIZE : Integer.parseInt(streamBufferSizeParam));
         if (isDebug()) {
-            LOGGER.debug("streamBufferSize: " + getStreamBufferSize());
+            LOGGER.debug("streamBufferSize: {}", getStreamBufferSize());
         }
     }
 
@@ -538,7 +538,7 @@ public class ClamAVScan extends GenericMailet {
             do {
                 if (usedAddresses.size() >= getAddressesCount()) {
                     String logText = "Unable to connect to CLAMD. All addresses failed.";
-                    LOGGER.debug(logText + " Giving up.");
+                    LOGGER.debug("{} Giving up.", logText);
                     throw new MessagingException(logText);
                 }
                 address = getNextAddress();
@@ -547,8 +547,7 @@ public class ClamAVScan extends GenericMailet {
                 // get the socket
                 return new Socket(address, getPort());
             } catch (IOException ioe) {
-                LOGGER.error("Exception caught acquiring main socket to CLAMD on "
-                        + address + " on port " + getPort() + ": ", ioe);
+                LOGGER.error("Exception caught acquiring main socket to CLAMD on {} on port {}: ", address, getPort(), ioe);
                 getNextAddress();
                 // retry
             }
@@ -686,7 +685,7 @@ public class ClamAVScan extends GenericMailet {
 
             } else {
                 if (isDebug()) {
-                    LOGGER.debug("OK (by CLAMD on " + socket.getInetAddress() + ")");
+                    LOGGER.debug("OK (by CLAMD on {})", socket.getInetAddress());
                 }
                 mail.setAttribute(MAIL_ATTRIBUTE_NAME, "false");
 
@@ -702,7 +701,7 @@ public class ClamAVScan extends GenericMailet {
             }
 
         } catch (Exception ex) {
-            LOGGER.error("Exception caught calling CLAMD on " + socket.getInetAddress() + ": " + ex.getMessage(), ex);
+            LOGGER.error("Exception caught calling CLAMD on {}: {}", socket.getInetAddress(), ex.getMessage(), ex);
             throw new MessagingException("Exception caught", ex);
         } finally {
             IOUtils.closeQuietly(reader);
@@ -738,16 +737,16 @@ public class ClamAVScan extends GenericMailet {
         int ping = 1;
         for (; ; ) {
             if (isDebug()) {
-                LOGGER.debug("Trial #" + ping + "/" + getMaxPings() + " - creating socket connected to " + address + " on port " + getPort());
+                LOGGER.debug("Trial #{}/{} - creating socket connected to {} on port {}", ping, getMaxPings(), address, getPort());
             }
             try {
                 socket = new Socket(address, getPort());
                 break;
             } catch (ConnectException ce) {
-                LOGGER.debug("Trial #" + ping + "/" + getMaxPings() + " - exception caught: " + ce.toString() + " while creating socket connected to " + address + " on port " + getPort());
+                LOGGER.debug("Trial #{}/{} - exception caught: {} while creating socket connected to {} on port {}", ping, getMaxPings(), ce, address, getPort());
                 ping++;
                 if (ping <= getMaxPings()) {
-                    LOGGER.debug("Waiting " + getPingIntervalMilli() + " milliseconds before retrying ...");
+                    LOGGER.debug("Waiting {} milliseconds before retrying ...", getPingIntervalMilli());
                     Thread.sleep(getPingIntervalMilli());
                 } else {
                     break;
@@ -765,7 +764,7 @@ public class ClamAVScan extends GenericMailet {
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "ASCII"));
             PrintWriter writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
 
-            LOGGER.debug("Sending: \"PING\" to " + address + " ...");
+            LOGGER.debug("Sending: \"PING\" to {} ...", address);
             writer.println("PING");
             writer.flush();
 
@@ -774,7 +773,7 @@ public class ClamAVScan extends GenericMailet {
                 String answer = reader.readLine();
                 if (answer != null) {
                     answer = answer.trim();
-                    LOGGER.debug("Received: \"" + answer + "\"");
+                    LOGGER.debug("Received: \"{}\"", answer);
                     answer = answer.trim();
                     if (answer.equals("PONG")) {
                         pongReceived = true;
@@ -809,7 +808,7 @@ public class ClamAVScan extends GenericMailet {
             try {
                 port = Integer.parseInt(portSubstring);
             } catch (NumberFormatException nfe) {
-                LOGGER.error("Can not parse port from substring " + portSubstring);
+                LOGGER.error("Can not parse port from substring {}", portSubstring);
             }
         }
 

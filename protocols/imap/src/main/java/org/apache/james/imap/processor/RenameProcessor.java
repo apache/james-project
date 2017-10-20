@@ -88,7 +88,7 @@ public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
             }
             taggedBad(command, tag, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
         } catch (MailboxException e) {
-            LOGGER.error("Rename from " + existingPath + " to " + newPath + " failed", e);
+            LOGGER.error("Rename from {} to {} failed", existingPath, newPath, e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

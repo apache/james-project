@@ -128,7 +128,7 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
             // Store the header
             session.setAttachment(SPF_HEADER, result.getHeaderText(), State.Transaction);
 
-            LOGGER.info("Result for " + ip + " - " + sender + " - " + heloEhlo + " = " + spfResult);
+            LOGGER.info("Result for {} - {} - {} = {}", ip, sender, heloEhlo, spfResult);
 
             // Check if we should block!
             if ((spfResult.equals(SPFErrorConstants.FAIL_CONV)) || (spfResult.equals(SPFErrorConstants.SOFTFAIL_CONV) && blockSoftFail) || (spfResult.equals(SPFErrorConstants.PERM_ERROR_CONV) && blockPermError)) {

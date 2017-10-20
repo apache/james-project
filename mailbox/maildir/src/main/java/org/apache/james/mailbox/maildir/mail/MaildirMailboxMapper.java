@@ -105,7 +105,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
                     FileUtils.forceDelete(file);
                 }
             } catch (IOException e) {
-                LOGGER.error("Error while deleting file " + file, e);
+                LOGGER.error("Error while deleting file {}", file, e);
             }
         }
     }

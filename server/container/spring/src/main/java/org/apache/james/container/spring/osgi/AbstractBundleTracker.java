@@ -106,9 +106,9 @@ public abstract class AbstractBundleTracker implements BeanFactoryAware, BundleL
                             osgiFactoryBean.setBundleContext(b.getBundleContext());
                             osgiFactoryBean.setInterfaces(new Class[] { clazz });
                             osgiFactoryBean.afterPropertiesSet();
-                            logger.debug("Registered " + configuredClass + " in the OSGI-Registry with interface " + clazz.getName());
+                            logger.debug("Registered {} in the OSGI-Registry with interface {}", configuredClass, clazz.getName());
                         } catch (Exception e1) {
-                            logger.error("Unable to register " + configuredClass + " in the OSGI-Registry", e1);
+                            logger.error("Unable to register {} in the OSGI-Registry", configuredClass, e1);
                         }
                     }
                 }
@@ -119,7 +119,7 @@ public abstract class AbstractBundleTracker implements BeanFactoryAware, BundleL
             if (osgiFactoryBean != null) {
                 osgiFactoryBean.destroy();
                 osgiFactoryBean = null;
-                logger.debug("Unregistered " + configuredClass + " in the OSGI-Registry with interface " + getServiceClass().getName());
+                logger.debug("Unregistered {} in the OSGI-Registry with interface {}", configuredClass, getServiceClass().getName());
 
             }
             break;

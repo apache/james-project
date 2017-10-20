@@ -88,7 +88,7 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
             // create inbox if not exist
             if (!mailboxManager.mailboxExists(inbox, mailboxSession)) {
                 Optional<MailboxId> mailboxId = mailboxManager.createMailbox(inbox, mailboxSession);
-                LOGGER.info("Provisioning INBOX. " + mailboxId + " created.");
+                LOGGER.info("Provisioning INBOX. {} created.", mailboxId);
             }
             mailboxManager.getMailbox(MailboxPath.inbox(mailboxSession), mailboxSession).appendMessage(envelope.getMessageInputStream(), new Date(), mailboxSession, true, null);
             mailboxManager.endProcessingRequest(mailboxSession);

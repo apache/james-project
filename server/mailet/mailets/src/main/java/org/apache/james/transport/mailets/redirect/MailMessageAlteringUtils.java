@@ -113,7 +113,7 @@ public class MailMessageAlteringUtils {
             multipart.addBodyPart(contentPartRoot);
 
             if (mailet.getInitParameters().isDebug()) {
-                LOGGER.debug("attachmentType:" + mailet.getInitParameters().getAttachmentType());
+                LOGGER.debug("attachmentType:{}", mailet.getInitParameters().getAttachmentType());
             }
             if (!mailet.getInitParameters().getAttachmentType().equals(TypeCode.NONE)) {
                 multipart.addBodyPart(getAttachmentPart(originalMessage, head));
@@ -192,7 +192,7 @@ public class MailMessageAlteringUtils {
         }
 
         if (mailet.getInitParameters().isDebug()) {
-            LOGGER.debug("inline:" + mailet.getInitParameters().getInLineType());
+            LOGGER.debug("inline:{}", mailet.getInitParameters().getInLineType());
         }
         switch (mailet.getInitParameters().getInLineType()) {
             case ALL:
