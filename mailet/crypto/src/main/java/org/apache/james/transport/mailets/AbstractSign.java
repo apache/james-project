@@ -294,11 +294,7 @@ public abstract class AbstractSign extends GenericMailet {
         }
         
         if (isDebug()) {
-            LOGGER.debug("KeyStore related parameters:"
-                         + "  keyStoreFileName={}"
-                         + ", keyStoreType={}"
-                         + ", keyAlias={}",
-                    keyStoreFileName, keyStoreType, keyAlias);
+            LOGGER.debug("KeyStore related parameters: keyStoreFileName={}, keyStoreType={}, keyAlias={}", keyStoreFileName, keyStoreType, keyAlias);
         }
             
         // Certificate preparation
