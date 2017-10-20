@@ -117,7 +117,7 @@ public abstract class AbstractSQLWhitelistMatcher extends GenericMatcher {
             repositoryPath = st.nextToken().trim();
         }
         if (repositoryPath != null) {
-            LOGGER.info("repositoryPath: " + repositoryPath);
+            LOGGER.info("repositoryPath: {}", repositoryPath);
         } else {
             throw new MessagingException("repositoryPath is null");
         }

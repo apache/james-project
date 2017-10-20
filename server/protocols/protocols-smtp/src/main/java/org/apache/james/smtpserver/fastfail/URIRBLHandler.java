@@ -151,10 +151,10 @@ public class URIRBLHandler implements JamesMessageHook, ProtocolHandler {
      */
     private HashSet<String> scanMailForDomains(MimePart part, SMTPSession session) throws MessagingException, IOException {
         HashSet<String> domains = new HashSet<>();
-        LOGGER.debug("mime type is: \"" + part.getContentType() + "\"");
+        LOGGER.debug("mime type is: \"{}\"", part.getContentType());
 
         if (part.isMimeType("text/plain") || part.isMimeType("text/html")) {
-            LOGGER.debug("scanning: \"" + part.getContent().toString() + "\"");
+            LOGGER.debug("scanning: \"{}\"", part.getContent());
             HashSet<String> newDom = URIScanner.scanContentForDomains(domains, part.getContent().toString());
 
             // Check if new domains are found and add the domains
@@ -164,10 +164,10 @@ public class URIRBLHandler implements JamesMessageHook, ProtocolHandler {
         } else if (part.isMimeType("multipart/*")) {
             MimeMultipart multipart = (MimeMultipart) part.getContent();
             int count = multipart.getCount();
-            LOGGER.debug("multipart count is: " + count);
+            LOGGER.debug("multipart count is: {}", count);
 
             for (int index = 0; index < count; index++) {
-                LOGGER.debug("recursing index: " + index);
+                LOGGER.debug("recursing index: {}", index);
                 MimeBodyPart mimeBodyPart = (MimeBodyPart) multipart.getBodyPart(index);
                 HashSet<String> newDomains = scanMailForDomains(mimeBodyPart, session);
 

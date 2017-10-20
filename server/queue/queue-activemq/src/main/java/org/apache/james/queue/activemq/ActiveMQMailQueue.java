@@ -124,7 +124,7 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
                     mail.setAttribute(JAMES_QUEUE_NAME, queueName);
                 } catch (MalformedURLException e) {
                     // Ignore on error
-                    LOGGER.debug("Unable to get url from blobmessage for mail " + mail.getName());
+                    LOGGER.debug("Unable to get url from blobmessage for mail {}", mail.getName());
                 }
                 MimeMessageSource source = new MimeMessageBlobMessageSource(blobMessage);
                 mail.setMessage(new MimeMessageCopyOnWriteProxy(source));
@@ -243,7 +243,7 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
                     // https://issues.apache.org/activemq/browse/AMQ-3018
                     ((ActiveMQBlobMessage) m).deleteFile();
                 } catch (Exception e) {
-                    LOGGER.error("Unable to delete blob file for message " + m, e);
+                    LOGGER.error("Unable to delete blob file for message {}", m, e);
                 }
             }
         }

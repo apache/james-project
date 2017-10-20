@@ -69,7 +69,7 @@ public class ContentReplacer {
 
     private String replaceFirst(ReplacingPattern replacingPattern, Matcher matcher) {
         if (debug) {
-            LOGGER.debug("Subject rule match: " + replacingPattern.getMatcher());
+            LOGGER.debug("Subject rule match: {}", replacingPattern.getMatcher());
         }
         return matcher.replaceFirst(replacingPattern.getSubstitution());
     }

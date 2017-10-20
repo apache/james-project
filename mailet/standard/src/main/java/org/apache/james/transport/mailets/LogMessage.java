@@ -87,7 +87,7 @@ public class LogMessage extends GenericMailet {
 
     @Override
     public void service(Mail mail) {
-        logger.info("Logging mail " + mail.getName());
+        logger.info("Logging mail {}", mail.getName());
         logComment();
         try {
             MimeMessage message = mail.getMessage();

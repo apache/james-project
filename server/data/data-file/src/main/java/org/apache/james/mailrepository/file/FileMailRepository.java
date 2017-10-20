@@ -244,7 +244,7 @@ public class FileMailRepository extends AbstractMailRepository {
 
             return mc;
         } catch (Exception me) {
-            LOGGER.error("Exception retrieving mail: " + me);
+            LOGGER.error("Exception retrieving mail: {}", me.toString());
             throw new MessagingException("Exception while retrieving mail: " + me.getMessage(), me);
         }
     }

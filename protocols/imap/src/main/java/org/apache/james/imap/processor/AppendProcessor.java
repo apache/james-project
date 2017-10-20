@@ -84,7 +84,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
             // consume message on exception
             consume(messageIn);
 
-            LOGGER.debug("Append failed for mailbox " + mailboxPath, e);
+            LOGGER.debug("Append failed for mailbox {}", mailboxPath, e);
             
             // Indicates that the mailbox does not exist
             // So TRY CREATE
@@ -94,7 +94,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
             // consume message on exception
             consume(messageIn);
             
-            LOGGER.error("Append failed for mailbox " + mailboxPath, e);
+            LOGGER.error("Append failed for mailbox {}", mailboxPath, e);
             
             // Some other issue
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
@@ -156,7 +156,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
             // So TRY CREATE
             tryCreate(session, tag, command, responder, e);
         } catch (MailboxException e) {
-            LOGGER.error("Unable to append message to mailbox " + mailboxPath, e);
+            LOGGER.error("Unable to append message to mailbox {}", mailboxPath, e);
             // Some other issue
             no(command, tag, responder, HumanReadableText.SAVE_FAILED);
         }

@@ -248,7 +248,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
                 return isLocalEmail(new MailAddress(name.toLowerCase(Locale.US)));
             }
         } catch (ParseException e) {
-            LOGGER.info("Error checking isLocalUser for user " + name, e);
+            LOGGER.info("Error checking isLocalUser for user {}", name, e);
             return false;
         }
     }

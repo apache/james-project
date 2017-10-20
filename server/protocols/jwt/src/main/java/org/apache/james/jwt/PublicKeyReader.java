@@ -46,7 +46,7 @@ public class PublicKeyReader {
             if (readPEM instanceof SubjectPublicKeyInfo) {
                 return Optional.of(new JcaPEMKeyConverter().getPublicKey((SubjectPublicKeyInfo) readPEM));
             }
-            LOGGER.warn("Key is not an instance of SubjectPublicKeyInfo but of " + readPEM);
+            LOGGER.warn("Key is not an instance of SubjectPublicKeyInfo but of {}", readPEM);
             return Optional.empty();
         } catch (IOException e) {
             LOGGER.warn("Error when reading the PEM file", e);

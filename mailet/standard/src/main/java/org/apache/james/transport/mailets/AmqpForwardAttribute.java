@@ -112,9 +112,9 @@ public class AmqpForwardAttribute extends GenericMailet {
         try {
             sendContent(content);
         } catch (IOException e) {
-            LOGGER.error("IOException while writing to AMQP: " + e.getMessage(), e);
+            LOGGER.error("IOException while writing to AMQP: {}", e.getMessage(), e);
         } catch (TimeoutException e) {
-            LOGGER.error("TimeoutException while writing to AMQP: " + e.getMessage(), e);
+            LOGGER.error("TimeoutException while writing to AMQP: {}", e.getMessage(), e);
         }
     }
 

@@ -246,7 +246,7 @@ public class BayesianAnalysis extends GenericMailet {
         if (maxSizeParam != null) {
             setMaxSize(Integer.parseInt(maxSizeParam));
         }
-        LOGGER.debug("maxSize: " + getMaxSize());
+        LOGGER.debug("maxSize: {}", getMaxSize());
 
         String tag = getInitParameter("tagSubject");
         if (tag != null && tag.equals("false")) {
@@ -338,7 +338,7 @@ public class BayesianAnalysis extends GenericMailet {
             saveChanges(message);
 
         } catch (Exception e) {
-            LOGGER.error("Exception: " + e.getMessage(), e);
+            LOGGER.error("Exception: {}", e.getMessage(), e);
             throw new MessagingException("Exception thrown", e);
         }
     }

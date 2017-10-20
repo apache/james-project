@@ -168,7 +168,7 @@ public class AuthenticationServlet extends HttpServlet {
         if (authenticate(request, username)) {
             returnAccessTokenResponse(resp, username);
         } else {
-            LOG.info("Authentication failure for " + username);
+            LOG.info("Authentication failure for {}", username);
             returnUnauthorizedResponse(resp);
         }
     }

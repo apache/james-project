@@ -218,7 +218,7 @@ public class MIMEMessageConverter {
                 return createMultipartAlternativeBody(newMessage);
             }
         } catch (IOException e) {
-            LOGGER.error("Error while creating textBody \n"+ newMessage.getTextBody().get() +"\n or htmlBody \n" + newMessage.getHtmlBody().get(), e);
+            LOGGER.error("Error while creating textBody \n{}\n or htmlBody \n{}", newMessage.getTextBody().get(), newMessage.getHtmlBody().get(), e);
             throw Throwables.propagate(e);
         }
     }

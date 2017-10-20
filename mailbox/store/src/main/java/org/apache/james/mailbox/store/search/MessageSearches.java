@@ -116,7 +116,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
                     builder.add(m);
                 }
             } catch (MailboxException e) {
-                LOGGER.error("Unable to search message " + m.getUid(), e);
+                LOGGER.error("Unable to search message {}", m.getUid(), e);
             }
         }
         return builder.build()

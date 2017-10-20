@@ -69,13 +69,13 @@ public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotati
 
             okComplete(command, tag, responder);
         } catch (MailboxNotFoundException e) {
-            LOGGER.info(command.getName() + " failed for mailbox " + mailboxName, e);
+            LOGGER.info("{} failed for mailbox {}", command.getName(), mailboxName, e);
             no(command, tag, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
         } catch (AnnotationException e) {
-            LOGGER.info(command.getName() + " failed for mailbox " + mailboxName, e);
+            LOGGER.info("{} failed for mailbox {}", command.getName(), mailboxName, e);
             no(command, tag, responder, new HumanReadableText(HumanReadableText.MAILBOX_ANNOTATION_KEY, e.getMessage()));
         } catch (MailboxException e) {
-            LOGGER.error(command.getName() + " failed for mailbox " + mailboxName, e);
+            LOGGER.error("{} failed for mailbox {}", command.getName(), mailboxName, e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

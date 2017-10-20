@@ -162,14 +162,14 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
           
             if (authorizedNetworks != null) {
-                LOGGER.info("Authorized addresses: " + authorizedNetworks.toString());
+                LOGGER.info("Authorized addresses: {}", authorizedNetworks);
             }
 
             // get the message size limit from the conf file and multiply
             // by 1024, to put it in bytes
             maxMessageSize = configuration.getLong("maxmessagesize", maxMessageSize) * 1024;
             if (maxMessageSize > 0) {
-                LOGGER.info("The maximum allowed message size is " + maxMessageSize + " bytes.");
+                LOGGER.info("The maximum allowed message size is {} bytes.", maxMessageSize);
             } else {
                 LOGGER.info("No maximum message size is enforced for this server.");
             }

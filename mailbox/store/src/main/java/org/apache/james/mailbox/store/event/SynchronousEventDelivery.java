@@ -32,10 +32,8 @@ public class SynchronousEventDelivery implements EventDelivery {
         try {
             mailboxListener.event(event);
         } catch(Throwable throwable) {
-            LOGGER.error("Error while processing listener "
-                        + mailboxListener.getClass().getCanonicalName()
-                        + " for "
-                        + event.getClass().getCanonicalName(),
+            LOGGER.error("Error while processing listener {} for {}",
+                    mailboxListener.getClass().getCanonicalName(), event.getClass().getCanonicalName(),
                     throwable);
         }
     }

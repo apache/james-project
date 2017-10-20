@@ -184,7 +184,7 @@ public class WhiteListManager extends GenericMailet {
      */
     public void init() throws MessagingException {
         automaticInsert = Boolean.valueOf(getInitParameter("automaticInsert"));
-        LOGGER.debug("automaticInsert: " + automaticInsert);
+        LOGGER.debug("automaticInsert: {}", automaticInsert);
 
         displayFlag = getInitParameter("displayFlag");
         insertFlag = getInitParameter("insertFlag");
@@ -193,7 +193,7 @@ public class WhiteListManager extends GenericMailet {
         String whitelistManagerAddressString = getInitParameter("whitelistManagerAddress");
         if (whitelistManagerAddressString != null) {
             whitelistManagerAddressString = whitelistManagerAddressString.trim();
-            LOGGER.debug("whitelistManagerAddress: " + whitelistManagerAddressString);
+            LOGGER.debug("whitelistManagerAddress: {}", whitelistManagerAddressString);
             try {
                 whitelistManagerAddress = new MailAddress(whitelistManagerAddressString);
             } catch (javax.mail.internet.ParseException pe) {
@@ -202,19 +202,19 @@ public class WhiteListManager extends GenericMailet {
 
             if (displayFlag != null) {
                 displayFlag = displayFlag.trim();
-                LOGGER.debug("displayFlag: " + displayFlag);
+                LOGGER.debug("displayFlag: {}", displayFlag);
             } else {
                 LOGGER.debug("displayFlag is null");
             }
             if (insertFlag != null) {
                 insertFlag = insertFlag.trim();
-                LOGGER.debug("insertFlag: " + insertFlag);
+                LOGGER.debug("insertFlag: {}", insertFlag);
             } else {
                 LOGGER.debug("insertFlag is null");
             }
             if (removeFlag != null) {
                 removeFlag = removeFlag.trim();
-                LOGGER.debug("removeFlag: " + removeFlag);
+                LOGGER.debug("removeFlag: {}", removeFlag);
             } else {
                 LOGGER.debug("removeFlag is null");
             }
@@ -224,7 +224,7 @@ public class WhiteListManager extends GenericMailet {
 
         String repositoryPath = getInitParameter("repositoryPath");
         if (repositoryPath != null) {
-            LOGGER.debug("repositoryPath: " + repositoryPath);
+            LOGGER.debug("repositoryPath: {}", repositoryPath);
         } else {
             throw new MessagingException("repositoryPath is null");
         }
@@ -507,7 +507,7 @@ public class WhiteListManager extends GenericMailet {
                 }
 
                 if (dbUpdated) {
-                    LOGGER.debug("Insertion request issued by " + senderMailAddress);
+                    LOGGER.debug("Insertion request issued by {}", senderMailAddress);
                 }
                 // Commit our changes if necessary.
                 if (conn != null && dbUpdated && !conn.getAutoCommit()) {
@@ -628,7 +628,7 @@ public class WhiteListManager extends GenericMailet {
                 }
 
                 if (dbUpdated) {
-                    LOGGER.debug("Removal request issued by " + senderMailAddress);
+                    LOGGER.debug("Removal request issued by {}", senderMailAddress);
                 }
                 // Commit our changes if necessary.
                 if (conn != null && dbUpdated && !conn.getAutoCommit()) {

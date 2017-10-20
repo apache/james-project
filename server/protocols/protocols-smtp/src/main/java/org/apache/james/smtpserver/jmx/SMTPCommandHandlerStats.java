@@ -87,7 +87,7 @@ public class SMTPCommandHandlerStats extends AbstractCommandHandlerStats impleme
             }
 
         } catch (NumberFormatException e) {
-            LOGGER.error("Error while reading SMTP return code " + response.getRetCode(), e);
+            LOGGER.error("Error while reading SMTP return code {}", response.getRetCode(), e);
         }
     }
 

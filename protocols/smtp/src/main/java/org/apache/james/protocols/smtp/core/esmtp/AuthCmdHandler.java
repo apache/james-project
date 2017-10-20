@@ -384,7 +384,7 @@ public class AuthCmdHandler
         
         if (hooks != null) {
             for (AuthHook rawHook : hooks) {
-                LOGGER.debug("executing  hook " + rawHook);
+                LOGGER.debug("executing  hook {}", rawHook);
 
                 long start = System.currentTimeMillis();
                 HookResult hRes = rawHook.doAuth(session, user, pass);
@@ -392,7 +392,7 @@ public class AuthCmdHandler
 
                 if (rHooks != null) {
                     for (HookResultHook rHook : rHooks) {
-                        LOGGER.debug("executing  hook " + rHook);
+                        LOGGER.debug("executing  hook {}", rHook);
                         hRes = rHook.onHookResult(session, hRes, executionTime, rawHook);
                     }
                 }
@@ -401,7 +401,7 @@ public class AuthCmdHandler
 
                 if (res != null) {
                     if (SMTPRetCode.AUTH_FAILED.equals(res.getRetCode())) {
-                        LOGGER.info("AUTH method " + authType + " failed");
+                        LOGGER.info("AUTH method {} failed", authType);
                     } else if (SMTPRetCode.AUTH_OK.equals(res.getRetCode())) {
                         if (LOGGER.isDebugEnabled()) {
                             // TODO: Make this string a more useful debug message
@@ -414,7 +414,7 @@ public class AuthCmdHandler
         }
 
         res = AUTH_FAILED;
-        LOGGER.error("AUTH method "+authType+" failed from " + user + "@" + session.getRemoteAddress().getAddress().getHostAddress());
+        LOGGER.error("AUTH method {} failed from {}@{}", authType, user, session.getRemoteAddress().getAddress().getHostAddress());
         return res;
     }
 

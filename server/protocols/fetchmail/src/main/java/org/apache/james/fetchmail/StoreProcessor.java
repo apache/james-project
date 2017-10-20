@@ -75,7 +75,7 @@ public class StoreProcessor extends ProcessorAbstract {
             // Get the Folder
             folder = store.getFolder(getJavaMailFolderName());
             if (folder == null)
-                LOGGER.error(getFetchTaskName() + " No default folder");
+                LOGGER.error("{} No default folder", getFetchTaskName());
 
             // Process the Folder
             new FolderProcessor(folder, getAccount()).process();

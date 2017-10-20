@@ -156,7 +156,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         enabled = config.getBoolean("[@enabled]", true);
 
         if (!enabled) {
-            LOGGER.info(getServiceType() + " disabled by configuration");
+            LOGGER.info("{} disabled by configuration", getServiceType());
             return;
         }
 
@@ -177,7 +177,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             }
             address = new InetSocketAddress(ip, port);
 
-            LOGGER.info(getServiceType() + " bound to: " + ip + ":" + port);
+            LOGGER.info("{} bound to: {}:{}", getServiceType(), ip, port);
 
             bindAddresses.add(address);
         }
@@ -268,7 +268,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             mbeanServer = ManagementFactory.getPlatformMBeanServer();
             registerMBean();
             
-            LOGGER.info("Init " + getServiceType() + " done");
+            LOGGER.info("Init {} done", getServiceType());
 
         }
     
@@ -277,7 +277,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     @PreDestroy
     public final void destroy() {
         
-        LOGGER.info("Dispose " + getServiceType());
+        LOGGER.info("Dispose {}", getServiceType());
         
         if (isEnabled()) {
             unbind();
@@ -289,7 +289,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
             unregisterMBean();
         }
-        LOGGER.info("Dispose " + getServiceType() + " done");
+        LOGGER.info("Dispose {} done", getServiceType());
 
     }
 

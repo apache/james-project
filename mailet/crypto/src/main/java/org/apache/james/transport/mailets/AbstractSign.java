@@ -202,7 +202,7 @@ public abstract class AbstractSign extends GenericMailet {
             throw new MessagingException("The specified <keyHolderClass> does not exist: " + keyHolderClassName);
         }
         if (isDebug()) {
-            LOGGER.debug("keyHolderClass: " + getKeyHolderClass());
+            LOGGER.debug("keyHolderClass: {}", getKeyHolderClass());
         }
     }
     
@@ -309,7 +309,7 @@ public abstract class AbstractSign extends GenericMailet {
         setKeyHolder((KeyHolder)keyHolderConstructor.newInstance(parameters));
         
         if (isDebug()) {
-            LOGGER.debug("Subject Distinguished Name: " + getKeyHolder().getSignerDistinguishedName());
+            LOGGER.debug("Subject Distinguished Name: {}", getKeyHolder().getSignerDistinguishedName());
         }
         
         if (getKeyHolder().getSignerAddress() == null) {
@@ -538,7 +538,7 @@ public abstract class AbstractSign extends GenericMailet {
             mail.setAttribute(SMIMEAttributeNames.SMIME_SIGNER_ADDRESS, getKeyHolder().getSignerAddress());
             
             if (isDebug()) {
-                LOGGER.debug("Message signed, reverse-path: " + mail.getSender() + ", Id: " + messageId);
+                LOGGER.debug("Message signed, reverse-path: {}, Id: {}", mail.getSender(), messageId);
             }
             
         } catch (MessagingException me) {
@@ -583,7 +583,7 @@ public abstract class AbstractSign extends GenericMailet {
         String authUser = (String) mail.getAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME);
         // was the sender user SMTP authorized?
         if (authUser == null) {
-            LOGGER.info("Can not sign mail for sender <" + mail.getSender() + "> as he is not a SMTP authenticated user");
+            LOGGER.info("Can not sign mail for sender <{}> as he is not a SMTP authenticated user", mail.getSender());
             return false;
         }
         
@@ -598,7 +598,7 @@ public abstract class AbstractSign extends GenericMailet {
             // is the reverse-path user different from the SMTP authorized user?
             String username = getUsername(reversePath);
             if (!username.equals(authUser)) {
-                LOGGER.info("SMTP logged in as <" + authUser + "> but pretend to be sender <" + username + ">");
+                LOGGER.info("SMTP logged in as <{}> but pretend to be sender <{}>", authUser, username);
                 return false;
             }
             // is there no "From:" address same as the reverse-path?
@@ -661,7 +661,7 @@ public abstract class AbstractSign extends GenericMailet {
                     try {
                         mailAddress = new MailAddress(aFromArray);
                     } catch (ParseException pe) {
-                        LOGGER.info("Unable to parse a \"FROM\" header address: " + aFromArray.toString() + "; ignoring.");
+                        LOGGER.info("Unable to parse a \"FROM\" header address: {}; ignoring.", aFromArray);
                         continue;
                     }
                     if (mailAddress.equals(reversePath)) {

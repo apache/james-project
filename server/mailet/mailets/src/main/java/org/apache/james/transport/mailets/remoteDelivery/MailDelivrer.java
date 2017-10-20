@@ -265,7 +265,7 @@ public class MailDelivrer {
             EnhancedMessagingException enhancedMessagingException = new EnhancedMessagingException(me);
             if (me.getClass().getName().endsWith(".SMTPAddressFailedException") || me.getClass().getName().endsWith(".SMTPAddressSucceededException")) {
                 LOGGER.debug("ADDRESS :[{}] Address:[{}] Command : [{}] RetCode[{}] Response [{}]",
-                    enhancedMessagingException.computeAction(), me.toString(), enhancedMessagingException.computeAddress(),
+                    enhancedMessagingException.computeAction(), me, enhancedMessagingException.computeAddress(),
                     enhancedMessagingException.computeCommand(), enhancedMessagingException.getReturnCode());
             }
         }

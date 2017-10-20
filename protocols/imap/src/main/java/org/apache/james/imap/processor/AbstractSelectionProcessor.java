@@ -92,10 +92,10 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
            
             
         } catch (MailboxNotFoundException e) {
-            LOGGER.debug("Select failed as mailbox does not exist " + mailboxName, e);
+            LOGGER.debug("Select failed as mailbox does not exist {}", mailboxName, e);
             responder.respond(statusResponseFactory.taggedNo(tag, command, HumanReadableText.FAILURE_NO_SUCH_MAILBOX));
         } catch (MailboxException e) {
-            LOGGER.error("Select failed for mailbox " + mailboxName , e);
+            LOGGER.error("Select failed for mailbox {}", mailboxName, e);
             no(command, tag, responder, HumanReadableText.SELECT);
         } 
     }

@@ -120,7 +120,7 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
      */
     @PostConstruct
     public void init() {
-        LOGGER.info(getClass().getName() + " init...");
+        LOGGER.info("{} init...", getClass().getName());
 
         queue = queueFactory.getQueue(MailQueueFactory.SPOOL);
 
@@ -220,7 +220,7 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
     @PreDestroy
     @Override
     public void dispose() {
-        LOGGER.info(getClass().getName() + " dispose...");
+        LOGGER.info("{} dispose...", getClass().getName());
         active.set(false); // shutdown the threads
         dequeueService.shutdownNow();
         workerService.shutdown();
@@ -234,7 +234,7 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
             }
         }
 
-        LOGGER.info(getClass().getName() + " thread shutdown completed.");
+        LOGGER.info("{} thread shutdown completed.", getClass().getName());
     }
 
     @Override

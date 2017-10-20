@@ -102,7 +102,7 @@ public class NetMatcher {
         try {
             ip = dnsServer.getByName(hostIP);
         } catch (UnknownHostException uhe) {
-            LOGGER.info("Cannot resolve address for " + hostIP + ": " + uhe.getMessage());
+            LOGGER.info("Cannot resolve address for {}: {}", hostIP, uhe.getMessage());
             return false;
         }
 
@@ -163,7 +163,7 @@ public class NetMatcher {
                 InetNetwork inet = inetNetwork.getFromString(net);
                 networks.add(inet);
             } catch (UnknownHostException uhe) {
-                LOGGER.info("Cannot resolve address: " + uhe.getMessage());
+                LOGGER.info("Cannot resolve address: {}", uhe.getMessage());
             }
         }
 

@@ -120,7 +120,7 @@ public class MailModifier {
             InternetAddress[] internetAddresses = MailAddressUtils.toInternetAddressArray(mailAddresses);
             mail.getMessage().setRecipients(Message.RecipientType.TO, internetAddresses);
             if (mailet.getInitParameters().isDebug()) {
-                LOGGER.debug("apparentlyTo set to: " + internetAddresses);
+                LOGGER.debug("apparentlyTo set to: {}", (Object) internetAddresses);
             }
         }
     }
@@ -148,7 +148,7 @@ public class MailModifier {
             } else {
                 mail.getMessage().setReplyTo(new InternetAddress[] { replyTo.toInternetAddress() });
                 if (mailet.getInitParameters().isDebug()) {
-                    LOGGER.debug("replyTo set to: " + replyTo);
+                    LOGGER.debug("replyTo set to: {}", replyTo);
                 }
             }
         }
@@ -170,7 +170,7 @@ public class MailModifier {
             } else {
                 mail.setSender(reversePath);
                 if (mailet.getInitParameters().isDebug()) {
-                    LOGGER.debug("reversePath set to: " + reversePath);
+                    LOGGER.debug("reversePath set to: {}", reversePath);
                 }
             }
         }
@@ -186,7 +186,7 @@ public class MailModifier {
             if (messageId != null) {
                 mail.getMessage().setHeader(RFC2822Headers.IN_REPLY_TO, messageId);
                 if (mailet.getInitParameters().isDebug()) {
-                    LOGGER.debug("IN_REPLY_TO set to: " + messageId);
+                    LOGGER.debug("IN_REPLY_TO set to: {}", messageId);
                 }
             }
         }
@@ -197,7 +197,7 @@ public class MailModifier {
             mail.getMessage().setFrom(sender.get().toInternetAddress());
 
             if (mailet.getInitParameters().isDebug()) {
-                LOGGER.debug("sender set to: " + sender);
+                LOGGER.debug("sender set to: {}", sender);
             }
         }
     }
@@ -213,7 +213,7 @@ public class MailModifier {
         if (messageId != null) {
             mail.getMessage().setHeader(RFC2822Headers.MESSAGE_ID, messageId);
             if (mailet.getInitParameters().isDebug()) {
-                LOGGER.debug("MESSAGE_ID restored to: " + messageId);
+                LOGGER.debug("MESSAGE_ID restored to: {}", messageId);
             }
         }
     }

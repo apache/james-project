@@ -133,7 +133,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             if (serversArray != null) {
                 for (String aServersArray : serversArray) {
                     dnsServers.add(aServersArray);
-                    LOGGER.info("Adding autodiscovered server " + aServersArray);
+                    LOGGER.info("Adding autodiscovered server {}", aServersArray);
                 }
             }
             Name[] systemSearchPath = ResolverConfig.getCurrentConfig().searchPath();
@@ -307,7 +307,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                 Collections.shuffle(samePrio);
                 servers.addAll(samePrio);
             }
-            LOGGER.debug("Found MX record " + mxRecord);
+            LOGGER.debug("Found MX record {}", mxRecord);
         }
         return servers;
     }
@@ -377,7 +377,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             // return rawDNSLookup(name, false, type, typeDesc);
         } catch (TextParseException tpe) {
             // TODO: Figure out how to handle this correctly.
-            LOGGER.error("Couldn't parse name " + namestr, tpe);
+            LOGGER.error("Couldn't parse name {}", namestr, tpe);
             return null;
         }
     }
