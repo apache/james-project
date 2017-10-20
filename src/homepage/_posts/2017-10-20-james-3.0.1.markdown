@@ -1,0 +1,28 @@
+---
+layout: post
+title:  "Security release: Apache James server 3.0.1"
+date:   2017-10-20 00:00:22 +0200
+categories: james update
+---
+
+The Apache James PMCs are glad to announce you the release
+version 3.0.1 of Apache James server.
+
+It fixes vulnerability described in CVE-2017-12628. The JMX server, also
+used by the command line client is exposed to a java de-serialization
+issue, and thus can be used to execute arbitrary commands. As James
+exposes JMX socket by default only on local-host, this vulnerability can
+only be used for privilege escalation.
+
+Release 3.0.1 upgrades the incriminated library.
+
+Note that you can take additional defensive steps in order to mitigate this vulnerability:
+
+ - Ensure that you restrict the access to JMX only on local-host
+ - Ensure that you are using a recent Java Run-time Environment. For instance OpenJDK 8 u111 is vulnerable but OpenJDK 8 u 141 is not.
+ - You can additionally run James in a container to limit damages of potential exploits
+ - And of course upgrade to the newest 3.0.1 version.
+
+Read more about Java deserialization [issues].
+
+[issues]: https://www.sourceclear.com/blog/Commons-Collections-Deserialization-Vulnerability-Research-Findings/
