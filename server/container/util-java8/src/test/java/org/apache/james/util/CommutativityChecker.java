@@ -20,9 +20,7 @@
 package org.apache.james.util;
 
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BinaryOperator;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.paukov.combinatorics3.Generator;

@@ -85,7 +85,6 @@ public abstract class GetMessageListMethodTest {
     protected abstract void await();
 
     private AccessToken aliceAccessToken;
-    private AccessToken bobAccessToken;
     private String alice;
     private String bob;
     private String domain;
@@ -119,7 +118,7 @@ public abstract class GetMessageListMethodTest {
         this.bob = "bob@" + domain;
         String bobPassword = "bobPassword";
         dataProbe.addUser(bob, bobPassword);
-        this.bobAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), bob, bobPassword);
+        HttpJmapAuthentication.authenticateJamesUser(baseUri(), bob, bobPassword);
     }
 
     private URIBuilder baseUri() {
