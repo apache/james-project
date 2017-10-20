@@ -178,9 +178,7 @@ public class MBoxMailRepository implements MailRepository, Configurable {
         String checkType = configuration.getString("[@type]");
         if (!(checkType.equals("MAIL") || checkType.equals("SPOOL"))) {
             String exceptionString = "Attempt to configure MboxMailRepository as " + checkType;
-            if (LOGGER.isWarnEnabled()) {
-                LOGGER.warn(exceptionString);
-            }
+            LOGGER.warn(exceptionString);
             throw new ConfigurationException(exceptionString);
         }
     }
@@ -585,8 +583,7 @@ public class MBoxMailRepository implements MailRepository, Configurable {
         try {
             FileUtils.forceDelete(mBoxLock);
         } catch (IOException e) {
-            String logBuffer = this.getClass().getName() + " Failed to delete lock file " + lockFileName;
-            LOGGER.error(logBuffer);
+            LOGGER.error("{} Failed to delete lock file {}", getClass().getName(), lockFileName);
         }
     }
 
