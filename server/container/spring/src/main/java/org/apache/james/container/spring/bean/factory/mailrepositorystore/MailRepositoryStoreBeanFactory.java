@@ -165,7 +165,7 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
             return reply;
         } else {
             String repClass = classes.get(protocol);
-            LOGGER.debug("obtained repository: {} to handle: {} with key {}", repClass, protocol, protocol);
+            LOGGER.debug("obtained repository: {} to handle: {}", repClass, protocol);
 
             // If default values have been set, create a new repository
             // configuration element using the default values
