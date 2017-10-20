@@ -124,14 +124,10 @@ public class SieveExecutor {
             sieveMessageEvaluate(recipient, aMail, userSieveInformation);
             return true;
         } catch (ScriptNotFoundException e) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Can not locate SIEVE script for user " + recipient.asPrettyString());
-            }
+            LOGGER.info("Can not locate SIEVE script for user {}", recipient.asPrettyString());
             return false;
         } catch (Exception ex) {
-            if (LOGGER.isErrorEnabled()) {
-                LOGGER.error("Cannot evaluate Sieve script for user " + recipient.asPrettyString(), ex);
-            }
+            LOGGER.error("Cannot evaluate Sieve script for user {}", recipient.asPrettyString(), ex);
             return false;
         }
     }
