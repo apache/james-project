@@ -146,12 +146,8 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
                 .map(uid ->  indexIdFor(mailbox, uid))
                 .collect(Collectors.toList()));
         } catch (Exception e) {
-            if (LOGGER.isErrorEnabled()) {
-                LOGGER.error("Error when deleting messages {} in mailbox {} from index",
-                    mailbox.getMailboxId().serialize(),
-                    ImmutableList.copyOf(expungedUids),
-                    e);
-            }
+            LOGGER.error("Error when deleting messages {} in mailbox {} from index",
+                    mailbox.getMailboxId().serialize(), expungedUids, e);
         }
     }
 
