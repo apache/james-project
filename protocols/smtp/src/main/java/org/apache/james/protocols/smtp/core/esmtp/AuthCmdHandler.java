@@ -403,10 +403,8 @@ public class AuthCmdHandler
                     if (SMTPRetCode.AUTH_FAILED.equals(res.getRetCode())) {
                         LOGGER.info("AUTH method {} failed", authType);
                     } else if (SMTPRetCode.AUTH_OK.equals(res.getRetCode())) {
-                        if (LOGGER.isDebugEnabled()) {
-                            // TODO: Make this string a more useful debug message
-                            LOGGER.debug("AUTH method " + authType + " succeeded");
-                        }
+                        // TODO: Make this string a more useful debug message
+                        LOGGER.debug("AUTH method {} succeeded", authType);
                     }
                     return res;
                 }

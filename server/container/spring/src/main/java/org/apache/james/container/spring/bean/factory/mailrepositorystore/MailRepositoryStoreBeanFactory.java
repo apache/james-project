@@ -196,9 +196,7 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
                 LOGGER.info("added repository: {}->{}", repID, repClass);
                 return reply;
             } catch (Exception e) {
-                if (LOGGER.isWarnEnabled()) {
-                    LOGGER.warn("Exception while creating repository:" + e.getMessage(), e);
-                }
+                LOGGER.warn("Exception while creating repository: {}", e.getMessage(), e);
                 throw new MailRepositoryStoreException("Cannot find or init repository", e);
             }
         }
