@@ -294,14 +294,11 @@ public abstract class AbstractSign extends GenericMailet {
         }
         
         if (isDebug()) {
-            StringBuilder logBuffer =
-            new StringBuilder(1024)
-            .append("KeyStore related parameters:")
-            .append("  keyStoreFileName=").append(keyStoreFileName)
-            .append(", keyStoreType=").append(keyStoreType)
-            .append(", keyAlias=").append(keyAlias)
-            .append(" ");
-            LOGGER.debug(logBuffer.toString());
+            LOGGER.debug("KeyStore related parameters:"
+                         + "  keyStoreFileName={}"
+                         + ", keyStoreType={}"
+                         + ", keyAlias={}",
+                    keyStoreFileName, keyStoreType, keyAlias);
         }
             
         // Certificate preparation

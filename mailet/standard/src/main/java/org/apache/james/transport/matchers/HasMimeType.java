@@ -65,7 +65,7 @@ public class HasMimeType extends GenericMatcher {
         try {
             return Optional.of(new MimeType(message.getContentType()).getBaseType());
         } catch (MimeTypeParseException e) {
-            LOGGER.warn(String.format("Error while parsing message's mimeType %s", message.getContentType()), e);
+            LOGGER.warn("Error while parsing message's mimeType {}", message.getContentType(), e);
             return Optional.empty();
         }
     }
