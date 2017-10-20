@@ -73,9 +73,9 @@ public class StoreMailboxManagerTest {
         FakeAuthenticator authenticator = new FakeAuthenticator();
         authenticator.addUser(CURRENT_USER, CURRENT_USER_PASSWORD);
         authenticator.addUser(ADMIN, ADMIN_PASSWORD);
+        StoreRightManager storeRightManager = new StoreRightManager(mockedMapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver());
         storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, authenticator, FakeAuthorizator.forUserAndAdmin(ADMIN, CURRENT_USER),
-                new JVMMailboxPathLocker(), new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), 
-                new MessageParser(), messageIdFactory);
+                new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory, storeRightManager);
         storeMailboxManager.init();
     }
 

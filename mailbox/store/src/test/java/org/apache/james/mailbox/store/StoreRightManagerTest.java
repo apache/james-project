@@ -32,7 +32,7 @@ import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Test;
 
-public class StoreMessageManagerTest {
+public class StoreRightManagerTest {
 
     public static final long UID_VALIDITY = 3421l;
 
@@ -41,7 +41,7 @@ public class StoreMessageManagerTest {
         MailboxACL acl = new MailboxACL()
             .apply(MailboxACL.command().rights(Right.Read, Right.Write).forUser(BOB).asAddition())
             .apply(MailboxACL.command().rights(Right.Read, Right.Write, Right.Administer).forUser(CEDRIC).asAddition());
-        MailboxACL actual = StoreMessageManager.filteredForSession(
+        MailboxACL actual = StoreRightManager.filteredForSession(
             new SimpleMailbox(INBOX_ALICE, UID_VALIDITY), acl, new MockMailboxSession(ALICE));
         assertThat(actual).isEqualTo(acl);
     }
@@ -51,7 +51,7 @@ public class StoreMessageManagerTest {
         MailboxACL acl = new MailboxACL()
             .apply(MailboxACL.command().rights(Right.Read, Right.Write).forUser(BOB).asAddition())
             .apply(MailboxACL.command().rights(Right.Read, Right.Write, Right.Administer).forUser(CEDRIC).asAddition());
-        MailboxACL actual = StoreMessageManager.filteredForSession(
+        MailboxACL actual = StoreRightManager.filteredForSession(
             new SimpleMailbox(INBOX_ALICE, UID_VALIDITY), acl, new MockMailboxSession(CEDRIC));
         assertThat(actual).isEqualTo(acl);
     }
@@ -61,7 +61,7 @@ public class StoreMessageManagerTest {
         MailboxACL acl = new MailboxACL()
             .apply(MailboxACL.command().rights(Right.Read, Right.Write).forUser(BOB).asAddition())
             .apply(MailboxACL.command().rights(Right.Read, Right.Write, Right.Administer).forUser(CEDRIC).asAddition());
-        MailboxACL actual = StoreMessageManager.filteredForSession(
+        MailboxACL actual = StoreRightManager.filteredForSession(
             new SimpleMailbox(INBOX_ALICE, UID_VALIDITY), acl, new MockMailboxSession(BOB));
         assertThat(actual.getEntries()).containsKey(MailboxACL.EntryKey.createUserEntryKey(BOB));
     }

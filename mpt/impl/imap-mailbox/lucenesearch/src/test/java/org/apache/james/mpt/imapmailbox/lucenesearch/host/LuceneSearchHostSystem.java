@@ -51,6 +51,7 @@ import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
@@ -116,7 +117,13 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
             GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
             MessageParser messageParser = new MessageParser();
 
-            mailboxManager = new OpenJPAMailboxManager(factory, authenticator, authorizator, locker, false, aclResolver, groupMembershipResolver, messageParser, messageIdFactory, MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
+            StoreRightManager storeRightManager = new StoreRightManager(factory, aclResolver, groupMembershipResolver);
+            boolean useStreaming = false;
+            mailboxManager = new OpenJPAMailboxManager(factory, authenticator, authorizator, locker, useStreaming,
+                                                       messageParser, messageIdFactory,
+                                                       MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX,
+                                                       MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE,
+                                                       storeRightManager);
 
             LuceneMessageSearchIndex searchIndex = new LuceneMessageSearchIndex(factory, mailboxIdFactory, fsDirectory, messageIdFactory);
             searchIndex.setEnableSuffixMatch(true);

@@ -24,8 +24,6 @@ import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
-import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAMailboxManager;
 import org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory;
@@ -37,6 +35,7 @@ import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreMessageManager;
+import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 
@@ -48,12 +47,18 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
 
     private final AdvancedFeature feature;
 
-    public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, Authorizator authorizator,
-            MailboxPathLocker locker, boolean useStreaming, MailboxACLResolver aclResolver, 
-            GroupMembershipResolver groupMembershipResolver, MessageParser messageParser, MessageId.Factory messageIdFactory,
-            int annotationLimit, int annotationLimitSize) {
-        super(mapperFactory, authenticator, authorizator, locker, aclResolver, groupMembershipResolver, messageParser,
-            messageIdFactory, annotationLimit, annotationLimitSize);
+    public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory,
+                                 Authenticator authenticator,
+                                 Authorizator authorizator,
+                                 MailboxPathLocker locker,
+                                 boolean useStreaming,
+                                 MessageParser messageParser,
+                                 MessageId.Factory messageIdFactory,
+                                 int annotationLimit,
+                                 int annotationLimitSize,
+                                 StoreRightManager storeRightManager) {
+        super(mapperFactory, authenticator, authorizator, locker, messageParser,
+            messageIdFactory, annotationLimit, annotationLimitSize, storeRightManager);
         if (useStreaming) {
             feature = AdvancedFeature.Streaming;
         } else {
@@ -61,11 +66,16 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
         }
     }
 
-    public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, Authorizator authorizator,
-            MailboxPathLocker locker,  String encryptPass, MailboxACLResolver aclResolver, 
-            GroupMembershipResolver groupMembershipResolver, MessageParser messageParser, MessageId.Factory messageIdFactory) {
-        super(mapperFactory, authenticator, authorizator, locker, aclResolver, groupMembershipResolver, messageParser,
-            messageIdFactory);
+    public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory,
+                                 Authenticator authenticator,
+                                 Authorizator authorizator,
+                                 MailboxPathLocker locker,
+                                 String encryptPass,
+                                 MessageParser messageParser,
+                                 MessageId.Factory messageIdFactory,
+                                 StoreRightManager storeRightManager) {
+        super(mapperFactory, authenticator, authorizator, locker, messageParser,
+            messageIdFactory, storeRightManager);
         if (encryptPass != null) {
             EncryptDecryptHelper.init(encryptPass);
             feature = AdvancedFeature.Encryption;
@@ -75,20 +85,27 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
     }
     
     @Inject
-    public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, Authorizator authorizator,
-            MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, 
-            MessageParser messageParser, MessageId.Factory messageIdFactory) {
-        this(mapperFactory, authenticator, authorizator, new JVMMailboxPathLocker(), false, aclResolver,
-            groupMembershipResolver, messageParser, messageIdFactory, MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX,
-            MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
+    public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory,
+                                 Authenticator authenticator,
+                                 Authorizator authorizator,
+                                 MessageParser messageParser,
+                                 MessageId.Factory messageIdFactory,
+                                 StoreRightManager storeRightManager) {
+        this(mapperFactory, authenticator, authorizator, new JVMMailboxPathLocker(), false,
+            messageParser, messageIdFactory, MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX,
+            MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE, storeRightManager);
     }
 
-    public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, Authorizator authorizator,
-                                 MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver,
-                                 MessageParser messageParser, MessageId.Factory messageIdFactory, int annotationLimit,
-                                 int annotationLimitSize) {
-        this(mapperFactory, authenticator, authorizator, new JVMMailboxPathLocker(), false, aclResolver,
-            groupMembershipResolver, messageParser, messageIdFactory, annotationLimit, annotationLimitSize);
+    public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory,
+                                 Authenticator authenticator,
+                                 Authorizator authorizator,
+                                 MessageParser messageParser,
+                                 MessageId.Factory messageIdFactory,
+                                 int annotationLimit,
+                                 int annotationLimitSize,
+                                 StoreRightManager storeRightManager) {
+        this(mapperFactory, authenticator, authorizator, new JVMMailboxPathLocker(), false,
+            messageParser, messageIdFactory, annotationLimit, annotationLimitSize, storeRightManager);
     }
 
     @Override
@@ -99,13 +116,12 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
             getLocker(),
             mailboxRow,
             feature,
-            getAclResolver(),
-            getGroupMembershipResolver(),
             getQuotaManager(),
             getQuotaRootResolver(),
             getMessageParser(),
             getMessageIdFactory(),
             getBatchSizes(),
-            getImmutableMailboxMessageFactory());
+            getImmutableMailboxMessageFactory(),
+            getStoreRightManager());
     }
 }

@@ -37,6 +37,7 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
+import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
@@ -59,9 +60,11 @@ public class IsOverQuotaTest {
     @Before
     public void setUp() throws Exception {
         InMemoryMailboxSessionMapperFactory factory = new InMemoryMailboxSessionMapperFactory();
+        StoreRightManager storeRightManager = new StoreRightManager(factory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver());
         mailboxManager = new InMemoryMailboxManager(factory, new FakeAuthenticator(), FakeAuthorizator.defaultReject(),
-            new NoMailboxPathLocker(), new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), new MessageParser(),
-            new InMemoryMessageId.Factory());
+            new NoMailboxPathLocker(), new MessageParser(),
+            new InMemoryMessageId.Factory(),
+            storeRightManager);
 
         quotaRootResolver = new DefaultQuotaRootResolver(factory);
         maxQuotaManager = new InMemoryPerUserMaxQuotaManager();

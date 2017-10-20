@@ -39,6 +39,7 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.junit.Before;
@@ -156,18 +157,17 @@ public class MailboxCopierTest {
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
-
+        InMemoryMailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
+        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, aclResolver, groupMembershipResolver);
         return new StoreMailboxManager(
-            new InMemoryMailboxSessionMapperFactory(),
+            mapperFactory,
             (userid, passwd) -> AUTHENTIC,
             (userId, otherUserId) -> Authorizator.AuthorizationState.NOT_ADMIN,
-            aclResolver,
-            groupMembershipResolver,
             messageParser,
             new DefaultMessageId.Factory(),
             MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX,
-            MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE
-            );
+            MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE,
+            storeRightManager);
     
     }
 

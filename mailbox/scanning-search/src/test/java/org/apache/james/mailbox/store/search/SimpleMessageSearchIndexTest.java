@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store.search;
 
+
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -30,6 +31,7 @@ import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
+import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -48,15 +50,17 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
         MailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
         messageSearchIndex = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new PDFTextExtractor());
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
+        UnionMailboxACLResolver aclResolver = new UnionMailboxACLResolver();
+        SimpleGroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
+        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, aclResolver, groupMembershipResolver);
         storeMailboxManager = new InMemoryMailboxManager(
             mapperFactory,
             new FakeAuthenticator(),
             FakeAuthorizator.defaultReject(),
             new JVMMailboxPathLocker(),
-            new UnionMailboxACLResolver(),
-            new SimpleGroupMembershipResolver(),
             new MessageParser(),
-            messageIdFactory);
+            messageIdFactory,
+            storeRightManager);
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
         MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(new DefaultDelegatingMailboxListener());
         storeMailboxManager.setDelegatingMailboxListener(delegatingListener);

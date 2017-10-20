@@ -100,8 +100,14 @@ public class StoreMailboxManagerAnnotationTest {
                 return transaction.run();
             });
 
-        storeMailboxManager = spy(new StoreMailboxManager(mailboxSessionMapperFactory, authenticator, authorizator, aclResolver, groupMembershipResolver, 
-                messageParser, messageIdFactory, MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE));
+        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, aclResolver,
+                                                                    groupMembershipResolver);
+
+        storeMailboxManager = spy(new StoreMailboxManager(mailboxSessionMapperFactory, authenticator, authorizator,
+                                                          messageParser, messageIdFactory,
+                                                          MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX,
+                                                          MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE,
+                                                          storeRightManager));
         storeMailboxManager.init();
     }
 

@@ -31,6 +31,7 @@ import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
+import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -50,15 +51,17 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
     protected void initializeMailboxManager() throws Exception {
         TestMessageId.Factory messageIdFactory = new TestMessageId.Factory();
         MailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
+        UnionMailboxACLResolver aclResolver = new UnionMailboxACLResolver();
+        SimpleGroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
+        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, aclResolver, groupMembershipResolver);
         storeMailboxManager = new InMemoryMailboxManager(
             mapperFactory,
             new FakeAuthenticator(),
             FakeAuthorizator.defaultReject(),
             new JVMMailboxPathLocker(),
-            new UnionMailboxACLResolver(),
-            new SimpleGroupMembershipResolver(),
             new MessageParser(),
-            messageIdFactory);
+            messageIdFactory,
+            storeRightManager);
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
         MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
         storeMailboxManager.setDelegatingMailboxListener(delegatingListener);

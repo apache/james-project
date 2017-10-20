@@ -41,18 +41,13 @@ import org.apache.commons.io.input.TeeInputStream;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
-import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.ReadOnlyException;
-import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -91,7 +86,6 @@ import org.apache.james.util.IteratorWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -460,7 +454,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
     /**
      * This mailbox is writable
-     * 
+     *
      * @throws MailboxException
      */
     public boolean isWriteable(MailboxSession session) throws MailboxException {
@@ -513,7 +507,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             recent = new ArrayList<>();
             break;
         }
-        MailboxACL resolvedAcl = getResolvedMailboxACL(mailboxSession);
+        MailboxACL resolvedAcl = storeRightManager.getResolvedMailboxACL(mailbox, mailboxSession);
         return new MailboxMetaData(recent, permanentFlags, uidValidity, uidNext, highestModSeq, messageCount, unseenCount, firstUnseen, isWriteable(mailboxSession), isModSeqPermanent(mailboxSession), resolvedAcl);
     }
 
@@ -792,36 +786,6 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
         return messageMapper.findFirstUnseenMessageUid(getMailboxEntity());
     }
-
-    /**
-     * Applies the global ACL (if there are any) to the mailbox ACL.
-     * 
-     * @param mailboxSession
-     * @return the ACL of the present mailbox merged with the global ACL (if
-     *         there are any).
-     * @throws UnsupportedRightException
-     */
-    protected MailboxACL getResolvedMailboxACL(MailboxSession mailboxSession) throws UnsupportedRightException {
-        return StoreRightManager.filteredForSession(mailbox, mailbox.getACL(), mailboxSession);
-    }
-
-    /**
-     * ACL is sensible information and as such we should expose as few information as possible
-     * to users. This method allows to filter a {@link MailboxACL} in order to present it to
-     * the connected user.
-     */
-    @VisibleForTesting static MailboxACL filteredForSession(Mailbox mailbox, MailboxACL acl, MailboxSession mailboxSession) throws UnsupportedRightException {
-        if (mailboxSession.getUser().isSameUser(mailbox.getUser())) {
-            return acl;
-        }
-        MailboxACL.EntryKey userAsKey = MailboxACL.EntryKey.createUserEntryKey(mailboxSession.getUser().getUserName());
-        Rfc4314Rights rights = acl.getEntries().getOrDefault(userAsKey, new Rfc4314Rights());
-        if (rights.contains(MailboxACL.Right.Administer)) {
-            return acl;
-        }
-        return new MailboxACL(ImmutableMap.of(userAsKey, rights));
-    }
-
 
     @Override
     public MailboxId getId() {

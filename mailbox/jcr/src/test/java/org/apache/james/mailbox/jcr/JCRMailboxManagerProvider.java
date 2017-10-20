@@ -31,6 +31,7 @@ import org.apache.james.mailbox.jcr.mail.JCRUidProvider;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.xml.sax.InputSource;
@@ -64,8 +65,9 @@ public class JCRMailboxManagerProvider {
 
         Authenticator noAuthenticator = null;
         Authorizator noAuthorizator = null;
-        JCRMailboxManager manager = new JCRMailboxManager(mf, noAuthenticator, noAuthorizator, locker, aclResolver, groupMembershipResolver,
-            messageParser, new DefaultMessageId.Factory());
+        StoreRightManager storeRightManager = new StoreRightManager(mf, aclResolver, groupMembershipResolver);
+        JCRMailboxManager manager = new JCRMailboxManager(mf, noAuthenticator, noAuthorizator, locker,
+            messageParser, new DefaultMessageId.Factory(), storeRightManager);
 
         try {
             manager.init();

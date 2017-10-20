@@ -26,8 +26,6 @@ import javax.inject.Inject;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
-import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -39,6 +37,7 @@ import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
+import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -61,14 +60,13 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             authenticator,
             authorizator,
             locker,
-            new UnionMailboxACLResolver(),
-            new SimpleGroupMembershipResolver(),
             messageParser,
             messageIdFactory,
             MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX,
             MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE,
             mailboxEventDispatcher,
-            delegatingMailboxListener);
+            delegatingMailboxListener,
+            new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver()));
         this.locker = locker;
         this.mapperFactory = mapperFactory;
     }
@@ -79,26 +77,24 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             authenticator,
             authorizator,
             locker,
-            new UnionMailboxACLResolver(),
-            new SimpleGroupMembershipResolver(),
             messageParser,
-            messageIdFactory);
+            messageIdFactory,
+            new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver()));
         this.locker = locker;
         this.mapperFactory = mapperFactory;
     }
 
     public CassandraMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory, Authenticator authenticator,  Authorizator authorizator,
-            MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, MessageParser messageParser,
-            MessageId.Factory messageIdFactory, int limitOfAnnotations, int limitAnnotationSize) {
+            MailboxPathLocker locker, MessageParser messageParser,
+            MessageId.Factory messageIdFactory, int limitOfAnnotations, int limitAnnotationSize, StoreRightManager storeRightManager) {
         super(mapperFactory,
             authenticator,
             authorizator,
-            aclResolver,
-            groupMembershipResolver,
             messageParser,
             messageIdFactory,
             limitOfAnnotations,
-            limitAnnotationSize);
+            limitAnnotationSize,
+            storeRightManager);
         this.locker = locker;
         this.mapperFactory = mapperFactory;
     }
@@ -138,7 +134,8 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             getMessageParser(),
             getMessageIdFactory(),
             getBatchSizes(),
-            getImmutableMailboxMessageFactory());
+            getImmutableMailboxMessageFactory(),
+            getStoreRightManager());
     }
 
 }

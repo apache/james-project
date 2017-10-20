@@ -52,6 +52,7 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.pop3server.netty.POP3Server;
@@ -720,6 +721,7 @@ public class POP3ServerTest {
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
+        StoreRightManager storeRightManager = new StoreRightManager(factory, aclResolver, groupMembershipResolver);
         mailboxManager = new StoreMailboxManager(factory, (userid, passwd) -> {
             try {
                 return usersRepository.test(userid, passwd.toString());
@@ -728,12 +730,11 @@ public class POP3ServerTest {
                 return false;
             }
         }, (userId, otherUserId) -> Authorizator.AuthorizationState.NOT_ADMIN,
-            aclResolver,
-            groupMembershipResolver,
             messageParser,
             new DefaultMessageId.Factory(),
             MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX,
-            MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
+            MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE,
+            storeRightManager);
         mailboxManager.init();
 
         protocolHandlerChain.put("mailboxmanager", MailboxManager.class, mailboxManager);

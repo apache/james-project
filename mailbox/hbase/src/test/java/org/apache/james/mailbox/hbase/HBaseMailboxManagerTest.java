@@ -40,6 +40,7 @@ import org.apache.james.mailbox.hbase.mail.HBaseUidProvider;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
+import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.junit.After;
@@ -61,16 +62,16 @@ public class HBaseMailboxManagerTest extends MailboxManagerTest {
         MessageId.Factory messageIdFactory = new DefaultMessageId.Factory();
         HBaseMailboxSessionMapperFactory mapperFactory = new HBaseMailboxSessionMapperFactory(CLUSTER.getConf(),
             uidProvider, modSeqProvider, messageIdFactory);
+        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver());
 
         Authenticator noAuthenticator = null;
         Authorizator noAuthorizator = null;
         HBaseMailboxManager manager = new HBaseMailboxManager(mapperFactory,
             noAuthenticator,
             noAuthorizator,
-            new UnionMailboxACLResolver(),
-            new SimpleGroupMembershipResolver(),
             new MessageParser(),
-            messageIdFactory
+            messageIdFactory,
+            storeRightManager
         );
 
         try {
