@@ -113,7 +113,9 @@ public abstract class AbstractMessageRangeProcessor<M extends AbstractMessageRan
             }
             taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            LOGGER.error(getOperationName() + " failed from mailbox " + currentMailbox.getPath() + " to " + targetMailbox + " for sequence-set " + ImmutableList.copyOf(idSet), e);
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.error(getOperationName() + " failed from mailbox " + currentMailbox.getPath() + " to " + targetMailbox + " for sequence-set " + ImmutableList.copyOf(idSet), e);
+            }
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

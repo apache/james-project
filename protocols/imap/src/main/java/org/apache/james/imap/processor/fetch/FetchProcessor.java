@@ -138,7 +138,9 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             }
             taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            LOGGER.error("Fetch failed for mailbox " + session.getSelected().getPath() + " and sequence-set " + ImmutableList.copyOf(idSet), e);
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.error("Fetch failed for mailbox " + session.getSelected().getPath() + " and sequence-set " + ImmutableList.copyOf(idSet), e);
+            }
             no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
         }
     }

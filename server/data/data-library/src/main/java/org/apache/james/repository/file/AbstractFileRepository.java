@@ -188,7 +188,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
             throw new RuntimeException("Cannot initialize child " + "repository " + childName + " : " + e);
         }
 
-        if (DEBUG) {
+        if (DEBUG && LOGGER.isDebugEnabled()) {
             LOGGER.debug("Child repository of " + m_name + " created in " + m_baseDirectory + File.pathSeparatorChar + childName + File.pathSeparator);
         }
 

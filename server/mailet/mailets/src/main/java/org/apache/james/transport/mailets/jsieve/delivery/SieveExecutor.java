@@ -124,10 +124,14 @@ public class SieveExecutor {
             sieveMessageEvaluate(recipient, aMail, userSieveInformation);
             return true;
         } catch (ScriptNotFoundException e) {
-            LOGGER.info("Can not locate SIEVE script for user " + recipient.asPrettyString());
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Can not locate SIEVE script for user " + recipient.asPrettyString());
+            }
             return false;
         } catch (Exception ex) {
-            LOGGER.error("Cannot evaluate Sieve script for user " + recipient.asPrettyString(), ex);
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.error("Cannot evaluate Sieve script for user " + recipient.asPrettyString(), ex);
+            }
             return false;
         }
     }
@@ -137,8 +141,10 @@ public class SieveExecutor {
             SieveMailAdapter aMailAdapter = new SieveMailAdapter(aMail,
                 mailetContext, actionDispatcher, sievePoster, userSieveInformation.getScriptActivationDate(),
                 userSieveInformation.getScriptInterpretationDate(), recipient);
-            // This logging operation is potentially costly
-            LOGGER.debug("Evaluating " + aMailAdapter.toString() + " against \"" + recipient.asPrettyString() + "\"");
+            if (LOGGER.isDebugEnabled()) {
+                // This logging operation is potentially costly
+                LOGGER.debug("Evaluating " + aMailAdapter.toString() + " against \"" + recipient.asPrettyString() + "\"");
+            }
             factory.evaluate(aMailAdapter, factory.parse(userSieveInformation.getScriptContent()));
         } catch (SieveException | ParseException ex) {
             handleFailure(recipient, aMail, ex);

@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -61,6 +62,7 @@ public class LogMessageTest {
     @Before
     public void setup() {
         logger = mock(Logger.class);
+        when(logger.isInfoEnabled()).thenReturn(true);
         mailContext = FakeMailContext.builder()
                 .logger(logger)
                 .build();
@@ -97,7 +99,8 @@ public class LogMessageTest {
                 .mimeMessage(message)
                 .build());
 
-        verify(logger).info("Logging mail null");
+        verify(logger).info("Logging mail {}", (Object) null);
+        verify(logger, times(2)).isInfoEnabled();
         verify(logger).info("\n");
         verify(logger).info("Subject: subject\n");
         verify(logger).error(eq("Error logging message."), any(MessagingException.class));
@@ -114,7 +117,8 @@ public class LogMessageTest {
 
         mailet.service(createMail());
 
-        verify(logger).info("Logging mail name");
+        verify(logger).info("Logging mail {}", "name");
+        verify(logger, times(2)).isInfoEnabled();
         verify(logger).info("\n");
         verify(logger).info("Subject: subject\n");
         verify(logger).info("Content-Type: text/plain\n");
@@ -139,7 +143,7 @@ public class LogMessageTest {
 
         mailet.service(mail);
 
-        verify(logger).info("Logging mail name");
+        verify(logger).info("Logging mail {}", "name");
         verify(logger).error("Error logging message.", messagingException);
         verifyNoMoreInteractions(logger);
     }
@@ -186,7 +190,8 @@ public class LogMessageTest {
 
         mailet.service(createMail());
 
-        verify(logger).info("Logging mail name");
+        verify(logger).info("Logging mail {}", "name");
+        verify(logger).isInfoEnabled();
         verify(logger).info("This is a fake mail");
         verifyNoMoreInteractions(logger);
     }
@@ -202,7 +207,8 @@ public class LogMessageTest {
 
         mailet.service(createMail());
 
-        verify(logger).info("Logging mail name");
+        verify(logger).info("Logging mail {}", "name");
+        verify(logger).isInfoEnabled();
         verify(logger).info("\n");
         verify(logger).info("Subject: subject\n");
         verify(logger).info("Content-Type: text/plain\n");
@@ -220,7 +226,8 @@ public class LogMessageTest {
 
         mailet.service(createMail());
 
-        verify(logger).info("Logging mail name");
+        verify(logger).info("Logging mail {}", "name");
+        verify(logger, times(2)).isInfoEnabled();
         verify(logger).info("\n");
         verify(logger).info("Subject: subject\n");
         verify(logger).info("Content-Type: text/plain\n");
@@ -239,8 +246,9 @@ public class LogMessageTest {
 
         mailet.service(createMail());
 
-        verify(logger).info("Logging mail name");
+        verify(logger).info("Logging mail {}", "name");
         verify(logger).info("comment");
+        verify(logger, times(2)).isInfoEnabled();
         verify(logger).info("\n");
         verify(logger).info("Subject: subject\n");
         verify(logger).info("Content-Type: text/plain\n");

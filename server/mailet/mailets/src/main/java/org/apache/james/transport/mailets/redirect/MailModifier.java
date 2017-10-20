@@ -110,7 +110,9 @@ public class MailModifier {
         if (!recipients.isEmpty()) {
             mail.setRecipients(recipients);
             if (mailet.getInitParameters().isDebug()) {
-                LOGGER.debug("recipients set to: " + StringUtils.arrayToString(recipients.toArray()));
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("recipients set to: " + StringUtils.arrayToString(recipients.toArray()));
+                }
             }
         }
     }
