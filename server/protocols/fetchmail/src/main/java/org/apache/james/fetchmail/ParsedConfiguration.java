@@ -370,9 +370,7 @@ class ParsedConfiguration {
             setMarkMaxMessageSizeExceededSeen(maxmessagesize.getBoolean("[@markseen]"));
         }
 
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.info("Configured FetchMail fetch task " + getFetchTaskName());
-        }
+        LOGGER.info("Configured FetchMail fetch task {}", getFetchTaskName());
     }
 
     /**
