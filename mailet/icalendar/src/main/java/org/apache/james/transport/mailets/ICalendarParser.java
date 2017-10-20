@@ -21,11 +21,13 @@ package org.apache.james.transport.mailets;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.stream.Stream;
 
 import javax.mail.MessagingException;
 
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
@@ -134,10 +136,28 @@ public class ICalendarParser extends GenericMailet {
             ByteArrayInputStream inputStream = new ByteArrayInputStream(icsContent);
             return Stream.of(Pair.of(key, builder.build(inputStream)));
         } catch (IOException e) {
-            LOGGER.error("Error while reading input: " + icsContent, e);
+            if (LOGGER.isErrorEnabled()) {
+                String icsContentAsString;
+                try {
+                    icsContentAsString = new String(icsContent, Charset.forName("UTF-8"));
+                } catch (Throwable t) {
+                    LOGGER.error("Error while decoding ics content", t);
+                    icsContentAsString = new String(Hex.encodeHex(icsContent));
+                }
+                LOGGER.error("Error while reading input: " + icsContentAsString, e);
+            }
             return Stream.of();
         } catch (ParserException e) {
-            LOGGER.error("Error while parsing ICal object: " + icsContent, e);
+            if (LOGGER.isErrorEnabled()) {
+                String icsContentAsString;
+                try {
+                    icsContentAsString = new String(icsContent, Charset.forName("UTF-8"));
+                } catch (Throwable t) {
+                    LOGGER.error("Error while decoding ics content", t);
+                    icsContentAsString = new String(Hex.encodeHex(icsContent));
+                }
+                LOGGER.error("Error while parsing ICal object: " + icsContentAsString, e);
+            }
             return Stream.of();
         }
     }
