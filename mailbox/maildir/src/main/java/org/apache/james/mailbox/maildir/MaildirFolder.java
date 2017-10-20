@@ -631,13 +631,13 @@ public class MaildirFolder {
             if (line != null)
                 readUidListHeader(line);
             int lineNumber = 1;
-            while ((line = reader.readLine()) != null) {
+            for (; (line = reader.readLine()) != null; lineNumber++) {
                 if (!line.equals("")) {
                     int gap = line.indexOf(" ");
 
                     if (gap == -1) {
                         // there must be some issues in the file if no gap can be found
-                    	LOGGER.info("Corrupted entry in uid-file {} line {}", uidList, lineNumber++);
+                    	LOGGER.info("Corrupted entry in uid-file {} line {}", uidList, lineNumber);
                         continue;
                     }
                     
@@ -857,11 +857,11 @@ public class MaildirFolder {
                 ArrayList<String> lines = new ArrayList<>();
                 String line;
                 int lineNumber = 1;
-                while ((line = reader.readLine()) != null) {
+                for (; (line = reader.readLine()) != null; lineNumber++) {
                     int gap = line.indexOf(" ");
                     if (gap == -1) {
                         // there must be some issues in the file if no gap can be found
-                        LOGGER.info("Corrupted entry in uid-file {} line {}", uidList, lineNumber++);
+                        LOGGER.info("Corrupted entry in uid-file {} line {}", uidList, lineNumber);
                         continue;
                     }
 
