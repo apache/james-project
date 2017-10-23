@@ -36,7 +36,7 @@ Feature: IMAP compatibility of JMAP setMessages method used to update mailboxes
 
   Scenario: A message copied by JMAP is seen as copied by IMAP
     Given the user has a message "m1" in "source" mailbox with subject "My awesome subject", content "This is the content"
-    When the user copy "m1" from mailbox "source" to mailbox "mailbox"
+    When "username@domain.tld" copy "m1" from mailbox "source" to mailbox "mailbox"
     Then the user has a IMAP message in mailbox "mailbox"
     And the user has a IMAP message in mailbox "source"
 

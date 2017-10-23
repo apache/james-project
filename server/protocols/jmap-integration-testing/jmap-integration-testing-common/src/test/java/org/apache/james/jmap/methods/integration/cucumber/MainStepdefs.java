@@ -29,6 +29,7 @@ import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
+import org.apache.james.utils.MessageIdProbe;
 
 import com.google.common.base.Charsets;
 
@@ -41,6 +42,7 @@ public class MainStepdefs {
     public DataProbe dataProbe;
     public MailboxProbe mailboxProbe;
     public ACLProbe aclProbe;
+    public MessageIdProbe messageIdProbe;
     public Runnable awaitMethod = () -> {};
     public MessageId.Factory messageIdFactory;
     
@@ -49,6 +51,7 @@ public class MainStepdefs {
         dataProbe = jmapServer.getProbe(DataProbeImpl.class);
         mailboxProbe = jmapServer.getProbe(MailboxProbeImpl.class);
         aclProbe = jmapServer.getProbe(ACLProbeImpl.class);
+        messageIdProbe = jmapServer.getProbe(MessageIdProbe.class);
     }
     
 
