@@ -116,38 +116,37 @@ public class StoreRightManager implements RightManager {
     }
 
     public boolean isReadWrite(MailboxSession session, Mailbox mailbox, Flags sharedPermanentFlags) throws UnsupportedRightException {
-        return isReadWrite(myRights(mailbox, session), sharedPermanentFlags);
-    }
-
-    private boolean isReadWrite(Rfc4314Rights rights, Flags sharedPermanentFlags) {
-        if (rights.contains(Right.Insert) || rights.contains(Right.PerformExpunge)) {
-            return true;
-        }
+        Rfc4314Rights rights = myRights(mailbox, session);
 
         /*
          * then go through shared flags. RFC 4314 section 4:
          * Changing flags: STORE
-         * - the server MUST check if the user has "t" right
-         * - when the user modifies \Deleted flag "s" right
-         * - when the user modifies \Seen flag "w" right - for all other message flags.
+         * - the server MUST check if the user has "t" (expunge) right
+         * - when the user modifies \Deleted flag "s" (seen) right
+         * - when the user modifies \Seen flag "w" (write) - for all other message flags.
          */
-       if (sharedPermanentFlags != null) {
-            if (sharedPermanentFlags.contains(Flags.Flag.DELETED) && rights.contains(Right.DeleteMessages)) {
-                return true;
-            } else if (sharedPermanentFlags.contains(Flags.Flag.SEEN) && rights.contains(Right.WriteSeenFlag)) {
-                return true;
-            } else {
-                boolean hasWriteRight = rights.contains(Right.Write);
-                return hasWriteRight &&
-                    (sharedPermanentFlags.contains(Flags.Flag.ANSWERED) ||
-                    sharedPermanentFlags.contains(Flags.Flag.DRAFT) ||
-                    sharedPermanentFlags.contains(Flags.Flag.FLAGGED) ||
-                    sharedPermanentFlags.contains(Flags.Flag.RECENT) ||
-                    sharedPermanentFlags.contains(Flags.Flag.USER));
-            }
-        }
+        return rights.contains(Right.Insert) ||
+            rights.contains(Right.PerformExpunge) ||
+            checkDeleteFlag(rights, sharedPermanentFlags) ||
+            checkSeenFlag(rights, sharedPermanentFlags) ||
+            checkWriteFlag(rights, sharedPermanentFlags);
+    }
 
-        return false;
+    private boolean checkWriteFlag(Rfc4314Rights rights, Flags sharedPermanentFlags) {
+        return rights.contains(Right.Write) &&
+            (sharedPermanentFlags.contains(Flags.Flag.ANSWERED) ||
+                sharedPermanentFlags.contains(Flags.Flag.DRAFT) ||
+                sharedPermanentFlags.contains(Flags.Flag.FLAGGED) ||
+                sharedPermanentFlags.contains(Flags.Flag.RECENT) ||
+                sharedPermanentFlags.contains(Flags.Flag.USER));
+    }
+
+    private boolean checkSeenFlag(Rfc4314Rights rights, Flags sharedPermanentFlags) {
+        return sharedPermanentFlags.contains(Flags.Flag.SEEN) && rights.contains(Right.WriteSeenFlag);
+    }
+
+    private boolean checkDeleteFlag(Rfc4314Rights rights, Flags sharedPermanentFlags) {
+        return sharedPermanentFlags.contains(Flags.Flag.DELETED) && rights.contains(Right.DeleteMessages);
     }
 
     @Override
