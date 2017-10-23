@@ -73,20 +73,17 @@ Feature: Download GET
 
   Scenario: User cannot download attachment of another user
     Given "alice@domain.tld" mailbox "INBOX" contains a message "1" with an attachment "2"
-    And "bob@domain.tld" has a mailbox "INBOX"
     When "bob@domain.tld" downloads "2"
     Then "alice@domain.tld" should receive a not found response
 
   Scenario: User cannot download message blob of another user
     Given "alice@domain.tld" mailbox "INBOX" contains a message "1" with an attachment "2"
-    And "bob@domain.tld" has a mailbox "INBOX"
     When "bob@domain.tld" downloads "1"
     Then "bob@domain.tld" should receive a not found response
 
   Scenario: User can download attachment of another user when shared mailbox
     Given "alice@domain.tld" mailbox "sharedMailbox" contains a message "1" with an attachment "2"
     And "alice@domain.tld" shares its mailbox "sharedMailbox" with "bob@domain.tld"
-    And "bob@domain.tld" has a mailbox "sharedMailbox"
     When "bob@domain.tld" downloads "2"
     Then he can read that blob
     And the blob size is 3071
@@ -94,7 +91,6 @@ Feature: Download GET
   Scenario: User can download message blob of another user when shared mailbox
     Given "alice@domain.tld" mailbox "sharedMailbox" contains a message "1" with an attachment "2"
     And "alice@domain.tld" shares its mailbox "sharedMailbox" with "bob@domain.tld"
-    And "bob@domain.tld" has a mailbox "sharedMailbox"
     When "bob@domain.tld" downloads "1"
     Then he can read that blob
     And the blob size is 4963
