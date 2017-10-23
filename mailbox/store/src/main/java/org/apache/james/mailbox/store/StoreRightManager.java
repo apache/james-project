@@ -59,32 +59,39 @@ public class StoreRightManager implements RightManager {
 
     @Override
     public boolean hasRight(MailboxPath mailboxPath, Right right, MailboxSession session) throws MailboxException {
-        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
-        return hasRight(mailbox, right, session);
+        return myRights(mailboxPath, session).contains(right);
+    }
+
+    @Override
+    public boolean hasRight(MailboxId mailboxId, Right right, MailboxSession session) throws MailboxException {
+        return myRights(mailboxId, session).contains(right);
     }
 
     public boolean hasRight(Mailbox mailbox, Right right, MailboxSession session) throws MailboxException {
-        MailboxSession.User user = session.getUser();
-        String userName = user != null ? user.getUserName() : null;
-        boolean resourceOwnerIsGroup = new GroupFolderResolver(session).isGroupFolder(mailbox);
-
-        return aclResolver.hasRight(userName, groupMembershipResolver, right, mailbox.getACL(), mailbox.getUser(),
-                                    resourceOwnerIsGroup);
+        return myRights(mailbox, session).contains(right);
     }
 
     @Override
     public Rfc4314Rights myRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
-        return myRights(session, mailbox);
+        return myRights(mailbox, session);
     }
 
     @Override
     public Rfc4314Rights myRights(MailboxId mailboxId, MailboxSession session) throws MailboxException {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = mapper.findMailboxById(mailboxId);
-        return myRights(session, mailbox);
+        return myRights(mailbox, session);
+    }
+
+    public Rfc4314Rights myRights(Mailbox mailbox, MailboxSession session) throws UnsupportedRightException {
+        MailboxSession.User user = session.getUser();
+        if (user != null) {
+            return aclResolver.resolveRights(user.getUserName(), groupMembershipResolver, mailbox.getACL(), mailbox.getUser(), new GroupFolderResolver(session).isGroupFolder(mailbox));
+        } else {
+            return MailboxACL.NO_RIGHTS;
+        }
     }
 
     @Override
@@ -109,7 +116,7 @@ public class StoreRightManager implements RightManager {
     }
 
     public boolean isReadWrite(MailboxSession session, Mailbox mailbox, Flags sharedPermanentFlags) throws UnsupportedRightException {
-        return aclResolver.isReadWrite(myRights(session, mailbox), sharedPermanentFlags);
+        return aclResolver.isReadWrite(myRights(mailbox, session), sharedPermanentFlags);
     }
 
     @Override
@@ -151,14 +158,5 @@ public class StoreRightManager implements RightManager {
             return acl;
         }
         return new MailboxACL(ImmutableMap.of(userAsKey, rights));
-    }
-
-    private Rfc4314Rights myRights(MailboxSession session, Mailbox mailbox) throws UnsupportedRightException {
-        MailboxSession.User user = session.getUser();
-        if (user != null) {
-            return aclResolver.resolveRights(user.getUserName(), groupMembershipResolver, mailbox.getACL(), mailbox.getUser(), new GroupFolderResolver(session).isGroupFolder(mailbox));
-        } else {
-            return MailboxACL.NO_RIGHTS;
-        }
     }
 }

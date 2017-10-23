@@ -56,36 +56,6 @@ public interface MailboxACLResolver {
     MailboxACL applyGlobalACL(MailboxACL resourceACL, boolean resourceOwnerIsGroup) throws UnsupportedRightException;
 
     /**
-     * Tells whether the given user has the given right granted on the basis of
-     * the given resourceACL. Global ACL (if there is any) should be applied
-     * within this method.
-     * 
-     * @param requestUser
-     *            the user for whom the given right is tested, possibly
-     *            <code>null</code> when there is no authenticated user in the
-     *            given context.
-     * @param groupMembershipResolver
-     *            this resolver is used when checking whether any group rights
-     *            contained in resourceACL are applicable for the requestUser.
-     * @param right
-     *            the right which will be proven to apply for the given
-     *            requestUser.
-     * @param resourceACL
-     *            the ACL defining the access right for the resource in
-     *            question.
-     * @param resourceOwner
-     *            this user name is used as a replacement for the "owner" place
-     *            holder in the resourceACL.
-     * @param resourceOwnerIsGroup
-     *            true if the resourceOwner is a group of users, false
-     *            otherwise.
-     * @return true if the given user has the given right for the given
-     *         resource; false otherwise.
-     * @throws UnsupportedRightException
-     */
-    boolean hasRight(String requestUser, GroupMembershipResolver groupMembershipResolver, MailboxACL.Right right, MailboxACL resourceACL, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException;
-
-    /**
      * Maps the given {@code mailboxACLRights} to READ-WRITE and READ-ONLY
      * response codes.
      * 

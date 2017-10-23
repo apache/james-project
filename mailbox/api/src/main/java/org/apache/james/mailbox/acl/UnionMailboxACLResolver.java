@@ -235,50 +235,6 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.MailboxACLResolver#hasRight(java.
-     *      lang.String, org.apache.james.mailbox.store.mail.MailboxACLResolver.
-     *      GroupMembershipResolver,
-     *      org.apache.james.mailbox.MailboxACL.Right,
-     *      org.apache.james.mailbox.MailboxACL, java.lang.String)
-     */
-    @Override
-    public boolean hasRight(String requestUser, GroupMembershipResolver groupMembershipResolver, Right right, MailboxACL resourceACL, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException {
-        final EntryKey queryKey = requestUser == null ? null : new EntryKey(requestUser, NameType.user, false);
-        boolean result = false;
-        Map<EntryKey, Rfc4314Rights> entries = resourceOwnerIsGroup ? groupGlobalACL.getEntries() : userGlobalACL.getEntries();
-        if (entries != null) {
-            for (Entry<EntryKey, Rfc4314Rights> entry : entries.entrySet()) {
-                final EntryKey key = entry.getKey();
-                if (applies(key, queryKey, groupMembershipResolver, resourceOwner, resourceOwnerIsGroup) && entry.getValue().contains(right)) {
-                    if (key.isNegative()) {
-                        return false;
-                    } else {
-                        result = true;
-                    }
-                }
-            }
-        }
-
-        if (resourceACL != null) {
-            entries = resourceACL.getEntries();
-            if (entries != null) {
-                for (Entry<EntryKey, Rfc4314Rights> entry : entries.entrySet()) {
-                    final EntryKey key = entry.getKey();
-                    if (applies(key, queryKey, groupMembershipResolver, resourceOwner, resourceOwnerIsGroup) && entry.getValue().contains(right)) {
-                        if (key.isNegative()) {
-                            return false;
-                        } else {
-                            result = true;
-                        }
-                    }
-                }
-            }
-        }
-
-        return result;
-    }
-
-    /**
      * @see org.apache.james.mailbox.acl.MailboxACLResolver#isReadWrite(org.apache.james.mailbox.model.Rfc4314Rights,
      *      javax.mail.Flags)
      */

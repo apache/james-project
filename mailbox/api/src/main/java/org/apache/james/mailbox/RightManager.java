@@ -20,10 +20,12 @@
 package org.apache.james.mailbox;
 
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mime4j.dom.address.Mailbox;
 
 public interface RightManager {
     /**
@@ -40,6 +42,19 @@ public interface RightManager {
      */
     boolean hasRight(MailboxPath mailboxPath, Right right, MailboxSession session) throws MailboxException;
 
+    /**
+     * Tells whether the given {@link MailboxSession}'s user has the given
+     * {@link MailboxACL.Right} for this {@link MessageManager}'s mailbox.
+     *
+     * @param mailboxId MailboxId of the mailbox we want to check
+     * @param right Right we want to check.
+     * @param session Session of the user we want to check this right against.
+     * @return true if the given {@link MailboxSession}'s user has the given
+     *         {@link MailboxACL.Right} for this {@link MessageManager}'s
+     *         mailbox; false otherwise.
+     * @throws MailboxException in case of unknown mailbox or unsupported right
+     */
+    boolean hasRight(MailboxId mailboxId, Right right, MailboxSession session) throws MailboxException;
     /**
      * Computes a result suitable for the LISTRIGHTS IMAP command. The result is
      * computed for this mailbox and the given {@code identifier}.
