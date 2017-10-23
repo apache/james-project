@@ -25,6 +25,7 @@ Feature: GetMessages method
     Given a domain named "domain.tld"
     And a user "alice@domain.tld"
     And a user "bob@domain.tld"
+    And a user "cedric@domain.tld"
     And "alice@domain.tld" has a mailbox "INBOX"
 
   Scenario: Retrieving a message in several mailboxes should return a single message in these mailboxes
@@ -44,6 +45,14 @@ Feature: GetMessages method
     Then no error is returned
     And the list should contain 1 message
     And the id of the message is "m1"
+
+  Scenario: Retrieving a message in a mailbox delegated to someone else
+    Given "alice@domain.tld" has a mailbox "shared"
+    And "alice@domain.tld" shares its mailbox "shared" with "bob@domain.tld"
+    And "alice@domain.tld" has a message "m1" in "shared" mailbox with subject "my test subject", content "testmail"
+    When "cedric@domain.tld" ask for messages "m1"
+    Then no error is returned
+    And the list of messages is empty
 
   Scenario: Retrieving a message in a mailbox not delegated to me
     Given "alice@domain.tld" has a mailbox "notShared"
