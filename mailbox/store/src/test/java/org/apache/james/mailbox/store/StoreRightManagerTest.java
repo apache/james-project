@@ -29,7 +29,6 @@ import static org.mockito.Mockito.when;
 
 import javax.mail.Flags;
 
-import com.google.common.collect.ImmutableMap;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
@@ -37,6 +36,7 @@ import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
+import org.apache.james.mailbox.fixture.MailboxFixture;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Right;
@@ -55,7 +55,6 @@ public class StoreRightManagerTest {
     private StoreRightManager storeRightManager;
     private MailboxACLResolver mailboxAclResolver;
     private GroupMembershipResolver groupMembershipResolver;
-    private String alice;
     private MockMailboxSession aliceSession;
 
     @Rule
@@ -64,8 +63,7 @@ public class StoreRightManagerTest {
 
     @Before
     public void setup() throws MailboxException {
-        alice = "Alice";
-        aliceSession = new MockMailboxSession(alice);
+        aliceSession = new MockMailboxSession(MailboxFixture.ALICE);
         MailboxSessionMapperFactory mockedMapperFactory = mock(MailboxSessionMapperFactory.class);
         mockedMailboxMapper = mock(MailboxMapper.class);
         mailboxAclResolver = new UnionMailboxACLResolver();
@@ -81,15 +79,16 @@ public class StoreRightManagerTest {
     public void hasRightShouldThrowMailboxNotFoundExceptionWhenMailboxDoesNotExist() throws MailboxException {
         expectedException.expect(MailboxNotFoundException.class);
 
-        MailboxPath mailboxPath = MailboxPath.forUser(alice, "unexisting mailbox");
-        when(mockedMailboxMapper.findMailboxByPath(mailboxPath)).thenThrow(MailboxNotFoundException.class);
+        MailboxPath mailboxPath = MailboxPath.forUser(MailboxFixture.ALICE, "unexisting mailbox");
+        when(mockedMailboxMapper.findMailboxByPath(mailboxPath))
+            .thenThrow(new MailboxNotFoundException(""));
         storeRightManager.hasRight(mailboxPath, Right.Read, aliceSession);
     }
 
     @Test
     public void hasRightShouldReturnTrueWhenTheUserOwnTheMailbox() throws MailboxException {
         Mailbox mailbox = mock(Mailbox.class);
-        when(mailbox.getUser()).thenReturn(alice);
+        when(mailbox.getUser()).thenReturn(MailboxFixture.ALICE);
 
         assertThat(storeRightManager.hasRight(mailbox, Right.Write, aliceSession))
             .isFalse();
@@ -98,8 +97,8 @@ public class StoreRightManagerTest {
     @Test
     public void hasRightShouldReturnTrueWhenTheUserDoesnotOwnTheMailboxButHaveTheCorrectRightOnIt() throws MailboxException {
         Mailbox mailbox = mock(Mailbox.class);
-        when(mailbox.getUser()).thenReturn("bob");
-        when(mailbox.getACL()).thenReturn(new MailboxACL(new MailboxACL.Entry(alice, Right.Write)));
+        when(mailbox.getUser()).thenReturn(MailboxFixture.BOB);
+        when(mailbox.getACL()).thenReturn(new MailboxACL(new MailboxACL.Entry(MailboxFixture.ALICE, Right.Write)));
 
         assertThat(storeRightManager.hasRight(mailbox, Right.Write, aliceSession))
             .isTrue();
@@ -108,8 +107,8 @@ public class StoreRightManagerTest {
     @Test
     public void hasRightShouldReturnTrueWhenTheUserDoesnotOwnTheMailboxButHasAtLeastTheCorrectRightOnIt() throws MailboxException {
         Mailbox mailbox = mock(Mailbox.class);
-        when(mailbox.getUser()).thenReturn("bob");
-        when(mailbox.getACL()).thenReturn(new MailboxACL(new MailboxACL.Entry(alice, Right.Write, Right.Lookup)));
+        when(mailbox.getUser()).thenReturn(MailboxFixture.BOB);
+        when(mailbox.getACL()).thenReturn(new MailboxACL(new MailboxACL.Entry(MailboxFixture.ALICE, Right.Write, Right.Lookup)));
 
         assertThat(storeRightManager.hasRight(mailbox, Right.Write, aliceSession))
             .isTrue();
@@ -118,7 +117,7 @@ public class StoreRightManagerTest {
     @Test
     public void hasRightShouldReturnFalseWhenTheUserDoesNotOwnTheMailboxAndHasNoRightOnIt() throws MailboxException {
         Mailbox mailbox = mock(Mailbox.class);
-        when(mailbox.getUser()).thenReturn("bob");
+        when(mailbox.getUser()).thenReturn(MailboxFixture.BOB);
 
         assertThat(storeRightManager.hasRight(mailbox, Right.Write, aliceSession))
             .isFalse();
@@ -128,7 +127,7 @@ public class StoreRightManagerTest {
     public void isReadWriteShouldReturnTrueWhenUserHasInsertRightOnMailbox() throws Exception {
         Mailbox mailbox = mock(Mailbox.class);
         Flags flags = new Flags();
-        when(mailbox.getACL()).thenReturn(new MailboxACL(new MailboxACL.Entry(alice, Right.Insert)));
+        when(mailbox.getACL()).thenReturn(new MailboxACL(new MailboxACL.Entry(MailboxFixture.ALICE, Right.Insert)));
         assertThat(storeRightManager.isReadWrite(aliceSession, mailbox, flags))
             .isTrue();
     }
@@ -137,7 +136,7 @@ public class StoreRightManagerTest {
     public void isReadWriteShouldReturnTrueWhenUserHasPerformExpungeRightOnMailbox() throws Exception {
         Mailbox mailbox = mock(Mailbox.class);
         Flags flags = new Flags();
-        when(mailbox.getACL()).thenReturn(new MailboxACL(new MailboxACL.Entry(alice, Right.PerformExpunge)));
+        when(mailbox.getACL()).thenReturn(new MailboxACL(new MailboxACL.Entry(MailboxFixture.ALICE, Right.PerformExpunge)));
         assertThat(storeRightManager.isReadWrite(aliceSession, mailbox, flags))
             .isTrue();
     }
@@ -146,7 +145,7 @@ public class StoreRightManagerTest {
     public void isReadWriteShouldReturnTrueWhenUserHasDeleteMessagesRightOnMailboxAndFlagsContainDeletedFlag() throws Exception {
         Mailbox mailbox = mock(Mailbox.class);
         Flags flags = new Flags(Flags.Flag.DELETED);
-        when(mailbox.getACL()).thenReturn(new MailboxACL(new MailboxACL.Entry(alice, Right.DeleteMessages)));
+        when(mailbox.getACL()).thenReturn(new MailboxACL(new MailboxACL.Entry(MailboxFixture.ALICE, Right.DeleteMessages)));
         assertThat(storeRightManager.isReadWrite(aliceSession, mailbox, flags))
             .isTrue();
     }
@@ -155,7 +154,7 @@ public class StoreRightManagerTest {
     public void isReadWriteShouldReturnFalseWhenUserHasDeleteMessagesRightOnMailboxButFlagsDoesNotContainDeletedFlag() throws Exception {
         Mailbox mailbox = mock(Mailbox.class);
         Flags flags = new Flags();
-        when(mailbox.getACL()).thenReturn(new MailboxACL(new MailboxACL.Entry(alice, Right.DeleteMessages)));
+        when(mailbox.getACL()).thenReturn(new MailboxACL(new MailboxACL.Entry(MailboxFixture.ALICE, Right.DeleteMessages)));
         assertThat(storeRightManager.isReadWrite(aliceSession, mailbox, flags))
             .isFalse();
     }
@@ -164,7 +163,7 @@ public class StoreRightManagerTest {
     public void isReadWriteShouldReturnTrueWhenUserHasWriteSeenFlagRightOnMailboxAndFlagsContainSeenFlag() throws Exception {
         Mailbox mailbox = mock(Mailbox.class);
         Flags flags = new Flags(Flags.Flag.SEEN);
-        when(mailbox.getACL()).thenReturn(new MailboxACL(new MailboxACL.Entry(alice, Right.WriteSeenFlag)));
+        when(mailbox.getACL()).thenReturn(new MailboxACL(new MailboxACL.Entry(MailboxFixture.ALICE, Right.WriteSeenFlag)));
         assertThat(storeRightManager.isReadWrite(aliceSession, mailbox, flags))
             .isTrue();
     }
@@ -173,7 +172,7 @@ public class StoreRightManagerTest {
     public void isReadWriteShouldReturnFalseWhenUserHasWriteSeenFlagRightOnMailboxAndFlagsDoesNotContainSeenFlag() throws Exception {
         Mailbox mailbox = mock(Mailbox.class);
         Flags flags = new Flags();
-        when(mailbox.getACL()).thenReturn(new MailboxACL(new MailboxACL.Entry(alice, Right.WriteSeenFlag)));
+        when(mailbox.getACL()).thenReturn(new MailboxACL(new MailboxACL.Entry(MailboxFixture.ALICE, Right.WriteSeenFlag)));
         assertThat(storeRightManager.isReadWrite(aliceSession, mailbox, flags))
             .isFalse();
     }
@@ -182,7 +181,7 @@ public class StoreRightManagerTest {
     public void isReadWriteShouldReturnTrueWhenUserHasWriteRightOnMailboxAndFlagsContainAnsweredFlag() throws Exception {
         Mailbox mailbox = mock(Mailbox.class);
         Flags flags = new Flags(Flags.Flag.ANSWERED);
-        when(mailbox.getACL()).thenReturn(new MailboxACL(new MailboxACL.Entry(alice, Right.Write)));
+        when(mailbox.getACL()).thenReturn(new MailboxACL(new MailboxACL.Entry(MailboxFixture.ALICE, Right.Write)));
         assertThat(storeRightManager.isReadWrite(aliceSession, mailbox, flags))
             .isTrue();
     }
@@ -190,7 +189,7 @@ public class StoreRightManagerTest {
     @Test
     public void isReadWriteShouldReturnFalseWhenUserDoesNotHaveInsertOrPerformExpungeRightOnMailboxAndNullFlag() throws Exception {
         Mailbox mailbox = mock(Mailbox.class);
-        when(mailbox.getACL()).thenReturn(new MailboxACL(new MailboxACL.Entry(alice, Right.Administer)));
+        when(mailbox.getACL()).thenReturn(new MailboxACL(new MailboxACL.Entry(MailboxFixture.ALICE, Right.Administer)));
         assertThat(storeRightManager.isReadWrite(aliceSession, mailbox, new Flags()))
             .isFalse();
     }

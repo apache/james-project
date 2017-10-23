@@ -22,6 +22,7 @@ package org.apache.james.mailbox.store;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
+import com.github.fge.lambdas.Throwing;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.RightManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
@@ -41,6 +42,9 @@ import org.apache.james.mailbox.store.transaction.Mapper;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
+
+import java.util.Optional;
+import java.util.function.Function;
 
 public class StoreRightManager implements RightManager {
 
@@ -87,11 +91,17 @@ public class StoreRightManager implements RightManager {
 
     public Rfc4314Rights myRights(Mailbox mailbox, MailboxSession session) throws UnsupportedRightException {
         MailboxSession.User user = session.getUser();
-        if (user != null) {
-            return aclResolver.resolveRights(user.getUserName(), groupMembershipResolver, mailbox.getACL(), mailbox.getUser(), new GroupFolderResolver(session).isGroupFolder(mailbox));
-        } else {
-            return MailboxACL.NO_RIGHTS;
-        }
+
+        return Optional.ofNullable(user)
+            .map(Throwing.function(value ->
+                aclResolver.resolveRights(
+                    user.getUserName(),
+                    groupMembershipResolver,
+                    mailbox.getACL(),
+                    mailbox.getUser(),
+                    new GroupFolderResolver(session).isGroupFolder(mailbox)))
+                .sneakyThrow())
+            .orElse(MailboxACL.NO_RIGHTS);
     }
 
     @Override
@@ -106,13 +116,6 @@ public class StoreRightManager implements RightManager {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
         mapper.execute(Mapper.toTransaction(() -> mapper.updateACL(mailbox, mailboxACLCommand)));
-    }
-
-    @Override
-    public void setRights(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
-        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
-        mapper.execute(Mapper.toTransaction(() -> mapper.setACL(mailbox, mailboxACL)));
     }
 
     public boolean isReadWrite(MailboxSession session, Mailbox mailbox, Flags sharedPermanentFlags) throws UnsupportedRightException {
@@ -153,7 +156,20 @@ public class StoreRightManager implements RightManager {
     public void setRights(MailboxId mailboxId, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = mapper.findMailboxById(mailboxId);
+
         setRights(mailbox.generateAssociatedPath(), mailboxACL, session);
+    }
+
+    @Override
+    public void setRights(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
+        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
+
+        setRights(mailboxACL, mapper, mailbox);
+    }
+
+    private void setRights(MailboxACL mailboxACL, MailboxMapper mapper, Mailbox mailbox) throws MailboxException {
+        mapper.execute(Mapper.toTransaction(() -> mapper.setACL(mailbox, mailboxACL)));
     }
 
     /**
@@ -182,6 +198,7 @@ public class StoreRightManager implements RightManager {
         if (mailboxSession.getUser().isSameUser(mailbox.getUser())) {
             return acl;
         }
+
         MailboxACL.EntryKey userAsKey = MailboxACL.EntryKey.createUserEntryKey(mailboxSession.getUser().getUserName());
         Rfc4314Rights rights = acl.getEntries().getOrDefault(userAsKey, new Rfc4314Rights());
         if (rights.contains(MailboxACL.Right.Administer)) {
