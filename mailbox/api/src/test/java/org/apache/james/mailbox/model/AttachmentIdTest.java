@@ -29,21 +29,21 @@ import org.junit.Test;
 public class AttachmentIdTest {
 
     @Test
-    public void forPayloadAndTypeShouldCalculateTheUnderlyingSha1() {
+    public void forPayloadAndTypeShouldCalculateTheUnderlyingSha256() {
         AttachmentId attachmentId = AttachmentId.forPayloadAndType("payload".getBytes(), "text/plain");
-        String expectedId = "826b0786f04e07525a36be70f84c647af7b73059";
+        String expectedId = "d3a2642ee092a1b32c0a83cf94fc2499f7495b7b91b1bd434302a0a4c2aa4278";
         assertThat(attachmentId.getId()).isEqualTo(expectedId);
     }
 
     @Test
-    public void forPayloadAndTypeShouldCalculateDifferentSha1WhenContentTypeIsDifferent() {
+    public void forPayloadAndTypeShouldCalculateDifferentSha256WhenContentTypeIsDifferent() {
         AttachmentId attachmentId = AttachmentId.forPayloadAndType("payload".getBytes(), "text/plain");
         AttachmentId attachmentId2 = AttachmentId.forPayloadAndType("payload".getBytes(), "text/html");
         assertThat(attachmentId.getId()).isNotEqualTo(attachmentId2.getId());
     }
 
     @Test
-    public void forPayloadAndTypeShouldCalculateSameSha1WhenMimeTypeIsSameButNotParameters() {
+    public void forPayloadAndTypeShouldCalculateSameSha256WhenMimeTypeIsSameButNotParameters() {
         AttachmentId attachmentId = AttachmentId.forPayloadAndType("payload".getBytes(), "text/html; charset=UTF-8");
         AttachmentId attachmentId2 = AttachmentId.forPayloadAndType("payload".getBytes(), "text/html; charset=UTF-16");
         assertThat(attachmentId.getId()).isEqualTo(attachmentId2.getId());

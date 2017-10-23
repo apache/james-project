@@ -47,10 +47,10 @@ public class AttachmentId {
     }
 
     private static String computeRawId(final byte[] payload, final String contentType) {
-        return DigestUtils.sha1Hex(
+        return DigestUtils.sha256Hex(
             Bytes.concat(
                 asMimeType(contentType).getBytes(StandardCharsets.UTF_8),
-                DigestUtils.sha1Hex(payload).getBytes(StandardCharsets.UTF_8)));
+                DigestUtils.sha256Hex(payload).getBytes(StandardCharsets.UTF_8)));
     }
 
     @VisibleForTesting static String asMimeType(String contentType) {
