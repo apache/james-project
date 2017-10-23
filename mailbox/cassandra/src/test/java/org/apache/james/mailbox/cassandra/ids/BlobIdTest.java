@@ -71,13 +71,13 @@ public class BlobIdTest {
     public void forPayloadShouldHashEmptyArray() {
         BlobId blobId = BlobId.forPayload(new byte[0]);
 
-        assertThat(blobId.getId()).isEqualTo("da39a3ee5e6b4b0d3255bfef95601890afd80709");
+        assertThat(blobId.getId()).isEqualTo("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
     }
 
     @Test
     public void forPayloadShouldHashArray() {
         BlobId blobId = BlobId.forPayload("content".getBytes(Charsets.UTF_8));
 
-        assertThat(blobId.getId()).isEqualTo("040f06fd774092478d450774f5ba30c5da78acc8");
+        assertThat(blobId.getId()).isEqualTo("ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73");
     }
 }
