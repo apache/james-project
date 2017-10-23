@@ -25,6 +25,7 @@ Feature: Download GET
     Given a domain named "domain.tld"
     And a user "alice@domain.tld"
     And a user "bob@domain.tld"
+    And a user "cedric@domain.tld"
     And "alice@domain.tld" has a mailbox "INBOX"
     And "alice@domain.tld" has a mailbox "sharedMailbox"
 
@@ -97,3 +98,15 @@ Feature: Download GET
     When "bob@domain.tld" downloads "1"
     Then he can read that blob
     And the blob size is 4963
+
+  Scenario: Attachment read delegation should be user specific
+    Given "alice@domain.tld" mailbox "sharedMailbox" contains a message "1" with an attachment "2"
+    And "alice@domain.tld" shares its mailbox "sharedMailbox" with "bob@domain.tld"
+    When "cedric@domain.tld" downloads "1"
+    Then "cedric@domain.tld" should receive a not found response
+
+  Scenario: Message download read delegation should be user specific
+    Given "alice@domain.tld" mailbox "sharedMailbox" contains a message "1" with an attachment "2"
+    And "alice@domain.tld" shares its mailbox "sharedMailbox" with "bob@domain.tld"
+    When "cedric@domain.tld" downloads "2"
+    Then "cedric@domain.tld" should receive a not found response
