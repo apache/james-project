@@ -116,7 +116,38 @@ public class StoreRightManager implements RightManager {
     }
 
     public boolean isReadWrite(MailboxSession session, Mailbox mailbox, Flags sharedPermanentFlags) throws UnsupportedRightException {
-        return aclResolver.isReadWrite(myRights(mailbox, session), sharedPermanentFlags);
+        return isReadWrite(myRights(mailbox, session), sharedPermanentFlags);
+    }
+
+    private boolean isReadWrite(Rfc4314Rights rights, Flags sharedPermanentFlags) {
+        if (rights.contains(Right.Insert) || rights.contains(Right.PerformExpunge)) {
+            return true;
+        }
+
+        /*
+         * then go through shared flags. RFC 4314 section 4:
+         * Changing flags: STORE
+         * - the server MUST check if the user has "t" right
+         * - when the user modifies \Deleted flag "s" right
+         * - when the user modifies \Seen flag "w" right - for all other message flags.
+         */
+       if (sharedPermanentFlags != null) {
+            if (sharedPermanentFlags.contains(Flags.Flag.DELETED) && rights.contains(Right.DeleteMessages)) {
+                return true;
+            } else if (sharedPermanentFlags.contains(Flags.Flag.SEEN) && rights.contains(Right.WriteSeenFlag)) {
+                return true;
+            } else {
+                boolean hasWriteRight = rights.contains(Right.Write);
+                return hasWriteRight &&
+                    (sharedPermanentFlags.contains(Flags.Flag.ANSWERED) ||
+                    sharedPermanentFlags.contains(Flags.Flag.DRAFT) ||
+                    sharedPermanentFlags.contains(Flags.Flag.FLAGGED) ||
+                    sharedPermanentFlags.contains(Flags.Flag.RECENT) ||
+                    sharedPermanentFlags.contains(Flags.Flag.USER));
+            }
+        }
+
+        return false;
     }
 
     @Override

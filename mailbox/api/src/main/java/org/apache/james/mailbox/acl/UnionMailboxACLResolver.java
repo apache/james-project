@@ -235,41 +235,6 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
     }
 
     /**
-     * @see org.apache.james.mailbox.acl.MailboxACLResolver#isReadWrite(org.apache.james.mailbox.model.Rfc4314Rights,
-     *      javax.mail.Flags)
-     */
-    @Override
-    public boolean isReadWrite(Rfc4314Rights Rfc4314Rights, Flags sharedFlags) throws UnsupportedRightException {
-        /* the two fast cases first */
-        if (Rfc4314Rights.contains(MailboxACL.Right.Insert) || Rfc4314Rights.contains(MailboxACL.Right.PerformExpunge)) {
-            return true;
-        }
-        /*
-         * then go through shared flags. RFC 4314 section 4:
-         * 
-         * Changing flags: STORE
-         * 
-         * - the server MUST check if the user has "t" right
-         * 
-         * - when the user modifies \Deleted flag "s" right
-         * 
-         * - when the user modifies \Seen flag "w" right - for all other message
-         * flags.
-         */
-        else if (sharedFlags != null) {
-            if (sharedFlags.contains(Flag.DELETED) && Rfc4314Rights.contains(MailboxACL.Right.DeleteMessages)) {
-                return true;
-            } else if (sharedFlags.contains(Flag.SEEN) && Rfc4314Rights.contains(MailboxACL.Right.WriteSeenFlag)) {
-                return true;
-            } else {
-                boolean hasWriteRight = Rfc4314Rights.contains(MailboxACL.Right.Write);
-                return hasWriteRight && (sharedFlags.contains(Flag.ANSWERED) || sharedFlags.contains(Flag.DRAFT) || sharedFlags.contains(Flag.FLAGGED) || sharedFlags.contains(Flag.RECENT) || sharedFlags.contains(Flag.USER));
-            }
-        }
-        return false;
-    }
-
-    /**
      * The key point of this implementation is that it resolves everything what
      * can be resolved. Let us explain what it means in particular for the
      * implicit (global) rights included in the result:
