@@ -28,21 +28,17 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-import com.github.fge.lambdas.runnable.ThrowingRunnable;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
-import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.model.MailboxConstants;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.runnable.ThrowingRunnable;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Hashing;
 
-import cucumber.api.PendingException;
 import cucumber.api.java.en.Given;
 import cucumber.runtime.java.guice.ScenarioScoped;
-import org.apache.james.mailbox.model.MailboxPath;
 
 @ScenarioScoped
 public class UserStepdefs {

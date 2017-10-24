@@ -19,23 +19,11 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
 import javax.inject.Inject;
 
-import org.apache.james.jmap.api.access.AccessToken;
-import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
-
-import com.github.steveash.guavate.Guavate;
 
 import cucumber.api.java.en.Given;
 import cucumber.runtime.java.guice.ScenarioScoped;

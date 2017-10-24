@@ -143,7 +143,7 @@ public class UploadStepdefs {
 
     @When("^\"([^\"]*)\" checks for the availability of the upload endpoint$")
     public void optionUpload(String username) throws Throwable {
-        AccessToken accessToken = userStepdefs.getTokenForUser(username);
+        userStepdefs.getTokenForUser(username);
         Request request = Request.Options(uploadUri);
         response = request.execute().returnResponse();
     }

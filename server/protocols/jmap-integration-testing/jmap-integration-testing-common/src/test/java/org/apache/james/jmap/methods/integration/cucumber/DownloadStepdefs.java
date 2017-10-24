@@ -194,11 +194,6 @@ public class DownloadStepdefs {
         return request;
     }
 
-    private Request unAuthenticatedDownloadRequest(URIBuilder uriBuilder, String blobId, String username) throws URISyntaxException {
-        Request request = Request.Get(uriBuilder.build());
-        return request;
-    }
-
     @When("^\"([^\"]*)\" is trusted for attachment \"([^\"]*)\"$")
     public void attachmentAccessTokenFor(String username, String attachmentId) throws Throwable {
         userStepdefs.connectUser(username);
