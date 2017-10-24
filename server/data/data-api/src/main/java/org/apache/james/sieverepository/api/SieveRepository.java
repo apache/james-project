@@ -26,7 +26,6 @@ import java.util.List;
 import org.apache.james.sieverepository.api.exception.DuplicateException;
 import org.apache.james.sieverepository.api.exception.IsActiveException;
 import org.apache.james.sieverepository.api.exception.QuotaExceededException;
-import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.StorageException;
 import org.joda.time.DateTime;
@@ -35,7 +34,7 @@ import org.joda.time.DateTime;
 /**
  * <code>SieveRepository</code>
  */
-public interface SieveRepository {
+public interface SieveRepository extends SieveQuotaRepository {
 
     String NO_SCRIPT_NAME = "";
 
@@ -67,21 +66,5 @@ public interface SieveRepository {
     void deleteScript(String user, String name) throws ScriptNotFoundException, IsActiveException, StorageException;
     
     void renameScript(String user, String oldName, String newName) throws ScriptNotFoundException, DuplicateException, StorageException;
-
-    boolean hasQuota() throws StorageException;
-    
-    long getQuota() throws QuotaNotFoundException, StorageException;
-    
-    void setQuota(long quota) throws StorageException;
-    
-    void removeQuota() throws QuotaNotFoundException, StorageException;
-    
-    boolean hasQuota(String user) throws StorageException;
-    
-    long getQuota(String user) throws QuotaNotFoundException, StorageException;
-    
-    void setQuota(String user, long quota) throws StorageException;
-    
-    void removeQuota(String user) throws QuotaNotFoundException, StorageException;
 
 }
