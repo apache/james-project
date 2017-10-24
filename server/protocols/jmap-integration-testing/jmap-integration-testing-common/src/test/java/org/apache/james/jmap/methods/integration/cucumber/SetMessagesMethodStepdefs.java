@@ -25,8 +25,6 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
-import org.apache.http.entity.ContentType;
-import org.apache.http.client.fluent.Request;
 import org.apache.james.jmap.model.Keywords;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
@@ -43,25 +41,26 @@ public class SetMessagesMethodStepdefs {
 
     private final MainStepdefs mainStepdefs;
     private final UserStepdefs userStepdefs;
+    private final HttpStepDefs httpStepDefs;
     private final GetMessagesMethodStepdefs getMessagesMethodStepdefs;
 
     @Inject
-    private SetMessagesMethodStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs, GetMessagesMethodStepdefs getMessagesMethodStepdefs) {
+    private SetMessagesMethodStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs, HttpStepDefs httpStepDefs, GetMessagesMethodStepdefs getMessagesMethodStepdefs) {
         this.mainStepdefs = mainStepdefs;
         this.userStepdefs = userStepdefs;
+        this.httpStepDefs = httpStepDefs;
         this.getMessagesMethodStepdefs = getMessagesMethodStepdefs;
     }
 
     @When("^the user move \"([^\"]*)\" to mailbox \"([^\"]*)\"")
     public void moveMessageToMailbox(String message, String mailbox) throws Throwable {
-        String username = userStepdefs.getConnectedUser();
         MessageId messageId = getMessagesMethodStepdefs.getMessageId(message);
         MailboxId mailboxId = mainStepdefs.jmapServer
             .getProbe(MailboxProbeImpl.class)
             .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.getConnectedUser(), mailbox)
             .getMailboxId();
 
-        String requestBody = "[" +
+        httpStepDefs.post("[" +
             "  [" +
             "    \"setMessages\","+
             "    {" +
@@ -71,12 +70,7 @@ public class SetMessagesMethodStepdefs {
             "    }," +
             "    \"#0\"" +
             "  ]" +
-            "]";
-        Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
-            .addHeader("Authorization", userStepdefs.authenticate(username).serialize())
-            .bodyString(requestBody, ContentType.APPLICATION_JSON)
-            .execute()
-            .discardContent();
+            "]");
         mainStepdefs.awaitMethod.run();
     }
 
@@ -92,7 +86,8 @@ public class SetMessagesMethodStepdefs {
             .getMailbox(MailboxConstants.USER_NAMESPACE, userName, destinationMailbox)
             .getMailboxId();
 
-        String requestBody = "[" +
+
+        httpStepDefs.post("[" +
             "  [" +
             "    \"setMessages\","+
             "    {" +
@@ -102,39 +97,29 @@ public class SetMessagesMethodStepdefs {
             "    }," +
             "    \"#0\"" +
             "  ]" +
-            "]";
-        Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
-            .addHeader("Authorization", userStepdefs.authenticate(userName).serialize())
-            .bodyString(requestBody, ContentType.APPLICATION_JSON)
-            .execute()
-            .discardContent();
+            "]");
         mainStepdefs.awaitMethod.run();
     }
 
-    @When("^\"([^\"]*)\" set flags on \"([^\"]*)\" to \"([^\"]*)\"")
-    public void setFlags(String username, String message, List<String> keywords) throws Throwable {
+    @When("^the user set flags on \"([^\"]*)\" to \"([^\"]*)\"")
+    public void setFlags(String message, List<String> keywords) throws Throwable {
         MessageId messageId = getMessagesMethodStepdefs.getMessageId(message);
         String keywordString = keywords
             .stream()
             .map(value -> "\"" + value + "\" : true")
             .collect(Collectors.joining(","));
 
-        Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
-            .addHeader("Authorization", userStepdefs.authenticate(username).serialize())
-            .bodyString("[" +
-                "  [" +
-                "    \"setMessages\","+
-                "    {" +
-                "      \"update\": { \"" + messageId.serialize() + "\" : {" +
-                "        \"keywords\": {" + keywordString + "}" +
-                "      }}" +
-                "    }," +
-                "    \"#0\"" +
-                "  ]" +
-                "]",
-                ContentType.APPLICATION_JSON)
-            .execute()
-            .discardContent();
+        httpStepDefs.post("[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"update\": { \"" + messageId.serialize() + "\" : {" +
+            "        \"keywords\": {" + keywordString + "}" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]");
         mainStepdefs.awaitMethod.run();
     }
 

@@ -29,9 +29,6 @@ import java.util.stream.IntStream;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.entity.ContentType;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -55,11 +52,13 @@ public class SetMailboxesMethodStepdefs {
 
     private final MainStepdefs mainStepdefs;
     private final UserStepdefs userStepdefs;
+    private final HttpStepDefs httpStepDefs;
 
     @Inject
-    private SetMailboxesMethodStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs) {
+    private SetMailboxesMethodStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs, HttpStepDefs httpStepDefs) {
         this.mainStepdefs = mainStepdefs;
         this.userStepdefs = userStepdefs;
+        this.httpStepDefs = httpStepDefs;
     }
 
     @Given("^mailbox \"([^\"]*)\" with (\\d+) messages$")
@@ -81,7 +80,6 @@ public class SetMailboxesMethodStepdefs {
 
     @When("^renaming mailbox \"([^\"]*)\" to \"([^\"]*)\"")
     public void renamingMailbox(String actualMailboxName, String newMailboxName) throws Throwable {
-        String username = userStepdefs.getConnectedUser();
         Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", userStepdefs.getConnectedUser(), actualMailboxName);
         String mailboxId = mailbox.getMailboxId().serialize();
         String requestBody =
@@ -97,11 +95,7 @@ public class SetMailboxesMethodStepdefs {
                     "    \"#0\"" +
                     "  ]" +
                     "]";
-        Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
-            .addHeader("Authorization", userStepdefs.authenticate(username).serialize())
-            .bodyString(requestBody, ContentType.APPLICATION_JSON)
-            .execute()
-            .discardContent();
+        httpStepDefs.post(requestBody);
     }
 
     @When("^moving mailbox \"([^\"]*)\" to \"([^\"]*)\"$")
@@ -125,12 +119,7 @@ public class SetMailboxesMethodStepdefs {
                     "    \"#0\"" +
                     "  ]" +
                     "]";
-
-        Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
-            .addHeader("Authorization", userStepdefs.authenticate(username).serialize())
-            .bodyString(requestBody, ContentType.APPLICATION_JSON)
-            .execute()
-            .discardContent();
+        httpStepDefs.post(requestBody);
     }
 
     @Then("^mailbox \"([^\"]*)\" contains (\\d+) messages$")
@@ -141,13 +130,12 @@ public class SetMailboxesMethodStepdefs {
         String mailboxId = mailbox.getMailboxId().serialize();
 
         Awaitility.await().atMost(Duration.FIVE_SECONDS).pollDelay(slowPacedPollInterval).pollInterval(slowPacedPollInterval).until(() -> {
-            HttpResponse response = Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
-                    .addHeader("Authorization", userStepdefs.authenticate(username).serialize())
-                    .bodyString("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]", ContentType.APPLICATION_JSON)
-                    .execute().returnResponse();
+            String requestBody = "[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]";
 
-            assertThat(response.getStatusLine().getStatusCode()).isEqualTo(200);
-            DocumentContext jsonPath = JsonPath.parse(response.getEntity().getContent());
+            httpStepDefs.post(requestBody);
+
+            assertThat(httpStepDefs.response.getStatusLine().getStatusCode()).isEqualTo(200);
+            DocumentContext jsonPath = JsonPath.parse(httpStepDefs.response.getEntity().getContent());
             assertThat(jsonPath.<String>read(NAME)).isEqualTo("messageList");
 
             return jsonPath.<List<String>>read(ARGUMENTS + ".messageIds").size() == messageCount;

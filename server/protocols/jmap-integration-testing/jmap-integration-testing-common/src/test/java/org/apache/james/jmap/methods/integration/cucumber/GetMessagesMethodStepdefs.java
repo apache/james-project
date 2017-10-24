@@ -38,8 +38,6 @@ import javax.mail.Flags;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
 import org.apache.james.jmap.DefaultMailboxes;
 import org.apache.james.jmap.methods.integration.cucumber.util.TableRow;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
@@ -58,10 +56,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import com.jayway.jsonpath.Configuration;
-import com.jayway.jsonpath.DocumentContext;
-import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.Option;
 
 import cucumber.api.DataTable;
 import cucumber.api.java.en.Given;
@@ -84,16 +78,17 @@ public class GetMessagesMethodStepdefs {
 
     private final MainStepdefs mainStepdefs;
     private final UserStepdefs userStepdefs;
+    private final HttpStepDefs httpStepDefs;
     private final Map<String, MessageId> messageIdsByName;
 
-    private HttpResponse response;
-    private DocumentContext jsonPath;
     private List<MessageId> requestedMessageIds;
 
     @Inject
-    private GetMessagesMethodStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs) {
+    private GetMessagesMethodStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs,
+                                      HttpStepDefs httpStepDefs) {
         this.mainStepdefs = mainStepdefs;
         this.userStepdefs = userStepdefs;
+        this.httpStepDefs = httpStepDefs;
         this.messageIdsByName = new HashMap<>();
     }
 
@@ -399,7 +394,7 @@ public class GetMessagesMethodStepdefs {
 
     @When("^\the user ask for messages using its accountId$")
     public void postWithAccountId() throws Exception {
-        post("[[\"getMessages\", {\"accountId\": \"1\"}, \"#0\"]]");
+        httpStepDefs.post("[[\"getMessages\", {\"accountId\": \"1\"}, \"#0\"]]");
     }
 
     @When("^\"([^\"]*)\" ask for messages using unknown arguments$")
@@ -409,12 +404,12 @@ public class GetMessagesMethodStepdefs {
 
     @When("^the user ask for messages using unknown arguments$")
     public void postWithUnknownArguments() throws Exception {
-        post("[[\"getMessages\", {\"WAT\": true}, \"#0\"]]");
+        httpStepDefs.post("[[\"getMessages\", {\"WAT\": true}, \"#0\"]]");
     }
 
     @When("^the user ask for messages using invalid argument$")
     public void postWithInvalidArguments() throws Exception {
-        post("[[\"getMessages\", {\"ids\": null}, \"#0\"]]");
+        httpStepDefs.post("[[\"getMessages\", {\"ids\": null}, \"#0\"]]");
     }
 
     @When("^\"([^\"]*)\" ask for messages using invalid argument$")
@@ -424,7 +419,7 @@ public class GetMessagesMethodStepdefs {
 
     @When("^the user ask for messages$")
     public void post() throws Exception {
-        post("[[\"getMessages\", {\"ids\": []}, \"#0\"]]");
+        httpStepDefs.post("[[\"getMessages\", {\"ids\": []}, \"#0\"]]");
     }
 
     @When("^\"(.*?)\" ask for messages$")
@@ -461,7 +456,7 @@ public class GetMessagesMethodStepdefs {
             .map(MessageId::serialize)
             .map(toJsonString())
             .collect(Collectors.joining(",", "[", "]" ));
-        post("[[\"getMessages\", {\"ids\": " + serializedIds + "}, \"#0\"]]");
+        httpStepDefs.post("[[\"getMessages\", {\"ids\": " + serializedIds + "}, \"#0\"]]");
     }
 
     private Function<? super String, ? extends String> toJsonString() {
@@ -488,7 +483,7 @@ public class GetMessagesMethodStepdefs {
             .map(toJsonString())
             .collect(Collectors.joining(",", "[", "]" ));
 
-        post("[[\"getMessages\", {\"ids\": " + serializedIds + ", \"properties\": " + serializedProperties + "}, \"#0\"]]");
+        httpStepDefs.post("[[\"getMessages\", {\"ids\": " + serializedIds + ", \"properties\": " + serializedProperties + "}, \"#0\"]]");
     }
 
     private Pair<String, String> entryToPair(Map.Entry<String, String> entry) {
@@ -499,67 +494,55 @@ public class GetMessagesMethodStepdefs {
         return Joiner.on(": ").join(pair);
     }
 
-    private void post(String requestBody) throws Exception {
-        response = Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
-            .addHeader("Authorization", userStepdefs.authenticate(userStepdefs.getConnectedUser()).serialize())
-            .addHeader("Accept", org.apache.http.entity.ContentType.APPLICATION_JSON.getMimeType())
-            .bodyString(requestBody, org.apache.http.entity.ContentType.APPLICATION_JSON)
-            .execute()
-            .returnResponse();
-        jsonPath = JsonPath.using(Configuration.defaultConfiguration()
-            .addOptions(Option.SUPPRESS_EXCEPTIONS))
-            .parse(response.getEntity().getContent());
-    }
-
     @Then("^an error \"([^\"]*)\" is returned$")
     public void error(String type) throws Exception {
-        assertThat(response.getStatusLine().getStatusCode()).isEqualTo(200);
-        assertThat(jsonPath.<String>read(NAME)).isEqualTo("error");
-        assertThat(jsonPath.<String>read(ARGUMENTS + ".type")).isEqualTo(type);
+        assertThat(httpStepDefs.response.getStatusLine().getStatusCode()).isEqualTo(200);
+        assertThat(httpStepDefs.jsonPath.<String>read(NAME)).isEqualTo("error");
+        assertThat(httpStepDefs.jsonPath.<String>read(ARGUMENTS + ".type")).isEqualTo(type);
     }
 
     @Then("^no error is returned$")
     public void noError() throws Exception {
-        assertThat(response.getStatusLine().getStatusCode()).isEqualTo(200);
-        assertThat(jsonPath.<String>read(NAME)).isEqualTo("messages");
+        assertThat(httpStepDefs.response.getStatusLine().getStatusCode()).isEqualTo(200);
+        assertThat(httpStepDefs.jsonPath.<String>read(NAME)).isEqualTo("messages");
     }
 
     @Then("^the list of unknown messages is empty$")
     public void assertNotFoundIsEmpty() {
-        assertThat(jsonPath.<List<String>>read(ARGUMENTS + ".notFound")).isEmpty();
+        assertThat(httpStepDefs.jsonPath.<List<String>>read(ARGUMENTS + ".notFound")).isEmpty();
     }
 
     @Then("^the list of messages is empty$")
     public void assertListIsEmpty() {
-        assertThat(jsonPath.<List<String>>read(ARGUMENTS + ".list")).isEmpty();
+        assertThat(httpStepDefs.jsonPath.<List<String>>read(ARGUMENTS + ".list")).isEmpty();
     }
 
     @Then("^the description is \"(.*?)\"$")
     public void assertDescription(String description) throws Exception {
-        assertThat(jsonPath.<String>read(ARGUMENTS + ".description")).isEqualTo(description);
+        assertThat(httpStepDefs.jsonPath.<String>read(ARGUMENTS + ".description")).isEqualTo(description);
     }
 
     @Then("^the notFound list should contain \"([^\"]*)\"$")
     public void assertNotFoundListContains(String ids) throws Exception {
-        assertThat(jsonPath.<List<String>>read(ARGUMENTS + ".notFound")).contains(ids);
+        assertThat(httpStepDefs.jsonPath.<List<String>>read(ARGUMENTS + ".notFound")).contains(ids);
     }
 
     @Then("^the notFound list should contain the requested message id$")
     public void assertNotFoundListContainsRequestedMessages() throws Exception {
         ImmutableList<String> elements = requestedMessageIds.stream().map(MessageId::serialize).collect(Guavate.toImmutableList());
-        assertThat(jsonPath.<List<String>>read(ARGUMENTS + ".notFound")).containsExactlyElementsOf(elements);
+        assertThat(httpStepDefs.jsonPath.<List<String>>read(ARGUMENTS + ".notFound")).containsExactlyElementsOf(elements);
     }
 
 
     @Then("^the list should contain (\\d+) message$")
     public void assertListContains(int numberOfMessages) throws Exception {
-        assertThat(jsonPath.<List<String>>read(ARGUMENTS + ".list")).hasSize(numberOfMessages);
+        assertThat(httpStepDefs.jsonPath.<List<String>>read(ARGUMENTS + ".list")).hasSize(numberOfMessages);
     }
 
     @Then("^the id of the message is \"([^\"]*)\"$")
     public void assertIdOfTheFirstMessage(String messageName) throws Exception {
         MessageId id = messageIdsByName.get(messageName);
-        assertThat(jsonPath.<String>read(FIRST_MESSAGE + ".id")).isEqualTo(id.serialize());
+        assertThat(httpStepDefs.jsonPath.<String>read(FIRST_MESSAGE + ".id")).isEqualTo(id.serialize());
     }
 
     @Then("^the message is in \"([^\"]*)\" mailboxes")
@@ -573,7 +556,7 @@ public class GetMessagesMethodStepdefs {
                 .serialize()))
             .distinct()
             .collect(Guavate.toImmutableList());
-        assertThat(jsonPath.<JSONArray>read(FIRST_MESSAGE + ".mailboxIds"))
+        assertThat(httpStepDefs.jsonPath.<JSONArray>read(FIRST_MESSAGE + ".mailboxIds"))
             .hasSize(values.size())
             .containsOnlyElementsOf(values);
     }
@@ -591,7 +574,7 @@ public class GetMessagesMethodStepdefs {
                 .serialize()))
             .distinct()
             .collect(Guavate.toImmutableList());
-        assertThat(jsonPath.<JSONArray>read(FIRST_MESSAGE + ".mailboxIds"))
+        assertThat(httpStepDefs.jsonPath.<JSONArray>read(FIRST_MESSAGE + ".mailboxIds"))
             .hasSize(values.size())
             .containsOnlyElementsOf(values);
     }
@@ -599,44 +582,44 @@ public class GetMessagesMethodStepdefs {
     @Then("^the threadId of the message is \"([^\"]*)\"$")
     public void assertThreadIdOfTheFirstMessage(String threadId) throws Exception {
         MessageId id = messageIdsByName.get(threadId);
-        assertThat(jsonPath.<String>read(FIRST_MESSAGE + ".threadId")).isEqualTo(id.serialize());
+        assertThat(httpStepDefs.jsonPath.<String>read(FIRST_MESSAGE + ".threadId")).isEqualTo(id.serialize());
     }
 
     @Then("^the subject of the message is \"([^\"]*)\"$")
     public void assertSubjectOfTheFirstMessage(String subject) throws Exception {
-        assertThat(jsonPath.<String>read(FIRST_MESSAGE + ".subject")).isEqualTo(subject);
+        assertThat(httpStepDefs.jsonPath.<String>read(FIRST_MESSAGE + ".subject")).isEqualTo(subject);
     }
 
     @Then("^the textBody of the message is \"([^\"]*)\"$")
     public void assertTextBodyOfTheFirstMessage(String textBody) throws Exception {
-        assertThat(jsonPath.<String>read(FIRST_MESSAGE + ".textBody")).isEqualTo(StringEscapeUtils.unescapeJava(textBody));
+        assertThat(httpStepDefs.jsonPath.<String>read(FIRST_MESSAGE + ".textBody")).isEqualTo(StringEscapeUtils.unescapeJava(textBody));
     }
 
     @Then("^the htmlBody of the message is \"([^\"]*)\"$")
     public void assertHtmlBodyOfTheFirstMessage(String htmlBody) throws Exception {
-        assertThat(jsonPath.<String>read(FIRST_MESSAGE + ".htmlBody")).isEqualTo(StringEscapeUtils.unescapeJava(htmlBody));
+        assertThat(httpStepDefs.jsonPath.<String>read(FIRST_MESSAGE + ".htmlBody")).isEqualTo(StringEscapeUtils.unescapeJava(htmlBody));
     }
 
     @Then("^the isUnread of the message is \"([^\"]*)\"$")
     public void assertIsUnreadOfTheFirstMessage(String isUnread) throws Exception {
-        assertThat(jsonPath.<Boolean>read(FIRST_MESSAGE + ".isUnread")).isEqualTo(Boolean.valueOf(isUnread));
+        assertThat(httpStepDefs.jsonPath.<Boolean>read(FIRST_MESSAGE + ".isUnread")).isEqualTo(Boolean.valueOf(isUnread));
     }
 
     @Then("^the preview of the message is \"([^\"]*)\"$")
     public void assertPreviewOfTheFirstMessage(String preview) throws Exception {
-        String actual = jsonPath.<String>read(FIRST_MESSAGE + ".preview").replace("\n", " ");
+        String actual = httpStepDefs.jsonPath.<String>read(FIRST_MESSAGE + ".preview").replace("\n", " ");
         assertThat(actual).isEqualToIgnoringWhitespace(StringEscapeUtils.unescapeJava(preview));
     }
 
     @Then("^the preview of the message is not empty$")
     public void assertPreviewOfTheFirstMessageIsNotEmpty() throws Exception {
-        String actual = jsonPath.<String>read(FIRST_MESSAGE + ".preview");
+        String actual = httpStepDefs.jsonPath.<String>read(FIRST_MESSAGE + ".preview");
         assertThat(actual).isNotEmpty();
     }
 
     @Then("^the preview should not contain consecutive spaces or blank characters$")
     public void assertPreviewShouldBeNormalized() throws Exception {
-        String actual = jsonPath.<String>read(FIRST_MESSAGE + ".preview");
+        String actual = httpStepDefs.jsonPath.<String>read(FIRST_MESSAGE + ".preview");
         assertThat(actual).hasSize(MessagePreviewGenerator.MAX_PREVIEW_LENGTH)
             .doesNotMatch("  ")
             .doesNotContain(StringUtils.CR)
@@ -645,37 +628,37 @@ public class GetMessagesMethodStepdefs {
 
     @Then("^the headers of the message contains:$")
     public void assertHeadersOfTheFirstMessage(DataTable headers) throws Exception {
-        assertThat(jsonPath.<Map<String, String>>read(FIRST_MESSAGE + ".headers")).containsAllEntriesOf(headers.asMap(String.class, String.class));
+        assertThat(httpStepDefs.jsonPath.<Map<String, String>>read(FIRST_MESSAGE + ".headers")).containsAllEntriesOf(headers.asMap(String.class, String.class));
     }
 
     @Then("^the date of the message is \"([^\"]*)\"$")
     public void assertDateOfTheFirstMessage(String date) throws Exception {
-        assertThat(jsonPath.<String>read(FIRST_MESSAGE + ".date")).isEqualTo(date);
+        assertThat(httpStepDefs.jsonPath.<String>read(FIRST_MESSAGE + ".date")).isEqualTo(date);
     }
 
     @Then("^the hasAttachment of the message is \"([^\"]*)\"$")
     public void assertHasAttachmentOfTheFirstMessage(String hasAttachment) throws Exception {
-        assertThat(jsonPath.<Boolean>read(FIRST_MESSAGE + ".hasAttachment")).isEqualTo(Boolean.valueOf(hasAttachment));
+        assertThat(httpStepDefs.jsonPath.<Boolean>read(FIRST_MESSAGE + ".hasAttachment")).isEqualTo(Boolean.valueOf(hasAttachment));
     }
 
     @Then("^the list of attachments of the message is empty$")
     public void assertAttachmentsOfTheFirstMessageIsEmpty() throws Exception {
-        assertThat(jsonPath.<List<Object>>read(ATTACHMENTS)).isEmpty();
+        assertThat(httpStepDefs.jsonPath.<List<Object>>read(ATTACHMENTS)).isEmpty();
     }
 
     @Then("^the property \"([^\"]*)\" of the message is null$")
     public void assertPropertyIsNull(String property) throws Exception {
-        assertThat(jsonPath.<String>read(FIRST_MESSAGE + "." + property + ".date")).isNull();
+        assertThat(httpStepDefs.jsonPath.<String>read(FIRST_MESSAGE + "." + property + ".date")).isNull();
     }
 
     @Then("^the list of attachments of the message contains (\\d+) attachments?$")
     public void assertAttachmentsHasSize(int numberOfAttachments) throws Exception {
-        assertThat(jsonPath.<List<Object>>read(ATTACHMENTS)).hasSize(numberOfAttachments);
+        assertThat(httpStepDefs.jsonPath.<List<Object>>read(ATTACHMENTS)).hasSize(numberOfAttachments);
     }
 
     @Then("^the list of attachments of the message contains only one attachment with cid \"([^\"]*)\"?$")
     public void assertAttachmentsAndItsCid(String cid) throws Exception {
-        assertThat(jsonPath.<String>read(FIRST_ATTACHMENT + ".cid")).isEqualTo(cid);
+        assertThat(httpStepDefs.jsonPath.<String>read(FIRST_ATTACHMENT + ".cid")).isEqualTo(cid);
     }
 
     @Then("^the first attachment is:$")
@@ -690,28 +673,28 @@ public class GetMessagesMethodStepdefs {
 
     @Then("^the preview of the message contains: (.*)$")
     public void assertPreviewOfMessageShouldBePrintedWithEncoding(List<String> preview) throws Exception {
-        String actual = jsonPath.<String>read(FIRST_MESSAGE + ".preview");
+        String actual = httpStepDefs.jsonPath.<String>read(FIRST_MESSAGE + ".preview");
         assertThat(actual).contains(preview);
     }
 
     @Then("^the keywords of the message is (.*)$")
     public void assertKeywordsOfMessageShouldDisplay(List<String> keywords) throws Exception {
-        assertThat(jsonPath.<Map<String, Boolean>>read(FIRST_MESSAGE + ".keywords").keySet())
+        assertThat(httpStepDefs.jsonPath.<Map<String, Boolean>>read(FIRST_MESSAGE + ".keywords").keySet())
             .containsOnlyElementsOf(keywords);
     }
 
     @Then("^the message has no keyword$")
     public void assertMessageHasNoKeyword() throws Exception {
-        assertThat(jsonPath.<Map<String, Boolean>>read(FIRST_MESSAGE + ".keywords"))
+        assertThat(httpStepDefs.jsonPath.<Map<String, Boolean>>read(FIRST_MESSAGE + ".keywords"))
             .isNullOrEmpty();
     }
 
     private void assertAttachment(String attachment, DataTable attachmentProperties) {
         attachmentProperties.asList(TableRow.class)
-            .forEach(entry -> assertThat(jsonPath.<Object>read(attachment + "." + entry.getKey())).isEqualTo(entry.getValue()));
+            .forEach(entry -> assertThat(httpStepDefs.jsonPath.<Object>read(attachment + "." + entry.getKey())).isEqualTo(entry.getValue()));
     }
 
     public String getBlobId() {
-        return jsonPath.<String>read(FIRST_MESSAGE + ".blobId");
+        return httpStepDefs.jsonPath.<String>read(FIRST_MESSAGE + ".blobId");
     }
 }
