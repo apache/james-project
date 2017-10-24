@@ -46,14 +46,14 @@ public class SetMessagesMethodStepdefs {
 
     private final MainStepdefs mainStepdefs;
     private final UserStepdefs userStepdefs;
-    private final HttpStepDefs httpStepDefs;
+    private final HttpClient httpClient;
     private final GetMessagesMethodStepdefs getMessagesMethodStepdefs;
 
     @Inject
-    private SetMessagesMethodStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs, HttpStepDefs httpStepDefs, GetMessagesMethodStepdefs getMessagesMethodStepdefs) {
+    private SetMessagesMethodStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs, HttpClient httpClient, GetMessagesMethodStepdefs getMessagesMethodStepdefs) {
         this.mainStepdefs = mainStepdefs;
         this.userStepdefs = userStepdefs;
-        this.httpStepDefs = httpStepDefs;
+        this.httpClient = httpClient;
         this.getMessagesMethodStepdefs = getMessagesMethodStepdefs;
     }
 
@@ -70,7 +70,7 @@ public class SetMessagesMethodStepdefs {
             .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.getConnectedUser(), mailbox)
             .getMailboxId();
 
-        httpStepDefs.post("[" +
+        httpClient.post("[" +
             "  [" +
             "    \"setMessages\","+
             "    {" +
@@ -101,7 +101,7 @@ public class SetMessagesMethodStepdefs {
             .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.getConnectedUser(), destinationMailbox)
             .getMailboxId();
 
-        httpStepDefs.post("[" +
+        httpClient.post("[" +
             "  [" +
             "    \"setMessages\","+
             "    {" +
@@ -131,7 +131,7 @@ public class SetMessagesMethodStepdefs {
             .getMailbox(MailboxConstants.USER_NAMESPACE, destinationUser, destinationMailbox)
             .getMailboxId();
 
-        httpStepDefs.post("[" +
+        httpClient.post("[" +
             "  [" +
             "    \"setMessages\","+
             "    {" +
@@ -157,7 +157,7 @@ public class SetMessagesMethodStepdefs {
             .getMailbox(MailboxConstants.USER_NAMESPACE, destinationUser, destinationMailbox)
             .getMailboxId();
 
-        httpStepDefs.post("[" +
+        httpClient.post("[" +
             "  [" +
             "    \"setMessages\","+
             "    {" +
@@ -184,7 +184,7 @@ public class SetMessagesMethodStepdefs {
             .map(value -> "\"" + value + "\" : true")
             .collect(Collectors.joining(","));
 
-        httpStepDefs.post("[" +
+        httpClient.post("[" +
             "  [" +
             "    \"setMessages\","+
             "    {" +
@@ -215,7 +215,7 @@ public class SetMessagesMethodStepdefs {
     @Then("^message \"([^\"]*)\" is not updated$")
     public void assertIdOfTheFirstMessage(String messageName) throws Exception {
         MessageId id = getMessagesMethodStepdefs.getMessageId(messageName);
-        assertThat(httpStepDefs.jsonPath.<Map<String, String>>read("[0][1].notUpdated"))
+        assertThat(httpClient.jsonPath.<Map<String, String>>read("[0][1].notUpdated"))
             .containsOnlyKeys(id.serialize());
     }
 

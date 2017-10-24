@@ -52,13 +52,13 @@ public class SetMailboxesMethodStepdefs {
 
     private final MainStepdefs mainStepdefs;
     private final UserStepdefs userStepdefs;
-    private final HttpStepDefs httpStepDefs;
+    private final HttpClient httpClient;
 
     @Inject
-    private SetMailboxesMethodStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs, HttpStepDefs httpStepDefs) {
+    private SetMailboxesMethodStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs, HttpClient httpClient) {
         this.mainStepdefs = mainStepdefs;
         this.userStepdefs = userStepdefs;
-        this.httpStepDefs = httpStepDefs;
+        this.httpClient = httpClient;
     }
 
     @Given("^mailbox \"([^\"]*)\" with (\\d+) messages$")
@@ -95,7 +95,7 @@ public class SetMailboxesMethodStepdefs {
                     "    \"#0\"" +
                     "  ]" +
                     "]";
-        httpStepDefs.post(requestBody);
+        httpClient.post(requestBody);
     }
 
     @When("^moving mailbox \"([^\"]*)\" to \"([^\"]*)\"$")
@@ -119,7 +119,7 @@ public class SetMailboxesMethodStepdefs {
                     "    \"#0\"" +
                     "  ]" +
                     "]";
-        httpStepDefs.post(requestBody);
+        httpClient.post(requestBody);
     }
 
     @Then("^mailbox \"([^\"]*)\" contains (\\d+) messages$")
@@ -132,10 +132,10 @@ public class SetMailboxesMethodStepdefs {
         Awaitility.await().atMost(Duration.FIVE_SECONDS).pollDelay(slowPacedPollInterval).pollInterval(slowPacedPollInterval).until(() -> {
             String requestBody = "[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]";
 
-            httpStepDefs.post(requestBody);
+            httpClient.post(requestBody);
 
-            assertThat(httpStepDefs.response.getStatusLine().getStatusCode()).isEqualTo(200);
-            DocumentContext jsonPath = JsonPath.parse(httpStepDefs.response.getEntity().getContent());
+            assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
+            DocumentContext jsonPath = JsonPath.parse(httpClient.response.getEntity().getContent());
             assertThat(jsonPath.<String>read(NAME)).isEqualTo("messageList");
 
             return jsonPath.<List<String>>read(ARGUMENTS + ".messageIds").size() == messageCount;

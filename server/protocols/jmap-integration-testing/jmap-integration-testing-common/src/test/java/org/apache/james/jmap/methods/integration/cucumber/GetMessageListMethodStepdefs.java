@@ -42,13 +42,13 @@ public class GetMessageListMethodStepdefs {
 
     private static final String ARGUMENTS = "[0][1]";
     private final MainStepdefs mainStepdefs;
-    private final HttpStepDefs httpStepDefs;
+    private final HttpClient httpClient;
     private final GetMessagesMethodStepdefs messagesMethodStepdefs;
 
     @Inject
-    private GetMessageListMethodStepdefs(MainStepdefs mainStepdefs, HttpStepDefs httpStepDefs, GetMessagesMethodStepdefs messagesMethodStepdefs) {
+    private GetMessageListMethodStepdefs(MainStepdefs mainStepdefs, HttpClient httpClient, GetMessagesMethodStepdefs messagesMethodStepdefs) {
         this.mainStepdefs = mainStepdefs;
-        this.httpStepDefs = httpStepDefs;
+        this.httpClient = httpClient;
         this.messagesMethodStepdefs = messagesMethodStepdefs;
     }
 
@@ -63,7 +63,7 @@ public class GetMessageListMethodStepdefs {
                     .serialize())
                 .collect(Guavate.toImmutableList()));
 
-        httpStepDefs.post(String.format(
+        httpClient.post(String.format(
                 "[[\"getMessageList\", {\"filter\":{" +
                 "    \"inMailboxes\":[\"%s\"]," +
                 "    \"hasKeyword\":\"%s\"" +
@@ -79,7 +79,7 @@ public class GetMessageListMethodStepdefs {
             .getMailbox(MailboxConstants.USER_NAMESPACE, username, mailbox)
             .getMailboxId();
 
-        httpStepDefs.post(String.format(
+        httpClient.post(String.format(
                 "[[\"getMessageList\", {\"filter\":{" +
                 "    \"inMailboxes\":[\"%s\"]," +
                 "    \"hasKeyword\":\"%s\"" +
@@ -90,7 +90,7 @@ public class GetMessageListMethodStepdefs {
 
     @When("^the user asks for message list with flag \"([^\"]*)\"$")
     public void getMessageList(String flag) throws Exception {
-        httpStepDefs.post(String.format(
+        httpClient.post(String.format(
             "[[\"getMessageList\", {\"filter\":{" +
                 "    \"hasKeyword\":\"%s\"" +
                 "}}, \"#0\"]]",
@@ -99,20 +99,20 @@ public class GetMessageListMethodStepdefs {
 
     @Then("^the message list is empty$")
     public void assertEmpty() throws Exception {
-        assertThat(httpStepDefs.response.getStatusLine().getStatusCode()).isEqualTo(200);
-        assertThat(httpStepDefs.jsonPath.<List<String>>read(ARGUMENTS + ".messageIds")).isEmpty();
+        assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
+        assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".messageIds")).isEmpty();
     }
 
     @Then("^the message list has size (\\d+)")
     public void assertSize(int size) throws Exception {
-        assertThat(httpStepDefs.response.getStatusLine().getStatusCode()).isEqualTo(200);
-        assertThat(httpStepDefs.jsonPath.<List<String>>read(ARGUMENTS + ".messageIds")).hasSize(size);
+        assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
+        assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".messageIds")).hasSize(size);
     }
 
     @Then("^the message list contains \"([^\"]*)\"")
     public void assertContains(String messsage) throws Exception {
         MessageId messageId = messagesMethodStepdefs.getMessageId(messsage);
-        assertThat(httpStepDefs.response.getStatusLine().getStatusCode()).isEqualTo(200);
-        assertThat(httpStepDefs.jsonPath.<List<String>>read(ARGUMENTS + ".messageIds")).contains(messageId.serialize());
+        assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
+        assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".messageIds")).contains(messageId.serialize());
     }
 }

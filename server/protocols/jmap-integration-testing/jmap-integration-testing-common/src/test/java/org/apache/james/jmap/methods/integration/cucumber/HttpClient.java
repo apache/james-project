@@ -29,7 +29,7 @@ import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
 
-public class HttpStepDefs {
+public class HttpClient {
     private final MainStepdefs mainStepdefs;
     private final UserStepdefs userStepdefs;
 
@@ -37,7 +37,7 @@ public class HttpStepDefs {
     public DocumentContext jsonPath;
 
     @Inject
-    public HttpStepDefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs) {
+    public HttpClient(MainStepdefs mainStepdefs, UserStepdefs userStepdefs) {
         this.mainStepdefs = mainStepdefs;
         this.userStepdefs = userStepdefs;
     }
