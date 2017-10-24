@@ -57,7 +57,6 @@ Feature: SetMessages method on shared folders
     And "alice@domain.tld" moves "mAlice" to mailbox "shared" of user "bob@domain.tld"
     Then "alice@domain.tld" should see message "mAlice" with keywords $Flagged
 
-  @Ignore
   Scenario: A delegated user can add sanitized messages to a shared mailbox when missing "write" right
     Given "bob@domain.tld" shares his mailbox "shared" with "alice@domain.tld" with "lri" rights
     And "alice@domain.tld" sets flags "$Flagged" on message "mAlice"

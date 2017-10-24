@@ -24,6 +24,8 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.time.Instant;
+import java.util.Date;
 
 import javax.mail.Flags;
 
@@ -92,6 +94,7 @@ public class StoreMessageIdManagerTestSystem extends MessageIdManagerTestSystem 
         when(mailboxMessage.getUid()).thenReturn(uid);
         when(mailboxMessage.getModSeq()).thenReturn(MOD_SEQ);
         when(mailboxMessage.getMailboxId()).thenReturn(mailboxId);
+        when(mailboxMessage.getInternalDate()).thenReturn(Date.from(Instant.parse("2007-12-03T10:15:30.00Z")));
         try {
             when(mailboxMessage.getFullContent()).thenReturn(ARRAY_INPUT_STREAM);
         } catch (IOException e) {

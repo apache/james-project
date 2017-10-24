@@ -53,6 +53,8 @@ import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.mailbox.store.mail.model.FlagsFactory;
+import org.apache.james.mailbox.store.mail.model.FlagsFilter;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -295,7 +297,21 @@ public class StoreMessageIdManager implements MessageIdManager {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
 
         for (MailboxId mailboxId : mailboxIds) {
-            SimpleMailboxMessage copy = SimpleMailboxMessage.copy(mailboxId, mailboxMessage);
+            boolean shouldPreserveFlags = mailboxManager.myRights(mailboxId, mailboxSession).contains(Right.Write);
+            SimpleMailboxMessage copy =
+                SimpleMailboxMessage.from(mailboxMessage)
+                    .mailboxId(mailboxId)
+                    .flags(
+                        FlagsFactory
+                            .builder()
+                            .flags(mailboxMessage.createFlags())
+                            .filteringFlags(
+                                FlagsFilter.builder()
+                                    .systemFlagFilter(f -> shouldPreserveFlags)
+                                    .userFlagFilter(f -> shouldPreserveFlags)
+                                    .build())
+                            .build())
+                    .build();
             save(mailboxSession, messageIdMapper, copy);
             dispatcher.added(mailboxSession, mailboxMapper.findMailboxById(mailboxId), copy);
         }

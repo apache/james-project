@@ -43,7 +43,7 @@ public abstract class DelegatingMailboxMessage implements MailboxMessage {
 
     @Override
     public final Flags createFlags() {
-        return FlagsBuilder.createFlags(this, createUserFlags());
+        return FlagsFactory.createFlags(this, createUserFlags());
     }
 
     /**

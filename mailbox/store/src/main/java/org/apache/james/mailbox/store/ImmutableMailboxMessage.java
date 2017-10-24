@@ -36,7 +36,7 @@ import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.mail.model.FlagsBuilder;
+import org.apache.james.mailbox.store.mail.model.FlagsFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 
@@ -266,7 +266,7 @@ public class ImmutableMailboxMessage implements MailboxMessage {
 
     @Override
     public Flags createFlags() {
-        return FlagsBuilder.createFlags(this, userFlags);
+        return FlagsFactory.createFlags(this, userFlags);
     }
 
 }
