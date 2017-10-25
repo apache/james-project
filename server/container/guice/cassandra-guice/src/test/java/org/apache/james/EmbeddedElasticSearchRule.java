@@ -20,7 +20,7 @@
 package org.apache.james;
 
 import org.apache.james.backends.es.EmbeddedElasticSearch;
-import org.apache.james.mailbox.elasticsearch.MailboxElasticsearchConstants;
+import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
 import org.apache.james.modules.TestElasticSearchModule;
 import org.elasticsearch.node.Node;
 import org.junit.rules.RuleChain;
@@ -34,7 +34,7 @@ import com.google.inject.Module;
 public class EmbeddedElasticSearchRule implements GuiceModuleTestRule {
 
     private final TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private final EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX);
+    private final EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
 
     private final RuleChain chain = RuleChain
         .outerRule(temporaryFolder)

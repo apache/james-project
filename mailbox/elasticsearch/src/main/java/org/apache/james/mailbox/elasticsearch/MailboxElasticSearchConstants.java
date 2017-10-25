@@ -23,7 +23,7 @@ import org.apache.james.backends.es.AliasName;
 import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.TypeName;
 
-public interface MailboxElasticsearchConstants {
+public interface MailboxElasticSearchConstants {
     AliasName DEFAULT_MAILBOX_WRITE_ALIAS = new AliasName("mailboxWriteAlias");
     AliasName DEFAULT_MAILBOX_READ_ALIAS = new AliasName("mailboxReadAlias");
     IndexName DEFAULT_MAILBOX_INDEX = new IndexName("mailbox");

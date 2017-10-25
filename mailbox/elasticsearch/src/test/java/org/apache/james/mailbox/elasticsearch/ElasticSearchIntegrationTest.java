@@ -83,7 +83,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
     private static final boolean IS_RECENT = true;
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch= new EmbeddedElasticSearch(temporaryFolder, MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX);
+    private EmbeddedElasticSearch embeddedElasticSearch= new EmbeddedElasticSearch(temporaryFolder, MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
 
     @Rule
     public RuleChain ruleChain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
@@ -111,12 +111,12 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
     protected void initializeMailboxManager() throws Exception {
         Client client = NodeMappingFactory.applyMapping(
             new IndexCreationFactory()
-                .onIndex(MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX)
-                .addAlias( MailboxElasticsearchConstants.DEFAULT_MAILBOX_READ_ALIAS)
-                .addAlias( MailboxElasticsearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS)
+                .onIndex(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX)
+                .addAlias( MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS)
+                .addAlias( MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS)
                 .createIndexAndAliases(new TestingClientProvider(embeddedElasticSearch.getNode()).get()),
-            MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX,
-            MailboxElasticsearchConstants.MESSAGE_TYPE,
+            MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX,
+            MailboxElasticSearchConstants.MESSAGE_TYPE,
             MailboxMappingFactory.getMappingContent());
 
         MailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
@@ -127,14 +127,14 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
                 new DeleteByQueryPerformer(client,
                     Executors.newSingleThreadExecutor(),
                     BATCH_SIZE,
-                    MailboxElasticsearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
-                    MailboxElasticsearchConstants.MESSAGE_TYPE),
-                MailboxElasticsearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
-                MailboxElasticsearchConstants.MESSAGE_TYPE),
+                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
+                    MailboxElasticSearchConstants.MESSAGE_TYPE),
+                MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
+                MailboxElasticSearchConstants.MESSAGE_TYPE),
             new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
                 new InMemoryId.Factory(), messageIdFactory,
-                MailboxElasticsearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
-                MailboxElasticsearchConstants.MESSAGE_TYPE),
+                MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
+                MailboxElasticSearchConstants.MESSAGE_TYPE),
             new MessageToElasticSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES));
         storeMailboxManager = new InMemoryMailboxManager(
             mapperFactory,

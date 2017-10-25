@@ -29,7 +29,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.backends.es.AliasName;
 import org.apache.james.backends.es.IndexName;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
-import org.apache.james.mailbox.elasticsearch.MailboxElasticsearchConstants;
+import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
 import org.apache.james.util.Host;
 import org.junit.Test;
 
@@ -152,7 +152,7 @@ public class ElasticSearchConfigurationTest {
         ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
 
         assertThat(elasticSearchConfiguration.getIndexName())
-            .isEqualTo(MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX);
+            .isEqualTo(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
     }
 
     @Test
@@ -176,7 +176,7 @@ public class ElasticSearchConfigurationTest {
         ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
 
         assertThat(elasticSearchConfiguration.getReadAliasName())
-            .isEqualTo(MailboxElasticsearchConstants.DEFAULT_MAILBOX_READ_ALIAS);
+            .isEqualTo(MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS);
     }
 
 
@@ -201,7 +201,7 @@ public class ElasticSearchConfigurationTest {
         ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
 
         assertThat(elasticSearchConfiguration.getWriteAliasName())
-            .isEqualTo(MailboxElasticsearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS);
+            .isEqualTo(MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS);
     }
 
     @Test

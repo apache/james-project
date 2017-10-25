@@ -27,7 +27,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.backends.es.AliasName;
 import org.apache.james.backends.es.IndexName;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
-import org.apache.james.mailbox.elasticsearch.MailboxElasticsearchConstants;
+import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
 import org.apache.james.util.Host;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -63,13 +63,13 @@ public class ElasticSearchConfiguration {
 
         AliasName readAlias = Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_READ_NAME))
             .map(AliasName::new)
-            .orElse(MailboxElasticsearchConstants.DEFAULT_MAILBOX_READ_ALIAS);
+            .orElse(MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS);
         AliasName writeAlias = Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_WRITE_NAME))
             .map(AliasName::new)
-            .orElse(MailboxElasticsearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS);
+            .orElse(MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS);
         IndexName indexName = Optional.ofNullable(configuration.getString(ELASTICSEARCH_INDEX_NAME))
             .map(IndexName::new)
-            .orElse(MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX);
+            .orElse(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
 
         return new ElasticSearchConfiguration(
             hosts,

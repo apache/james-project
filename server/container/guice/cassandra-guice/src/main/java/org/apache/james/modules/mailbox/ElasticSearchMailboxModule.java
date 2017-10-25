@@ -36,7 +36,7 @@ import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.NodeMappingFactory;
 import org.apache.james.backends.es.TypeName;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
-import org.apache.james.mailbox.elasticsearch.MailboxElasticsearchConstants;
+import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
 import org.apache.james.mailbox.elasticsearch.MailboxMappingFactory;
 import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
@@ -61,7 +61,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(TypeName.class).toInstance(MailboxElasticsearchConstants.MESSAGE_TYPE);
+        bind(TypeName.class).toInstance(MailboxElasticSearchConstants.MESSAGE_TYPE);
         bind(ElasticSearchListeningMessageSearchIndex.class).in(Scopes.SINGLETON);
         bind(MessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
         bind(ListeningMessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
@@ -126,7 +126,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
         indexCreationFactory.createIndexAndAliases(client);
         return NodeMappingFactory.applyMapping(client,
             configuration.getIndexName(),
-            MailboxElasticsearchConstants.MESSAGE_TYPE,
+            MailboxElasticSearchConstants.MESSAGE_TYPE,
             MailboxMappingFactory.getMappingContent());
     }
 

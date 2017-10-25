@@ -26,7 +26,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
-import org.apache.james.mailbox.elasticsearch.MailboxElasticsearchConstants;
+import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
 import org.apache.james.modules.CassandraJmapServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.mpt.monitor.SystemLoggingMonitor;
@@ -83,7 +83,7 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
         inMemoryDNSService = new InMemoryDNSService();
         folder = new TemporaryFolder();
         folder.create();
-        embeddedElasticSearch = new EmbeddedElasticSearch(folder.getRoot().toPath(), MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX);
+        embeddedElasticSearch = new EmbeddedElasticSearch(folder.getRoot().toPath(), MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
         embeddedElasticSearch.before();
         jamesServer = createJamesServer();
         jamesServer.start();

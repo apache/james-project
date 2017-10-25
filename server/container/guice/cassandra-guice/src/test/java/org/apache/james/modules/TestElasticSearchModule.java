@@ -25,7 +25,7 @@ import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.backends.es.IndexCreationFactory;
 import org.apache.james.backends.es.NodeMappingFactory;
 import org.apache.james.backends.es.utils.TestingClientProvider;
-import org.apache.james.mailbox.elasticsearch.MailboxElasticsearchConstants;
+import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
 import org.apache.james.mailbox.elasticsearch.MailboxMappingFactory;
 import org.elasticsearch.client.Client;
 
@@ -51,13 +51,13 @@ public class TestElasticSearchModule extends AbstractModule{
         Client client = new TestingClientProvider(embeddedElasticSearch.getNode()).get();
 
         new IndexCreationFactory()
-            .onIndex(MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX)
-            .addAlias(MailboxElasticsearchConstants.DEFAULT_MAILBOX_READ_ALIAS)
-            .addAlias(MailboxElasticsearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS)
+            .onIndex(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX)
+            .addAlias(MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS)
+            .addAlias(MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS)
             .createIndexAndAliases(client);
         return NodeMappingFactory.applyMapping(client,
-            MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX,
-            MailboxElasticsearchConstants.MESSAGE_TYPE,
+            MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX,
+            MailboxElasticSearchConstants.MESSAGE_TYPE,
             MailboxMappingFactory.getMappingContent());
     }
 }
