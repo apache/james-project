@@ -21,6 +21,7 @@ package org.apache.james.mailbox.cassandra.ids;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -79,5 +80,14 @@ public class BlobIdTest {
         BlobId blobId = BlobId.forPayload("content".getBytes(Charsets.UTF_8));
 
         assertThat(blobId.getId()).isEqualTo("ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73");
+    }
+
+    @Test
+    public void forPayloadShouldCalculateDifferentHashesWhenCraftedSha1Collision() throws Exception {
+        byte[] payload1 = IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("shattered-1.pdf"));
+        byte[] payload2 = IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("shattered-2.pdf"));
+        BlobId blobId1 = BlobId.forPayload(payload1);
+        BlobId blobId2 = BlobId.forPayload(payload2);
+        assertThat(blobId1).isNotEqualTo(blobId2);
     }
 }
