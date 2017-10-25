@@ -43,20 +43,20 @@ public class DeleteByQueryPerformer {
     private final Client client;
     private final ExecutorService executor;
     private final int batchSize;
-    private final IndexName indexName;
+    private final AliasName aliasName;
     private final TypeName typeName;
 
     @Inject
-    public DeleteByQueryPerformer(Client client, @Named("AsyncExecutor") ExecutorService executor, IndexName indexName, TypeName typeName) {
-        this(client, executor, DEFAULT_BATCH_SIZE, indexName, typeName);
+    public DeleteByQueryPerformer(Client client, @Named("AsyncExecutor") ExecutorService executor, AliasName aliasName, TypeName typeName) {
+        this(client, executor, DEFAULT_BATCH_SIZE, aliasName, typeName);
     }
 
     @VisibleForTesting
-    public DeleteByQueryPerformer(Client client, @Named("AsyncExecutor") ExecutorService executor, int batchSize, IndexName indexName, TypeName typeName) {
+    public DeleteByQueryPerformer(Client client, @Named("AsyncExecutor") ExecutorService executor, int batchSize, AliasName aliasName, TypeName typeName) {
         this.client = client;
         this.executor = executor;
         this.batchSize = batchSize;
-        this.indexName = indexName;
+        this.aliasName = aliasName;
         this.typeName = typeName;
     }
 
@@ -66,7 +66,7 @@ public class DeleteByQueryPerformer {
 
     protected void doDeleteByQuery(QueryBuilder queryBuilder) {
         new ScrollIterable(client,
-            client.prepareSearch(indexName.getValue())
+            client.prepareSearch(aliasName.getValue())
                 .setTypes(typeName.getValue())
                 .setScroll(TIMEOUT)
                 .setNoFields()
@@ -80,7 +80,7 @@ public class DeleteByQueryPerformer {
         BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
         for (SearchHit hit : searchResponse.getHits()) {
             bulkRequestBuilder.add(client.prepareDelete()
-                .setIndex(indexName.getValue())
+                .setIndex(aliasName.getValue())
                 .setType(typeName.getValue())
                 .setId(hit.getId()));
         }

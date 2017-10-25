@@ -126,13 +126,13 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
                 new DeleteByQueryPerformer(client,
                     Executors.newSingleThreadExecutor(),
                     BATCH_SIZE,
-                    MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX,
+                    MailboxElasticsearchConstants.DEFAULT_MAILBOX_ALIAS,
                     MailboxElasticsearchConstants.MESSAGE_TYPE),
-                MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX,
+                MailboxElasticsearchConstants.DEFAULT_MAILBOX_ALIAS,
                 MailboxElasticsearchConstants.MESSAGE_TYPE),
             new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
                 new InMemoryId.Factory(), messageIdFactory,
-                MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX,
+                MailboxElasticsearchConstants.DEFAULT_MAILBOX_ALIAS,
                 MailboxElasticsearchConstants.MESSAGE_TYPE),
             new MessageToElasticSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES));
         storeMailboxManager = new InMemoryMailboxManager(

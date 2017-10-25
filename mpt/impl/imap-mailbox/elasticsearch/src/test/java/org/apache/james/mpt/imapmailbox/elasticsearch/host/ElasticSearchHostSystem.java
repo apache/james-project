@@ -108,10 +108,13 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
         ElasticSearchListeningMessageSearchIndex searchIndex = new ElasticSearchListeningMessageSearchIndex(
             factory,
-            new ElasticSearchIndexer(client, new DeleteByQueryPerformer(client, Executors.newSingleThreadExecutor(), MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX, MailboxElasticsearchConstants.MESSAGE_TYPE), MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX, MailboxElasticsearchConstants.MESSAGE_TYPE),
+            new ElasticSearchIndexer(client,
+                new DeleteByQueryPerformer(client, Executors.newSingleThreadExecutor(), MailboxElasticsearchConstants.DEFAULT_MAILBOX_ALIAS, MailboxElasticsearchConstants.MESSAGE_TYPE),
+                MailboxElasticsearchConstants.DEFAULT_MAILBOX_ALIAS,
+                MailboxElasticsearchConstants.MESSAGE_TYPE),
             new ElasticSearchSearcher(client,
                 new QueryConverter(new CriterionConverter()), new InMemoryId.Factory(), messageIdFactory,
-                MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX, MailboxElasticsearchConstants.MESSAGE_TYPE),
+                MailboxElasticsearchConstants.DEFAULT_MAILBOX_ALIAS, MailboxElasticsearchConstants.MESSAGE_TYPE),
             new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.systemDefault(), IndexAttachments.YES));
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();

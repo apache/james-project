@@ -88,14 +88,14 @@ public class ElasticSearchIndexer {
     
     private final Client client;
     private final DeleteByQueryPerformer deleteByQueryPerformer;
-    private final IndexName indexName;
+    private final AliasName aliasName;
     private final TypeName typeName;
 
     @Inject
-    public ElasticSearchIndexer(Client client, DeleteByQueryPerformer deleteByQueryPerformer, IndexName indexName, TypeName typeName) {
+    public ElasticSearchIndexer(Client client, DeleteByQueryPerformer deleteByQueryPerformer, AliasName aliasName, TypeName typeName) {
         this.client = client;
         this.deleteByQueryPerformer = deleteByQueryPerformer;
-        this.indexName = indexName;
+        this.aliasName = aliasName;
         this.typeName = typeName;
     }
     
@@ -104,7 +104,7 @@ public class ElasticSearchIndexer {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Indexing {}: {}", id, StringUtils.left(content, DEBUG_MAX_LENGTH_CONTENT));
         }
-        return client.prepareIndex(indexName.getValue(), typeName.getValue(), id)
+        return client.prepareIndex(aliasName.getValue(), typeName.getValue(), id)
             .setSource(content)
             .get();
     }
@@ -115,7 +115,7 @@ public class ElasticSearchIndexer {
             BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
             updatedDocumentParts.forEach(updatedDocumentPart -> bulkRequestBuilder.add(
                 client.prepareUpdate(
-                    indexName.getValue(),
+                    aliasName.getValue(),
                     typeName.getValue(),
                     updatedDocumentPart.getId())
                 .setDoc(updatedDocumentPart.getUpdatedDocumentPart())));
@@ -131,7 +131,7 @@ public class ElasticSearchIndexer {
             BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
             ids.forEach(id -> bulkRequestBuilder.add(
                 client.prepareDelete(
-                    indexName.getValue(),
+                    aliasName.getValue(),
                     typeName.getValue(),
                     id)));
             return Optional.of(bulkRequestBuilder.get());
