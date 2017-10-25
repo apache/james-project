@@ -142,9 +142,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
     private final MessageSearchIndex index;
 
-    private final MailboxACLResolver aclResolver;
-
-    private final GroupMembershipResolver groupMembershipResolver;
+    private final StoreRightManager storeRightManager;
 
     private final QuotaManager quotaManager;
 
@@ -161,23 +159,22 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     private final ImmutableMailboxMessage.Factory immutableMailboxMessageFactory;
 
     public StoreMessageManager(MailboxSessionMapperFactory mapperFactory, MessageSearchIndex index, MailboxEventDispatcher dispatcher, 
-            MailboxPathLocker locker, Mailbox mailbox, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver,
+            MailboxPathLocker locker, Mailbox mailbox,
             QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory, BatchSizes batchSizes,
-            ImmutableMailboxMessage.Factory immutableMailboxMessageFactory) 
+            ImmutableMailboxMessage.Factory immutableMailboxMessageFactory, StoreRightManager storeRightManager)
                     throws MailboxException {
         this.mailbox = mailbox;
         this.dispatcher = dispatcher;
         this.mapperFactory = mapperFactory;
         this.index = index;
         this.locker = locker;
-        this.aclResolver = aclResolver;
-        this.groupMembershipResolver = groupMembershipResolver;
         this.quotaManager = quotaManager;
         this.quotaRootResolver = quotaRootResolver;
         this.messageParser = messageParser;
         this.messageIdFactory = messageIdFactory;
         this.batchSizes = batchSizes;
         this.immutableMailboxMessageFactory = immutableMailboxMessageFactory;
+        this.storeRightManager = storeRightManager;
     }
 
     protected Factory getMessageIdFactory() {
@@ -467,7 +464,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
      * @throws MailboxException
      */
     public boolean isWriteable(MailboxSession session) throws MailboxException {
-        return aclResolver.isReadWrite(myRights(session), getSharedPermanentFlags(session));
+        return storeRightManager.isReadWrite(session, mailbox, getSharedPermanentFlags(session));
     }
 
     @Override
@@ -796,15 +793,6 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         return messageMapper.findFirstUnseenMessageUid(getMailboxEntity());
     }
 
-    private Rfc4314Rights myRights(MailboxSession session) throws MailboxException {
-        User user = session.getUser();
-        if (user != null) {
-            return aclResolver.resolveRights(user.getUserName(), groupMembershipResolver, mailbox.getACL(), mailbox.getUser(), new GroupFolderResolver(session).isGroupFolder(mailbox));
-        } else {
-            return MailboxACL.NO_RIGHTS;
-        }
-    }
-
     /**
      * Applies the global ACL (if there are any) to the mailbox ACL.
      * 
@@ -814,7 +802,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
      * @throws UnsupportedRightException
      */
     protected MailboxACL getResolvedMailboxACL(MailboxSession mailboxSession) throws UnsupportedRightException {
-        return filteredForSession(mailbox, aclResolver.applyGlobalACL(mailbox.getACL(), new GroupFolderResolver(mailboxSession).isGroupFolder(mailbox)), mailboxSession);
+        return StoreRightManager.filteredForSession(mailbox, mailbox.getACL(), mailboxSession);
     }
 
     /**
