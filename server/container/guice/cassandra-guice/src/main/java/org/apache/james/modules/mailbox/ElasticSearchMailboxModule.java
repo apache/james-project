@@ -109,7 +109,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    protected Client provideClientProvider(ElasticSearchConfiguration configuration,
+    protected Client provideClient(ElasticSearchConfiguration configuration,
                                            IndexCreationFactory indexCreationFactory,
                                            AsyncRetryExecutor executor) throws ExecutionException, InterruptedException {
 
