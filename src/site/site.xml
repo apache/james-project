@@ -46,14 +46,6 @@
 
     <body>
 
-        <head>
-            <link
-                rel="meta"
-                title="DOAP"
-                href="${project.url}/doap_${project.artifactId}.rdf"
-                type="application/rdf+xml" />
-        </head>
-
         <!--
             Breadcrumbs are desactivated as they give strange results.
             <breadcrumbs>
