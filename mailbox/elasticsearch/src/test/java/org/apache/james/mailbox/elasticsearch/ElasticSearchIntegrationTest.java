@@ -83,7 +83,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
     private static final boolean IS_RECENT = true;
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch= new EmbeddedElasticSearch(temporaryFolder, MailboxElasticsearchConstants.MAILBOX_INDEX);
+    private EmbeddedElasticSearch embeddedElasticSearch= new EmbeddedElasticSearch(temporaryFolder, MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX);
 
     @Rule
     public RuleChain ruleChain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
@@ -112,8 +112,8 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
         Client client = NodeMappingFactory.applyMapping(
             IndexCreationFactory.createIndex(
                 new TestingClientProvider(embeddedElasticSearch.getNode()).get(),
-                MailboxElasticsearchConstants.MAILBOX_INDEX),
-            MailboxElasticsearchConstants.MAILBOX_INDEX,
+                MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX),
+            MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX,
             MailboxElasticsearchConstants.MESSAGE_TYPE,
             MailboxMappingFactory.getMappingContent());
 
@@ -125,11 +125,14 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
                 new DeleteByQueryPerformer(client,
                     Executors.newSingleThreadExecutor(),
                     BATCH_SIZE,
-                    MailboxElasticsearchConstants.MAILBOX_INDEX,
+                    MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX,
                     MailboxElasticsearchConstants.MESSAGE_TYPE),
-                MailboxElasticsearchConstants.MAILBOX_INDEX,
+                MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX,
                 MailboxElasticsearchConstants.MESSAGE_TYPE),
-            new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE, new InMemoryId.Factory(), messageIdFactory),
+            new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
+                new InMemoryId.Factory(), messageIdFactory,
+                MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX,
+                MailboxElasticsearchConstants.MESSAGE_TYPE),
             new MessageToElasticSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES));
         storeMailboxManager = new InMemoryMailboxManager(
             mapperFactory,

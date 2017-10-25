@@ -83,7 +83,7 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
         inMemoryDNSService = new InMemoryDNSService();
         folder = new TemporaryFolder();
         folder.create();
-        embeddedElasticSearch = new EmbeddedElasticSearch(folder.getRoot().toPath(), MailboxElasticsearchConstants.MAILBOX_INDEX);
+        embeddedElasticSearch = new EmbeddedElasticSearch(folder.getRoot().toPath(), MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX);
         embeddedElasticSearch.before();
         jamesServer = createJamesServer();
         jamesServer.start();

@@ -23,6 +23,6 @@ import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.TypeName;
 
 public interface MailboxElasticsearchConstants {
-    IndexName MAILBOX_INDEX = new IndexName("mailbox");
+    IndexName DEFAULT_MAILBOX_INDEX = new IndexName("mailbox");
     TypeName MESSAGE_TYPE = new TypeName("message");
 }

@@ -24,11 +24,14 @@ import static org.apache.james.modules.mailbox.ElasticSearchMailboxModule.ELASTI
 import static org.apache.james.modules.mailbox.ElasticSearchMailboxModule.ELASTICSEARCH_PORT;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.FileNotFoundException;
 import java.util.Optional;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.james.backends.es.IndexName;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
+import org.apache.james.mailbox.elasticsearch.MailboxElasticsearchConstants;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -37,6 +40,44 @@ public class ElasticSearchMailboxModuleTest {
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
+
+    @Test
+    public void provideIndexNameShouldRetrievedConfiguredIndexName() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String name = "name";
+        configuration.addProperty("elasticsearch.index.name", name);
+
+        ElasticSearchMailboxModule testee = new ElasticSearchMailboxModule();
+
+        IndexName indexName = testee.provideIndexName(() -> configuration);
+
+        assertThat(indexName)
+            .isEqualTo(new IndexName(name));
+    }
+
+    @Test
+    public void provideIndexNameShouldReturnDefaultIndexNameWhenNone() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+
+        ElasticSearchMailboxModule testee = new ElasticSearchMailboxModule();
+
+        IndexName indexName = testee.provideIndexName(() -> configuration);
+
+        assertThat(indexName)
+            .isEqualTo(MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX);
+    }
+
+    @Test
+    public void provideIndexNameShouldReturnDefaultIndexNameWhenError() throws ConfigurationException {
+        ElasticSearchMailboxModule testee = new ElasticSearchMailboxModule();
+
+        IndexName indexName = testee.provideIndexName(() -> {
+            throw new FileNotFoundException();
+        });
+
+        assertThat(indexName)
+            .isEqualTo(MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX);
+    }
 
     @Test
     public void provideIndexAttachmentsShouldReturnTrueWhenIndexAttachmentsIsTrueInConfiguration() {

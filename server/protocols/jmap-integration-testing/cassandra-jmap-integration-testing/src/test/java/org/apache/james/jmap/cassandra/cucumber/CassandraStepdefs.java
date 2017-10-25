@@ -46,7 +46,7 @@ public class CassandraStepdefs {
 
     private final MainStepdefs mainStepdefs;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, MailboxElasticsearchConstants.MAILBOX_INDEX);
+    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX);
     private DockerCassandraRule cassandraServer = CucumberCassandraSingleton.cassandraServer;
 
     @Inject

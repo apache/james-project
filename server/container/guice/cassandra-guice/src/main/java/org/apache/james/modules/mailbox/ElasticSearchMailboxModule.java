@@ -68,7 +68,6 @@ public class ElasticSearchMailboxModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(IndexName.class).toInstance(MailboxElasticsearchConstants.MAILBOX_INDEX);
         bind(TypeName.class).toInstance(MailboxElasticsearchConstants.MESSAGE_TYPE);
         bind(ElasticSearchListeningMessageSearchIndex.class).in(Scopes.SINGLETON);
         bind(MessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
@@ -76,33 +75,48 @@ public class ElasticSearchMailboxModule extends AbstractModule {
     }
 
     @Provides
+    protected IndexName provideIndexName(ElasticSearchConfiguration elasticSearchConfiguration) throws ConfigurationException {
+        try {
+            return Optional.ofNullable(elasticSearchConfiguration.getConfiguration()
+                .getString("elasticsearch.index.name"))
+                .map(IndexName::new)
+                .orElse(MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX);
+        } catch (FileNotFoundException e) {
+            LOGGER.info("Could not find ElasticSearch configuration file. Using default index {}", MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX.getValue());
+            return MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX;
+        }
+    }
+
+    @Provides
     @Singleton
-    protected Client provideClientProvider(ElasticSearchConfiguration elasticSearchConfiguration, AsyncRetryExecutor executor) throws ConfigurationException, FileNotFoundException, ExecutionException, InterruptedException {
+    protected Client provideClientProvider(ElasticSearchConfiguration elasticSearchConfiguration,
+                                           IndexName indexName,
+                                           AsyncRetryExecutor executor) throws ConfigurationException, FileNotFoundException, ExecutionException, InterruptedException {
         PropertiesConfiguration propertiesReader = elasticSearchConfiguration.getConfiguration();
         int maxRetries = propertiesReader.getInt("elasticsearch.retryConnection.maxRetries", DEFAULT_CONNECTION_MAX_RETRIES);
         int minDelay = propertiesReader.getInt("elasticsearch.retryConnection.minDelay", DEFAULT_CONNECTION_MIN_DELAY);
 
         return RetryExecutorUtil.retryOnExceptions(executor, maxRetries, minDelay, NoNodeAvailableException.class)
-            .getWithRetry(context -> connectToCluster(propertiesReader))
+            .getWithRetry(context -> connectToCluster(propertiesReader, indexName))
             .get();
     }
 
-    private Client createIndexAndMapping(Client client, PropertiesConfiguration propertiesReader) {
+    private Client createIndexAndMapping(Client client, IndexName indexName, PropertiesConfiguration propertiesReader) {
         IndexCreationFactory.createIndex(client,
-            MailboxElasticsearchConstants.MAILBOX_INDEX,
+            indexName,
             propertiesReader.getInt(ELASTICSEARCH_CONFIGURATION_NAME + ".nb.shards", DEFAULT_NB_SHARDS),
             propertiesReader.getInt(ELASTICSEARCH_CONFIGURATION_NAME + ".nb.replica", DEFAULT_NB_REPLICA));
         NodeMappingFactory.applyMapping(client,
-            MailboxElasticsearchConstants.MAILBOX_INDEX,
+            MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX,
             MailboxElasticsearchConstants.MESSAGE_TYPE,
             MailboxMappingFactory.getMappingContent());
         return client;
     }
 
-    private Client connectToCluster(PropertiesConfiguration propertiesReader) throws ConfigurationException {
+    private Client connectToCluster(PropertiesConfiguration propertiesReader, IndexName indexName) throws ConfigurationException {
         LOGGER.info("Trying to connect to ElasticSearch service at {}", LocalDateTime.now());
 
-        return createIndexAndMapping(createClient(propertiesReader), propertiesReader);
+        return createIndexAndMapping(createClient(propertiesReader), indexName, propertiesReader);
     }
 
     @Provides

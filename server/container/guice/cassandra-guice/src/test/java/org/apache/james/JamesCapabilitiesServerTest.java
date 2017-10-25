@@ -45,7 +45,7 @@ public class JamesCapabilitiesServerTest {
 
     private GuiceJamesServer server;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, MailboxElasticsearchConstants.MAILBOX_INDEX);
+    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX);
     private DockerCassandraRule cassandraServer = new DockerCassandraRule();
     
     @Rule

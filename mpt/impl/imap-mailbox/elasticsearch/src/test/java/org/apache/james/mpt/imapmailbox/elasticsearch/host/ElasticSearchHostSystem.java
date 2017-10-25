@@ -82,7 +82,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
     public void beforeTest() throws Exception {
         super.beforeTest();
         this.tempDirectory = Files.createTempDirectory("elasticsearch");
-        this.embeddedElasticSearch = new EmbeddedElasticSearch(tempDirectory, MailboxElasticsearchConstants.MAILBOX_INDEX);
+        this.embeddedElasticSearch = new EmbeddedElasticSearch(tempDirectory, MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX);
         embeddedElasticSearch.before();
         initFields();
     }
@@ -95,19 +95,20 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
     private void initFields() {
         Client client = NodeMappingFactory.applyMapping(
-            IndexCreationFactory.createIndex(new TestingClientProvider(embeddedElasticSearch.getNode()).get(), MailboxElasticsearchConstants.MAILBOX_INDEX),
-            MailboxElasticsearchConstants.MAILBOX_INDEX,
+            IndexCreationFactory.createIndex(new TestingClientProvider(embeddedElasticSearch.getNode()).get(), MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX),
+            MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX,
             MailboxElasticsearchConstants.MESSAGE_TYPE,
-            MailboxMappingFactory.getMappingContent()
-        );
+            MailboxMappingFactory.getMappingContent());
 
         InMemoryMailboxSessionMapperFactory factory = new InMemoryMailboxSessionMapperFactory();
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
 
         ElasticSearchListeningMessageSearchIndex searchIndex = new ElasticSearchListeningMessageSearchIndex(
             factory,
-            new ElasticSearchIndexer(client, new DeleteByQueryPerformer(client, Executors.newSingleThreadExecutor(), MailboxElasticsearchConstants.MAILBOX_INDEX, MailboxElasticsearchConstants.MESSAGE_TYPE), MailboxElasticsearchConstants.MAILBOX_INDEX, MailboxElasticsearchConstants.MESSAGE_TYPE),
-            new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), new InMemoryId.Factory(), messageIdFactory),
+            new ElasticSearchIndexer(client, new DeleteByQueryPerformer(client, Executors.newSingleThreadExecutor(), MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX, MailboxElasticsearchConstants.MESSAGE_TYPE), MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX, MailboxElasticsearchConstants.MESSAGE_TYPE),
+            new ElasticSearchSearcher(client,
+                new QueryConverter(new CriterionConverter()), new InMemoryId.Factory(), messageIdFactory,
+                MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX, MailboxElasticsearchConstants.MESSAGE_TYPE),
             new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.systemDefault(), IndexAttachments.YES));
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();

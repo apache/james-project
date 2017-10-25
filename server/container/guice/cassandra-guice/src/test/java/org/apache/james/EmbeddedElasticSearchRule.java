@@ -34,7 +34,7 @@ import com.google.inject.Module;
 public class EmbeddedElasticSearchRule implements GuiceModuleTestRule {
 
     private final TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private final EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, MailboxElasticsearchConstants.MAILBOX_INDEX);
+    private final EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX);
 
     private final RuleChain chain = RuleChain
         .outerRule(temporaryFolder)
