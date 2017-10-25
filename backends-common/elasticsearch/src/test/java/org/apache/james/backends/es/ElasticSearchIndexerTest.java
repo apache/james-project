@@ -58,8 +58,10 @@ public class ElasticSearchIndexerTest {
     public void setup() throws IOException {
         node = embeddedElasticSearch.getNode();
         TestingClientProvider clientProvider = new TestingClientProvider(node);
-        IndexCreationFactory.createIndexAndAlias(clientProvider.get(),
-            INDEX_NAME, ALIAS_NAME);
+        new IndexCreationFactory()
+            .onIndex(INDEX_NAME)
+            .addAlias(ALIAS_NAME)
+            .createIndexAndAliases(clientProvider.get());
         DeleteByQueryPerformer deleteByQueryPerformer = new DeleteByQueryPerformer(clientProvider.get(),
             Executors.newSingleThreadExecutor(),
             MINIMUM_BATCH_SIZE,

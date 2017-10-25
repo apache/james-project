@@ -42,6 +42,11 @@ public class ClientProviderImpl implements ClientProvider {
         return new ClientProviderImpl(Host.parseHosts(hostsString));
     }
 
+    public static ClientProviderImpl fromHosts(ImmutableList<Host> hosts) {
+        Preconditions.checkNotNull(hosts, "Hosts should not be null");
+        return new ClientProviderImpl(hosts);
+    }
+
     private static boolean isValidPort(Integer port) {
         return port > 0 && port <= 65535;
     }

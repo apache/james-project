@@ -67,7 +67,10 @@ public class ScrollIterableTest {
     @Before
     public void setUp() throws Exception {
         clientProvider = new TestingClientProvider(embeddedElasticSearch.getNode());
-        IndexCreationFactory.createIndexAndAlias(clientProvider.get(), INDEX_NAME, ALIAS_NAME);
+        new IndexCreationFactory()
+            .onIndex(INDEX_NAME)
+            .addAlias(ALIAS_NAME)
+            .createIndexAndAliases(clientProvider.get());
         embeddedElasticSearch.awaitForElasticSearch();
         NodeMappingFactory.applyMapping(clientProvider.get(), INDEX_NAME, TYPE_NAME, getMappingsSources());
     }

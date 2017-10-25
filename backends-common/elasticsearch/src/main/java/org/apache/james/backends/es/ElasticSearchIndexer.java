@@ -23,6 +23,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -92,7 +93,9 @@ public class ElasticSearchIndexer {
     private final TypeName typeName;
 
     @Inject
-    public ElasticSearchIndexer(Client client, DeleteByQueryPerformer deleteByQueryPerformer, AliasName aliasName, TypeName typeName) {
+    public ElasticSearchIndexer(Client client, DeleteByQueryPerformer deleteByQueryPerformer,
+                                @Named(ElasticSearchConstants.WRITE_ALIAS) AliasName aliasName,
+                                TypeName typeName) {
         this.client = client;
         this.deleteByQueryPerformer = deleteByQueryPerformer;
         this.aliasName = aliasName;

@@ -17,15 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.elasticsearch;
+package org.apache.james.backends.es;
 
-import org.apache.james.backends.es.AliasName;
-import org.apache.james.backends.es.IndexName;
-import org.apache.james.backends.es.TypeName;
-
-public interface MailboxElasticsearchConstants {
-    AliasName DEFAULT_MAILBOX_WRITE_ALIAS = new AliasName("mailboxWriteAlias");
-    AliasName DEFAULT_MAILBOX_READ_ALIAS = new AliasName("mailboxReadAlias");
-    IndexName DEFAULT_MAILBOX_INDEX = new IndexName("mailbox");
-    TypeName MESSAGE_TYPE = new TypeName("message");
+public interface ElasticSearchConstants {
+    String WRITE_ALIAS = "injectWriteAlias";
+    String READ_ALIAS = "injectReadAlias";
 }

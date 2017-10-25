@@ -41,11 +41,17 @@ public class IndexCreationFactoryTest {
     @Before
     public void setUp() {
         clientProvider = new TestingClientProvider(embeddedElasticSearch.getNode());
-        IndexCreationFactory.createIndexAndAlias(clientProvider.get(), INDEX_NAME, ALIAS_NAME);
+        new IndexCreationFactory()
+            .onIndex(INDEX_NAME)
+            .addAlias(ALIAS_NAME)
+            .createIndexAndAliases(clientProvider.get());
     }
 
     @Test
     public void createIndexAndAliasShouldNotThrowWhenCalledSeveralTime() {
-        IndexCreationFactory.createIndexAndAlias(clientProvider.get(), INDEX_NAME, ALIAS_NAME);
+        new IndexCreationFactory()
+            .onIndex(INDEX_NAME)
+            .addAlias(ALIAS_NAME)
+            .createIndexAndAliases(clientProvider.get());
     }
 }

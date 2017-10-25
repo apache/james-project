@@ -22,6 +22,7 @@ package org.apache.james.backends.es;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
@@ -31,6 +32,9 @@ import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+
 public class IndexCreationFactory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IndexCreationFactory.class);
@@ -38,26 +42,55 @@ public class IndexCreationFactory {
     private static final int DEFAULT_NB_REPLICA = 0;
     public static final String CASE_INSENSITIVE = "case_insensitive";
 
-    public static Client createIndexAndAlias(Client client, IndexName indexName, AliasName aliasName, int nbShards, int nbReplica) {
+    private IndexName indexName;
+    private ImmutableList.Builder<AliasName> aliases;
+    private Optional<Integer> nbShards;
+    private Optional<Integer> nbReplica;
+
+    public IndexCreationFactory() {
+        indexName = null;
+        aliases = ImmutableList.builder();
+        nbShards = Optional.empty();
+        nbReplica = Optional.empty();
+    }
+
+    public IndexCreationFactory onIndex(IndexName indexName) {
+        Preconditions.checkNotNull(indexName);
+        this.indexName = indexName;
+        return this;
+    }
+
+    public IndexCreationFactory addAlias(AliasName aliasName) {
+        Preconditions.checkNotNull(aliasName);
+        this.aliases.add(aliasName);
+        return this;
+    }
+
+    public IndexCreationFactory nbShards(int nbShards) {
+        this.nbShards = Optional.of(nbShards);
+        return this;
+    }
+
+    public IndexCreationFactory nbReplica(int nbReplica) {
+        this.nbReplica = Optional.of(nbReplica);
+        return this;
+    }
+
+    public Client createIndexAndAliases(Client client) {
+        Preconditions.checkNotNull(indexName);
         try {
-            return createIndexAndAlias(client, indexName, aliasName, generateSetting(nbShards, nbReplica));
+            createIndexIfNeeded(client, indexName, generateSetting(
+                nbShards.orElse(DEFAULT_NB_SHARDS),
+                nbReplica.orElse(DEFAULT_NB_REPLICA)));
+            aliases.build()
+                .forEach(alias -> createAliasIfNeeded(client, indexName, alias));
         } catch (IOException e) {
             LOGGER.error("Error while creating index : ", e);
-            return client;
         }
-    }
-
-    public static Client createIndexAndAlias(Client client, IndexName indexName, AliasName aliasName) {
-        return createIndexAndAlias(client, indexName, aliasName, DEFAULT_NB_SHARDS, DEFAULT_NB_REPLICA);
-    }
-
-    private static Client createIndexAndAlias(Client client, IndexName indexName, AliasName aliasName, XContentBuilder settings) {
-        createIndexIfNeeded(client, indexName, settings);
-        createAliasIfNeeded(client, indexName, aliasName);
         return client;
     }
 
-    private static void createAliasIfNeeded(Client client, IndexName indexName, AliasName aliasName) {
+    private void createAliasIfNeeded(Client client, IndexName indexName, AliasName aliasName) {
         if (!aliasExist(client, aliasName)) {
             client.admin()
                 .indices()
@@ -67,7 +100,7 @@ public class IndexCreationFactory {
         }
     }
 
-    private static boolean aliasExist(Client client, AliasName aliasName) {
+    private boolean aliasExist(Client client, AliasName aliasName) {
         return client.admin()
             .indices()
             .aliasesExist(new GetAliasesRequest()
@@ -76,7 +109,7 @@ public class IndexCreationFactory {
             .exists();
     }
 
-    private static void createIndexIfNeeded(Client client, IndexName indexName, XContentBuilder settings) {
+    private void createIndexIfNeeded(Client client, IndexName indexName, XContentBuilder settings) {
         try {
             client.admin()
                 .indices()
@@ -89,7 +122,7 @@ public class IndexCreationFactory {
         }
     }
 
-    private static XContentBuilder generateSetting(int nbShards, int nbReplica) throws IOException {
+    private XContentBuilder generateSetting(int nbShards, int nbReplica) throws IOException {
         return jsonBuilder()
             .startObject()
                 .field("number_of_shards", nbShards)

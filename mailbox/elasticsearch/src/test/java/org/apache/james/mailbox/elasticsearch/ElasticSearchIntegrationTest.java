@@ -110,10 +110,11 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
     @Override
     protected void initializeMailboxManager() throws Exception {
         Client client = NodeMappingFactory.applyMapping(
-            IndexCreationFactory.createIndexAndAlias(
-                new TestingClientProvider(embeddedElasticSearch.getNode()).get(),
-                MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX,
-                MailboxElasticsearchConstants.DEFAULT_MAILBOX_ALIAS),
+            new IndexCreationFactory()
+                .onIndex(MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX)
+                .addAlias( MailboxElasticsearchConstants.DEFAULT_MAILBOX_READ_ALIAS)
+                .addAlias( MailboxElasticsearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS)
+                .createIndexAndAliases(new TestingClientProvider(embeddedElasticSearch.getNode()).get()),
             MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX,
             MailboxElasticsearchConstants.MESSAGE_TYPE,
             MailboxMappingFactory.getMappingContent());
@@ -126,13 +127,13 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
                 new DeleteByQueryPerformer(client,
                     Executors.newSingleThreadExecutor(),
                     BATCH_SIZE,
-                    MailboxElasticsearchConstants.DEFAULT_MAILBOX_ALIAS,
+                    MailboxElasticsearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
                     MailboxElasticsearchConstants.MESSAGE_TYPE),
-                MailboxElasticsearchConstants.DEFAULT_MAILBOX_ALIAS,
+                MailboxElasticsearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
                 MailboxElasticsearchConstants.MESSAGE_TYPE),
             new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
                 new InMemoryId.Factory(), messageIdFactory,
-                MailboxElasticsearchConstants.DEFAULT_MAILBOX_ALIAS,
+                MailboxElasticsearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
                 MailboxElasticsearchConstants.MESSAGE_TYPE),
             new MessageToElasticSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES));
         storeMailboxManager = new InMemoryMailboxManager(

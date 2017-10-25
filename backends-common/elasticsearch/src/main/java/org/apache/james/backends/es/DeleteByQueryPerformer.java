@@ -47,7 +47,7 @@ public class DeleteByQueryPerformer {
     private final TypeName typeName;
 
     @Inject
-    public DeleteByQueryPerformer(Client client, @Named("AsyncExecutor") ExecutorService executor, AliasName aliasName, TypeName typeName) {
+    public DeleteByQueryPerformer(Client client, @Named("AsyncExecutor") ExecutorService executor, @Named(ElasticSearchConstants.WRITE_ALIAS) AliasName aliasName, TypeName typeName) {
         this(client, executor, DEFAULT_BATCH_SIZE, aliasName, typeName);
     }
 

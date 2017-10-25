@@ -49,9 +49,12 @@ public class TestElasticSearchModule extends AbstractModule{
     @Singleton
     protected Client provideClientProvider() {
         Client client = new TestingClientProvider(embeddedElasticSearch.getNode()).get();
-        IndexCreationFactory.createIndexAndAlias(client,
-            MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX,
-            MailboxElasticsearchConstants.DEFAULT_MAILBOX_ALIAS);
+
+        new IndexCreationFactory()
+            .onIndex(MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX)
+            .addAlias(MailboxElasticsearchConstants.DEFAULT_MAILBOX_READ_ALIAS)
+            .addAlias(MailboxElasticsearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS)
+            .createIndexAndAliases(client);
         return NodeMappingFactory.applyMapping(client,
             MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX,
             MailboxElasticsearchConstants.MESSAGE_TYPE,

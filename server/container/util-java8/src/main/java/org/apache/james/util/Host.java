@@ -123,7 +123,8 @@ public class Host {
     public final boolean equals(Object object) {
         if (object instanceof Host) {
             Host that = (Host) object;
-            return Objects.equal(this.hostName, that.hostName) && Objects.equal(this.port, that.port);
+            return Objects.equal(this.hostName, that.hostName)
+                && Objects.equal(this.port, that.port);
         }
         return false;
     }
