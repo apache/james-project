@@ -22,8 +22,11 @@ package org.apache.james.mailbox.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.InputStream;
 import java.util.UUID;
+import java.util.stream.Stream;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
 public class AttachmentIdTest {
@@ -122,5 +125,14 @@ public class AttachmentIdTest {
         String mimeType = AttachmentId.asMimeType("text");
         
         assertThat(mimeType).isEqualTo("application/octet-stream");
+    }
+
+    @Test
+    public void forPayloadAndTypeShouldCalculateDifferentHashesWhenCraftedSha1Collision() throws Exception {
+        byte[] payload1 = IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("shattered-1.pdf"));
+        byte[] payload2 = IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("shattered-2.pdf"));
+        AttachmentId attachmentId1 = AttachmentId.forPayloadAndType(payload1, "application/pdf");
+        AttachmentId attachmentId2 = AttachmentId.forPayloadAndType(payload2, "application/pdf");
+        assertThat(attachmentId1).isNotEqualTo(attachmentId2);
     }
 }
