@@ -110,9 +110,10 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
     @Override
     protected void initializeMailboxManager() throws Exception {
         Client client = NodeMappingFactory.applyMapping(
-            IndexCreationFactory.createIndex(
+            IndexCreationFactory.createIndexAndAlias(
                 new TestingClientProvider(embeddedElasticSearch.getNode()).get(),
-                MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX),
+                MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX,
+                MailboxElasticsearchConstants.DEFAULT_MAILBOX_ALIAS),
             MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX,
             MailboxElasticsearchConstants.MESSAGE_TYPE,
             MailboxMappingFactory.getMappingContent());

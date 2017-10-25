@@ -17,14 +17,35 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.elasticsearch;
+package org.apache.james.backends.es;
 
-import org.apache.james.backends.es.AliasName;
-import org.apache.james.backends.es.IndexName;
-import org.apache.james.backends.es.TypeName;
+import org.apache.james.backends.es.utils.TestingClientProvider;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.RuleChain;
+import org.junit.rules.TemporaryFolder;
 
-public interface MailboxElasticsearchConstants {
-    AliasName DEFAULT_MAILBOX_ALIAS = new AliasName("mailboxAlias");
-    IndexName DEFAULT_MAILBOX_INDEX = new IndexName("mailbox");
-    TypeName MESSAGE_TYPE = new TypeName("message");
+public class IndexCreationFactoryTest {
+    public static final IndexName INDEX_NAME = new IndexName("index");
+    public static final AliasName ALIAS_NAME = new AliasName("alias");
+
+    private TemporaryFolder temporaryFolder = new TemporaryFolder();
+    private EmbeddedElasticSearch embeddedElasticSearch= new EmbeddedElasticSearch(temporaryFolder, INDEX_NAME);
+
+    @Rule
+    public RuleChain ruleChain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
+
+    private ClientProvider clientProvider;
+
+    @Before
+    public void setUp() {
+        clientProvider = new TestingClientProvider(embeddedElasticSearch.getNode());
+        IndexCreationFactory.createIndexAndAlias(clientProvider.get(), INDEX_NAME, ALIAS_NAME);
+    }
+
+    @Test
+    public void createIndexAndAliasShouldNotThrowWhenCalledSeveralTime() {
+        IndexCreationFactory.createIndexAndAlias(clientProvider.get(), INDEX_NAME, ALIAS_NAME);
+    }
 }

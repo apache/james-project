@@ -23,6 +23,8 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.io.IOException;
 
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
@@ -36,31 +38,55 @@ public class IndexCreationFactory {
     private static final int DEFAULT_NB_REPLICA = 0;
     public static final String CASE_INSENSITIVE = "case_insensitive";
 
-    public static Client createIndex(Client client, IndexName name, int nbShards, int nbReplica) {
+    public static Client createIndexAndAlias(Client client, IndexName indexName, AliasName aliasName, int nbShards, int nbReplica) {
         try {
-            return createIndex(client, name, generateSetting(nbShards, nbReplica));
+            return createIndexAndAlias(client, indexName, aliasName, generateSetting(nbShards, nbReplica));
         } catch (IOException e) {
             LOGGER.error("Error while creating index : ", e);
             return client;
         }
     }
 
-    public static Client createIndex(Client client, IndexName name) {
-        return createIndex(client, name, DEFAULT_NB_SHARDS, DEFAULT_NB_REPLICA);
+    public static Client createIndexAndAlias(Client client, IndexName indexName, AliasName aliasName) {
+        return createIndexAndAlias(client, indexName, aliasName, DEFAULT_NB_SHARDS, DEFAULT_NB_REPLICA);
     }
 
-    private static Client createIndex(Client client, IndexName name, XContentBuilder settings) {
+    private static Client createIndexAndAlias(Client client, IndexName indexName, AliasName aliasName, XContentBuilder settings) {
+        createIndexIfNeeded(client, indexName, settings);
+        createAliasIfNeeded(client, indexName, aliasName);
+        return client;
+    }
+
+    private static void createAliasIfNeeded(Client client, IndexName indexName, AliasName aliasName) {
+        if (!aliasExist(client, aliasName)) {
+            client.admin()
+                .indices()
+                .aliases( new IndicesAliasesRequest()
+                    .addAlias(aliasName.getValue(), indexName.getValue()))
+                .actionGet();
+        }
+    }
+
+    private static boolean aliasExist(Client client, AliasName aliasName) {
+        return client.admin()
+            .indices()
+            .aliasesExist(new GetAliasesRequest()
+                .aliases(aliasName.getValue()))
+            .actionGet()
+            .exists();
+    }
+
+    private static void createIndexIfNeeded(Client client, IndexName indexName, XContentBuilder settings) {
         try {
             client.admin()
                 .indices()
-                .prepareCreate(name.getValue())
+                .prepareCreate(indexName.getValue())
                 .setSettings(settings)
                 .execute()
                 .actionGet();
         } catch (IndexAlreadyExistsException exception) {
-            LOGGER.info("Index [" + name + "] already exist");
+            LOGGER.info("Index [" + indexName + "] already exist");
         }
-        return client;
     }
 
     private static XContentBuilder generateSetting(int nbShards, int nbReplica) throws IOException {

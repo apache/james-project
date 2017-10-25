@@ -95,7 +95,10 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
     private void initFields() {
         Client client = NodeMappingFactory.applyMapping(
-            IndexCreationFactory.createIndex(new TestingClientProvider(embeddedElasticSearch.getNode()).get(), MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX),
+            IndexCreationFactory.createIndexAndAlias(
+                new TestingClientProvider(embeddedElasticSearch.getNode()).get(),
+                MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX,
+                MailboxElasticsearchConstants.DEFAULT_MAILBOX_ALIAS),
             MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX,
             MailboxElasticsearchConstants.MESSAGE_TYPE,
             MailboxMappingFactory.getMappingContent());

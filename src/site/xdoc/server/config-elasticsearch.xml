@@ -57,7 +57,10 @@
           <dt><strong>elasticsearch.nb.replica</strong></dt>
           <dd>Number of replica for index provisionned by James</dd>
           <dt><strong>elasticsearch.index.name</strong></dt>
-          <dd>Name of the index to use with Apache James. It will be created if missing.</dd>
+          <dd>Name of the index backed by the alias. It will be created if missing.</dd>
+          <dt><strong>elasticsearch.alias.name</strong></dt>
+          <dd>Name of the alias to use with Apache James. It will be created if missing.
+           The target of the alias is the index name configured above.</dd>
           <dt><strong>elasticsearch.retryConnection.maxRetries</strong></dt>
           <dd>Number of retries when connecting the cluster</dd>
           <dt><strong>elasticsearch.retryConnection.minDelay</strong></dt>

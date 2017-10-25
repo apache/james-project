@@ -17,14 +17,33 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.elasticsearch;
+package org.apache.james.backends.es;
 
-import org.apache.james.backends.es.AliasName;
-import org.apache.james.backends.es.IndexName;
-import org.apache.james.backends.es.TypeName;
+import java.util.Objects;
 
-public interface MailboxElasticsearchConstants {
-    AliasName DEFAULT_MAILBOX_ALIAS = new AliasName("mailboxAlias");
-    IndexName DEFAULT_MAILBOX_INDEX = new IndexName("mailbox");
-    TypeName MESSAGE_TYPE = new TypeName("message");
+public class AliasName {
+    private final String value;
+
+    public AliasName(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof AliasName) {
+            AliasName aliasName = (AliasName) o;
+
+            return Objects.equals(this.value, aliasName.value);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(value);
+    }
 }

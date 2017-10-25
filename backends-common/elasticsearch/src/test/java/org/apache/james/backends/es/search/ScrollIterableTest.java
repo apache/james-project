@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.james.backends.es.AliasName;
 import org.apache.james.backends.es.ClientProvider;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.backends.es.IndexCreationFactory;
@@ -52,6 +53,7 @@ public class ScrollIterableTest {
     public static final int SIZE = 2;
     public static final String MESSAGE = "message";
     public static final IndexName INDEX_NAME = new IndexName("index");
+    public static final AliasName ALIAS_NAME = new AliasName("alias");
     public static final TypeName TYPE_NAME = new TypeName("messages");
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -65,7 +67,7 @@ public class ScrollIterableTest {
     @Before
     public void setUp() throws Exception {
         clientProvider = new TestingClientProvider(embeddedElasticSearch.getNode());
-        IndexCreationFactory.createIndex(clientProvider.get(), INDEX_NAME);
+        IndexCreationFactory.createIndexAndAlias(clientProvider.get(), INDEX_NAME, ALIAS_NAME);
         embeddedElasticSearch.awaitForElasticSearch();
         NodeMappingFactory.applyMapping(clientProvider.get(), INDEX_NAME, TYPE_NAME, getMappingsSources());
     }

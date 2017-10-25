@@ -28,6 +28,7 @@ import javax.inject.Singleton;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.james.backends.es.AliasName;
 import org.apache.james.backends.es.ClientProviderImpl;
 import org.apache.james.backends.es.IndexCreationFactory;
 import org.apache.james.backends.es.IndexName;
@@ -75,7 +76,8 @@ public class ElasticSearchMailboxModule extends AbstractModule {
     }
 
     @Provides
-    protected IndexName provideIndexName(ElasticSearchConfiguration elasticSearchConfiguration) throws ConfigurationException {
+    protected IndexName provideIndexName(ElasticSearchConfiguration elasticSearchConfiguration)
+            throws ConfigurationException {
         try {
             return Optional.ofNullable(elasticSearchConfiguration.getConfiguration()
                 .getString("elasticsearch.index.name"))
@@ -88,22 +90,37 @@ public class ElasticSearchMailboxModule extends AbstractModule {
     }
 
     @Provides
+    protected AliasName provideAliasName(ElasticSearchConfiguration elasticSearchConfiguration)
+            throws ConfigurationException {
+        try {
+            return Optional.ofNullable(elasticSearchConfiguration.getConfiguration()
+                .getString("elasticsearch.alias.name"))
+                .map(AliasName::new)
+                .orElse(MailboxElasticsearchConstants.DEFAULT_MAILBOX_ALIAS);
+        } catch (FileNotFoundException e) {
+            LOGGER.info("Could not find ElasticSearch configuration file. Using default alias {}", MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX.getValue());
+            return MailboxElasticsearchConstants.DEFAULT_MAILBOX_ALIAS;
+        }
+    }
+
+    @Provides
     @Singleton
     protected Client provideClientProvider(ElasticSearchConfiguration elasticSearchConfiguration,
-                                           IndexName indexName,
+                                           IndexName indexName, AliasName aliasName,
                                            AsyncRetryExecutor executor) throws ConfigurationException, FileNotFoundException, ExecutionException, InterruptedException {
         PropertiesConfiguration propertiesReader = elasticSearchConfiguration.getConfiguration();
         int maxRetries = propertiesReader.getInt("elasticsearch.retryConnection.maxRetries", DEFAULT_CONNECTION_MAX_RETRIES);
         int minDelay = propertiesReader.getInt("elasticsearch.retryConnection.minDelay", DEFAULT_CONNECTION_MIN_DELAY);
 
         return RetryExecutorUtil.retryOnExceptions(executor, maxRetries, minDelay, NoNodeAvailableException.class)
-            .getWithRetry(context -> connectToCluster(propertiesReader, indexName))
+            .getWithRetry(context -> connectToCluster(propertiesReader, indexName, aliasName))
             .get();
     }
 
-    private Client createIndexAndMapping(Client client, IndexName indexName, PropertiesConfiguration propertiesReader) {
-        IndexCreationFactory.createIndex(client,
+    private Client createIndexAndMapping(Client client, IndexName indexName, AliasName aliasName, PropertiesConfiguration propertiesReader) {
+        IndexCreationFactory.createIndexAndAlias(client,
             indexName,
+            aliasName,
             propertiesReader.getInt(ELASTICSEARCH_CONFIGURATION_NAME + ".nb.shards", DEFAULT_NB_SHARDS),
             propertiesReader.getInt(ELASTICSEARCH_CONFIGURATION_NAME + ".nb.replica", DEFAULT_NB_REPLICA));
         NodeMappingFactory.applyMapping(client,
@@ -113,10 +130,11 @@ public class ElasticSearchMailboxModule extends AbstractModule {
         return client;
     }
 
-    private Client connectToCluster(PropertiesConfiguration propertiesReader, IndexName indexName) throws ConfigurationException {
+    private Client connectToCluster(PropertiesConfiguration propertiesReader, IndexName indexName, AliasName aliasName)
+            throws ConfigurationException {
         LOGGER.info("Trying to connect to ElasticSearch service at {}", LocalDateTime.now());
 
-        return createIndexAndMapping(createClient(propertiesReader), indexName, propertiesReader);
+        return createIndexAndMapping(createClient(propertiesReader), indexName, aliasName, propertiesReader);
     }
 
     @Provides

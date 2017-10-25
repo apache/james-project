@@ -29,6 +29,7 @@ import java.util.Optional;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.james.backends.es.AliasName;
 import org.apache.james.backends.es.IndexName;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticsearchConstants;
@@ -77,6 +78,44 @@ public class ElasticSearchMailboxModuleTest {
 
         assertThat(indexName)
             .isEqualTo(MailboxElasticsearchConstants.DEFAULT_MAILBOX_INDEX);
+    }
+
+    @Test
+    public void provideAliasNameShouldRetrievedConfiguredAliasName() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String name = "name";
+        configuration.addProperty("elasticsearch.alias.name", name);
+
+        ElasticSearchMailboxModule testee = new ElasticSearchMailboxModule();
+
+        AliasName indexName = testee.provideAliasName(() -> configuration);
+
+        assertThat(indexName)
+            .isEqualTo(new AliasName(name));
+    }
+
+    @Test
+    public void provideAliasNameShouldReturnDefaultAliasNameWhenNone() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+
+        ElasticSearchMailboxModule testee = new ElasticSearchMailboxModule();
+
+        AliasName aliasName = testee.provideAliasName(() -> configuration);
+
+        assertThat(aliasName)
+            .isEqualTo(MailboxElasticsearchConstants.DEFAULT_MAILBOX_ALIAS);
+    }
+
+    @Test
+    public void provideAliasNameShouldReturnDefaultAliasNameWhenError() throws ConfigurationException {
+        ElasticSearchMailboxModule testee = new ElasticSearchMailboxModule();
+
+        AliasName aliasName = testee.provideAliasName(() -> {
+            throw new FileNotFoundException();
+        });
+
+        assertThat(aliasName)
+            .isEqualTo(MailboxElasticsearchConstants.DEFAULT_MAILBOX_ALIAS);
     }
 
     @Test
