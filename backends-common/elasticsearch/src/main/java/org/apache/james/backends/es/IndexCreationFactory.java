@@ -51,12 +51,12 @@ public class IndexCreationFactory {
 
     private static Client createIndex(Client client, IndexName name, XContentBuilder settings) {
         try {
-                client.admin()
-                    .indices()
-                    .prepareCreate(name.getValue())
-                    .setSettings(settings)
-                    .execute()
-                    .actionGet();
+            client.admin()
+                .indices()
+                .prepareCreate(name.getValue())
+                .setSettings(settings)
+                .execute()
+                .actionGet();
         } catch (IndexAlreadyExistsException exception) {
             LOGGER.info("Index [" + name + "] already exist");
         }
