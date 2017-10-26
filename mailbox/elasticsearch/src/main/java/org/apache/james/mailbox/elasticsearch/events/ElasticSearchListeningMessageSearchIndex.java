@@ -79,7 +79,12 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
 
     @Override
     public EnumSet<SearchCapabilities> getSupportedCapabilities(EnumSet<MessageCapabilities> messageCapabilities) {
-        return EnumSet.of(SearchCapabilities.MultimailboxSearch, SearchCapabilities.Text, SearchCapabilities.FullText, SearchCapabilities.Attachment);
+        return EnumSet.of(
+            SearchCapabilities.MultimailboxSearch,
+            SearchCapabilities.Text,
+            SearchCapabilities.FullText,
+            SearchCapabilities.Attachment,
+            SearchCapabilities.PartialEmailMatch);
     }
     
     @Override

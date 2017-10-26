@@ -95,6 +95,7 @@ public abstract class AbstractMessageSearchIndexTest {
     private StoreMessageManager myFolderMessageManager;
     private MailboxPath inboxPath;
     private MailboxPath otherInboxPath;
+    private StoreMessageManager inboxMessageManager;
 
 
     @Before
@@ -110,7 +111,7 @@ public abstract class AbstractMessageSearchIndexTest {
         storeMailboxManager.createMailbox(inboxPath, session);
         storeMailboxManager.createMailbox(otherInboxPath, otherSession);
 
-        StoreMessageManager inboxMessageManager = (StoreMessageManager) storeMailboxManager.getMailbox(inboxPath, session);
+        inboxMessageManager = (StoreMessageManager) storeMailboxManager.getMailbox(inboxPath, session);
         StoreMessageManager otherInboxMessageManager = (StoreMessageManager) storeMailboxManager.getMailbox(otherInboxPath, otherSession);
 
         MailboxPath myFolderPath = MailboxPath.forUser(USERNAME, "MyFolder");
@@ -418,6 +419,34 @@ public abstract class AbstractMessageSearchIndexTest {
 
         assertThat(messageSearchIndex.search(session, mailbox2, searchQuery))
             .contains(mailWithDotsInHeader.getUid());
+    }
+
+    @Test
+    public void searchShouldBeExactOnEmailAddresses() throws MailboxException {
+        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+
+        ComposedMessageId m11 = inboxMessageManager.appendMessage(
+            ClassLoader.getSystemResourceAsStream("eml/mail5.eml"),
+            new Date(1396389600000L),
+            session,
+            RECENT,
+            new Flags(Flags.Flag.FLAGGED));
+
+        String emailToSearch = "luc.duzan@james.apache.org";
+
+        await();
+
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.or(ImmutableList.of(
+            SearchQuery.address(AddressType.From, emailToSearch),
+            SearchQuery.address(AddressType.To, emailToSearch),
+            SearchQuery.address(AddressType.Cc, emailToSearch),
+            SearchQuery.address(AddressType.Bcc, emailToSearch),
+            SearchQuery.headerContains("Subject", emailToSearch),
+            SearchQuery.attachmentContains(emailToSearch),
+            SearchQuery.bodyContains(emailToSearch))));
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsOnly(m11.getUid());
     }
 
     @Test
@@ -767,6 +796,30 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
+    public void addressShouldReturnUidHavingRightExpeditorWhenFromIsSpecifiedWithOnlyUserPartOfEmail() throws Exception {
+        Assume.assumeTrue(storeMailboxManager
+            .getSupportedSearchCapabilities()
+            .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
+
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.address(AddressType.From, "murari"));
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsOnly(m8.getUid());
+    }
+
+    @Test
+    public void addressShouldReturnUidHavingRightExpeditorWhenFromIsSpecifiedWithDomainPartOfEmail() throws Exception {
+        Assume.assumeTrue(storeMailboxManager
+            .getSupportedSearchCapabilities()
+            .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
+
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.address(AddressType.From, "gmail.com"));
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsOnly(m8.getUid());
+    }
+
+    @Test
     public void addressShouldReturnUidHavingRightRecipientWhenToIsSpecified() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.address(AddressType.To, "root@listes.minet.net"));
 
@@ -775,14 +828,91 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
+    public void addressShouldReturnUidHavingRightRecipientWhenToIsSpecifiedWithOnlyEmailUserPart() throws Exception {
+        Assume.assumeTrue(storeMailboxManager
+            .getSupportedSearchCapabilities()
+            .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
+
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.address(AddressType.To, "root"));
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsOnly(m1.getUid());
+    }
+
+    @Test
+    public void addressShouldReturnUidHavingRightRecipientWhenToIsSpecifiedWithOnlyDomainPartSpecified() throws Exception {
+        Assume.assumeTrue(storeMailboxManager
+            .getSupportedSearchCapabilities()
+            .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
+
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.address(AddressType.To, "listes.minet.net"));
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsOnly(m1.getUid());
+    }
+
+    @Test
     public void addressShouldReturnUidHavingRightRecipientWhenCcIsSpecified() throws Exception {
-        SearchQuery searchQuery = new SearchQuery(SearchQuery.address(AddressType.Cc, "any@any.com"));
+        Assume.assumeTrue(storeMailboxManager
+            .getSupportedSearchCapabilities()
+            .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
+
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.address(AddressType.Cc, "monkey@any.com"));
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsOnly(m5.getUid());
+    }
+
+    @Test
+    public void addressShouldReturnUidHavingRightRecipientWhenCcIsSpecifiedWithOnlyUserPartOfTheEmail() throws Exception {
+        Assume.assumeTrue(storeMailboxManager
+            .getSupportedSearchCapabilities()
+            .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
+
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.address(AddressType.Cc, "monkey"));
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsOnly(m5.getUid());
+    }
+
+    @Test
+    public void addressShouldReturnUidHavingRightRecipientWhenCcIsSpecifiedWithOnlyDomainPartOfTheEmail() throws Exception {
+        Assume.assumeTrue(storeMailboxManager
+            .getSupportedSearchCapabilities()
+            .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
+
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.address(AddressType.Cc, "any.com"));
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsOnly(m5.getUid());
+    }
+
+    @Test
+    public void addressShouldReturnUidHavingRightRecipientWhenBccIsSpecifiedWithOnlyUserPartOfTheEmail() throws Exception {
+        Assume.assumeTrue(storeMailboxManager
+            .getSupportedSearchCapabilities()
+            .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
+
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.address(AddressType.Bcc, "monkey"));
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsOnly(m5.getUid());
+    }
+
+    @Test
+    public void addressShouldReturnUidHavingRightRecipientWhenBccIsSpecifiedWithOnlyDomainPartOfTheEmail() throws Exception {
+        Assume.assumeTrue(storeMailboxManager
+            .getSupportedSearchCapabilities()
+            .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
+
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.address(AddressType.Bcc, "any.com"));
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsOnly(m5.getUid());
     }
 
     @Test
     public void addressShouldReturnUidHavingRightRecipientWhenBccIsSpecified() throws Exception {
+        Assume.assumeTrue(storeMailboxManager
+            .getSupportedSearchCapabilities()
+            .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
+
         SearchQuery searchQuery = new SearchQuery(SearchQuery.address(AddressType.Bcc, "no@no.com"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -917,7 +1047,7 @@ public abstract class AbstractMessageSearchIndexTest {
         // 2 : No cc
         // 3 : Cc : abc@abc.org
         // 4 : zzz@bcd.org
-        // 5 : any@any.com
+        // 5 : monkey@any.com
     }
 
     @Test
@@ -927,7 +1057,7 @@ public abstract class AbstractMessageSearchIndexTest {
         searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.MailboxFrom)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
-            .containsExactly(m3.getUid(), m2.getUid(), m4.getUid(), m5.getUid());
+            .containsExactly(m2.getUid(), m3.getUid(), m4.getUid(), m5.getUid());
         // 2 : jira2@apache.org
         // 3 : jira1@apache.org
         // 4 : jira@apache.org
@@ -1047,9 +1177,17 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithTextShouldReturnMailsWhenToMatches() throws Exception {
+    public void searchWithTextShouldReturnMailsWhenMatches() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
-        SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("listes.minet.net"));
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("root@listes.minet.net"));
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(m1.getUid());
+    }
+    @Test
+    public void searchWithTextShouldReturnMailsWhenToIsNotAnExactMatches() throws Exception {
+        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("root"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsExactly(m1.getUid());
@@ -1058,16 +1196,34 @@ public abstract class AbstractMessageSearchIndexTest {
     @Test
     public void searchWithTextShouldReturnMailsWhenCcMatches() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
-        SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("abc.org"));
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("abc@abc.org"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsExactly(m3.getUid());
     }
 
     @Test
+    public void searchWithTextShouldReturnMailsWhenCcIsNotAExactMatch() throws Exception {
+        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("monkey"));
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(m5.getUid());
+    }
+
+    @Test
     public void searchWithTextShouldReturnMailsWhenBccMatches() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
-        SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("any.com"));
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("monkey@any.com"));
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(m5.getUid());
+    }
+
+    @Test
+    public void searchWithTextShouldReturnMailsWhenBccIsNotAExactMatch() throws Exception {
+        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("monkey"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsExactly(m5.getUid());

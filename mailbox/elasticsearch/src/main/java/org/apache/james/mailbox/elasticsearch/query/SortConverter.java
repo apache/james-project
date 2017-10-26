@@ -51,7 +51,7 @@ public class SortConverter {
                 return SortBuilders.fieldSort(JsonMessageConstants.TO + PATH_SEPARATOR + JsonMessageConstants.EMailer.ADDRESS)
                     .setNestedPath(JsonMessageConstants.TO);
             case BaseSubject :
-                return SortBuilders.fieldSort(JsonMessageConstants.SUBJECT);
+                return SortBuilders.fieldSort(JsonMessageConstants.SUBJECT + PATH_SEPARATOR + NodeMappingFactory.RAW);
             case Size :
                 return SortBuilders.fieldSort(JsonMessageConstants.SIZE);
             case SentDate :

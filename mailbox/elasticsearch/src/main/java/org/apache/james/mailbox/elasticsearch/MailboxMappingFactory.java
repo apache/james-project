@@ -20,6 +20,8 @@
 package org.apache.james.mailbox.elasticsearch;
 
 import static org.apache.james.backends.es.IndexCreationFactory.CASE_INSENSITIVE;
+import static org.apache.james.backends.es.IndexCreationFactory.KEEP_MAIL_AND_URL;
+import static org.apache.james.backends.es.IndexCreationFactory.SNOWBALL_KEEP_MAIL_AND_URL;
 import static org.apache.james.backends.es.NodeMappingFactory.ANALYZER;
 import static org.apache.james.backends.es.NodeMappingFactory.BOOLEAN;
 import static org.apache.james.backends.es.NodeMappingFactory.FIELDS;
@@ -31,7 +33,9 @@ import static org.apache.james.backends.es.NodeMappingFactory.NESTED;
 import static org.apache.james.backends.es.NodeMappingFactory.NOT_ANALYZED;
 import static org.apache.james.backends.es.NodeMappingFactory.PROPERTIES;
 import static org.apache.james.backends.es.NodeMappingFactory.RAW;
+import static org.apache.james.backends.es.NodeMappingFactory.SEARCH_ANALYZER;
 import static org.apache.james.backends.es.NodeMappingFactory.SNOWBALL;
+import static org.apache.james.backends.es.NodeMappingFactory.SPLIT_EMAIL;
 import static org.apache.james.backends.es.NodeMappingFactory.STRING;
 import static org.apache.james.backends.es.NodeMappingFactory.TYPE;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.BCC;
@@ -74,6 +78,7 @@ import com.google.common.base.Throwables;
 public class MailboxMappingFactory {
 
     private static final int MAXIMUM_TERM_LENGTH = 4096;
+    private static final String STANDARD = "standard";
 
     public static XContentBuilder getMappingContent() {
         try {
@@ -154,6 +159,7 @@ public class MailboxMappingFactory {
                                 .startObject(PROPERTIES)
                                     .startObject(EMailer.NAME)
                                         .field(TYPE, STRING)
+                                        .field(ANALYZER, KEEP_MAIL_AND_URL)
                                         .startObject(FIELDS)
                                             .startObject(RAW)
                                                 .field(TYPE, STRING)
@@ -163,13 +169,21 @@ public class MailboxMappingFactory {
                                     .endObject()
                                     .startObject(EMailer.ADDRESS)
                                         .field(TYPE, STRING)
-                                        .field(INDEX, NOT_ANALYZED)
+                                        .field(ANALYZER, STANDARD)
+                                        .field(SEARCH_ANALYZER, KEEP_MAIL_AND_URL)
+                                        .startObject(FIELDS)
+                                            .startObject(RAW)
+                                                .field(TYPE, STRING)
+                                                .field(ANALYZER, CASE_INSENSITIVE)
+                                            .endObject()
+                                        .endObject()
                                     .endObject()
                                 .endObject()
                             .endObject()
 
                             .startObject(SUBJECT)
                                 .field(TYPE, STRING)
+                                .field(ANALYZER, KEEP_MAIL_AND_URL)
                                 .startObject(FIELDS)
                                     .startObject(RAW)
                                         .field(TYPE, STRING)
@@ -183,6 +197,7 @@ public class MailboxMappingFactory {
                                 .startObject(PROPERTIES)
                                     .startObject(EMailer.NAME)
                                         .field(TYPE, STRING)
+                                        .field(ANALYZER, KEEP_MAIL_AND_URL)
                                         .startObject(FIELDS)
                                             .startObject(RAW)
                                                 .field(TYPE, STRING)
@@ -192,7 +207,14 @@ public class MailboxMappingFactory {
                                     .endObject()
                                     .startObject(EMailer.ADDRESS)
                                         .field(TYPE, STRING)
-                                        .field(INDEX, NOT_ANALYZED)
+                                        .field(ANALYZER, STANDARD)
+                                        .field(SEARCH_ANALYZER, KEEP_MAIL_AND_URL)
+                                        .startObject(FIELDS)
+                                            .startObject(RAW)
+                                                .field(TYPE, STRING)
+                                                .field(ANALYZER, CASE_INSENSITIVE)
+                                            .endObject()
+                                        .endObject()
                                     .endObject()
                                 .endObject()
                             .endObject()
@@ -202,10 +224,24 @@ public class MailboxMappingFactory {
                                 .startObject(PROPERTIES)
                                     .startObject(EMailer.NAME)
                                         .field(TYPE, STRING)
+                                        .field(ANALYZER, KEEP_MAIL_AND_URL)
+                                        .startObject(FIELDS)
+                                            .startObject(RAW)
+                                                .field(TYPE, STRING)
+                                                .field(ANALYZER, CASE_INSENSITIVE)
+                                            .endObject()
+                                        .endObject()
                                     .endObject()
                                     .startObject(EMailer.ADDRESS)
                                         .field(TYPE, STRING)
-                                        .field(INDEX, NOT_ANALYZED)
+                                        .field(ANALYZER, STANDARD)
+                                        .field(SEARCH_ANALYZER, KEEP_MAIL_AND_URL)
+                                        .startObject(FIELDS)
+                                            .startObject(RAW)
+                                            .field(TYPE, STRING)
+                                            .field(ANALYZER, CASE_INSENSITIVE)
+                                            .endObject()
+                                        .endObject()
                                     .endObject()
                                 .endObject()
                             .endObject()
@@ -215,10 +251,24 @@ public class MailboxMappingFactory {
                                 .startObject(PROPERTIES)
                                     .startObject(EMailer.NAME)
                                         .field(TYPE, STRING)
+                                        .field(ANALYZER, KEEP_MAIL_AND_URL)
+                                        .startObject(FIELDS)
+                                            .startObject(RAW)
+                                                .field(TYPE, STRING)
+                                                .field(ANALYZER, CASE_INSENSITIVE)
+                                            .endObject()
+                                        .endObject()
                                     .endObject()
                                     .startObject(EMailer.ADDRESS)
                                         .field(TYPE, STRING)
-                                        .field(INDEX, NOT_ANALYZED)
+                                        .field(ANALYZER, STANDARD)
+                                        .field(SEARCH_ANALYZER, KEEP_MAIL_AND_URL)
+                                        .startObject(FIELDS)
+                                            .startObject(RAW)
+                                                .field(TYPE, STRING)
+                                                .field(ANALYZER, CASE_INSENSITIVE)
+                                            .endObject()
+                                        .endObject()
                                     .endObject()
                                 .endObject()
                             .endObject()
@@ -246,13 +296,20 @@ public class MailboxMappingFactory {
                                     .endObject()
                                     .startObject(Property.VALUE)
                                         .field(TYPE, STRING)
+                                        .field(INDEX, NOT_ANALYZED)
                                     .endObject()
                                 .endObject()
                             .endObject()
 
                             .startObject(TEXT_BODY)
                                 .field(TYPE, STRING)
+                                .field(ANALYZER, KEEP_MAIL_AND_URL)
                                 .startObject(FIELDS)
+                                    .startObject(SPLIT_EMAIL)
+                                        .field(TYPE, STRING)
+                                        .field(ANALYZER, STANDARD)
+                                        .field(SEARCH_ANALYZER, KEEP_MAIL_AND_URL)
+                                    .endObject()
                                     .startObject(RAW)
                                         .field(TYPE, STRING)
                                         .field(ANALYZER, CASE_INSENSITIVE)
@@ -263,7 +320,13 @@ public class MailboxMappingFactory {
 
                             .startObject(HTML_BODY)
                                 .field(TYPE, STRING)
+                                .field(ANALYZER, KEEP_MAIL_AND_URL)
                                 .startObject(FIELDS)
+                                    .startObject(SPLIT_EMAIL)
+                                        .field(TYPE, STRING)
+                                        .field(ANALYZER, STANDARD)
+                                        .field(SEARCH_ANALYZER, KEEP_MAIL_AND_URL)
+                                    .endObject()
                                     .startObject(RAW)
                                         .field(TYPE, STRING)
                                         .field(ANALYZER, CASE_INSENSITIVE)
@@ -278,8 +341,15 @@ public class MailboxMappingFactory {
 
                             .startObject(TEXT)
                                 .field(TYPE, STRING)
-                                .field(ANALYZER, SNOWBALL)
+                                .field(ANALYZER, SNOWBALL_KEEP_MAIL_AND_URL)
                                 .field(IGNORE_ABOVE, MAXIMUM_TERM_LENGTH)
+                                .startObject(FIELDS)
+                                    .startObject(SPLIT_EMAIL)
+                                        .field(TYPE, STRING)
+                                        .field(ANALYZER, SNOWBALL)
+                                        .field(SEARCH_ANALYZER, SNOWBALL_KEEP_MAIL_AND_URL)
+                                    .endObject()
+                                .endObject()
                             .endObject()
                         .endObject()
                     .endObject()
@@ -288,5 +358,4 @@ public class MailboxMappingFactory {
             throw Throwables.propagate(e);
         }
     }
-
 }
