@@ -35,6 +35,24 @@
             </div>
         </div>
 
+        <section name="Version 3.0.1">
+
+            <p>Released October 2017</p>
+
+            <p>The Apache James PMCs are glad to announce you the release
+                version 3.0.1 of Apache James server.</p>
+
+            <p>It fixes vulnerability described in CVE-2017-12628. The JMX server, also
+                used by the command line client is exposed to a java de-serialization
+                issue, and thus can be used to execute arbitrary commands. As James
+                exposes JMX socket by default only on local-host, this vulnerability can
+                only be used for privilege escalation.</p>
+
+            <p>If you're interested in contributing to the James project, please subscribe to the James
+                <a href="http://james.apache.org/mail.html">mailing lists</a>.</p>
+
+        </section>
+
         <section name="Version 3.0.0">
 
             <p>Released July 2017</p>
