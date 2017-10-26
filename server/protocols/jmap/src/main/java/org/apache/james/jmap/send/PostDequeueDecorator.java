@@ -96,21 +96,22 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
 
     private boolean checkMessageIdAttribute() {
         Serializable messageId = getMail().getAttribute(MailMetadata.MAIL_METADATA_MESSAGE_ID_ATTRIBUTE);
-        if (messageId == null || ! (messageId instanceof String)) {
-            return false;
+        if (messageId instanceof String) {
+            try {
+                messageIdFactory.fromString((String) messageId);
+                return true;
+            } catch (Exception e) {
+                LOG.error("Invalid messageId: {}", messageId, e);
+            }
+        } else if (messageId != null) {
+            LOG.error("Non-String messageId {} has type {}", messageId, messageId.getClass());
         }
-        try {
-            messageIdFactory.fromString((String) messageId);
-        } catch (Exception e) {
-            LOG.error("Invalid messageId: " + messageId, e);
-            return false;
-        }
-        return true;
+        return false;
     }
 
     private boolean checkUsernameAttribute() {
         Serializable username = getMail().getAttribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE);
-        return (username != null && username instanceof String);
+        return (username instanceof String);
     }
 
     private void moveFromOutboxToSent(MessageId messageId, MailboxSession mailboxSession) throws MailQueueException, MailboxException {
