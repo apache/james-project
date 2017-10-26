@@ -19,6 +19,8 @@
 
 package org.apache.james.backends.es;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.junit.Before;
 import org.junit.Rule;
@@ -42,7 +44,7 @@ public class IndexCreationFactoryTest {
     public void setUp() {
         clientProvider = new TestingClientProvider(embeddedElasticSearch.getNode());
         new IndexCreationFactory()
-            .onIndex(INDEX_NAME)
+            .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .createIndexAndAliases(clientProvider.get());
     }
@@ -50,8 +52,48 @@ public class IndexCreationFactoryTest {
     @Test
     public void createIndexAndAliasShouldNotThrowWhenCalledSeveralTime() {
         new IndexCreationFactory()
-            .onIndex(INDEX_NAME)
+            .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .createIndexAndAliases(clientProvider.get());
+    }
+
+    @Test
+    public void useIndexShouldThrowWhenNull() {
+        assertThatThrownBy(() ->
+            new IndexCreationFactory()
+                .useIndex(null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void addAliasShouldThrowWhenNull() {
+        assertThatThrownBy(() ->
+            new IndexCreationFactory()
+                .addAlias(null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void nbReplicaShouldThrowWhenNegative() {
+        assertThatThrownBy(() ->
+            new IndexCreationFactory()
+                .nbReplica(-1))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void nbShardsShouldThrowWhenNegative() {
+        assertThatThrownBy(() ->
+            new IndexCreationFactory()
+                .nbShards(-1))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void nbShardsShouldThrowWhenZero() {
+        assertThatThrownBy(() ->
+            new IndexCreationFactory()
+                .nbShards(0))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 }

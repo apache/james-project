@@ -59,7 +59,7 @@ public class ElasticSearchIndexerTest {
         node = embeddedElasticSearch.getNode();
         TestingClientProvider clientProvider = new TestingClientProvider(node);
         new IndexCreationFactory()
-            .onIndex(INDEX_NAME)
+            .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .createIndexAndAliases(clientProvider.get());
         DeleteByQueryPerformer deleteByQueryPerformer = new DeleteByQueryPerformer(clientProvider.get(),

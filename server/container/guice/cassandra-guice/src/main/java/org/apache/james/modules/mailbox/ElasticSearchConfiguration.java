@@ -91,35 +91,35 @@ public class ElasticSearchConfiguration {
     }
 
     private static ImmutableList<Host> getHosts(PropertiesConfiguration propertiesReader) throws ConfigurationException {
-        Optional<String> monoHostAddress = Optional.ofNullable(
+        Optional<String> masterHost = Optional.ofNullable(
             propertiesReader.getString(ELASTICSEARCH_MASTER_HOST, null));
-        Optional<Integer> monoHostPort = Optional.ofNullable(
+        Optional<Integer> masterPort = Optional.ofNullable(
             propertiesReader.getInteger(ELASTICSEARCH_PORT, null));
         Optional<String> multiHosts = Optional.ofNullable(
             propertiesReader.getString(ELASTICSEARCH_HOSTS, null));
 
-        validateHostsConfigurationOptions(monoHostAddress, monoHostPort, multiHosts);
+        validateHostsConfigurationOptions(masterHost, masterPort, multiHosts);
 
-        if (monoHostAddress.isPresent()) {
+        if (masterHost.isPresent()) {
             return ImmutableList.of(
-                Host.from(monoHostAddress.get(),
-                monoHostPort.get()));
+                Host.from(masterHost.get(),
+                masterPort.get()));
         } else {
             return Host.parseHosts(multiHosts.get(), DEFAULT_PORT);
         }
     }
 
     @VisibleForTesting
-    static void validateHostsConfigurationOptions(Optional<String> monoHostAddress,
-                                                  Optional<Integer> monoHostPort,
+    static void validateHostsConfigurationOptions(Optional<String> masterHost,
+                                                  Optional<Integer> masterPort,
                                                   Optional<String> multiHosts) throws ConfigurationException {
-        if (monoHostAddress.isPresent() != monoHostPort.isPresent()) {
+        if (masterHost.isPresent() != masterPort.isPresent()) {
             throw new ConfigurationException(ELASTICSEARCH_MASTER_HOST + " and " + ELASTICSEARCH_PORT + " should be specified together");
         }
-        if (multiHosts.isPresent() && monoHostAddress.isPresent()) {
+        if (multiHosts.isPresent() && masterHost.isPresent()) {
             throw new ConfigurationException("You should choose between mono host set up and " + ELASTICSEARCH_HOSTS);
         }
-        if (!multiHosts.isPresent() && !monoHostAddress.isPresent()) {
+        if (!multiHosts.isPresent() && !masterHost.isPresent()) {
             throw new ConfigurationException("You should specify either (" + ELASTICSEARCH_MASTER_HOST + " and " + ELASTICSEARCH_PORT + ") or " + ELASTICSEARCH_HOSTS);
         }
     }

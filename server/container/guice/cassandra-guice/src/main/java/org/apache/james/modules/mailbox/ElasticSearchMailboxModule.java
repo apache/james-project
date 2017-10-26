@@ -100,7 +100,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
     @Singleton
     protected IndexCreationFactory provideIndexCreationFactory(ElasticSearchConfiguration configuration) {
         return new IndexCreationFactory()
-            .onIndex(configuration.getIndexName())
+            .useIndex(configuration.getIndexName())
             .addAlias(configuration.getReadAliasName())
             .addAlias(configuration.getWriteAliasName())
             .nbShards(configuration.getNbShards())
