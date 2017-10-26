@@ -85,7 +85,7 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
                     moveFromOutboxToSentWithSeenFlag(messageId, mailboxSession);
                     getMail().setAttribute(IS_DELIVERED, IS_DELIVERED);
                 } catch (MailShouldBeInOutboxException e) {
-                    LOG.info("Message does not exist on Outbox anymore, it could have already been sent {}", e.toString());
+                    LOG.info("Message does not exist on Outbox anymore, it could have already been sent", e);
                 } catch (MailboxException e) {
                     throw new MailQueueException(e.getMessage(), e);
                 }
