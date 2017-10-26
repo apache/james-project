@@ -62,7 +62,7 @@ public class Host {
         return parse(ipAndPort, Optional.empty());
     }
 
-    private static Host parse(String ipAndPort, Optional<Integer> defaultPort) {
+    public static Host parse(String ipAndPort, Optional<Integer> defaultPort) {
         Preconditions.checkNotNull(ipAndPort);
         Preconditions.checkArgument(!ipAndPort.isEmpty());
 

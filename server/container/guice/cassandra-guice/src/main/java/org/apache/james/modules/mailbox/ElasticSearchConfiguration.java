@@ -19,6 +19,8 @@
 
 package org.apache.james.modules.mailbox;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -30,6 +32,7 @@ import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
 import org.apache.james.util.Host;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
@@ -52,6 +55,7 @@ public class ElasticSearchConfiguration {
     public static final int DEFAULT_NB_SHARDS = 1;
     public static final int DEFAULT_NB_REPLICA = 0;
     public static final int DEFAULT_PORT = 9300;
+    public static final Optional<Integer> DEFAULT_PORT_AS_OPTIONAL = Optional.of(DEFAULT_PORT);
 
     public static ElasticSearchConfiguration fromProperties(PropertiesConfiguration configuration) throws ConfigurationException {
         int nbShards = configuration.getInt(ELASTICSEARCH_NB_SHARDS, DEFAULT_NB_SHARDS);
@@ -95,8 +99,7 @@ public class ElasticSearchConfiguration {
             propertiesReader.getString(ELASTICSEARCH_MASTER_HOST, null));
         Optional<Integer> masterPort = Optional.ofNullable(
             propertiesReader.getInteger(ELASTICSEARCH_PORT, null));
-        Optional<String> multiHosts = Optional.ofNullable(
-            propertiesReader.getString(ELASTICSEARCH_HOSTS, null));
+        List<String> multiHosts = Arrays.asList(propertiesReader.getStringArray(ELASTICSEARCH_HOSTS));
 
         validateHostsConfigurationOptions(masterHost, masterPort, multiHosts);
 
@@ -105,21 +108,23 @@ public class ElasticSearchConfiguration {
                 Host.from(masterHost.get(),
                 masterPort.get()));
         } else {
-            return Host.parseHosts(multiHosts.get(), DEFAULT_PORT);
+            return multiHosts.stream()
+                .map(ipAndPort -> Host.parse(ipAndPort, DEFAULT_PORT_AS_OPTIONAL))
+                .collect(Guavate.toImmutableList());
         }
     }
 
     @VisibleForTesting
     static void validateHostsConfigurationOptions(Optional<String> masterHost,
                                                   Optional<Integer> masterPort,
-                                                  Optional<String> multiHosts) throws ConfigurationException {
+                                                  List<String> multiHosts) throws ConfigurationException {
         if (masterHost.isPresent() != masterPort.isPresent()) {
             throw new ConfigurationException(ELASTICSEARCH_MASTER_HOST + " and " + ELASTICSEARCH_PORT + " should be specified together");
         }
-        if (multiHosts.isPresent() && masterHost.isPresent()) {
+        if (!multiHosts.isEmpty() && masterHost.isPresent()) {
             throw new ConfigurationException("You should choose between mono host set up and " + ELASTICSEARCH_HOSTS);
         }
-        if (!multiHosts.isPresent() && !masterHost.isPresent()) {
+        if (multiHosts.isEmpty() && !masterHost.isPresent()) {
             throw new ConfigurationException("You should specify either (" + ELASTICSEARCH_MASTER_HOST + " and " + ELASTICSEARCH_PORT + ") or " + ELASTICSEARCH_HOSTS);
         }
     }

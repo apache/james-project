@@ -33,6 +33,8 @@ import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
 import org.apache.james.util.Host;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
+
 public class ElasticSearchConfigurationTest {
 
     @Test
@@ -253,6 +255,21 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
+    public void getHostsShouldReturnConfiguredHostsWhenListIsUsed() throws ConfigurationException {
+        String hostname = "myHost";
+        String hostname2 = "myOtherHost";
+        int port = 2154;
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("elasticsearch.hosts", hostname + "," + hostname2 + ":" + port);
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getHosts())
+            .containsOnly(Host.from(hostname, ElasticSearchConfiguration.DEFAULT_PORT),
+                Host.from(hostname2, port));
+    }
+
+    @Test
     public void getHostsShouldReturnConfiguredHosts() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String hostname = "myHost";
@@ -285,7 +302,7 @@ public class ElasticSearchConfigurationTest {
             ElasticSearchConfiguration.validateHostsConfigurationOptions(
                 Optional.empty(),
                 Optional.empty(),
-                Optional.empty()))
+                ImmutableList.of()))
             .isInstanceOf(ConfigurationException.class)
             .hasMessage("You should specify either (" + ElasticSearchConfiguration.ELASTICSEARCH_MASTER_HOST +
                 " and " + ElasticSearchConfiguration.ELASTICSEARCH_PORT +
@@ -298,7 +315,7 @@ public class ElasticSearchConfigurationTest {
             ElasticSearchConfiguration.validateHostsConfigurationOptions(
                 Optional.of("localhost"),
                 Optional.of(9200),
-                Optional.of("localhost:9200")))
+                ImmutableList.of("localhost:9200")))
             .isInstanceOf(ConfigurationException.class)
             .hasMessage("You should choose between mono host set up and " + ElasticSearchConfiguration.ELASTICSEARCH_HOSTS);
     }
@@ -309,7 +326,7 @@ public class ElasticSearchConfigurationTest {
             ElasticSearchConfiguration.validateHostsConfigurationOptions(
                 Optional.of("localhost"),
                 Optional.empty(),
-                Optional.empty()))
+                ImmutableList.of()))
             .isInstanceOf(ConfigurationException.class)
             .hasMessage(ElasticSearchConfiguration.ELASTICSEARCH_MASTER_HOST +
                 " and " + ElasticSearchConfiguration.ELASTICSEARCH_PORT + " should be specified together");
@@ -321,7 +338,7 @@ public class ElasticSearchConfigurationTest {
         ElasticSearchConfiguration.validateHostsConfigurationOptions(
             Optional.empty(),
             Optional.of(9200),
-            Optional.empty()))
+            ImmutableList.of()))
         .isInstanceOf(ConfigurationException.class)
         .hasMessage(ElasticSearchConfiguration.ELASTICSEARCH_MASTER_HOST + " and " +
             ElasticSearchConfiguration.ELASTICSEARCH_PORT + " should be specified together");
@@ -332,7 +349,7 @@ public class ElasticSearchConfigurationTest {
         ElasticSearchConfiguration.validateHostsConfigurationOptions(
             Optional.of("localhost"),
             Optional.of(9200),
-            Optional.empty());
+            ImmutableList.of());
     }
 
     @Test
@@ -340,7 +357,7 @@ public class ElasticSearchConfigurationTest {
         ElasticSearchConfiguration.validateHostsConfigurationOptions(
             Optional.empty(),
             Optional.empty(),
-            Optional.of("localhost:9200"));
+            ImmutableList.of("localhost:9200"));
     }
 
 
