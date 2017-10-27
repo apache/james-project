@@ -13,6 +13,7 @@ ORIGIN=/origin
 CASSANDRA_DESTINATION=/cassandra/destination
 JPA_DESTINATION=/jpa/destination
 SPRING_DESTINATION=/spring/destination
+SWAGGER_DESTINATION=/swagger
 
 for arg in "$@"
 do
@@ -46,9 +47,9 @@ git checkout $SHA1
 # Compilation
 
 if [ "$SKIPTESTS" = "skipTests" ]; then
-   mvn package -DskipTests -Pcassandra,inmemory,jpa,elasticsearch,lucene,with-assembly,with-jetm
+   mvn package -DskipTests -Pcassandra,inmemory,jpa,elasticsearch,lucene,with-assembly,with-jetm,swagger-json
 else
-   mvn package -Pcassandra,inmemory,jpa,elasticsearch,lucene,with-assembly,with-jetm
+   mvn package -Pcassandra,inmemory,jpa,elasticsearch,lucene,with-assembly,with-jetm,swagger-json
 fi
 
 # Retrieve result
@@ -76,5 +77,11 @@ if [ $? -eq 0 ]; then
    if [ -d "$SPRING_DESTINATION" ]; then
       echo "Copying SPRING jars"
       cp server/app/target/james-server-app-*-app.zip $SPRING_DESTINATION
+   fi
+
+   if [ -d "$SWAGGER_DESTINATION" ]; then
+      cp server/protocols/webadmin/webadmin-data/target/webadmin-data.json $SWAGGER_DESTINATION || true
+      cp server/protocols/webadmin/webadmin-mailbox/target/webadmin-mailbox.json $SWAGGER_DESTINATION || true
+      cp server/protocols/webadmin/webadmin-swagger/target/webadmin-swagger.json $SWAGGER_DESTINATION || true
    fi
 fi
