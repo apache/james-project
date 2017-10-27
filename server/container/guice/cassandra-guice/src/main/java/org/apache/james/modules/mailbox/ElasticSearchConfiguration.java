@@ -55,7 +55,19 @@ public class ElasticSearchConfiguration {
     public static final int DEFAULT_NB_SHARDS = 1;
     public static final int DEFAULT_NB_REPLICA = 0;
     public static final int DEFAULT_PORT = 9300;
+    private static final String LOCALHOST = "127.0.0.1";
     public static final Optional<Integer> DEFAULT_PORT_AS_OPTIONAL = Optional.of(DEFAULT_PORT);
+
+    public static final ElasticSearchConfiguration DEFAULT_CONFIGURATION = new ElasticSearchConfiguration(
+        ImmutableList.of(Host.from(LOCALHOST, DEFAULT_PORT)),
+        MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX,
+        MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
+        MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
+        DEFAULT_NB_SHARDS,
+        DEFAULT_NB_REPLICA,
+        DEFAULT_CONNECTION_MIN_DELAY,
+        DEFAULT_CONNECTION_MAX_RETRIES,
+        IndexAttachments.YES);
 
     public static ElasticSearchConfiguration fromProperties(PropertiesConfiguration configuration) throws ConfigurationException {
         int nbShards = configuration.getInt(ELASTICSEARCH_NB_SHARDS, DEFAULT_NB_SHARDS);
