@@ -154,7 +154,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
     }
 
     @Override
-    protected MailboxManager getMailboxManager() {
+    public MailboxManager getMailboxManager() {
         return mailboxManager;
     }
 }

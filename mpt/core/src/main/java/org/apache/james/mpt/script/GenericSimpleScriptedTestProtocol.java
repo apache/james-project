@@ -30,9 +30,13 @@ import org.apache.james.mpt.api.HostSystem;
 import org.apache.james.mpt.api.Session;
 import org.apache.james.mpt.protocol.FileProtocolSessionBuilder;
 import org.apache.james.mpt.protocol.ProtocolSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GenericSimpleScriptedTestProtocol<T extends HostSystem, SELF extends GenericSimpleScriptedTestProtocol<?, ?>> {
-    
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GenericSimpleScriptedTestProtocol.class);
+
     public interface PrepareCommand<T extends HostSystem> {
         void prepare(T system) throws Exception;
     }
@@ -48,7 +52,11 @@ public class GenericSimpleScriptedTestProtocol<T extends HostSystem, SELF extend
         }
         
         public void prepare(HostSystem system) throws Exception {
-            system.addUser(user, password);
+            try {
+                system.addUser(user, password);
+            } catch (Exception e) {
+                LOGGER.info("User {} already exists");
+            }
         }
     }
     
