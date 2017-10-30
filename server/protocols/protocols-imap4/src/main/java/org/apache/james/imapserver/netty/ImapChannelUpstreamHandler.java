@@ -204,9 +204,7 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
 
                 if (failure != null) {
                     LOGGER.info(failure.getMessage());
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("Failed to write " + message, failure);
-                    }
+                    LOGGER.debug("Failed to write {}", message, failure);
                     throw failure;
                 }
             } finally {

@@ -244,9 +244,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             final MessageUid uid = mr.getUid();
             int msn = selected.msn(uid);
             if (msn == SelectedMailbox.NO_SUCH_MESSAGE) {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("No message found with uid " + uid + " in the uid<->msn mapping for mailbox " + selected.getPath().getFullName(mailboxSession.getPathDelimiter()) +" , this may be because it was deleted by a concurrent session. So skip it..");
-                }  
+                LOGGER.debug("No message found with uid {} in the uid<->msn mapping for mailbox {}. This may be because it was deleted by a concurrent session. So skip it..", uid, selected.getPath().getFullName(mailboxSession.getPathDelimiter()));
                     
 
                 // skip this as it was not found in the mapping
@@ -319,7 +317,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     }
 
     private void handleResponseException(ImapProcessor.Responder responder, MailboxException e, HumanReadableText message, ImapSession session) {
-        LOGGER.error(message.toString(), e);
+        LOGGER.error("{}", message, e);
         // TODO: consider whether error message should be passed to the user
         final StatusResponse response = factory.untaggedNo(message);
         responder.respond(response);

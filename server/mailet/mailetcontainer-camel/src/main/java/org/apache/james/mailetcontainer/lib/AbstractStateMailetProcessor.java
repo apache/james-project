@@ -138,14 +138,10 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
         for (MatcherMailetPair pair : pairs) {
             Mailet mailet = pair.getMailet();
             Matcher matcher = pair.getMatcher();
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Shutdown matcher " + matcher.getMatcherInfo());
-            }
+            LOGGER.debug("Shutdown matcher {}", matcher.getMatcherInfo());
             matcher.destroy();
 
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Shutdown mailet " + mailet.getMailetInfo());
-            }
+            LOGGER.debug("Shutdown mailet {}", mailet.getMailetInfo());
             mailet.destroy();
 
         }
@@ -347,35 +343,23 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
                 }
 
                 // The matcher itself should log that it's been inited.
-                if (LOGGER.isInfoEnabled()) {
-                    String infoBuffer = "Matcher " + matcherName + " instantiated.";
-                    LOGGER.info(infoBuffer.toString());
-                }
+                LOGGER.info("Matcher {} instantiated.", matcherName);
             } catch (MessagingException ex) {
                 // **** Do better job printing out exception
-                if (LOGGER.isErrorEnabled()) {
-                    String errorBuffer = "Unable to init matcher " + matcherName + ": " + ex.toString();
-                    LOGGER.error(errorBuffer.toString(), ex);
-                    if (ex.getNextException() != null) {
-                        LOGGER.error("Caused by nested exception: ", ex.getNextException());
-                    }
+                LOGGER.error("Unable to init matcher {}", matcherName, ex);
+                if (ex.getNextException() != null) {
+                    LOGGER.error("Caused by nested exception: ", ex.getNextException());
                 }
                 throw new ConfigurationException("Unable to init matcher " + matcherName, ex);
             }
             try {
                 mailet = mailetLoader.getMailet(createMailetConfig(mailetClassName, c));
-                if (LOGGER.isInfoEnabled()) {
-                    String infoBuffer = "Mailet " + mailetClassName + " instantiated.";
-                    LOGGER.info(infoBuffer.toString());
-                }
+                LOGGER.info("Mailet {} instantiated.", mailetClassName);
             } catch (MessagingException ex) {
                 // **** Do better job printing out exception
-                if (LOGGER.isErrorEnabled()) {
-                    String errorBuffer = "Unable to init mailet " + mailetClassName + ": " + ex.toString();
-                    LOGGER.error(errorBuffer.toString(), ex);
-                    if (ex.getNextException() != null) {
-                        LOGGER.error("Caused by nested exception: ", ex.getNextException());
-                    }
+                LOGGER.error("Unable to init mailet {}", mailetClassName, ex);
+                if (ex.getNextException() != null) {
+                    LOGGER.error("Caused by nested exception: ", ex.getNextException());
                 }
                 throw new ConfigurationException("Unable to init mailet " + mailetClassName, ex);
             }

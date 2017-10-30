@@ -124,10 +124,7 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
 
         queue = queueFactory.getQueue(MailQueueFactory.SPOOL);
 
-        if (LOGGER.isInfoEnabled()) {
-            String infoBuffer = getClass().getName() + " uses " + numThreads + " Thread(s)";
-            LOGGER.info(infoBuffer);
-        }
+        LOGGER.info("{} uses {} Thread(s)", getClass().getName(), numThreads);
 
         active.set(true);
         workerService = JMXEnabledThreadPoolExecutor.newFixedThreadPool("org.apache.james:type=component,component=mailetcontainer,name=mailspooler,sub-type=threadpool", "spooler", numThreads);
@@ -145,11 +142,8 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
      */
     @Override
     public void run() {
-
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Run " + getClass().getName() + ": " + Thread.currentThread().getName());
-            LOGGER.info("Queue=" + queue.toString());
-        }
+        LOGGER.info("Run {}: {}", getClass().getName(), Thread.currentThread().getName());
+        LOGGER.info("Queue={}", queue);
 
         while (active.get()) {
 
@@ -165,17 +159,14 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
                         processingActive.incrementAndGet();
 
                         Mail mail = queueItem.getMail();
-                        if (LOGGER.isDebugEnabled()) {
-                            String debugBuffer = "==== Begin processing mail " + mail.getName() + "====";
-                            LOGGER.debug(debugBuffer);
-                        }
+                        LOGGER.debug("==== Begin processing mail {} ====", mail.getName());
 
                         try {
                             mailProcessor.service(mail);
                             queueItem.done(true);
                         } catch (Exception e) {
-                            if (active.get() && LOGGER.isErrorEnabled()) {
-                                LOGGER.error("Exception processing mail while spooling " + e.getMessage(), e);
+                            if (active.get()) {
+                                LOGGER.error("Exception processing mail while spooling {}", e.getMessage(), e);
                             }
                             queueItem.done(false);
 
@@ -184,8 +175,8 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
                             mail = null;
                         }
                     } catch (Throwable e) {
-                        if (active.get() && LOGGER.isErrorEnabled()) {
-                            LOGGER.error("Exception processing mail while spooling " + e.getMessage(), e);
+                        if (active.get()) {
+                            LOGGER.error("Exception processing mail while spooling {}", e.getMessage(), e);
 
                         }
                     } finally {
