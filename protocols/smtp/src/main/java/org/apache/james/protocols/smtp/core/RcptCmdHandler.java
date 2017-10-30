@@ -226,12 +226,13 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
     private String getContext(SMTPSession session, MailAddress recipientAddress, String recipient) {
         StringBuilder sb = new StringBuilder(128);
         if (null != recipientAddress) {
-            sb.append(" [to:" + recipientAddress.toString() + "]");
+            sb.append(" [to:").append(recipientAddress.asString()).append(']');
         } else if (null != recipient) {
-            sb.append(" [to:" + recipient + "]");
+            sb.append(" [to:").append(recipient).append(']');
         }
         if (null != session.getAttachment(SMTPSession.SENDER, State.Transaction)) {
-            sb.append(" [from:" + ((MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction)).toString() + "]");
+            MailAddress mailAddress = (MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction);
+            sb.append(" [from:").append(mailAddress.asString()).append(']');
         }
         return sb.toString();
     }
