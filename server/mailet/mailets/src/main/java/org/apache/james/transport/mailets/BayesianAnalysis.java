@@ -374,10 +374,10 @@ public class BayesianAnalysis extends GenericMailet {
         StringBuilder sb = new StringBuilder();
         sb.append('[');
         for (int i = 0; iter.hasNext(); i++) {
-            sb.append(iter.next());
-            if (i + 1 < addresses.size()) {
+            if (i > 0) {
                 sb.append(", ");
             }
+            sb.append(iter.next());
         }
         sb.append(']');
         return sb.toString();
