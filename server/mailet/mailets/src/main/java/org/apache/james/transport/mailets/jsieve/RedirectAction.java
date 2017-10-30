@@ -63,11 +63,7 @@ public class RedirectAction implements MailAction {
         recipients.add(new MailAddress(new InternetAddress(anAction.getAddress())));
         MailAddress sender = aMail.getSender();
         context.post(sender, recipients, aMail.getMessage());
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Redirected Message ID: "
-                + aMail.getMessage().getMessageID() + " to \""
-                + anAction.getAddress() + "\"");
-        }
+        LOGGER.debug("Redirected Message ID: {} to \"{}\"", aMail.getMessage().getMessageID(), anAction.getAddress());
         DiscardAction.removeRecipient(aMail, context);
     }
 }

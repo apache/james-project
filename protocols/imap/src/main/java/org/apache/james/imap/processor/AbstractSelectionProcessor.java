@@ -140,9 +140,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
         while(unseen(responder, firstUnseen, selected, ImapSessionUtils.getMailboxSession(session)) == false) {
             // if we not was able to get find the unseen within 5 retries we should just not send it
             if (retryCount == 5) {
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info("Unable to uid for unseen message " + firstUnseen + " in mailbox " + selected.getPath());
-                }
+                LOGGER.info("Unable to uid for unseen message {} in mailbox {}", firstUnseen, selected.getPath());
                 break;
             }
             firstUnseen = selectMailbox(fullMailboxPath, session).getFirstUnseen();
@@ -368,9 +366,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
             int msn = selected.msn(unseenUid);
 
             if (msn == SelectedMailbox.NO_SUCH_MESSAGE) {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("No message found with uid " + unseenUid + " in mailbox " + selected.getPath().getFullName(session.getPathDelimiter()));
-                }
+                LOGGER.debug("No message found with uid {} in mailbox {}", unseenUid, selected.getPath().getFullName(session.getPathDelimiter()));
                 return false;
             } 
 

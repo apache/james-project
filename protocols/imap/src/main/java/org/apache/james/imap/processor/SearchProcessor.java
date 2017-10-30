@@ -202,9 +202,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             unsolicitedResponses(session, responder, omitExpunged, useUids);
             okComplete(command, tag, responder);
         } catch (MessageRangeException e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Search failed in mailbox " + session.getSelected().getPath() + " because of an invalid sequence-set ", e);
-            }
+            LOGGER.debug("Search failed in mailbox {} because of an invalid sequence-set ", session.getSelected().getPath(), e);
             taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
             LOGGER.error("Search failed in mailbox {}", session.getSelected().getPath(), e);

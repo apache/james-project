@@ -111,14 +111,10 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
                 manageFailureCount(session, tag, command, responder, failed);
             }
         } catch (UserDoesNotExistException e) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("User " + authenticationAttempt.getAuthenticationId() + " does not exist", e);
-            }
+            LOGGER.info("User {} does not exist", authenticationAttempt.getAuthenticationId(), e);
             no(command, tag, responder, HumanReadableText.USER_DOES_NOT_EXIST);
         } catch (NotAdminException e) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("User " + authenticationAttempt.getDelegateUserName() + " is not an admin", e);
-            }
+            LOGGER.info("User {} is not an admin", authenticationAttempt.getDelegateUserName(), e);
             no(command, tag, responder, HumanReadableText.NOT_AN_ADMIN);
         } catch (MailboxException e) {
             LOGGER.info("Login failed", e);

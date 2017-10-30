@@ -101,9 +101,7 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
         if (command == null) {
             return null;
         }
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Lookup command handler for command: " + command);
-        }
+        LOGGER.debug("Lookup command handler for command: {}", command);
         List<CommandHandler<Session>> handlers =  commandHandlerMap.get(command);
         if(handlers == null) {
             handlers = commandHandlerMap.get(getUnknownCommandHandlerIdentifier());
@@ -175,9 +173,7 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
      * @return response
      */
     protected Response dispatchCommandHandlers(Session session, Request request) {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(getClass().getName() + " received: " + request.getCommand());
-        }
+        LOGGER.debug("{} received: {}", getClass().getName(), request.getCommand());
         List<CommandHandler<Session>> commandHandlers = getCommandHandlers(request.getCommand(), session);
         // fetch the command handlers registered to the command
 

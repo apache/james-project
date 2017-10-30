@@ -83,9 +83,7 @@ public class FileMailRepository extends AbstractMailRepository {
     protected void doConfigure(HierarchicalConfiguration config) throws org.apache.commons.configuration.ConfigurationException {
         super.doConfigure(config);
         destination = config.getString("[@destinationURL]");
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("FileMailRepository.destinationURL: " + destination);
-        }
+        LOGGER.debug("FileMailRepository.destinationURL: {}", destination);
         fifo = config.getBoolean("[@FIFO]", false);
         cacheKeys = config.getBoolean("[@CACHEKEYS]", true);
         // ignore model
@@ -145,13 +143,9 @@ public class FileMailRepository extends AbstractMailRepository {
                     keys.add(i.next());
                 }
             }
-            if (LOGGER.isDebugEnabled()) {
-                String logBuffer = getClass().getName() + " created in " + destination;
-                LOGGER.debug(logBuffer);
-            }
+            LOGGER.debug("{} created in {}", getClass().getName(), destination);
         } catch (Exception e) {
-            final String message = "Failed to retrieve Store component:" + e.getMessage();
-            LOGGER.error(message, e);
+            LOGGER.error("Failed to retrieve Store component:{}", e.getMessage(), e);
             throw e;
         }
     }
@@ -228,15 +222,12 @@ public class FileMailRepository extends AbstractMailRepository {
             try {
                 mc = (Mail) objectRepository.get(key);
             } catch (RuntimeException re) {
-                StringBuilder exceptionBuffer = new StringBuilder(128);
                 if (re.getCause() instanceof Error) {
-                    exceptionBuffer.append("Error when retrieving mail, not deleting: ").append(re.toString());
+                    LOGGER.warn("Error when retrieving mail, not deleting: {}", re, re);
                 } else {
-                    exceptionBuffer.append("Exception retrieving mail: ").append(re.toString()).append(", so we're deleting it.");
+                    LOGGER.warn("Exception retrieving mail: {}, so we're deleting it.", re, re);
                     remove(key);
                 }
-                final String errorMessage = exceptionBuffer.toString();
-                LOGGER.warn(errorMessage, re);
                 return null;
             }
             MimeMessageStreamRepositorySource source = new MimeMessageStreamRepositorySource(streamRepository, destination, key);

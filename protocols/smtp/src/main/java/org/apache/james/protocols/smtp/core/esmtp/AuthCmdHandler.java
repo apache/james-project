@@ -487,14 +487,7 @@ public class AuthCmdHandler
      * @param initialResponse the initial response line passed in with the AUTH command
      */
     private Response doUnknownAuth(SMTPSession session, String authType, String initialResponse) {
-        if (LOGGER.isInfoEnabled()) {
-            StringBuilder errorBuffer =
-                new StringBuilder(128)
-                    .append("AUTH method ")
-                        .append(authType)
-                        .append(" is an unrecognized authentication type");
-            LOGGER.info(errorBuffer.toString());
-        }
+        LOGGER.info("AUTH method {} is an unrecognized authentication type", authType);
         return UNKNOWN_AUTH_TYPE;
     }
 

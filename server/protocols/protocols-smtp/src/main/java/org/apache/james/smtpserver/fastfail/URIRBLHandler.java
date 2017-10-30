@@ -200,9 +200,7 @@ public class URIRBLHandler implements JamesMessageHook, ProtocolHandler {
                         String uRblServer = uRbl.next();
                         String address = target + "." + uRblServer;
 
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug("Lookup " + address);
-                        }
+                        LOGGER.debug("Lookup {}", address);
 
                         dnsService.getByName(address);
 
@@ -229,9 +227,7 @@ public class URIRBLHandler implements JamesMessageHook, ProtocolHandler {
         Collection<String> serverCollection = new ArrayList<>();
         for (String rblServerName : servers) {
             serverCollection.add(rblServerName);
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Adding uriRBL server: " + rblServerName);
-            }
+            LOGGER.info("Adding uriRBL server: {}", rblServerName);
         }
         if (serverCollection != null && serverCollection.size() > 0) {
             setUriRblServer(serverCollection);

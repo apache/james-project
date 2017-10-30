@@ -247,11 +247,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      */
     @PostConstruct
     public void init() throws Exception {
-        StringBuffer logBuffer;
-        if (LOGGER.isDebugEnabled()) {
-            logBuffer = new StringBuffer(128).append(this.getClass().getName()).append(".initialize()");
-            LOGGER.debug(logBuffer.toString());
-        }
+        LOGGER.debug("{}.initialize()", getClass().getName());
 
         theJDBCUtil = new JDBCUtil();
 
@@ -269,10 +265,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
                 throw e;
             }
 
-            if (LOGGER.isDebugEnabled()) {
-                logBuffer = new StringBuffer(256).append("Reading SQL resources from: ").append(m_sqlFileName).append(", section ").append(this.getClass().getName()).append(".");
-                LOGGER.debug(logBuffer.toString());
-            }
+            LOGGER.debug("Reading SQL resources from: {}, section {}.", m_sqlFileName, getClass().getName());
 
             SqlResources sqlStatements = new SqlResources();
             sqlStatements.init(sqlFile, this.getClass().getName(), conn, m_sqlParameters);
@@ -322,12 +315,9 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
                     theJDBCUtil.closeJDBCStatement(createStatement);
                 }
 
-                logBuffer = new StringBuffer(128).append(this.getClass().getName()).append(": Created table \'").append(tableName).append("\'.");
-                LOGGER.info(logBuffer.toString());
+                LOGGER.info("{}: Created table '{}'.", getClass().getName(), tableName);
             } else {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Using table: " + tableName);
-                }
+                LOGGER.debug("Using table: {}", tableName);
             }
 
         } finally {
@@ -358,11 +348,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      * @see org.apache.james.user.lib.AbstractJamesUsersRepository#doConfigure(org.apache.commons.configuration.HierarchicalConfiguration)
      */
     protected void doConfigure(HierarchicalConfiguration configuration) throws ConfigurationException {
-        StringBuffer logBuffer;
-        if (LOGGER.isDebugEnabled()) {
-            logBuffer = new StringBuffer(64).append(this.getClass().getName()).append(".configure()");
-            LOGGER.debug(logBuffer.toString());
-        }
+        LOGGER.debug("{}.configure()", getClass().getName());
 
         // Parse the DestinationURL for the name of the datasource,
         // the table to use, and the (optional) repository Key.
@@ -399,10 +385,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
             throw new ConfigurationException("Malformed destinationURL - " + "Must be of the format \"db://<data-source>[/<table>[/<key>]]\".");
         }
 
-        if (LOGGER.isDebugEnabled()) {
-            logBuffer = new StringBuffer(128).append("Parsed URL: table = '").append(m_sqlParameters.get("table")).append("', key = '").append(m_sqlParameters.get("key")).append("'");
-            LOGGER.debug(logBuffer.toString());
-        }
+        LOGGER.debug("Parsed URL: table = '{}', key = '{}'", m_sqlParameters.get("table"), m_sqlParameters.get("key"));
 
         // Get the SQL file location
         m_sqlFileName = configuration.getString("sqlFile", null);

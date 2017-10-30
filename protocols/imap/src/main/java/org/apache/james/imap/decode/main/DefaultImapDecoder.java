@@ -77,9 +77,7 @@ public class DefaultImapDecoder implements ImapDecoder {
 
     private ImapMessage decodeCommandTagged(ImapRequestLineReader request, String tag, ImapSession session) {
         ImapMessage message;
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Got <tag>: " + tag);
-        }
+        LOGGER.debug("Got <tag>: {}", tag);
         try {
             final String commandName = request.atom();
             message = decodeCommandNamed(request, tag, commandName, session);
@@ -116,14 +114,10 @@ public class DefaultImapDecoder implements ImapDecoder {
 
     private ImapMessage decodeCommandNamed(ImapRequestLineReader request, String tag, String commandName, ImapSession session) {
         ImapMessage message;
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Got <command>: " + commandName);
-        }
+        LOGGER.debug("Got <command>: {}", commandName);
         final ImapCommandParser command = imapCommands.getParser(commandName);
         if (command == null) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Missing command implementation for commmand " + commandName);
-            }
+            LOGGER.info("Missing command implementation for commmand {}", commandName);
             message = unknownCommand(tag, session);
         } else {
             message = command.parse(request, tag, session);

@@ -87,9 +87,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                 }
             }
         } else {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug  ("Unsupported authentication mechanism '" + authType + "'");
-            }
+            LOGGER.debug("Unsupported authentication mechanism '{}'", authType);
             no(command, tag, responder, HumanReadableText.UNSUPPORTED_AUTHENTICATION_MECHANISM);
         }
     }

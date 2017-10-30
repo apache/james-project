@@ -85,9 +85,7 @@ public final class ImapRequestStreamHandler extends AbstractImapRequestHandler {
                 } catch (DecodingException e) {
                     // Cannot clean up. No recovery is therefore possible.
                     // Abandon connection.
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info("Fault during clean up: " + e.getMessage());
-                    }
+                    LOGGER.info("Fault during clean up: {}", e.getMessage());
                     LOGGER.debug("Abandoning after fault in clean up", e);
                     abandon(output, session);
                     return false;

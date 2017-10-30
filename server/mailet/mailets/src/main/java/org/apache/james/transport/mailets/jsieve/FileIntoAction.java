@@ -88,18 +88,11 @@ public class FileIntoAction implements MailAction {
             delivered = true;
         }
         catch (MessagingException ex) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Error while storing mail into. "+destinationMailbox, ex);
-            }
+            LOGGER.debug("Error while storing mail into {}.", destinationMailbox, ex);
             throw ex;
         }
         if (delivered) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Filed Message ID: "
-                    + aMail.getMessage().getMessageID()
-                    + " into destination: \""
-                    + destinationMailbox + "\"");
-            }
+            LOGGER.debug("Filed Message ID: {} into destination: \"{}\"", aMail.getMessage().getMessageID(), destinationMailbox);
         }
     }
 }

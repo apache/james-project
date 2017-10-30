@@ -76,9 +76,7 @@ public class UidCommandParser extends AbstractImapCommandParser implements Deleg
         if (helperCommand == null || !(helperCommand instanceof AbstractUidCommandParser)) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid UID command: '" + commandName + "'");
         }
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Got <command>: UID " + commandName);
-        }
+        LOGGER.debug("Got <command>: UID {}", commandName);
         final AbstractUidCommandParser uidEnabled = (AbstractUidCommandParser) helperCommand;
         return uidEnabled.decode(request, tag, true, session);
     }

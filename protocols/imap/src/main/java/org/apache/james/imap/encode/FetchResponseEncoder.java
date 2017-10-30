@@ -203,9 +203,7 @@ public class FetchResponseEncoder extends AbstractChainedImapEncoder {
                 final String value = params.get(name);
                 if (value == null) {
                     LOGGER.warn("Disposition parameter name has no value.");
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("Disposition parameter " + name + " has no matching value");
-                    }
+                    LOGGER.debug("Disposition parameter {} has no matching value", name);
                 } else {
                     composer.quote(name);
                     composer.quote(value);

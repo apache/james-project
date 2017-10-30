@@ -81,10 +81,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
     @PostConstruct
     public void init() throws Exception {
 
-        StringBuffer logBuffer;
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(this.getClass().getName() + ".initialize()");
-        }
+        LOGGER.debug("{}.initialize()", getClass().getName());
 
         // Test the connection to the database, by getting the DatabaseMetaData.
         Connection conn = dataSource.getConnection();
@@ -102,10 +99,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
                 throw e;
             }
 
-            if (LOGGER.isDebugEnabled()) {
-                logBuffer = new StringBuffer(128).append("Reading SQL resources from file: ").append(sqlFileName).append(", section ").append(this.getClass().getName()).append(".");
-                LOGGER.debug(logBuffer.toString());
-            }
+            LOGGER.debug("Reading SQL resources from file: {}, section {}.", sqlFileName, getClass().getName());
 
             // Build the statement parameters
             Map<String, String> sqlParameters = new HashMap<>();
@@ -128,10 +122,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
                 createStatement = conn.prepareStatement(sqlQueries.getSqlString("createTable", true));
                 createStatement.execute();
 
-                if (LOGGER.isInfoEnabled()) {
-                    logBuffer = new StringBuffer(64).append("JdbcVirtalUserTable: Created table '").append(tableName).append("'.");
-                    LOGGER.info(logBuffer.toString());
-                }
+                LOGGER.info("JdbcVirtalUserTable: Created table '{}'.", tableName);
             }
 
         } finally {
@@ -185,10 +176,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
             tableName = urlParams.get(1);
         }
 
-        if (LOGGER.isDebugEnabled()) {
-            String logBuffer = "Parsed URL: table = '" + tableName + "'";
-            LOGGER.debug(logBuffer);
-        }
+        LOGGER.debug("Parsed URL: table = '{}'", tableName);
 
         sqlFileName = conf.getString("sqlFile");
 

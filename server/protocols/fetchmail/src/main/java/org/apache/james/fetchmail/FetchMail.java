@@ -480,13 +480,7 @@ public class FetchMail implements Runnable, Configurable {
             mergedAccounts.addAll(getStaticAccounts());
             Collections.sort(mergedAccounts);
 
-            StringBuilder logMessage = new StringBuilder(64);
-            logMessage.append("Processing ");
-            logMessage.append(getStaticAccounts().size());
-            logMessage.append(" static accounts and ");
-            logMessage.append(getDynamicAccounts().size());
-            logMessage.append(" dynamic accounts.");
-            LOGGER.info(logMessage.toString());
+            LOGGER.info("Processing {} static accounts and {} dynamic accounts.", getStaticAccounts().size(), getDynamicAccounts().size());
 
             // Fetch each account
             for (Account mergedAccount : mergedAccounts) {
@@ -850,14 +844,10 @@ public class FetchMail implements Runnable, Configurable {
             Properties properties = getSession().getProperties();
             List<HierarchicalConfiguration> allProperties = configuration.configurationsAt("javaMailProperties.property");
             for (HierarchicalConfiguration propConf : allProperties) {
-                properties.setProperty(propConf.getString("[@name]"), propConf.getString("[@value]"));
-                if (LOGGER.isDebugEnabled()) {
-                    StringBuilder messageBuffer = new StringBuilder("Set property name: ");
-                    messageBuffer.append(propConf.getString("[@name]"));
-                    messageBuffer.append(" to: ");
-                    messageBuffer.append(propConf.getString("[@value]"));
-                    LOGGER.debug(messageBuffer.toString());
-                }
+                final String nameProp = propConf.getString("[@name]");
+                final String valueProp = propConf.getString("[@value]");
+                properties.setProperty(nameProp, valueProp);
+                LOGGER.debug("Set property name: {} to: {}", nameProp, valueProp);
             }
         }
     }

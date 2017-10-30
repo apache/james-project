@@ -63,9 +63,7 @@ public abstract class AbstractImapRequestHandler {
         } else {
             result = false;
             LOGGER.info(failure.getMessage());
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Failed to write " + message, failure);
-            }
+            LOGGER.debug("Failed to write {}", message, failure);
         }
         return result;
     }

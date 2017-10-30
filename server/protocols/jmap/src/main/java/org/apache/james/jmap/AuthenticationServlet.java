@@ -154,9 +154,7 @@ public class AuthenticationServlet extends HttpServlet {
             returnRestartAuthentication(resp);
             break;
         case INVALID:
-            if (LOG.isWarnEnabled()) {
-                LOG.warn("Use of an invalid ContinuationToken : " + request.getToken().serialize());
-            }
+            LOG.warn("Use of an invalid ContinuationToken : {}", request.getToken().serialize());
             returnUnauthorizedResponse(resp);
             break;
         case OK:

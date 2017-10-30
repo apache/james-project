@@ -297,11 +297,7 @@ public class MessageProcessor extends ProcessorAbstract {
      */
     public void process() throws MessagingException {
         // Log delivery attempt
-        if (LOGGER.isDebugEnabled()) {
-            StringBuilder logMessageBuffer = new StringBuilder("Attempting delivery of message with id. ");
-            logMessageBuffer.append(getMessageIn().getMessageID());
-            LOGGER.debug(logMessageBuffer.toString());
-        }
+        LOGGER.debug("Attempting delivery of message with id. {}", getMessageIn().getMessageID());
 
         // Determine the intended recipient
         MailAddress intendedRecipient = getIntendedRecipient();
@@ -313,19 +309,11 @@ public class MessageProcessor extends ProcessorAbstract {
                 String messageID = getMessageIn().getMessageID();
                 if (!getDeferredRecipientNotFoundMessageIDs().contains(messageID)) {
                     getDeferredRecipientNotFoundMessageIDs().add(messageID);
-                    if (LOGGER.isDebugEnabled()) {
-                        StringBuilder messageBuffer = new StringBuilder("Deferred processing of message for which the intended recipient could not be found. Message ID: ");
-                        messageBuffer.append(messageID);
-                        LOGGER.debug(messageBuffer.toString());
-                    }
+                    LOGGER.debug("Deferred processing of message for which the intended recipient could not be found. Message ID: {}", messageID);
                     return;
                 } else {
                     getDeferredRecipientNotFoundMessageIDs().remove(messageID);
-                    if (LOGGER.isDebugEnabled()) {
-                        StringBuilder messageBuffer = new StringBuilder("Processing deferred message for which the intended recipient could not be found. Message ID: ");
-                        messageBuffer.append(messageID);
-                        LOGGER.debug(messageBuffer.toString());
-                    }
+                    LOGGER.debug("Processing deferred message for which the intended recipient could not be found. Message ID: {}", messageID);
                 }
             }
 
@@ -799,11 +787,7 @@ public class MessageProcessor extends ProcessorAbstract {
         if (isMarkUndeliverableSeen())
             setMessageSeen();
         logStatusWarn("Message could not be delivered due to an error parsing a mail address.");
-        if (LOGGER.isDebugEnabled()) {
-            StringBuilder messageBuffer = new StringBuilder("UNDELIVERABLE Message ID: ");
-            messageBuffer.append(getMessageIn().getMessageID());
-            LOGGER.debug(messageBuffer.toString(), ex);
-        }
+        LOGGER.debug("UNDELIVERABLE Message ID: {}", getMessageIn().getMessageID(), ex);
     }
 
     /**
@@ -821,11 +805,7 @@ public class MessageProcessor extends ProcessorAbstract {
             setMessageSeen();
 
         logStatusWarn("Message could not be delivered due to an error determining the remote domain.");
-        if (LOGGER.isDebugEnabled()) {
-            StringBuilder messageBuffer = new StringBuilder("UNDELIVERABLE Message ID: ");
-            messageBuffer.append(getMessageIn().getMessageID());
-            LOGGER.debug(messageBuffer.toString(), ex);
-        }
+        LOGGER.debug("UNDELIVERABLE Message ID: {}", getMessageIn().getMessageID(), ex);
     }
 
     /**
@@ -1083,7 +1063,7 @@ public class MessageProcessor extends ProcessorAbstract {
      * @param detailMsg
      */
     protected void logStatusInfo(String detailMsg) throws MessagingException {
-        LOGGER.info(getStatusReport(detailMsg).toString());
+        LOGGER.info("{}", getStatusReport(detailMsg));
     }
 
     /**
@@ -1092,7 +1072,7 @@ public class MessageProcessor extends ProcessorAbstract {
      * @param detailMsg
      */
     protected void logStatusWarn(String detailMsg) throws MessagingException {
-        LOGGER.warn(getStatusReport(detailMsg).toString());
+        LOGGER.warn("{}", getStatusReport(detailMsg));
     }
 
     /**
@@ -1101,7 +1081,7 @@ public class MessageProcessor extends ProcessorAbstract {
      * @param detailMsg
      */
     protected void logStatusError(String detailMsg) throws MessagingException {
-        LOGGER.error(getStatusReport(detailMsg).toString());
+        LOGGER.error("{}", getStatusReport(detailMsg));
     }
 
     /**

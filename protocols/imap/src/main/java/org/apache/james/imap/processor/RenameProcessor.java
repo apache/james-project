@@ -73,19 +73,13 @@ public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
             okComplete(command, tag, responder);
             unsolicitedResponses(session, responder, false);
         } catch (MailboxExistsException e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Rename from " + existingPath + " to " + newPath + " failed because the target mailbox exists", e);
-            }
+            LOGGER.debug("Rename from {} to {} failed because the target mailbox exists", existingPath, newPath, e);
             no(command, tag, responder, HumanReadableText.FAILURE_MAILBOX_EXISTS);
         } catch (MailboxNotFoundException e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Rename from " + existingPath + " to " + newPath + " failed because the source mailbox not exists", e);
-            }
+            LOGGER.debug("Rename from {} to {} failed because the source mailbox doesn't exist", existingPath, newPath, e);
             no(command, tag, responder, HumanReadableText.MAILBOX_NOT_FOUND);
         } catch (TooLongMailboxNameException e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("The mailbox name length is over limit: " + newPath.getName(), e);
-            }
+            LOGGER.debug("The mailbox name length is over limit: {}", newPath.getName(), e);
             taggedBad(command, tag, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
         } catch (MailboxException e) {
             LOGGER.error("Rename from {} to {} failed", existingPath, newPath, e);
