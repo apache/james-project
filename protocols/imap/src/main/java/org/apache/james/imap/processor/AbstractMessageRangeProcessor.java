@@ -108,11 +108,11 @@ public abstract class AbstractMessageRangeProcessor<M extends AbstractMessageRan
             }
         } catch (MessageRangeException e) {
             LOGGER.debug("{} failed from mailbox {} to {} for invalid sequence-set {}",
-                    getOperationName(), currentMailbox.getPath(), targetMailbox, Arrays.asList(idSet), e);
+                    getOperationName(), currentMailbox.getPath(), targetMailbox, idSet, e);
             taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
             LOGGER.error("{} failed from mailbox {} to {} for sequence-set {}",
-                    getOperationName(), currentMailbox.getPath(), targetMailbox, Arrays.asList(idSet), e);
+                    getOperationName(), currentMailbox.getPath(), targetMailbox, idSet, e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }
