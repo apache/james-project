@@ -265,7 +265,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
                 LOGGER.debug(logBuf);
             }
         } catch (Exception e) {
-            final String message = "Failed to retrieve Store component:" + e.getMessage();
+            String message = "Failed to retrieve Store component:" + e.getMessage();
             LOGGER.error(message, e);
             throw new ConfigurationException(message, e);
         }
@@ -365,18 +365,21 @@ public class JDBCMailRepository extends AbstractMailRepository {
 
         if (hasUpdateMessageAttributesSQL && !hasRetrieveMessageAttributesSQL) {
             logBuffer.append("JDBC Mail Attributes support was activated for update but not for retrieval" + "(found 'updateMessageAttributesSQL' but not 'retrieveMessageAttributesSQL'" + "in table '").append(tableName).append("').");
-            LOGGER.error(logBuffer.toString());
-            throw new SQLException(logBuffer.toString());
+            String logBufferAsString = logBuffer.toString();
+            LOGGER.error(logBufferAsString);
+            throw new SQLException(logBufferAsString);
         }
         if (!hasUpdateMessageAttributesSQL && hasRetrieveMessageAttributesSQL) {
             logBuffer.append("JDBC Mail Attributes support was activated for retrieval but not for update" + "(found 'retrieveMessageAttributesSQL' but not 'updateMessageAttributesSQL'" + "in table '").append(tableName).append("'.");
-            LOGGER.error(logBuffer.toString());
-            throw new SQLException(logBuffer.toString());
+            String logBufferAsString = logBuffer.toString();
+            LOGGER.error(logBufferAsString);
+            throw new SQLException(logBufferAsString);
         }
         if (!hasMessageAttributesColumn && (hasUpdateMessageAttributesSQL || hasRetrieveMessageAttributesSQL)) {
             logBuffer.append("JDBC Mail Attributes support was activated but column '").append(attributesColumnName).append("' is missing in table '").append(tableName).append("'.");
-            LOGGER.error(logBuffer.toString());
-            throw new SQLException(logBuffer.toString());
+            String logBufferAsString = logBuffer.toString();
+            LOGGER.error(logBufferAsString);
+            throw new SQLException(logBufferAsString);
         }
         if (hasUpdateMessageAttributesSQL && hasRetrieveMessageAttributesSQL) {
             jdbcMailAttributesReady = true;
