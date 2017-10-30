@@ -18,11 +18,11 @@
  ****************************************************************/
 package org.apache.james.transport.mailets.delivery;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Vector;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
@@ -115,7 +115,7 @@ public class MailDispatcher {
     }
 
     private Collection<MailAddress> deliver(Mail mail, MimeMessage message) {
-        Collection<MailAddress> errors = new Vector<>();
+        Collection<MailAddress> errors = new ArrayList<>();
         for (MailAddress recipient : mail.getRecipients()) {
             try {
                 Map<String, List<String>> savedHeaders = saveHeaders(mail, recipient);
