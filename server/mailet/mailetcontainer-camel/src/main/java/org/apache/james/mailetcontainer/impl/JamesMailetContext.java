@@ -177,8 +177,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
     @Override
     public void bounce(Mail mail, String message, MailAddress bouncer) throws MessagingException {
         if (mail.getSender() == null) {
-            if (LOGGER.isInfoEnabled())
-                LOGGER.info("Mail to be bounced contains a null (<>) reverse path.  No bounce will be sent.");
+            LOGGER.info("Mail to be bounced contains a null (<>) reverse path.  No bounce will be sent.");
             return;
         } else {
             // Bounce message goes to the reverse path, not to the Reply-To

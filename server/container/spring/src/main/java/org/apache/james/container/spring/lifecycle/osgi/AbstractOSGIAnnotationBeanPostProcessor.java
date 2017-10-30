@@ -213,9 +213,8 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
         }
 
         if (lookupBeanFactory) {
-            if (logger.isDebugEnabled())
-                logger.debug("Lookup the bean via the BeanFactory");
-            
+            logger.debug("Lookup the bean via the BeanFactory");
+
             final Class<?> clazz = writeMethod.getParameterTypes()[0];
             Object bean;
             try {

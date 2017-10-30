@@ -127,11 +127,9 @@ public class FetchScheduler implements FetchSchedulerMBean, Configurable {
                 schedulers.add(scheduler.scheduleWithFixedDelay(fetcher, 0, interval, TimeUnit.MILLISECONDS));
             }
 
-            if (LOGGER.isInfoEnabled())
-                LOGGER.info("FetchMail Started");
+            LOGGER.info("FetchMail Started");
         } else {
-            if (LOGGER.isInfoEnabled())
-                LOGGER.info("FetchMail Disabled");
+            LOGGER.info("FetchMail Disabled");
         }
     }
 

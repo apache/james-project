@@ -121,9 +121,7 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
             }
             no(command, tag, responder, HumanReadableText.NOT_AN_ADMIN);
         } catch (MailboxException e) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Login failed", e);
-            }
+            LOGGER.info("Login failed", e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }
@@ -131,9 +129,7 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
     private void provisionInbox(ImapSession session, MailboxManager mailboxManager, MailboxSession mailboxSession) throws MailboxException {
         final MailboxPath inboxPath = PathConverter.forSession(session).buildFullPath(MailboxConstants.INBOX);
         if (mailboxManager.mailboxExists(inboxPath, mailboxSession)) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("INBOX exists. No need to create it.");
-            }
+            LOGGER.debug("INBOX exists. No need to create it.");
         } else {
             try {
                 Optional<MailboxId> mailboxId = mailboxManager.createMailbox(inboxPath, mailboxSession);
@@ -156,9 +152,7 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
             session.setAttribute(ATTRIBUTE_NUMBER_OF_FAILURES, failures);
             no(command, tag, responder, failed);
         } else {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Too many authentication failures. Closing connection.");
-            }
+            LOGGER.info("Too many authentication failures. Closing connection.");
             bye(responder, HumanReadableText.TOO_MANY_FAILURES);
             session.logout();
         }
