@@ -20,7 +20,6 @@
 package org.apache.james.imap.processor;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
