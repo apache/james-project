@@ -19,7 +19,6 @@
 package org.apache.james.transport.mailets.redirect;
 
 import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -34,7 +33,6 @@ import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.RFC2822Headers;
-import org.apache.mailet.base.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,7 +110,7 @@ public class MailModifier {
             mail.setRecipients(recipients);
             if (mailet.getInitParameters().isDebug()) {
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("recipients set to: " + StringUtils.arrayToString(recipients.toArray()));
+                    LOGGER.debug("recipients set to: {}", (Object) recipients.toArray());
                 }
             }
         }
@@ -123,7 +121,7 @@ public class MailModifier {
             InternetAddress[] internetAddresses = MailAddressUtils.toInternetAddressArray(mailAddresses);
             mail.getMessage().setRecipients(Message.RecipientType.TO, internetAddresses);
             if (mailet.getInitParameters().isDebug()) {
-                LOGGER.debug("apparentlyTo set to: {}", Arrays.asList(internetAddresses));
+                LOGGER.debug("apparentlyTo set to: {}", (Object) internetAddresses);
             }
         }
     }

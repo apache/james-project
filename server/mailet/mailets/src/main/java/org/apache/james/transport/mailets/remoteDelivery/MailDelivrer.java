@@ -20,7 +20,6 @@
 package org.apache.james.transport.mailets.remoteDelivery;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -39,7 +38,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 @SuppressWarnings("deprecation")
@@ -215,7 +213,7 @@ public class MailDelivrer {
         if (sfe.getValidSentAddresses() != null) {
             Address[] validSent = sfe.getValidSentAddresses();
             if (validSent.length > 0) {
-                LOGGER.debug( "Mail ({}) sent successfully for {}", mail.getName(), Arrays.asList(validSent));
+                LOGGER.debug( "Mail ({}) sent successfully for {}", mail.getName(), validSent);
             }
         }
 
@@ -224,9 +222,10 @@ public class MailDelivrer {
             throw sfe;
         }
 
-        if (sfe.getValidUnsentAddresses() != null && sfe.getValidUnsentAddresses().length > 0) {
+        final Address[] validUnsentAddresses = sfe.getValidUnsentAddresses();
+        if (validUnsentAddresses != null && validUnsentAddresses.length > 0) {
             if (configuration.isDebug())
-                LOGGER.debug("Send failed, {} valid addresses remain, continuing with any other servers", ImmutableList.copyOf(sfe.getValidUnsentAddresses()));
+                LOGGER.debug("Send failed, {} valid addresses remain, continuing with any other servers", (Object) validUnsentAddresses);
             return sfe;
         } else {
             // There are no valid addresses left to send, so rethrow
