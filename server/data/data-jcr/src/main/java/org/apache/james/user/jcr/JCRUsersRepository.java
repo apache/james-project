@@ -315,11 +315,8 @@ public class JCRUsersRepository extends AbstractUsersRepository {
                 session.logout();
             }
         } catch (RepositoryException e) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Failed to count user", e);
-            }
+            LOGGER.info("Failed to count user", e);
             throw new UsersRepositoryException("Failed to count user", e);
-
         }
     }
 
@@ -356,9 +353,7 @@ public class JCRUsersRepository extends AbstractUsersRepository {
                 session.logout();
             }
         } catch (RepositoryException e) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Failed to list users", e);
-            }
+            LOGGER.info("Failed to list users", e);
             throw new UsersRepositoryException("Failed to list users", e);
         }
         return userNames.iterator();

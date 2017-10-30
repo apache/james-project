@@ -106,8 +106,6 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
 
         String className = repConf.getString("[@class]");
 
-        boolean infoEnabled = LOGGER.isInfoEnabled();
-
         for (String protocol : repConf.getStringArray("protocols.protocol")) {
             HierarchicalConfiguration defConf = null;
 
@@ -117,9 +115,7 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
                 defConf = repConf.configurationAt("config");
             }
 
-            if (infoEnabled) {
-                LOGGER.info("Registering Repository instance of class {} to handle {} protocol requests", className, protocol);
-            }
+            LOGGER.info("Registering Repository instance of class {} to handle {} protocol requests", className, protocol);
 
             if (classes.get(protocol) != null) {
                 throw new ConfigurationException("The combination of protocol and type comprise a unique key for repositories.  This constraint has been violated.  Please check your repository configuration.");

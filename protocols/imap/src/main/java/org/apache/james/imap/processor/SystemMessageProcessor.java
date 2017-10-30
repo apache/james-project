@@ -73,9 +73,7 @@ public class SystemMessageProcessor extends AbstractChainedProcessor<SystemMessa
     private void forceLogout(ImapSession imapSession) throws MailboxException {
         final MailboxSession session = ImapSessionUtils.getMailboxSession(imapSession);
         if (session == null) {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("No mailbox session so no force logout needed");
-            }
+            LOGGER.trace("No mailbox session so no force logout needed");
         } else {
             session.close();
             mailboxManager.logout(session, true);

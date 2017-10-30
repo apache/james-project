@@ -69,9 +69,7 @@ public class DefaultImapDecoder implements ImapDecoder {
             final String tag = request.tag();
             message = decodeCommandTagged(request, tag, session);
         } catch (DecodingException e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Cannot parse tag", e);
-            }
+            LOGGER.debug("Cannot parse tag", e);
             message = unknownCommand(null, session);
         }
         return message;
@@ -86,9 +84,7 @@ public class DefaultImapDecoder implements ImapDecoder {
             final String commandName = request.atom();
             message = decodeCommandNamed(request, tag, commandName, session);
         } catch (DecodingException e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Error during initial request parsing", e);
-            }
+            LOGGER.debug("Error during initial request parsing", e);
             message = unknownCommand(tag, session);
         }
         return message;
