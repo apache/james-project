@@ -142,7 +142,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             }
             if (LOGGER.isInfoEnabled()) {
                 for (Name searchPath : sPaths) {
-                    LOGGER.info("Adding autodiscovered search path " + searchPath.toString());
+                    LOGGER.info("Adding autodiscovered search path " + searchPath);
                 }
             }
         }
