@@ -19,16 +19,14 @@
 
 package org.apache.james.mailetcontainer.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
-import java.util.Vector;
 
 import javax.inject.Inject;
 import javax.mail.Address;
@@ -132,9 +130,9 @@ public class JamesMailetContext implements MailetContext, Configurable {
 
     @Override
     public Iterator<String> getAttributeNames() {
-        Vector<String> names = new Vector<>();
-        for (Enumeration<String> e = attributes.keys(); e.hasMoreElements(); ) {
-            names.add(e.nextElement());
+        final List<String> names;
+        synchronized (attributes) {
+            names = new ArrayList<>(attributes.keySet());
         }
         return names.iterator();
     }
