@@ -21,6 +21,7 @@ package org.apache.james.mailbox.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.mailbox.MailboxSession;
 
@@ -77,11 +78,9 @@ public class MailboxPath {
     private String name;
     
     public MailboxPath(String namespace, String user, String name) {
-        if (namespace == null || namespace.equals("")) {
-            this.namespace = MailboxConstants.USER_NAMESPACE;
-        } else {
-            this.namespace = namespace;
-        }
+        this.namespace = Optional.ofNullable(namespace)
+            .filter(s -> !s.isEmpty())
+            .orElse(MailboxConstants.USER_NAMESPACE);
         this.user = user;
         this.name = name;
     }
