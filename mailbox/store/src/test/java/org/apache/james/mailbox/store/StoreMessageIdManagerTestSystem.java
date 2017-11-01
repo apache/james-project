@@ -31,7 +31,6 @@ import javax.mail.Flags;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MailboxSession.SessionType;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -58,7 +57,7 @@ public class StoreMessageIdManagerTestSystem extends MessageIdManagerTestSystem 
 
         this.messageIdFactory = messageIdFactory;
         this.mapperFactory = mapperFactory;
-        this.defaultMailboxSession = new MockMailboxSession("user", SessionType.System);
+        this.defaultMailboxSession = new MockMailboxSession("user");
     }
 
     @Override

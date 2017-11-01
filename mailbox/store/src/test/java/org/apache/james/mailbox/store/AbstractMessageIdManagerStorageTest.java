@@ -30,7 +30,6 @@ import java.util.function.Predicate;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MailboxSession.SessionType;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
@@ -76,7 +75,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
     public void setUp() throws Exception {
         aliceSession = new MockMailboxSession(MailboxFixture.ALICE);
         bobSession = new MockMailboxSession(MailboxFixture.BOB);
-        systemSession = new MockMailboxSession("systemuser", SessionType.System);
+        systemSession = new MockMailboxSession("systemuser");
         testingData = createTestingData();
         messageIdManager = testingData.getMessageIdManager();
 
