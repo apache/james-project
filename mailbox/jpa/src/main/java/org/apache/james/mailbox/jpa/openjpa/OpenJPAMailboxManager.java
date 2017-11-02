@@ -29,11 +29,11 @@ import org.apache.james.mailbox.jpa.JPAMailboxManager;
 import org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.EncryptDecryptHelper;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMessageManager.AdvancedFeature;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
@@ -56,13 +56,12 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
                                  boolean useStreaming,
                                  MessageParser messageParser,
                                  MessageId.Factory messageIdFactory,
-                                 int annotationLimit,
-                                 int annotationLimitSize,
+                                 StoreMailboxAnnotationManager annotationManager,
                                  DelegatingMailboxListener delegatingMailboxListener,
                                  MailboxEventDispatcher mailboxEventDispatcher,
                                  StoreRightManager storeRightManager) {
         super(mapperFactory, authenticator, authorizator, locker, messageParser,
-            messageIdFactory, delegatingMailboxListener, mailboxEventDispatcher, annotationLimit,  annotationLimitSize, storeRightManager);
+            messageIdFactory, delegatingMailboxListener, mailboxEventDispatcher, annotationManager, storeRightManager);
         if (useStreaming) {
             feature = AdvancedFeature.Streaming;
         } else {
@@ -77,11 +76,12 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
                                  String encryptPass,
                                  MessageParser messageParser,
                                  MessageId.Factory messageIdFactory,
+                                 StoreMailboxAnnotationManager annotationManager,
                                  DelegatingMailboxListener delegatingMailboxListener,
                                  MailboxEventDispatcher mailboxEventDispatcher,
                                  StoreRightManager storeRightManager) {
         super(mapperFactory, authenticator, authorizator, locker, messageParser,
-            messageIdFactory, delegatingMailboxListener, mailboxEventDispatcher, storeRightManager);
+            messageIdFactory, delegatingMailboxListener, mailboxEventDispatcher, annotationManager, storeRightManager);
         if (encryptPass != null) {
             EncryptDecryptHelper.init(encryptPass);
             feature = AdvancedFeature.Encryption;
@@ -98,24 +98,11 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
                                  MessageId.Factory messageIdFactory,
                                  DelegatingMailboxListener delegatingMailboxListener,
                                  MailboxEventDispatcher mailboxEventDispatcher,
+                                 StoreMailboxAnnotationManager annotationManager,
                                  StoreRightManager storeRightManager) {
         this(mapperFactory, authenticator, authorizator, new JVMMailboxPathLocker(), false,
-            messageParser, messageIdFactory, MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX,
-            MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE, delegatingMailboxListener, mailboxEventDispatcher, storeRightManager);
-    }
-
-    public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory,
-                                 Authenticator authenticator,
-                                 Authorizator authorizator,
-                                 MessageParser messageParser,
-                                 MessageId.Factory messageIdFactory,
-                                 int annotationLimit,
-                                 int annotationLimitSize,
-                                 DelegatingMailboxListener delegatingMailboxListener,
-                                 MailboxEventDispatcher mailboxEventDispatcher,
-                                 StoreRightManager storeRightManager) {
-        this(mapperFactory, authenticator, authorizator, new JVMMailboxPathLocker(), false,
-            messageParser, messageIdFactory, annotationLimit, annotationLimitSize, delegatingMailboxListener, mailboxEventDispatcher, storeRightManager);
+            messageParser, messageIdFactory,  annotationManager, delegatingMailboxListener, mailboxEventDispatcher,
+           storeRightManager);
     }
 
     @Override

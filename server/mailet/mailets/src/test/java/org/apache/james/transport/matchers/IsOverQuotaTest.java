@@ -27,21 +27,12 @@ import java.util.Collection;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
-import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
-import org.apache.james.mailbox.inmemory.InMemoryMessageId;
+import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.store.FakeAuthenticator;
-import org.apache.james.mailbox.store.FakeAuthorizator;
-import org.apache.james.mailbox.store.NoMailboxPathLocker;
-import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
@@ -56,31 +47,23 @@ public class IsOverQuotaTest {
     private IsOverQuota testee;
     private InMemoryPerUserMaxQuotaManager maxQuotaManager;
     private DefaultQuotaRootResolver quotaRootResolver;
-    private InMemoryMailboxManager mailboxManager;
+    private StoreMailboxManager mailboxManager;
     private UsersRepository usersRepository;
 
     @Before
     public void setUp() throws Exception {
-        InMemoryMailboxSessionMapperFactory factory = new InMemoryMailboxSessionMapperFactory();
-        StoreRightManager storeRightManager = new StoreRightManager(factory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver());
+        mailboxManager = new InMemoryIntegrationResources().createMailboxManager(new SimpleGroupMembershipResolver());
 
-        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
-        mailboxManager = new InMemoryMailboxManager(factory, new FakeAuthenticator(), FakeAuthorizator.defaultReject(),
-            new NoMailboxPathLocker(), new MessageParser(),
-            new InMemoryMessageId.Factory(), mailboxEventDispatcher,
-            delegatingListener, storeRightManager);
-
-        quotaRootResolver = new DefaultQuotaRootResolver(factory);
+        quotaRootResolver = new DefaultQuotaRootResolver(mailboxManager.getMapperFactory());
         maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
-        InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(new CurrentQuotaCalculator(factory, quotaRootResolver), mailboxManager);
+        CurrentQuotaCalculator quotaCalculator = new CurrentQuotaCalculator(mailboxManager.getMapperFactory(), quotaRootResolver);
+        InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(quotaCalculator, mailboxManager);
         StoreQuotaManager quotaManager = new StoreQuotaManager(currentQuotaManager, maxQuotaManager);
         usersRepository = mock(UsersRepository.class);
         testee = new IsOverQuota(quotaRootResolver, quotaManager, mailboxManager, usersRepository);
 
         mailboxManager.setQuotaRootResolver(quotaRootResolver);
         mailboxManager.setQuotaManager(quotaManager);
-        mailboxManager.init();
 
         testee.init(FakeMatcherConfig.builder().matcherName("IsOverQuota").build());
 

@@ -20,23 +20,11 @@
 package org.apache.james.mailbox.lucene.search;
 
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
-import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
-import org.apache.james.mailbox.model.TestMessageId;
-import org.apache.james.mailbox.store.FakeAuthenticator;
-import org.apache.james.mailbox.store.FakeAuthorizator;
-import org.apache.james.mailbox.store.JVMMailboxPathLocker;
-import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
-import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
-import org.apache.james.mailbox.store.quota.NoQuotaManager;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
 import org.apache.lucene.store.RAMDirectory;
 import org.junit.Ignore;
@@ -49,35 +37,22 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
 
     @Override
     protected void initializeMailboxManager() throws Exception {
-        TestMessageId.Factory messageIdFactory = new TestMessageId.Factory();
-        MailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
-        UnionMailboxACLResolver aclResolver = new UnionMailboxACLResolver();
-        SimpleGroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
-        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, aclResolver, groupMembershipResolver);
-
-        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
-        storeMailboxManager = new InMemoryMailboxManager(
-            mapperFactory,
-            new FakeAuthenticator(),
-            FakeAuthorizator.defaultReject(),
-            new JVMMailboxPathLocker(),
-            new MessageParser(),
-            messageIdFactory,
-            mailboxEventDispatcher,
-            delegatingListener,
-            storeRightManager);
+        storeMailboxManager = new InMemoryIntegrationResources()
+            .createMailboxManager(new SimpleGroupMembershipResolver());
 
         messageIdManager = new StoreMessageIdManager(
             storeMailboxManager,
             storeMailboxManager.getMapperFactory(),
-            mailboxEventDispatcher,
-            messageIdFactory,
-            new NoQuotaManager(),
-            new DefaultQuotaRootResolver(mapperFactory));
-        messageSearchIndex = new LuceneMessageSearchIndex(mapperFactory, new InMemoryId.Factory(), new RAMDirectory(), messageIdFactory);
-        storeMailboxManager.setMessageSearchIndex(messageSearchIndex);
-        storeMailboxManager.init();
+            storeMailboxManager.getEventDispatcher(),
+            storeMailboxManager.getMessageIdFactory(),
+            storeMailboxManager.getQuotaManager(),
+            storeMailboxManager.getQuotaRootResolver());
+        LuceneMessageSearchIndex luceneMessageSearchIndex = new LuceneMessageSearchIndex(
+            storeMailboxManager.getMapperFactory(), new InMemoryId.Factory(), new RAMDirectory(),
+            storeMailboxManager.getMessageIdFactory());
+        storeMailboxManager.setMessageSearchIndex(luceneMessageSearchIndex);
+        storeMailboxManager.addGlobalListener(luceneMessageSearchIndex, new MockMailboxSession("admin"));
+        this.messageSearchIndex = luceneMessageSearchIndex;
     }
 
     /**

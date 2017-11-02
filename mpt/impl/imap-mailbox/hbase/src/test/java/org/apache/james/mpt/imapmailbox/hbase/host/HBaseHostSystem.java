@@ -42,6 +42,7 @@ import org.apache.james.mailbox.hbase.HBaseMailboxSessionMapperFactory;
 import org.apache.james.mailbox.hbase.mail.HBaseModSeqProvider;
 import org.apache.james.mailbox.hbase.mail.HBaseUidProvider;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
@@ -109,9 +110,11 @@ public class HBaseHostSystem extends JamesImapHostSystem {
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
         MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
         StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, aclResolver, groupMembershipResolver);
+        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mapperFactory, storeRightManager);
         mailboxManager = new HBaseMailboxManager(mapperFactory, authenticator, authorizator,
             new JVMMailboxPathLocker(), messageParser,
-            messageIdFactory, mailboxEventDispatcher, delegatingListener, storeRightManager);
+            messageIdFactory, mailboxEventDispatcher, delegatingListener,
+            annotationManager, storeRightManager);
         mailboxManager.init();
 
         SubscriptionManager subscriptionManager = new StoreSubscriptionManager(mapperFactory);

@@ -52,6 +52,7 @@ import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
@@ -115,9 +116,11 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         DefaultDelegatingMailboxListener delegatingMailboxListener = new DefaultDelegatingMailboxListener();
         MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingMailboxListener);
         StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver());
+
+        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mapperFactory, storeRightManager);
         mailboxManager = new CassandraMailboxManager(mapperFactory, authenticator, authorizator,
             new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,
-            mailboxEventDispatcher, delegatingMailboxListener, storeRightManager);
+            mailboxEventDispatcher, delegatingMailboxListener, annotationManager, storeRightManager);
         QuotaRootResolver quotaRootResolver = new DefaultQuotaRootResolver(mapperFactory);
 
         perUserMaxQuotaManager = new CassandraPerUserMaxQuotaManager(session);

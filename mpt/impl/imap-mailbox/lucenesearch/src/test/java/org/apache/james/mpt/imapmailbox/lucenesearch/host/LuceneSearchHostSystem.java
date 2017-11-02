@@ -48,10 +48,12 @@ import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
 import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
+import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
@@ -118,12 +120,13 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
             MessageParser messageParser = new MessageParser();
 
             StoreRightManager storeRightManager = new StoreRightManager(factory, aclResolver, groupMembershipResolver);
-            boolean useStreaming = false;
-            mailboxManager = new OpenJPAMailboxManager(factory, authenticator, authorizator, locker, useStreaming,
-                                                       messageParser, messageIdFactory,
-                                                       MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX,
-                                                       MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE,
-                                                       storeRightManager);
+
+            DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+            MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
+            StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(factory, storeRightManager);
+            mailboxManager = new OpenJPAMailboxManager(factory, authenticator, authorizator,
+                messageParser, new DefaultMessageId.Factory(), delegatingListener,
+                mailboxEventDispatcher, annotationManager, storeRightManager);
 
             LuceneMessageSearchIndex searchIndex = new LuceneMessageSearchIndex(factory, mailboxIdFactory, fsDirectory, messageIdFactory);
             searchIndex.setEnableSuffixMatch(true);

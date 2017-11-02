@@ -49,6 +49,7 @@ import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
+import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
@@ -107,17 +108,18 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
         DefaultDelegatingMailboxListener delegatingMailboxListener = new DefaultDelegatingMailboxListener();
         MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingMailboxListener);
         StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver());
+        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
 
         mailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory,
             noAuthenticator, noAuthorizator, new NoMailboxPathLocker(), new MessageParser(),
-            messageIdFactory, mailboxEventDispatcher, delegatingMailboxListener, storeRightManager);
+            messageIdFactory, mailboxEventDispatcher, delegatingMailboxListener, annotationManager, storeRightManager);
         mailboxManager.init();
         MessageParser failingMessageParser = mock(MessageParser.class);
         when(failingMessageParser.retrieveAttachments(any()))
             .thenThrow(new RuntimeException("Message parser set to fail"));
         parseFailingMailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory, noAuthenticator, noAuthorizator,
             new NoMailboxPathLocker(), failingMessageParser, messageIdFactory,
-            mailboxEventDispatcher, delegatingMailboxListener, storeRightManager);
+            mailboxEventDispatcher, delegatingMailboxListener, annotationManager, storeRightManager);
         parseFailingMailboxManager.init();
     }
 

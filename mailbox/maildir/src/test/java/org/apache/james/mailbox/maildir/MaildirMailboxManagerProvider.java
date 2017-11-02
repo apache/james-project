@@ -29,6 +29,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
@@ -52,8 +53,10 @@ public class MaildirMailboxManagerProvider {
 
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
         MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
+        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mf, storeRightManager);
         StoreMailboxManager manager = new StoreMailboxManager(mf, noAuthenticator, noAuthorizator, new JVMMailboxPathLocker(),
-            messageParser, new DefaultMessageId.Factory(), mailboxEventDispatcher, delegatingListener, storeRightManager);
+            messageParser, new DefaultMessageId.Factory(), annotationManager,
+            mailboxEventDispatcher, delegatingListener, storeRightManager);
         manager.init();
 
         return manager;

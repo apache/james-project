@@ -19,24 +19,10 @@
 
 package org.apache.james.mailbox.store.search;
 
-
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
-import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
-import org.apache.james.mailbox.inmemory.InMemoryMessageId;
-import org.apache.james.mailbox.store.FakeAuthenticator;
-import org.apache.james.mailbox.store.FakeAuthorizator;
-import org.apache.james.mailbox.store.JVMMailboxPathLocker;
-import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
-import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
-import org.apache.james.mailbox.store.quota.NoQuotaManager;
 import org.junit.Ignore;
 
 public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
@@ -47,35 +33,23 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
 
     @Override
     protected void initializeMailboxManager() throws Exception {
-        MailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
-        messageSearchIndex = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new PDFTextExtractor());
-        InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
-        UnionMailboxACLResolver aclResolver = new UnionMailboxACLResolver();
-        SimpleGroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
-        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, aclResolver, groupMembershipResolver);
+        storeMailboxManager = new InMemoryIntegrationResources()
+            .createMailboxManager(new SimpleGroupMembershipResolver());
 
-        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
-        storeMailboxManager = new InMemoryMailboxManager(
-            mapperFactory,
-            new FakeAuthenticator(),
-            FakeAuthorizator.defaultReject(),
-            new JVMMailboxPathLocker(),
-            new MessageParser(),
-            messageIdFactory,
-            mailboxEventDispatcher,
-            delegatingListener,
-            storeRightManager);
+        messageSearchIndex = new SimpleMessageSearchIndex(
+            storeMailboxManager.getMapperFactory(),
+            storeMailboxManager.getMapperFactory(),
+            new PDFTextExtractor());
 
         messageIdManager = new StoreMessageIdManager(
             storeMailboxManager,
             storeMailboxManager.getMapperFactory(),
-            mailboxEventDispatcher,
-            messageIdFactory,
-            new NoQuotaManager(),
-            new DefaultQuotaRootResolver(mapperFactory));
+            storeMailboxManager.getEventDispatcher(),
+            storeMailboxManager.getMessageIdFactory(),
+            storeMailboxManager.getQuotaManager(),
+            storeMailboxManager.getQuotaRootResolver());
+
         storeMailboxManager.setMessageSearchIndex(messageSearchIndex);
-        storeMailboxManager.init();
     }
 
     /**

@@ -37,10 +37,7 @@ import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
-import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
-import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
 import org.apache.james.mailbox.elasticsearch.MailboxMappingFactory;
@@ -53,14 +50,11 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
-import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.store.StoreMailboxManager;
-import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
@@ -68,8 +62,6 @@ import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.elasticsearch.client.Client;
-
-import com.google.common.base.Throwables;
 
 public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
@@ -95,7 +87,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
         FileUtils.deleteDirectory(tempDirectory.toFile());
     }
 
-    private void initFields() {
+    private void initFields() throws MailboxException {
         Client client = NodeMappingFactory.applyMapping(
             new IndexCreationFactory()
                 .useIndex(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX)
@@ -120,26 +112,13 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
                 MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, MailboxElasticSearchConstants.MESSAGE_TYPE),
             new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.systemDefault(), IndexAttachments.YES));
 
-        MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
-        GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
-        MessageParser messageParser = new MessageParser();
-
-        StoreRightManager storeRightManager = new StoreRightManager(factory, aclResolver, groupMembershipResolver);
-
-        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
-        mailboxManager = new StoreMailboxManager(factory, authenticator, authorizator, new JVMMailboxPathLocker(),
-            messageParser, messageIdFactory, mailboxEventDispatcher, delegatingListener, storeRightManager);
-        mailboxManager.setMessageSearchIndex(searchIndex);
-
-        try {
-            mailboxManager.init();
-        } catch (MailboxException e) {
-            throw Throwables.propagate(e);
-        }
+        InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
+        this.mailboxManager = inMemoryIntegrationResources.createMailboxManager(new SimpleGroupMembershipResolver());
+        this.mailboxManager.setMessageSearchIndex(searchIndex);
+        this.mailboxManager.removeGlobalListener(searchIndex, new MockMailboxSession("admin"));
 
         final ImapProcessor defaultImapProcessorFactory =
-            DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager,
+            DefaultImapProcessorFactory.createDefaultProcessor(this.mailboxManager,
                 new StoreSubscriptionManager(factory),
                 new NoQuotaManager(),
                 new DefaultQuotaRootResolver(factory),

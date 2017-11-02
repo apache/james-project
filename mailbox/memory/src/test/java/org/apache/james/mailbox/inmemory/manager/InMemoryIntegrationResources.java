@@ -34,9 +34,12 @@ import org.apache.james.mailbox.manager.ManagerTestResources;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
+import org.apache.james.mailbox.store.Authenticator;
+import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
+import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
@@ -60,6 +63,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         fakeAuthenticator.addUser(ManagerTestResources.OTHER_USER, ManagerTestResources.OTHER_USER_PASS);
         InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
         StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), groupMembershipResolver);
+        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
 
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
         MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
@@ -72,6 +76,30 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             new InMemoryMessageId.Factory(),
             mailboxEventDispatcher,
             delegatingListener,
+            annotationManager,
+            storeRightManager);
+        manager.init();
+        return manager;
+    }
+
+    public StoreMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver,
+                                                    Authenticator authenticator, Authorizator authorizator) throws MailboxException {
+        InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
+        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), groupMembershipResolver);
+        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
+
+        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
+        StoreMailboxManager manager = new InMemoryMailboxManager(
+            mailboxSessionMapperFactory,
+            authenticator,
+            authorizator,
+            new NoMailboxPathLocker(),
+            new MessageParser(),
+            new InMemoryMessageId.Factory(),
+            mailboxEventDispatcher,
+            delegatingListener,
+            annotationManager,
             storeRightManager);
         manager.init();
         return manager;

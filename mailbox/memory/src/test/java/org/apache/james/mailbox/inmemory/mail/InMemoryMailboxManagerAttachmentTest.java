@@ -37,6 +37,7 @@ import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
+import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
@@ -63,14 +64,15 @@ public class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManager
 
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
         MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
+        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
         mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, noAuthenticator, noAuthorizator, new NoMailboxPathLocker(),
-                new MessageParser(), messageIdFactory, mailboxEventDispatcher, delegatingListener, storeRightManager);
+                new MessageParser(), messageIdFactory, mailboxEventDispatcher, delegatingListener, annotationManager, storeRightManager);
         mailboxManager.init();
         MessageParser failingMessageParser = mock(MessageParser.class);
         when(failingMessageParser.retrieveAttachments(any(InputStream.class)))
             .thenThrow(new RuntimeException("Message parser set to fail"));
         parseFailingMailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, noAuthenticator, noAuthorizator, new NoMailboxPathLocker(),
-            failingMessageParser, messageIdFactory, mailboxEventDispatcher, delegatingListener, storeRightManager);
+            failingMessageParser, messageIdFactory, mailboxEventDispatcher, delegatingListener, annotationManager, storeRightManager);
         parseFailingMailboxManager.init();
         super.setUp();
     }

@@ -28,6 +28,9 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
+import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.StoreAttachmentManager;
+import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
@@ -49,9 +52,11 @@ public class MemoryMailboxManagerProvider {
         MessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
         MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
+        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager,
+            LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE);
         InMemoryMailboxManager mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, new FakeAuthenticator(), FakeAuthorizator.defaultReject(),
-            messageParser, messageIdFactory, LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE,
-            mailboxEventDispatcher, delegatingListener, storeRightManager);
+            new JVMMailboxPathLocker(), messageParser, messageIdFactory, mailboxEventDispatcher, delegatingListener,
+            annotationManager, storeRightManager);
 
         try {
             mailboxManager.init();

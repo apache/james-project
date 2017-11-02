@@ -30,6 +30,7 @@ import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import org.apache.james.mailbox.MailboxAnnotationManager;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
@@ -40,7 +41,6 @@ import org.apache.james.mailbox.MailboxSessionIdGenerator;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.RequestAware;
 import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
-import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
@@ -69,7 +69,6 @@ import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
-import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -108,6 +107,7 @@ public class StoreMailboxManager implements MailboxManager {
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
 
     private final Authenticator authenticator;
+    private final MailboxAnnotationManager annotationManager;
 
     private Authorizator authorizator;
 
@@ -135,23 +135,15 @@ public class StoreMailboxManager implements MailboxManager {
 
     private final MessageParser messageParser;
     private final Factory messageIdFactory;
-    private final int limitOfAnnotations;
-    private final int limitAnnotationSize;
     private final ImmutableMailboxMessage.Factory immutableMailboxMessageFactory;
 
     @Inject
-    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, Authorizator authorizator, 
-            MailboxPathLocker locker, MessageParser messageParser, MessageId.Factory messageIdFactory, MailboxEventDispatcher mailboxEventDispatcher,
-            DelegatingMailboxListener delegatingListener, StoreRightManager storeRightManager) {
-        this(mailboxSessionMapperFactory, authenticator, authorizator, locker, messageParser, messageIdFactory,
-            MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE, mailboxEventDispatcher,
-            delegatingListener, storeRightManager);
-    }
-
     public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, Authorizator authorizator,
                                MailboxPathLocker locker, MessageParser messageParser,
-                               MessageId.Factory messageIdFactory, int limitOfAnnotations, int limitAnnotationSize, MailboxEventDispatcher mailboxEventDispatcher,
+                               MessageId.Factory messageIdFactory, MailboxAnnotationManager annotationManager,
+                               MailboxEventDispatcher mailboxEventDispatcher,
                                DelegatingMailboxListener delegatingListener, StoreRightManager storeRightManager) {
+        this.annotationManager = annotationManager;
         Preconditions.checkNotNull(delegatingListener);
         Preconditions.checkNotNull(mailboxEventDispatcher);
         this.authenticator = authenticator;
@@ -160,15 +152,13 @@ public class StoreMailboxManager implements MailboxManager {
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
         this.messageParser = messageParser;
         this.messageIdFactory = messageIdFactory;
-        this.limitOfAnnotations = limitOfAnnotations;
-        this.limitAnnotationSize = limitAnnotationSize;
         this.delegatingListener = delegatingListener;
         this.dispatcher = mailboxEventDispatcher;
         this.immutableMailboxMessageFactory = new ImmutableMailboxMessage.Factory(this);
         this.storeRightManager = storeRightManager;
     }
 
-    protected Factory getMessageIdFactory() {
+    public Factory getMessageIdFactory() {
         return messageIdFactory;
     }
     
@@ -819,50 +809,21 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public List<MailboxAnnotation> getAllAnnotations(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
-        final AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        final MailboxId mailboxId = getMailbox(mailboxPath, session).getId();
-
-        return annotationMapper.execute(
-            () -> annotationMapper.getAllAnnotations(mailboxId));
+        return annotationManager.getAllAnnotations(mailboxPath, session);
     }
 
     @Override
-    public List<MailboxAnnotation> getAnnotationsByKeys(MailboxPath mailboxPath, MailboxSession session, final Set<MailboxAnnotationKey> keys)
+    public List<MailboxAnnotation> getAnnotationsByKeys(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys)
             throws MailboxException {
-        final AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        final MailboxId mailboxId = getMailbox(mailboxPath, session).getId();
-
-        return annotationMapper.execute(
-            () -> annotationMapper.getAnnotationsByKeys(mailboxId, keys));
+        return annotationManager.getAnnotationsByKeys(mailboxPath, session, keys);
     }
 
     @Override
-    public void updateAnnotations(MailboxPath mailboxPath, MailboxSession session, final List<MailboxAnnotation> mailboxAnnotations)
+    public void updateAnnotations(MailboxPath mailboxPath, MailboxSession session, List<MailboxAnnotation> mailboxAnnotations)
             throws MailboxException {
-        final AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        final MailboxId mailboxId = getMailbox(mailboxPath, session).getId();
-
-        annotationMapper.execute(Mapper.toTransaction(() -> {
-            for (MailboxAnnotation annotation : mailboxAnnotations) {
-                if (annotation.isNil()) {
-                    annotationMapper.deleteAnnotation(mailboxId, annotation.getKey());
-                } else if (canInsertOrUpdate(mailboxId, annotation, annotationMapper)) {
-                    annotationMapper.insertAnnotation(mailboxId, annotation);
-                }
-            }
-        }));
+        annotationManager.updateAnnotations(mailboxPath, session, mailboxAnnotations);
     }
 
-    private boolean canInsertOrUpdate(MailboxId mailboxId, MailboxAnnotation annotation, AnnotationMapper annotationMapper) throws AnnotationException {
-        if (annotation.size() > limitAnnotationSize) {
-            throw new AnnotationException("annotation too big.");
-        }
-        if (!annotationMapper.exist(mailboxId, annotation)
-            && annotationMapper.countAnnotations(mailboxId) >= limitOfAnnotations) {
-            throw new AnnotationException("too many annotations.");
-        }
-        return true;
-    }
 
     @Override
     public boolean hasCapability(MailboxCapabilities capability) {
@@ -871,22 +832,14 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(MailboxPath mailboxPath, MailboxSession session,
-            final Set<MailboxAnnotationKey> keys) throws MailboxException {
-        final AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        final MailboxId mailboxId = getMailbox(mailboxPath, session).getId();
-
-        return annotationMapper.execute(
-            () -> annotationMapper.getAnnotationsByKeysWithOneDepth(mailboxId, keys));
+            Set<MailboxAnnotationKey> keys) throws MailboxException {
+        return annotationManager.getAnnotationsByKeysWithOneDepth(mailboxPath, session, keys);
     }
 
     @Override
     public List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(MailboxPath mailboxPath, MailboxSession session,
-            final Set<MailboxAnnotationKey> keys) throws MailboxException {
-        final AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        final MailboxId mailboxId = getMailbox(mailboxPath, session).getId();
-
-        return annotationMapper.execute(
-            () -> annotationMapper.getAnnotationsByKeysWithAllDepth(mailboxId, keys));
+            Set<MailboxAnnotationKey> keys) throws MailboxException {
+        return annotationManager.getAnnotationsByKeysWithAllDepth(mailboxPath, session, keys);
     }
 
     @Override

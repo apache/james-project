@@ -79,8 +79,10 @@ public class StoreMailboxManagerTest {
 
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
         MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
+        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mockedMapperFactory, storeRightManager);
         storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, authenticator, FakeAuthorizator.forUserAndAdmin(ADMIN, CURRENT_USER),
-                new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory, mailboxEventDispatcher, delegatingListener, storeRightManager);
+                new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,
+                annotationManager, mailboxEventDispatcher, delegatingListener, storeRightManager);
         storeMailboxManager.init();
     }
 

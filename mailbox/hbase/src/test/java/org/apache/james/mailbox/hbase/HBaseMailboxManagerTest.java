@@ -41,6 +41,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
@@ -71,6 +72,7 @@ public class HBaseMailboxManagerTest extends MailboxManagerTest {
         Authorizator noAuthorizator = null;
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
         MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
+        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mapperFactory, storeRightManager);
         HBaseMailboxManager manager = new HBaseMailboxManager(mapperFactory,
             noAuthenticator,
             noAuthorizator,
@@ -79,6 +81,7 @@ public class HBaseMailboxManagerTest extends MailboxManagerTest {
             messageIdFactory,
             mailboxEventDispatcher,
             delegatingListener,
+            annotationManager,
             storeRightManager);
 
         try {

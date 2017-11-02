@@ -28,6 +28,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
+import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
@@ -50,9 +51,10 @@ public class JCRMailboxManager extends StoreMailboxManager implements JCRImapCon
                              MessageId.Factory messageIdFactory,
                              MailboxEventDispatcher mailboxEventDispatcher,
                              DelegatingMailboxListener delegatingMailboxListener,
+                             StoreMailboxAnnotationManager annotationManager,
                              StoreRightManager storeRightManager) {
         super(mapperFactory, authenticator, authorizator, locker, messageParser, messageIdFactory,
-            mailboxEventDispatcher, delegatingMailboxListener, storeRightManager);
+            annotationManager, mailboxEventDispatcher, delegatingMailboxListener, storeRightManager);
     }
 
     @Override
