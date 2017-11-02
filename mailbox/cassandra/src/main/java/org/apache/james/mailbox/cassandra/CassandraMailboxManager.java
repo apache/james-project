@@ -26,8 +26,6 @@ import javax.inject.Inject;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
-import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -55,8 +53,9 @@ public class CassandraMailboxManager extends StoreMailboxManager {
     @Inject
     public CassandraMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, Authorizator authorizator,
                                    MailboxPathLocker locker, MessageParser messageParser, MessageId.Factory messageIdFactory,
-                                   MailboxEventDispatcher mailboxEventDispatcher, DelegatingMailboxListener delegatingMailboxListener) {
-        super(mapperFactory,
+                                   MailboxEventDispatcher mailboxEventDispatcher, DelegatingMailboxListener delegatingMailboxListener,
+                                   StoreRightManager storeRightManager) {
+        this(mapperFactory,
             authenticator,
             authorizator,
             locker,
@@ -66,34 +65,24 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE,
             mailboxEventDispatcher,
             delegatingMailboxListener,
-            new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver()));
-        this.locker = locker;
-        this.mapperFactory = mapperFactory;
+            storeRightManager);
     }
 
-    public CassandraMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, Authorizator authorizator,
-                                   MailboxPathLocker locker, MessageParser messageParser, MessageId.Factory messageIdFactory) {
+    public CassandraMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory, Authenticator authenticator,  Authorizator authorizator,
+                                   MailboxPathLocker locker, MessageParser messageParser,
+                                   MessageId.Factory messageIdFactory, int limitOfAnnotations, int limitAnnotationSize,
+                                   MailboxEventDispatcher mailboxEventDispatcher, DelegatingMailboxListener delegatingMailboxListener,
+                                   StoreRightManager storeRightManager) {
         super(mapperFactory,
             authenticator,
             authorizator,
             locker,
             messageParser,
             messageIdFactory,
-            new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver()));
-        this.locker = locker;
-        this.mapperFactory = mapperFactory;
-    }
-
-    public CassandraMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory, Authenticator authenticator,  Authorizator authorizator,
-            MailboxPathLocker locker, MessageParser messageParser,
-            MessageId.Factory messageIdFactory, int limitOfAnnotations, int limitAnnotationSize, StoreRightManager storeRightManager) {
-        super(mapperFactory,
-            authenticator,
-            authorizator,
-            messageParser,
-            messageIdFactory,
             limitOfAnnotations,
             limitAnnotationSize,
+            mailboxEventDispatcher,
+            delegatingMailboxListener,
             storeRightManager);
         this.locker = locker;
         this.mapperFactory = mapperFactory;
