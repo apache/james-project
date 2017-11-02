@@ -19,7 +19,6 @@
 package org.apache.james.mailbox.store.mail.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
