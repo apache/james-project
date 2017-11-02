@@ -65,7 +65,6 @@ import org.apache.james.mailbox.model.search.MailboxNameExpression;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
@@ -88,6 +87,7 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
@@ -103,9 +103,8 @@ public class StoreMailboxManager implements MailboxManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreMailboxManager.class);
     public static final char SQL_WILDCARD_CHAR = '%';
 
-
-    private MailboxEventDispatcher dispatcher;
-    private DelegatingMailboxListener delegatingListener;
+    private final MailboxEventDispatcher dispatcher;
+    private final DelegatingMailboxListener delegatingListener;
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
 
     private final Authenticator authenticator;
@@ -136,11 +135,8 @@ public class StoreMailboxManager implements MailboxManager {
 
     private final MessageParser messageParser;
     private final Factory messageIdFactory;
-
     private final int limitOfAnnotations;
-
     private final int limitAnnotationSize;
-
     private final ImmutableMailboxMessage.Factory immutableMailboxMessageFactory;
 
     @Inject
@@ -153,28 +149,11 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, Authorizator authorizator,
-                               MailboxPathLocker locker, MessageParser messageParser, MessageId.Factory messageIdFactory, StoreRightManager storeRightManager) {
-        this(mailboxSessionMapperFactory, authenticator, authorizator, locker, messageParser, messageIdFactory,
-            MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE, storeRightManager);
-    }
-
-    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, Authorizator authorizator,
-            MessageParser messageParser, MessageId.Factory messageIdFactory, int limitOfAnnotations, int limitAnnotationSize, StoreRightManager storeRightManager) {
-        this(mailboxSessionMapperFactory, authenticator, authorizator, new JVMMailboxPathLocker(), messageParser, messageIdFactory,
-                limitOfAnnotations, limitAnnotationSize, storeRightManager);
-    }
-
-    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, Authorizator authorizator,
-            MailboxPathLocker locker, MessageParser messageParser,
-            MessageId.Factory messageIdFactory, int limitOfAnnotations, int limitAnnotationSize, StoreRightManager storeRightManager) {
-        this(mailboxSessionMapperFactory, authenticator, authorizator, locker, messageParser, messageIdFactory,
-            limitOfAnnotations, limitAnnotationSize, null, null, storeRightManager);
-    }
-
-    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, Authorizator authorizator,
                                MailboxPathLocker locker, MessageParser messageParser,
                                MessageId.Factory messageIdFactory, int limitOfAnnotations, int limitAnnotationSize, MailboxEventDispatcher mailboxEventDispatcher,
                                DelegatingMailboxListener delegatingListener, StoreRightManager storeRightManager) {
+        Preconditions.checkNotNull(delegatingListener);
+        Preconditions.checkNotNull(mailboxEventDispatcher);
         this.authenticator = authenticator;
         this.authorizator = authorizator;
         this.locker = locker;
@@ -236,11 +215,6 @@ public class StoreMailboxManager implements MailboxManager {
      */
     @PostConstruct
     public void init() throws MailboxException {
-
-        if (dispatcher == null) {
-            dispatcher = new MailboxEventDispatcher(getDelegationListener());
-        }
-
         if (index == null) {
             index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory, new DefaultTextExtractor());
         }
@@ -294,9 +268,6 @@ public class StoreMailboxManager implements MailboxManager {
      * @return delegatingListener
      */
     public DelegatingMailboxListener getDelegationListener() {
-        if (delegatingListener == null) {
-            delegatingListener = new DefaultDelegatingMailboxListener();
-        }
         return delegatingListener;
     }
 
@@ -346,17 +317,6 @@ public class StoreMailboxManager implements MailboxManager {
 
     public MessageParser getMessageParser() {
         return messageParser;
-    }
-
-    /**
-     * Set the {@link DelegatingMailboxListener} to use with this {@link MailboxManager} instance. If none is set here a {@link DefaultDelegatingMailboxListener} instance will
-     * be created lazy
-     *
-     * @param delegatingListener
-     */
-    public void setDelegatingMailboxListener(DelegatingMailboxListener delegatingListener) {
-        this.delegatingListener = delegatingListener;
-        dispatcher = new MailboxEventDispatcher(getDelegationListener());
     }
 
     /**

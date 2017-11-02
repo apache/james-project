@@ -42,6 +42,8 @@ import org.apache.james.mailbox.model.MessageId.Factory;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.PrefixedRegex;
+import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -74,8 +76,11 @@ public class StoreMailboxManagerTest {
         authenticator.addUser(CURRENT_USER, CURRENT_USER_PASSWORD);
         authenticator.addUser(ADMIN, ADMIN_PASSWORD);
         StoreRightManager storeRightManager = new StoreRightManager(mockedMapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver());
+
+        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
         storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, authenticator, FakeAuthorizator.forUserAndAdmin(ADMIN, CURRENT_USER),
-                new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory, storeRightManager);
+                new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory, mailboxEventDispatcher, delegatingListener, storeRightManager);
         storeMailboxManager.init();
     }
 

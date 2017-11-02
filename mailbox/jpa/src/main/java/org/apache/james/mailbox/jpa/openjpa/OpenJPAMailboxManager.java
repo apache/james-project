@@ -36,6 +36,8 @@ import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
+import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 
@@ -56,9 +58,11 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
                                  MessageId.Factory messageIdFactory,
                                  int annotationLimit,
                                  int annotationLimitSize,
+                                 DelegatingMailboxListener delegatingMailboxListener,
+                                 MailboxEventDispatcher mailboxEventDispatcher,
                                  StoreRightManager storeRightManager) {
         super(mapperFactory, authenticator, authorizator, locker, messageParser,
-            messageIdFactory, annotationLimit, annotationLimitSize, storeRightManager);
+            messageIdFactory, delegatingMailboxListener, mailboxEventDispatcher, annotationLimit,  annotationLimitSize, storeRightManager);
         if (useStreaming) {
             feature = AdvancedFeature.Streaming;
         } else {
@@ -73,9 +77,11 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
                                  String encryptPass,
                                  MessageParser messageParser,
                                  MessageId.Factory messageIdFactory,
+                                 DelegatingMailboxListener delegatingMailboxListener,
+                                 MailboxEventDispatcher mailboxEventDispatcher,
                                  StoreRightManager storeRightManager) {
         super(mapperFactory, authenticator, authorizator, locker, messageParser,
-            messageIdFactory, storeRightManager);
+            messageIdFactory, delegatingMailboxListener, mailboxEventDispatcher, storeRightManager);
         if (encryptPass != null) {
             EncryptDecryptHelper.init(encryptPass);
             feature = AdvancedFeature.Encryption;
@@ -90,10 +96,12 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
                                  Authorizator authorizator,
                                  MessageParser messageParser,
                                  MessageId.Factory messageIdFactory,
+                                 DelegatingMailboxListener delegatingMailboxListener,
+                                 MailboxEventDispatcher mailboxEventDispatcher,
                                  StoreRightManager storeRightManager) {
         this(mapperFactory, authenticator, authorizator, new JVMMailboxPathLocker(), false,
             messageParser, messageIdFactory, MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX,
-            MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE, storeRightManager);
+            MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE, delegatingMailboxListener, mailboxEventDispatcher, storeRightManager);
     }
 
     public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory,
@@ -103,9 +111,11 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
                                  MessageId.Factory messageIdFactory,
                                  int annotationLimit,
                                  int annotationLimitSize,
+                                 DelegatingMailboxListener delegatingMailboxListener,
+                                 MailboxEventDispatcher mailboxEventDispatcher,
                                  StoreRightManager storeRightManager) {
         this(mapperFactory, authenticator, authorizator, new JVMMailboxPathLocker(), false,
-            messageParser, messageIdFactory, annotationLimit, annotationLimitSize, storeRightManager);
+            messageParser, messageIdFactory, annotationLimit, annotationLimitSize, delegatingMailboxListener, mailboxEventDispatcher, storeRightManager);
     }
 
     @Override

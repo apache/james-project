@@ -40,6 +40,8 @@ import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreRightManager;
+import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -68,6 +70,9 @@ public class MailboxManagementTest {
                                                                     new UnionMailboxACLResolver(),
                                                                     new SimpleGroupMembershipResolver());
 
+
+        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
         StoreMailboxManager mailboxManager = new StoreMailboxManager(
             inMemoryMapperFactory,
             new FakeAuthenticator(),
@@ -75,6 +80,8 @@ public class MailboxManagementTest {
             new JVMMailboxPathLocker(),
             new MessageParser(),
             new DefaultMessageId.Factory(),
+            mailboxEventDispatcher,
+            delegatingListener,
             storeRightManager);
 
         mailboxManager.init();

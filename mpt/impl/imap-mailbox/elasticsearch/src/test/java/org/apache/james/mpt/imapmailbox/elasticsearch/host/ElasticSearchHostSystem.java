@@ -53,10 +53,12 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
-import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
+import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
@@ -124,9 +126,10 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
         StoreRightManager storeRightManager = new StoreRightManager(factory, aclResolver, groupMembershipResolver);
 
-        mailboxManager = new StoreMailboxManager(factory, authenticator, authorizator, messageParser,
-                                                 messageIdFactory, MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX,
-                                                 MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE, storeRightManager);
+        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
+        mailboxManager = new StoreMailboxManager(factory, authenticator, authorizator, new JVMMailboxPathLocker(),
+            messageParser, messageIdFactory, mailboxEventDispatcher, delegatingListener, storeRightManager);
         mailboxManager.setMessageSearchIndex(searchIndex);
 
         try {

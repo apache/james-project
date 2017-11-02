@@ -31,6 +31,8 @@ import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreRightManager;
+import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.transaction.Mapper;
@@ -46,9 +48,11 @@ public abstract class JPAMailboxManager extends StoreMailboxManager {
                              MailboxPathLocker locker,
                              MessageParser messageParser,
                              MessageId.Factory messageIdFactory,
+                             DelegatingMailboxListener delegatingMailboxListener,
+                             MailboxEventDispatcher mailboxEventDispatcher,
                              StoreRightManager storeRightManager) {
         super(mailboxSessionMapperFactory, authenticator, authorizator, locker,
-            messageParser, messageIdFactory, storeRightManager);
+            messageParser, messageIdFactory, mailboxEventDispatcher, delegatingMailboxListener, storeRightManager);
     }
 
     public JPAMailboxManager(JPAMailboxSessionMapperFactory mailboxSessionMapperFactory,
@@ -57,11 +61,14 @@ public abstract class JPAMailboxManager extends StoreMailboxManager {
                              MailboxPathLocker locker,
                              MessageParser messageParser,
                              MessageId.Factory messageIdFactory,
+                             DelegatingMailboxListener delegatingMailboxListener,
+                             MailboxEventDispatcher mailboxEventDispatcher,
                              int limitAnnotation,
                              int limitAnnotationSize,
                              StoreRightManager storeRightManager) {
         super(mailboxSessionMapperFactory, authenticator, authorizator, locker,
-            messageParser, messageIdFactory, limitAnnotation, limitAnnotationSize, storeRightManager);
+            messageParser, messageIdFactory, limitAnnotation, limitAnnotationSize,
+            mailboxEventDispatcher, delegatingMailboxListener, storeRightManager);
     }
     
     @Override

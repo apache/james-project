@@ -30,6 +30,7 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
+import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
@@ -54,8 +55,11 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
     public InMemoryMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator,  Authorizator authorizator,
                                   MessageParser messageParser, MessageId.Factory messageIdFactory,
                                   int limitOfAnnotations, int limitAnnotationSize,
+                                  MailboxEventDispatcher dispatcher,
+                                  DelegatingMailboxListener delegatingMailboxListener,
                                   StoreRightManager storeRightManager) {
-        super(mailboxSessionMapperFactory, authenticator, authorizator, messageParser, messageIdFactory, limitOfAnnotations, limitAnnotationSize, storeRightManager);
+        super(mailboxSessionMapperFactory, authenticator, authorizator, new JVMMailboxPathLocker(), messageParser, messageIdFactory,
+            limitOfAnnotations, limitAnnotationSize, dispatcher, delegatingMailboxListener, storeRightManager);
     }
 
     @Override

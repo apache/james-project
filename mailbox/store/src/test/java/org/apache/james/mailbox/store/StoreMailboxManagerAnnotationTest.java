@@ -38,10 +38,11 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -103,10 +104,12 @@ public class StoreMailboxManagerAnnotationTest {
         StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, aclResolver,
                                                                     groupMembershipResolver);
 
+        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
         storeMailboxManager = spy(new StoreMailboxManager(mailboxSessionMapperFactory, authenticator, authorizator,
-                                                          messageParser, messageIdFactory,
-                                                          MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX,
-                                                          MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE,
+                                                          new JVMMailboxPathLocker(), messageParser, messageIdFactory,
+                                                          mailboxEventDispatcher,
+                                                          delegatingListener,
                                                           storeRightManager));
         storeMailboxManager.init();
     }
