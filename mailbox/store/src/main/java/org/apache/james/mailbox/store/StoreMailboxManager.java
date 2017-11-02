@@ -807,9 +807,7 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public void setRights(MailboxId mailboxId, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
-        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        Mailbox mailbox = mapper.findMailboxById(mailboxId);
-        storeRightManager.setRights(mailbox.generateAssociatedPath(), mailboxACL, session);
+        storeRightManager.setRights(mailboxId, mailboxACL, session);
     }
 
     @Override
