@@ -41,8 +41,11 @@ import org.apache.james.mailbox.hbase.HBaseMailboxManager;
 import org.apache.james.mailbox.hbase.HBaseMailboxSessionMapperFactory;
 import org.apache.james.mailbox.hbase.mail.HBaseModSeqProvider;
 import org.apache.james.mailbox.hbase.mail.HBaseUidProvider;
+import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
+import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
@@ -103,9 +106,12 @@ public class HBaseHostSystem extends JamesImapHostSystem {
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
 
+        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
         StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, aclResolver, groupMembershipResolver);
-        mailboxManager = new HBaseMailboxManager(mapperFactory, authenticator, authorizator, messageParser,
-                                                 messageIdFactory, storeRightManager);
+        mailboxManager = new HBaseMailboxManager(mapperFactory, authenticator, authorizator,
+            new JVMMailboxPathLocker(), messageParser,
+            messageIdFactory, mailboxEventDispatcher, delegatingListener, storeRightManager);
         mailboxManager.init();
 
         SubscriptionManager subscriptionManager = new StoreSubscriptionManager(mapperFactory);
