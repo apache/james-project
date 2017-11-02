@@ -92,7 +92,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
                 .thenCompose(cassandraIdOptional ->
                     cassandraIdOptional
                         .map(CassandraMailboxPathDAO.CassandraIdAndPath::getCassandraId)
-                        .map(mailboxDAO::retrieveMailbox)
+                        .map(this::retrieveMailbox)
                         .orElse(CompletableFuture.completedFuture(Optional.empty())))
                 .join()
                 .orElseThrow(() -> new MailboxNotFoundException(path));

@@ -398,4 +398,18 @@ public abstract class MailboxMapperACLTest {
             .containsOnly(benwaInboxMailbox);
     }
 
+    @Test
+    public void findMailboxByPathShouldReturnMailboxWithACL() throws MailboxException {
+        EntryKey key = EntryKey.createUserEntryKey("user");
+        Rfc4314Rights rights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
+        mailboxMapper.setACL(benwaInboxMailbox,
+            new MailboxACL(ImmutableMap.of(key, rights)));
+
+        assertThat(
+            mailboxMapper.findMailboxByPath(benwaInboxMailbox.generateAssociatedPath())
+                .getACL()
+                .getEntries())
+            .hasSize(1)
+            .containsEntry(key, rights);
+    }
 }
