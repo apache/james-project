@@ -91,6 +91,11 @@ public class MailboxEventAnalyserTest {
     private final MailboxManager mockManager = new MailboxManager() {
 
         @Override
+        public boolean hasRight(MailboxId mailboxId, Right right, MailboxSession session) throws MailboxException {
+            return false;
+        }
+
+        @Override
         public EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities() {
             return EnumSet.noneOf(MailboxCapabilities.class);
         }

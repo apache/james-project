@@ -776,6 +776,11 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
+    public boolean hasRight(MailboxId mailboxId, Right right, MailboxSession session) throws MailboxException {
+        return storeRightManager.hasRight(mailboxId, right, session);
+    }
+
+    @Override
     public Rfc4314Rights myRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
         return storeRightManager.myRights(mailboxPath, session);
     }

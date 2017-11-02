@@ -190,6 +190,11 @@ public class DefaultMailboxesProvisioningFilterThreadTest {
         }
 
         @Override
+        public boolean hasRight(MailboxId mailboxId, MailboxACL.Right right, MailboxSession session) throws MailboxException {
+            return false;
+        }
+
+        @Override
         public boolean hasRight(MailboxPath mailboxPath, MailboxACL.Right right, MailboxSession session) throws MailboxException {
             return false;
         }
