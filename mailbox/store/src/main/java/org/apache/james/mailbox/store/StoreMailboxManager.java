@@ -39,7 +39,6 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSession.SessionType;
 import org.apache.james.mailbox.MailboxSessionIdGenerator;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.RequestAware;
 import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -143,9 +142,11 @@ public class StoreMailboxManager implements MailboxManager {
                                MessageId.Factory messageIdFactory, MailboxAnnotationManager annotationManager,
                                MailboxEventDispatcher mailboxEventDispatcher,
                                DelegatingMailboxListener delegatingListener, StoreRightManager storeRightManager) {
-        this.annotationManager = annotationManager;
         Preconditions.checkNotNull(delegatingListener);
         Preconditions.checkNotNull(mailboxEventDispatcher);
+        Preconditions.checkNotNull(mailboxSessionMapperFactory);
+
+        this.annotationManager = annotationManager;
         this.authenticator = authenticator;
         this.authorizator = authorizator;
         this.locker = locker;
@@ -732,9 +733,7 @@ public class StoreMailboxManager implements MailboxManager {
      */
     @Override
     public void endProcessingRequest(MailboxSession session) {
-        if (mailboxSessionMapperFactory instanceof RequestAware) {
-            ((RequestAware) mailboxSessionMapperFactory).endProcessingRequest(session);
-        }
+        mailboxSessionMapperFactory.endProcessingRequest(session);
     }
 
     /**
