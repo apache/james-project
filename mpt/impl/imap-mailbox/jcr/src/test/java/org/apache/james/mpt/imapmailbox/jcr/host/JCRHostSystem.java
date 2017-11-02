@@ -43,6 +43,8 @@ import org.apache.james.mailbox.jcr.mail.JCRModSeqProvider;
 import org.apache.james.mailbox.jcr.mail.JCRUidProvider;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreRightManager;
+import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
@@ -93,8 +95,10 @@ public class JCRHostSystem extends JamesImapHostSystem {
             MessageParser messageParser = new MessageParser();
 
             StoreRightManager storeRightManager = new StoreRightManager(mf, aclResolver, groupMembershipResolver);
-            mailboxManager = new JCRMailboxManager(mf, authenticator, authorizator, messageParser,
-                    new DefaultMessageId.Factory(), storeRightManager);
+            DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+            MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
+            mailboxManager = new JCRMailboxManager(mf, authenticator, authorizator, new JVMMailboxPathLocker(), messageParser,
+                    new DefaultMessageId.Factory(), mailboxEventDispatcher, delegatingListener, storeRightManager);
             mailboxManager.init();
 
             final ImapProcessor defaultImapProcessorFactory = 
