@@ -119,10 +119,10 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
             GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
             MessageParser messageParser = new MessageParser();
 
-            StoreRightManager storeRightManager = new StoreRightManager(factory, aclResolver, groupMembershipResolver);
-
             DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
             MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
+            StoreRightManager storeRightManager = new StoreRightManager(factory, aclResolver, groupMembershipResolver, mailboxEventDispatcher);
+
             StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(factory, storeRightManager);
             mailboxManager = new OpenJPAMailboxManager(factory, authenticator, authorizator,
                 messageParser, new DefaultMessageId.Factory(), delegatingListener,

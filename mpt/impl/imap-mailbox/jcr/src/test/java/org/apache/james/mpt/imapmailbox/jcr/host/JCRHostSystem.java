@@ -95,9 +95,9 @@ public class JCRHostSystem extends JamesImapHostSystem {
             GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
             MessageParser messageParser = new MessageParser();
 
-            StoreRightManager storeRightManager = new StoreRightManager(mf, aclResolver, groupMembershipResolver);
             DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
             MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
+            StoreRightManager storeRightManager = new StoreRightManager(mf, aclResolver, groupMembershipResolver, mailboxEventDispatcher);
             StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mf, storeRightManager);
             mailboxManager = new JCRMailboxManager(mf, authenticator, authorizator, new JVMMailboxPathLocker(), messageParser,
                     new DefaultMessageId.Factory(), mailboxEventDispatcher, delegatingListener,

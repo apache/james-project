@@ -66,12 +66,12 @@ public class HBaseMailboxManagerStressTest extends MailboxManagerStressTest {
         MessageId.Factory messageIdFactory = new DefaultMessageId.Factory();
         HBaseMailboxSessionMapperFactory mapperFactory = new HBaseMailboxSessionMapperFactory(CLUSTER.getConf(),
             uidProvider, modSeqProvider, messageIdFactory);
-        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver());
+        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
+        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), mailboxEventDispatcher);
 
         Authenticator noAuthenticator = null;
         Authorizator noAuthorizator = null;
-        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mapperFactory, storeRightManager);
         HBaseMailboxManager manager = new HBaseMailboxManager(mapperFactory,
             noAuthenticator,

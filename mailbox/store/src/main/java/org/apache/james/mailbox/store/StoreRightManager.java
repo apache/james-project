@@ -41,6 +41,7 @@ import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.transaction.Mapper;
@@ -52,6 +53,7 @@ import com.google.common.collect.ImmutableMap;
 public class StoreRightManager implements RightManager {
     public static final boolean GROUP_FOLDER = true;
 
+    private final MailboxEventDispatcher dispatcher;
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final MailboxACLResolver aclResolver;
     private final GroupMembershipResolver groupMembershipResolver;
@@ -59,10 +61,12 @@ public class StoreRightManager implements RightManager {
     @Inject
     public StoreRightManager(MailboxSessionMapperFactory mailboxSessionMapperFactory,
                              MailboxACLResolver aclResolver,
-                             GroupMembershipResolver groupMembershipResolver) {
+                             GroupMembershipResolver groupMembershipResolver,
+                             MailboxEventDispatcher dispatcher) {
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
         this.aclResolver = aclResolver;
         this.groupMembershipResolver = groupMembershipResolver;
+        this.dispatcher = dispatcher;
     }
 
     @Override
