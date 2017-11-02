@@ -20,12 +20,10 @@
 package org.apache.james.mpt.imapmailbox.lucenesearch;
 
 import org.apache.james.mpt.api.ImapHostSystem;
+import org.apache.james.mpt.imapmailbox.lucenesearch.host.LuceneSearchHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.Copy;
 import org.junit.After;
 import org.junit.Before;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 public class LuceneCopy extends Copy {
 
@@ -33,8 +31,7 @@ public class LuceneCopy extends Copy {
 
     @Before
     public void setUp() throws Exception {
-        Injector injector = Guice.createInjector(new LuceneSearchMailboxTestModule());
-        system = injector.getInstance(ImapHostSystem.class);
+        system = new LuceneSearchHostSystem();
         system.beforeTest();
         super.setUp();
     }

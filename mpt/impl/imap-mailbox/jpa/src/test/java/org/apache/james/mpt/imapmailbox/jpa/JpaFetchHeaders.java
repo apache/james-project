@@ -20,12 +20,10 @@
 package org.apache.james.mpt.imapmailbox.jpa;
 
 import org.apache.james.mpt.api.ImapHostSystem;
+import org.apache.james.mpt.imapmailbox.jpa.host.JPAHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.FetchHeaders;
 import org.junit.After;
 import org.junit.Before;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 public class JpaFetchHeaders extends FetchHeaders {
 
@@ -33,8 +31,7 @@ public class JpaFetchHeaders extends FetchHeaders {
 
     @Before
     public void setUp() throws Exception {
-        Injector injector = Guice.createInjector(new JpaMailboxTestModule());
-        system = injector.getInstance(ImapHostSystem.class);
+        system = JPAHostSystem.build();
         system.beforeTest();
         super.setUp();
     }
