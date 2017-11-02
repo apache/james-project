@@ -112,10 +112,12 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
                 MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, MailboxElasticSearchConstants.MESSAGE_TYPE),
             new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.systemDefault(), IndexAttachments.YES));
 
-        InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
-        this.mailboxManager = inMemoryIntegrationResources.createMailboxManager(new SimpleGroupMembershipResolver());
+        this.mailboxManager = new InMemoryIntegrationResources()
+            .createMailboxManager(new SimpleGroupMembershipResolver(),
+                authenticator,
+                authorizator);
         this.mailboxManager.setMessageSearchIndex(searchIndex);
-        this.mailboxManager.removeGlobalListener(searchIndex, new MockMailboxSession("admin"));
+        this.mailboxManager.addGlobalListener(searchIndex, new MockMailboxSession("admin"));
 
         final ImapProcessor defaultImapProcessorFactory =
             DefaultImapProcessorFactory.createDefaultProcessor(this.mailboxManager,

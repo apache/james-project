@@ -20,51 +20,18 @@
 package org.apache.james.mailbox.inmemory;
 
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
-import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
-import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.FakeAuthenticator;
-import org.apache.james.mailbox.store.FakeAuthorizator;
-import org.apache.james.mailbox.store.JVMMailboxPathLocker;
-import org.apache.james.mailbox.store.StoreAttachmentManager;
-import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
-import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-
-import com.google.common.base.Throwables;
+import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 
 public class MemoryMailboxManagerProvider {
     private static final int LIMIT_ANNOTATIONS = 3;
     private static final int LIMIT_ANNOTATION_SIZE = 30;
 
-    public static MailboxManager provideMailboxManager() {
-        MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
-        GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
-        MessageParser messageParser = new MessageParser();
-
-        InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
-        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, aclResolver, groupMembershipResolver);
-        MessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
-        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
-        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager,
-            LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE);
-        InMemoryMailboxManager mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, new FakeAuthenticator(), FakeAuthorizator.defaultReject(),
-            new JVMMailboxPathLocker(), messageParser, messageIdFactory, mailboxEventDispatcher, delegatingListener,
-            annotationManager, storeRightManager);
-
-        try {
-            mailboxManager.init();
-        } catch (MailboxException e) {
-            throw Throwables.propagate(e);
-        }
-
-        return mailboxManager;
+    public static MailboxManager provideMailboxManager() throws MailboxException {
+        return new InMemoryIntegrationResources()
+            .createMailboxManager(new SimpleGroupMembershipResolver(),
+                LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE);
     }
 
 }

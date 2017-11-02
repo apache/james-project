@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.inmemory.manager;
 
+import java.util.function.BiFunction;
+
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
@@ -38,6 +40,7 @@ import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
+import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
@@ -58,12 +61,33 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
     @Override
     public StoreMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver) throws MailboxException {
+        return createMailboxManager(groupMembershipResolver,
+            ((storeRightManager, inMemoryMailboxSessionMapperFactory) ->
+                new StoreMailboxAnnotationManager(
+                    inMemoryMailboxSessionMapperFactory,
+                    storeRightManager)));
+    }
+
+    public StoreMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver,
+                                                    int limitAnnotationCount, int limitAnnotationSize) throws MailboxException {
+        return createMailboxManager(groupMembershipResolver,
+            ((storeRightManager, inMemoryMailboxSessionMapperFactory) ->
+             new StoreMailboxAnnotationManager(
+                 inMemoryMailboxSessionMapperFactory,
+                 storeRightManager,
+                 limitAnnotationCount,
+                 limitAnnotationSize)));
+    }
+
+    private StoreMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver,
+                                                    BiFunction<StoreRightManager, InMemoryMailboxSessionMapperFactory, StoreMailboxAnnotationManager> annotationManagerBiFunction) throws MailboxException {
         FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
         fakeAuthenticator.addUser(ManagerTestResources.USER, ManagerTestResources.USER_PASS);
         fakeAuthenticator.addUser(ManagerTestResources.OTHER_USER, ManagerTestResources.OTHER_USER_PASS);
         InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
         StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), groupMembershipResolver);
-        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
+        StoreMailboxAnnotationManager annotationManager = annotationManagerBiFunction
+            .apply(storeRightManager, mailboxSessionMapperFactory);
 
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
         MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
@@ -71,7 +95,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             mailboxSessionMapperFactory,
             fakeAuthenticator,
             FakeAuthorizator.defaultReject(),
-            new NoMailboxPathLocker(),
+            new JVMMailboxPathLocker(),
             new MessageParser(),
             new InMemoryMessageId.Factory(),
             mailboxEventDispatcher,
