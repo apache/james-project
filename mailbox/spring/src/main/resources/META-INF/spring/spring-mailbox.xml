@@ -60,6 +60,11 @@
      -->
     <bean id="messageParser" class="org.apache.james.mailbox.store.mail.model.impl.MessageParser"/>
 
+    <bean id="storeMailboxAnnotationManager" class="org.apache.james.mailbox.store.StoreMailboxAnnotationManager">
+        <constructor-arg index="0" ref="messageMapperFactory" />
+        <constructor-arg index="1" ref="storeRightManager" />
+    </bean>
+
     <bean id="storeRightManager" class="org.apache.james.mailbox.store.StoreRightManager" >
         <constructor-arg index="0" ref="messageMapperFactory" />
         <constructor-arg index="1" ref="aclResolver" />

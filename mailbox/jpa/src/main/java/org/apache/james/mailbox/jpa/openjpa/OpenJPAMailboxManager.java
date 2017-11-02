@@ -22,12 +22,10 @@ package org.apache.james.mailbox.jpa.openjpa;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAMailboxManager;
 import org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory;
-import org.apache.james.mailbox.jpa.mail.model.openjpa.EncryptDecryptHelper;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMessageManager.AdvancedFeature;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.Authenticator;
@@ -47,49 +45,6 @@ import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
  */
 public class OpenJPAMailboxManager extends JPAMailboxManager {
 
-    private final AdvancedFeature feature;
-
-    public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory,
-                                 Authenticator authenticator,
-                                 Authorizator authorizator,
-                                 MailboxPathLocker locker,
-                                 boolean useStreaming,
-                                 MessageParser messageParser,
-                                 MessageId.Factory messageIdFactory,
-                                 StoreMailboxAnnotationManager annotationManager,
-                                 DelegatingMailboxListener delegatingMailboxListener,
-                                 MailboxEventDispatcher mailboxEventDispatcher,
-                                 StoreRightManager storeRightManager) {
-        super(mapperFactory, authenticator, authorizator, locker, messageParser,
-            messageIdFactory, delegatingMailboxListener, mailboxEventDispatcher, annotationManager, storeRightManager);
-        if (useStreaming) {
-            feature = AdvancedFeature.Streaming;
-        } else {
-            feature = AdvancedFeature.None;
-        }
-    }
-
-    public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory,
-                                 Authenticator authenticator,
-                                 Authorizator authorizator,
-                                 MailboxPathLocker locker,
-                                 String encryptPass,
-                                 MessageParser messageParser,
-                                 MessageId.Factory messageIdFactory,
-                                 StoreMailboxAnnotationManager annotationManager,
-                                 DelegatingMailboxListener delegatingMailboxListener,
-                                 MailboxEventDispatcher mailboxEventDispatcher,
-                                 StoreRightManager storeRightManager) {
-        super(mapperFactory, authenticator, authorizator, locker, messageParser,
-            messageIdFactory, delegatingMailboxListener, mailboxEventDispatcher, annotationManager, storeRightManager);
-        if (encryptPass != null) {
-            EncryptDecryptHelper.init(encryptPass);
-            feature = AdvancedFeature.Encryption;
-        } else {
-            feature = AdvancedFeature.None;
-        }
-    }
-    
     @Inject
     public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory,
                                  Authenticator authenticator,
@@ -100,9 +55,12 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
                                  MailboxEventDispatcher mailboxEventDispatcher,
                                  StoreMailboxAnnotationManager annotationManager,
                                  StoreRightManager storeRightManager) {
-        this(mapperFactory, authenticator, authorizator, new JVMMailboxPathLocker(), false,
-            messageParser, messageIdFactory,  annotationManager, delegatingMailboxListener, mailboxEventDispatcher,
-           storeRightManager);
+        super(mapperFactory, authenticator, authorizator, new JVMMailboxPathLocker(), messageParser,
+            messageIdFactory, delegatingMailboxListener, mailboxEventDispatcher, annotationManager, storeRightManager);
+    }
+
+    protected AdvancedFeature getAdvancedFeature() {
+        return AdvancedFeature.None;
     }
 
     @Override
@@ -112,7 +70,7 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
             getEventDispatcher(),
             getLocker(),
             mailboxRow,
-            feature,
+            getAdvancedFeature(),
             getQuotaManager(),
             getQuotaRootResolver(),
             getMessageParser(),

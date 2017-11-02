@@ -58,17 +58,6 @@ public class OpenJPAMessageManager extends JPAMessageManager {
         Streaming,
         Encryption
     }
-    
-    public OpenJPAMessageManager(MailboxSessionMapperFactory mapperFactory, 
-                                 MessageSearchIndex index,MailboxEventDispatcher dispatcher,
-                                 MailboxPathLocker locker, Mailbox mailbox,
-                                 QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser,
-                                 MessageId.Factory messageIdFactory, BatchSizes batchSizes,
-                                 ImmutableMailboxMessage.Factory immutableMailboxMessageFactory,
-                                 StoreRightManager storeRightManager) throws MailboxException {
-        this(mapperFactory, index, dispatcher, locker,  mailbox, AdvancedFeature.None,
-                quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, immutableMailboxMessageFactory, storeRightManager);
-    }
 
     public OpenJPAMessageManager(MailboxSessionMapperFactory mapperFactory,
                                  MessageSearchIndex index, MailboxEventDispatcher dispatcher,
@@ -84,10 +73,6 @@ public class OpenJPAMessageManager extends JPAMessageManager {
 
     @Override
     protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachment> attachments) throws MailboxException {
-        int headerEnd = bodyStartOctet -2;
-        if (headerEnd < 0) {
-            headerEnd = 0;
-        }
         switch (feature) {
         case Streaming:
             return new JPAStreamingMailboxMessage((JPAMailbox) getMailboxEntity(), internalDate, size, flags, content, bodyStartOctet, propertyBuilder);

@@ -31,7 +31,7 @@
     <!-- WARNING: Memory does not persist the mailbox. -->
     <!--          Information will be lost after jvm restart. -->
 
-    <bean id="memory-mailboxManager" class="org.apache.james.mailbox.store.StoreMailboxManager" init-method="init">
+    <bean id="memory-mailboxManager" class="org.apache.james.mailbox.inmemory.InMemoryMailboxManager" init-method="init">
         <constructor-arg index="0" ref="memory-sessionMapperFactory"/>
         <constructor-arg index="1" ref="authenticator"/>
         <constructor-arg index="2" ref="authorizator"/>
@@ -40,7 +40,8 @@
         <constructor-arg index="5" ref="messageIdFactory" />
         <constructor-arg index="6" ref="dispatcher" />
         <constructor-arg index="7" ref="delegating-listener" />
-        <constructor-arg index="8" ref="storeRightManager" />
+        <constructor-arg index="8" ref="storeMailboxAnnotationManager" />
+        <constructor-arg index="9" ref="storeRightManager" />
 <!--         <property name="messageSearchIndex" ref="lazyIndex"/> -->
         <property name="quotaManager" ref="quotaManager"/>
         <property name="quotaRootResolver" ref="quotaRootResolver"/>

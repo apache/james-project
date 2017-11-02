@@ -38,11 +38,13 @@
         <constructor-arg index="2" ref="authorizator"/>
         <constructor-arg index="3" ref="messageParser"/>
         <constructor-arg index="4" ref="messageIdFactory"/>
-        <constructor-arg index="5" ref="storeRightManager" />
+        <constructor-arg index="5" ref="delegating-listener"/>
+        <constructor-arg index="6" ref="dispatcher"/>
+        <constructor-arg index="7" ref="storeMailboxAnnotationManager"/>
+        <constructor-arg index="8" ref="storeRightManager" />
         <property name="quotaManager" ref="quotaManager"/>
         <property name="quotaRootResolver" ref="quotaRootResolver"/>
         <property name="quotaUpdater" ref="quotaUpdater"/>
-        <property name="delegatingMailboxListener" ref="delegating-listener"/>
     </bean>
     
     <bean id ="jpa-subscriptionManager" class="org.apache.james.mailbox.jpa.JPASubscriptionManager">

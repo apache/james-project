@@ -41,9 +41,10 @@
         <constructor-arg index="3" ref="maildir-locker"/>
         <constructor-arg index="4" ref="messageParser"/>
         <constructor-arg index="5" ref="messageIdFactory" />
-        <constructor-arg index="6" ref="dispatcher" />
-        <constructor-arg index="7" ref="delegating-listener" />
-        <constructor-arg index="8" ref="storeRightManager" />
+        <constructor-arg index="6" ref="storeMailboxAnnotationManager" />
+        <constructor-arg index="7" ref="dispatcher" />
+        <constructor-arg index="8" ref="delegating-listener" />
+        <constructor-arg index="9" ref="storeRightManager" />
 <!--         <property name="messageSearchIndex" ref="lazyIndex"/> -->
         <property name="quotaManager" ref="quotaManager"/>
         <property name="quotaRootResolver" ref="quotaRootResolver"/>
