@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collection;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
@@ -38,12 +39,13 @@ import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreRightManager;
+import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
@@ -61,10 +63,13 @@ public class IsOverQuotaTest {
     public void setUp() throws Exception {
         InMemoryMailboxSessionMapperFactory factory = new InMemoryMailboxSessionMapperFactory();
         StoreRightManager storeRightManager = new StoreRightManager(factory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver());
+
+        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
         mailboxManager = new InMemoryMailboxManager(factory, new FakeAuthenticator(), FakeAuthorizator.defaultReject(),
             new NoMailboxPathLocker(), new MessageParser(),
-            new InMemoryMessageId.Factory(),
-            storeRightManager);
+            new InMemoryMessageId.Factory(), mailboxEventDispatcher,
+            delegatingListener, storeRightManager);
 
         quotaRootResolver = new DefaultQuotaRootResolver(factory);
         maxQuotaManager = new InMemoryPerUserMaxQuotaManager();

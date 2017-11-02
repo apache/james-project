@@ -136,6 +136,8 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
                 MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
                 MailboxElasticSearchConstants.MESSAGE_TYPE),
             new MessageToElasticSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES));
+        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
         storeMailboxManager = new InMemoryMailboxManager(
             mapperFactory,
             new FakeAuthenticator(),
@@ -143,10 +145,9 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
             new JVMMailboxPathLocker(),
             new MessageParser(),
             messageIdFactory,
+            mailboxEventDispatcher,
+            delegatingListener,
             storeRightManager);
-        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
-        storeMailboxManager.setDelegatingMailboxListener(delegatingListener);
 
         messageIdManager = new StoreMessageIdManager(
             storeMailboxManager,

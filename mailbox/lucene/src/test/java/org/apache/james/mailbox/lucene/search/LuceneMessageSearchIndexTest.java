@@ -54,6 +54,9 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
         UnionMailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         SimpleGroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, aclResolver, groupMembershipResolver);
+
+        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
         storeMailboxManager = new InMemoryMailboxManager(
             mapperFactory,
             new FakeAuthenticator(),
@@ -61,10 +64,9 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
             new JVMMailboxPathLocker(),
             new MessageParser(),
             messageIdFactory,
+            mailboxEventDispatcher,
+            delegatingListener,
             storeRightManager);
-        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
-        storeMailboxManager.setDelegatingMailboxListener(delegatingListener);
 
         messageIdManager = new StoreMessageIdManager(
             storeMailboxManager,

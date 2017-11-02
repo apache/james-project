@@ -51,11 +51,6 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
             delegatingMailboxListener, storeRightManager);
     }
 
-    public InMemoryMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, Authorizator authorizator,
-                                  MailboxPathLocker locker, MessageParser messageParser, MessageId.Factory messageIdFactory, StoreRightManager storeRightManager) {
-        super(mailboxSessionMapperFactory, authenticator, authorizator, locker, messageParser, messageIdFactory, storeRightManager);
-    }
-
     public InMemoryMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator,  Authorizator authorizator,
                                   MessageParser messageParser, MessageId.Factory messageIdFactory,
                                   int limitOfAnnotations, int limitAnnotationSize,

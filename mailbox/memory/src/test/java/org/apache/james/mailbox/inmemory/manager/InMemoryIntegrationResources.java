@@ -40,6 +40,8 @@ import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
+import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
@@ -58,13 +60,18 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         fakeAuthenticator.addUser(ManagerTestResources.OTHER_USER, ManagerTestResources.OTHER_USER_PASS);
         InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
         StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), groupMembershipResolver);
-        final StoreMailboxManager manager = new InMemoryMailboxManager(
+
+        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
+        StoreMailboxManager manager = new InMemoryMailboxManager(
             mailboxSessionMapperFactory,
             fakeAuthenticator,
             FakeAuthorizator.defaultReject(),
             new NoMailboxPathLocker(),
             new MessageParser(),
             new InMemoryMessageId.Factory(),
+            mailboxEventDispatcher,
+            delegatingListener,
             storeRightManager);
         manager.init();
         return manager;

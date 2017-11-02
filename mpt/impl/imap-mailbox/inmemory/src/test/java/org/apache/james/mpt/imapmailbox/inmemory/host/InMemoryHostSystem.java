@@ -38,6 +38,8 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
+import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
@@ -72,8 +74,12 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
 
         InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
         StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, aclResolver, groupMembershipResolver);
+
+        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
         mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, authenticator, authorizator,
-                new JVMMailboxPathLocker(), messageParser, new InMemoryMessageId.Factory(), storeRightManager);
+                new JVMMailboxPathLocker(), messageParser, new InMemoryMessageId.Factory(),
+                mailboxEventDispatcher, delegatingListener, storeRightManager);
         QuotaRootResolver quotaRootResolver = new DefaultQuotaRootResolver(mailboxManager.getMapperFactory());
 
         perUserMaxQuotaManager = new InMemoryPerUserMaxQuotaManager();
