@@ -206,15 +206,15 @@ public class StoreMailboxManager implements MailboxManager {
      */
     @PostConstruct
     public void init() throws MailboxException {
+        if (idGenerator == null) {
+            idGenerator = new RandomMailboxSessionIdGenerator();
+        }
+        MailboxSession session = createSystemSession("storeMailboxManager");
         if (index == null) {
             index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory, new DefaultTextExtractor());
         }
         if (index instanceof ListeningMessageSearchIndex) {
-            this.addGlobalListener((MailboxListener) index, null);
-        }
-
-        if (idGenerator == null) {
-            idGenerator = new RandomMailboxSessionIdGenerator();
+            this.addGlobalListener((MailboxListener) index, session);
         }
         if (quotaManager == null) {
             quotaManager = new NoQuotaManager();
@@ -223,7 +223,7 @@ public class StoreMailboxManager implements MailboxManager {
             quotaRootResolver = new DefaultQuotaRootResolver(mailboxSessionMapperFactory);
         }
         if (quotaUpdater != null && quotaUpdater instanceof MailboxListener) {
-            this.addGlobalListener((MailboxListener) quotaUpdater, null);
+            this.addGlobalListener((MailboxListener) quotaUpdater, session);
         }
         if (copyBatcher == null) {
             copyBatcher = new MessageBatcher(MessageBatcher.NO_BATCH_SIZE);
@@ -232,7 +232,6 @@ public class StoreMailboxManager implements MailboxManager {
             moveBatcher = new MessageBatcher(MessageBatcher.NO_BATCH_SIZE);
         }
         if (hasCapability(MailboxCapabilities.Annotation)) {
-            MailboxSession session = null;
             this.addGlobalListener(new MailboxAnnotationListener(mailboxSessionMapperFactory), session);
         }
     }
