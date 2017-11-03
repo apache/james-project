@@ -41,6 +41,7 @@ import org.apache.james.jmap.utils.MailboxUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SubscriptionManager;
+import org.apache.james.mailbox.exception.DifferentDomainException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNameException;
@@ -134,6 +135,11 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
                     .type("invalidArguments")
                     .description("Cannot rename a mailbox to an already existing mailbox.")
                     .build());
+        } catch (DifferentDomainException e) {
+            responseBuilder.notUpdated(mailboxId, SetError.builder()
+                .type("invalidArguments")
+                .description("Cannot share a mailbox to another domain")
+                .build());
         } catch (MailboxException e) {
             LOGGER.error("Error while updating mailbox", e);
             responseBuilder.notUpdated(mailboxId, SetError.builder()

@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayInputStream;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -38,6 +39,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.Maps;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.jsonpath.DocumentContext;
@@ -190,5 +192,18 @@ public class SetMailboxesMethodStepdefs {
 
             return jsonPath.<List<String>>read(ARGUMENTS + ".messageIds").size() == messageCount;
         });
+    }
+
+    @Then("^\"([^\"]*)\" receives not updated on mailbox \"([^\"]*)\" with kind \"([^\"]*)\" and message \"([^\"]*)\"$")
+    public void assertNotUpdatedWithGivenProperties(String userName, String mailboxName, String type, String message) throws Exception {
+        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", userName, mailboxName);
+        assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
+        assertThat(httpClient.jsonPath.<String>read(NAME)).isEqualTo("mailboxesSet");
+        
+        Map<String, Map<String, String>> notUpdated = httpClient.jsonPath.<Map<String, Map<String, String>>>read(ARGUMENTS + ".notUpdated");
+        assertThat(notUpdated).hasSize(1);
+        Map<String, String> parameters = notUpdated.get(mailbox.getMailboxId().serialize());
+        assertThat(parameters).contains(Maps.immutableEntry("type", type),
+                Maps.immutableEntry("description", message));
     }
 }
