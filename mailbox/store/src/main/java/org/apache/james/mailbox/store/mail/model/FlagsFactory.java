@@ -25,6 +25,8 @@ import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
+import com.google.common.collect.ImmutableList;
+
 public class FlagsFactory {
 
     private static Flags asFlags(MailboxMessage mailboxMessage, String[] userFlags) {
@@ -93,7 +95,9 @@ public class FlagsFactory {
         }
 
         public Builder addUserFlags(String... userFlags) {
-            this.userFlags.addAll(Arrays.asList(userFlags));
+            this.userFlags.addAll(Optional.ofNullable(userFlags)
+                .map(Arrays::asList)
+                .orElse(ImmutableList.of()));
             return this;
         }
 
