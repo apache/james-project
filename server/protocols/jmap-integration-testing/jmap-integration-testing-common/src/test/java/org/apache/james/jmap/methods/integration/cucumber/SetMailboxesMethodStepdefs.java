@@ -24,17 +24,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayInputStream;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.modules.ACLProbeImpl;
 
 import com.github.fge.lambdas.Throwing;
 import com.jayway.awaitility.Awaitility;
@@ -87,18 +88,44 @@ public class SetMailboxesMethodStepdefs {
     }
 
     @Given("^\"([^\"]*)\" shares its mailbox \"([^\"]*)\" with rights \"([^\"]*)\" with \"([^\"]*)\"$")
-    public void shareMailboxWithRight(String owner, String mailbox, String rights, String shareTo) throws Throwable {
-        MailboxPath mailboxPath = MailboxPath.forUser(owner, mailbox);
-
-        mainStepdefs.aclProbe.replaceRights(mailboxPath, shareTo, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights(rights));
+    public void shareMailboxWithRight(String owner, String mailboxName, String rights, String shareTo) throws Throwable {
+        userStepdefs.connectUser(owner);
+        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", owner, mailboxName);
+        String mailboxId = mailbox.getMailboxId().serialize();
+        String requestBody =
+                "[" +
+                    "  [ \"setMailboxes\"," +
+                    "    {" +
+                    "      \"update\": {" +
+                    "        \"" + mailboxId + "\" : {" +
+                    "          \"sharedWith\" : { \"" + shareTo + "\" : " + rightsAsString(rights) + " }" +
+                    "        }" +
+                    "      }" +
+                    "    }," +
+                    "    \"#0\"" +
+                    "  ]" +
+                    "]";
+        httpClient.post(requestBody);
+    }
+    
+    private String rightsAsString(String rights) throws UnsupportedRightException {
+        return MailboxACL.Rfc4314Rights
+            .fromSerializedRfc4314Rights(rights)
+            .list()
+            .stream()
+            .map(MailboxACL.Right::asCharacter)
+            .map(String::valueOf)
+            .map(this::surroundWithDoubleQuotes)
+            .collect(Collectors.joining(", ", "[ ", " ]"));
+    }
+    
+    private String surroundWithDoubleQuotes(String input) {
+        return "\"" + input + "\"";
     }
     
     @Given("^\"([^\"]*)\" shares (?:his|her) mailbox \"([^\"]*)\" with \"([^\"]*)\" with \"([^\"]*)\" rights$")
-    public void shareMailbox(String owner, String mailbox, String shareTo, String rights) throws Throwable {
-        mainStepdefs.jmapServer.getProbe(ACLProbeImpl.class)
-            .replaceRights(MailboxPath.forUser(owner, mailbox),
-                shareTo,
-                MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights(rights));
+    public void shareMailbox(String owner, String mailboxName, String shareTo, String rights) throws Throwable {
+        shareMailboxWithRight(owner, mailboxName, rights, shareTo);
     }
 
     @When("^renaming mailbox \"([^\"]*)\" to \"([^\"]*)\"")
