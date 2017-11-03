@@ -30,8 +30,11 @@ import javax.inject.Inject;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.modules.ACLProbeImpl;
 
 import com.github.fge.lambdas.Throwing;
 import com.jayway.awaitility.Awaitility;
@@ -76,6 +79,26 @@ public class SetMailboxesMethodStepdefs {
                 + "testBody" + i;
         mainStepdefs.mailboxProbe.appendMessage(userStepdefs.getConnectedUser(), mailboxPath,
                 new ByteArrayInputStream(content.getBytes()), new Date(), false, new Flags());
+    }
+
+    @Given("^\"([^\"]*)\" has a mailbox \"([^\"]*)\"$")
+    public void createMailbox(String username, String mailbox) throws Throwable {
+        mainStepdefs.mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, mailbox);
+    }
+
+    @Given("^\"([^\"]*)\" shares its mailbox \"([^\"]*)\" with rights \"([^\"]*)\" with \"([^\"]*)\"$")
+    public void shareMailboxWithRight(String owner, String mailbox, String rights, String shareTo) throws Throwable {
+        MailboxPath mailboxPath = MailboxPath.forUser(owner, mailbox);
+
+        mainStepdefs.aclProbe.replaceRights(mailboxPath, shareTo, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights(rights));
+    }
+    
+    @Given("^\"([^\"]*)\" shares (?:his|her) mailbox \"([^\"]*)\" with \"([^\"]*)\" with \"([^\"]*)\" rights$")
+    public void shareMailbox(String owner, String mailbox, String shareTo, String rights) throws Throwable {
+        mainStepdefs.jmapServer.getProbe(ACLProbeImpl.class)
+            .replaceRights(MailboxPath.forUser(owner, mailbox),
+                shareTo,
+                MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights(rights));
     }
 
     @When("^renaming mailbox \"([^\"]*)\" to \"([^\"]*)\"")
