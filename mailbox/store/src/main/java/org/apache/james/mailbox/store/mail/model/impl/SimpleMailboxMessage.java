@@ -24,10 +24,12 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+
 import javax.mail.Flags;
 import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -39,7 +41,6 @@ import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.FlagsFactory;
 import org.apache.james.mailbox.store.mail.model.FlagsFilter;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.commons.io.IOUtils;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -149,6 +150,15 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
     }
 
     public static Builder from(MailboxMessage original) throws MailboxException {
+        return fromWithoutAttachments(original)
+            .addAttachments(original.getAttachments());
+    }
+
+    public static SimpleMailboxMessage copy(MailboxId mailboxId, MailboxMessage original) throws MailboxException {
+        return from(original).mailboxId(mailboxId).build();
+    }
+
+    public static Builder fromWithoutAttachments(MailboxMessage original) throws MailboxException {
         PropertyBuilder propertyBuilder = new PropertyBuilder(original.getProperties());
         propertyBuilder.setTextualLineCount(original.getTextualLineCount());
         return builder()
@@ -158,12 +168,12 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
             .internalDate(original.getInternalDate())
             .size(original.getFullContentOctets())
             .flags(original.createFlags())
-            .propertyBuilder(propertyBuilder)
-            .addAttachments(original.getAttachments());
+            .propertyBuilder(propertyBuilder);
     }
 
-    public static SimpleMailboxMessage copy(MailboxId mailboxId, MailboxMessage original) throws MailboxException {
-        return from(original).mailboxId(mailboxId).build();
+    public static SimpleMailboxMessage copyWithoutAttachments(MailboxId mailboxId, MailboxMessage original) throws MailboxException {
+        return fromWithoutAttachments(original)
+            .mailboxId(mailboxId).build();
     }
 
     private static SharedByteArrayInputStream copyFullContent(MailboxMessage original) throws MailboxException {

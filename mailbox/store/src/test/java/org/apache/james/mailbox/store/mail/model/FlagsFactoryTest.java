@@ -60,6 +60,15 @@ public class FlagsFactoryTest {
     }
 
     @Test
+    public void builderShouldAcceptNullUserFlags() {
+        assertThat(
+            FlagsFactory.builder()
+                .addUserFlags(null)
+                .build())
+            .isEqualTo(new Flags());
+    }
+
+    @Test
     public void builderShouldFilterUserFlags() {
         Flags actual = FlagsFactory.builder()
             .flags(someFlags)
