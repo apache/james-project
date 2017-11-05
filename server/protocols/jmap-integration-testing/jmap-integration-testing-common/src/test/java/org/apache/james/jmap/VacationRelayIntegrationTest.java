@@ -43,6 +43,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.testcontainers.containers.wait.HostPortWaitStrategy;
 
 import com.google.common.base.Charsets;
 import com.jayway.awaitility.Awaitility;
@@ -66,7 +67,8 @@ public abstract class VacationRelayIntegrationTest {
 
     @Rule
     public final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer("weave/rest-smtp-sink:latest")
-        .withExposedPorts(VacationRelayIntegrationTest.REST_SMTP_SINK_PORT);
+        .withExposedPorts(REST_SMTP_SINK_PORT)
+        .waitingFor(new HostPortWaitStrategy());
 
 
     private ConditionFactory calmlyAwait;

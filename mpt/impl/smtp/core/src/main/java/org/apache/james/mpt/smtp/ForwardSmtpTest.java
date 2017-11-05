@@ -33,6 +33,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
+import org.testcontainers.containers.wait.HostPortWaitStrategy;
 
 import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
@@ -49,7 +50,8 @@ public abstract class ForwardSmtpTest {
     private final TemporaryFolder folder = new TemporaryFolder();
     private final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer("weave/rest-smtp-sink:latest")
             .withExposedPorts(25)
-            .withAffinityToContainer();
+            .withAffinityToContainer()
+            .waitingFor(new HostPortWaitStrategy());
     
     @Rule
     public final RuleChain chain = RuleChain.outerRule(folder).around(fakeSmtp);
