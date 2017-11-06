@@ -28,6 +28,7 @@ import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.RightManager;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
@@ -59,6 +60,7 @@ import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreAttachmentManager;
 import org.apache.james.mailbox.store.StoreBlobManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
+import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
@@ -107,6 +109,7 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(CassandraUserMailboxRightsDAO.class).in(Scopes.SINGLETON);
         bind(CassandraACLMapper.class).in(Scopes.SINGLETON);
         bind(StoreBlobManager.class).in(Scopes.SINGLETON);
+        bind(StoreRightManager.class).in(Scopes.SINGLETON);
 
         bind(BlobManager.class).to(StoreBlobManager.class);
         bind(MessageMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
@@ -125,6 +128,7 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(MessageId.Factory.class).to(CassandraMessageId.Factory.class);
         bind(MessageIdManager.class).to(StoreMessageIdManager.class);
         bind(AttachmentManager.class).to(StoreAttachmentManager.class);
+        bind(RightManager.class).to(StoreRightManager.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().to(org.apache.james.mailbox.cassandra.modules.CassandraAclModule.class);
