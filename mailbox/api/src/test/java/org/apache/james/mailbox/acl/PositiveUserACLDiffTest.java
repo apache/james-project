@@ -30,7 +30,9 @@ import org.junit.Test;
 
 public class PositiveUserACLDiffTest {
 
-    private static final EntryKey ENTRY_KEY = EntryKey.createUserEntryKey("user");
+    private static final EntryKey USER_ENTRY_KEY = EntryKey.createUserEntryKey("user");
+    private static final EntryKey NEGATIVE_USER_ENTRY_KEY = EntryKey.createUserEntryKey("user", true);
+    private static final EntryKey GROUP_ENTRY_KEY = EntryKey.createGroupEntryKey("group");
     private static final Rfc4314Rights RIGHTS = new Rfc4314Rights(Right.Administer);
 
     @Test
@@ -46,7 +48,7 @@ public class PositiveUserACLDiffTest {
     public void addedEntriesShouldReturnEmptyWhenSameNonEmptyACL() throws UnsupportedRightException {
         MailboxACL mailboxACL = MailboxACL.EMPTY.apply(
             MailboxACL.command()
-                .key(ENTRY_KEY)
+                .key(USER_ENTRY_KEY)
                 .rights(RIGHTS)
                 .asAddition());
 
@@ -68,7 +70,7 @@ public class PositiveUserACLDiffTest {
     public void removedEntriesShouldReturnEmptyWhenSameNonEmptyACL() throws UnsupportedRightException {
         MailboxACL mailboxACL = MailboxACL.EMPTY.apply(
             MailboxACL.command()
-                .key(ENTRY_KEY)
+                .key(USER_ENTRY_KEY)
                 .rights(RIGHTS)
                 .asAddition());
 
@@ -90,7 +92,7 @@ public class PositiveUserACLDiffTest {
     public void changedEntriesShouldReturnEmptyWhenSameNonEmptyACL() throws UnsupportedRightException {
         MailboxACL mailboxACL = MailboxACL.EMPTY.apply(
             MailboxACL.command()
-                .key(ENTRY_KEY)
+                .key(USER_ENTRY_KEY)
                 .rights(RIGHTS)
                 .asAddition());
 
@@ -98,18 +100,47 @@ public class PositiveUserACLDiffTest {
 
         assertThat(positiveUserAclDiff.changedEntries()).isEmpty();
     }
+
     @Test
     public void addedEntriesShouldReturnNewEntryWhenAddedEntry() throws Exception {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY,
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .key(ENTRY_KEY)
+                    .key(USER_ENTRY_KEY)
                     .rights(RIGHTS)
                     .asAddition()));
 
         assertThat(positiveUserAclDiff.addedEntries())
-            .containsOnly(new Entry(ENTRY_KEY, RIGHTS));
+            .containsOnly(new Entry(USER_ENTRY_KEY, RIGHTS));
+    }
+
+    @Test
+    public void addedEntriesShouldFilterNonUserEntryKey() throws Exception {
+        PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
+            MailboxACL.EMPTY,
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .key(GROUP_ENTRY_KEY)
+                    .rights(RIGHTS)
+                    .asAddition()));
+
+        assertThat(positiveUserAclDiff.addedEntries())
+            .isEmpty();
+    }
+
+    @Test
+    public void addedEntriesShouldFilterNegativeUserEntryKey() throws Exception {
+        PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
+            MailboxACL.EMPTY,
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .key(NEGATIVE_USER_ENTRY_KEY)
+                    .rights(RIGHTS)
+                    .asAddition()));
+
+        assertThat(positiveUserAclDiff.addedEntries())
+            .isEmpty();
     }
 
     @Test
@@ -118,7 +149,7 @@ public class PositiveUserACLDiffTest {
             MailboxACL.EMPTY,
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .key(ENTRY_KEY)
+                    .key(USER_ENTRY_KEY)
                     .rights(RIGHTS)
                     .asAddition()));
 
@@ -132,7 +163,7 @@ public class PositiveUserACLDiffTest {
             MailboxACL.EMPTY,
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .key(ENTRY_KEY)
+                    .key(USER_ENTRY_KEY)
                     .rights(RIGHTS)
                     .asAddition()));
 
@@ -145,7 +176,7 @@ public class PositiveUserACLDiffTest {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .key(ENTRY_KEY)
+                    .key(USER_ENTRY_KEY)
                     .rights(RIGHTS)
                     .asAddition()),
             MailboxACL.EMPTY);
@@ -159,7 +190,7 @@ public class PositiveUserACLDiffTest {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .key(ENTRY_KEY)
+                    .key(USER_ENTRY_KEY)
                     .rights(RIGHTS)
                     .asAddition()),
             MailboxACL.EMPTY);
@@ -173,13 +204,41 @@ public class PositiveUserACLDiffTest {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .key(ENTRY_KEY)
+                    .key(USER_ENTRY_KEY)
                     .rights(RIGHTS)
                     .asAddition()),
             MailboxACL.EMPTY);
 
         assertThat(positiveUserAclDiff.removedEntries())
-            .containsOnly(new Entry(ENTRY_KEY, RIGHTS));
+            .containsOnly(new Entry(USER_ENTRY_KEY, RIGHTS));
+    }
+
+    @Test
+    public void removedEntriesShouldFilterNonUserEntry() throws Exception {
+        PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .key(GROUP_ENTRY_KEY)
+                    .rights(RIGHTS)
+                    .asAddition()),
+            MailboxACL.EMPTY);
+
+        assertThat(positiveUserAclDiff.removedEntries())
+            .isEmpty();
+    }
+
+    @Test
+    public void removedEntriesShouldFilterNegativeUserEntry() throws Exception {
+        PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .key(NEGATIVE_USER_ENTRY_KEY)
+                    .rights(RIGHTS)
+                    .asAddition()),
+            MailboxACL.EMPTY);
+
+        assertThat(positiveUserAclDiff.removedEntries())
+            .isEmpty();
     }
 
     @Test
@@ -187,12 +246,12 @@ public class PositiveUserACLDiffTest {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .key(ENTRY_KEY)
+                    .key(USER_ENTRY_KEY)
                     .rights(RIGHTS)
                     .asAddition()),
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .key(ENTRY_KEY)
+                    .key(USER_ENTRY_KEY)
                     .rights(Right.Lookup)
                     .asAddition()));
 
@@ -205,12 +264,12 @@ public class PositiveUserACLDiffTest {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .key(ENTRY_KEY)
+                    .key(USER_ENTRY_KEY)
                     .rights(RIGHTS)
                     .asAddition()),
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .key(ENTRY_KEY)
+                    .key(USER_ENTRY_KEY)
                     .rights(Right.Lookup)
                     .asAddition()));
 
@@ -223,16 +282,52 @@ public class PositiveUserACLDiffTest {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .key(ENTRY_KEY)
+                    .key(USER_ENTRY_KEY)
                     .rights(Right.Administer)
                     .asAddition()),
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
-                    .key(ENTRY_KEY)
+                    .key(USER_ENTRY_KEY)
                     .rights(Right.Lookup)
                     .asAddition()));
 
         assertThat(positiveUserAclDiff.changedEntries())
-            .containsOnly(new Entry(ENTRY_KEY, new Rfc4314Rights(MailboxACL.Right.Lookup)));
+            .containsOnly(new Entry(USER_ENTRY_KEY, new Rfc4314Rights(MailboxACL.Right.Lookup)));
+    }
+
+    @Test
+    public void changedEntriesShouldFilterNonUserEntry() throws Exception {
+        PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .key(GROUP_ENTRY_KEY)
+                    .rights(Right.Administer)
+                    .asAddition()),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .key(GROUP_ENTRY_KEY)
+                    .rights(Right.Lookup)
+                    .asAddition()));
+
+        assertThat(positiveUserAclDiff.changedEntries())
+            .isEmpty();
+    }
+
+    @Test
+    public void changedEntriesShouldFilterNegativeUserEntry() throws Exception {
+        PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .key(NEGATIVE_USER_ENTRY_KEY)
+                    .rights(Right.Administer)
+                    .asAddition()),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .key(NEGATIVE_USER_ENTRY_KEY)
+                    .rights(Right.Lookup)
+                    .asAddition()));
+
+        assertThat(positiveUserAclDiff.changedEntries())
+            .isEmpty();
     }
 }
