@@ -21,11 +21,14 @@ package org.apache.james.mailbox.store.event;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.SortedMap;
 
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.acl.ACLDiff;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -198,4 +201,7 @@ public class EventFactory {
         return new MailboxAddedImpl(session, mailbox);
     }
 
+    public MailboxListener.MailboxACLUpdated aclUpdated(MailboxSession session, MailboxPath mailboxPath, ACLDiff aclDiff) {
+        return new MailboxListener.MailboxACLUpdated(session, mailboxPath, aclDiff);
+    }
 }
