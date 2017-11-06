@@ -28,6 +28,7 @@ import javax.mail.Flags;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.RightManager;
+import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.exception.DifferentDomainException;
@@ -129,6 +130,9 @@ public class StoreRightManager implements RightManager {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
         mapper.execute(Mapper.toTransaction(() -> mapper.updateACL(mailbox, mailboxACLCommand)));
+
+        ACLDiff aclDiff = ACLDiff.computeDiff(mailbox.getACL(), mailbox.getACL().apply(mailboxACLCommand));
+        dispatcher.aclUpdated(session, mailboxPath, aclDiff);
     }
 
     private void assertSharesBelongsToUserDomain(String user, ACLCommand mailboxACLCommand) throws DifferentDomainException {
@@ -183,7 +187,7 @@ public class StoreRightManager implements RightManager {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
 
-        setRights(mailboxACL, mapper, mailbox);
+        setRights(mailboxACL, mapper, mailbox, session);
     }
 
     @VisibleForTesting
@@ -203,8 +207,11 @@ public class StoreRightManager implements RightManager {
         return !domain.equals(otherDomain);
     }
 
-    private void setRights(MailboxACL mailboxACL, MailboxMapper mapper, Mailbox mailbox) throws MailboxException {
+    private void setRights(MailboxACL mailboxACL, MailboxMapper mapper, Mailbox mailbox, MailboxSession session) throws MailboxException {
         mapper.execute(Mapper.toTransaction(() -> mapper.setACL(mailbox, mailboxACL)));
+
+        ACLDiff aclDiff = ACLDiff.computeDiff(mailbox.getACL(), mailboxACL);
+        dispatcher.aclUpdated(session, mailbox.generateAssociatedPath(), aclDiff);
     }
 
     /**
