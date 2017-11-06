@@ -24,8 +24,10 @@ import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.cassandra.host.CassandraHostSystemRule;
 import org.apache.james.mpt.imapmailbox.suite.MailboxWithLongNameError;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.rules.RuleChain;
 
+@Ignore
 public class CassandraMailboxWithLongNameError extends MailboxWithLongNameError {
 
     private static DockerCassandraRule cassandraServer = new DockerCassandraRule();
