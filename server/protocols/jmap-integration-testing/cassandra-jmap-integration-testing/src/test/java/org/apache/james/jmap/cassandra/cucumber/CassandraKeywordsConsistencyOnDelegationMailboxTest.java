@@ -16,29 +16,29 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mpt.imapmailbox.jpa;
 
-import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.host.JamesImapHostSystem;
-import org.apache.james.mpt.imapmailbox.jpa.host.JPAHostSystem;
+package org.apache.james.jmap.cassandra.cucumber;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
 
-public class JpaMailboxTestModule extends AbstractModule {
+import cucumber.api.CucumberOptions;
+import cucumber.api.junit.Cucumber;
 
-    @Override
-    protected void configure() {
-        bind(HostSystem.class).to(ImapHostSystem.class);
-        bind(ImapHostSystem.class).to(JamesImapHostSystem.class);
+@RunWith(Cucumber.class)
+@CucumberOptions(features="classpath:cucumber/KeywordsConsistencyOnDelegationMailbox.feature",
+    glue={"org.apache.james.jmap.methods.integration", "org.apache.james.jmap.cassandra.cucumber"},
+    strict = true)
+public class CassandraKeywordsConsistencyOnDelegationMailboxTest {
+
+    @BeforeClass
+    public static void init() {
+        CucumberCassandraSingleton.cassandraServer.start();
     }
 
-    @Provides
-    @Singleton
-    public JamesImapHostSystem provideImapHostSystem() throws Exception {
-        return JPAHostSystem.build();
+    @AfterClass
+    public static void after() {
+        CucumberCassandraSingleton.cassandraServer.stop();
     }
-
 }

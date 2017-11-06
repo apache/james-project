@@ -17,17 +17,28 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mpt.imapmailbox.elasticsearch;
+package org.apache.james.jmap.cassandra.cucumber;
 
-import com.google.inject.AbstractModule;
-import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.imapmailbox.elasticsearch.host.ElasticSearchHostSystem;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
 
-public class ElasticSearchMailboxTestModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(ImapHostSystem.class).to(ElasticSearchHostSystem.class);
-        bind(HostSystem.class).to(ElasticSearchHostSystem.class);
+import cucumber.api.CucumberOptions;
+import cucumber.api.junit.Cucumber;
+
+@RunWith(Cucumber.class)
+@CucumberOptions(features="classpath:cucumber/SetMessages.feature",
+                glue={"org.apache.james.jmap.methods.integration", "org.apache.james.jmap.cassandra.cucumber"},
+                strict = true)
+public class CassandraSetMessagesMethodCucumberTest {
+
+    @BeforeClass
+    public static void init() {
+        CucumberCassandraSingleton.cassandraServer.start();
+    }
+
+    @AfterClass
+    public static void after() {
+        CucumberCassandraSingleton.cassandraServer.stop();
     }
 }

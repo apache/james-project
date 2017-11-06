@@ -20,13 +20,11 @@
 package org.apache.james.mpt.imapmailbox.maildir;
 
 import org.apache.james.mpt.api.ImapHostSystem;
+import org.apache.james.mpt.imapmailbox.maildir.host.MaildirHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.MailboxWithLongNameError;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 @Ignore("MAILBOX-299 Maildir should fail gracefully when too long mailbox name")
 public class MaildirMailboxWithLongNameError extends MailboxWithLongNameError {
@@ -35,8 +33,7 @@ public class MaildirMailboxWithLongNameError extends MailboxWithLongNameError {
 
     @Before
     public void setUp() throws Exception {
-        Injector injector = Guice.createInjector(new MaildirMailboxTestModule());
-        system = injector.getInstance(ImapHostSystem.class);
+        system = new MaildirHostSystem();
         super.setUp();
     }
     

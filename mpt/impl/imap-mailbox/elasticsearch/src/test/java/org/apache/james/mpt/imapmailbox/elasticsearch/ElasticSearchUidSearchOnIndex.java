@@ -20,12 +20,10 @@
 package org.apache.james.mpt.imapmailbox.elasticsearch;
 
 import org.apache.james.mpt.api.ImapHostSystem;
+import org.apache.james.mpt.imapmailbox.elasticsearch.host.ElasticSearchHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.UidSearchOnIndex;
 import org.junit.After;
 import org.junit.Before;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 public class ElasticSearchUidSearchOnIndex extends UidSearchOnIndex {
 
@@ -33,8 +31,7 @@ public class ElasticSearchUidSearchOnIndex extends UidSearchOnIndex {
 
     @Before
     public void setUp() throws Exception {
-        Injector injector = Guice.createInjector(new ElasticSearchMailboxTestModule());
-        system = injector.getInstance(ImapHostSystem.class);
+        system = new ElasticSearchHostSystem();
         system.beforeTest();
         super.setUp();
     }

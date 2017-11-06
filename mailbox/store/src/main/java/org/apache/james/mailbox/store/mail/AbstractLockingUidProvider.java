@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
@@ -57,6 +57,6 @@ public abstract class AbstractLockingUidProvider implements UidProvider{
 
     @Override
     public MessageUid nextUid(MailboxSession session, MailboxId mailboxId) throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
     }
 }

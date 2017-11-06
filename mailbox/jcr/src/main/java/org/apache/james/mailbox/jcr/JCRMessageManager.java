@@ -26,8 +26,6 @@ import javax.mail.internet.SharedInputStream;
 
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
-import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jcr.mail.model.JCRMailbox;
 import org.apache.james.mailbox.jcr.mail.model.JCRMailboxMessage;
@@ -39,6 +37,7 @@ import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.ImmutableMailboxMessage;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMessageManager;
+import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -51,13 +50,21 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
  */
 public class JCRMessageManager extends StoreMessageManager {
 
-    public JCRMessageManager(MailboxSessionMapperFactory mapperFactory, MessageSearchIndex index, 
-            final MailboxEventDispatcher dispatcher, MailboxPathLocker locker, JCRMailbox mailbox, 
-            MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, 
-            QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory, BatchSizes batchSizes, ImmutableMailboxMessage.Factory immutableMailboxMessageFactory)
+    public JCRMessageManager(MailboxSessionMapperFactory mapperFactory,
+                             MessageSearchIndex index,
+                             MailboxEventDispatcher dispatcher,
+                             MailboxPathLocker locker,
+                             JCRMailbox mailbox,
+                             QuotaManager quotaManager,
+                             QuotaRootResolver quotaRootResolver,
+                             MessageParser messageParser,
+                             MessageId.Factory messageIdFactory,
+                             BatchSizes batchSizes,
+                             ImmutableMailboxMessage.Factory immutableMailboxMessageFactory,
+                             StoreRightManager storeRightManager)
                     throws MailboxException {
-        super(mapperFactory, index, dispatcher, locker, mailbox, aclResolver, groupMembershipResolver, quotaManager, 
-                quotaRootResolver, messageParser, messageIdFactory, batchSizes, immutableMailboxMessageFactory);
+        super(mapperFactory, index, dispatcher, locker, mailbox, quotaManager,
+                quotaRootResolver, messageParser, messageIdFactory, batchSizes, immutableMailboxMessageFactory, storeRightManager);
     }
 
 

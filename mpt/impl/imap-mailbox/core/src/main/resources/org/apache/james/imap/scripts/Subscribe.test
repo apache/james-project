@@ -74,6 +74,12 @@ S: \* LSUB \(\\Noselect\) \"\.\" \"subscribetest1\"
 }
 S: b01 OK LSUB completed.
 
+C: b03 LSUB "" "subscribetest.%"
+SUB {
+S: \* LSUB \(\) \"\.\" \"subscribetest\.subfolder\"
+}
+S: b03 OK LSUB completed.
+
 
 # Attempt to unsubscribe from a mailbox that isn't subscribed
 C: a10 UNSUBSCRIBE subscribetest1

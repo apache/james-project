@@ -43,6 +43,7 @@ public class ElasticSearchIndexerTest {
 
     private static final int MINIMUM_BATCH_SIZE = 1;
     private static final IndexName INDEX_NAME = new IndexName("index_name");
+    private static final AliasName ALIAS_NAME = new AliasName("alias_name");
     private static final TypeName TYPE_NAME = new TypeName("type_name");
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch= new EmbeddedElasticSearch(temporaryFolder, INDEX_NAME);
@@ -57,17 +58,21 @@ public class ElasticSearchIndexerTest {
     public void setup() throws IOException {
         node = embeddedElasticSearch.getNode();
         TestingClientProvider clientProvider = new TestingClientProvider(node);
+        new IndexCreationFactory()
+            .useIndex(INDEX_NAME)
+            .addAlias(ALIAS_NAME)
+            .createIndexAndAliases(clientProvider.get());
         DeleteByQueryPerformer deleteByQueryPerformer = new DeleteByQueryPerformer(clientProvider.get(),
             Executors.newSingleThreadExecutor(),
             MINIMUM_BATCH_SIZE,
-            INDEX_NAME,
+            ALIAS_NAME,
             TYPE_NAME) {
             @Override
             public void perform(QueryBuilder queryBuilder) {
                 doDeleteByQuery(queryBuilder);
             }
         };
-        testee = new ElasticSearchIndexer(clientProvider.get(), deleteByQueryPerformer, INDEX_NAME, TYPE_NAME);
+        testee = new ElasticSearchIndexer(clientProvider.get(), deleteByQueryPerformer, ALIAS_NAME, TYPE_NAME);
     }
     
     @Test

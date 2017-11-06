@@ -29,7 +29,11 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.StoreRightManager;
+import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.junit.rules.TemporaryFolder;
@@ -42,11 +46,17 @@ public class MaildirMailboxManagerProvider {
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
+        StoreRightManager storeRightManager = new StoreRightManager(mf, aclResolver, groupMembershipResolver);
 
         Authenticator noAuthenticator = null;
         Authorizator noAuthorizator = null;
-        StoreMailboxManager manager = new StoreMailboxManager(mf, noAuthenticator, noAuthorizator, new JVMMailboxPathLocker(), aclResolver,
-            groupMembershipResolver, messageParser, new DefaultMessageId.Factory());
+
+        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
+        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mf, storeRightManager);
+        StoreMailboxManager manager = new StoreMailboxManager(mf, noAuthenticator, noAuthorizator, new JVMMailboxPathLocker(),
+            messageParser, new DefaultMessageId.Factory(), annotationManager,
+            mailboxEventDispatcher, delegatingListener, storeRightManager);
         manager.init();
 
         return manager;

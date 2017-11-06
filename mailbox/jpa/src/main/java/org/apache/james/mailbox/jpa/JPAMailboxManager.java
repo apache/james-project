@@ -22,8 +22,6 @@ import java.util.EnumSet;
 
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
-import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.mail.JPAMailboxMapper;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
@@ -31,7 +29,11 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
+import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.StoreRightManager;
+import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.transaction.Mapper;
@@ -40,20 +42,20 @@ import org.apache.james.mailbox.store.transaction.Mapper;
  * JPA implementation of {@link StoreMailboxManager}
  */
 public abstract class JPAMailboxManager extends StoreMailboxManager {
-    
-    public JPAMailboxManager(JPAMailboxSessionMapperFactory mailboxSessionMapperFactory,
-            Authenticator authenticator, Authorizator authorizator, MailboxPathLocker locker, MailboxACLResolver aclResolver, 
-            GroupMembershipResolver groupMembershipResolver, MessageParser messageParser, MessageId.Factory messageIdFactory) {
-        super(mailboxSessionMapperFactory, authenticator, authorizator, locker, aclResolver, groupMembershipResolver,
-            messageParser, messageIdFactory);
-    }
 
     public JPAMailboxManager(JPAMailboxSessionMapperFactory mailboxSessionMapperFactory,
-                             Authenticator authenticator, Authorizator authorizator, MailboxPathLocker locker, MailboxACLResolver aclResolver,
-                             GroupMembershipResolver groupMembershipResolver, MessageParser messageParser, MessageId.Factory messageIdFactory,
-                             int limitAnnotation, int limitAnnotationSize) {
-        super(mailboxSessionMapperFactory, authenticator, authorizator, locker, aclResolver, groupMembershipResolver,
-            messageParser, messageIdFactory, limitAnnotation, limitAnnotationSize);
+                             Authenticator authenticator,
+                             Authorizator authorizator,
+                             MailboxPathLocker locker,
+                             MessageParser messageParser,
+                             MessageId.Factory messageIdFactory,
+                             DelegatingMailboxListener delegatingMailboxListener,
+                             MailboxEventDispatcher mailboxEventDispatcher,
+                             StoreMailboxAnnotationManager annotationManager,
+                             StoreRightManager storeRightManager) {
+        super(mailboxSessionMapperFactory, authenticator, authorizator, locker,
+            messageParser, messageIdFactory, annotationManager,
+            mailboxEventDispatcher, delegatingMailboxListener, storeRightManager);
     }
     
     @Override

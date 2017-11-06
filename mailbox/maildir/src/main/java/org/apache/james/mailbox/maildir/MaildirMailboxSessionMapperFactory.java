@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.maildir;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.SubscriptionException;
@@ -59,7 +59,7 @@ public class MaildirMailboxSessionMapperFactory extends
 
     @Override
     public MessageIdMapper createMessageIdMapper(MailboxSession session) throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
     }
 
     @Override
@@ -71,17 +71,17 @@ public class MaildirMailboxSessionMapperFactory extends
     @Override
     public AnnotationMapper createAnnotationMapper(MailboxSession session)
             throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
     }
 
     @Override
     public UidProvider getUidProvider() {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
     }
 
     @Override
     public ModSeqProvider getModSeqProvider() {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
     }
 
 }

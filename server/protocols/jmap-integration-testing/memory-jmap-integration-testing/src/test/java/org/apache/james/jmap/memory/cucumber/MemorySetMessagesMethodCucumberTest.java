@@ -16,40 +16,17 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.store.mail.model;
 
-import javax.mail.Flags;
+package org.apache.james.jmap.memory.cucumber;
 
-public class FlagsBuilder {
+import org.junit.runner.RunWith;
 
-    public static Flags createFlags(MailboxMessage mailboxMessage, String[] userFlags) {
-        final Flags flags = new Flags();
+import cucumber.api.CucumberOptions;
+import cucumber.api.junit.Cucumber;
 
-        if (mailboxMessage.isAnswered()) {
-            flags.add(Flags.Flag.ANSWERED);
-        }
-        if (mailboxMessage.isDeleted()) {
-            flags.add(Flags.Flag.DELETED);
-        }
-        if (mailboxMessage.isDraft()) {
-            flags.add(Flags.Flag.DRAFT);
-        }
-        if (mailboxMessage.isFlagged()) {
-            flags.add(Flags.Flag.FLAGGED);
-        }
-        if (mailboxMessage.isRecent()) {
-            flags.add(Flags.Flag.RECENT);
-        }
-        if (mailboxMessage.isSeen()) {
-            flags.add(Flags.Flag.SEEN);
-        }
-        if (userFlags != null && userFlags.length > 0) {
-            for (String userFlag : userFlags) {
-                flags.add(userFlag);
-            }
-        }
-        return flags;
-    }
-
-
+@RunWith(Cucumber.class)
+@CucumberOptions(features="classpath:cucumber/SetMessages.feature",
+                glue={"org.apache.james.jmap.methods.integration", "org.apache.james.jmap.memory.cucumber"},
+                strict = true)
+public class MemorySetMessagesMethodCucumberTest {
 }

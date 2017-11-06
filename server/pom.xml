@@ -91,11 +91,7 @@
         <module>protocols/protocols-pop3</module>
         <module>protocols/protocols-smtp</module>
         <module>protocols/webadmin-integration-test</module>
-        <module>protocols/webadmin/webadmin-cassandra</module>
-        <module>protocols/webadmin/webadmin-core</module>
-        <module>protocols/webadmin/webadmin-data</module>
-        <module>protocols/webadmin/webadmin-mailbox</module>
-        <module>protocols/webadmin/webadmin-swagger</module>
+        <module>protocols/webadmin</module>
         <module>queue/queue-activemq</module>
 
         <module>queue/queue-api</module>

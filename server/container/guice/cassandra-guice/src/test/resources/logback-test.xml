@@ -20,4 +20,8 @@
 
         <logger name="com.datastax.driver.core.QueryLogger.SLOW" level="DEBUG" />
 
+        <logger name="org.apache.james.backends.cassandra.DockerCassandraRule" level="WARN" >
+                <appender-ref ref="CONSOLE" />
+        </logger>
+
 </configuration>

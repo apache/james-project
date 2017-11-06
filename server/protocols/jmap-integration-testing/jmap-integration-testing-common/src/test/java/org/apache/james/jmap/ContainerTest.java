@@ -29,12 +29,15 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.util.streams.SwarmGenericContainer;
 import org.junit.Rule;
 import org.junit.Test;
+import org.testcontainers.containers.wait.HttpWaitStrategy;
 
 public class ContainerTest {
 
     @Rule
     public SwarmGenericContainer container = new SwarmGenericContainer("nginx:1.7.1")
-            .withAffinityToContainer();
+        .withAffinityToContainer()
+        .withExposedPorts(80)
+        .waitingFor(new HttpWaitStrategy().forStatusCode(200));
 
     @Test
     public void containerShouldBeReachableOnExposedPort() throws IOException, URISyntaxException {

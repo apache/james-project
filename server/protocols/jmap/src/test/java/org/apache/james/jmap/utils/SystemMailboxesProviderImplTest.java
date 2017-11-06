@@ -38,7 +38,7 @@ import org.junit.rules.ExpectedException;
 
 public class SystemMailboxesProviderImplTest {
 
-    private MailboxSession mailboxSession = new MockMailboxSession("user");
+    private MailboxSession mailboxSession = new MockMailboxSession(MailboxFixture.ALICE);
     private SystemMailboxesProviderImpl systemMailboxProvider;
 
     private MailboxManager mailboxManager;
@@ -59,14 +59,14 @@ public class SystemMailboxesProviderImplTest {
     @Test
     @SuppressWarnings("unchecked")
     public void getMailboxByRoleShouldReturnEmptyWhenNoMailbox() throws Exception {
-        when(mailboxManager.getMailbox(eq(MailboxFixture.MAILBOX_PATH1), eq(mailboxSession))).thenThrow(MailboxNotFoundException.class);
+        when(mailboxManager.getMailbox(eq(MailboxFixture.INBOX_ALICE), eq(mailboxSession))).thenThrow(MailboxNotFoundException.class);
 
         assertThat(systemMailboxProvider.getMailboxByRole(Role.INBOX, mailboxSession)).isEmpty();
     }
 
     @Test
     public void getMailboxByRoleShouldReturnMailboxByRole() throws Exception {
-        when(mailboxManager.getMailbox(eq(MailboxFixture.MAILBOX_PATH1), eq(mailboxSession))).thenReturn(inboxMessageManager);
+        when(mailboxManager.getMailbox(eq(MailboxFixture.INBOX_ALICE), eq(mailboxSession))).thenReturn(inboxMessageManager);
 
         assertThat(systemMailboxProvider.getMailboxByRole(Role.INBOX, mailboxSession))
             .hasSize(1)

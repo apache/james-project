@@ -32,6 +32,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.transport.mailets.managesieve.ManageSieveMailet;
@@ -50,7 +51,6 @@ import org.apache.james.transport.util.ReplyToUtils;
 import org.apache.james.transport.util.SenderUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.james.transport.util.TosUtils;
-import org.apache.commons.lang.time.FastDateFormat;
 import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.DateFormats;

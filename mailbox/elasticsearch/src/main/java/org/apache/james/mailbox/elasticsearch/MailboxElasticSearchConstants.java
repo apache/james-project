@@ -16,29 +16,16 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mpt.imapmailbox.inmemory;
 
-import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.host.JamesImapHostSystem;
-import org.apache.james.mpt.imapmailbox.inmemory.host.InMemoryHostSystem;
+package org.apache.james.mailbox.elasticsearch;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
+import org.apache.james.backends.es.AliasName;
+import org.apache.james.backends.es.IndexName;
+import org.apache.james.backends.es.TypeName;
 
-public class InMemoryMailboxTestModule extends AbstractModule {
-
-    @Override
-    protected void configure() {
-        bind(HostSystem.class).to(JamesImapHostSystem.class);
-        bind(ImapHostSystem.class).to(JamesImapHostSystem.class);
-    }
-
-    @Provides
-    @Singleton
-    public JamesImapHostSystem provideHostSystem() throws Exception {
-        return InMemoryHostSystem.build();
-    }
-
+public interface MailboxElasticSearchConstants {
+    AliasName DEFAULT_MAILBOX_WRITE_ALIAS = new AliasName("mailboxWriteAlias");
+    AliasName DEFAULT_MAILBOX_READ_ALIAS = new AliasName("mailboxReadAlias");
+    IndexName DEFAULT_MAILBOX_INDEX = new IndexName("mailbox_v1");
+    TypeName MESSAGE_TYPE = new TypeName("message");
 }

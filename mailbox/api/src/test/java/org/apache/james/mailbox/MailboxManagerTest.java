@@ -84,7 +84,7 @@ public abstract class MailboxManagerTest {
     private MailboxManager mailboxManager;
     private MailboxSession session;
 
-    protected abstract MailboxManager provideMailboxManager();
+    protected abstract MailboxManager provideMailboxManager() throws MailboxException;
 
     public void setUp() throws Exception {
         this.mailboxManager = new MockMailboxManager(provideMailboxManager()).getMockMailboxManager();

@@ -24,10 +24,13 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
+import org.apache.james.backends.es.ElasticSearchConstants;
+import org.apache.james.backends.es.AliasName;
+import org.apache.james.backends.es.TypeName;
 import org.apache.james.backends.es.search.ScrollIterable;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.elasticsearch.MailboxElasticsearchConstants;
 import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.query.SortConverter;
@@ -57,18 +60,26 @@ public class ElasticSearchSearcher {
     private final int size;
     private final MailboxId.Factory mailboxIdFactory;
     private final MessageId.Factory messageIdFactory;
+    private final AliasName aliasName;
+    private final TypeName typeName;
 
     @Inject
-    public ElasticSearchSearcher(Client client, QueryConverter queryConverter, MailboxId.Factory mailboxIdFactory, MessageId.Factory messageIdFactory) {
-        this(client, queryConverter, DEFAULT_SIZE, mailboxIdFactory, messageIdFactory);
+    public ElasticSearchSearcher(Client client, QueryConverter queryConverter,
+                                 MailboxId.Factory mailboxIdFactory, MessageId.Factory messageIdFactory,
+                                 @Named(ElasticSearchConstants.READ_ALIAS) AliasName aliasName, TypeName typeName) {
+        this(client, queryConverter, DEFAULT_SIZE, mailboxIdFactory, messageIdFactory, aliasName, typeName);
     }
 
-    public ElasticSearchSearcher(Client client, QueryConverter queryConverter, int size, MailboxId.Factory mailboxIdFactory, MessageId.Factory messageIdFactory) {
+    public ElasticSearchSearcher(Client client, QueryConverter queryConverter, int size,
+                                 MailboxId.Factory mailboxIdFactory, MessageId.Factory messageIdFactory,
+                                 AliasName aliasName, TypeName typeName) {
         this.client = client;
         this.queryConverter = queryConverter;
         this.size = size;
         this.mailboxIdFactory = mailboxIdFactory;
         this.messageIdFactory = messageIdFactory;
+        this.aliasName = aliasName;
+        this.typeName = typeName;
     }
 
     public Stream<MessageSearchIndex.SearchResult> search(Collection<MailboxId> mailboxIds, SearchQuery query,
@@ -86,8 +97,8 @@ public class ElasticSearchSearcher {
         return query.getSorts()
             .stream()
             .reduce(
-                client.prepareSearch(MailboxElasticsearchConstants.MAILBOX_INDEX.getValue())
-                    .setTypes(MailboxElasticsearchConstants.MESSAGE_TYPE.getValue())
+                client.prepareSearch(aliasName.getValue())
+                    .setTypes(typeName.getValue())
                     .setScroll(TIMEOUT)
                     .addFields(JsonMessageConstants.UID, JsonMessageConstants.MAILBOX_ID, JsonMessageConstants.MESSAGE_ID)
                     .setQuery(queryConverter.from(users, query))

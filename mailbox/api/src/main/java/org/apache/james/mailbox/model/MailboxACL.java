@@ -170,6 +170,11 @@ public class MailboxACL {
      * MailboxACLRights are initialized.
      */
     public static class Rfc4314Rights {
+        public static Rfc4314Rights allExcept(Right... rights) throws UnsupportedRightException {
+            return MailboxACL.FULL_RIGHTS
+                .except(new Rfc4314Rights(rights));
+        }
+
         private static final char c_ObsoleteCreate = 'c';
         private static final char d_ObsoleteDelete = 'd';
 
@@ -193,7 +198,7 @@ public class MailboxACL {
             return new Rfc4314Rights(rightListFromSerializedRfc4314Rights(serializedRfc4314Rights));
         }
 
-        private static List<Right> rightListFromSerializedRfc4314Rights(String serializedRfc4314Rights) throws UnsupportedRightException {
+        public static List<Right> rightListFromSerializedRfc4314Rights(String serializedRfc4314Rights) throws UnsupportedRightException {
             return serializedRfc4314Rights.chars()
                 .mapToObj(i -> (char) i)
                 .flatMap(Throwing.function(Rfc4314Rights::convert).sneakyThrow())
@@ -222,6 +227,10 @@ public class MailboxACL {
 
         public boolean contains(Right right) {
             return value.contains(right);
+        }
+
+        public boolean contains(Right... rights) {
+            return value.containsAll(Arrays.asList(rights));
         }
 
         public boolean equals(Object o) {

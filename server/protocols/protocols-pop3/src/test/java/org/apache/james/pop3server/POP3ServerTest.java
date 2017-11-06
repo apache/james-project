@@ -42,18 +42,12 @@ import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
-import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
-import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
-import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.Authorizator;
+import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
-import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.pop3server.netty.POP3Server;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.lib.POP3BeforeSMTPHelper;
@@ -715,26 +709,17 @@ public class POP3ServerTest {
     protected void setUpServiceManager() throws Exception {
         protocolHandlerChain = new MockProtocolHandlerLoader();
         protocolHandlerChain.put("usersrepository", UsersRepository.class, usersRepository);
-    
-        InMemoryMailboxSessionMapperFactory factory = new InMemoryMailboxSessionMapperFactory();
-        MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
-        GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
-        MessageParser messageParser = new MessageParser();
-        mailboxManager = new StoreMailboxManager(factory, (userid, passwd) -> {
-            try {
-                return usersRepository.test(userid, passwd.toString());
-            } catch (UsersRepositoryException e) {
-                e.printStackTrace();
-                return false;
-            }
-        }, (userId, otherUserId) -> Authorizator.AuthorizationState.NOT_ADMIN,
-            aclResolver,
-            groupMembershipResolver,
-            messageParser,
-            new DefaultMessageId.Factory(),
-            MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX,
-            MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
-        mailboxManager.init();
+
+        mailboxManager = new InMemoryIntegrationResources()
+            .createMailboxManager(new SimpleGroupMembershipResolver(),
+                (userid, passwd) -> {
+                    try {
+                        return usersRepository.test(userid, passwd.toString());
+                    } catch (UsersRepositoryException e) {
+                        e.printStackTrace();
+                        return false;
+                    }
+                }, FakeAuthorizator.defaultReject());
 
         protocolHandlerChain.put("mailboxmanager", MailboxManager.class, mailboxManager);
     

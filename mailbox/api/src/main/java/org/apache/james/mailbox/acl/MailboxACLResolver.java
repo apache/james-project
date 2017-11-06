@@ -20,8 +20,6 @@
 
 package org.apache.james.mailbox.acl;
 
-import javax.mail.Flags;
-
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 
@@ -54,75 +52,6 @@ public interface MailboxACLResolver {
      * @throws UnsupportedRightException
      */
     MailboxACL applyGlobalACL(MailboxACL resourceACL, boolean resourceOwnerIsGroup) throws UnsupportedRightException;
-
-    /**
-     * Tells whether the given user has the given right granted on the basis of
-     * the given resourceACL. Global ACL (if there is any) should be applied
-     * within this method.
-     * 
-     * @param requestUser
-     *            the user for whom the given right is tested, possibly
-     *            <code>null</code> when there is no authenticated user in the
-     *            given context.
-     * @param groupMembershipResolver
-     *            this resolver is used when checking whether any group rights
-     *            contained in resourceACL are applicable for the requestUser.
-     * @param right
-     *            the right which will be proven to apply for the given
-     *            requestUser.
-     * @param resourceACL
-     *            the ACL defining the access right for the resource in
-     *            question.
-     * @param resourceOwner
-     *            this user name is used as a replacement for the "owner" place
-     *            holder in the resourceACL.
-     * @param resourceOwnerIsGroup
-     *            true if the resourceOwner is a group of users, false
-     *            otherwise.
-     * @return true if the given user has the given right for the given
-     *         resource; false otherwise.
-     * @throws UnsupportedRightException
-     */
-    boolean hasRight(String requestUser, GroupMembershipResolver groupMembershipResolver, MailboxACL.Right right, MailboxACL resourceACL, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException;
-
-    /**
-     * Maps the given {@code mailboxACLRights} to READ-WRITE and READ-ONLY
-     * response codes.
-     * 
-     * From RFC 4314 section 5.2:
-     * 
-     * The server SHOULD include a READ-WRITE response code in the tagged OK
-     * response if at least one of the "i", "e", or "shared flag rights"(***) is
-     * granted to the current user.
-     * 
-     * The server MUST include a READ-ONLY response code in the tagged OK
-     * response to a SELECT command if none of the following rights is granted
-     * to the current user: "i", "e", and "shared flag rights"(***).
-     * 
-     * @param mailboxACLRights
-     *            the rights applicable to the user and resource in question.
-     *            This method supposes that any global ACLs were already applied
-     *            to the {@code mailboxACLRights} parameter before this method
-     *            is called.
-     * @param sharedFlags
-     *            From RFC 4314 section 5.2: If the ACL server implements some
-     *            flags as shared for a mailbox (i.e., the ACL for the mailbox
-     *            MAY be set up so that changes to those flags are visible to
-     *            another user), let’s call the set of rights associated with
-     *            these flags (as described in Section 4) for that mailbox
-     *            collectively as "shared flag rights". Note that the
-     *            "shared flag rights" set MAY be different for different
-     *            mailboxes.
-     * 
-     *            If the server doesn’t support "shared multiuser write access"
-     *            to a mailbox or doesn’t implement shared flags on the mailbox,
-     *            "shared flag rights" for the mailbox is defined to be the
-     *            empty set.
-     * 
-     * @return
-     * @throws UnsupportedRightException
-     */
-    boolean isReadWrite(MailboxACL.Rfc4314Rights mailboxACLRights, Flags sharedFlags) throws UnsupportedRightException;
 
     /**
      * Computes a result suitable for the LISTRIGHTS IMAP command. The result is

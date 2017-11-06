@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
@@ -124,7 +124,7 @@ public class ListMailboxAssertTest {
 
             @Override
             public boolean isChildOf(Mailbox potentialParent, MailboxSession mailboxSession) {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not implemented");
             }
         };
     }

@@ -29,6 +29,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import static org.apache.james.mailbox.fixture.MailboxFixture.ALICE;
+
 import java.util.List;
 
 import javax.mail.Flags;
@@ -84,13 +86,13 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         dispatcher = mock(MailboxEventDispatcher.class);
         quotaManager = mock(QuotaManager.class);
 
-        session = new MockMailboxSession("user");
+        session = new MockMailboxSession(ALICE);
         testingData = createTestSystem(quotaManager, dispatcher);
         messageIdManager = testingData.getMessageIdManager();
 
-        mailbox1 = testingData.createMailbox(MailboxFixture.MAILBOX_PATH1, session);
-        mailbox2 = testingData.createMailbox(MailboxFixture.MAILBOX_PATH2, session);
-        mailbox3 = testingData.createMailbox(MailboxFixture.MAILBOX_PATH3, session);
+        mailbox1 = testingData.createMailbox(MailboxFixture.INBOX_ALICE, session);
+        mailbox2 = testingData.createMailbox(MailboxFixture.OUTBOX_ALICE, session);
+        mailbox3 = testingData.createMailbox(MailboxFixture.SENT_ALICE, session);
     }
 
 

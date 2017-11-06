@@ -20,12 +20,10 @@
 package org.apache.james.mpt.imapmailbox.maildir;
 
 import org.apache.james.mpt.host.JamesImapHostSystem;
+import org.apache.james.mpt.imapmailbox.maildir.host.MaildirHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.Condstore;
 import org.junit.After;
 import org.junit.Before;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 public class MaildirCondstore extends Condstore {
 
@@ -33,8 +31,7 @@ public class MaildirCondstore extends Condstore {
 
     @Before
     public void setUp() throws Exception {
-        Injector injector = Guice.createInjector(new MaildirMailboxTestModule());
-        system = injector.getInstance(JamesImapHostSystem.class);
+        system = new MaildirHostSystem();
         system.beforeTest();
         super.setUp();
     }

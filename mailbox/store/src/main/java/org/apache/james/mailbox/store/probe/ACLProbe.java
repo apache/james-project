@@ -27,5 +27,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 public interface ACLProbe {
     void replaceRights(MailboxPath mailboxPath, String targetUser, Rfc4314Rights rights) throws MailboxException;
 
+    void addRights(MailboxPath mailboxPath, String targetUser, Rfc4314Rights rights) throws MailboxException;
+
     MailboxACL retrieveRights(MailboxPath mailboxPath) throws MailboxException;
 }

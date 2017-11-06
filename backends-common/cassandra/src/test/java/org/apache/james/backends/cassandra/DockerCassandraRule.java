@@ -19,7 +19,7 @@
 
 package org.apache.james.backends.cassandra;
 
-import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.text.RandomStringGenerator;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -56,7 +56,7 @@ public class DockerCassandraRule implements TestRule {
 
     @SuppressWarnings("resource")
     public DockerCassandraRule() {
-        String tmpFsName = "cassandraData" + RandomStringUtils.randomAlphabetic(10);
+        String tmpFsName = "cassandraData" + new RandomStringGenerator.Builder().withinRange('a', 'z').build().generate(10);
         client = DockerClientFactory.instance().client();
         createTmpsFsCmd = client.createVolumeCmd()
             .withName(tmpFsName)

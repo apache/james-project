@@ -103,8 +103,7 @@ public class UserMailboxesService {
     }
 
     private Stream<MailboxPath> listChildren(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
-        return mailboxManager.search(createUserMailboxesQuery(mailboxSession), mailboxSession)
-            .stream()
+        return listUserMailboxes(mailboxSession)
             .map(MailboxMetaData::getPath)
             .filter(path -> path.getHierarchyLevels(mailboxSession.getPathDelimiter()).contains(mailboxPath));
     }
@@ -127,13 +126,10 @@ public class UserMailboxesService {
     }
 
     private Stream<MailboxMetaData> listUserMailboxes(MailboxSession mailboxSession) throws MailboxException {
-        return mailboxManager.search(createUserMailboxesQuery(mailboxSession), mailboxSession)
+        return mailboxManager.search(
+            MailboxQuery.privateMailboxesBuilder(mailboxSession).build(),
+            mailboxSession)
             .stream();
-    }
-
-    private MailboxQuery createUserMailboxesQuery(MailboxSession mailboxSession) {
-        return MailboxQuery.privateMailboxesBuilder(mailboxSession)
-            .build();
     }
 
 }

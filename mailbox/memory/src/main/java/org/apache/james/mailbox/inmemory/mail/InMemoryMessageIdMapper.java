@@ -106,7 +106,7 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
     }
 
     @Override
-    public void delete(MessageId messageId, List<MailboxId> mailboxIds) {
+    public void delete(MessageId messageId, Collection<MailboxId> mailboxIds) {
         find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata)
             .stream()
             .filter(message -> mailboxIds.contains(message.getMailboxId()))

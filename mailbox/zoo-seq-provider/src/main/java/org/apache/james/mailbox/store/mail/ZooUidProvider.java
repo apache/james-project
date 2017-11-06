@@ -20,12 +20,12 @@ package org.apache.james.mailbox.store.mail;
 
 import java.util.Optional;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.commons.lang.NotImplementedException;
 
 import com.google.common.base.Preconditions;
 import com.netflix.curator.RetryPolicy;
@@ -95,7 +95,7 @@ public class ZooUidProvider implements UidProvider {
 
     @Override
     public MessageUid nextUid(MailboxSession session, MailboxId mailboxId) throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
     }
 
     public static <E extends MailboxId> String pathForMailbox(Mailbox mailbox) {

@@ -25,9 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.mail.Flags;
-import javax.mail.Flags.Flag;
-
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
@@ -35,6 +32,7 @@ import org.apache.james.mailbox.model.MailboxACL.NameType;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxACL.SpecialName;
+import org.apache.james.mime4j.dom.address.Mailbox;
 
 
 /**
@@ -232,85 +230,6 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
     @Override
     public MailboxACL applyGlobalACL(MailboxACL resourceACL, boolean resourceOwnerIsGroup) throws UnsupportedRightException {
         return resourceOwnerIsGroup ? resourceACL.union(groupGlobalACL) : resourceACL.union(userGlobalACL);
-    }
-
-    /**
-     * @see org.apache.james.mailbox.store.mail.MailboxACLResolver#hasRight(java.
-     *      lang.String, org.apache.james.mailbox.store.mail.MailboxACLResolver.
-     *      GroupMembershipResolver,
-     *      org.apache.james.mailbox.MailboxACL.Right,
-     *      org.apache.james.mailbox.MailboxACL, java.lang.String)
-     */
-    @Override
-    public boolean hasRight(String requestUser, GroupMembershipResolver groupMembershipResolver, Right right, MailboxACL resourceACL, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException {
-        final EntryKey queryKey = requestUser == null ? null : new EntryKey(requestUser, NameType.user, false);
-        boolean result = false;
-        Map<EntryKey, Rfc4314Rights> entries = resourceOwnerIsGroup ? groupGlobalACL.getEntries() : userGlobalACL.getEntries();
-        if (entries != null) {
-            for (Entry<EntryKey, Rfc4314Rights> entry : entries.entrySet()) {
-                final EntryKey key = entry.getKey();
-                if (applies(key, queryKey, groupMembershipResolver, resourceOwner, resourceOwnerIsGroup) && entry.getValue().contains(right)) {
-                    if (key.isNegative()) {
-                        return false;
-                    } else {
-                        result = true;
-                    }
-                }
-            }
-        }
-
-        if (resourceACL != null) {
-            entries = resourceACL.getEntries();
-            if (entries != null) {
-                for (Entry<EntryKey, Rfc4314Rights> entry : entries.entrySet()) {
-                    final EntryKey key = entry.getKey();
-                    if (applies(key, queryKey, groupMembershipResolver, resourceOwner, resourceOwnerIsGroup) && entry.getValue().contains(right)) {
-                        if (key.isNegative()) {
-                            return false;
-                        } else {
-                            result = true;
-                        }
-                    }
-                }
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * @see org.apache.james.mailbox.acl.MailboxACLResolver#isReadWrite(org.apache.james.mailbox.model.Rfc4314Rights,
-     *      javax.mail.Flags)
-     */
-    @Override
-    public boolean isReadWrite(Rfc4314Rights Rfc4314Rights, Flags sharedFlags) throws UnsupportedRightException {
-        /* the two fast cases first */
-        if (Rfc4314Rights.contains(MailboxACL.Right.Insert) || Rfc4314Rights.contains(MailboxACL.Right.PerformExpunge)) {
-            return true;
-        }
-        /*
-         * then go through shared flags. RFC 4314 section 4:
-         * 
-         * Changing flags: STORE
-         * 
-         * - the server MUST check if the user has "t" right
-         * 
-         * - when the user modifies \Deleted flag "s" right
-         * 
-         * - when the user modifies \Seen flag "w" right - for all other message
-         * flags.
-         */
-        else if (sharedFlags != null) {
-            if (sharedFlags.contains(Flag.DELETED) && Rfc4314Rights.contains(MailboxACL.Right.DeleteMessages)) {
-                return true;
-            } else if (sharedFlags.contains(Flag.SEEN) && Rfc4314Rights.contains(MailboxACL.Right.WriteSeenFlag)) {
-                return true;
-            } else {
-                boolean hasWriteRight = Rfc4314Rights.contains(MailboxACL.Right.Write);
-                return hasWriteRight && (sharedFlags.contains(Flag.ANSWERED) || sharedFlags.contains(Flag.DRAFT) || sharedFlags.contains(Flag.FLAGGED) || sharedFlags.contains(Flag.RECENT) || sharedFlags.contains(Flag.USER));
-            }
-        }
-        return false;
     }
 
     /**

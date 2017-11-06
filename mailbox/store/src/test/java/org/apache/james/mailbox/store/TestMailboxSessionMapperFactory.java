@@ -33,7 +33,7 @@ import java.util.function.Predicate;
 
 import javax.mail.Flags;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
@@ -79,40 +79,38 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
     private final MessageIdMapper messageIdMapper;
 
     public TestMailboxSessionMapperFactory() {
-
-
-        mailbox1 = new SimpleMailbox(MailboxFixture.MAILBOX_PATH1, UID_VALIDITY, TestId.of(36));
-        mailbox2 = new SimpleMailbox(MailboxFixture.MAILBOX_PATH2, UID_VALIDITY, TestId.of(46));
-        mailbox3 = new SimpleMailbox(MailboxFixture.MAILBOX_PATH3, UID_VALIDITY, TestId.of(56));
-        mailbox4 = new SimpleMailbox(MailboxFixture.MAILBOX_PATH4, UID_VALIDITY, TestId.of(66));
+        mailbox1 = new SimpleMailbox(MailboxFixture.INBOX_ALICE, UID_VALIDITY, TestId.of(36));
+        mailbox2 = new SimpleMailbox(MailboxFixture.OUTBOX_ALICE, UID_VALIDITY, TestId.of(46));
+        mailbox3 = new SimpleMailbox(MailboxFixture.SENT_ALICE, UID_VALIDITY, TestId.of(56));
+        mailbox4 = new SimpleMailbox(MailboxFixture.INBOX_BOB, UID_VALIDITY, TestId.of(66));
 
         mailboxMapper = new MailboxMapper() {
             @Override
             public MailboxId save(Mailbox mailbox) throws MailboxException {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not implemented");
             }
 
             @Override
             public void delete(Mailbox mailbox) throws MailboxException {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not implemented");
 
             }
 
             @Override
             public Mailbox findMailboxByPath(MailboxPath mailboxName) throws MailboxException {
-                if (mailboxName.equals(MailboxFixture.MAILBOX_PATH1)) {
+                if (mailboxName.equals(MailboxFixture.INBOX_ALICE)) {
                     return mailbox1;
                 }
-                if (mailboxName.equals(MailboxFixture.MAILBOX_PATH2)) {
+                if (mailboxName.equals(MailboxFixture.OUTBOX_ALICE)) {
                     return mailbox2;
                 }
-                if (mailboxName.equals(MailboxFixture.MAILBOX_PATH3)) {
+                if (mailboxName.equals(MailboxFixture.SENT_ALICE)) {
                     return mailbox3;
                 }
                 throw new IllegalArgumentException("Unknown mailbox : " + mailboxName + " must be one of "
-                    + MailboxFixture.MAILBOX_PATH1 + " "
-                    + MailboxFixture.MAILBOX_PATH2 + " "
-                    + MailboxFixture.MAILBOX_PATH3);
+                    + MailboxFixture.INBOX_ALICE + " "
+                    + MailboxFixture.OUTBOX_ALICE + " "
+                    + MailboxFixture.SENT_ALICE);
             }
 
             @Override
@@ -131,42 +129,42 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
 
             @Override
             public List<Mailbox> findMailboxWithPathLike(MailboxPath mailboxPath) throws MailboxException {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not implemented");
             }
 
             @Override
             public boolean hasChildren(Mailbox mailbox, char delimiter) throws MailboxException {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not implemented");
             }
 
             @Override
             public void updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not implemented");
             }
 
             @Override
             public void setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not implemented");
             }
 
             @Override
             public List<Mailbox> list() throws MailboxException {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not implemented");
             }
 
             @Override
             public void endRequest() {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not implemented");
             }
 
             @Override
             public <T> T execute(Transaction<T> transaction) throws MailboxException {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not implemented");
             }
 
             @Override
             public List<Mailbox> findNonPersonalMailboxes(String userName, Right right) throws MailboxException {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not implemented");
             }
         };
         messageIdMapper = new MessageIdMapper() {
@@ -205,7 +203,7 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
             }
 
             @Override
-            public void delete(MessageId messageId, List<MailboxId> mailboxIds) {
+            public void delete(MessageId messageId, Collection<MailboxId> mailboxIds) {
                 messages.removeAll(
                     messages.stream()
                         .filter(withMessageId(messageId))
@@ -270,12 +268,12 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
 
     @Override
     public AnnotationMapper createAnnotationMapper(MailboxSession session) throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
     }
 
     @Override
     public MessageMapper createMessageMapper(MailboxSession session) throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
     }
 
     @Override
@@ -290,7 +288,7 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
 
     @Override
     public SubscriptionMapper createSubscriptionMapper(MailboxSession session) throws SubscriptionException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
     }
 
     public void clean() {
@@ -301,7 +299,7 @@ public class TestMailboxSessionMapperFactory extends MailboxSessionMapperFactory
         return mailboxMessage -> messageIds.contains(mailboxMessage.getMessageId());
     }
 
-    private Predicate<MailboxMessage> inMailboxes(List<MailboxId> mailboxIds) {
+    private Predicate<MailboxMessage> inMailboxes(Collection<MailboxId> mailboxIds) {
         return mailboxMessage -> mailboxIds.contains(mailboxMessage.getMailboxId());
     }
 

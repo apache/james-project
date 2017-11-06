@@ -36,30 +36,18 @@ import org.apache.james.backends.es.NodeMappingFactory;
 import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
-import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
 import org.apache.james.mailbox.elasticsearch.query.CriterionConverter;
 import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.inmemory.InMemoryId;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
-import org.apache.james.mailbox.inmemory.InMemoryMessageId;
+import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SearchQuery;
-import org.apache.james.mailbox.store.FakeAuthenticator;
-import org.apache.james.mailbox.store.FakeAuthorizator;
-import org.apache.james.mailbox.store.JVMMailboxPathLocker;
-import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
-import org.apache.james.mailbox.store.quota.NoQuotaManager;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
 import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.apache.james.mailbox.tika.TikaContainer;
@@ -82,7 +70,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
     private static final boolean IS_RECENT = true;
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch= new EmbeddedElasticSearch(temporaryFolder, MailboxElasticsearchConstants.MAILBOX_INDEX);
+    private EmbeddedElasticSearch embeddedElasticSearch= new EmbeddedElasticSearch(temporaryFolder, MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
 
     @Rule
     public RuleChain ruleChain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
@@ -109,48 +97,45 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
     @Override
     protected void initializeMailboxManager() throws Exception {
         Client client = NodeMappingFactory.applyMapping(
-            IndexCreationFactory.createIndex(
-                new TestingClientProvider(embeddedElasticSearch.getNode()).get(),
-                MailboxElasticsearchConstants.MAILBOX_INDEX),
-            MailboxElasticsearchConstants.MAILBOX_INDEX,
-            MailboxElasticsearchConstants.MESSAGE_TYPE,
+            new IndexCreationFactory()
+                .useIndex(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX)
+                .addAlias(MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS)
+                .addAlias(MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS)
+                .createIndexAndAliases(new TestingClientProvider(embeddedElasticSearch.getNode()).get()),
+            MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX,
+            MailboxElasticSearchConstants.MESSAGE_TYPE,
             MailboxMappingFactory.getMappingContent());
 
-        MailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
-        InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
-        messageSearchIndex = new ElasticSearchListeningMessageSearchIndex(mapperFactory,
+        storeMailboxManager = new InMemoryIntegrationResources()
+            .createMailboxManager(new SimpleGroupMembershipResolver());
+
+
+        ElasticSearchListeningMessageSearchIndex elasticSearchListeningMessageSearchIndex = new ElasticSearchListeningMessageSearchIndex(
+            storeMailboxManager.getMapperFactory(),
             new ElasticSearchIndexer(client,
                 new DeleteByQueryPerformer(client,
                     Executors.newSingleThreadExecutor(),
                     BATCH_SIZE,
-                    MailboxElasticsearchConstants.MAILBOX_INDEX,
-                    MailboxElasticsearchConstants.MESSAGE_TYPE),
-                MailboxElasticsearchConstants.MAILBOX_INDEX,
-                MailboxElasticsearchConstants.MESSAGE_TYPE),
-            new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE, new InMemoryId.Factory(), messageIdFactory),
+                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
+                    MailboxElasticSearchConstants.MESSAGE_TYPE),
+                MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
+                MailboxElasticSearchConstants.MESSAGE_TYPE),
+            new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
+                new InMemoryId.Factory(), storeMailboxManager.getMessageIdFactory(),
+                MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
+                MailboxElasticSearchConstants.MESSAGE_TYPE),
             new MessageToElasticSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES));
-        storeMailboxManager = new InMemoryMailboxManager(
-            mapperFactory,
-            new FakeAuthenticator(),
-            FakeAuthorizator.defaultReject(),
-            new JVMMailboxPathLocker(),
-            new UnionMailboxACLResolver(),
-            new SimpleGroupMembershipResolver(),
-            new MessageParser(),
-            messageIdFactory);
-        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
-        storeMailboxManager.setDelegatingMailboxListener(delegatingListener);
 
         messageIdManager = new StoreMessageIdManager(
+            storeMailboxManager,
             storeMailboxManager.getMapperFactory(),
-            mailboxEventDispatcher,
-            messageIdFactory,
-            new NoQuotaManager(),
-            new DefaultQuotaRootResolver(mapperFactory));
-
-        storeMailboxManager.setMessageSearchIndex(messageSearchIndex);
-        storeMailboxManager.init();
+            storeMailboxManager.getEventDispatcher(),
+            storeMailboxManager.getMessageIdFactory(),
+            storeMailboxManager.getQuotaManager(),
+            storeMailboxManager.getQuotaRootResolver());
+        storeMailboxManager.setMessageSearchIndex(elasticSearchListeningMessageSearchIndex);
+        storeMailboxManager.addGlobalListener(elasticSearchListeningMessageSearchIndex, new MockMailboxSession("admin"));
+        this.messageSearchIndex = elasticSearchListeningMessageSearchIndex;
     }
 
     @Test

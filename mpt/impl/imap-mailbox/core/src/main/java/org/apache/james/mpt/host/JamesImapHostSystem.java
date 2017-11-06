@@ -28,6 +28,7 @@ import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.decode.main.ImapRequestStreamHandler;
+import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.encode.ImapEncoder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -40,7 +41,6 @@ import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.helper.ByteBufferInputStream;
 import org.apache.james.mpt.helper.ByteBufferOutputStream;
 import org.apache.james.mpt.imapmailbox.GrantRightsOnHost;
-import org.apache.james.mpt.session.ImapSessionImpl;
 import org.apache.james.user.memory.MemoryUsersRepository;
 
 import com.google.common.base.Throwables;
@@ -123,7 +123,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
 
         ImapRequestStreamHandler handler;
 
-        ImapSessionImpl session;
+        FakeImapSession session;
 
         boolean isReadLast = true;
 
@@ -131,7 +131,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
             out = new ByteBufferOutputStream(continuation);
             in = new ByteBufferInputStream();
             handler = new ImapRequestStreamHandler(decoder, processor, encoder);
-            session = new ImapSessionImpl();
+            session = new FakeImapSession();
         }
 
         public String readLine() throws Exception {
@@ -148,7 +148,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
         }
 
         public void restart() throws Exception {
-            session = new ImapSessionImpl();
+            session = new FakeImapSession();
         }
 
         public void stop() throws Exception {

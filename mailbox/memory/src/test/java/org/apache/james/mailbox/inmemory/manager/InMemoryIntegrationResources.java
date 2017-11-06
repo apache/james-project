@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.inmemory.manager;
 
+import java.util.function.BiFunction;
+
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
@@ -34,11 +36,18 @@ import org.apache.james.mailbox.manager.ManagerTestResources;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
+import org.apache.james.mailbox.store.Authenticator;
+import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
+import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
+import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
+import org.apache.james.mailbox.store.StoreRightManager;
+import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
@@ -52,19 +61,70 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
     @Override
     public StoreMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver) throws MailboxException {
+        return createMailboxManager(groupMembershipResolver,
+            ((storeRightManager, inMemoryMailboxSessionMapperFactory) ->
+                new StoreMailboxAnnotationManager(
+                    inMemoryMailboxSessionMapperFactory,
+                    storeRightManager)));
+    }
+
+    public StoreMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver,
+                                                    int limitAnnotationCount, int limitAnnotationSize) throws MailboxException {
+        return createMailboxManager(groupMembershipResolver,
+            ((storeRightManager, inMemoryMailboxSessionMapperFactory) ->
+             new StoreMailboxAnnotationManager(
+                 inMemoryMailboxSessionMapperFactory,
+                 storeRightManager,
+                 limitAnnotationCount,
+                 limitAnnotationSize)));
+    }
+
+    private StoreMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver,
+                                                    BiFunction<StoreRightManager, InMemoryMailboxSessionMapperFactory, StoreMailboxAnnotationManager> annotationManagerBiFunction) throws MailboxException {
         FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
         fakeAuthenticator.addUser(ManagerTestResources.USER, ManagerTestResources.USER_PASS);
         fakeAuthenticator.addUser(ManagerTestResources.OTHER_USER, ManagerTestResources.OTHER_USER_PASS);
         InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
-        final StoreMailboxManager manager = new InMemoryMailboxManager(
+        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), groupMembershipResolver);
+        StoreMailboxAnnotationManager annotationManager = annotationManagerBiFunction
+            .apply(storeRightManager, mailboxSessionMapperFactory);
+
+        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
+        StoreMailboxManager manager = new InMemoryMailboxManager(
             mailboxSessionMapperFactory,
             fakeAuthenticator,
             FakeAuthorizator.defaultReject(),
-            new NoMailboxPathLocker(),
-            new UnionMailboxACLResolver(),
-            groupMembershipResolver,
+            new JVMMailboxPathLocker(),
             new MessageParser(),
-            new InMemoryMessageId.Factory());
+            new InMemoryMessageId.Factory(),
+            mailboxEventDispatcher,
+            delegatingListener,
+            annotationManager,
+            storeRightManager);
+        manager.init();
+        return manager;
+    }
+
+    public StoreMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver,
+                                                    Authenticator authenticator, Authorizator authorizator) throws MailboxException {
+        InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
+        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), groupMembershipResolver);
+        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
+
+        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
+        StoreMailboxManager manager = new InMemoryMailboxManager(
+            mailboxSessionMapperFactory,
+            authenticator,
+            authorizator,
+            new NoMailboxPathLocker(),
+            new MessageParser(),
+            new InMemoryMessageId.Factory(),
+            mailboxEventDispatcher,
+            delegatingListener,
+            annotationManager,
+            storeRightManager);
         manager.init();
         return manager;
     }
@@ -72,6 +132,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
     @Override
     public MessageIdManager createMessageIdManager(StoreMailboxManager mailboxManager) {
         return new StoreMessageIdManager(
+            mailboxManager,
             mailboxManager.getMapperFactory(),
             mailboxManager.getEventDispatcher(),
             new InMemoryMessageId.Factory(),

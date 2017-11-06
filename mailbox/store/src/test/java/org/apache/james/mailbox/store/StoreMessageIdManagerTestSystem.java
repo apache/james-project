@@ -24,16 +24,18 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.time.Instant;
+import java.util.Date;
 
 import javax.mail.Flags;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MailboxSession.SessionType;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
@@ -55,7 +57,7 @@ public class StoreMessageIdManagerTestSystem extends MessageIdManagerTestSystem 
 
         this.messageIdFactory = messageIdFactory;
         this.mapperFactory = mapperFactory;
-        this.defaultMailboxSession = new MockMailboxSession("user", SessionType.System);
+        this.defaultMailboxSession = new MockMailboxSession("user");
     }
 
     @Override
@@ -77,7 +79,7 @@ public class StoreMessageIdManagerTestSystem extends MessageIdManagerTestSystem 
 
     @Override
     public void deleteMailbox(MailboxId mailboxId, MailboxSession mailboxSession) {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
     }
 
     @Override
@@ -91,6 +93,7 @@ public class StoreMessageIdManagerTestSystem extends MessageIdManagerTestSystem 
         when(mailboxMessage.getUid()).thenReturn(uid);
         when(mailboxMessage.getModSeq()).thenReturn(MOD_SEQ);
         when(mailboxMessage.getMailboxId()).thenReturn(mailboxId);
+        when(mailboxMessage.getInternalDate()).thenReturn(Date.from(Instant.parse("2007-12-03T10:15:30.00Z")));
         try {
             when(mailboxMessage.getFullContent()).thenReturn(ARRAY_INPUT_STREAM);
         } catch (IOException e) {
@@ -102,6 +105,11 @@ public class StoreMessageIdManagerTestSystem extends MessageIdManagerTestSystem 
 
     @Override
     public int getConstantMessageSize() {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
+    }
+
+    @Override
+    public void setACL(MailboxId mailboxId, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
+        throw new NotImplementedException("Not implemented");
     }
 }

@@ -22,17 +22,11 @@ package org.apache.james.mailbox;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
-import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
-import org.apache.james.mailbox.exception.UnsupportedRightException;
-import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.model.MailboxAnnotation;
-import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -74,7 +68,7 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
  * </p>
  */
 
-public interface MailboxManager extends RequestAware, MailboxListenerSupport {
+public interface MailboxManager extends RequestAware, MailboxListenerSupport, RightManager, MailboxAnnotationManager {
 
     enum MailboxCapabilities {
         Annotation,
@@ -337,74 +331,6 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
     void logout(MailboxSession session, boolean force) throws MailboxException;
 
     /**
-     * Tells whether the given {@link MailboxSession}'s user has the given
-     * {@link MailboxACL.MailboxACLRight} for this {@link MessageManager}'s mailbox.
-     *
-     * @param session MailboxSession of the user we want to check 
-     * @param right Right we want to check.
-     * @param session Session of the user we want to check this right against.
-     * @return true if the given {@link MailboxSession}'s user has the given
-     *         {@link MailboxACL.MailboxACLRight} for this {@link MessageManager}'s
-     *         mailbox; false otherwise.
-     * @throws MailboxException
-     */
-    boolean hasRight(MailboxPath mailboxPath, MailboxACL.Right right, MailboxSession session) throws MailboxException;
-
-    /**
-     * Returns the rights applicable to the user who has sent the current
-     * request on the mailbox designated by this mailboxPath.
-     *
-     * @param mailboxPath Path of the mailbox you want to get your rights on.
-     * @param session The session used to determine the user we should retrieve the rights of.
-     * @return the rights applicable to the user who has sent the request,
-     *         returns {@link MailboxACL#NO_RIGHTS} if
-     *         {@code session.getUser()} is null.
-     * @throws UnsupportedRightException
-     */
-    MailboxACL.Rfc4314Rights myRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
-
-    /**
-     * Computes a result suitable for the LISTRIGHTS IMAP command. The result is
-     * computed for this mailbox and the given {@code identifier}.
-     *
-     * From RFC 4314 section 3.7:
-     * The first element of the resulting array contains the (possibly empty)
-     * set of rights the identifier will always be granted in the mailbox.
-     * Following this are zero or more right sets the identifier can be granted
-     * in the mailbox. Rights mentioned in the same set are tied together. The
-     * server MUST either grant all tied rights to the identifier in the mailbox
-     * or grant none.
-     *
-     * The same right MUST NOT be listed more than once in the LISTRIGHTS
-     * command.
-     *
-     * @param mailboxPath Path of the mailbox you want to get the rights list.
-     * @param identifier
-     *            the identifier from the LISTRIGHTS command.
-     * @param session Right of the user performing the request.
-     * @return result suitable for the LISTRIGHTS IMAP command
-     * @throws UnsupportedRightException
-     */
-    MailboxACL.Rfc4314Rights[] listRigths(MailboxPath mailboxPath, MailboxACL.EntryKey identifier, MailboxSession session) throws MailboxException;
-
-    /**
-     * Update the Mailbox ACL of the designated mailbox. We can either ADD REPLACE or REMOVE entries.
-     *
-     * @param mailboxACLCommand Update to perform.
-     * @throws UnsupportedRightException
-     */
-    void applyRightsCommand(MailboxPath mailboxPath, MailboxACL.ACLCommand mailboxACLCommand, MailboxSession session) throws MailboxException;
-
-
-    /**
-     * Reset the Mailbox ACL of the designated mailbox.
-     *
-     * @param mailboxACL New ACL value
-     * @throws UnsupportedRightException
-     */
-    void setRights(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException;
-
-    /**
      * Return a unmodifiable {@link List} of {@link MailboxPath} objects
      * 
      * @param session
@@ -413,65 +339,5 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      */
     List<MailboxPath> list(MailboxSession session) throws MailboxException;
 
-    /**
-     * Return all mailbox's annotation as the {@link List} of {@link MailboxAnnotation} without order and
-     * do not contain any two annotations with the same key
-     * 
-     * @param mailboxPath   the current mailbox
-     * @param session       the current session
-     * @return              List<MailboxAnnotation>
-     * @throws MailboxException in case of selected mailbox does not exist
-     */
-    List<MailboxAnnotation> getAllAnnotations(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
-
-    /**
-     * Return all mailbox's annotation filter by the list of the keys without order and
-     * do not contain any two annotations with the same key
-     * 
-     * @param mailboxPath   the current mailbox
-     * @param session       the current session
-     * @param keys          list of the keys should be filter
-     * @return              List<MailboxAnnotation>
-     * @throws MailboxException in case of selected mailbox does not exist
-     */
-    List<MailboxAnnotation> getAnnotationsByKeys(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) throws MailboxException;
-
-    /**
-     * Return all mailbox's annotation by the list of the keys and its children entries without order and
-     * do not contain any two annotations with the same key
-     *
-     * @param mailboxPath   the current mailbox
-     * @param session       the current session
-     * @param keys          list of the keys should be filter
-     * @return              List<MailboxAnnotation>
-     * @throws MailboxException in case of selected mailbox does not exist
-     */
-    List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) throws MailboxException;
-
-    /**
-     * Return all mailbox's annotation by the list of the keys and its below entries without order and
-     * do not contain any two annotations with the same key
-     *
-     * @param mailboxPath   the current mailbox
-     * @param session       the current session
-     * @param keys          list of the keys should be filter
-     * @return              List<MailboxAnnotation>
-     * @throws MailboxException in case of selected mailbox does not exist
-     */
-    List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) throws MailboxException;
-
-    /**
-     * Update the mailbox's annotations. This method can:
-     * - Insert new annotation if it does not exist
-     * - Update the new value for existed annotation
-     * - Delete the existed annotation if its value is nil
-     * 
-     * @param mailboxPath   the current mailbox
-     * @param session       the current session
-     * @param mailboxAnnotations    the list of annotation should be insert/udpate/delete
-     * @throws MailboxException in case of selected mailbox does not exist
-     */
-    void updateAnnotations(MailboxPath mailboxPath, MailboxSession session, List<MailboxAnnotation> mailboxAnnotations) throws MailboxException, AnnotationException;
-    
     boolean hasChildren(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 }

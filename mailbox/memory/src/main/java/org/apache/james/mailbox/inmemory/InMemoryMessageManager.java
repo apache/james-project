@@ -6,8 +6,6 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
-import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
@@ -17,6 +15,7 @@ import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.ImmutableMailboxMessage;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMessageManager;
+import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -29,10 +28,20 @@ public class InMemoryMessageManager extends StoreMessageManager {
 
     private InMemoryMailboxSessionMapperFactory mapperFactory;
 
-    public InMemoryMessageManager(MailboxSessionMapperFactory mapperFactory, MessageSearchIndex index, MailboxEventDispatcher dispatcher,
-                                  MailboxPathLocker locker, Mailbox mailbox, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver,
-                                  QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory, BatchSizes batchSizes, ImmutableMailboxMessage.Factory immutableMailboxMessageFactory) throws MailboxException {
-        super(mapperFactory, index, dispatcher, locker, mailbox, aclResolver, groupMembershipResolver, quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, immutableMailboxMessageFactory);
+    public InMemoryMessageManager(MailboxSessionMapperFactory mapperFactory,
+                                  MessageSearchIndex index,
+                                  MailboxEventDispatcher dispatcher,
+                                  MailboxPathLocker locker,
+                                  Mailbox mailbox,
+                                  QuotaManager quotaManager,
+                                  QuotaRootResolver quotaRootResolver,
+                                  MessageParser messageParser,
+                                  MessageId.Factory messageIdFactory,
+                                  BatchSizes batchSizes,
+                                  ImmutableMailboxMessage.Factory immutableMailboxMessageFactory,
+                                  StoreRightManager storeRightManager) throws MailboxException {
+        super(mapperFactory, index, dispatcher, locker, mailbox, quotaManager, quotaRootResolver,
+            messageParser, messageIdFactory, batchSizes, immutableMailboxMessageFactory, storeRightManager);
         this.mapperFactory = (InMemoryMailboxSessionMapperFactory) mapperFactory;
     }
 

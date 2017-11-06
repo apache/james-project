@@ -24,10 +24,12 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+
 import javax.mail.Flags;
 import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -36,8 +38,9 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
+import org.apache.james.mailbox.store.mail.model.FlagsFactory;
+import org.apache.james.mailbox.store.mail.model.FlagsFilter;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.commons.io.IOUtils;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -146,19 +149,31 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
         }
     }
 
-    public static SimpleMailboxMessage copy(MailboxId mailboxId, MailboxMessage original) throws MailboxException {
-        return copy(mailboxId, original, original.getAttachments());
+    public static Builder from(MailboxMessage original) throws MailboxException {
+        return fromWithoutAttachments(original)
+            .addAttachments(original.getAttachments());
     }
 
-    private static SimpleMailboxMessage copy(MailboxId mailboxId, MailboxMessage original, List<MessageAttachment> attachments) throws MailboxException {
-        Date internalDate = original.getInternalDate();
-        long size = original.getFullContentOctets();
-        Flags flags = original.createFlags();
-        SharedByteArrayInputStream content = copyFullContent(original);
-        int bodyStartOctet = Ints.checkedCast(original.getFullContentOctets() - original.getBodyOctets());
-        PropertyBuilder pBuilder = new PropertyBuilder(original.getProperties());
-        pBuilder.setTextualLineCount(original.getTextualLineCount());
-        return new SimpleMailboxMessage(original.getMessageId(), internalDate, size, bodyStartOctet, content, flags, pBuilder, mailboxId, attachments);
+    public static SimpleMailboxMessage copy(MailboxId mailboxId, MailboxMessage original) throws MailboxException {
+        return from(original).mailboxId(mailboxId).build();
+    }
+
+    public static Builder fromWithoutAttachments(MailboxMessage original) throws MailboxException {
+        PropertyBuilder propertyBuilder = new PropertyBuilder(original.getProperties());
+        propertyBuilder.setTextualLineCount(original.getTextualLineCount());
+        return builder()
+            .bodyStartOctet(Ints.checkedCast(original.getFullContentOctets() - original.getBodyOctets()))
+            .content(copyFullContent(original))
+            .messageId(original.getMessageId())
+            .internalDate(original.getInternalDate())
+            .size(original.getFullContentOctets())
+            .flags(original.createFlags())
+            .propertyBuilder(propertyBuilder);
+    }
+
+    public static SimpleMailboxMessage copyWithoutAttachments(MailboxId mailboxId, MailboxMessage original) throws MailboxException {
+        return fromWithoutAttachments(original)
+            .mailboxId(mailboxId).build();
     }
 
     private static SharedByteArrayInputStream copyFullContent(MailboxMessage original) throws MailboxException {
@@ -272,6 +287,16 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
         recent = flags.contains(Flags.Flag.RECENT);
         seen = flags.contains(Flags.Flag.SEEN);
         userFlags = flags.getUserFlags();
+    }
+
+    public SimpleMailboxMessage filterFlags(FlagsFilter filter) throws MailboxException {
+        Flags flags = FlagsFactory
+            .builder()
+            .flags(createFlags())
+            .addUserFlags(createUserFlags())
+            .filteringFlags(filter)
+            .build();
+        return from(this).flags(flags).build();
     }
 
     @Override

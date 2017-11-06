@@ -17,28 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mpt.imapmailbox.lucenesearch;
+package org.apache.james.backends.es;
 
-import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.host.JamesImapHostSystem;
-import org.apache.james.mpt.imapmailbox.lucenesearch.host.LuceneSearchHostSystem;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-
-public class LuceneSearchMailboxTestModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(HostSystem.class).to(JamesImapHostSystem.class);
-        bind(ImapHostSystem.class).to(JamesImapHostSystem.class);
-    }
-
-    @Provides
-    @Singleton
-    public JamesImapHostSystem provideImapHostSystem() throws Exception {
-        return new LuceneSearchHostSystem();
-    }
-
+public interface ElasticSearchConstants {
+    String WRITE_ALIAS = "injectWriteAlias";
+    String READ_ALIAS = "injectReadAlias";
 }

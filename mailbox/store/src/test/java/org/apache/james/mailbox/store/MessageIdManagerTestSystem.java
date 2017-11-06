@@ -25,6 +25,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
@@ -61,4 +62,6 @@ public abstract class MessageIdManagerTestSystem {
     public abstract void deleteMailbox(MailboxId mailboxId, MailboxSession session);
 
     public abstract int getConstantMessageSize();
+
+    public abstract void setACL(MailboxId mailboxId, MailboxACL mailboxACL, MailboxSession session) throws MailboxException;
 }

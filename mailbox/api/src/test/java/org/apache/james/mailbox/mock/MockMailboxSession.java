@@ -28,27 +28,29 @@ import java.util.Random;
 
 import org.apache.james.mailbox.MailboxSession;
 
-public class MockMailboxSession implements MailboxSession{
-
+public class MockMailboxSession implements MailboxSession {
     private final User user;
-    private boolean close;
     private final Map<Object, Object> attrs = new HashMap<>();
     private final static Random RANDOM = new Random();
-
-    private final long sessionId = RANDOM.nextLong();
-    private SessionType type = SessionType.User;
+    private final long sessionId;
+    private final SessionType type;
+    private boolean open;
     
-    public MockMailboxSession(final String username) {
+    public MockMailboxSession(String username) {
+        this(username, RANDOM.nextLong());
+    }
+
+    public MockMailboxSession(String username, long sessionId) {
         this.user = new User() {
-            
+
             public String getUserName() {
                 return username;
             }
-            
+
             public String getPassword() {
                 return null;
             }
-            
+
             public List<Locale> getLocalePreferences() {
                 return new ArrayList<>();
             }
@@ -61,14 +63,13 @@ public class MockMailboxSession implements MailboxSession{
                 return username.equalsIgnoreCase(other);
             }
         };
+        this.sessionId = sessionId;
+        this.open = true;
+        type = SessionType.User;
     }
 
-    public MockMailboxSession(final String username, SessionType type) {
-        this(username);
-        this.type = type;
-    }
     public void close() {
-        this.close = true;
+        this.open = false;
     }
 
     public Map<Object, Object> getAttributes() {
@@ -96,7 +97,7 @@ public class MockMailboxSession implements MailboxSession{
     }
 
     public boolean isOpen() {
-        return close == false;
+        return open;
     }
 
 	public char getPathDelimiter() {
@@ -106,5 +107,4 @@ public class MockMailboxSession implements MailboxSession{
     public SessionType getType() {
         return type;
     }
-
 }

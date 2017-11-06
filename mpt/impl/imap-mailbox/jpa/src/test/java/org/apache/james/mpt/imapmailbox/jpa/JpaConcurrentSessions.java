@@ -20,12 +20,10 @@
 package org.apache.james.mpt.imapmailbox.jpa;
 
 import org.apache.james.mpt.api.ImapHostSystem;
+import org.apache.james.mpt.imapmailbox.jpa.host.JPAHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.ConcurrentSessions;
 import org.junit.After;
 import org.junit.Before;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 public class JpaConcurrentSessions extends ConcurrentSessions {
 
@@ -33,8 +31,7 @@ public class JpaConcurrentSessions extends ConcurrentSessions {
 
     @Before
     public void setUp() throws Exception {
-        Injector injector = Guice.createInjector(new JpaMailboxTestModule());
-        system = injector.getInstance(ImapHostSystem.class);
+        system = JPAHostSystem.build();
         system.beforeTest();
         super.setUp();
     }

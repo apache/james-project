@@ -47,8 +47,6 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
-import org.apache.james.mailbox.model.search.MailboxQuery;
-import org.apache.james.mailbox.model.search.PrefixedWildcard;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.junit.Test;
 
@@ -77,11 +75,11 @@ public abstract class AbstractCombinationManagerTest {
     public abstract CombinationManagerTestSystem createTestingData() throws Exception ;
 
     public void setUp() throws Exception {
-        session = new MockMailboxSession(MailboxFixture.USER);
+        session = new MockMailboxSession(MailboxFixture.ALICE);
         testingData = createTestingData();
 
-        mailbox1 = testingData.createMailbox(MailboxFixture.MAILBOX_PATH1, session);
-        mailbox2 = testingData.createMailbox(MailboxFixture.MAILBOX_PATH2, session);
+        mailbox1 = testingData.createMailbox(MailboxFixture.INBOX_ALICE, session);
+        mailbox2 = testingData.createMailbox(MailboxFixture.OUTBOX_ALICE, session);
 
         mailboxManager = testingData.getMailboxManager();
         messageIdManager = testingData.getMessageIdManager();
@@ -112,37 +110,35 @@ public abstract class AbstractCombinationManagerTest {
     }
 
     @Test
-    public void searchFromMailboxManagerShouldReturnMessagesUsingSetInMailboxesFromMessageIdManagerWhenSearchByMailboxQueryWithMailboxPath() throws Exception {
+    public void searchFromMessageManagerShouldReturnMessagesUsingSetInMailboxesFromMessageIdManagerWhenSearchByMailboxQueryWithMailboxPath() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
 
-        MailboxQuery mailboxQuery = MailboxQuery.privateMailboxesBuilder(session)
-            .expression(new PrefixedWildcard(MailboxFixture.MAILBOX_PATH1.getName()))
-            .build();
         MessageId messageId = messageManager1.appendMessage(new ByteArrayInputStream(MAIL_CONTENT), new Date(), session, false, FLAGS).getMessageId();
 
-        messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
+        messageIdManager.setInMailboxes(messageId,
+            ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        assertThat(mailboxManager.search(mailboxQuery, session)).hasSize(1)
-            .extractingResultOf("getId")
-            .containsOnly(mailbox1.getMailboxId());
+        MessageUid uidInMailbox2 = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session)
+            .get(0)
+            .getUid();
+
+        assertThat(messageManager2.search(query, session)).hasSize(1)
+            .containsExactly(uidInMailbox2);
     }
 
     @Test
-    public void searchFromMailboxManagerShouldReturnMessagesUsingSetInMailboxesFromMessageIdManagerWhenSearchByMailboxQueryWithUsername() throws Exception {
+    public void searchFromMessageManagerShouldReturnMessagesUsingSetInMailboxesFromMessageIdManagerWhenSearchByMailboxQueryWithUsername() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
 
-        MailboxQuery mailboxQuery = MailboxQuery.privateMailboxesBuilder(session)
-            .matchesAllMailboxNames()
-            .build();
-        MessageId messageId = messageManager1.appendMessage(new ByteArrayInputStream(MAIL_CONTENT), new Date(), session, false, FLAGS).getMessageId();
+        ComposedMessageId composedMessageId = messageManager1.appendMessage(new ByteArrayInputStream(MAIL_CONTENT), new Date(), session, false, FLAGS);
 
-        messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
+        messageIdManager.setInMailboxes(composedMessageId.getMessageId(),
+            ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        assertThat(mailboxManager.search(mailboxQuery, session)).hasSize(2)
-            .extractingResultOf("getId")
-            .containsOnly(mailbox1.getMailboxId(), mailbox2.getMailboxId());
+        assertThat(messageManager1.search(query, session)).hasSize(1)
+            .containsExactly(composedMessageId.getUid());
     }
 
     @Test
@@ -216,7 +212,7 @@ public abstract class AbstractCombinationManagerTest {
     public void getMessageFromMessageIdManagerShouldReturnMessageWhenCopyMessageWithMailboxPathFromMailboxManager() throws Exception {
         MessageId messageId = messageManager1.appendMessage(new ByteArrayInputStream(MAIL_CONTENT), new Date(), session, false, FLAGS).getMessageId();
 
-        mailboxManager.copyMessages(MessageRange.all(), MailboxFixture.MAILBOX_PATH1, MailboxFixture.MAILBOX_PATH2, session);
+        mailboxManager.copyMessages(MessageRange.all(), MailboxFixture.INBOX_ALICE, MailboxFixture.OUTBOX_ALICE, session);
 
         List<MessageResult> listMessages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session);
 
@@ -229,7 +225,7 @@ public abstract class AbstractCombinationManagerTest {
     public void getMessageFromMessageIdManagerShouldReturnMessageWhenMoveMessageWithMailboxIdFromMailboxManager() throws Exception {
         MessageId messageId = messageManager1.appendMessage(new ByteArrayInputStream(MAIL_CONTENT), new Date(), session, false, FLAGS).getMessageId();
 
-        mailboxManager.moveMessages(MessageRange.all(), MailboxFixture.MAILBOX_PATH1, MailboxFixture.MAILBOX_PATH2, session);
+        mailboxManager.moveMessages(MessageRange.all(), MailboxFixture.INBOX_ALICE, MailboxFixture.OUTBOX_ALICE, session);
 
         List<MessageResult> listMessages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session);
 

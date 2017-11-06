@@ -29,10 +29,11 @@ import java.util.List;
 import javax.mail.util.SharedFileInputStream;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.maildir.MaildirMessageName;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -239,7 +240,7 @@ public class MaildirMessage implements Message {
 
     @Override
     public MessageId getMessageId() {
-        return null;
+        return new DefaultMessageId();
     }
 
     @Override

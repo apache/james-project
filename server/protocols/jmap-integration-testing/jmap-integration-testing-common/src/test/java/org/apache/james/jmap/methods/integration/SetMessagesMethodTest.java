@@ -31,7 +31,6 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
@@ -3765,6 +3764,7 @@ public abstract class SetMessagesMethodTest {
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
         String outboxId = getOutboxId(accessToken);
+        String inboxId = getMailboxId(accessToken, Role.INBOX);
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -3787,28 +3787,26 @@ public abstract class SetMessagesMethodTest {
                 "  ]" +
                 "]";
 
-        String messageId = with()
+        with()
             .header("Authorization", accessToken.serialize())
             .body(requestBody)
-        // When
-        .post("/jmap")
-        .then()
-            .extract()
-            .body()
-            .<String>path(ARGUMENTS + ".created."+ messageCreationId +".id");
+        .post("/jmap");
 
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
         given()
             .header("Authorization", accessToken.serialize())
-            .body("[[\"getMessageList\", {\"filter\":{\"body\": \"Test\"}}, \"#0\"]]")
+            .body("[[\"getMessageList\", {\"filter\":{" +
+                "   \"body\": \"Test body\", " +
+                "   \"inMailboxes\":[\"" + inboxId  + "\"]}}, " +
+                "\"#0\"]]")
             .when()
             .post("/jmap")
         .then()
             .statusCode(200)
             .log().ifValidationFails()
             .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds", hasItem(messageId));
+            .body(ARGUMENTS + ".messageIds", hasSize(1));
     }
 
     @Test

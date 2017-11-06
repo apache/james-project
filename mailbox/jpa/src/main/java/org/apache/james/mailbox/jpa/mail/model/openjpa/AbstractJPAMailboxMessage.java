@@ -55,7 +55,7 @@ import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
-import org.apache.james.mailbox.store.mail.model.FlagsBuilder;
+import org.apache.james.mailbox.store.mail.model.FlagsFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -470,7 +470,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
 
     @Override
     public Flags createFlags() {
-        return FlagsBuilder.createFlags(this, createUserFlags());
+        return FlagsFactory.createFlags(this, createUserFlags());
     }
 
     protected String[] createUserFlags() {

@@ -39,7 +39,7 @@ git checkout $SHA1
 
 # Compilation
 
-export MAVEN_OPTS="-Xmx7168m -Xms2048m -XX:MaxPermSize=256m -XX:+UseConcMarkSweepGC -XX:-UseGCOverheadLimit"
+export MAVEN_OPTS="-Xmx7168m -Xms2048m -XX:+UseConcMarkSweepGC -XX:-UseGCOverheadLimit"
 
 mvn clean install -DskipTests
 mvn clean site:site -Dmaven.javadoc.skip=true

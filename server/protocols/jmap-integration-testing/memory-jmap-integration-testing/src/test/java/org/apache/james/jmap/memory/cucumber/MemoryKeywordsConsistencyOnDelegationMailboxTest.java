@@ -16,29 +16,17 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mpt.imapmailbox.maildir;
 
-import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.host.JamesImapHostSystem;
-import org.apache.james.mpt.imapmailbox.maildir.host.MaildirHostSystem;
+package org.apache.james.jmap.memory.cucumber;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
+import org.junit.runner.RunWith;
 
-public class MaildirMailboxTestModule extends AbstractModule {
+import cucumber.api.CucumberOptions;
+import cucumber.api.junit.Cucumber;
 
-    @Override
-    protected void configure() {
-        bind(HostSystem.class).to(JamesImapHostSystem.class);
-        bind(ImapHostSystem.class).to(JamesImapHostSystem.class);
-    }
-
-    @Provides
-    @Singleton
-    public JamesImapHostSystem provideImapHostSystem() throws Exception {
-        return MaildirHostSystem.build();
-    }
-
+@RunWith(Cucumber.class)
+@CucumberOptions(features="classpath:cucumber/KeywordsConsistencyOnDelegationMailbox.feature",
+    glue={"org.apache.james.jmap.methods.integration", "org.apache.james.jmap.memory.cucumber"},
+    strict = true)
+public class MemoryKeywordsConsistencyOnDelegationMailboxTest {
 }

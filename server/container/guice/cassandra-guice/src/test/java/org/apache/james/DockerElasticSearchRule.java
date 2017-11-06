@@ -19,12 +19,14 @@
 
 package org.apache.james;
 
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.modules.mailbox.ElasticSearchConfiguration;
 import org.apache.james.util.streams.SwarmGenericContainer;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import com.google.common.base.Throwables;
 import com.google.inject.Module;
 
 
@@ -33,7 +35,7 @@ public class DockerElasticSearchRule implements GuiceModuleTestRule {
     private static final int ELASTIC_SEARCH_PORT = 9300;
     public static final int ELASTIC_SEARCH_HTTP_PORT = 9200;
 
-    public PropertiesConfiguration getElasticSearchConfigurationForDocker() {
+    public ElasticSearchConfiguration getElasticSearchConfigurationForDocker() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
 
         configuration.addProperty("elasticsearch.masterHost", getIp());
@@ -50,7 +52,11 @@ public class DockerElasticSearchRule implements GuiceModuleTestRule {
         configuration.addProperty("elasticsearch.metrics.reports.period", 30);
         configuration.addProperty("elasticsearch.metrics.reports.index", "james-metrics");
 
-        return configuration;
+        try {
+            return ElasticSearchConfiguration.fromProperties(configuration);
+        } catch (ConfigurationException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     private SwarmGenericContainer elasticSearchContainer = new SwarmGenericContainer("elasticsearch:2.2.2")
@@ -67,7 +73,9 @@ public class DockerElasticSearchRule implements GuiceModuleTestRule {
 
     @Override
     public Module getModule() {
-        return (binder) -> binder.bind(ElasticSearchConfiguration.class).toInstance(this::getElasticSearchConfigurationForDocker);
+        return (binder) ->
+                binder.bind(ElasticSearchConfiguration.class)
+                    .toInstance(getElasticSearchConfigurationForDocker());
     }
 
     public String getIp() {

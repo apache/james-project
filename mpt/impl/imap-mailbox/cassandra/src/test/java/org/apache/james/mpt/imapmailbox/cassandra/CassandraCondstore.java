@@ -21,36 +21,31 @@ package org.apache.james.mpt.imapmailbox.cassandra;
 
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mpt.host.JamesImapHostSystem;
+import org.apache.james.mpt.imapmailbox.cassandra.host.CassandraHostSystemRule;
 import org.apache.james.mpt.imapmailbox.suite.Condstore;
 import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+import org.junit.Rule;
+import org.junit.rules.RuleChain;
 
 public class CassandraCondstore extends Condstore {
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    private static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    private static CassandraHostSystemRule cassandraHostSystemRule = new CassandraHostSystemRule(cassandraServer);
 
-    private JamesImapHostSystem system;
-    
-    @Before
-    public void setUp() throws Exception {
-        Injector injector = Guice.createInjector(new CassandraMailboxTestModule(cassandraServer.getIp(), cassandraServer.getBindingPort()));
-        system = injector.getInstance(JamesImapHostSystem.class);
-        system.beforeTest();
-        super.setUp();
-    }
-    
+    /**
+     * The underlying tests are playing with capabilities, which are configured when starting James.
+     * Hence, we can't use the RuleChain as a @ClassRule in this implementation.
+     */
+    @Rule
+    public RuleChain ruleChaine = RuleChain.outerRule(cassandraServer).around(cassandraHostSystemRule);
+
     @Override
     protected JamesImapHostSystem createJamesImapHostSystem() {
-        return system;
+        return cassandraHostSystemRule.getImapHostSystem();
     }
 
     @After
     public void tearDown() throws Exception {
-        system.afterTest();
+        cassandraHostSystemRule.clean();
     }
-    
 }

@@ -46,10 +46,10 @@ public abstract class MailboxManagerStressTest {
 
     private MailboxManager mailboxManager;
 
-    protected abstract MailboxManager provideManager();
+    protected abstract MailboxManager provideManager() throws MailboxException;
 
     
-    public void setUp() throws MailboxException, Exception {
+    public void setUp() throws Exception {
         this.mailboxManager = provideManager();
     }
 

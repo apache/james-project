@@ -23,7 +23,7 @@ package org.apache.mailet.base;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import org.apache.commons.lang.time.FastDateFormat;
+import org.apache.commons.lang3.time.FastDateFormat;
 
 public class DateFormats {
 

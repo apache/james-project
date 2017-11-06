@@ -22,6 +22,7 @@ package org.apache.james;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.data.JPADataModule;
 import org.apache.james.modules.data.SieveFileRepositoryModule;
+import org.apache.james.modules.mailbox.DefaultEventModule;
 import org.apache.james.modules.mailbox.JPAMailboxModule;
 import org.apache.james.modules.mailbox.LuceneSearchMailboxModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
@@ -70,7 +71,8 @@ public class JPAJamesServerMain {
         new MailboxModule(),
         new NoJwtModule(),
         new RawPostDequeueDecoratorModule(),
-        new SieveFileRepositoryModule());
+        new SieveFileRepositoryModule(),
+        new DefaultEventModule());
 
     public static void main(String[] args) throws Exception {
         GuiceJamesServer server = new GuiceJamesServer()

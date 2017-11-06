@@ -19,10 +19,10 @@
 
 package org.apache.james.mailbox.store;
 
-import static org.apache.james.mailbox.fixture.MailboxFixture.MAILBOX_PATH1;
-import static org.apache.james.mailbox.fixture.MailboxFixture.OTHER_USER;
-import static org.apache.james.mailbox.fixture.MailboxFixture.THIRD_USER;
-import static org.apache.james.mailbox.fixture.MailboxFixture.USER;
+import static org.apache.james.mailbox.fixture.MailboxFixture.ALICE;
+import static org.apache.james.mailbox.fixture.MailboxFixture.BOB;
+import static org.apache.james.mailbox.fixture.MailboxFixture.CEDRIC;
+import static org.apache.james.mailbox.fixture.MailboxFixture.INBOX_ALICE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.MailboxManager;
@@ -39,41 +39,41 @@ public abstract class AbstractMessageManagerTest {
 
     private MessageManagerTestSystem testSystem;
     private MailboxManager mailboxManager;
-    private MailboxSession session;
-    private MailboxSession otherSession;
+    private MailboxSession aliceSession;
+    private MailboxSession bobSession;
 
     protected abstract MessageManagerTestSystem createTestSystem() throws Exception;
 
     public void setUp() throws Exception {
-        session = new MockMailboxSession(USER);
-        otherSession = new MockMailboxSession(OTHER_USER);
+        aliceSession = new MockMailboxSession(ALICE);
+        bobSession = new MockMailboxSession(BOB);
         testSystem = createTestSystem();
         mailboxManager = testSystem.getMailboxManager();
 
-        testSystem.createMailbox(MAILBOX_PATH1, session);
-        testSystem.createMailbox(MailboxFixture.MAILBOX_PATH2, session);
-        testSystem.createMailbox(MailboxFixture.MAILBOX_PATH3, session);
-        testSystem.createMailbox(MailboxFixture.MAILBOX_PATH4, otherSession);
+        testSystem.createMailbox(INBOX_ALICE, aliceSession);
+        testSystem.createMailbox(MailboxFixture.OUTBOX_ALICE, aliceSession);
+        testSystem.createMailbox(MailboxFixture.SENT_ALICE, aliceSession);
+        testSystem.createMailbox(MailboxFixture.INBOX_BOB, bobSession);
     }
 
     @Test
     public void getMetadataShouldListUsersAclWhenShared() throws Exception {
-        mailboxManager.applyRightsCommand(MAILBOX_PATH1, MailboxACL.command().forUser(OTHER_USER).rights(MailboxACL.Right.Read).asAddition(), session);
-        mailboxManager.applyRightsCommand(MAILBOX_PATH1, MailboxACL.command().forUser(THIRD_USER).rights(MailboxACL.Right.Read).asAddition(), session);
-        MessageManager messageManager = mailboxManager.getMailbox(MAILBOX_PATH1, session);
+        mailboxManager.applyRightsCommand(INBOX_ALICE, MailboxACL.command().forUser(BOB).rights(MailboxACL.Right.Read).asAddition(), aliceSession);
+        mailboxManager.applyRightsCommand(INBOX_ALICE, MailboxACL.command().forUser(CEDRIC).rights(MailboxACL.Right.Read).asAddition(), aliceSession);
+        MessageManager messageManager = mailboxManager.getMailbox(INBOX_ALICE, aliceSession);
 
-        MessageManager.MetaData actual = messageManager.getMetaData(NO_RESET_RECENT, session, MessageManager.MetaData.FetchGroup.NO_COUNT);
-        assertThat(actual.getACL().getEntries()).containsKeys(MailboxACL.EntryKey.createUserEntryKey(OTHER_USER), MailboxACL.EntryKey.createUserEntryKey(THIRD_USER));
+        MessageManager.MetaData actual = messageManager.getMetaData(NO_RESET_RECENT, aliceSession, MessageManager.MetaData.FetchGroup.NO_COUNT);
+        assertThat(actual.getACL().getEntries()).containsKeys(MailboxACL.EntryKey.createUserEntryKey(BOB), MailboxACL.EntryKey.createUserEntryKey(CEDRIC));
     }
 
     @Test
     public void getMetadataShouldNotExposeOtherUsersWhenSessionIsNotOwner() throws Exception {
-        mailboxManager.applyRightsCommand(MAILBOX_PATH1, MailboxACL.command().forUser(OTHER_USER).rights(MailboxACL.Right.Read).asAddition(), session);
-        mailboxManager.applyRightsCommand(MAILBOX_PATH1, MailboxACL.command().forUser(THIRD_USER).rights(MailboxACL.Right.Read).asAddition(), session);
-        MessageManager messageManager = mailboxManager.getMailbox(MAILBOX_PATH1, session);
+        mailboxManager.applyRightsCommand(INBOX_ALICE, MailboxACL.command().forUser(BOB).rights(MailboxACL.Right.Read).asAddition(), aliceSession);
+        mailboxManager.applyRightsCommand(INBOX_ALICE, MailboxACL.command().forUser(CEDRIC).rights(MailboxACL.Right.Read).asAddition(), aliceSession);
+        MessageManager messageManager = mailboxManager.getMailbox(INBOX_ALICE, aliceSession);
 
-        MessageManager.MetaData actual = messageManager.getMetaData(NO_RESET_RECENT, otherSession, MessageManager.MetaData.FetchGroup.NO_COUNT);
-        assertThat(actual.getACL().getEntries()).containsOnlyKeys(MailboxACL.EntryKey.createUserEntryKey(OTHER_USER));
+        MessageManager.MetaData actual = messageManager.getMetaData(NO_RESET_RECENT, bobSession, MessageManager.MetaData.FetchGroup.NO_COUNT);
+        assertThat(actual.getACL().getEntries()).containsOnlyKeys(MailboxACL.EntryKey.createUserEntryKey(BOB));
     }
 
 }

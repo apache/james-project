@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.commons.net.imap.IMAPClient;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 
 public class IMAPMessageReader implements Closeable {
@@ -32,6 +33,11 @@ public class IMAPMessageReader implements Closeable {
     private static final String INBOX = "INBOX";
 
     private final IMAPClient imapClient;
+
+    @VisibleForTesting
+    IMAPMessageReader(IMAPClient imapClient) {
+        this.imapClient = imapClient;
+    }
 
     public IMAPMessageReader(String host, int port) throws IOException {
         imapClient = new IMAPClient();
@@ -63,6 +69,22 @@ public class IMAPMessageReader implements Closeable {
         imapClient.fetch("1:1", "ALL");
         return imapClient.getReplyString()
             .contains("OK FETCH completed");
+    }
+
+    public boolean userReceivedMessageWithFlagsInMailbox(String user, String password, String mailbox, String flags) throws IOException {
+        connectAndSelect(user, password, mailbox);
+        imapClient.fetch("1:1", "ALL");
+        String replyString = imapClient.getReplyString();
+        return isCompletedWithFlags(flags, replyString);
+    }
+
+    @VisibleForTesting
+    boolean isCompletedWithFlags(String flags, String replyString) {
+        return replyString.contains("OK FETCH completed") &&
+            Splitter.on(" ")
+            .splitToList(flags)
+            .stream()
+            .allMatch(s -> replyString.contains(s));
     }
 
     public boolean userGetNotifiedForNewMessagesWhenSelectingMailbox(String user, String password, int numOfNewMessage, String mailboxName) throws IOException {

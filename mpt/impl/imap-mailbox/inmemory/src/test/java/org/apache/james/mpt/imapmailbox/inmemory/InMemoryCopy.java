@@ -20,12 +20,10 @@
 package org.apache.james.mpt.imapmailbox.inmemory;
 
 import org.apache.james.mpt.api.ImapHostSystem;
+import org.apache.james.mpt.imapmailbox.inmemory.host.InMemoryHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.Copy;
 import org.junit.After;
 import org.junit.Before;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 public class InMemoryCopy extends Copy {
 
@@ -33,8 +31,7 @@ public class InMemoryCopy extends Copy {
 
     @Before
     public void setUp() throws Exception {
-        Injector injector = Guice.createInjector(new InMemoryMailboxTestModule());
-        system = injector.getInstance(ImapHostSystem.class);
+        system = new InMemoryHostSystem();
         system.beforeTest();
         super.setUp();
     }

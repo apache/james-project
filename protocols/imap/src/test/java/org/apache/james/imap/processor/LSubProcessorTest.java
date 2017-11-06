@@ -139,26 +139,6 @@ public class LSubProcessorTest {
     }
 
     @Test
-    public void testHierarchy() throws Exception {
-        subscriptions.add(MAILBOX_A);
-        subscriptions.add(MAILBOX_B);
-        subscriptions.add(MAILBOX_C);
-
-        mockery.checking(new Expectations() {{
-            allowing(session).getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY); will(returnValue(mailboxSession));
-            allowing(mailboxSession).getPathDelimiter(); will(returnValue(HIERARCHY_DELIMITER));
-            oneOf(responder).respond(with(
-                    equal(new LSubResponse("", true, HIERARCHY_DELIMITER))));
-        }});
-
-        expectOk();
-
-        LsubRequest request = new LsubRequest(command, "", "", TAG);
-        processor.doProcessRequest(request, session, TAG, command, responderImpl);
-
-    }
-
-    @Test
     public void testShouldRespondToRegexWithSubscribedMailboxes()
             throws Exception {
         subscriptions.add(MAILBOX_A);

@@ -1,6 +1,6 @@
 package org.apache.james.mailbox.store.mail.model;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.model.MessageId;
 
 public class DefaultMessageId implements MessageId {

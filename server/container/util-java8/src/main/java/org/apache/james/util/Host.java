@@ -62,7 +62,7 @@ public class Host {
         return parse(ipAndPort, Optional.empty());
     }
 
-    private static Host parse(String ipAndPort, Optional<Integer> defaultPort) {
+    public static Host parse(String ipAndPort, Optional<Integer> defaultPort) {
         Preconditions.checkNotNull(ipAndPort);
         Preconditions.checkArgument(!ipAndPort.isEmpty());
 
@@ -123,7 +123,8 @@ public class Host {
     public final boolean equals(Object object) {
         if (object instanceof Host) {
             Host that = (Host) object;
-            return Objects.equal(this.hostName, that.hostName) && Objects.equal(this.port, that.port);
+            return Objects.equal(this.hostName, that.hostName)
+                && Objects.equal(this.port, that.port);
         }
         return false;
     }

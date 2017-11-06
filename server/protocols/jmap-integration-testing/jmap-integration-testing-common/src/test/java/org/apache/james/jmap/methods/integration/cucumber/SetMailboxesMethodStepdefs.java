@@ -29,9 +29,6 @@ import java.util.stream.IntStream;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.entity.ContentType;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -55,17 +52,19 @@ public class SetMailboxesMethodStepdefs {
 
     private final MainStepdefs mainStepdefs;
     private final UserStepdefs userStepdefs;
+    private final HttpClient httpClient;
 
     @Inject
-    private SetMailboxesMethodStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs) {
+    private SetMailboxesMethodStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs, HttpClient httpClient) {
         this.mainStepdefs = mainStepdefs;
         this.userStepdefs = userStepdefs;
+        this.httpClient = httpClient;
     }
 
     @Given("^mailbox \"([^\"]*)\" with (\\d+) messages$")
     public void mailboxWithMessages(String mailboxName, int messageCount) throws Throwable {
-        mainStepdefs.mailboxProbe.createMailbox("#private", userStepdefs.lastConnectedUser, mailboxName);
-        MailboxPath mailboxPath = MailboxPath.forUser(userStepdefs.lastConnectedUser, mailboxName);
+        mainStepdefs.mailboxProbe.createMailbox("#private", userStepdefs.getConnectedUser(), mailboxName);
+        MailboxPath mailboxPath = MailboxPath.forUser(userStepdefs.getConnectedUser(), mailboxName);
         IntStream
             .range(0, messageCount)
             .forEach(Throwing.intConsumer(i -> appendMessage(mailboxPath, i)));
@@ -75,14 +74,13 @@ public class SetMailboxesMethodStepdefs {
     private void appendMessage(MailboxPath mailboxPath, int i) throws MailboxException {
         String content = "Subject: test" + i + "\r\n\r\n"
                 + "testBody" + i;
-        mainStepdefs.mailboxProbe.appendMessage(userStepdefs.lastConnectedUser, mailboxPath,
+        mainStepdefs.mailboxProbe.appendMessage(userStepdefs.getConnectedUser(), mailboxPath,
                 new ByteArrayInputStream(content.getBytes()), new Date(), false, new Flags());
     }
 
     @When("^renaming mailbox \"([^\"]*)\" to \"([^\"]*)\"")
     public void renamingMailbox(String actualMailboxName, String newMailboxName) throws Throwable {
-        String username = userStepdefs.lastConnectedUser;
-        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", userStepdefs.lastConnectedUser, actualMailboxName);
+        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", userStepdefs.getConnectedUser(), actualMailboxName);
         String mailboxId = mailbox.getMailboxId().serialize();
         String requestBody =
                 "[" +
@@ -97,16 +95,12 @@ public class SetMailboxesMethodStepdefs {
                     "    \"#0\"" +
                     "  ]" +
                     "]";
-        Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
-            .addHeader("Authorization", userStepdefs.tokenByUser.get(username).serialize())
-            .bodyString(requestBody, ContentType.APPLICATION_JSON)
-            .execute()
-            .discardContent();
+        httpClient.post(requestBody);
     }
 
     @When("^moving mailbox \"([^\"]*)\" to \"([^\"]*)\"$")
     public void movingMailbox(String actualMailboxPath, String newParentMailboxPath) throws Throwable {
-        String username = userStepdefs.lastConnectedUser;
+        String username = userStepdefs.getConnectedUser();
         Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", username, actualMailboxPath);
         String mailboxId = mailbox.getMailboxId().serialize();
         Mailbox parent = mainStepdefs.mailboxProbe.getMailbox("#private", username, newParentMailboxPath);
@@ -125,29 +119,23 @@ public class SetMailboxesMethodStepdefs {
                     "    \"#0\"" +
                     "  ]" +
                     "]";
-
-        Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
-            .addHeader("Authorization", userStepdefs.tokenByUser.get(username).serialize())
-            .bodyString(requestBody, ContentType.APPLICATION_JSON)
-            .execute()
-            .discardContent();
+        httpClient.post(requestBody);
     }
 
     @Then("^mailbox \"([^\"]*)\" contains (\\d+) messages$")
     public void mailboxContainsMessages(String mailboxName, int messageCount) throws Throwable {
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        String username = userStepdefs.lastConnectedUser;
+        String username = userStepdefs.getConnectedUser();
         Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", username, mailboxName);
         String mailboxId = mailbox.getMailboxId().serialize();
 
         Awaitility.await().atMost(Duration.FIVE_SECONDS).pollDelay(slowPacedPollInterval).pollInterval(slowPacedPollInterval).until(() -> {
-            HttpResponse response = Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
-                    .addHeader("Authorization", userStepdefs.tokenByUser.get(username).serialize())
-                    .bodyString("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]", ContentType.APPLICATION_JSON)
-                    .execute().returnResponse();
+            String requestBody = "[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]";
 
-            assertThat(response.getStatusLine().getStatusCode()).isEqualTo(200);
-            DocumentContext jsonPath = JsonPath.parse(response.getEntity().getContent());
+            httpClient.post(requestBody);
+
+            assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
+            DocumentContext jsonPath = JsonPath.parse(httpClient.response.getEntity().getContent());
             assertThat(jsonPath.<String>read(NAME)).isEqualTo("messageList");
 
             return jsonPath.<List<String>>read(ARGUMENTS + ".messageIds").size() == messageCount;

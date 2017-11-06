@@ -80,7 +80,7 @@ public class MailboxMappingFactory {
             return jsonBuilder()
                 .startObject()
 
-                    .startObject(MailboxElasticsearchConstants.MESSAGE_TYPE.getValue())
+                    .startObject(MailboxElasticSearchConstants.MESSAGE_TYPE.getValue())
                         .startObject(PROPERTIES)
 
                             .startObject(MESSAGE_ID)
