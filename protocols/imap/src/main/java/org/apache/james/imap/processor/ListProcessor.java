@@ -36,6 +36,7 @@ import org.apache.james.imap.api.process.MailboxType;
 import org.apache.james.imap.api.process.MailboxTyper;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.ListRequest;
+import org.apache.james.imap.message.response.AbstractListingResponse;
 import org.apache.james.imap.message.response.ListResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -51,6 +52,8 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.annotations.VisibleForTesting;
 
 public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListProcessor.class);
@@ -194,14 +197,19 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
         }
     }
 
-    void processResult(Responder responder, boolean relative, MailboxMetaData listResult, MailboxType mailboxType) {
+    private void processResult(Responder responder, boolean relative, MailboxMetaData listResult, MailboxType mailboxType) {
+        ImapResponseMessage response = convertMetadataToListResponse(relative, listResult, mailboxType);
+        responder.respond(response);
+    }
+
+    @VisibleForTesting <T extends AbstractListingResponse & ImapResponseMessage> T convertMetadataToListResponse(boolean relative, MailboxMetaData listResult, MailboxType mailboxType) {
         final char delimiter = listResult.getHierarchyDelimiter();
         final String mailboxName = mailboxName(relative, listResult.getPath(), delimiter);
 
         final Children inferiors = listResult.inferiors();
-        final boolean noInferior = MailboxMetaData.Children.NO_INFERIORS.equals(inferiors);
-        final boolean hasChildren = MailboxMetaData.Children.HAS_CHILDREN.equals(inferiors);
-        final boolean hasNoChildren = MailboxMetaData.Children.HAS_NO_CHILDREN.equals(inferiors);
+        final boolean noInferior = Children.NO_INFERIORS.equals(inferiors);
+        final boolean hasChildren = Children.HAS_CHILDREN.equals(inferiors);
+        final boolean hasNoChildren = Children.HAS_NO_CHILDREN.equals(inferiors);
         boolean noSelect = false;
         boolean marked = false;
         boolean unmarked = false;
@@ -218,7 +226,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
         default:
             break;
         }
-        responder.respond(createResponse(noInferior, noSelect, marked, unmarked, hasChildren, hasNoChildren, mailboxName, delimiter, mailboxType));
+        return (T)createResponse(noInferior, noSelect, marked, unmarked, hasChildren, hasNoChildren, mailboxName, delimiter, mailboxType);
     }
 
     /**
