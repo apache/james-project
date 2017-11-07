@@ -55,7 +55,7 @@ public class GenericSimpleScriptedTestProtocol<T extends HostSystem, SELF extend
             try {
                 system.addUser(user, password);
             } catch (Exception e) {
-                LOGGER.info("User {} already exists");
+                LOGGER.info("User {} already exists", user, e);
             }
         }
     }
