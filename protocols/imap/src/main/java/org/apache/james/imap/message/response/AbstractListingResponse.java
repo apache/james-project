@@ -138,16 +138,6 @@ public abstract class AbstractListingResponse {
         return type;
     }
 
-    /**
-     * Are any name attributes set?
-     * 
-     * @return true if {@link #isNoInferiors()}, {@link #isNoSelect()},
-     *         {@link #isMarked()} or {@link #isUnmarked()}
-     */
-    public final boolean isNameAttributed() {
-        return noInferiors || noSelect || marked || unmarked || children || noChildren || (!MailboxType.OTHER.equals(type));
-    }
-
     @Override
     public int hashCode() {
         final int PRIME = 31;
