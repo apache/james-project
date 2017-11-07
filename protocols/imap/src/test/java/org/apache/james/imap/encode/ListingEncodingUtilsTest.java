@@ -18,52 +18,92 @@
  ****************************************************************/
 package org.apache.james.imap.encode;
 
-import java.util.ArrayList;
-import java.util.List;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.imap.api.process.MailboxType;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.ListResponse;
-import org.junit.Assert;
-import org.junit.Before;
+import org.apache.james.imap.message.response.XListResponse;
 import org.junit.Test;
 
 public class ListingEncodingUtilsTest  {
 
-    final String nameParameter = "LIST";
-    final String typeNameParameters = "A Type Name";
+    final String nameParameter = "mailbox";
+    final String typeNameParameters = "LIST";
     
-    List<String> attributesOutput;
-        
     private ByteImapResponseWriter writer = new ByteImapResponseWriter();
     private ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
-    
-    @Before
-    public void setUp() throws Exception {
-        attributesOutput = new ArrayList<>();
-      
+
+    @Test
+    public void encodeShouldWriteNilDelimiterWhenUnassigned() throws Exception {
+        ListResponse input = new ListResponse(false, false, false, false, true, false, nameParameter, ((char) Character.UNASSIGNED));
+
+        ListingEncodingUtils.encodeListingResponse(typeNameParameters, composer, input);
+        assertThat(writer.getString()).isEqualTo("* LIST (\\HasChildren) NIL \"mailbox\"\r\n");
     }
 
     @Test
-    public void testShouldAddHasChildrenToAttributes() throws Exception {
-        // Setup 
-        attributesOutput.add("\\HasChildren");
+    public void encodeShouldWriteAnyDelimiter() throws Exception {
+        ListResponse input = new ListResponse(false, false, false, false, true, false, nameParameter, '#');
+
+        ListingEncodingUtils.encodeListingResponse(typeNameParameters, composer, input);
+        assertThat(writer.getString()).isEqualTo("* LIST (\\HasChildren) \"#\" \"mailbox\"\r\n");
+    }
+
+    @Test
+    public void encodeShouldNotIncludeAttributeWhenNone() throws Exception {
+        ListResponse input = new ListResponse(false, false, false, false, false, false, nameParameter, '.');
+
+        ListingEncodingUtils.encodeListingResponse(typeNameParameters, composer, input);
+        assertThat(writer.getString()).isEqualTo("* LIST () \".\" \"mailbox\"\r\n");
+    }
+
+    @Test
+    public void encodeShouldAddHasChildrenToAttributes() throws Exception {
         ListResponse input = new ListResponse(false, false, false, false, true, false, nameParameter, '.');
             
-        // Exercise
         ListingEncodingUtils.encodeListingResponse(typeNameParameters, composer, input);
-        Assert.assertEquals("* A Type Name (\\HasChildren) \".\" \"LIST\"\r\n", writer.getString());
+        assertThat(writer.getString()).isEqualTo("* LIST (\\HasChildren) \".\" \"mailbox\"\r\n");
     }
     
     @Test
-    public void testShouldAddHasNoChildrenToAttributes() throws Exception {
-        // Setup 
-        attributesOutput.add("\\HasNoChildren");
+    public void encodeShouldAddHasNoChildrenToAttributes() throws Exception {
         ListResponse input = new ListResponse(false, false, false, false, false, true, nameParameter, '.');
             
-        // Exercise
         ListingEncodingUtils.encodeListingResponse(typeNameParameters, composer, input);
-        Assert.assertEquals("* A Type Name (\\HasNoChildren) \".\" \"LIST\"\r\n", writer.getString());
+        assertThat(writer.getString()).isEqualTo("* LIST (\\HasNoChildren) \".\" \"mailbox\"\r\n");
+    }
 
+    @Test
+    public void encodeShouldAddSeveralAttributes() throws Exception {
+        ListResponse input = new ListResponse(true, true, false, false, false, true, nameParameter, '.');
+
+        ListingEncodingUtils.encodeListingResponse(typeNameParameters, composer, input);
+        assertThat(writer.getString()).isEqualTo("* LIST (\\Noinferiors \\Noselect \\HasNoChildren) \".\" \"mailbox\"\r\n");
+    }
+
+    @Test
+    public void encodeShouldAddMarkedAttribute() throws Exception {
+        ListResponse input = new ListResponse(false, false, true, false, false, false, nameParameter, '.');
+
+        ListingEncodingUtils.encodeListingResponse(typeNameParameters, composer, input);
+        assertThat(writer.getString()).isEqualTo("* LIST (\\Marked) \".\" \"mailbox\"\r\n");
+    }
+
+    @Test
+    public void encodeShouldAddUnmarkedAttribute() throws Exception {
+        ListResponse input = new ListResponse(false, false, false, true, false, false, nameParameter, '.');
+
+        ListingEncodingUtils.encodeListingResponse(typeNameParameters, composer, input);
+        assertThat(writer.getString()).isEqualTo("* LIST (\\Unmarked) \".\" \"mailbox\"\r\n");
+    }
+
+    @Test
+    public void encodeShouldAddXListAttributeWhenTypeIsInbox() throws Exception {
+        XListResponse input = new XListResponse(false, false, false, false, true, false, nameParameter, '.', MailboxType.INBOX);
+
+        ListingEncodingUtils.encodeListingResponse("XLIST", composer, input);
+        assertThat(writer.getString()).isEqualTo("* XLIST (\\HasChildren \\Inbox) \".\" \"mailbox\"\r\n");
     }
 }

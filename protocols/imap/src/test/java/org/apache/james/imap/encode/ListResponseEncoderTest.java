@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.encode;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -37,8 +38,6 @@ public class ListResponseEncoderTest {
 
     private ListResponseEncoder encoder;
 
-    private ImapEncoder mockNextEncoder;
-
     private ByteImapResponseWriter writer = new ByteImapResponseWriter();
     private ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
 
@@ -46,63 +45,36 @@ public class ListResponseEncoderTest {
     
     @Before
     public void setUp() throws Exception {
-        mockNextEncoder = context.mock(ImapEncoder.class);
-        encoder = new ListResponseEncoder(mockNextEncoder);
+        encoder = new ListResponseEncoder(context.mock(ImapEncoder.class));
     }
 
     @Test
-    public void testIsAcceptable() {
-        assertTrue(encoder.isAcceptable(new ListResponse(true, true, true,
-                true, false, false, "name", '.')));
-        assertFalse(encoder.isAcceptable(new LSubResponse("name", true, '.')));
+    public void encoderShouldAcceptListResponse() {
+        assertThat(encoder.isAcceptable(new ListResponse(true, true, true,
+            true, false, false, "name", '.')))
+        .isTrue();
+    }
+
+    @Test
+    public void encoderShouldNotAcceptLsubResponse() {
+        assertThat(encoder.isAcceptable(new LSubResponse("name", true, '.'))).isFalse();
         assertFalse(encoder.isAcceptable(context.mock(ImapMessage.class)));
         assertFalse(encoder.isAcceptable(null));
     }
 
     @Test
-	public void testName() throws Exception {     
+    public void encoderShouldNotAcceptImapMessage() {
+        assertThat(encoder.isAcceptable(context.mock(ImapMessage.class))).isFalse();
+    }
+
+    @Test
+    public void encoderShouldNotAcceptNull() {
+        assertThat(encoder.isAcceptable(null)).isFalse();
+    }
+
+    @Test
+	public void encoderShouldIncludeListCommand() throws Exception {
         encoder.encode(new ListResponse(false, false, false, false, false, false, "INBOX.name", '.'), composer, new FakeImapSession());
-        assertEquals("* LIST () \".\" \"INBOX.name\"\r\n", writer.getString());
-    }
-
-    @Test
-	public void testDelimiter() throws Exception {
-        encoder.encode(new ListResponse(false, false, false, false, false, false, "INBOX.name", '.'), composer, new FakeImapSession());
-        assertEquals("* LIST () \".\" \"INBOX.name\"\r\n", writer.getString());
-    }
-
-
-    @Test
-    public void testAllAttributes() throws Exception {
-        encoder.encode(new ListResponse(true, true, true, true, false, false, "INBOX.name", '.'), composer, new FakeImapSession());
-        assertEquals("* LIST (\\Noinferiors \\Noselect \\Marked \\Unmarked) \".\" \"INBOX.name\"\r\n", writer.getString());
-
-    }
-
-    @Test
-    public void testNoInferiors() throws Exception {      
-        encoder.encode(new ListResponse(true, false, false, false, false, false, "INBOX.name", '.'), composer, new FakeImapSession());
-        assertEquals("* LIST (\\Noinferiors) \".\" \"INBOX.name\"\r\n", writer.getString());
-    }
-
-    @Test
-    public void testNoSelect() throws Exception {
-        encoder.encode(new ListResponse(false, true, false, false, false, false, "INBOX.name", '.'), composer, new FakeImapSession());
-        assertEquals("* LIST (\\Noselect) \".\" \"INBOX.name\"\r\n", writer.getString());
-
-    }
-
-    @Test
-    public void testMarked() throws Exception {
-        encoder.encode(new ListResponse(false, false, true, false, false, false, "INBOX.name", '.'), composer, new FakeImapSession());
-        assertEquals("* LIST (\\Marked) \".\" \"INBOX.name\"\r\n", writer.getString());
-
-    }
-
-    @Test
-    public void testUnmarked() throws Exception {
-        encoder.encode(new ListResponse(false, false, false, true, false, false, "INBOX.name", '.'), composer, new FakeImapSession());
-        assertEquals("* LIST (\\Unmarked) \".\" \"INBOX.name\"\r\n", writer.getString());
-
+        assertThat(writer.getString()).startsWith("* LIST");
     }
 }

@@ -20,43 +20,46 @@
 package org.apache.james.imap.encode;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import org.apache.james.imap.api.ImapMessage;
+import org.apache.james.imap.api.process.MailboxType;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.LSubResponse;
 import org.apache.james.imap.message.response.ListResponse;
+import org.apache.james.imap.message.response.XListResponse;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
 
-public class LSubResponseEncoderTest  {
-    private LSubResponseEncoder encoder;
+public class XListResponseEncoderTest {
+
+    private XListResponseEncoder encoder;
 
     private ByteImapResponseWriter writer = new ByteImapResponseWriter();
     private ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
 
     private Mockery context = new JUnit4Mockery();
-
+    
     @Before
     public void setUp() throws Exception {
-        encoder = new LSubResponseEncoder(context.mock(ImapEncoder.class));
+        encoder = new XListResponseEncoder(context.mock(ImapEncoder.class));
     }
 
     @Test
-    public void encoderShouldNotAcceptListResponse() {
-        assertThat(encoder.isAcceptable(new ListResponse(true, true, true,
-            true, false, false, "name", '.')))
-            .isFalse();
+    public void encoderShouldAcceptXListResponse() {
+        assertThat(encoder.isAcceptable(new XListResponse(true, true, true,
+            true, false, false, "name", '.', MailboxType.INBOX)))
+        .isTrue();
     }
 
     @Test
-    public void encoderShouldAcceptLsubResponse() {
-        assertThat(encoder.isAcceptable(new LSubResponse("name", true, '.'))).isTrue();
+    public void encoderShouldNotAcceptLsubResponse() {
+        assertThat(encoder.isAcceptable(new LSubResponse("name", true, '.'))).isFalse();
+        assertFalse(encoder.isAcceptable(context.mock(ImapMessage.class)));
+        assertFalse(encoder.isAcceptable(null));
     }
 
     @Test
@@ -70,9 +73,9 @@ public class LSubResponseEncoderTest  {
     }
 
     @Test
-    public void encoderShouldIncludeLSUBCommand() throws Exception {
-        encoder.encode(new LSubResponse("name", true, '.'), composer, new FakeImapSession());
-        assertThat(writer.getString()).startsWith("* LSUB");
+	public void encoderShouldIncludeListCommand() throws Exception {
+        encoder.encode(new XListResponse(true, true, true,
+            true, false, false, "name", '.', MailboxType.INBOX), composer, new FakeImapSession());
+        assertThat(writer.getString()).startsWith("* XLIST");
     }
-
 }
