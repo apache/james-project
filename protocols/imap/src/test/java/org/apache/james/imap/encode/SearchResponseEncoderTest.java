@@ -26,8 +26,7 @@ import static org.junit.Assert.assertTrue;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
-import org.apache.james.imap.message.response.LSubResponse;
-import org.apache.james.imap.message.response.ListResponse;
+import org.apache.james.imap.message.response.SearchResponse;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
@@ -35,7 +34,11 @@ import org.junit.Test;
 
 public class SearchResponseEncoderTest {
 
-    private ListResponseEncoder encoder;
+    private static final long[] IDS = { 1, 4, 9, 16 };
+
+    private SearchResponse response;
+
+    private SearchResponseEncoder encoder;
 
     private ImapEncoder mockNextEncoder;
 
@@ -47,62 +50,20 @@ public class SearchResponseEncoderTest {
     @Before
     public void setUp() throws Exception {
         mockNextEncoder = context.mock(ImapEncoder.class);
-        encoder = new ListResponseEncoder(mockNextEncoder);
+        response = new SearchResponse(IDS, null);
+        encoder = new SearchResponseEncoder(mockNextEncoder);
     }
 
     @Test
     public void testIsAcceptable() {
-        assertTrue(encoder.isAcceptable(new ListResponse(true, true, true,
-                true, false, false, "name", '.')));
-        assertFalse(encoder.isAcceptable(new LSubResponse("name", true, '.')));
+        assertTrue(encoder.isAcceptable(response));
         assertFalse(encoder.isAcceptable(context.mock(ImapMessage.class)));
         assertFalse(encoder.isAcceptable(null));
     }
 
     @Test
-	public void testName() throws Exception {     
-        encoder.encode(new ListResponse(false, false, false, false, false, false, "INBOX.name", '.'), composer, new FakeImapSession());
-        assertEquals("* LIST () \".\" \"INBOX.name\"\r\n", writer.getString());
-    }
-
-    @Test
-	public void testDelimiter() throws Exception {
-        encoder.encode(new ListResponse(false, false, false, false, false, false, "INBOX.name", '.'), composer, new FakeImapSession());
-        assertEquals("* LIST () \".\" \"INBOX.name\"\r\n", writer.getString());
-    }
-
-
-    @Test
-    public void testAllAttributes() throws Exception {
-        encoder.encode(new ListResponse(true, true, true, true, false, false, "INBOX.name", '.'), composer, new FakeImapSession());
-        assertEquals("* LIST (\\Noinferiors \\Noselect \\Marked \\Unmarked) \".\" \"INBOX.name\"\r\n", writer.getString());
-
-    }
-
-    @Test
-    public void testNoInferiors() throws Exception {      
-        encoder.encode(new ListResponse(true, false, false, false, false, false, "INBOX.name", '.'), composer, new FakeImapSession());
-        assertEquals("* LIST (\\Noinferiors) \".\" \"INBOX.name\"\r\n", writer.getString());
-    }
-
-    @Test
-    public void testNoSelect() throws Exception {
-        encoder.encode(new ListResponse(false, true, false, false, false, false, "INBOX.name", '.'), composer, new FakeImapSession());
-        assertEquals("* LIST (\\Noselect) \".\" \"INBOX.name\"\r\n", writer.getString());
-
-    }
-
-    @Test
-    public void testMarked() throws Exception {
-        encoder.encode(new ListResponse(false, false, true, false, false, false, "INBOX.name", '.'), composer, new FakeImapSession());
-        assertEquals("* LIST (\\Marked) \".\" \"INBOX.name\"\r\n", writer.getString());
-
-    }
-
-    @Test
-    public void testUnmarked() throws Exception {
-        encoder.encode(new ListResponse(false, false, false, true, false, false, "INBOX.name", '.'), composer, new FakeImapSession());
-        assertEquals("* LIST (\\Unmarked) \".\" \"INBOX.name\"\r\n", writer.getString());
-
+    public void testEncode() throws Exception {
+        encoder.encode(response, composer, new FakeImapSession());
+        assertEquals("* SEARCH 1 4 9 16\r\n", writer.getString());
     }
 }
