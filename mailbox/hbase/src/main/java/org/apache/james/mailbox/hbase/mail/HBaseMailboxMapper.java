@@ -49,6 +49,7 @@ import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.filter.SubstringComparator;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.IOUtils;
+import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.hbase.HBaseId;
@@ -417,8 +418,11 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
     }
 
     @Override
-    public void updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
-        mailbox.setACL(mailbox.getACL().apply(mailboxACLCommand));
+    public ACLDiff updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
+        MailboxACL oldACL = mailbox.getACL();
+        MailboxACL newACL = mailbox.getACL().apply(mailboxACLCommand);
+        mailbox.setACL(newACL);
+        return ACLDiff.computeDiff(oldACL, newACL);
     }
 
     @Override

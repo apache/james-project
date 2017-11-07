@@ -27,6 +27,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
 
+import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -223,8 +224,11 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     }
 
     @Override
-    public void updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
-        mailbox.setACL(mailbox.getACL().apply(mailboxACLCommand));
+    public ACLDiff updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
+        MailboxACL oldACL = mailbox.getACL();
+        MailboxACL newACL = mailbox.getACL().apply(mailboxACLCommand);
+        mailbox.setACL(newACL);
+        return ACLDiff.computeDiff(oldACL, newACL);
     }
 
     @Override

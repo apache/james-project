@@ -21,6 +21,7 @@ package org.apache.james.mailbox.caching;
 
 import java.util.List;
 
+import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -108,8 +109,11 @@ public class CachingMailboxMapper implements MailboxMapper {
 	}
 
 	@Override
-	public void updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
-		mailbox.setACL(mailbox.getACL().apply(mailboxACLCommand));
+	public ACLDiff updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
+		MailboxACL oldACL = mailbox.getACL();
+		MailboxACL newACL = mailbox.getACL().apply(mailboxACLCommand);
+		mailbox.setACL(newACL);
+		return ACLDiff.computeDiff(oldACL, newACL);
 	}
 
 	@Override

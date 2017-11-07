@@ -25,7 +25,7 @@ import org.apache.james.mailbox.model.MailboxACL;
 public class PositiveUserACLDiff {
     private final ACLDiff aclDiff;
 
-    private PositiveUserACLDiff(ACLDiff aclDiff) {
+    public PositiveUserACLDiff(ACLDiff aclDiff) {
         this.aclDiff = aclDiff;
     }
 

@@ -34,6 +34,7 @@ import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.util.Text;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.jcr.AbstractJCRScalingMapper;
@@ -254,8 +255,11 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
     }
 
     @Override
-    public void updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
-        mailbox.setACL(mailbox.getACL().apply(mailboxACLCommand));
+    public ACLDiff updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
+        MailboxACL oldACL = mailbox.getACL();
+        MailboxACL newACL = mailbox.getACL().apply(mailboxACLCommand);
+        mailbox.setACL(newACL);
+        return ACLDiff.computeDiff(oldACL, newACL);
     }
 
     @Override

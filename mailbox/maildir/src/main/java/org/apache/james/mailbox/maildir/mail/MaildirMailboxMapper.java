@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -336,11 +337,13 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     }
 
     @Override
-    public void updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
+    public ACLDiff updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
         MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
+        MailboxACL oldACL = mailbox.getACL();
         MailboxACL newACL = mailbox.getACL().apply(mailboxACLCommand);
         folder.setACL(session, newACL);
         mailbox.setACL(newACL);
+        return ACLDiff.computeDiff(oldACL, newACL);
     }
 
     @Override
