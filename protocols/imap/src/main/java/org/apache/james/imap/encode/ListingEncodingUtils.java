@@ -20,12 +20,14 @@
 package org.apache.james.imap.encode;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.process.MailboxType;
 import org.apache.james.imap.message.response.AbstractListingResponse;
+import org.apache.james.mailbox.model.MailboxMetaData;
+
+import com.google.common.collect.ImmutableList;
 
 public class ListingEncodingUtils {
 
@@ -51,30 +53,48 @@ public class ListingEncodingUtils {
         }
     }
 
-    private static List<String> getNameAttributes(AbstractListingResponse response) {
-        final List<String> attributes = new ArrayList<>();
-        if (response.isNoInferiors()) {
-            attributes.add(ImapConstants.NAME_ATTRIBUTE_NOINFERIORS);
+    private static ImmutableList<String> getNameAttributes(AbstractListingResponse response) {
+        return ImmutableList
+            .<String>builder()
+            .addAll(selectabilityAsString(response.getSelectability()))
+            .addAll(childrenAsString(response.getChildren()))
+            .addAll(mailboxAttributeAsString(response.getType()))
+            .build();
+    }
+
+
+    private static List<String> selectabilityAsString(MailboxMetaData.Selectability selectability) {
+        switch (selectability) {
+            case MARKED:
+                return ImmutableList.of(ImapConstants.NAME_ATTRIBUTE_MARKED);
+            case NOSELECT:
+                return ImmutableList.of(ImapConstants.NAME_ATTRIBUTE_NOSELECT);
+            case UNMARKED:
+                return ImmutableList.of(ImapConstants.NAME_ATTRIBUTE_UNMARKED);
+            default:
+                return ImmutableList.of();
         }
-        if (response.isNoSelect()) {
-            attributes.add(ImapConstants.NAME_ATTRIBUTE_NOSELECT);
+    }
+
+    private static ImmutableList<String> childrenAsString(MailboxMetaData.Children children) {
+        switch (children) {
+            case HAS_CHILDREN:
+                return ImmutableList.of(ImapConstants.NAME_ATTRIBUTE_HAS_CHILDREN);
+            case HAS_NO_CHILDREN:
+                return ImmutableList.of(ImapConstants.NAME_ATTRIBUTE_HAS_NO_CHILDREN);
+            case NO_INFERIORS:
+                return ImmutableList.of(ImapConstants.NAME_ATTRIBUTE_NOINFERIORS);
+            default:
+                return ImmutableList.of();
         }
-        if (response.isMarked()) {
-            attributes.add(ImapConstants.NAME_ATTRIBUTE_MARKED);
+    }
+
+    private static ImmutableList<String> mailboxAttributeAsString(MailboxType type) {
+        String attributeName = type.getAttributeName();
+        if (attributeName != null) {
+            return ImmutableList.of(attributeName);
         }
-        if (response.isUnmarked()) {
-            attributes.add(ImapConstants.NAME_ATTRIBUTE_UNMARKED);
-        }
-        if (response.hasChildren()) {
-            attributes.add(ImapConstants.NAME_ATTRIBUTE_HAS_CHILDREN);
-        }
-        if (response.hasNoChildren()) {
-            attributes.add(ImapConstants.NAME_ATTRIBUTE_HAS_NO_CHILDREN);
-        }
-        if (!MailboxType.OTHER.equals(response.getType())) {
-            attributes.add(response.getType().getAttributeName());
-        }
-        return attributes;
+        return ImmutableList.of();
     }
 
 }

@@ -29,6 +29,7 @@ import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.LSubResponse;
 import org.apache.james.imap.message.response.ListResponse;
 import org.apache.james.imap.message.response.XListResponse;
+import org.apache.james.mailbox.model.MailboxMetaData;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
@@ -50,8 +51,13 @@ public class XListResponseEncoderTest {
 
     @Test
     public void encoderShouldAcceptXListResponse() {
-        assertThat(encoder.isAcceptable(new XListResponse(true, true, true,
-            true, false, false, "name", '.', MailboxType.INBOX)))
+        assertThat(encoder.isAcceptable(
+            new XListResponse(
+                MailboxMetaData.Children.HAS_CHILDREN,
+                MailboxMetaData.Selectability.NONE,
+                "name",
+                '.',
+                MailboxType.INBOX)))
         .isTrue();
     }
 
@@ -74,8 +80,15 @@ public class XListResponseEncoderTest {
 
     @Test
 	public void encoderShouldIncludeListCommand() throws Exception {
-        encoder.encode(new XListResponse(true, true, true,
-            true, false, false, "name", '.', MailboxType.INBOX), composer, new FakeImapSession());
+        encoder.encode(
+            new XListResponse(
+                MailboxMetaData.Children.HAS_CHILDREN,
+                MailboxMetaData.Selectability.NONE,
+                "name",
+                '.',
+                MailboxType.INBOX),
+            composer,
+            new FakeImapSession());
         assertThat(writer.getString()).startsWith("* XLIST");
     }
 }

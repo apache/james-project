@@ -29,6 +29,7 @@ import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.LSubResponse;
 import org.apache.james.imap.message.response.ListResponse;
+import org.apache.james.mailbox.model.MailboxMetaData;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
@@ -49,8 +50,7 @@ public class LSubResponseEncoderTest  {
 
     @Test
     public void encoderShouldNotAcceptListResponse() {
-        assertThat(encoder.isAcceptable(new ListResponse(true, true, true,
-            true, false, false, "name", '.')))
+        assertThat(encoder.isAcceptable(new ListResponse(MailboxMetaData.Children.HAS_CHILDREN, MailboxMetaData.Selectability.NOSELECT, "name", '.')))
             .isFalse();
     }
 

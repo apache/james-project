@@ -36,7 +36,6 @@ import org.apache.james.imap.api.process.MailboxType;
 import org.apache.james.imap.api.process.MailboxTyper;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.ListRequest;
-import org.apache.james.imap.message.response.AbstractListingResponse;
 import org.apache.james.imap.message.response.ListResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -44,7 +43,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
-import org.apache.james.mailbox.model.MailboxMetaData.Children;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.PrefixedRegex;
@@ -52,8 +50,6 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.annotations.VisibleForTesting;
 
 public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListProcessor.class);
@@ -77,8 +73,8 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
         doProcess(baseReferenceName, mailboxPatternString, session, tag, command, responder, null);
     }
 
-    protected ImapResponseMessage createResponse(boolean noInferior, boolean noSelect, boolean marked, boolean unmarked, boolean hasChildren, boolean hasNoChildren, String mailboxName, char delimiter, MailboxType type) {
-        return new ListResponse(noInferior, noSelect, marked, unmarked, hasChildren, hasNoChildren, mailboxName, delimiter);
+    protected ImapResponseMessage createResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability, String name, char hierarchyDelimiter, MailboxType type) {
+        return new ListResponse(children, selectability, name, hierarchyDelimiter);
     }
 
     /**
@@ -198,35 +194,16 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
     }
 
     private void processResult(Responder responder, boolean relative, MailboxMetaData listResult, MailboxType mailboxType) {
-        ImapResponseMessage response = convertMetadataToListResponse(relative, listResult, mailboxType);
+        final String mailboxName = mailboxName(relative, listResult.getPath(), listResult.getHierarchyDelimiter());
+
+        ImapResponseMessage response =
+            createResponse(
+                listResult.inferiors(),
+                listResult.getSelectability(),
+                mailboxName,
+                listResult.getHierarchyDelimiter(),
+                mailboxType);
         responder.respond(response);
-    }
-
-    @VisibleForTesting <T extends AbstractListingResponse & ImapResponseMessage> T convertMetadataToListResponse(boolean relative, MailboxMetaData listResult, MailboxType mailboxType) {
-        final char delimiter = listResult.getHierarchyDelimiter();
-        final String mailboxName = mailboxName(relative, listResult.getPath(), delimiter);
-
-        final Children inferiors = listResult.inferiors();
-        final boolean noInferior = Children.NO_INFERIORS.equals(inferiors);
-        final boolean hasChildren = Children.HAS_CHILDREN.equals(inferiors);
-        final boolean hasNoChildren = Children.HAS_NO_CHILDREN.equals(inferiors);
-        boolean noSelect = false;
-        boolean marked = false;
-        boolean unmarked = false;
-        switch (listResult.getSelectability()) {
-        case MARKED:
-            marked = true;
-            break;
-        case UNMARKED:
-            unmarked = true;
-            break;
-        case NOSELECT:
-            noSelect = true;
-            break;
-        default:
-            break;
-        }
-        return (T)createResponse(noInferior, noSelect, marked, unmarked, hasChildren, hasNoChildren, mailboxName, delimiter, mailboxType);
     }
 
     /**

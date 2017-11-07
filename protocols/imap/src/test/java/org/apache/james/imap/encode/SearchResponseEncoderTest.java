@@ -26,7 +26,10 @@ import static org.junit.Assert.assertTrue;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
+import org.apache.james.imap.message.response.LSubResponse;
+import org.apache.james.imap.message.response.ListResponse;
 import org.apache.james.imap.message.response.SearchResponse;
+import org.apache.james.mailbox.model.MailboxMetaData;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
@@ -57,6 +60,7 @@ public class SearchResponseEncoderTest {
     @Test
     public void testIsAcceptable() {
         assertTrue(encoder.isAcceptable(response));
+        assertFalse(encoder.isAcceptable(new LSubResponse("name", true, '.')));
         assertFalse(encoder.isAcceptable(context.mock(ImapMessage.class)));
         assertFalse(encoder.isAcceptable(null));
     }
