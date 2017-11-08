@@ -484,27 +484,25 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public Optional<MailboxId> createMailbox(MailboxPath mailboxPath, final MailboxSession mailboxSession)
+    public Optional<MailboxId> createMailbox(MailboxPath mailboxPath, MailboxSession mailboxSession)
             throws MailboxException {
         LOGGER.debug("createMailbox " + mailboxPath);
-        final int length = mailboxPath.getName().length();
-        if (length == 0) {
+        if (mailboxPath.getName().isEmpty()) {
             LOGGER.warn("Ignoring mailbox with empty name");
         } else {
-            if (mailboxPath.getName().charAt(length - 1) == getDelimiter())
-                mailboxPath.setName(mailboxPath.getName().substring(0, length - 1));
-            if (mailboxExists(mailboxPath, mailboxSession))
-                throw new MailboxExistsException(mailboxPath.toString());
+            MailboxPath sanitizedMailboxPath = sanitizeMailboxPath(mailboxPath);
+            if (mailboxExists(sanitizedMailboxPath, mailboxSession))
+                throw new MailboxExistsException(sanitizedMailboxPath.asString());
             // Create parents first
             // If any creation fails then the mailbox will not be created
             // TODO: transaction
-            final List<MailboxId> mailboxIds = new ArrayList<>();
-            for (final MailboxPath mailbox : mailboxPath.getHierarchyLevels(getDelimiter()))
+            List<MailboxId> mailboxIds = new ArrayList<>();
+            for (MailboxPath mailbox : sanitizedMailboxPath.getHierarchyLevels(getDelimiter()))
 
                 locker.executeWithLock(mailboxSession, mailbox, (LockAwareExecution<Void>) () -> {
                     if (!mailboxExists(mailbox, mailboxSession)) {
-                        final Mailbox m = doCreateMailbox(mailbox, mailboxSession);
-                        final MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
+                        Mailbox m = doCreateMailbox(mailbox, mailboxSession);
+                        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
                         mapper.execute(Mapper.toTransaction(() -> mailboxIds.add(mapper.save(m))));
 
                         // notify listeners
@@ -519,6 +517,18 @@ public class StoreMailboxManager implements MailboxManager {
             }
         }
         return Optional.empty();
+    }
+
+    private MailboxPath sanitizeMailboxPath(MailboxPath mailboxPath) {
+        if (mailboxPath.getName().endsWith(String.valueOf(getDelimiter()))) {
+            int length = mailboxPath.getName().length();
+            String sanitizedName = mailboxPath.getName().substring(0, length - 1);
+            return new MailboxPath(
+                mailboxPath.getNamespace(),
+                mailboxPath.getUser(),
+                sanitizedName);
+        }
+        return mailboxPath;
     }
 
     @Override

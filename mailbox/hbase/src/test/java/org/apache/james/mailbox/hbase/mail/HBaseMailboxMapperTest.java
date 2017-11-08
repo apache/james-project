@@ -160,16 +160,24 @@ public class HBaseMailboxMapperTest {
         MailboxPath newPath;
 
         for (int i = start; i < end; i++) {
-            newPath = new MailboxPath(path);
-            newPath.setName(i + newPath.getName() + " " + i);
-            // test for paths with null user
-            if (i % 2 == 0) {
-                newPath.setUser(null);
-            }
+            newPath = new MailboxPath(path.getNamespace(),
+                computeUserName(path.getUser(), i),
+                computeMailboxName(path.getName(), i));
             addMailbox(new HBaseMailbox(newPath, 1234));
         }
         result = mapper.findMailboxWithPathLike(path);
         assertEquals(end - start + 1, result.size());
+    }
+
+    private String computeUserName(String user, int i) {
+        if (i % 2 == 0) {
+            return null;
+        }
+        return user;
+    }
+
+    private String computeMailboxName(String name, int i) {
+        return i + name + " " + i;
     }
 
     /**

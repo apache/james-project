@@ -49,9 +49,9 @@ public class MailboxPath {
         return new MailboxPath(MailboxConstants.USER_NAMESPACE, username, mailboxName);
     }
 
-    private String namespace;
-    private String user;
-    private String name;
+    private final String namespace;
+    private final String user;
+    private final String name;
     
     public MailboxPath(String namespace, String user, String name) {
         this.namespace = Optional.ofNullable(namespace)
@@ -79,13 +79,6 @@ public class MailboxPath {
     }
 
     /**
-     * Set the namespace this mailbox is in
-     */
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
-    }
-
-    /**
      * Get the name of the user who owns the mailbox. This can be null e.g. for
      * shared mailboxes.
      * 
@@ -96,13 +89,6 @@ public class MailboxPath {
     }
 
     /**
-     * Set the name of the user who owns the mailbox.
-     */
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-    /**
      * Get the name of the mailbox. This is the pure name without user or
      * namespace, so this is what a user would see in his client.
      * 
@@ -110,14 +96,6 @@ public class MailboxPath {
      */
     public String getName() {
         return name;
-    }
-
-    /**
-     * Set the name of the mailbox. This is the pure name without user or
-     * namespace, so this is what a user would see in his client.
-     */
-    public void setName(String name) {
-        this.name = name;
     }
 
     /**
