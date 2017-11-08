@@ -127,6 +127,22 @@ public class MailboxPath {
         return levels;
     }
 
+    public MailboxPath sanitize(char delimiter) {
+        if (name == null) {
+            return this;
+        }
+        if (name.endsWith(String.valueOf(delimiter))) {
+            int length = name.length();
+            String sanitizedName = name.substring(0, length - 1);
+            return new MailboxPath(
+                namespace,
+                user,
+                sanitizedName);
+        }
+        return this;
+    }
+
+
     public String asString() {
         return namespace + ":" + user + ":" + name;
     }

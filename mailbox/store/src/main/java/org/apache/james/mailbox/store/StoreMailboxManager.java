@@ -490,7 +490,7 @@ public class StoreMailboxManager implements MailboxManager {
         if (mailboxPath.getName().isEmpty()) {
             LOGGER.warn("Ignoring mailbox with empty name");
         } else {
-            MailboxPath sanitizedMailboxPath = sanitizeMailboxPath(mailboxPath);
+            MailboxPath sanitizedMailboxPath = mailboxPath.sanitize(mailboxSession.getPathDelimiter());
             if (mailboxExists(sanitizedMailboxPath, mailboxSession))
                 throw new MailboxExistsException(sanitizedMailboxPath.asString());
             // Create parents first
@@ -517,18 +517,6 @@ public class StoreMailboxManager implements MailboxManager {
             }
         }
         return Optional.empty();
-    }
-
-    private MailboxPath sanitizeMailboxPath(MailboxPath mailboxPath) {
-        if (mailboxPath.getName().endsWith(String.valueOf(getDelimiter()))) {
-            int length = mailboxPath.getName().length();
-            String sanitizedName = mailboxPath.getName().substring(0, length - 1);
-            return new MailboxPath(
-                mailboxPath.getNamespace(),
-                mailboxPath.getUser(),
-                sanitizedName);
-        }
-        return mailboxPath;
     }
 
     @Override
