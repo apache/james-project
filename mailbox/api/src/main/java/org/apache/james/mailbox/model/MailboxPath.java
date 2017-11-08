@@ -21,6 +21,7 @@ package org.apache.james.mailbox.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.mailbox.MailboxSession;
@@ -135,50 +136,23 @@ public class MailboxPath {
         return asString();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
     @Override
-    public boolean equals(Object mailboxPath) {
-        if (this == mailboxPath)
-            return true;
+    public final boolean equals(Object o) {
+        if (o instanceof MailboxPath) {
+            MailboxPath that = (MailboxPath) o;
 
-        if (!(mailboxPath instanceof MailboxPath))
-            return false;
-        MailboxPath mp = (MailboxPath) mailboxPath;
-        if (namespace == null) {
-            if (mp.getNamespace() != null)
-                return false;
-        } else if (!namespace.equals(mp.getNamespace()))
-            return false;
-        if (user == null) {
-            if (mp.getUser() != null)
-                return false;
-        } else if (!user.equals(mp.getUser()))
-            return false;
-        if (name == null) {
-            if (mp.getName() != null)
-                return false;
-        } else if (!name.equals(mp.getName()))
-            return false;
-        return true;
+            return Objects.equals(this.namespace, that.namespace)
+                && Objects.equals(this.user, that.user)
+                && Objects.equals(this.name, that.name);
+        }
+        return false;
     }
 
     @Override
-    public int hashCode() {
-        final int PRIME = 31;
-        int result = 1;
-        if (getName() != null)
-            result = PRIME * result + getName().hashCode();
-        if (getUser() != null)
-            result = PRIME * result + getUser().hashCode();
-        if (getNamespace() != null)
-            result = PRIME * result + getNamespace().hashCode();
-        return result;
+    public final int hashCode() {
+        return Objects.hash(namespace, user, name);
     }
-    
+
     /**
      * Return the full name of the {@link MailboxPath}, which is constructed via the {@link #namespace} and {@link #name}
      * 

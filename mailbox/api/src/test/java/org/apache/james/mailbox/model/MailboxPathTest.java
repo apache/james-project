@@ -24,7 +24,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 public class MailboxPathTest {
+
+    @Test
+    public void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(MailboxPath.class)
+            .allFieldsShouldBeUsed()
+            .verify();
+    }
 
     @Test
     public void getHierarchyLevelsShouldBeOrdered() {
