@@ -672,7 +672,7 @@
         <guice.version>4.0</guice.version>
         <jackrabbit-core.version>2.5.2</jackrabbit-core.version>
 
-        <logback.version>1.1.7</logback.version>
+        <logback.version>1.1.11</logback.version>
     </properties>
 
     <dependencyManagement>
@@ -1396,7 +1396,7 @@
             <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-core</artifactId>
-                <version>1.1.7</version>
+                <version>${logback.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.beetstra.jutf7</groupId>
