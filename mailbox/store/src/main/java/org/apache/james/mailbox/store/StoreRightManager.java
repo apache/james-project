@@ -50,6 +50,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
 public class StoreRightManager implements RightManager {
+    public static final boolean GROUP_FOLDER = true;
 
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final MailboxACLResolver aclResolver;
@@ -102,7 +103,7 @@ public class StoreRightManager implements RightManager {
                     groupMembershipResolver,
                     mailbox.getACL(),
                     mailbox.getUser(),
-                    new GroupFolderResolver(session).isGroupFolder(mailbox)))
+                    !GROUP_FOLDER))
                 .sneakyThrow())
             .orElse(MailboxACL.NO_RIGHTS);
     }
@@ -111,7 +112,11 @@ public class StoreRightManager implements RightManager {
     public Rfc4314Rights[] listRigths(MailboxPath mailboxPath, EntryKey key, MailboxSession session) throws MailboxException {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
-        return aclResolver.listRights(key, groupMembershipResolver, mailbox.getUser(), new GroupFolderResolver(session).isGroupFolder(mailbox));
+
+        return aclResolver.listRights(key,
+            groupMembershipResolver,
+            mailbox.getUser(),
+            !GROUP_FOLDER);
     }
 
     @Override
@@ -209,7 +214,7 @@ public class StoreRightManager implements RightManager {
     public MailboxACL getResolvedMailboxACL(Mailbox mailbox, MailboxSession mailboxSession) throws UnsupportedRightException {
         MailboxACL acl = aclResolver.applyGlobalACL(
             mailbox.getACL(),
-            new GroupFolderResolver(mailboxSession).isGroupFolder(mailbox));
+            !GROUP_FOLDER);
 
         return filteredForSession(mailbox, acl, mailboxSession);
     }
