@@ -24,16 +24,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayInputStream;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.UnsupportedRightException;
+import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.Maps;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.jsonpath.DocumentContext;
@@ -76,6 +82,52 @@ public class SetMailboxesMethodStepdefs {
                 + "testBody" + i;
         mainStepdefs.mailboxProbe.appendMessage(userStepdefs.getConnectedUser(), mailboxPath,
                 new ByteArrayInputStream(content.getBytes()), new Date(), false, new Flags());
+    }
+
+    @Given("^\"([^\"]*)\" has a mailbox \"([^\"]*)\"$")
+    public void createMailbox(String username, String mailbox) throws Throwable {
+        mainStepdefs.mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, mailbox);
+    }
+
+    @Given("^\"([^\"]*)\" shares its mailbox \"([^\"]*)\" with rights \"([^\"]*)\" with \"([^\"]*)\"$")
+    public void shareMailboxWithRight(String owner, String mailboxName, String rights, String shareTo) throws Throwable {
+        userStepdefs.connectUser(owner);
+        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", owner, mailboxName);
+        String mailboxId = mailbox.getMailboxId().serialize();
+        String requestBody =
+                "[" +
+                    "  [ \"setMailboxes\"," +
+                    "    {" +
+                    "      \"update\": {" +
+                    "        \"" + mailboxId + "\" : {" +
+                    "          \"sharedWith\" : { \"" + shareTo + "\" : " + rightsAsString(rights) + " }" +
+                    "        }" +
+                    "      }" +
+                    "    }," +
+                    "    \"#0\"" +
+                    "  ]" +
+                    "]";
+        httpClient.post(requestBody);
+    }
+    
+    private String rightsAsString(String rights) throws UnsupportedRightException {
+        return MailboxACL.Rfc4314Rights
+            .fromSerializedRfc4314Rights(rights)
+            .list()
+            .stream()
+            .map(MailboxACL.Right::asCharacter)
+            .map(String::valueOf)
+            .map(this::surroundWithDoubleQuotes)
+            .collect(Collectors.joining(", ", "[ ", " ]"));
+    }
+    
+    private String surroundWithDoubleQuotes(String input) {
+        return "\"" + input + "\"";
+    }
+    
+    @Given("^\"([^\"]*)\" shares (?:his|her) mailbox \"([^\"]*)\" with \"([^\"]*)\" with \"([^\"]*)\" rights$")
+    public void shareMailbox(String owner, String mailboxName, String shareTo, String rights) throws Throwable {
+        shareMailboxWithRight(owner, mailboxName, rights, shareTo);
     }
 
     @When("^renaming mailbox \"([^\"]*)\" to \"([^\"]*)\"")
@@ -140,5 +192,18 @@ public class SetMailboxesMethodStepdefs {
 
             return jsonPath.<List<String>>read(ARGUMENTS + ".messageIds").size() == messageCount;
         });
+    }
+
+    @Then("^\"([^\"]*)\" receives not updated on mailbox \"([^\"]*)\" with kind \"([^\"]*)\" and message \"([^\"]*)\"$")
+    public void assertNotUpdatedWithGivenProperties(String userName, String mailboxName, String type, String message) throws Exception {
+        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", userName, mailboxName);
+        assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
+        assertThat(httpClient.jsonPath.<String>read(NAME)).isEqualTo("mailboxesSet");
+        
+        Map<String, Map<String, String>> notUpdated = httpClient.jsonPath.<Map<String, Map<String, String>>>read(ARGUMENTS + ".notUpdated");
+        assertThat(notUpdated).hasSize(1);
+        Map<String, String> parameters = notUpdated.get(mailbox.getMailboxId().serialize());
+        assertThat(parameters).contains(Maps.immutableEntry("type", type),
+                Maps.immutableEntry("description", message));
     }
 }

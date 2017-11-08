@@ -17,29 +17,11 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.cassandra.cucumber;
+package org.apache.james.mailbox.exception;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
+public class DifferentDomainException extends MailboxException {
 
-import cucumber.api.CucumberOptions;
-import cucumber.api.junit.Cucumber;
-
-@RunWith(Cucumber.class)
-@CucumberOptions(features= { "classpath:cucumber/MailboxModification.feature", "classpath:cucumber/SetMailboxes.feature" },
-                glue= { "org.apache.james.jmap.methods.integration", "org.apache.james.jmap.cassandra.cucumber" },
-                strict = true)
-public class CassandraSetMailboxesMethodCucumberTest {
-
-    @BeforeClass
-    public static void init() {
-        CucumberCassandraSingleton.cassandraServer.start();
+    public DifferentDomainException() {
+        super();
     }
-
-    @AfterClass
-    public static void after() {
-        CucumberCassandraSingleton.cassandraServer.stop();
-    }
-
 }

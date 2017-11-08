@@ -1176,7 +1176,7 @@ public abstract class SetMailboxesMethodTest {
                 "    {" +
                 "      \"update\": {" +
                 "        \"" + mailboxId.serialize() + "\" : {" +
-                "          \"sharedWith\" : {\"user\": [\"a\", \"w\"]}" +
+                "          \"sharedWith\" : {\"user@" + USERS_DOMAIN + "\": [\"a\", \"w\"]}" +
                 "        }" +
                 "      }" +
                 "    }," +
@@ -1285,7 +1285,7 @@ public abstract class SetMailboxesMethodTest {
     @Test
     public void updateShouldApplyWhenSettingNewACL() {
         String myBox = "myBox";
-        String user = "user";
+        String user = "user@" + USERS_DOMAIN;
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, myBox);
         String requestBody =
             "[" +
@@ -1321,7 +1321,7 @@ public abstract class SetMailboxesMethodTest {
     @Test
     public void updateShouldModifyStoredDataWhenUpdatingACL() {
         String myBox = "myBox";
-        String user = "user";
+        String user = "user@" + USERS_DOMAIN;
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, myBox);
 
         with()
@@ -1421,8 +1421,8 @@ public abstract class SetMailboxesMethodTest {
     @Test
     public void updateShouldModifyStoredDataWhenSwitchingACLUser() {
         String myBox = "myBox";
-        String user1 = "user1";
-        String user2 = "user2";
+        String user1 = "user1@" + USERS_DOMAIN;
+        String user2 = "user2@" + USERS_DOMAIN;
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, myBox);
 
         with()
