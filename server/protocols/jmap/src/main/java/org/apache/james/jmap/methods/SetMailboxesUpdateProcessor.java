@@ -235,9 +235,9 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
     private MailboxPath computeNewMailboxPath(Mailbox mailbox, MailboxPath originMailboxPath, MailboxUpdateRequest updateRequest, MailboxSession mailboxSession) throws MailboxException {
         Optional<MailboxId> parentId = updateRequest.getParentId();
         if (parentId == null) {
-            return new MailboxPath(mailboxSession.getPersonalSpace(), 
-                    mailboxSession.getUser().getUserName(), 
-                    updateRequest.getName().orElse(mailbox.getName()));
+            return MailboxPath.forUser(
+                mailboxSession.getUser().getUserName(),
+                updateRequest.getName().orElse(mailbox.getName()));
         }
 
         MailboxPath modifiedMailboxPath = updateRequest.getName()

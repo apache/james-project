@@ -122,7 +122,7 @@ public class UserMailboxesService {
     }
 
     private MailboxPath convertToMailboxPath(String username, String mailboxName, MailboxSession mailboxSession) {
-        return new MailboxPath(mailboxSession.getPersonalSpace(), username, mailboxName);
+        return MailboxPath.forUser(username, mailboxName);
     }
 
     private Stream<MailboxMetaData> listUserMailboxes(MailboxSession mailboxSession) throws MailboxException {

@@ -25,7 +25,6 @@ import javax.mail.Flags;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -33,6 +32,7 @@ import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.server.core.MimeMessageInputStream;
 
 import com.google.common.base.Strings;
 
@@ -65,7 +65,7 @@ public class MailboxAppender {
     private ComposedMessageId append(MimeMessage mail, String user, String folder, MailboxSession session) throws MessagingException {
         mailboxManager.startProcessingRequest(session);
         try {
-            MailboxPath mailboxPath = new MailboxPath(session.getPersonalSpace(), user, folder);
+            MailboxPath mailboxPath = MailboxPath.forUser(user, folder);
             return appendMessageToMailbox(mail, session, mailboxPath);
         } catch (MailboxException e) {
             throw new MessagingException("Unable to access mailbox.", e);

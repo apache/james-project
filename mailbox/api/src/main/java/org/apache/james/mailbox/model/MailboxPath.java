@@ -39,7 +39,7 @@ public class MailboxPath {
      * @return inbox
      */
     public static MailboxPath inbox(MailboxSession session) {
-        return new MailboxPath(session.getPersonalSpace(), session.getUser().getUserName(), MailboxConstants.INBOX);
+        return MailboxPath.forUser(session.getUser().getUserName(), MailboxConstants.INBOX);
     }
 
     /**
@@ -47,7 +47,6 @@ public class MailboxPath {
      */
     public static MailboxPath forUser(String username, String mailboxName) {
         return new MailboxPath(MailboxConstants.USER_NAMESPACE, username, mailboxName);
-
     }
 
     private String namespace;

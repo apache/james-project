@@ -98,7 +98,7 @@ public class DefaultMailboxesProvisioningFilter implements Filter {
     }
 
     private Function<String, MailboxPath> toMailboxPath(MailboxSession session) {
-        return mailbox -> new MailboxPath(session.getPersonalSpace(), session.getUser().getUserName(), mailbox);
+        return mailbox -> MailboxPath.forUser(session.getUser().getUserName(), mailbox);
     }
     
     private void createMailbox(MailboxPath mailboxPath, MailboxSession session) {
