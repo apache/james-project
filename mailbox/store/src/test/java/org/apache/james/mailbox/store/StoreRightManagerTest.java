@@ -90,7 +90,7 @@ public class StoreRightManagerTest {
     }
 
     @Test
-    public void hasRightShouldReturnTrueWhenTheUserDoesnotOwnTheMailboxButHaveTheCorrectRightOnIt() throws MailboxException {
+    public void hasRightShouldReturnTrueWhenTheUserDoesNotOwnTheMailboxButHaveTheCorrectRightOnIt() throws MailboxException {
         Mailbox mailbox = new SimpleMailbox(MailboxPath.forUser(BOB, MailboxConstants.INBOX), UID_VALIDITY);
         mailbox.setACL(new MailboxACL(new MailboxACL.Entry(MailboxFixture.ALICE, Right.Write)));
 
@@ -99,7 +99,7 @@ public class StoreRightManagerTest {
     }
 
     @Test
-    public void hasRightShouldReturnTrueWhenTheUserDoesnotOwnTheMailboxButHasAtLeastTheCorrectRightOnIt() throws MailboxException {
+    public void hasRightShouldReturnTrueWhenTheUserDoesNotOwnTheMailboxButHasAtLeastTheCorrectRightOnIt() throws MailboxException {
         Mailbox mailbox = new SimpleMailbox(MailboxPath.forUser(BOB, MailboxConstants.INBOX), UID_VALIDITY);
         mailbox.setACL(new MailboxACL(new MailboxACL.Entry(MailboxFixture.ALICE, Right.Write, Right.Lookup)));
 
