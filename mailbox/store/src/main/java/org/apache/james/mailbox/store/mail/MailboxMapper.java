@@ -121,7 +121,7 @@ public interface MailboxMapper extends Mapper {
      * @param mailbox Mailbox for whom we want to update ACL
      * @param mailboxACL New value of the ACL for this mailbox
      */
-    void setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException;
+    ACLDiff setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException;
 
     /**
      * Return a unmodifable {@link List} of all {@link Mailbox} 

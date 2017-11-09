@@ -228,9 +228,9 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public void setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+    public ACLDiff setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
-        cassandraACLMapper.setACL(cassandraId, mailboxACL);
+        return cassandraACLMapper.setACL(cassandraId, mailboxACL);
     }
 
     @Override

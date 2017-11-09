@@ -20,7 +20,10 @@
 package org.apache.james.mailbox.store.mail.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.james.mailbox.acl.ACLDiff;
+import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
@@ -411,5 +414,35 @@ public abstract class MailboxMapperACLTest {
                 .getEntries())
             .hasSize(1)
             .containsEntry(key, rights);
+    }
+
+    @Test
+    public void setACLShouldReturnACLDiff() throws MailboxException {
+        EntryKey key = EntryKey.createUserEntryKey("user");
+        Rfc4314Rights rights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
+
+        ACLDiff expectAclDiff = ACLDiff.computeDiff(MailboxACL.EMPTY, MailboxACL.EMPTY.apply(
+            MailboxACL.command()
+                .key(key)
+                .rights(rights)
+                .asAddition()));
+
+        assertThat(mailboxMapper.setACL(benwaInboxMailbox,
+            new MailboxACL(ImmutableMap.of(key, rights)))).isEqualTo(expectAclDiff);
+    }
+
+    @Test
+    public void updateACLShouldReturnACLDiff() throws MailboxException {
+        EntryKey key = EntryKey.createUserEntryKey("user");
+        Rfc4314Rights rights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
+
+        MailboxACL.ACLCommand aclCommand = MailboxACL.command()
+            .key(key)
+            .rights(rights)
+            .asAddition();
+
+        ACLDiff expectAclDiff = ACLDiff.computeDiff(MailboxACL.EMPTY, MailboxACL.EMPTY.apply(aclCommand));
+
+        assertThat(mailboxMapper.updateACL(benwaInboxMailbox, aclCommand)).isEqualTo(expectAclDiff);
     }
 }

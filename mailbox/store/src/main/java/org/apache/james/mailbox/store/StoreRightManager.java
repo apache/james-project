@@ -45,7 +45,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.transaction.Mapper;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
@@ -207,9 +206,8 @@ public class StoreRightManager implements RightManager {
     }
 
     private void setRights(MailboxACL mailboxACL, MailboxMapper mapper, Mailbox mailbox, MailboxSession session) throws MailboxException {
-        mapper.execute(Mapper.toTransaction(() -> mapper.setACL(mailbox, mailboxACL)));
+        ACLDiff aclDiff = mapper.setACL(mailbox, mailboxACL);
 
-        ACLDiff aclDiff = ACLDiff.computeDiff(mailbox.getACL(), mailboxACL);
         dispatcher.aclUpdated(session, mailbox.generateAssociatedPath(), aclDiff);
     }
 

@@ -117,8 +117,10 @@ public class CachingMailboxMapper implements MailboxMapper {
 	}
 
 	@Override
-	public void setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+	public ACLDiff setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+		MailboxACL oldMailboxAcl = mailbox.getACL();
 		mailbox.setACL(mailboxACL);
+		return ACLDiff.computeDiff(oldMailboxAcl, mailboxACL);
 	}
 
 	private void invalidate(Mailbox mailbox) {

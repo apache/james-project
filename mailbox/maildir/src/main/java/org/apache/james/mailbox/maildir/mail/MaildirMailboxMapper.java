@@ -347,10 +347,12 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     }
 
     @Override
-    public void setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+    public ACLDiff setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+        MailboxACL oldAcl = mailbox.getACL();
         MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
         folder.setACL(session, mailboxACL);
         mailbox.setACL(mailboxACL);
+        return ACLDiff.computeDiff(oldAcl, mailboxACL);
     }
 
     @Override
