@@ -21,7 +21,6 @@ package org.apache.james.domainlist.lib;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -40,6 +39,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 /**
  * All implementations of the DomainList interface should extends this abstract
@@ -151,32 +151,33 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     }
 
     @Override
-    public List<String> getDomains() throws DomainListException {
+    public ImmutableList<String> getDomains() throws DomainListException {
         List<String> domains = getDomainListInternal();
-
-        // create mutable copy, some subclasses return ImmutableList
-        ArrayList<String> mutableDomains = new ArrayList<>(domains);
-        List<String> detectedDomains = detectDomains();
-        mutableDomains.addAll(detectedDomains);
-        mutableDomains.addAll(detectIps(mutableDomains));
+        ImmutableList<String> detectedDomains = detectDomains();
+        // Guava does not support concatenating ImmutableLists at this time:
+        // https://stackoverflow.com/questions/37919648/concatenating-immutablelists
+        // A work-around is to use Iterables.concat() until something like
+        // https://github.com/google/guava/issues/1029 is implemented.
+        ImmutableList<String> detectedIps = detectIps(Iterables.concat(domains, detectedDomains));
+        Iterable<String> allDomains = Iterables.concat(domains, detectedDomains, detectedIps);
 
         if (LOGGER.isDebugEnabled()) {
-            for (String domain : mutableDomains) {
+            for (String domain : allDomains) {
                 LOGGER.debug("Handling mail for: " + domain);
             }
         }
 
-        return ImmutableList.copyOf(mutableDomains);
+        return ImmutableList.copyOf(allDomains);
     }
 
-    private List<String> detectIps(ArrayList<String> mutableDomains) {
+    private ImmutableList<String> detectIps(Iterable<String> domains) {
         if (autoDetectIP) {
-            return getDomainsIP(mutableDomains, dns, LOGGER);
+            return getDomainsIP(domains, dns, LOGGER);
         }
         return ImmutableList.of();
     }
 
-    private List<String> detectDomains() {
+    private ImmutableList<String> detectDomains() {
         if (autoDetect) {
             String hostName;
             try {
@@ -197,11 +198,11 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
      * Return a List which holds all ipAddress of the domains in the given List
      * 
      * @param domains
-     *            List of domains
+     *            Iterable of domains
      * @return domainIP List of ipaddress for domains
      */
-    private static List<String> getDomainsIP(List<String> domains, DNSService dns, Logger log) {
-        return domains.stream()
+    private static ImmutableList<String> getDomainsIP(Iterable<String> domains, DNSService dns, Logger log) {
+        return Guavate.stream(domains)
             .flatMap(domain -> getDomainIP(domain, dns, log).stream())
             .distinct()
             .collect(Guavate.toImmutableList());
@@ -210,7 +211,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     /**
      * @see #getDomainsIP(List, DNSService, Logger)
      */
-    private static List<String> getDomainIP(String domain, DNSService dns, Logger log) {
+    private static ImmutableList<String> getDomainIP(String domain, DNSService dns, Logger log) {
         try {
             return dns.getAllByName(domain).stream()
                 .map(InetAddress::getHostAddress)
