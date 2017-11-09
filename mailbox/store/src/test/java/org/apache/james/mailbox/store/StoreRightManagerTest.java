@@ -47,7 +47,6 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class StoreRightManagerTest {
@@ -82,13 +81,12 @@ public class StoreRightManagerTest {
             .isInstanceOf(MailboxNotFoundException.class);
     }
 
-    @Ignore("PROTOCOLS-117 Will be solved in next commit")
     @Test
     public void hasRightShouldReturnTrueWhenTheUserOwnTheMailbox() throws MailboxException {
         Mailbox mailbox = new SimpleMailbox(MailboxPath.forUser(ALICE, MailboxConstants.INBOX), UID_VALIDITY);
 
         assertThat(storeRightManager.hasRight(mailbox, Right.Write, aliceSession))
-            .isFalse();
+            .isTrue();
     }
 
     @Test
