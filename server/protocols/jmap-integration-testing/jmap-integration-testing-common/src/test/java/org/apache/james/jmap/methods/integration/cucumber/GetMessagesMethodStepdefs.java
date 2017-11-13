@@ -358,6 +358,11 @@ public class GetMessagesMethodStepdefs {
         userStepdefs.execWithUser(username, () -> appendMessageWithFlags(messageName, mailbox, flagList));
     }
 
+    @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox$")
+    public void appendSimpleMessage(String username, String messageName, String mailbox) throws Throwable {
+        userStepdefs.execWithUser(username, () -> appendMessageWithFlags(messageName, mailbox, ImmutableList.of()));
+    }
+
     @Given("^the user has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with flags \"([^\"]*)\"$")
     public void appendMessageWithFlags(String messageName, String mailbox, List<String> flagList) throws Exception {
         appendMessage(messageName, StringListToFlags.fromFlagList(flagList));
