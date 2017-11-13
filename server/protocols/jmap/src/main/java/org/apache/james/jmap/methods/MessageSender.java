@@ -20,12 +20,10 @@
 package org.apache.james.jmap.methods;
 
 import java.io.IOException;
-import java.util.List;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
-import org.apache.james.jmap.model.CreationMessageId;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.send.MailFactory;
@@ -35,8 +33,6 @@ import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.mailet.Mail;
-
-import com.google.common.collect.ImmutableList;
 
 public class MessageSender {
     private final MailSpool mailSpool;
@@ -70,16 +66,16 @@ public class MessageSender {
     }
 
     private void validateUserIsInSenders(Message message, MailboxSession session) throws MailboxSendingNotAllowedException {
-        List<String> allowedSenders = ImmutableList.of(session.getUser().getUserName());
-        if (!isAllowedFromAddress(message, allowedSenders)) {
-            throw new MailboxSendingNotAllowedException(allowedSenders);
+        String allowedSender = session.getUser().getUserName();
+        if (!isAllowedFromAddress(message, allowedSender)) {
+            throw new MailboxSendingNotAllowedException(allowedSender);
         }
     }
 
-    private boolean isAllowedFromAddress(Message message, List<String> allowedFromMailAddresses) {
+    private boolean isAllowedFromAddress(Message message, String allowedFromMailAddress) {
         return message.getFrom()
             .map(draftEmailer -> draftEmailer.getEmail()
-                .map(allowedFromMailAddresses::contains)
+                .map(allowedFromMailAddress::equals)
                 .orElse(false))
             .orElse(false);
     }

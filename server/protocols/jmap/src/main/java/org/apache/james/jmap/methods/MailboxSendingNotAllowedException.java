@@ -19,20 +19,18 @@
 
 package org.apache.james.jmap.methods;
 
-import java.util.Collection;
-
 import org.apache.james.mailbox.exception.MailboxException;
 
 public class MailboxSendingNotAllowedException extends MailboxException {
 
-    private Collection<String> allowedFroms;
+    private String allowedFrom;
 
-    public MailboxSendingNotAllowedException(Collection<String> allowedFroms) {
+    public MailboxSendingNotAllowedException(String allowedFrom) {
         super();
-        this.allowedFroms = allowedFroms;
+        this.allowedFrom = allowedFrom;
     }
     
-    public Collection<String> getAllowedFroms() {
-        return allowedFroms;
+    public String getAllowedFrom() {
+        return allowedFrom;
     }
 }

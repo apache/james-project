@@ -63,7 +63,6 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.FunctionChainer;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 
 
@@ -117,8 +116,8 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                     SetError.builder()
                         .type("invalidProperties")
                         .properties(MessageProperty.from)
-                        .description("Invalid 'from' field. Must be one of " + 
-                                Joiner.on(", ").join(e.getAllowedFroms()))
+                        .description("Invalid 'from' field. Must be " +
+                                e.getAllowedFrom())
                         .build());
 
         } catch (InvalidDraftKeywordsException e) {
