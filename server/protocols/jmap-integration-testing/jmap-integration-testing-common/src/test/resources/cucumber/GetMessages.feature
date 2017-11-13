@@ -406,3 +406,17 @@ Feature: GetMessages method
     Examples:
             |flags                    |keyword                 |
             |"$Flagged,$Forwarded"    |$Forwarded,$Flagged     |
+
+  Scenario: Retrieving message should include true isForwarded property when set
+    Given "alice@domain.tld" has a message "m1" in the "inbox" mailbox with flags "$Forwarded"
+    When "alice@domain.tld" ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the isForwarded property of the message is "true"
+
+  Scenario: Retrieving message should include false isForwarded property when not set
+    Given "alice@domain.tld" has a message "m1" in the "inbox" mailbox with flags "$Answered"
+    When "alice@domain.tld" ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the isForwarded property of the message is "false"
