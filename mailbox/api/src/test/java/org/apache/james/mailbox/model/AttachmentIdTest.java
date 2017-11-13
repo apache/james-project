@@ -22,9 +22,7 @@ package org.apache.james.mailbox.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.io.InputStream;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;

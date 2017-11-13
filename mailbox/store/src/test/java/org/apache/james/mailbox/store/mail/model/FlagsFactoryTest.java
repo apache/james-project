@@ -63,7 +63,7 @@ public class FlagsFactoryTest {
     public void builderShouldAcceptNullUserFlags() {
         assertThat(
             FlagsFactory.builder()
-                .addUserFlags(null)
+                .addUserFlags((String)null)
                 .build())
             .isEqualTo(new Flags());
     }

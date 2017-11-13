@@ -27,7 +27,6 @@ import org.apache.james.imap.api.process.MailboxType;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.LSubResponse;
-import org.apache.james.imap.message.response.ListResponse;
 import org.apache.james.imap.message.response.XListResponse;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.jmock.Mockery;
