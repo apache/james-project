@@ -21,8 +21,6 @@ package org.apache.james.jmap.methods;
 
 import static org.apache.james.jmap.methods.Method.JMAP_PREFIX;
 
-import java.io.IOException;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -30,7 +28,6 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
-import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.jmap.exceptions.AttachmentsNotFoundException;
 import org.apache.james.jmap.methods.ValueWithId.CreationMessageEntry;
@@ -38,8 +35,6 @@ import org.apache.james.jmap.methods.ValueWithId.MessageWithId;
 import org.apache.james.jmap.model.Attachment;
 import org.apache.james.jmap.model.BlobId;
 import org.apache.james.jmap.model.CreationMessage;
-import org.apache.james.jmap.model.CreationMessageId;
-import org.apache.james.jmap.model.Keywords;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
@@ -51,11 +46,7 @@ import org.apache.james.jmap.model.SetMessagesRequest;
 import org.apache.james.jmap.model.SetMessagesResponse;
 import org.apache.james.jmap.model.SetMessagesResponse.Builder;
 import org.apache.james.jmap.model.mailbox.Role;
-import org.apache.james.jmap.send.MailFactory;
-import org.apache.james.jmap.send.MailMetadata;
-import org.apache.james.jmap.send.MailSpool;
 import org.apache.james.jmap.utils.SystemMailboxesProvider;
-import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -64,19 +55,13 @@ import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.AttachmentId;
-import org.apache.james.mailbox.model.Cid;
-import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
-import org.apache.james.util.OptionalUtils;
-import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.github.fge.lambdas.predicates.ThrowingPredicate;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
@@ -88,35 +73,29 @@ import com.google.common.collect.ImmutableList;
 public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(SetMailboxesCreationProcessor.class);
-    private final MIMEMessageConverter mimeMessageConverter;
-    private final MailSpool mailSpool;
-    private final MailFactory mailFactory;
     private final MessageFactory messageFactory;
     private final SystemMailboxesProvider systemMailboxesProvider;
     private final AttachmentManager attachmentManager;
     private final MetricFactory metricFactory;
     private final MailboxManager mailboxManager;
     private final MailboxId.Factory mailboxIdFactory;
+    private final MessageAppender messageAppender;
+    private final MessageSender messageSender;
     
     @VisibleForTesting @Inject
-    SetMessagesCreationProcessor(MIMEMessageConverter mimeMessageConverter,
-                                 MailSpool mailSpool,
-                                 MailFactory mailFactory,
-                                 MessageFactory messageFactory,
-                                 SystemMailboxesProvider systemMailboxesProvider,
-                                 AttachmentManager attachmentManager, 
+    SetMessagesCreationProcessor(MessageFactory messageFactory, SystemMailboxesProvider systemMailboxesProvider,
+                                 AttachmentManager attachmentManager,
                                  MetricFactory metricFactory,
                                  MailboxManager mailboxManager,
-                                 MailboxId.Factory mailboxIdFactory) {
-        this.mimeMessageConverter = mimeMessageConverter;
-        this.mailSpool = mailSpool;
-        this.mailFactory = mailFactory;
+                                 MailboxId.Factory mailboxIdFactory, MessageAppender messageAppender, MessageSender messageSender) {
         this.messageFactory = messageFactory;
         this.systemMailboxesProvider = systemMailboxesProvider;
         this.attachmentManager = attachmentManager;
         this.metricFactory = metricFactory;
         this.mailboxManager = mailboxManager;
         this.mailboxIdFactory = mailboxIdFactory;
+        this.messageAppender = messageAppender;
+        this.messageSender = messageSender;
     }
 
     @Override
@@ -279,8 +258,10 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         if (!isRequestForSending(entry.getValue(), session)) {
             throw new IllegalStateException("Messages for everything but outbox should have been filtered earlier");
         }
-        MetaDataWithContent newMessage = createMessageInOutbox(entry, outbox, session);
-        return sendMessage(entry.getCreationId(), newMessage, session);
+        MetaDataWithContent newMessage = messageAppender.createMessageInMailbox(entry, outbox, session);
+        Message jmapMessage = messageFactory.fromMetaDataWithContent(newMessage);
+        messageSender.sendMessage(jmapMessage, newMessage, session);
+        return new ValueWithId.MessageWithId(entry.getCreationId(), jmapMessage);
     }
     
     private boolean isAppendToMailboxWithRole(Role role, CreationMessage entry, MailboxSession mailboxSession) throws MailboxException {
@@ -318,81 +299,5 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     private boolean isRequestForSending(CreationMessage creationMessage, MailboxSession session) throws MailboxException {
         return isAppendToMailboxWithRole(Role.OUTBOX, creationMessage, session);
     }
-    
-    private MetaDataWithContent createMessageInOutbox(MessageWithId.CreationMessageEntry createdEntry,
-                                                      MessageManager outbox,
-                                                      MailboxSession session) throws MailboxException {
-        ImmutableList<MessageAttachment> messageAttachments = getMessageAttachments(session, createdEntry.getValue().getAttachments());
-        byte[] messageContent = mimeMessageConverter.convert(createdEntry, messageAttachments);
-        SharedByteArrayInputStream content = new SharedByteArrayInputStream(messageContent);
-        Date internalDate = Date.from(createdEntry.getValue().getDate().toInstant());
 
-        Keywords keywords = createdEntry.getValue()
-            .getKeywords()
-            .orElse(Keywords.DEFAULT_VALUE);
-        boolean notRecent = false;
-
-        ComposedMessageId message = outbox.appendMessage(content, internalDate, session, notRecent, keywords.asFlags());
-
-        return MetaDataWithContent.builder()
-                .uid(message.getUid())
-                .keywords(keywords)
-                .internalDate(internalDate.toInstant())
-                .sharedContent(content)
-                .size(messageContent.length)
-                .attachments(messageAttachments)
-                .mailboxId(outbox.getId())
-                .messageId(message.getMessageId())
-                .build();
-    }
-
-    private ImmutableList<MessageAttachment> getMessageAttachments(MailboxSession session, ImmutableList<Attachment> attachments) throws MailboxException {
-        ThrowingFunction<Attachment, Optional<MessageAttachment>> toMessageAttachment = att -> messageAttachment(session, att);
-        return attachments.stream()
-            .map(Throwing.function(toMessageAttachment).sneakyThrow())
-            .flatMap(OptionalUtils::toStream)
-            .collect(Guavate.toImmutableList());
-    }
-
-    private Optional<MessageAttachment> messageAttachment(MailboxSession session, Attachment attachment) throws MailboxException {
-        try {
-            return Optional.of(MessageAttachment.builder()
-                    .attachment(attachmentManager.getAttachment(AttachmentId.from(attachment.getBlobId().getRawValue()), session))
-                    .name(attachment.getName().orElse(null))
-                    .cid(attachment.getCid().map(Cid::from).orElse(null))
-                    .isInline(attachment.isIsInline())
-                    .build());
-        } catch (AttachmentNotFoundException e) {
-            // should not happen (checked before)
-            LOG.error(String.format("Attachment %s not found", attachment.getBlobId()), e);
-            return Optional.empty();
-        } catch (IllegalStateException e) {
-            LOG.error(String.format("Attachment %s is not well-formed", attachment.getBlobId()), e);
-            return Optional.empty();
-        }
-    }
-
-    private MessageWithId sendMessage(CreationMessageId creationId, MetaDataWithContent message, MailboxSession session) throws MailboxException, MessagingException {
-        Message jmapMessage = messageFactory.fromMetaDataWithContent(message);
-        sendMessage(message, jmapMessage, session);
-        return new MessageWithId(creationId, jmapMessage);
-    }
-    
-    private void sendMessage(MetaDataWithContent message, Message jmapMessage, MailboxSession session) throws MessagingException {
-        Mail mail = buildMessage(message, jmapMessage);
-        try {
-            MailMetadata metadata = new MailMetadata(jmapMessage.getId(), session.getUser().getUserName());
-            mailSpool.send(mail, metadata);
-        } finally {
-            LifecycleUtil.dispose(mail);
-        }
-    }
-
-    private Mail buildMessage(MetaDataWithContent message, Message jmapMessage) throws MessagingException {
-        try {
-            return mailFactory.build(message, jmapMessage);
-        } catch (IOException e) {
-            throw new MessagingException("error building message to send", e);
-        }
-    }
 }
