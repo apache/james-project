@@ -32,7 +32,7 @@
     <packaging>bundle</packaging>
 
     <name>Apache James :: Server :: App</name>
-    <description>An advanced email server</description>
+    <description>An advanced email server / Spring version</description>
 
     <properties>
 
@@ -85,6 +85,17 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-jpa</artifactId>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-lucene</artifactId>
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
@@ -548,589 +559,374 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
             </plugin>
-        </plugins>
-    </build>
-
-    <profiles>
-        <profile>
-            <id>build-for-jdk-8</id>
-            <activation>
-                <jdk>[1.8,)</jdk>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-james-mailbox-elasticsearch</artifactId>
-                    <scope>runtime</scope>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>javax.mail</groupId>
-                            <artifactId>mail</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-james-mailbox-tika</artifactId>
-                    <scope>runtime</scope>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>javax.mail</groupId>
-                            <artifactId>mail</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>cassandra</id>
-            <properties>
-                <james.system-property2>-Dspring.profiles.active=cassandra</james.system-property2>
-                <james.system-properties>${james.system-property1} ${james.system-property2}</james.system-properties>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-james-backends-cassandra</artifactId>
-                    <scope>runtime</scope>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-james-mailbox-cassandra</artifactId>
-                    <scope>runtime</scope>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>javax.mail</groupId>
-                            <artifactId>mail</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>james-server-data-cassandra</artifactId>
-                    <scope>runtime</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>kafka</id>
-            <dependencies>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-james-mailbox-kafka</artifactId>
-                    <scope>runtime</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>lucene</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-james-mailbox-lucene</artifactId>
-                    <scope>runtime</scope>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>javax.mail</groupId>
-                            <artifactId>mail</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>exclude-lucene</id>
-            <dependencies>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-james-mailbox-lucene</artifactId>
-                    <scope>runtime</scope>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>javax.mail</groupId>
-                            <artifactId>mail</artifactId>
-                        </exclusion>
-                        <exclusion>
-                            <groupId>org.apache.lucene</groupId>
-                            <artifactId>lucene-core</artifactId>
-                        </exclusion>
-                        <exclusion>
-                            <groupId>org.apache.lucene</groupId>
-                            <artifactId>lucene-analyzers</artifactId>
-                        </exclusion>
-                        <exclusion>
-                            <groupId>org.apache.lucene</groupId>
-                            <artifactId>lucene-smartcn</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>with-assembly</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>appassembler-maven-plugin</artifactId>
-                        <version>2.0.0</version>
-                        <configuration>
-                            <!-- Include etc/ in the beginning of the classpath declaration in the bin scripts -->
-                            <includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
-                            <configurationDirectory>conf</configurationDirectory>
-                            <target>${project.build.directory}/appassembler</target>
-                            <repositoryLayout>flat</repositoryLayout>
-                            <repositoryName>lib</repositoryName>
-                            <includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
-                            <environmentSetupFileName>setenv</environmentSetupFileName>
-                            <!-- set some sane defaults for memory -->
-                            <extraJvmArguments>${jvm.system-property1} -Xms128m -Xmx512m ${jmx.system-properties}
-                                ${javamail.system-properties} ${james.system-properties}</extraJvmArguments>
-                            <!-- Generate bin scripts for windows and unix per default -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>appassembler-maven-plugin</artifactId>
+                <version>2.0.0</version>
+                <configuration>
+                    <!-- Include etc/ in the beginning of the classpath declaration in the bin scripts -->
+                    <includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
+                    <configurationDirectory>conf</configurationDirectory>
+                    <target>${project.build.directory}/appassembler</target>
+                    <repositoryLayout>flat</repositoryLayout>
+                    <repositoryName>lib</repositoryName>
+                    <includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
+                    <environmentSetupFileName>setenv</environmentSetupFileName>
+                    <!-- set some sane defaults for memory -->
+                    <extraJvmArguments>${jvm.system-property1} -Xms128m -Xmx512m ${jmx.system-properties}
+                        ${javamail.system-properties} ${james.system-properties}</extraJvmArguments>
+                    <!-- Generate bin scripts for windows and unix per default -->
+                    <platforms>
+                        <platform>windows</platform>
+                        <platform>unix</platform>
+                    </platforms>
+                    <!-- use .sh on unix instead of .bin -->
+                    <binFileExtensions>
+                        <unix>.sh</unix>
+                    </binFileExtensions>
+                    <!-- use *.jar instead of every single jar file in classpath -->
+                    <useWildcardClassPath>true</useWildcardClassPath>
+                    <repositoryLayout>flat</repositoryLayout>
+                    <programs>
+                        <program>
+                            <mainClass>org.apache.james.app.spring.JamesAppSpringMain</mainClass>
+                            <!-- call it only "run" because appassemble will add the extension -->
+                            <name>run</name>
+                            <!-- Only generate windows bat script and unix sh for this application -->
                             <platforms>
                                 <platform>windows</platform>
                                 <platform>unix</platform>
                             </platforms>
-                            <!-- use .sh on unix instead of .bin -->
-                            <binFileExtensions>
-                                <unix>.sh</unix>
-                            </binFileExtensions>
-                            <!-- use *.jar instead of every single jar file in classpath -->
-                            <useWildcardClassPath>true</useWildcardClassPath>
-                            <repositoryLayout>flat</repositoryLayout>
-                            <programs>
-                                <program>
-                                    <mainClass>org.apache.james.app.spring.JamesAppSpringMain</mainClass>
-                                    <!-- call it only "run" because appassemble will add the extension -->
-                                    <name>run</name>
-                                    <!-- Only generate windows bat script and unix sh for this application -->
-                                    <platforms>
-                                        <platform>windows</platform>
-                                        <platform>unix</platform>
-                                    </platforms>
-                                </program>
+                        </program>
 
-                                <!-- This create the scripts for the command line administration client. Maybe this should better be moved to the cli module, but I'm not sure yet -->
-                                <program>
-                                    <mainClass>org.apache.james.cli.ServerCmd</mainClass>
-                                    <!-- call it only "james-cli" because appassemble will add the extension -->
-                                    <name>james-cli</name>
-                                    <!-- Only generate windows bat script and unix sh for this application -->
-                                    <platforms>
-                                        <platform>windows</platform>
-                                        <platform>unix</platform>
-                                    </platforms>
-                                </program>
-                            </programs>
-                            <daemons>
-                                <daemon>
-                                    <id>james</id>
-                                    <mainClass>org.apache.james.app.spring.JamesAppSpringMain</mainClass>
-                                    <commandLineArguments>
-                                        <commandLineArgument>start</commandLineArgument>
-                                    </commandLineArguments>
-                                    <platforms>
-                                        <!--
-                                            =======================================================================
+                        <!-- This create the scripts for the command line administration client. Maybe this should better be moved to the cli module, but I'm not sure yet -->
+                        <program>
+                            <mainClass>org.apache.james.cli.ServerCmd</mainClass>
+                            <!-- call it only "james-cli" because appassemble will add the extension -->
+                            <name>james-cli</name>
+                            <!-- Only generate windows bat script and unix sh for this application -->
+                            <platforms>
+                                <platform>windows</platform>
+                                <platform>unix</platform>
+                            </platforms>
+                        </program>
+                    </programs>
+                    <daemons>
+                        <daemon>
+                            <id>james</id>
+                            <mainClass>org.apache.james.app.spring.JamesAppSpringMain</mainClass>
+                            <commandLineArguments>
+                                <commandLineArgument>start</commandLineArgument>
+                            </commandLineArguments>
+                            <platforms>
+                                <!--
+                                    =======================================================================
 
-                                            JSW relies on software licensed under the following "Tanuki Software License"
+                                    JSW relies on software licensed under the following "Tanuki Software License"
 
-                                            BEGIN Tanuki Software License =========================================
-                                            Copyright (c) 1999, 2006 Tanuki Software, Inc.
+                                    BEGIN Tanuki Software License =========================================
+                                    Copyright (c) 1999, 2006 Tanuki Software, Inc.
 
-                                            Permission is hereby granted, free of charge, to any person
-                                            obtaining a copy of the Java Service Wrapper and associated
-                                            documentation files (the "Software"), to deal in the Software
-                                            without restriction, including without limitation the rights
-                                            to use, copy, modify, merge, publish, distribute, sub-license,
-                                            and/or sell copies of the Software, and to permit persons to
-                                            whom the Software is furnished to do so, subject to the
-                                            following conditions:
+                                    Permission is hereby granted, free of charge, to any person
+                                    obtaining a copy of the Java Service Wrapper and associated
+                                    documentation files (the "Software"), to deal in the Software
+                                    without restriction, including without limitation the rights
+                                    to use, copy, modify, merge, publish, distribute, sub-license,
+                                    and/or sell copies of the Software, and to permit persons to
+                                    whom the Software is furnished to do so, subject to the
+                                    following conditions:
 
-                                            The above copyright notice and this permission notice shall be
-                                            included in all copies or substantial portions of the Software.
+                                    The above copyright notice and this permission notice shall be
+                                    included in all copies or substantial portions of the Software.
 
-                                            THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-                                            EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-                                            OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-                                            NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-                                            HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-                                            WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-                                            FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-                                            OTHER DEALINGS IN THE SOFTWARE.
+                                    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+                                    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+                                    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+                                    NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+                                    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+                                    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+                                    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+                                    OTHER DEALINGS IN THE SOFTWARE.
 
 
-                                            Portions of the Software have been derived from source code
-                                            developed by Silver Egg Technology under the following license:
+                                    Portions of the Software have been derived from source code
+                                    developed by Silver Egg Technology under the following license:
 
-                                            BEGIN Silver Egg Techology License =================================
+                                    BEGIN Silver Egg Techology License =================================
 
-                                            Copyright (c) 2001 Silver Egg Technology
+                                    Copyright (c) 2001 Silver Egg Technology
 
-                                            Permission is hereby granted, free of charge, to any person
-                                            obtaining a copy of this software and associated documentation
-                                            files (the "Software"), to deal in the Software without
-                                            restriction, including without limitation the rights to use,
-                                            copy, modify, merge, publish, distribute, sub-license, and/or
-                                            sell copies of the Software, and to permit persons to whom the
-                                            Software is furnished to do so, subject to the following
-                                            conditions:
+                                    Permission is hereby granted, free of charge, to any person
+                                    obtaining a copy of this software and associated documentation
+                                    files (the "Software"), to deal in the Software without
+                                    restriction, including without limitation the rights to use,
+                                    copy, modify, merge, publish, distribute, sub-license, and/or
+                                    sell copies of the Software, and to permit persons to whom the
+                                    Software is furnished to do so, subject to the following
+                                    conditions:
 
-                                            The above copyright notice and this permission notice shall be
-                                            included in all copies or substantial portions of the Software.
+                                    The above copyright notice and this permission notice shall be
+                                    included in all copies or substantial portions of the Software.
 
-                                            THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-                                            EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-                                            OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-                                            NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-                                            HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-                                            WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-                                            FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-                                            OTHER DEALINGS IN THE SOFTWARE.
+                                    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+                                    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+                                    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+                                    NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+                                    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+                                    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+                                    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+                                    OTHER DEALINGS IN THE SOFTWARE.
 
-                                            END Silver Egg Techology License =====================================
-                                            END Tanuki Software License ============================================
-                                            ========================================================================
-                                        -->
-                                        <platform>jsw</platform>
-                                    </platforms>
-                                    <generatorConfigurations>
-                                        <generatorConfiguration>
+                                    END Silver Egg Techology License =====================================
+                                    END Tanuki Software License ============================================
+                                    ========================================================================
+                                -->
+                                <platform>jsw</platform>
+                            </platforms>
+                            <generatorConfigurations>
+                                <generatorConfiguration>
 
-                                            <generator>jsw</generator>
-                                            <includes>
-                                                <include>linux-x86-32</include>
-                                                <include>linux-x86-64</include>
-                                                <include>linux-ppc-64</include>
-                                                <include>macosx-x86-universal-32</include>
-                                                <include>macosx-ppc-32</include>
-                                                <include>solaris-sparc-32</include>
-                                                <include>solaris-sparc-64</include>
-                                                <include>solaris-x86-32</include>
-                                                <include>windows-x86-32</include>
-                                                <include>windows-x86-64</include>
-                                            </includes>
-
-                                            <configuration>
-                                                <!-- add to to the classpath in this order: config files, james jars, user jars.-->
-                                                <property>
-                                                    <name>configuration.directory.in.classpath.first</name>
-                                                    <value>../conf</value>
-                                                </property>
-                                                <property>
-                                                    <name>configuration.directory.in.classpath.last</name>
-                                                    <value>../conf/lib/*</value>
-                                                </property>
-                                                <property>
-                                                    <name>set.default.REPO_DIR</name>
-                                                    <value>../lib</value>
-                                                </property>
-                                                <property>
-                                                    <name>wrapper.working.dir</name>
-                                                    <value>.</value>
-                                                </property>
-                                                <property>
-                                                    <name>wrapper.logfile</name>
-                                                    <value>../log/wrapper.log</value>
-                                                </property>
-                                                <property>
-                                                    <name>wrapper.java.library.path</name>
-                                                    <value>../lib</value>
-                                                </property>
-                                                <property>
-                                                    <name>wrapper.java.initmemory</name>
-                                                    <value>128</value>
-                                                </property>
-                                                <property>
-                                                    <name>wrapper.java.maxmemory</name>
-                                                    <value>512</value>
-                                                </property>
-                                                <property>
-                                                    <name>wrapper.java.additional.1</name>
-                                                    <value>${jvm.system-property1}</value>
-                                                </property>
-                                                <property>
-                                                    <name>wrapper.java.additional.2</name>
-                                                    <value>${jmx.system-property1}</value>
-                                                </property>
-                                                <property>
-                                                    <name>wrapper.java.additional.3</name>
-                                                    <value>${jmx.system-property2}</value>
-                                                </property>
-                                                <property>
-                                                    <name>wrapper.java.additional.4</name>
-                                                    <value>${javamail.system-property1}</value>
-                                                </property>
-                                                <property>
-                                                    <name>wrapper.java.additional.5</name>
-                                                    <value>${javamail.system-property2}</value>
-                                                </property>
-                                                <property>
-                                                    <name>wrapper.java.additional.6</name>
-                                                    <value>${javamail.system-property3}</value>
-                                                </property>
-                                                <property>
-                                                    <name>wrapper.java.additional.7</name>
-                                                    <value>${javamail.system-property4}</value>
-                                                </property>
-                                                <property>
-                                                    <name>wrapper.java.additional.8</name>
-                                                    <value>${javamail.system-property5}</value>
-                                                </property>
-                                                <property>
-                                                    <name>wrapper.java.additional.9</name>
-                                                    <value>${javamail.system-property6}</value>
-                                                </property>
-                                                <property>
-                                                    <name>wrapper.java.additional.10</name>
-                                                    <value>${javamail.system-property7}</value>
-                                                </property>
-                                                <property>
-                                                    <name>wrapper.java.additional.11</name>
-                                                    <value>${javamail.system-property8}</value>
-                                                </property>
-                                                <property>
-                                                    <name>wrapper.java.additional.12</name>
-                                                    <value>${javamail.system-property9}</value>
-                                                </property>
-                                                <property>
-                                                    <name>wrapper.java.additional.13</name>
-                                                    <value>${javamail.system-property10}</value>
-                                                </property>
-                                                <property>
-                                                    <name>wrapper.java.additional.14</name>
-                                                    <value>${james.system-property1}</value>
-                                                </property>
-                                                <property>
-                                                    <name>wrapper.java.additional.15</name>
-                                                    <value>${james.system-property2}</value>
-                                                </property>
-                                            </configuration>
-                                        </generatorConfiguration>
-                                    </generatorConfigurations>
-
-                                </daemon>
-                            </daemons>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>make-appassemble</id>
-                                <goals>
-                                    <goal>assemble</goal>
-                                    <goal>generate-daemons</goal>
-                                </goals>
-                                <phase>package</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-antrun-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>run</goal>
-                                </goals>
-                                <phase>package</phase>
-                                <configuration>
-
-                                    <tasks>
-                                        <!-- this is only needed because windows freak out on long cmd lines, so we strip of the absolute path
-                                            from the lib dir to make windows happy again
-                                        -->
-                                        <replace file="${project.build.directory}/appassembler/bin/run.bat" token="%BASEDIR%\lib" value="..\lib" />
-                                        <replace file="${project.build.directory}/appassembler/bin/run.sh" token="setenv" value="setenv.sh" />
-
-                                        <!-- this is needed because appassembler is not really smart on some settings -->
-                                        <replace file="${project.build.directory}/appassembler/jsw/james/conf/wrapper.conf" token="lib/wrapper.jar" value="%REPO_DIR%/wrapper.jar" />
-                                        <replace file="${project.build.directory}/appassembler/jsw/james/bin/james" token="logs" value="var" />
-
-                                        <!-- copy the linux wrapper-linux-x86-32 to wrapper, so use it as default if no matching wrapper was found -->
-                                        <copy file="${project.build.directory}/appassembler/jsw/james/bin/wrapper-linux-x86-32" tofile="${project.build.directory}/appassembler/jsw/james/bin/wrapper" />
-                                        <!-- this is only needed because windows freak out on long cmd lines, so we strip of the absolute path
-                                            from the lib dir to make windows happy again
-                                        -->
-                                        <replace file="${project.build.directory}/appassembler/bin/james-cli.bat" token="%BASEDIR%\lib" value="..\lib" />
-                                        <replace file="${project.build.directory}/appassembler/bin/james-cli.sh" token="setenv" value="setenv.sh" />
-                                    </tasks>
-
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <configuration>
-                            <descriptorSourceDirectory>src/assemble/</descriptorSourceDirectory>
-                            <tarLongFileMode>gnu</tarLongFileMode>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>make-assembly</id>
-                                <goals>
-                                    <goal>single</goal>
-                                </goals>
-				<phase>package</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <!--
-                    The signing process excludes the artifact created by this plugin.
-                    The cause seems likely to be project type pom (not war).
-                    If this is the case then releasing the war would require
-                    reorganisation.
-                    -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-war-plugin</artifactId>
-                        <configuration>
-                            <webResources>
-                                <resource>
-                                    <directory>src/main/resources</directory>
-                                    <!-- override the destination directory for this resource -->
-                                    <targetPath>WEB-INF/conf/</targetPath>
-                                    <excludes>
-                                        <exclude>log4j.properties</exclude>
-                                        <exclude>**/lib/**</exclude>
-                                    </excludes>
-                                </resource>
-                                <resource>
-                                    <directory>src/main/resources</directory>
-                                    <!-- override the destination directory for this resource -->
-                                    <targetPath>WEB-INF/classes/</targetPath>
+                                    <generator>jsw</generator>
                                     <includes>
-                                        <include>log4j.properties</include>
+                                        <include>linux-x86-32</include>
+                                        <include>linux-x86-64</include>
+                                        <include>linux-ppc-64</include>
+                                        <include>macosx-x86-universal-32</include>
+                                        <include>macosx-ppc-32</include>
+                                        <include>solaris-sparc-32</include>
+                                        <include>solaris-sparc-64</include>
+                                        <include>solaris-x86-32</include>
+                                        <include>windows-x86-32</include>
+                                        <include>windows-x86-64</include>
                                     </includes>
-                                </resource>
-                                <resource>
-                                    <directory>src/main/config/war</directory>
-                                    <!-- override the destination directory for this resource -->
-                                    <targetPath>WEB-INF/conf/</targetPath>
 
-                                </resource>
-                                <resource>
-                                    <directory>src/main/licensing/war</directory>
-                                    <targetPath>META-INF</targetPath>
-                                    <excludes>
-                                        <exclude>licensing.xml</exclude>
-                                    </excludes>
-                                </resource>
-                                <resource>
-                                    <directory>../container/spring/src/main/resources/META-INF</directory>
-                                    <targetPath>WEB-INF/conf/META-INF</targetPath>
-                                    <includes>
-                                        <include>**/*.xml</include>
-                                    </includes>
-                                </resource>
-                                <resource>
-                                    <directory>.</directory>
-                                    <targetPath>META-INF</targetPath>
-                                    <includes>
-                                        <include>README*</include>
-                                    </includes>
-                                </resource>
-                            </webResources>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>make-war</id>
-                                <goals>
-                                    <goal>war</goal>
-                                </goals>
-                                <phase>package</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
+                                    <configuration>
+                                        <!-- add to to the classpath in this order: config files, james jars, user jars.-->
+                                        <property>
+                                            <name>configuration.directory.in.classpath.first</name>
+                                            <value>../conf</value>
+                                        </property>
+                                        <property>
+                                            <name>configuration.directory.in.classpath.last</name>
+                                            <value>../conf/lib/*</value>
+                                        </property>
+                                        <property>
+                                            <name>set.default.REPO_DIR</name>
+                                            <value>../lib</value>
+                                        </property>
+                                        <property>
+                                            <name>wrapper.working.dir</name>
+                                            <value>.</value>
+                                        </property>
+                                        <property>
+                                            <name>wrapper.logfile</name>
+                                            <value>../log/wrapper.log</value>
+                                        </property>
+                                        <property>
+                                            <name>wrapper.java.library.path</name>
+                                            <value>../lib</value>
+                                        </property>
+                                        <property>
+                                            <name>wrapper.java.initmemory</name>
+                                            <value>128</value>
+                                        </property>
+                                        <property>
+                                            <name>wrapper.java.maxmemory</name>
+                                            <value>512</value>
+                                        </property>
+                                        <property>
+                                            <name>wrapper.java.additional.1</name>
+                                            <value>${jvm.system-property1}</value>
+                                        </property>
+                                        <property>
+                                            <name>wrapper.java.additional.2</name>
+                                            <value>${jmx.system-property1}</value>
+                                        </property>
+                                        <property>
+                                            <name>wrapper.java.additional.3</name>
+                                            <value>${jmx.system-property2}</value>
+                                        </property>
+                                        <property>
+                                            <name>wrapper.java.additional.4</name>
+                                            <value>${javamail.system-property1}</value>
+                                        </property>
+                                        <property>
+                                            <name>wrapper.java.additional.5</name>
+                                            <value>${javamail.system-property2}</value>
+                                        </property>
+                                        <property>
+                                            <name>wrapper.java.additional.6</name>
+                                            <value>${javamail.system-property3}</value>
+                                        </property>
+                                        <property>
+                                            <name>wrapper.java.additional.7</name>
+                                            <value>${javamail.system-property4}</value>
+                                        </property>
+                                        <property>
+                                            <name>wrapper.java.additional.8</name>
+                                            <value>${javamail.system-property5}</value>
+                                        </property>
+                                        <property>
+                                            <name>wrapper.java.additional.9</name>
+                                            <value>${javamail.system-property6}</value>
+                                        </property>
+                                        <property>
+                                            <name>wrapper.java.additional.10</name>
+                                            <value>${javamail.system-property7}</value>
+                                        </property>
+                                        <property>
+                                            <name>wrapper.java.additional.11</name>
+                                            <value>${javamail.system-property8}</value>
+                                        </property>
+                                        <property>
+                                            <name>wrapper.java.additional.12</name>
+                                            <value>${javamail.system-property9}</value>
+                                        </property>
+                                        <property>
+                                            <name>wrapper.java.additional.13</name>
+                                            <value>${javamail.system-property10}</value>
+                                        </property>
+                                        <property>
+                                            <name>wrapper.java.additional.14</name>
+                                            <value>${james.system-property1}</value>
+                                        </property>
+                                    </configuration>
+                                </generatorConfiguration>
+                            </generatorConfigurations>
 
-        <profile>
-            <id>with-mpt</id>
-            <build>
-                <plugins>
-                    <!-- be sure to start up james before run it -->
-                    <plugin>
-                        <groupId>${project.groupId}</groupId>
-                        <artifactId>maven-mpt-plugin</artifactId>
-                        <version>0.2-SNAPSHOT</version>
+                        </daemon>
+                    </daemons>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-appassemble</id>
+                        <goals>
+                            <goal>assemble</goal>
+                            <goal>generate-daemons</goal>
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <phase>package</phase>
                         <configuration>
-                            <mailProtocolTests>
-                                <mailProtocolTest>
-                                    <host>127.0.0.1</host>
-                                    <port>110</port>
-                                    <scriptFile>src/mpt/pop3.mpt</scriptFile>
-                                    <addUsers>
-                                        <addUser>
-                                            <host>127.0.0.1</host>
-                                            <port>4555</port>
-                                            <scriptFile>src/mpt/adduser.mpt</scriptFile>
-                                            <user>root</user>
-                                            <passwd>root</passwd>
-                                        </addUser>
-                                    </addUsers>
-                                </mailProtocolTest>
-                                <mailProtocolTest>
-                                    <host>127.0.0.1</host>
-                                    <port>143</port>
-                                    <scriptFile>src/mpt/imap.mpt</scriptFile>
-                                    <addUsers>
-                                        <addUser>
-                                            <host>127.0.0.1</host>
-                                            <port>4555</port>
-                                            <scriptFile>src/mpt/adduser.mpt</scriptFile>
-                                            <user>root</user>
-                                            <passwd>root</passwd>
-                                        </addUser>
-                                    </addUsers>
-                                </mailProtocolTest>
-                                <mailProtocolTest>
-                                    <host>127.0.0.1</host>
-                                    <port>25</port>
-                                    <scriptFile>src/mpt/smtp.mpt</scriptFile>
-                                    <addUsers>
-                                        <addUser>
-                                            <host>127.0.0.1</host>
-                                            <port>4555</port>
-                                            <scriptFile>src/mpt/adduser.mpt</scriptFile>
-                                            <user>root</user>
-                                            <passwd>root</passwd>
-                                        </addUser>
-                                    </addUsers>
-                                </mailProtocolTest>
-                            </mailProtocolTests>
+
+                            <tasks>
+                                <!-- this is only needed because windows freak out on long cmd lines, so we strip of the absolute path
+                                    from the lib dir to make windows happy again
+                                -->
+                                <replace file="${project.build.directory}/appassembler/bin/run.bat" token="%BASEDIR%\lib" value="..\lib" />
+                                <replace file="${project.build.directory}/appassembler/bin/run.sh" token="setenv" value="setenv.sh" />
+
+                                <!-- this is needed because appassembler is not really smart on some settings -->
+                                <replace file="${project.build.directory}/appassembler/jsw/james/conf/wrapper.conf" token="lib/wrapper.jar" value="%REPO_DIR%/wrapper.jar" />
+                                <replace file="${project.build.directory}/appassembler/jsw/james/bin/james" token="logs" value="var" />
+
+                                <!-- copy the linux wrapper-linux-x86-32 to wrapper, so use it as default if no matching wrapper was found -->
+                                <copy file="${project.build.directory}/appassembler/jsw/james/bin/wrapper-linux-x86-32" tofile="${project.build.directory}/appassembler/jsw/james/bin/wrapper" />
+                                <!-- this is only needed because windows freak out on long cmd lines, so we strip of the absolute path
+                                    from the lib dir to make windows happy again
+                                -->
+                                <replace file="${project.build.directory}/appassembler/bin/james-cli.bat" token="%BASEDIR%\lib" value="..\lib" />
+                                <replace file="${project.build.directory}/appassembler/bin/james-cli.sh" token="setenv" value="setenv.sh" />
+                            </tasks>
+
                         </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptorSourceDirectory>src/assemble/</descriptorSourceDirectory>
+                    <tarLongFileMode>gnu</tarLongFileMode>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--
+            The signing process excludes the artifact created by this plugin.
+            The cause seems likely to be project type pom (not war).
+            If this is the case then releasing the war would require
+            reorganisation.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <configuration>
+                    <webResources>
+                        <resource>
+                            <directory>src/main/resources</directory>
+                            <!-- override the destination directory for this resource -->
+                            <targetPath>WEB-INF/conf/</targetPath>
+                            <excludes>
+                                <exclude>log4j.properties</exclude>
+                                <exclude>**/lib/**</exclude>
+                            </excludes>
+                        </resource>
+                        <resource>
+                            <directory>src/main/resources</directory>
+                            <!-- override the destination directory for this resource -->
+                            <targetPath>WEB-INF/classes/</targetPath>
+                            <includes>
+                                <include>log4j.properties</include>
+                            </includes>
+                        </resource>
+                        <resource>
+                            <directory>src/main/config/war</directory>
+                            <!-- override the destination directory for this resource -->
+                            <targetPath>WEB-INF/conf/</targetPath>
 
-        <profile>
-            <id>with-jetm</id>
-            <activation>
-                <!-- remember to comment out the jetm-monitoring import line from spring-server.xml if you de-activate this
-                -->
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>fm.void.jetm</groupId>
-                    <artifactId>jetm</artifactId>
-                    <version>1.2.3</version>
-                </dependency>
-                <dependency>
-                    <groupId>fm.void.jetm</groupId>
-                    <artifactId>jetm-optional</artifactId>
-                    <version>1.2.3</version>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
-
+                        </resource>
+                        <resource>
+                            <directory>src/main/licensing/war</directory>
+                            <targetPath>META-INF</targetPath>
+                            <excludes>
+                                <exclude>licensing.xml</exclude>
+                            </excludes>
+                        </resource>
+                        <resource>
+                            <directory>../container/spring/src/main/resources/META-INF</directory>
+                            <targetPath>WEB-INF/conf/META-INF</targetPath>
+                            <includes>
+                                <include>**/*.xml</include>
+                            </includes>
+                        </resource>
+                        <resource>
+                            <directory>.</directory>
+                            <targetPath>META-INF</targetPath>
+                            <includes>
+                                <include>README*</include>
+                            </includes>
+                        </resource>
+                    </webResources>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-war</id>
+                        <goals>
+                            <goal>war</goal>
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    
 </project>
