@@ -112,7 +112,7 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
                 // Note that Section 6 recommends additional identifier’s verification
                 // steps.
                 
-                Rfc4314Rights[] rights = mailboxManager.listRigths(mailboxPath, key, mailboxSession);
+                Rfc4314Rights[] rights = mailboxManager.listRights(mailboxPath, key, mailboxSession);
                 ListRightsResponse aclResponse = new ListRightsResponse(mailboxName, identifier, rights);
                 responder.respond(aclResponse);
                 okComplete(command, tag, responder);

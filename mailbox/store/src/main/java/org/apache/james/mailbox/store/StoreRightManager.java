@@ -113,7 +113,7 @@ public class StoreRightManager implements RightManager {
     }
 
     @Override
-    public Rfc4314Rights[] listRigths(MailboxPath mailboxPath, EntryKey key, MailboxSession session) throws MailboxException {
+    public Rfc4314Rights[] listRights(MailboxPath mailboxPath, EntryKey key, MailboxSession session) throws MailboxException {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
 

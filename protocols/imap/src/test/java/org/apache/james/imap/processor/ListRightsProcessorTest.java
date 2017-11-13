@@ -171,7 +171,7 @@ public class ListRightsProcessorTest {
             .thenReturn(true);
         when(metaData.getACL()).thenReturn(acl);
         
-        when(mailboxManager.listRigths(path, user1Key, mailboxSession))
+        when(mailboxManager.listRights(path, user1Key, mailboxSession))
             .thenReturn(listRights);
 
 

@@ -76,7 +76,7 @@ public interface RightManager {
      * @return result suitable for the LISTRIGHTS IMAP command
      * @throws MailboxException in case of unknown mailbox or unsupported right
      */
-    MailboxACL.Rfc4314Rights[] listRigths(MailboxPath mailboxPath, MailboxACL.EntryKey identifier, MailboxSession session) throws MailboxException;
+    MailboxACL.Rfc4314Rights[] listRights(MailboxPath mailboxPath, MailboxACL.EntryKey identifier, MailboxSession session) throws MailboxException;
 
     MailboxACL listRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 

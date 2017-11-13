@@ -210,13 +210,13 @@ public class DefaultMailboxesProvisioningFilterThreadTest {
         }
 
         @Override
-        public MailboxACL.Rfc4314Rights[] listRigths(MailboxPath mailboxPath, MailboxACL.EntryKey identifier, MailboxSession session) throws MailboxException {
+        public MailboxACL.Rfc4314Rights[] listRights(MailboxPath mailboxPath, MailboxACL.EntryKey identifier, MailboxSession session) throws MailboxException {
             throw new NotImplementedException();
         }
 
         @Override
         public MailboxACL listRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
-            return null;
+            throw new NotImplementedException();
         }
 
         @Override
