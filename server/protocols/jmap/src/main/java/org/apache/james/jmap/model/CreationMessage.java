@@ -371,7 +371,7 @@ public class CreationMessage {
         return mailboxIds.contains(mailbox.getId().serialize());
     }
 
-    public boolean isInOnly(MessageManager mailbox) {
+    public boolean isOnlyIn(MessageManager mailbox) {
         return isIn(mailbox)
             && mailboxIds.size() == 1;
     }

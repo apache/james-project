@@ -234,9 +234,6 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
     private MessageWithId handleOutboxMessages(CreationMessageEntry entry, MailboxSession session) throws MailboxException, MessagingException {
         MessageManager outbox = getMailboxWithRole(session, Role.OUTBOX).orElseThrow(() -> new MailboxNotFoundException(Role.OUTBOX.serialize()));
-        if (!isRequestForSending(entry.getValue(), session)) {
-            throw new IllegalStateException("Messages for everything but outbox should have been filtered earlier");
-        }
         MetaDataWithContent newMessage = messageAppender.createMessageInMailbox(entry, outbox, session);
         Message jmapMessage = messageFactory.fromMetaDataWithContent(newMessage);
         messageSender.sendMessage(jmapMessage, newMessage, session);
@@ -245,7 +242,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     
     private boolean isAppendToMailboxWithRole(Role role, CreationMessage entry, MailboxSession mailboxSession) throws MailboxException {
         return getMailboxWithRole(mailboxSession, role)
-                .map(entry::isInOnly)
+                .map(entry::isOnlyIn)
                 .orElse(false);
     }
 
@@ -273,10 +270,6 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                 .flatMap(err -> propertiesSplitter.splitToList(err.getProperty()).stream())
                 .flatMap(MessageProperty::find)
                 .collect(Collectors.toSet());
-    }
-
-    private boolean isRequestForSending(CreationMessage creationMessage, MailboxSession session) throws MailboxException {
-        return isAppendToMailboxWithRole(Role.OUTBOX, creationMessage, session);
     }
 
 }
