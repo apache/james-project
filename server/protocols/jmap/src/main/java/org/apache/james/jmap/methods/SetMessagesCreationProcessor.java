@@ -124,7 +124,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
             responseBuilder.notCreated(create.getCreationId(), 
                     SetMessagesError.builder()
                         .type("invalidProperties")
-                        .properties(MessageProperty.mailboxIds)
+                        .properties(MessageProperty.attachments)
                         .attachmentsNotFound(e.getAttachmentIds())
                         .description("Attachment not found")
                         .build());

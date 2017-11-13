@@ -2673,6 +2673,7 @@ public abstract class SetMessagesMethodTest {
             .body(NAME, equalTo("messagesSet"))
             .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
             .body(notCreatedPath + ".type", equalTo("invalidProperties"))
+            .body(notCreatedPath + ".properties", contains("attachments"))
             .body(notCreatedPath + ".attachmentsNotFound", contains("brokenId1", "brokenId2"))
             .body(ARGUMENTS + ".created", aMapWithSize(0));
     }
