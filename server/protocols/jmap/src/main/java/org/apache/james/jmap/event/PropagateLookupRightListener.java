@@ -83,7 +83,7 @@ public class PropagateLookupRightListener implements MailboxListener {
                             .entrySet()
                             .stream()
                             .map(entry -> new Entry(entry.getKey(), entry.getValue()))
-                ));
+                    ));
         } catch (MailboxException e) {
             Throwables.propagate(e);
         }
