@@ -17,13 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.methods;
+package org.apache.james.jmap.exceptions;
 
 import org.apache.james.mailbox.exception.MailboxException;
 
-public class MailboxRightsException extends MailboxException {
+public class MailboxNotOwnedException extends MailboxException {
 
-    public MailboxRightsException() {
+    public MailboxNotOwnedException() {
         super();
     }
 }

@@ -35,6 +35,7 @@ import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
+import org.apache.james.jmap.exceptions.MailboxNotOwnedException;
 import org.apache.james.jmap.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
@@ -357,7 +358,7 @@ public class SetMessagesCreationProcessorTest {
         CreationMessageEntry entry = new CreationMessageEntry(creationMessageId, creationMessageBuilder.mailboxId(mailboxId.serialize()).build());
 
         assertThatThrownBy(() -> sut.validateIsUserOwnerOfMailboxes(entry, session))
-            .isInstanceOf(MailboxRightsException.class);
+            .isInstanceOf(MailboxNotOwnedException.class);
     }
 
     @Test

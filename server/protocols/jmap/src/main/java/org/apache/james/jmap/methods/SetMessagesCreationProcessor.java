@@ -31,6 +31,7 @@ import javax.mail.MessagingException;
 
 import org.apache.james.jmap.exceptions.AttachmentsNotFoundException;
 import org.apache.james.jmap.exceptions.InvalidDraftKeywordsException;
+import org.apache.james.jmap.exceptions.MailboxNotOwnedException;
 import org.apache.james.jmap.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.methods.ValueWithId.MessageWithId;
 import org.apache.james.jmap.model.CreationMessage;
@@ -155,7 +156,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                         .description(e.getMessage())
                         .build());
 
-        } catch (MailboxRightsException e) {
+        } catch (MailboxNotOwnedException e) {
             LOG.error("Appending message in an unknown mailbox", e);
             responseBuilder.notCreated(create.getCreationId(), 
                     SetError.builder()
@@ -215,9 +216,9 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         attachmentChecker.assertAttachmentsExist(entry, session);
     }
 
-    @VisibleForTesting void validateIsUserOwnerOfMailboxes(CreationMessageEntry entry, MailboxSession session) throws MailboxRightsException {
+    @VisibleForTesting void validateIsUserOwnerOfMailboxes(CreationMessageEntry entry, MailboxSession session) throws MailboxNotOwnedException {
         if (containsMailboxNotOwn(entry.getValue().getMailboxIds(), session)) {
-            throw new MailboxRightsException();
+            throw new MailboxNotOwnedException();
         }
     }
 
