@@ -128,6 +128,7 @@ public class MessageProperties {
         isFlagged("isFlagged"),
         isAnswered("isAnswered"),
         isDraft("isDraft"),
+        isForwarded("isForwarded"),
         hasAttachment("hasAttachment"),
         headers("headers"),
         from("from"),

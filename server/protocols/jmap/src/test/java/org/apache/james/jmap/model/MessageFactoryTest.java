@@ -90,7 +90,7 @@ public class MessageFactoryTest {
     public void flagsShouldBeSetIntoMessage() throws Exception {
         MetaDataWithContent testMail = MetaDataWithContent.builder()
                 .uid(MessageUid.of(2))
-                .keywords(Keywords.factory().from(Keyword.ANSWERED, Keyword.FLAGGED, Keyword.DRAFT))
+                .keywords(Keywords.factory().from(Keyword.ANSWERED, Keyword.FLAGGED, Keyword.DRAFT, Keyword.FORWARDED))
                 .size(0)
                 .internalDate(INTERNAL_DATE)
                 .content(new ByteArrayInputStream("".getBytes(Charsets.UTF_8)))
@@ -100,8 +100,8 @@ public class MessageFactoryTest {
                 .build();
         Message testee = messageFactory.fromMetaDataWithContent(testMail);
         assertThat(testee)
-            .extracting(Message::isIsUnread, Message::isIsFlagged, Message::isIsAnswered, Message::isIsDraft)
-            .containsExactly(true, true, true, true);
+            .extracting(Message::isIsUnread, Message::isIsFlagged, Message::isIsAnswered, Message::isIsDraft, Message::isIsForwarded)
+            .containsExactly(true, true, true, true, true);
     }
 
     @Test

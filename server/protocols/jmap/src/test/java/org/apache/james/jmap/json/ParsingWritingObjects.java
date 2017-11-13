@@ -51,7 +51,7 @@ public interface ParsingWritingObjects {
         Flags FLAGS = FlagsBuilder.builder()
                 .add(Flags.Flag.FLAGGED, Flags.Flag.ANSWERED, Flags.Flag.DRAFT, Flags.Flag.SEEN)
                 .build();
-        ImmutableSet<Keyword> KEYWORDS = ImmutableSet.of(Keyword.DRAFT, Keyword.FLAGGED, Keyword.ANSWERED, Keyword.SEEN);
+        ImmutableSet<Keyword> KEYWORDS = ImmutableSet.of(Keyword.DRAFT, Keyword.FLAGGED, Keyword.ANSWERED, Keyword.SEEN, Keyword.FORWARDED);
         boolean HAS_ATTACHMENT = true;
         ImmutableMap<String, String> HEADERS = ImmutableMap.of("h1", "h1Value", "h2", "h2Value");
         Emailer FROM = Emailer.builder().name("myName").email("myEmail@james.org").build();

@@ -994,6 +994,53 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".list[0].isAnswered", equalTo(true));
     }
 
+
+    @Test
+    public void setMessagesShouldMarkMessageAsForwardWhenIsForwardedPassed() throws MailboxException {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
+
+        ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+        await();
+
+        String serializedMessageId = message.getMessageId().serialize();
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isForwarded\" : true } } }, \"#0\"]]", serializedMessageId))
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .spec(getSetMessagesUpdateOKResponseAssertions(serializedMessageId));
+    }
+
+    @Test
+    public void setMessagesShouldMarkAsForwardedWhenIsForwardedPassed() throws MailboxException {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
+
+        ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+        await();
+
+        String serializedMessageId = message.getMessageId().serialize();
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isForwarded\" : true } } }, \"#0\"]]", serializedMessageId))
+        .when()
+            .post("/jmap");
+
+        with()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + serializedMessageId + "\"]}, \"#0\"]]")
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(ARGUMENTS + ".list[0].isForwarded", equalTo(true));
+    }
+
     @Test
     public void setMessagesShouldReturnNotFoundWhenUpdateUnknownMessage() {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");

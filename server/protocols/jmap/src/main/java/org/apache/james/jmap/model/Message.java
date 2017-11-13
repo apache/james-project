@@ -332,6 +332,10 @@ public class Message {
         return keywords.contains(Keyword.DRAFT);
     }
 
+    public boolean isIsForwarded() {
+        return keywords.contains(Keyword.FORWARDED);
+    }
+
     public boolean isHasAttachment() {
         return hasAttachment;
     }
