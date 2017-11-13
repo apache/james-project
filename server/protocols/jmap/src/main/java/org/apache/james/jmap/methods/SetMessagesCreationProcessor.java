@@ -31,6 +31,7 @@ import javax.mail.MessagingException;
 
 import org.apache.james.jmap.exceptions.AttachmentsNotFoundException;
 import org.apache.james.jmap.exceptions.InvalidDraftKeywordsException;
+import org.apache.james.jmap.exceptions.InvalidMailboxForCreationException;
 import org.apache.james.jmap.exceptions.MailboxNotOwnedException;
 import org.apache.james.jmap.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.methods.ValueWithId.MessageWithId;
@@ -137,12 +138,12 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                         .description("Attachment not found")
                         .build());
             
-        } catch (MailboxNotImplementedException e) {
+        } catch (InvalidMailboxForCreationException e) {
             responseBuilder.notCreated(create.getCreationId(), 
                     SetError.builder()
                         .type("invalidProperties")
                         .properties(MessageProperty.mailboxIds)
-                        .description("Not yet implemented")
+                        .description("Message creation is only supported in mailboxes with role Draft and Outbox")
                         .build());
 
         } catch (MailboxInvalidMessageCreationException e) {
@@ -175,13 +176,13 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         }
     }
     
-    private void performCreate(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session) throws MailboxException, MailboxNotImplementedException, MessagingException, AttachmentsNotFoundException {
+    private void performCreate(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session) throws MailboxException, InvalidMailboxForCreationException, MessagingException, AttachmentsNotFoundException {
         if (isAppendToMailboxWithRole(Role.DRAFTS, entry.getValue(), session)) {
             saveDraft(entry, responseBuilder, session);
         } else if (isAppendToMailboxWithRole(Role.OUTBOX, entry.getValue(), session)) {
             sendMailViaOutbox(entry, responseBuilder, session);
         } else {
-            throw new MailboxNotImplementedException("The only implemented feature is sending via outbox and draft saving");
+            throw new InvalidMailboxForCreationException("The only implemented feature is sending via outbox and draft saving");
         }
     }
 

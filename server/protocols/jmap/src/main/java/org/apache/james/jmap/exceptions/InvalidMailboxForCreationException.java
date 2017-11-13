@@ -17,13 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.methods;
+package org.apache.james.jmap.exceptions;
 
 import org.apache.james.mailbox.exception.MailboxException;
 
-public class MailboxNotImplementedException extends MailboxException {
+public class InvalidMailboxForCreationException extends MailboxException {
 
-    public MailboxNotImplementedException(String message) {
+    public InvalidMailboxForCreationException(String message) {
         super(message);
     }
     

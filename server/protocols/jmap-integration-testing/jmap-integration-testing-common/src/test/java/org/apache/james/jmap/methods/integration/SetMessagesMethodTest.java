@@ -1439,11 +1439,11 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
             .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].type", equalTo("invalidProperties"))
             .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].properties", contains("mailboxIds"))
-            .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].description", equalTo("Not yet implemented"));
+            .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].description", equalTo("Message creation is only supported in mailboxes with role Draft and Outbox"));
     }
 
     @Test
-    public void setMessagesShouldBeCompatibleWithIsDraftProperty() {
+    public void setMessageShouldAllowDraftCreationWhenUsingIsDraftProperty() {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         String requestBody = "[" +
@@ -1511,7 +1511,7 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
             .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].type", equalTo("invalidProperties"))
             .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].properties", contains("mailboxIds"))
-            .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].description", equalTo("Not yet implemented"));
+            .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].description", equalTo("Message creation is only supported in mailboxes with role Draft and Outbox"));
     }
 
     @Test
@@ -2645,7 +2645,7 @@ public abstract class SetMessagesMethodTest {
             .statusCode(200)
             .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
             .body(notCreatedMessage + ".type", equalTo("invalidProperties"))
-            .body(notCreatedMessage + ".description", equalTo("Not yet implemented"))
+            .body(notCreatedMessage + ".description", equalTo("Message creation is only supported in mailboxes with role Draft and Outbox"))
             .body(ARGUMENTS + ".created", aMapWithSize(0));
     }
 
