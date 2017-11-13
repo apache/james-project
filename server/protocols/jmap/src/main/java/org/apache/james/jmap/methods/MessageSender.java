@@ -19,8 +19,6 @@
 
 package org.apache.james.jmap.methods;
 
-import java.io.IOException;
-
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
@@ -48,20 +46,12 @@ public class MessageSender {
                             Envelope envelope,
                             MailboxSession session) throws MailboxException, MessagingException {
         assertUserIsInSenders(envelope, session);
-        Mail mail = buildMessage(message, envelope);
+        Mail mail = mailFactory.build(message, envelope);
         try {
             MailMetadata metadata = new MailMetadata(message.getMessageId(), session.getUser().getUserName());
             mailSpool.send(mail, metadata);
         } finally {
             LifecycleUtil.dispose(mail);
-        }
-    }
-
-    private Mail buildMessage(MessageFactory.MetaDataWithContent message, Envelope envelope) throws MessagingException {
-        try {
-            return mailFactory.build(message, envelope);
-        } catch (IOException e) {
-            throw new MessagingException("error building message to send", e);
         }
     }
 

@@ -19,8 +19,6 @@
 
 package org.apache.james.jmap.send;
 
-import java.io.IOException;
-
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
@@ -38,7 +36,7 @@ public class MailFactory {
     @VisibleForTesting MailFactory() {
     }
 
-    public Mail build(MetaDataWithContent message, Envelope envelope) throws MessagingException, IOException {
+    public Mail build(MetaDataWithContent message, Envelope envelope) throws MessagingException {
         ImmutableSet<MailAddress> recipients = Sets.union(
             Sets.union(envelope.getTo(), envelope.getCc()),
                 envelope.getBcc()).immutableCopy();
