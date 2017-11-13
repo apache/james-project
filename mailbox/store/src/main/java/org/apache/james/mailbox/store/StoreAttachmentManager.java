@@ -53,6 +53,11 @@ public class StoreAttachmentManager implements AttachmentManager {
     }
 
     @Override
+    public boolean exists(AttachmentId attachmentId, MailboxSession session) throws MailboxException {
+        return userHasAccessToAttachment(attachmentId, session);
+    }
+
+    @Override
     public Attachment getAttachment(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException, AttachmentNotFoundException {
         if (!userHasAccessToAttachment(attachmentId, mailboxSession)) {
             throw new AttachmentNotFoundException(attachmentId.getId());

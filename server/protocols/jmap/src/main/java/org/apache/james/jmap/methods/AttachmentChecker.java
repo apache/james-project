@@ -28,7 +28,6 @@ import org.apache.james.jmap.model.Attachment;
 import org.apache.james.jmap.model.BlobId;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
 
@@ -53,14 +52,8 @@ public class AttachmentChecker {
     }
 
     private List<BlobId> listAttachmentsNotFound(List<Attachment> attachments, MailboxSession session) throws MailboxException {
-        ThrowingPredicate<Attachment> notExists = attachment -> {
-            try {
-                attachmentManager.getAttachment(getAttachmentId(attachment), session);
-                return false;
-            } catch (AttachmentNotFoundException e) {
-                return true;
-            }
-        };
+        ThrowingPredicate<Attachment> notExists =
+            attachment -> !attachmentManager.exists(getAttachmentId(attachment), session);
         return attachments.stream()
             .filter(Throwing.predicate(notExists).sneakyThrow())
             .map(Attachment::getBlobId)

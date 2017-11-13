@@ -30,7 +30,6 @@ import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessageId;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.AttachmentId;
@@ -66,7 +65,7 @@ public class AttachmentCheckerTest {
     public void assertAttachmentsExistShouldThrowWhenUnknownBlobId() throws MailboxException {
         BlobId unknownBlobId = BlobId.of("unknownBlobId");
         AttachmentId unknownAttachmentId = AttachmentId.from(unknownBlobId.getRawValue());
-        when(attachmentManager.getAttachment(unknownAttachmentId, session)).thenThrow(new AttachmentNotFoundException(unknownBlobId.getRawValue()));
+        when(attachmentManager.exists(unknownAttachmentId, session)).thenReturn(false);
 
         assertThatThrownBy(() -> sut.assertAttachmentsExist(
             new ValueWithId.CreationMessageEntry(
@@ -86,8 +85,8 @@ public class AttachmentCheckerTest {
         AttachmentId unknownAttachmentId1 = AttachmentId.from(unknownBlobId1.getRawValue());
         AttachmentId unknownAttachmentId2 = AttachmentId.from(unknownBlobId2.getRawValue());
 
-        when(attachmentManager.getAttachment(unknownAttachmentId1, session)).thenThrow(new AttachmentNotFoundException(unknownBlobId1.getRawValue()));
-        when(attachmentManager.getAttachment(unknownAttachmentId2, session)).thenThrow(new AttachmentNotFoundException(unknownBlobId2.getRawValue()));
+        when(attachmentManager.exists(unknownAttachmentId1, session)).thenReturn(false);
+        when(attachmentManager.exists(unknownAttachmentId2, session)).thenReturn(false);
 
         assertThatThrownBy(() -> sut.assertAttachmentsExist(
             new ValueWithId.CreationMessageEntry(
