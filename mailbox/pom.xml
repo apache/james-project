@@ -95,30 +95,4 @@
         </plugins>
     </build>
 
-    <profiles>
-        <profile>
-            <id>exclude-tika</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-
-            <dependencies>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-james-mailbox-elasticsearch</artifactId>
-                    <type>pom</type>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>org.apache.tika</groupId>
-                            <artifactId>tika-core</artifactId>
-                        </exclusion>
-                        <exclusion>
-                            <groupId>org.apache.tika</groupId>
-                            <artifactId>tika-parsers</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
 </project>
