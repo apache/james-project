@@ -67,7 +67,6 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 
 
 public class SetMessagesCreationProcessor implements SetMessagesProcessor {
@@ -114,7 +113,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         try {
             validateImplementedFeature(create, mailboxSession);
             validateArguments(create, mailboxSession);
-            validateRights(create, mailboxSession);
+            validateIsUserOwnerOfMailboxes(create, mailboxSession);
             MessageWithId created = handleOutboxMessages(create, mailboxSession);
             responseBuilder.created(created.getCreationId(), created.getValue());
 
@@ -219,26 +218,6 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         return AttachmentId.from(attachment.getBlobId().getRawValue());
     }
 
-    private void validateRights(CreationMessageEntry entry, MailboxSession session) throws MailboxSendingNotAllowedException, MailboxRightsException {
-        validateUserIsInSenders(entry, session);
-        validateIsUserOwnerOfMailboxes(entry, session);
-    }
-
-    private void validateUserIsInSenders(CreationMessageEntry entry, MailboxSession session) throws MailboxSendingNotAllowedException {
-        List<String> allowedSenders = ImmutableList.of(session.getUser().getUserName());
-        if (!isAllowedFromAddress(entry.getValue(), allowedSenders)) {
-            throw new MailboxSendingNotAllowedException(allowedSenders);
-        }
-    }
-    
-    private boolean isAllowedFromAddress(CreationMessage creationMessage, List<String> allowedFromMailAddresses) {
-        return creationMessage.getFrom()
-                .map(draftEmailer -> draftEmailer.getEmail()
-                        .map(allowedFromMailAddresses::contains)
-                        .orElse(false))
-                .orElse(false);
-    }
-
     @VisibleForTesting void validateIsUserOwnerOfMailboxes(CreationMessageEntry entry, MailboxSession session) throws MailboxRightsException {
         if (containsMailboxNotOwn(entry.getValue().getMailboxIds(), session)) {
             throw new MailboxRightsException();
@@ -266,7 +245,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     
     private boolean isAppendToMailboxWithRole(Role role, CreationMessage entry, MailboxSession mailboxSession) throws MailboxException {
         return getMailboxWithRole(mailboxSession, role)
-                .map(entry::isIn)
+                .map(entry::isInOnly)
                 .orElse(false);
     }
 

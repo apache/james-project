@@ -51,6 +51,7 @@ public class MessageSender {
     public void sendMessage(Message jmapMessage,
                             MessageFactory.MetaDataWithContent message,
                             MailboxSession session) throws MailboxException, MessagingException {
+        validateUserIsInSenders(jmapMessage, session);
         Mail mail = buildMessage(message, jmapMessage);
         try {
             MailMetadata metadata = new MailMetadata(jmapMessage.getId(), session.getUser().getUserName());
@@ -66,5 +67,20 @@ public class MessageSender {
         } catch (IOException e) {
             throw new MessagingException("error building message to send", e);
         }
+    }
+
+    private void validateUserIsInSenders(Message message, MailboxSession session) throws MailboxSendingNotAllowedException {
+        List<String> allowedSenders = ImmutableList.of(session.getUser().getUserName());
+        if (!isAllowedFromAddress(message, allowedSenders)) {
+            throw new MailboxSendingNotAllowedException(allowedSenders);
+        }
+    }
+
+    private boolean isAllowedFromAddress(Message message, List<String> allowedFromMailAddresses) {
+        return message.getFrom()
+            .map(draftEmailer -> draftEmailer.getEmail()
+                .map(allowedFromMailAddresses::contains)
+                .orElse(false))
+            .orElse(false);
     }
 }

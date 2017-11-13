@@ -370,6 +370,11 @@ public class CreationMessage {
     public boolean isIn(MessageManager mailbox) {
         return mailboxIds.contains(mailbox.getId().serialize());
     }
+
+    public boolean isInOnly(MessageManager mailbox) {
+        return isIn(mailbox)
+            && mailboxIds.size() == 1;
+    }
     
     @JsonDeserialize(builder = DraftEmailer.Builder.class)
     public static class DraftEmailer {
