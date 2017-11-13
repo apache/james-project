@@ -71,12 +71,4 @@
         </plugins>
     </build>
 
-    <profiles>
-        <profile>
-            <id>jpa</id>
-            <properties>
-                <jpa.includes>**/*.java</jpa.includes>
-            </properties>
-        </profile>
-    </profiles>
 </project>
