@@ -396,7 +396,55 @@ public abstract class GetMessageListMethodTest {
                     containsInAnyOrder(messageNotAnswered.getMessageId().serialize()), 
                     not(containsInAnyOrder(messageAnswered.getMessageId().serialize()))));
     }
-    
+
+    @Test
+    public void getMessageListSetForwardedFilterShouldReturnOnlyForwardedMessages() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
+
+        ComposedMessageId messageNotForwarded = mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+        ComposedMessageId messageForwarded = mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
+            ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags(FORWARDED));
+
+        await();
+
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"isForwarded\":\"true\"}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messageList"))
+            .body(ARGUMENTS + ".messageIds", allOf(
+                containsInAnyOrder(messageForwarded.getMessageId().serialize()),
+                not(containsInAnyOrder(messageNotForwarded.getMessageId().serialize()))));
+    }
+
+    @Test
+    public void getMessageListUnsetForwardedFilterShouldReturnOnlyNotForwardedMessages() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
+
+        ComposedMessageId messageNotForwarded = mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+        ComposedMessageId messageForwarded = mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
+            ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags(FORWARDED));
+
+        await();
+
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"isForwarded\":\"false\"}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messageList"))
+            .body(ARGUMENTS + ".messageIds", allOf(
+                containsInAnyOrder(messageNotForwarded.getMessageId().serialize()),
+                not(containsInAnyOrder(messageForwarded.getMessageId().serialize()))));
+    }
+
     @Test
     public void getMessageListANDOperatorShouldReturnMessagesWhichMatchAllConditions() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");

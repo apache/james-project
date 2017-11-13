@@ -85,6 +85,7 @@ public class FilterConditionTest {
         boolean isUnread = true;
         boolean isAnswered = true;
         boolean isDraft = true;
+        boolean isForwarded = true;
         boolean hasAttachment = true;
         String text = "text";
         String from = "sender@james.org";
@@ -99,7 +100,7 @@ public class FilterConditionTest {
         Optional<String> notKeyword = Optional.of("$Flagged");
 
         FilterCondition expectedFilterCondition = new FilterCondition(Optional.of(ImmutableList.of("1")), Optional.of(ImmutableList.of("2")), Optional.of(before), Optional.of(after), Optional.of(minSize), Optional.of(maxSize),
-                Optional.of(isFlagged), Optional.of(isUnread), Optional.of(isAnswered), Optional.of(isDraft), Optional.of(hasAttachment), Optional.of(text), Optional.of(from), 
+                Optional.of(isFlagged), Optional.of(isUnread), Optional.of(isAnswered), Optional.of(isDraft), Optional.of(isForwarded), Optional.of(hasAttachment), Optional.of(text), Optional.of(from),
                 Optional.of(to), Optional.of(cc), Optional.of(bcc), Optional.of(subject), Optional.of(body), Optional.of(attachments), Optional.of(header),
                 hasKeyword, notKeyword);
 
@@ -114,6 +115,7 @@ public class FilterConditionTest {
                 .isUnread(isUnread)
                 .isAnswered(isAnswered)
                 .isDraft(isDraft)
+                .isForwarded(isForwarded)
                 .hasAttachment(hasAttachment)
                 .text(text)
                 .from(from)
