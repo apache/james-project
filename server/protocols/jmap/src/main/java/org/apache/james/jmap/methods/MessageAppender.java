@@ -25,10 +25,12 @@ import java.util.Optional;
 import javax.inject.Inject;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.james.jmap.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.model.Attachment;
 import org.apache.james.jmap.model.Keywords;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.mailbox.AttachmentManager;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
@@ -36,6 +38,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
@@ -49,16 +52,18 @@ import com.google.common.collect.ImmutableList;
 public class MessageAppender {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageAppender.class);
 
+    private final MailboxManager mailboxManager;
     private final AttachmentManager attachmentManager;
     private final MIMEMessageConverter mimeMessageConverter;
 
     @Inject
-    public MessageAppender(AttachmentManager attachmentManager, MIMEMessageConverter mimeMessageConverter) {
+    public MessageAppender(MailboxManager mailboxManager, AttachmentManager attachmentManager, MIMEMessageConverter mimeMessageConverter) {
+        this.mailboxManager = mailboxManager;
         this.attachmentManager = attachmentManager;
         this.mimeMessageConverter = mimeMessageConverter;
     }
 
-    public MessageFactory.MetaDataWithContent createMessageInMailbox(ValueWithId.MessageWithId.CreationMessageEntry createdEntry,
+    public MessageFactory.MetaDataWithContent appendMessageInMailbox(CreationMessageEntry createdEntry,
                                                                      MessageManager mailbox,
                                                                      MailboxSession session) throws MailboxException {
         ImmutableList<MessageAttachment> messageAttachments = getMessageAttachments(session, createdEntry.getValue().getAttachments());
@@ -85,6 +90,14 @@ public class MessageAppender {
             .build();
     }
 
+    public MessageFactory.MetaDataWithContent appendMessageInMailbox(CreationMessageEntry createdEntry,
+                                                                     MailboxId mailboxId,
+                                                                     MailboxSession session) throws MailboxException {
+        return appendMessageInMailbox(createdEntry,
+            mailboxManager.getMailbox(mailboxId, session),
+            session);
+    }
+
     private ImmutableList<MessageAttachment> getMessageAttachments(MailboxSession session, ImmutableList<Attachment> attachments) throws MailboxException {
         ThrowingFunction<Attachment, Optional<MessageAttachment>> toMessageAttachment = att -> messageAttachment(session, att);
         return attachments.stream()
@@ -102,7 +115,6 @@ public class MessageAppender {
                 .isInline(attachment.isIsInline())
                 .build());
         } catch (AttachmentNotFoundException e) {
-            // should not happen (checked before)
             LOGGER.error(String.format("Attachment %s not found", attachment.getBlobId()), e);
             return Optional.empty();
         } catch (IllegalStateException e) {

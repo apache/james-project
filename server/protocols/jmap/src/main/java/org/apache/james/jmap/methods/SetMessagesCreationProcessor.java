@@ -30,9 +30,11 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 
 import org.apache.james.jmap.exceptions.AttachmentsNotFoundException;
+import org.apache.james.jmap.exceptions.InvalidDraftKeywordsException;
 import org.apache.james.jmap.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.methods.ValueWithId.MessageWithId;
 import org.apache.james.jmap.model.CreationMessage;
+import org.apache.james.jmap.model.Keyword;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
@@ -107,11 +109,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     private void handleCreate(CreationMessageEntry create, Builder responseBuilder, MailboxSession mailboxSession) {
         try {
             validateIsUserOwnerOfMailboxes(create, mailboxSession);
-            validateImplementedFeature(create, mailboxSession);
-            validateArguments(create, mailboxSession);
-            MessageWithId created = handleOutboxMessages(create, mailboxSession);
-            responseBuilder.created(created.getCreationId(), created.getValue());
-
+            performCreate(create, responseBuilder, mailboxSession);
         } catch (MailboxSendingNotAllowedException e) {
             responseBuilder.notCreated(create.getCreationId(), 
                     SetError.builder()
@@ -120,6 +118,14 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                         .description("Invalid 'from' field. Must be one of " + 
                                 Joiner.on(", ").join(e.getAllowedFroms()))
                         .build());
+
+        } catch (InvalidDraftKeywordsException e) {
+            responseBuilder.notCreated(create.getCreationId(),
+                SetError.builder()
+                    .type("invalidProperties")
+                    .properties(MessageProperty.keywords)
+                    .description("A draft message should be flagged as Draft")
+                    .build());
 
         } catch (AttachmentsNotFoundException e) {
             responseBuilder.notCreated(create.getCreationId(), 
@@ -154,6 +160,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
             responseBuilder.notCreated(create.getCreationId(), 
                     SetError.builder()
                         .type("error")
+                        .properties(MessageProperty.mailboxIds)
                         .description("MailboxId invalid")
                         .build());
 
@@ -167,15 +174,39 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         }
     }
     
-    private void validateImplementedFeature(CreationMessageEntry entry, MailboxSession session) throws MailboxException, MailboxNotImplementedException {
+    private void performCreate(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session) throws MailboxException, MailboxNotImplementedException, MessagingException, AttachmentsNotFoundException {
         if (isAppendToMailboxWithRole(Role.DRAFTS, entry.getValue(), session)) {
-            throw new MailboxNotImplementedException("Drafts saving is not implemented");
-        }
-        if (!isAppendToMailboxWithRole(Role.OUTBOX, entry.getValue(), session)) {
-            throw new MailboxNotImplementedException("The only implemented feature is sending via outbox");
+            saveDraft(entry, responseBuilder, session);
+        } else if (isAppendToMailboxWithRole(Role.OUTBOX, entry.getValue(), session)) {
+            sendMailViaOutbox(entry, responseBuilder, session);
+        } else {
+            throw new MailboxNotImplementedException("The only implemented feature is sending via outbox and draft saving");
         }
     }
-    
+
+    private void sendMailViaOutbox(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session) throws AttachmentsNotFoundException, MailboxException, MessagingException {
+        validateArguments(entry, session);
+        MessageWithId created = handleOutboxMessages(entry, session);
+        responseBuilder.created(created.getCreationId(), created.getValue());
+    }
+
+    private void saveDraft(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session) throws AttachmentsNotFoundException, MailboxException, MessagingException {
+        attachmentChecker.assertAttachmentsExist(entry, session);
+        assertDraftKeywords(entry);
+        MessageWithId created = handleDraftMessages(entry, session);
+        responseBuilder.created(created.getCreationId(), created.getValue());
+    }
+
+    private void assertDraftKeywords(CreationMessageEntry entry) {
+        Boolean isDraft = entry.getValue()
+            .getKeywords()
+            .map(keywords -> keywords.contains(Keyword.DRAFT))
+            .orElse(false);
+        if (!isDraft) {
+            throw new InvalidDraftKeywordsException();
+        }
+    }
+
     private void validateArguments(CreationMessageEntry entry, MailboxSession session) throws MailboxInvalidMessageCreationException, AttachmentsNotFoundException, MailboxException {
         CreationMessage message = entry.getValue();
         if (!message.isValid()) {
@@ -201,9 +232,16 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
     private MessageWithId handleOutboxMessages(CreationMessageEntry entry, MailboxSession session) throws MailboxException, MessagingException {
         MessageManager outbox = getMailboxWithRole(session, Role.OUTBOX).orElseThrow(() -> new MailboxNotFoundException(Role.OUTBOX.serialize()));
-        MetaDataWithContent newMessage = messageAppender.createMessageInMailbox(entry, outbox, session);
+        MetaDataWithContent newMessage = messageAppender.appendMessageInMailbox(entry, outbox, session);
         Message jmapMessage = messageFactory.fromMetaDataWithContent(newMessage);
         messageSender.sendMessage(jmapMessage, newMessage, session);
+        return new ValueWithId.MessageWithId(entry.getCreationId(), jmapMessage);
+    }
+
+    private MessageWithId handleDraftMessages(CreationMessageEntry entry, MailboxSession session) throws MailboxException, MessagingException {
+        MessageManager draftMailbox = getMailboxWithRole(session, Role.DRAFTS).orElseThrow(() -> new MailboxNotFoundException(Role.DRAFTS.serialize()));
+        MetaDataWithContent newMessage = messageAppender.appendMessageInMailbox(entry, draftMailbox, session);
+        Message jmapMessage = messageFactory.fromMetaDataWithContent(newMessage);
         return new ValueWithId.MessageWithId(entry.getCreationId(), jmapMessage);
     }
     
