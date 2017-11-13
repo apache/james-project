@@ -136,39 +136,35 @@
         </dependency>
     </dependencies>
 
-    <profiles>
-        <profile>
-            <id>swagger-json</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>com.github.kongchen</groupId>
-                        <artifactId>swagger-maven-plugin</artifactId>
-                        <configuration>
-                            <apiSources>
-                                <apiSource>
-                                    <springmvc>false</springmvc>
-                                    <locations>org.apache.james.webadmin</locations>
-                                    <info>
-                                        <title>Swagger Maven Plugin</title>
-                                        <version>v1</version>
-                                    </info>
-                                    <swaggerDirectory>${project.build.directory}</swaggerDirectory>
-                                    <swaggerFileName>webadmin-mailbox</swaggerFileName>
-                                </apiSource>
-                            </apiSources>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <phase>compile</phase>
-                                <goals>
-                                    <goal>generate</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.github.kongchen</groupId>
+                <artifactId>swagger-maven-plugin</artifactId>
+                <configuration>
+                    <apiSources>
+                        <apiSource>
+                            <springmvc>false</springmvc>
+                            <locations>org.apache.james.webadmin</locations>
+                            <info>
+                                <title>Swagger Maven Plugin</title>
+                                <version>v1</version>
+                            </info>
+                            <swaggerDirectory>${project.build.directory}</swaggerDirectory>
+                            <swaggerFileName>webadmin-mailbox</swaggerFileName>
+                        </apiSource>
+                    </apiSources>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>
