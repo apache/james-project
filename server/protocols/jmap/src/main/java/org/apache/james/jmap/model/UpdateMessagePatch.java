@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+
 import javax.mail.Flags;
 
 import org.apache.james.jmap.methods.ValidationResult;
@@ -48,6 +49,7 @@ public class UpdateMessagePatch {
         private Optional<Boolean> isFlagged = Optional.empty();
         private Optional<Boolean> isUnread = Optional.empty();
         private Optional<Boolean> isAnswered = Optional.empty();
+        private Optional<Boolean> isForwarded = Optional.empty();
         private Optional<Map<String, Boolean>> keywords = Optional.empty();
         private Set<ValidationResult> validationResult = Sets.newHashSet();
 
@@ -76,6 +78,11 @@ public class UpdateMessagePatch {
             return this;
         }
 
+        public Builder isForwarded(Boolean isForwarded) {
+            this.isForwarded = Optional.of(isForwarded);
+            return this;
+        }
+
         public Builder validationResult(Set<ValidationResult> validationResult) {
             this.validationResult.addAll(validationResult);
             return this;
@@ -97,9 +104,9 @@ public class UpdateMessagePatch {
         }
 
         private Optional<OldKeyword> getOldKeywords() {
-            if (isAnswered.isPresent() || isFlagged.isPresent() || isUnread.isPresent()) {
+            if (isAnswered.isPresent() || isFlagged.isPresent() || isUnread.isPresent() || isForwarded.isPresent()) {
                 Optional<Boolean> isDraft = Optional.empty();
-                return Optional.of(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft));
+                return Optional.of(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded));
             }
             return Optional.empty();
         }

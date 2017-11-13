@@ -46,6 +46,7 @@ public class Keyword {
     public final static Keyword ANSWERED = new Keyword("$Answered");
     public final static Keyword DELETED = new Keyword("$Deleted");
     public final static Keyword RECENT = new Keyword("$Recent");
+    public final static Keyword FORWARDED = new Keyword("$Forwarded");
     public final static Boolean FLAG_VALUE = true;
 
     private final static ImmutableList<Keyword> NON_EXPOSED_IMAP_KEYWORDS = ImmutableList.of(Keyword.RECENT, Keyword.DELETED);
