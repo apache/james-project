@@ -57,6 +57,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.functions.FunctionChainer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -105,9 +106,9 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
     private void handleCreate(CreationMessageEntry create, Builder responseBuilder, MailboxSession mailboxSession) {
         try {
+            validateIsUserOwnerOfMailboxes(create, mailboxSession);
             validateImplementedFeature(create, mailboxSession);
             validateArguments(create, mailboxSession);
-            validateIsUserOwnerOfMailboxes(create, mailboxSession);
             MessageWithId created = handleOutboxMessages(create, mailboxSession);
             responseBuilder.created(created.getCreationId(), created.getValue());
 
@@ -190,9 +191,10 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     }
 
     private boolean containsMailboxNotOwn(List<String> mailboxIds, MailboxSession session) {
+        FunctionChainer<MailboxId, MessageManager> findMailbox = Throwing.function(mailboxId -> mailboxManager.getMailbox(mailboxId, session));
         return mailboxIds.stream()
             .map(mailboxIdFactory::fromString)
-            .map(Throwing.function(mailboxId -> mailboxManager.getMailbox(mailboxId, session)))
+            .map(findMailbox.sneakyThrow())
             .map(Throwing.function(MessageManager::getMailboxPath))
             .anyMatch(path -> !session.getUser().isSameUser(path.getUser()));
     }

@@ -120,10 +120,13 @@ public abstract class SetMessagesMethodTest {
     private static final String USERS_DOMAIN = "domain.tld";
     private static final String USERNAME = "username@" + USERS_DOMAIN;
     private static final String PASSWORD = "password";
+    private static final String BOB = "bob@" + USERS_DOMAIN;
+    private static final String BOB_PASSWORD = "bobPassword";
     private static final MailboxPath USER_MAILBOX = MailboxPath.forUser(USERNAME, "mailbox");
     private static final String NOT_UPDATED = ARGUMENTS + ".notUpdated";
 
     private ConditionFactory calmlyAwait;
+    private AccessToken bobAccessToken;
 
     protected abstract GuiceJamesServer createJmapServer();
 
@@ -158,8 +161,10 @@ public abstract class SetMessagesMethodTest {
 
         dataProbe.addDomain(USERS_DOMAIN);
         dataProbe.addUser(USERNAME, PASSWORD);
+        dataProbe.addUser(BOB, BOB_PASSWORD);
         mailboxProbe.createMailbox("#private", USERNAME, DefaultMailboxes.INBOX);
         accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USERNAME, PASSWORD);
+        bobAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), BOB, BOB_PASSWORD);
 
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, DefaultMailboxes.OUTBOX);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, DefaultMailboxes.TRASH);
@@ -1182,6 +1187,40 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
+    public void setMessagesShouldReturnValidErrorWhenMailboxNotFound() {
+        String messageCreationId = "creationId1337";
+        String fromAddress = USERNAME;
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", bobAccessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".created", aMapWithSize(0))
+            .body(ARGUMENTS + ".notCreated", aMapWithSize(1))
+            .body(ARGUMENTS + ".notCreated." + messageCreationId + ".type", equalTo("error"))
+            .body(ARGUMENTS + ".notCreated." + messageCreationId + ".description", endsWith("can not be found"));
+    }
+
+    @Test
     public void setMessagesShouldReturnCreatedMessageWithNonASCIICharactersInSubjectWhenPresent() {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
@@ -1325,6 +1364,7 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].keywords.$Flagged", equalTo(true))
             ;
     }
+
     @Test
     public void setMessagesShouldSupportArbitraryMessageId() {
         String messageCreationId = "1717fcd1-603e-44a5-b2a6-1234dbcd5723";
@@ -1890,11 +1930,10 @@ public abstract class SetMessagesMethodTest {
         dataProbe.addUser(recipientAddress, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
 
-        String bccAddress = "bob" + "@" + USERS_DOMAIN;
-        dataProbe.addUser(bccAddress, password);
+        String bccAddress = BOB;
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bccAddress, DefaultMailboxes.INBOX);
         await();
-        AccessToken bccToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), bccAddress, password);
+        AccessToken bccToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), BOB, BOB_PASSWORD);
 
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
