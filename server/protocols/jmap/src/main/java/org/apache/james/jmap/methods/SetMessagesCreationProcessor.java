@@ -110,7 +110,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
     private void handleCreate(CreationMessageEntry create, Builder responseBuilder, MailboxSession mailboxSession) {
         try {
-            validateIsUserOwnerOfMailboxes(create, mailboxSession);
+            assertIsUserOwnerOfMailboxes(create, mailboxSession);
             performCreate(create, responseBuilder, mailboxSession);
         } catch (MailboxSendingNotAllowedException e) {
             responseBuilder.notCreated(create.getCreationId(), 
@@ -217,7 +217,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         attachmentChecker.assertAttachmentsExist(entry, session);
     }
 
-    @VisibleForTesting void validateIsUserOwnerOfMailboxes(CreationMessageEntry entry, MailboxSession session) throws MailboxNotOwnedException {
+    @VisibleForTesting void assertIsUserOwnerOfMailboxes(CreationMessageEntry entry, MailboxSession session) throws MailboxNotOwnedException {
         if (containsMailboxNotOwn(entry.getValue().getMailboxIds(), session)) {
             throw new MailboxNotOwnedException();
         }
