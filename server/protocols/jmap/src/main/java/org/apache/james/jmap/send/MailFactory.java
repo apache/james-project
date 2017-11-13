@@ -20,60 +20,30 @@
 package org.apache.james.jmap.send;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.AddressException;
 
-import org.apache.james.server.core.MailImpl;
-import org.apache.james.jmap.model.Emailer;
-import org.apache.james.jmap.model.Message;
-import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
-import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.james.jmap.model.Envelope;
+import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
+import org.apache.james.server.core.MailImpl;
+import org.apache.mailet.Mail;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 public class MailFactory {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MailFactory.class);
     
     @VisibleForTesting MailFactory() {
     }
 
-    public Mail build(MetaDataWithContent message, Message jmapMessage) throws MessagingException, IOException {
-        MailAddress sender = jmapMessage.getFrom()
-                .map(this::emailerToMailAddress)
-                .orElseThrow(() -> new RuntimeException("Sender is mandatory"));
-        Set<MailAddress> to = emailersToMailAddressSet(jmapMessage.getTo());
-        Set<MailAddress> cc = emailersToMailAddressSet(jmapMessage.getCc());
-        Set<MailAddress> bcc = emailersToMailAddressSet(jmapMessage.getBcc());
+    public Mail build(MetaDataWithContent message, Envelope envelope) throws MessagingException, IOException {
         ImmutableSet<MailAddress> recipients = Sets.union(
-                Sets.union(to, cc),
-                bcc).immutableCopy();
-        return new MailImpl(jmapMessage.getId().serialize(), sender, recipients, message.getContent());
+            Sets.union(envelope.getTo(), envelope.getCc()),
+                envelope.getBcc()).immutableCopy();
+        return new MailImpl(message.getMessageId().serialize(),
+            envelope.getFrom(), recipients, message.getContent());
     }
 
-    private MailAddress emailerToMailAddress(Emailer emailer) {
-        Preconditions.checkArgument(emailer.getEmail().isPresent(), "eMailer mail address should be present when sending a mail using JMAP");
-        try {
-            return new MailAddress(emailer.getEmail().get());
-        } catch (AddressException e) {
-            LOGGER.error("Invalid mail address", emailer.getEmail());
-            throw Throwables.propagate(e);
-        }
-    }
-
-    private Set<MailAddress> emailersToMailAddressSet(List<Emailer> emailers) {
-        return emailers.stream()
-            .map(this::emailerToMailAddress)
-            .collect(Collectors.toSet());
-    }
 }

@@ -29,6 +29,7 @@ import java.util.Collection;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.jmap.model.Envelope;
 import org.apache.james.jmap.model.Keyword;
 import org.apache.james.jmap.model.Keywords;
 import org.apache.james.jmap.model.Message;
@@ -57,6 +58,7 @@ public class MailFactoryTest {
     private MailFactory testee;
     private MetaDataWithContent message;
     private Message jmapMessage;
+    private Envelope envelope;
 
     @Before
     public void init() throws MailboxException {
@@ -88,11 +90,12 @@ public class MailFactoryTest {
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.fromString("fake"));
         MessageFactory messageFactory = new MessageFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor);
         jmapMessage = messageFactory.fromMetaDataWithContent(message);
+        envelope = Envelope.fromMessage(jmapMessage);
     }
 
     @Test(expected=NullPointerException.class)
     public void buildMailShouldThrowWhenNullMailboxMessage() throws Exception {
-        testee.build(null, jmapMessage);
+        testee.build(null, envelope);
     }
 
     @Test(expected=NullPointerException.class)
@@ -110,7 +113,7 @@ public class MailFactoryTest {
                 new MailAddress("2@example.com"),
                 new MailAddress("4@example.com"));
         
-        Mail actual = testee.build(message, jmapMessage);
+        Mail actual = testee.build(message, envelope);
         
         assertThat(actual.getName()).isEqualTo(expectedName);
         assertThat(actual.getSender()).isEqualTo(expectedSender);

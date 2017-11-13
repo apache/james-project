@@ -24,7 +24,7 @@ import java.io.IOException;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
-import org.apache.james.jmap.model.Message;
+import org.apache.james.jmap.model.Envelope;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.send.MailFactory;
 import org.apache.james.jmap.send.MailMetadata;
@@ -44,39 +44,31 @@ public class MessageSender {
         this.mailFactory = mailFactory;
     }
 
-    public void sendMessage(Message jmapMessage,
-                            MessageFactory.MetaDataWithContent message,
+    public void sendMessage(MessageFactory.MetaDataWithContent message,
+                            Envelope envelope,
                             MailboxSession session) throws MailboxException, MessagingException {
-        assertUserIsInSenders(jmapMessage, session);
-        Mail mail = buildMessage(message, jmapMessage);
+        assertUserIsInSenders(envelope, session);
+        Mail mail = buildMessage(message, envelope);
         try {
-            MailMetadata metadata = new MailMetadata(jmapMessage.getId(), session.getUser().getUserName());
+            MailMetadata metadata = new MailMetadata(message.getMessageId(), session.getUser().getUserName());
             mailSpool.send(mail, metadata);
         } finally {
             LifecycleUtil.dispose(mail);
         }
     }
 
-    private Mail buildMessage(MessageFactory.MetaDataWithContent message, Message jmapMessage) throws MessagingException {
+    private Mail buildMessage(MessageFactory.MetaDataWithContent message, Envelope envelope) throws MessagingException {
         try {
-            return mailFactory.build(message, jmapMessage);
+            return mailFactory.build(message, envelope);
         } catch (IOException e) {
             throw new MessagingException("error building message to send", e);
         }
     }
 
-    private void assertUserIsInSenders(Message message, MailboxSession session) throws MailboxSendingNotAllowedException {
+    private void assertUserIsInSenders(Envelope envelope, MailboxSession session) throws MailboxSendingNotAllowedException {
         String allowedSender = session.getUser().getUserName();
-        if (!isAllowedFromAddress(message, allowedSender)) {
+        if (!session.getUser().isSameUser(envelope.getFrom().asString())) {
             throw new MailboxSendingNotAllowedException(allowedSender);
         }
-    }
-
-    private boolean isAllowedFromAddress(Message message, String allowedFromMailAddress) {
-        return message.getFrom()
-            .map(draftEmailer -> draftEmailer.getEmail()
-                .map(allowedFromMailAddress::equals)
-                .orElse(false))
-            .orElse(false);
     }
 }

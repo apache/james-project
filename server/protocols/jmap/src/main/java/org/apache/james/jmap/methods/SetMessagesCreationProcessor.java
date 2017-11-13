@@ -36,6 +36,7 @@ import org.apache.james.jmap.exceptions.MailboxNotOwnedException;
 import org.apache.james.jmap.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.methods.ValueWithId.MessageWithId;
 import org.apache.james.jmap.model.CreationMessage;
+import org.apache.james.jmap.model.Envelope;
 import org.apache.james.jmap.model.Keyword;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageFactory;
@@ -235,7 +236,8 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         MessageManager outbox = getMailboxWithRole(session, Role.OUTBOX).orElseThrow(() -> new MailboxNotFoundException(Role.OUTBOX.serialize()));
         MetaDataWithContent newMessage = messageAppender.appendMessageInMailbox(entry, outbox, session);
         Message jmapMessage = messageFactory.fromMetaDataWithContent(newMessage);
-        messageSender.sendMessage(jmapMessage, newMessage, session);
+        Envelope envelope = Envelope.fromMessage(jmapMessage);
+        messageSender.sendMessage(newMessage, envelope, session);
         return new ValueWithId.MessageWithId(entry.getCreationId(), jmapMessage);
     }
 
