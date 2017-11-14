@@ -30,20 +30,24 @@ public class OldKeyword {
     private final Optional<Boolean> isFlagged;
     private final Optional<Boolean> isAnswered;
     private final Optional<Boolean> isDraft;
+    private final Optional<Boolean> isForwarded;
 
     @VisibleForTesting
-    OldKeyword(boolean isUnread, boolean isFlagged, boolean isAnswered, boolean isDraft) {
+    OldKeyword(boolean isUnread, boolean isFlagged, boolean isAnswered, boolean isDraft, boolean isForwarded) {
         this.isUnread = Optional.of(isUnread);
         this.isFlagged = Optional.of(isFlagged);
         this.isAnswered = Optional.of(isAnswered);
         this.isDraft = Optional.of(isDraft);
+        this.isForwarded = Optional.of(isForwarded);
     }
 
-    public OldKeyword(Optional<Boolean> isUnread, Optional<Boolean> isFlagged, Optional<Boolean> isAnswered, Optional<Boolean> isDraft) {
+    public OldKeyword(Optional<Boolean> isUnread, Optional<Boolean> isFlagged, Optional<Boolean> isAnswered,
+                      Optional<Boolean> isDraft, Optional<Boolean> isForwarded) {
         this.isUnread = isUnread;
         this.isFlagged = isFlagged;
         this.isAnswered = isAnswered;
         this.isDraft = isDraft;
+        this.isForwarded = isForwarded;
     }
 
     public Optional<Boolean> isUnread() {
@@ -62,6 +66,10 @@ public class OldKeyword {
         return isDraft;
     }
 
+    public Optional<Boolean> isForwarded() {
+        return isForwarded;
+    }
+
     @Override
     public final boolean equals(Object other) {
         if (other instanceof OldKeyword) {
@@ -69,14 +77,15 @@ public class OldKeyword {
             return Objects.equal(isUnread, oldKeyword.isUnread)
                 && Objects.equal(isFlagged, oldKeyword.isFlagged)
                 && Objects.equal(isAnswered, oldKeyword.isAnswered)
-                && Objects.equal(isDraft, oldKeyword.isDraft);
+                && Objects.equal(isDraft, oldKeyword.isDraft)
+                && Objects.equal(isForwarded, oldKeyword.isForwarded);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hashCode(isUnread, isFlagged, isAnswered, isDraft);
+        return Objects.hashCode(isUnread, isFlagged, isAnswered, isDraft, isForwarded);
     }
 
     @Override
@@ -86,6 +95,7 @@ public class OldKeyword {
                 .add("isFlagged", isFlagged)
                 .add("isAnswered", isAnswered)
                 .add("isDraft", isDraft)
+                .add("isForwarded", isForwarded)
                 .toString();
     }
 

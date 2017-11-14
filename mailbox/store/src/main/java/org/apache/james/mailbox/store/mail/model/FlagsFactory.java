@@ -25,6 +25,7 @@ import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 public class FlagsFactory {
@@ -114,6 +115,7 @@ public class FlagsFactory {
                         toUserFlagStream(flagsOrEmpty),
                         userFlags.stream())
                     .distinct()
+                    .filter(s -> !Strings.isNullOrEmpty(s))
                     .filter(flagsFilter.getUserFlagFilter());
 
             final Flags result = new Flags();

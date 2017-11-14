@@ -63,7 +63,7 @@ public class FlagsFactoryTest {
     public void builderShouldAcceptNullUserFlags() {
         assertThat(
             FlagsFactory.builder()
-                .addUserFlags(null)
+                .addUserFlags((String)null)
                 .build())
             .isEqualTo(new Flags());
     }
@@ -121,6 +121,21 @@ public class FlagsFactoryTest {
             .build();
         assertThat(actual.getSystemFlags()).containsOnly(Flag.SEEN);
         assertThat(actual.getUserFlags()).containsOnly("soCool");
+    }
+
+    @Test
+    public void builderShouldTrimEmptyUserFlags() {
+        Flags flags = new Flags();
+        flags.add("");
+        flags.add("value2");
+        Flags actual = FlagsFactory.builder().flags(flags).addUserFlags("", "value").build();
+        assertThat(actual.getUserFlags()).containsOnly("value", "value2");
+    }
+
+    @Test
+    public void builderShouldTrimNullUserFlags() {
+        Flags actual = FlagsFactory.builder().addUserFlags(null, "value").build();
+        assertThat(actual.getUserFlags()).containsOnly("value");
     }
 
 }

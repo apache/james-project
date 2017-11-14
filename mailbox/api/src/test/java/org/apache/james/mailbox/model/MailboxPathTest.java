@@ -24,7 +24,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 public class MailboxPathTest {
+
+    @Test
+    public void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(MailboxPath.class)
+            .allFieldsShouldBeUsed()
+            .verify();
+    }
 
     @Test
     public void getHierarchyLevelsShouldBeOrdered() {
@@ -58,5 +67,61 @@ public class MailboxPathTest {
             .getHierarchyLevels('.'))
             .containsExactly(
                 MailboxPath.forUser("user", null));
+    }
+
+    @Test
+    public void sanitizeShouldNotThrowOnNullMailboxName() {
+        assertThat(MailboxPath.forUser("user", null)
+            .sanitize('.'))
+            .isEqualTo(
+                MailboxPath.forUser("user", null));
+    }
+
+    @Test
+    public void sanitizeShouldReturnEmptyWhenEmpty() {
+        assertThat(MailboxPath.forUser("user", "")
+            .sanitize('.'))
+            .isEqualTo(
+                MailboxPath.forUser("user", ""));
+    }
+
+    @Test
+    public void sanitizeShouldRemoveMaximumOneTrailingDelimiterWhenAlone() {
+        assertThat(MailboxPath.forUser("user", ".")
+            .sanitize('.'))
+            .isEqualTo(
+                MailboxPath.forUser("user", ""));
+    }
+
+    @Test
+    public void sanitizeShouldPreserveHeadingDelimiter() {
+        assertThat(MailboxPath.forUser("user", ".a")
+            .sanitize('.'))
+            .isEqualTo(
+                MailboxPath.forUser("user", ".a"));
+    }
+
+    @Test
+    public void sanitizeShouldRemoveTrailingDelimiter() {
+        assertThat(MailboxPath.forUser("user", "a.")
+            .sanitize('.'))
+            .isEqualTo(
+                MailboxPath.forUser("user", "a"));
+    }
+
+    @Test
+    public void sanitizeShouldRemoveMaximumOneTrailingDelimiter() {
+        assertThat(MailboxPath.forUser("user", "a..")
+            .sanitize('.'))
+            .isEqualTo(
+                MailboxPath.forUser("user", "a."));
+    }
+
+    @Test
+    public void sanitizeShouldPreserveRedundantDelimiters() {
+        assertThat(MailboxPath.forUser("user", "a..a")
+            .sanitize('.'))
+            .isEqualTo(
+                MailboxPath.forUser("user", "a..a"));
     }
 }

@@ -8,6 +8,7 @@
     "isFlagged": true,
     "isAnswered": true,
     "isDraft": true,
+    "isForwarded": true,
     "hasAttachment": false,
     "headers": { "h1": "h1Value", "h2": "h2Value" },
     "from": { "name": "myName", "email": "myEmail@james.org"},
@@ -23,5 +24,5 @@
     "htmlBody": "<h1>myHtmlBody</h1>",
     "attachments": [ ],
     "attachedMessages": { },
-    "keywords": {"$Draft" : true, "$Flagged" : true, "$Answered" : true, "$Seen" : true}
+    "keywords": {"$Draft" : true, "$Flagged" : true, "$Answered" : true, "$Seen" : true, "$Forwarded" : true}
 }

@@ -578,7 +578,7 @@
         -->
         <deployTechnicalSiteDirectory />
 
-        <activemq.version>5.15.0</activemq.version>
+        <activemq.version>5.15.2</activemq.version>
         <apache-mime4j.version>0.8.1</apache-mime4j.version>
         <camel.version>2.19.1</camel.version>
         <derby.version>10.9.1.0</derby.version>
@@ -634,7 +634,7 @@
         <karaf.tooling.exam.container.version>2.3.0</karaf.tooling.exam.container.version>
         <pax-logging-api.version>1.6.4</pax-logging-api.version>
         <jackson-data.version>2.6.3</jackson-data.version>
-        <jetty.version>9.4.4.v20170414</jetty.version>
+        <jetty.version>9.4.7.v20170914</jetty.version>
         <cassandra-unit.version>2.1.9.2</cassandra-unit.version>
         <assertj-guava.version>3.1.0</assertj-guava.version>
         <testcontainers-version>1.4.2</testcontainers-version>
@@ -672,7 +672,7 @@
         <guice.version>4.0</guice.version>
         <jackrabbit-core.version>2.5.2</jackrabbit-core.version>
 
-        <logback.version>1.1.7</logback.version>
+        <logback.version>1.1.11</logback.version>
     </properties>
 
     <dependencyManagement>
@@ -1396,7 +1396,7 @@
             <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-core</artifactId>
-                <version>1.1.7</version>
+                <version>${logback.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.beetstra.jutf7</groupId>

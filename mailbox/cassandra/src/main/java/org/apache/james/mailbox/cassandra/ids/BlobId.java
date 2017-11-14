@@ -30,7 +30,7 @@ import com.google.common.base.Strings;
 public class BlobId {
     public static BlobId forPayload(byte[] payload) {
         Preconditions.checkArgument(payload != null);
-        return new BlobId(DigestUtils.sha1Hex(payload));
+        return new BlobId(DigestUtils.sha256Hex(payload));
     }
 
     public static BlobId from(String id) {

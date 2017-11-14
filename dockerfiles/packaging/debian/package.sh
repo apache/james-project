@@ -14,9 +14,10 @@ fi
 
 RELEASE=$1
 ITERATION=$2
-cp /jars/james-server.jar /debian/package/usr/share/james/
+cp /jars/james-server-cassandra-guice.jar /debian/package/usr/share/james/james-server.jar
 cp -r /jars/james-server-cassandra-guice.lib /debian/package/usr/share/james/
-cp /jars/james-cli.jar /debian/package/usr/share/james/
+cp /jars/james-server-cli.jar /debian/package/usr/share/james/james-cli.jar
+cp -r /jars/james-server-cli.lib /debian/package/usr/share/james/
 
 fpm -s dir -t deb \
  -n james \

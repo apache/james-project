@@ -20,9 +20,11 @@
 package org.apache.james.jmap.methods;
 
 import static org.apache.james.jmap.methods.Method.JMAP_PREFIX;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
 import javax.inject.Inject;
 
 import org.apache.james.jmap.exceptions.MailboxParentNotFoundException;
@@ -170,10 +172,10 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
                             .orElseThrow(() -> new MailboxParentNotFoundException(parentId))
                     ));
 
-            return new MailboxPath(mailboxSession.getPersonalSpace(), mailboxSession.getUser().getUserName(), 
+            return MailboxPath.forUser(mailboxSession.getUser().getUserName(),
                     parentName + mailboxSession.getPathDelimiter() + mailboxRequest.getName());
         }
-        return new MailboxPath(mailboxSession.getPersonalSpace(), mailboxSession.getUser().getUserName(), mailboxRequest.getName());
+        return MailboxPath.forUser(mailboxSession.getUser().getUserName(), mailboxRequest.getName());
     }
 
     private Optional<String> getMailboxNameFromId(MailboxCreationId creationId, MailboxSession mailboxSession) {

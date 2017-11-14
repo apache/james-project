@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
@@ -62,6 +63,7 @@ public class CreationMessage {
         private Optional<Boolean> isFlagged = Optional.empty();
         private Optional<Boolean> isAnswered = Optional.empty();
         private Optional<Boolean> isDraft = Optional.empty();
+        private Optional<Boolean> isForwarded = Optional.empty();
         private final ImmutableMap.Builder<String, String> headers;
         private Optional<DraftEmailer> from = Optional.empty();
         private final ImmutableList.Builder<DraftEmailer> to;
@@ -118,6 +120,11 @@ public class CreationMessage {
 
         public Builder isDraft(Optional<Boolean> isDraft) {
             this.isDraft = isDraft;
+            return this;
+        }
+
+        public Builder isForwarded(Optional<Boolean> isForwarded) {
+            this.isForwarded = isForwarded;
             return this;
         }
 
@@ -225,8 +232,8 @@ public class CreationMessage {
         }
 
         private Optional<OldKeyword> getOldKeywords() {
-            if (isAnswered.isPresent() || isFlagged.isPresent() || isUnread.isPresent() || isDraft.isPresent()) {
-                return Optional.of(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft));
+            if (isAnswered.isPresent() || isFlagged.isPresent() || isUnread.isPresent() || isDraft.isPresent() || isForwarded.isPresent()) {
+                return Optional.of(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded));
             }
             return Optional.empty();
         }

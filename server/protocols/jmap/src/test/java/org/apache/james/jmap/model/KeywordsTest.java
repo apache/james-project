@@ -20,21 +20,23 @@
 package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Map;
 import java.util.Optional;
+
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.james.mailbox.FlagsBuilder;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class KeywordsTest {
     public static final String ANY_KEYWORD = "AnyKeyword";
@@ -87,11 +89,26 @@ public class KeywordsTest {
         Optional<Boolean> isUnread = Optional.empty();
         Optional<Boolean> isFlagged = Optional.empty();
         Optional<Boolean> isDraft = Optional.empty();
+        Optional<Boolean> isForwarded = Optional.empty();
         Keywords keywords = Keywords.factory()
-            .fromOldKeyword(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft));
+            .fromOldKeyword(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded));
 
         assertThat(keywords.getKeywords())
             .containsOnly(Keyword.ANSWERED);
+    }
+
+    @Test
+    public void fromOldKeywordsShouldReturnKeywordsFromIsForwarded() throws Exception {
+        Optional<Boolean> isAnswered = Optional.empty();
+        Optional<Boolean> isUnread = Optional.empty();
+        Optional<Boolean> isFlagged = Optional.empty();
+        Optional<Boolean> isDraft = Optional.empty();
+        Optional<Boolean> isForwarded = Optional.of(true);
+        Keywords keywords = Keywords.factory()
+            .fromOldKeyword(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded));
+
+        assertThat(keywords.getKeywords())
+            .containsOnly(Keyword.FORWARDED);
     }
 
     @Test
@@ -100,8 +117,9 @@ public class KeywordsTest {
         Optional<Boolean> isUnread = Optional.empty();
         Optional<Boolean> isFlagged = Optional.empty();
         Optional<Boolean> isDraft = Optional.of(true);
+        Optional<Boolean> isForwarded = Optional.empty();
         Keywords keywords = Keywords.factory()
-            .fromOldKeyword(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft));
+            .fromOldKeyword(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded));
 
         assertThat(keywords.getKeywords())
             .containsOnly(Keyword.DRAFT);
@@ -113,8 +131,9 @@ public class KeywordsTest {
         Optional<Boolean> isUnread = Optional.empty();
         Optional<Boolean> isFlagged = Optional.of(true);
         Optional<Boolean> isDraft = Optional.empty();
+        Optional<Boolean> isForwarded = Optional.empty();
         Keywords keywords = Keywords.factory()
-            .fromOldKeyword(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft));
+            .fromOldKeyword(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded));
 
         assertThat(keywords.getKeywords())
             .containsOnly(Keyword.FLAGGED);
@@ -126,8 +145,9 @@ public class KeywordsTest {
         Optional<Boolean> isUnread = Optional.of(false);
         Optional<Boolean> isFlagged = Optional.empty();
         Optional<Boolean> isDraft = Optional.empty();
+        Optional<Boolean> isForwarded = Optional.empty();
         Keywords keywords = Keywords.factory()
-            .fromOldKeyword(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft));
+            .fromOldKeyword(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded));
 
         assertThat(keywords.getKeywords())
             .containsOnly(Keyword.SEEN);
@@ -139,8 +159,9 @@ public class KeywordsTest {
         Optional<Boolean> isUnread = Optional.of(true);
         Optional<Boolean> isFlagged = Optional.of(true);
         Optional<Boolean> isDraft = Optional.of(true);
+        Optional<Boolean> isForwarded = Optional.empty();
         Keywords keywords = Keywords.factory()
-            .fromOldKeyword(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft));
+            .fromOldKeyword(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded));
 
         assertThat(keywords.getKeywords())
             .containsOnly(Keyword.ANSWERED, Keyword.DRAFT, Keyword.FLAGGED);
@@ -166,8 +187,9 @@ public class KeywordsTest {
         Optional<Boolean> isUnread = Optional.of(true);
         Optional<Boolean> isFlagged = Optional.of(true);
         Optional<Boolean> isDraft = Optional.of(true);
+        Optional<Boolean> isForwarded = Optional.of(true);
 
-        OldKeyword oldKeyword = new OldKeyword(isUnread, isFlagged, isAnswered, isDraft);
+        OldKeyword oldKeyword = new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded);
 
         assertThat(Keywords.factory()
             .fromMapOrOldKeyword(Optional.empty(), Optional.of(oldKeyword)))
@@ -181,8 +203,9 @@ public class KeywordsTest {
         Optional<Boolean> isUnread = Optional.of(true);
         Optional<Boolean> isFlagged = Optional.of(true);
         Optional<Boolean> isDraft = Optional.of(true);
+        Optional<Boolean> isForwarded = Optional.of(true);
 
-        OldKeyword oldKeyword = new OldKeyword(isUnread, isFlagged, isAnswered, isDraft);
+        OldKeyword oldKeyword = new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded);
 
         Keywords.factory()
             .fromMapOrOldKeyword(Optional.of(ImmutableMap.of()), Optional.of(oldKeyword));
@@ -205,14 +228,15 @@ public class KeywordsTest {
         Optional<Boolean> isUnread = Optional.of(true);
         Optional<Boolean> isFlagged = Optional.of(true);
         Optional<Boolean> isDraft = Optional.of(true);
+        Optional<Boolean> isForwarded = Optional.of(true);
 
-        OldKeyword oldKeyword = new OldKeyword(isUnread, isFlagged, isAnswered, isDraft);
+        OldKeyword oldKeyword = new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded);
 
         Keywords keywords = Keywords.factory()
             .fromMapOrOldKeyword(Optional.empty(), Optional.of(oldKeyword))
             .get();
         assertThat(keywords.getKeywords())
-            .containsOnly(Keyword.ANSWERED, Keyword.DRAFT, Keyword.FLAGGED);
+            .containsOnly(Keyword.ANSWERED, Keyword.DRAFT, Keyword.FLAGGED, Keyword.FORWARDED);
     }
 
     @Test

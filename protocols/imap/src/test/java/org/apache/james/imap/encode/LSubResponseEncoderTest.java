@@ -19,65 +19,57 @@
 
 package org.apache.james.imap.encode;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.LSubResponse;
 import org.apache.james.imap.message.response.ListResponse;
+import org.apache.james.mailbox.model.MailboxMetaData;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
 
 public class LSubResponseEncoderTest  {
+    private LSubResponseEncoder encoder;
 
-    LSubResponseEncoder encoder;
-
-    ImapEncoder mockNextEncoder;
-
-    ByteImapResponseWriter writer = new ByteImapResponseWriter();
-    ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
+    private ByteImapResponseWriter writer = new ByteImapResponseWriter();
+    private ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
 
     private Mockery context = new JUnit4Mockery();
-    
+
     @Before
     public void setUp() throws Exception {
-        mockNextEncoder = context.mock(ImapEncoder.class);
-        encoder = new LSubResponseEncoder(mockNextEncoder);
+        encoder = new LSubResponseEncoder(context.mock(ImapEncoder.class));
     }
 
     @Test
-    public void testIsAcceptable() {
-        assertFalse(encoder.isAcceptable(new ListResponse(true, true, true,
-                true, false, false, "name", '.')));
-        assertTrue(encoder.isAcceptable(new LSubResponse("name", true, '.')));
-        assertFalse(encoder.isAcceptable(context.mock(ImapMessage.class)));
-        assertFalse(encoder.isAcceptable(null));
+    public void encoderShouldNotAcceptListResponse() {
+        assertThat(encoder.isAcceptable(new ListResponse(MailboxMetaData.Children.HAS_CHILDREN, MailboxMetaData.Selectability.NOSELECT, "name", '.')))
+            .isFalse();
     }
 
     @Test
-	public void testName() throws Exception {
-        encoder.encode(new LSubResponse("INBOX.name", false, '.'), composer, new FakeImapSession());
-        assertEquals("* LSUB () \".\" \"INBOX.name\"\r\n", writer.getString());
-
+    public void encoderShouldAcceptLsubResponse() {
+        assertThat(encoder.isAcceptable(new LSubResponse("name", true, '.'))).isTrue();
     }
 
     @Test
-	public void testDelimiter() throws Exception {
-        encoder.encode(new LSubResponse("INBOX.name", false, '.'), composer, new FakeImapSession());
-        assertEquals("* LSUB () \".\" \"INBOX.name\"\r\n", writer.getString());
-
+    public void encoderShouldNotAcceptImapMessage() {
+        assertThat(encoder.isAcceptable(context.mock(ImapMessage.class))).isFalse();
     }
 
     @Test
-    public void testNoSelect() throws Exception {
-        encoder.encode(new LSubResponse("INBOX.name", true, '.'), composer, new FakeImapSession());
-        assertEquals("* LSUB (\\Noselect) \".\" \"INBOX.name\"\r\n", writer.getString());
-
-
+    public void encoderShouldNotAcceptNull() {
+        assertThat(encoder.isAcceptable(null)).isFalse();
     }
+
+    @Test
+    public void encoderShouldIncludeLSUBCommand() throws Exception {
+        encoder.encode(new LSubResponse("name", true, '.'), composer, new FakeImapSession());
+        assertThat(writer.getString()).startsWith("* LSUB");
+    }
+
 }

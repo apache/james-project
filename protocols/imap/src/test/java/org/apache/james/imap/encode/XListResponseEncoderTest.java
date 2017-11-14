@@ -19,29 +19,24 @@
 
 package org.apache.james.imap.encode;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import org.apache.james.imap.api.ImapMessage;
+import org.apache.james.imap.api.process.MailboxType;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.LSubResponse;
-import org.apache.james.imap.message.response.SearchResponse;
+import org.apache.james.imap.message.response.XListResponse;
+import org.apache.james.mailbox.model.MailboxMetaData;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SearchResponseEncoderTest {
+public class XListResponseEncoderTest {
 
-    private static final long[] IDS = { 1, 4, 9, 16 };
-
-    private SearchResponse response;
-
-    private SearchResponseEncoder encoder;
-
-    private ImapEncoder mockNextEncoder;
+    private XListResponseEncoder encoder;
 
     private ByteImapResponseWriter writer = new ByteImapResponseWriter();
     private ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
@@ -50,22 +45,49 @@ public class SearchResponseEncoderTest {
     
     @Before
     public void setUp() throws Exception {
-        mockNextEncoder = context.mock(ImapEncoder.class);
-        response = new SearchResponse(IDS, null);
-        encoder = new SearchResponseEncoder(mockNextEncoder);
+        encoder = new XListResponseEncoder(context.mock(ImapEncoder.class));
     }
 
     @Test
-    public void testIsAcceptable() {
-        assertTrue(encoder.isAcceptable(response));
-        assertFalse(encoder.isAcceptable(new LSubResponse("name", true, '.')));
+    public void encoderShouldAcceptXListResponse() {
+        assertThat(encoder.isAcceptable(
+            new XListResponse(
+                MailboxMetaData.Children.HAS_CHILDREN,
+                MailboxMetaData.Selectability.NONE,
+                "name",
+                '.',
+                MailboxType.INBOX)))
+        .isTrue();
+    }
+
+    @Test
+    public void encoderShouldNotAcceptLsubResponse() {
+        assertThat(encoder.isAcceptable(new LSubResponse("name", true, '.'))).isFalse();
         assertFalse(encoder.isAcceptable(context.mock(ImapMessage.class)));
         assertFalse(encoder.isAcceptable(null));
     }
 
     @Test
-    public void testEncode() throws Exception {
-        encoder.encode(response, composer, new FakeImapSession());
-        assertEquals("* SEARCH 1 4 9 16\r\n", writer.getString());
+    public void encoderShouldNotAcceptImapMessage() {
+        assertThat(encoder.isAcceptable(context.mock(ImapMessage.class))).isFalse();
+    }
+
+    @Test
+    public void encoderShouldNotAcceptNull() {
+        assertThat(encoder.isAcceptable(null)).isFalse();
+    }
+
+    @Test
+	public void encoderShouldIncludeListCommand() throws Exception {
+        encoder.encode(
+            new XListResponse(
+                MailboxMetaData.Children.HAS_CHILDREN,
+                MailboxMetaData.Selectability.NONE,
+                "name",
+                '.',
+                MailboxType.INBOX),
+            composer,
+            new FakeImapSession());
+        assertThat(writer.getString()).startsWith("* XLIST");
     }
 }

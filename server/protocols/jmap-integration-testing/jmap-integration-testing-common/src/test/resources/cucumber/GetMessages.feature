@@ -189,19 +189,19 @@ Feature: GetMessages method
     And the hasAttachment of the message is "true"
     And the list of attachments of the message contains 2 attachments
     And the first attachment is:
-      |key      | value                                     |
-      |blobId   |"dc07cf16944187c1935daedc1bc89231635be63f" |
-      |type     |"image/jpeg"                               |
-      |size     |846                                        |
-      |cid      |null                                       |
-      |isInline |false                                      |
+      |key      | value                                                             |
+      |blobId   |"81dad497ef270bd4537f5b43906aa88ad2e7168744c572be9a7414707727bf58" |
+      |type     |"image/jpeg"                                                       |
+      |size     |846                                                                |
+      |cid      |null                                                               |
+      |isInline |false                                                              |
     And the second attachment is:
-      |key      | value                                     |
-      |blobId   |"21c3a55f516eeceff69969f3c40318f926404a6a" |
-      |type     |"image/jpeg"                               |
-      |size     |597                                        |
-      |cid      |"part1.37A15C92.A7C3488D@linagora.com"     |
-      |isInline |true                                       |
+      |key      | value                                                             |
+      |blobId   |"632b5341bbe044d26e0916b82a689282cc0891b806884b4d5a2339ea90b28e85" |
+      |type     |"image/jpeg"                                                       |
+      |size     |597                                                                |
+      |cid      |"part1.37A15C92.A7C3488D@linagora.com"                             |
+      |isInline |true                                                               |
 
   Scenario: Retrieving message should return attachments and html body when some attachments and html message
     Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with two attachments
@@ -406,3 +406,17 @@ Feature: GetMessages method
     Examples:
             |flags                    |keyword                 |
             |"$Flagged,$Forwarded"    |$Forwarded,$Flagged     |
+
+  Scenario: Retrieving message should include true isForwarded property when set
+    Given "alice@domain.tld" has a message "m1" in the "inbox" mailbox with flags "$Forwarded"
+    When "alice@domain.tld" ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the isForwarded property of the message is "true"
+
+  Scenario: Retrieving message should include false isForwarded property when not set
+    Given "alice@domain.tld" has a message "m1" in the "inbox" mailbox with flags "$Answered"
+    When "alice@domain.tld" ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the isForwarded property of the message is "false"

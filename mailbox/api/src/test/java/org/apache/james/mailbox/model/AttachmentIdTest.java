@@ -24,26 +24,27 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.UUID;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
 public class AttachmentIdTest {
 
     @Test
-    public void forPayloadAndTypeShouldCalculateTheUnderlyingSha1() {
+    public void forPayloadAndTypeShouldCalculateTheUnderlyingSha256() {
         AttachmentId attachmentId = AttachmentId.forPayloadAndType("payload".getBytes(), "text/plain");
-        String expectedId = "826b0786f04e07525a36be70f84c647af7b73059";
+        String expectedId = "d3a2642ee092a1b32c0a83cf94fc2499f7495b7b91b1bd434302a0a4c2aa4278";
         assertThat(attachmentId.getId()).isEqualTo(expectedId);
     }
 
     @Test
-    public void forPayloadAndTypeShouldCalculateDifferentSha1WhenContentTypeIsDifferent() {
+    public void forPayloadAndTypeShouldCalculateDifferentSha256WhenContentTypeIsDifferent() {
         AttachmentId attachmentId = AttachmentId.forPayloadAndType("payload".getBytes(), "text/plain");
         AttachmentId attachmentId2 = AttachmentId.forPayloadAndType("payload".getBytes(), "text/html");
         assertThat(attachmentId.getId()).isNotEqualTo(attachmentId2.getId());
     }
 
     @Test
-    public void forPayloadAndTypeShouldCalculateSameSha1WhenMimeTypeIsSameButNotParameters() {
+    public void forPayloadAndTypeShouldCalculateSameSha256WhenMimeTypeIsSameButNotParameters() {
         AttachmentId attachmentId = AttachmentId.forPayloadAndType("payload".getBytes(), "text/html; charset=UTF-8");
         AttachmentId attachmentId2 = AttachmentId.forPayloadAndType("payload".getBytes(), "text/html; charset=UTF-16");
         assertThat(attachmentId.getId()).isEqualTo(attachmentId2.getId());
@@ -122,5 +123,14 @@ public class AttachmentIdTest {
         String mimeType = AttachmentId.asMimeType("text");
         
         assertThat(mimeType).isEqualTo("application/octet-stream");
+    }
+
+    @Test
+    public void forPayloadAndTypeShouldCalculateDifferentHashesWhenCraftedSha1Collision() throws Exception {
+        byte[] payload1 = IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("shattered-1.pdf"));
+        byte[] payload2 = IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("shattered-2.pdf"));
+        AttachmentId attachmentId1 = AttachmentId.forPayloadAndType(payload1, "application/pdf");
+        AttachmentId attachmentId2 = AttachmentId.forPayloadAndType(payload2, "application/pdf");
+        assertThat(attachmentId1).isNotEqualTo(attachmentId2);
     }
 }

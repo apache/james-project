@@ -43,7 +43,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
-import org.apache.james.mailbox.model.MailboxMetaData.Children;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.PrefixedRegex;
@@ -74,8 +73,8 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
         doProcess(baseReferenceName, mailboxPatternString, session, tag, command, responder, null);
     }
 
-    protected ImapResponseMessage createResponse(boolean noInferior, boolean noSelect, boolean marked, boolean unmarked, boolean hasChildren, boolean hasNoChildren, String mailboxName, char delimiter, MailboxType type) {
-        return new ListResponse(noInferior, noSelect, marked, unmarked, hasChildren, hasNoChildren, mailboxName, delimiter);
+    protected ImapResponseMessage createResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability, String name, char hierarchyDelimiter, MailboxType type) {
+        return new ListResponse(children, selectability, name, hierarchyDelimiter);
     }
 
     /**
@@ -194,31 +193,17 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
         }
     }
 
-    void processResult(Responder responder, boolean relative, MailboxMetaData listResult, MailboxType mailboxType) {
-        final char delimiter = listResult.getHierarchyDelimiter();
-        final String mailboxName = mailboxName(relative, listResult.getPath(), delimiter);
+    private void processResult(Responder responder, boolean relative, MailboxMetaData listResult, MailboxType mailboxType) {
+        final String mailboxName = mailboxName(relative, listResult.getPath(), listResult.getHierarchyDelimiter());
 
-        final Children inferiors = listResult.inferiors();
-        final boolean noInferior = MailboxMetaData.Children.NO_INFERIORS.equals(inferiors);
-        final boolean hasChildren = MailboxMetaData.Children.HAS_CHILDREN.equals(inferiors);
-        final boolean hasNoChildren = MailboxMetaData.Children.HAS_NO_CHILDREN.equals(inferiors);
-        boolean noSelect = false;
-        boolean marked = false;
-        boolean unmarked = false;
-        switch (listResult.getSelectability()) {
-        case MARKED:
-            marked = true;
-            break;
-        case UNMARKED:
-            unmarked = true;
-            break;
-        case NOSELECT:
-            noSelect = true;
-            break;
-        default:
-            break;
-        }
-        responder.respond(createResponse(noInferior, noSelect, marked, unmarked, hasChildren, hasNoChildren, mailboxName, delimiter, mailboxType));
+        ImapResponseMessage response =
+            createResponse(
+                listResult.inferiors(),
+                listResult.getSelectability(),
+                mailboxName,
+                listResult.getHierarchyDelimiter(),
+                mailboxType);
+        responder.respond(response);
     }
 
     /**

@@ -314,7 +314,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
             }
             
             // Special case for INBOX: Let's use the user's folder.
-            MailboxPath inboxMailboxPath = new MailboxPath(session.getPersonalSpace(), userName, MailboxConstants.INBOX);
+            MailboxPath inboxMailboxPath = MailboxPath.forUser(userName, MailboxConstants.INBOX);
             mailboxList.add(maildirStore.loadMailbox(session, inboxMailboxPath));
             
             // List all INBOX sub folders.

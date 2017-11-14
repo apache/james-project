@@ -84,6 +84,7 @@ public abstract class GetMailboxesMethodTest {
     protected abstract GuiceJamesServer createJmapServer();
 
     private AccessToken accessToken;
+    private String domain;
     private String alice;
     private String bob;
     private String cedric;
@@ -106,7 +107,7 @@ public abstract class GetMailboxesMethodTest {
                 .build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
 
-        String domain = "domain.tld";
+        domain = "domain.tld";
         alice = "alice@" + domain;
         String alicePassword = "aliceSecret";
         bob = "bob@" + domain;
@@ -252,8 +253,8 @@ public abstract class GetMailboxesMethodTest {
     public void getMailboxesShouldReturnSharedWithProperty() throws Exception {
         String mailboxName = "myMailbox";
         String myMailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, mailboxName).serialize();
-        String targetUser1 = "toUser1@domain.com";
-        String targetUser2 = "toUser2@domain.com";
+        String targetUser1 = "toUser1@" + domain;
+        String targetUser2 = "toUser2@" + domain;
         Mailbox myMailbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, alice, mailboxName);
         aclProbe.replaceRights(myMailbox.generateAssociatedPath(), targetUser1, new Rfc4314Rights(Right.Lookup, Right.Administer));
         aclProbe.replaceRights(myMailbox.generateAssociatedPath(), targetUser2, new Rfc4314Rights(Right.Read, Right.Lookup));
@@ -275,7 +276,7 @@ public abstract class GetMailboxesMethodTest {
     public void getMailboxesShouldRemoveOwnerRight() throws Exception {
         String mailboxName = "myMailbox";
         String myMailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, mailboxName).serialize();
-        String targetUser1 = "toUser1@domain.com";
+        String targetUser1 = "toUser1@" + domain;
         Mailbox myMailbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, alice, mailboxName);
         aclProbe.replaceRights(myMailbox.generateAssociatedPath(), alice, new Rfc4314Rights(Right.Read, Right.Administer));
         aclProbe.replaceRights(myMailbox.generateAssociatedPath(), targetUser1, new Rfc4314Rights(Right.Read, Right.Lookup));
@@ -313,7 +314,7 @@ public abstract class GetMailboxesMethodTest {
     public void nonHandledRightsShouldBeFilteredOut() throws Exception {
         String mailboxName = "myMailbox";
         String myMailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, mailboxName).serialize();
-        String targetUser1 = "toUser1@domain.com";
+        String targetUser1 = "toUser1@" + domain;
         Mailbox myMailbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, alice, mailboxName);
         aclProbe.replaceRights(myMailbox.generateAssociatedPath(), targetUser1, new Rfc4314Rights(Right.Lookup, Right.Post));
 

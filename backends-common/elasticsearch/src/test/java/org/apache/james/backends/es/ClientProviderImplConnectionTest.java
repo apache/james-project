@@ -45,14 +45,15 @@ public class ClientProviderImplConnectionTest {
 
     @Rule
     public SwarmGenericContainer es2 = new SwarmGenericContainer(DOCKER_ES_IMAGE)
-        .withAffinityToContainer();
+        .withAffinityToContainer()
+        .withExposedPorts(ES_APPLICATIVE_PORT);
 
     @Test
     public void connectingASingleServerShouldWork() throws Exception {
         Awaitility.await()
             .atMost(1, TimeUnit.MINUTES)
             .pollInterval(5, TimeUnit.SECONDS)
-            .until(() -> isConnected(ClientProviderImpl.forHost(es1.getHostIp(), 9300)));
+            .until(() -> isConnected(ClientProviderImpl.forHost(es1.getContainerIp(), 9300)));
     }
 
     @Test
@@ -62,8 +63,8 @@ public class ClientProviderImplConnectionTest {
             .pollInterval(5, TimeUnit.SECONDS)
             .until(() ->isConnected(
                 ClientProviderImpl.fromHostsString(
-                    es1.getHostIp() + ":" + ES_APPLICATIVE_PORT + ","
-                    + es2.getHostIp() + ":" + ES_APPLICATIVE_PORT)));
+                    es1.getContainerIp() + ":" + ES_APPLICATIVE_PORT + ","
+                    + es2.getContainerIp() + ":" + ES_APPLICATIVE_PORT)));
     }
 
     @Test
@@ -75,8 +76,8 @@ public class ClientProviderImplConnectionTest {
             .pollInterval(5, TimeUnit.SECONDS)
             .until(() -> isConnected(
                 ClientProviderImpl.fromHostsString(
-                    es1.getHostIp() + ":" + ES_APPLICATIVE_PORT + ","
-                    + es2.getHostIp() + ":" + ES_APPLICATIVE_PORT)));
+                    es1.getContainerIp() + ":" + ES_APPLICATIVE_PORT + ","
+                    + es2.getContainerIp() + ":" + ES_APPLICATIVE_PORT)));
     }
 
     private boolean isConnected(ClientProvider clientProvider) {

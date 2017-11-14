@@ -90,7 +90,7 @@ public class CassandraBlobsDAOTest {
     public void saveShouldReturnBlobId() throws Exception {
         BlobId blobId = testee.save("toto".getBytes(Charsets.UTF_8)).join();
 
-        assertThat(blobId).isEqualTo(BlobId.from("0b9c2625dc21ef05f6ad4ddf47c5f203837aa32c"));
+        assertThat(blobId).isEqualTo(BlobId.from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
     }
 
     @Test

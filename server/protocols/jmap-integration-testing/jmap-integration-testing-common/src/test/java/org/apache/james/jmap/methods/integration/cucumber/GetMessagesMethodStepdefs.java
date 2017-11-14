@@ -639,6 +639,11 @@ public class GetMessagesMethodStepdefs {
         assertThat(httpClient.jsonPath.<Boolean>read(FIRST_MESSAGE + ".hasAttachment")).isEqualTo(Boolean.valueOf(hasAttachment));
     }
 
+    @Then("^the isForwarded property of the message is \"([^\"]*)\"$")
+    public void assertIsForwardedOfTheFirstMessage(String isForwarded) throws Exception {
+        assertThat(httpClient.jsonPath.<Boolean>read(FIRST_MESSAGE + ".isForwarded")).isEqualTo(Boolean.valueOf(isForwarded));
+    }
+
     @Then("^the list of attachments of the message is empty$")
     public void assertAttachmentsOfTheFirstMessageIsEmpty() throws Exception {
         assertThat(httpClient.jsonPath.<List<Object>>read(ATTACHMENTS)).isEmpty();

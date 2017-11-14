@@ -53,7 +53,7 @@ import cucumber.runtime.java.guice.ScenarioScoped;
 
 @ScenarioScoped
 public class UploadStepdefs {
-    private static final String _1M_ZEROED_FILE_BLOB_ID = "005caa8061cff547e3310182f394da6f8081d6a5";
+    private static final String _1M_ZEROED_FILE_BLOB_ID = "35d87cc65060b896a0541713e7868f5cb5f8be3f563ccf82b72e61c2fee67404";
     private static final int _1M = 1024 * 1024;
     private static final int _10M = 10 * _1M;
 

@@ -51,6 +51,7 @@ public class FilterCondition implements Filter {
         private Boolean isFlagged;
         private Boolean isUnread;
         private Boolean isAnswered;
+        private Boolean isForwarded;
         private Boolean isDraft;
         private Boolean hasAttachment;
         private String text;
@@ -146,6 +147,11 @@ public class FilterCondition implements Filter {
             return this;
         }
 
+        public Builder isForwarded(boolean isForwarded) {
+            this.isForwarded = isForwarded;
+            return this;
+        }
+
         public Builder hasAttachment(boolean hasAttachment) {
             this.hasAttachment = hasAttachment;
             return this;
@@ -200,7 +206,8 @@ public class FilterCondition implements Filter {
             Preconditions.checkArgument(!hasKeyword.isPresent() || (new Keyword(hasKeyword.get()) != null), "hasKeyword is not valid");
             Preconditions.checkArgument(!notKeyword.isPresent() || (new Keyword(notKeyword.get()) != null), "notKeyword is not valid");
             return new FilterCondition(inMailboxes, notInMailboxes, Optional.ofNullable(before), Optional.ofNullable(after), Optional.ofNullable(minSize), Optional.ofNullable(maxSize),
-                    Optional.ofNullable(isFlagged), Optional.ofNullable(isUnread), Optional.ofNullable(isAnswered), Optional.ofNullable(isDraft), Optional.ofNullable(hasAttachment),
+                    Optional.ofNullable(isFlagged), Optional.ofNullable(isUnread), Optional.ofNullable(isAnswered), Optional.ofNullable(isDraft), Optional.ofNullable(isForwarded),
+                    Optional.ofNullable(hasAttachment),
                     Optional.ofNullable(text), Optional.ofNullable(from), Optional.ofNullable(to), Optional.ofNullable(cc), Optional.ofNullable(bcc), Optional.ofNullable(subject),
                     Optional.ofNullable(body), Optional.ofNullable(attachments), Optional.ofNullable(header), hasKeyword, notKeyword);
         }
@@ -216,6 +223,7 @@ public class FilterCondition implements Filter {
     private final Optional<Boolean> isUnread;
     private final Optional<Boolean> isAnswered;
     private final Optional<Boolean> isDraft;
+    private final Optional<Boolean> isForwarded;
     private final Optional<Boolean> hasAttachment;
     private final Optional<String> text;
     private final Optional<String> from;
@@ -230,7 +238,8 @@ public class FilterCondition implements Filter {
     private final Optional<String> notKeyword;
 
     @VisibleForTesting FilterCondition(Optional<List<String>> inMailboxes, Optional<List<String>> notInMailboxes, Optional<ZonedDateTime> before, Optional<ZonedDateTime> after, Optional<Integer> minSize, Optional<Integer> maxSize,
-                                       Optional<Boolean> isFlagged, Optional<Boolean> isUnread, Optional<Boolean> isAnswered, Optional<Boolean> isDraft, Optional<Boolean> hasAttachment,
+                                       Optional<Boolean> isFlagged, Optional<Boolean> isUnread, Optional<Boolean> isAnswered, Optional<Boolean> isDraft, Optional<Boolean> isForwarded,
+                                       Optional<Boolean> hasAttachment,
                                        Optional<String> text, Optional<String> from, Optional<String> to, Optional<String> cc, Optional<String> bcc, Optional<String> subject,
                                        Optional<String> body, Optional<String> attachments, Optional<Header> header, Optional<String> hasKeyword, Optional<String> notKeyword) {
 
@@ -244,6 +253,7 @@ public class FilterCondition implements Filter {
         this.isUnread = isUnread;
         this.isAnswered = isAnswered;
         this.isDraft = isDraft;
+        this.isForwarded = isForwarded;
         this.hasAttachment = hasAttachment;
         this.text = text;
         this.from = from;
@@ -296,6 +306,10 @@ public class FilterCondition implements Filter {
 
     public Optional<Boolean> getIsDraft() {
         return isDraft;
+    }
+
+    public Optional<Boolean> getIsForwarded() {
+        return isForwarded;
     }
 
     public Optional<Boolean> getHasAttachment() {
@@ -360,6 +374,7 @@ public class FilterCondition implements Filter {
                 && Objects.equals(this.isUnread, other.isUnread)
                 && Objects.equals(this.isAnswered, other.isAnswered)
                 && Objects.equals(this.isDraft, other.isDraft)
+                && Objects.equals(this.isForwarded, other.isForwarded)
                 && Objects.equals(this.hasAttachment, other.hasAttachment)
                 && Objects.equals(this.text, other.text)
                 && Objects.equals(this.from, other.from)
@@ -378,7 +393,7 @@ public class FilterCondition implements Filter {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(inMailboxes, notInMailboxes, before, after, minSize, maxSize, isFlagged, isUnread, isAnswered, isDraft, hasAttachment,
+        return Objects.hash(inMailboxes, notInMailboxes, before, after, minSize, maxSize, isFlagged, isUnread, isAnswered, isDraft, isForwarded, hasAttachment,
                 text, from, to, cc, bcc, subject, body, attachments, header, hasKeyword, notKeyword);
     }
 
@@ -395,6 +410,7 @@ public class FilterCondition implements Filter {
         isUnread.ifPresent(x -> helper.add("isUnread", x));
         isAnswered.ifPresent(x -> helper.add("isAnswered", x));
         isDraft.ifPresent(x -> helper.add("isDraft", x));
+        isForwarded.ifPresent(x -> helper.add("isForwarded", x));
         hasAttachment.ifPresent(x -> helper.add("hasAttachment", x));
         text.ifPresent(x -> helper.add("text", x));
         from.ifPresent(x -> helper.add("from", x));

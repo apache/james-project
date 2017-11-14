@@ -126,6 +126,9 @@ public class Keywords {
             if (oldKeyword.isUnread().isPresent() && oldKeyword.isUnread().get() == false) {
                 builder.add(Keyword.SEEN);
             }
+            if (oldKeyword.isForwarded().orElse(false)) {
+                builder.add(Keyword.FORWARDED);
+            }
             return fromSet(builder.build());
         }
 

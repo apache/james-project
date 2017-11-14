@@ -17,25 +17,11 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store;
+package org.apache.james.mailbox.exception;
 
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
+public class DifferentDomainException extends MailboxException {
 
-public class GroupFolderResolver {
-    
-    private final MailboxSession mailboxSession;
-
-    public GroupFolderResolver(MailboxSession mailboxSession) {
-        this.mailboxSession = mailboxSession;
-    }
-
-    public boolean isGroupFolder(Mailbox mailbox) {
-        String namespace = mailbox.getNamespace();
-        return namespace == null || 
-                (!namespace.equals(mailboxSession.getPersonalSpace())
-                && !namespace.equals(MailboxConstants.USER_NAMESPACE)
-                && !namespace.equals(mailboxSession.getOtherUsersSpace()));
+    public DifferentDomainException() {
+        super();
     }
 }
