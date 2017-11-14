@@ -234,3 +234,11 @@ Feature: GetMailboxes method
     Then the mailbox "shared2" has 1 message
     And the mailbox "shared2" has 1 unseen message
 
+  Scenario: Lookup right should not be enough to read message and unseen counts
+    Given "alice@domain.tld" has a mailbox "shared2"
+    And "alice@domain.tld" shares her mailbox "shared2" with "bob@domain.tld" with "l" rights
+    And "alice@domain.tld" has a message "m1" in "shared2" mailbox
+    When "bob@domain.tld" ask for mailboxes
+    Then the mailbox "shared2" has 0 messages
+    And the mailbox "shared2" has 0 unseen messages
+
