@@ -21,15 +21,12 @@ package org.apache.james.jmap.send;
 
 import javax.mail.MessagingException;
 
-import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.model.Envelope;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
 public class MailFactory {
     
@@ -37,11 +34,10 @@ public class MailFactory {
     }
 
     public Mail build(MetaDataWithContent message, Envelope envelope) throws MessagingException {
-        ImmutableSet<MailAddress> recipients = Sets.union(
-            Sets.union(envelope.getTo(), envelope.getCc()),
-                envelope.getBcc()).immutableCopy();
         return new MailImpl(message.getMessageId().serialize(),
-            envelope.getFrom(), recipients, message.getContent());
+            envelope.getFrom(),
+            envelope.getRecipients(),
+            message.getContent());
     }
 
 }

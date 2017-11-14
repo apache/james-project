@@ -22,78 +22,53 @@ package org.apache.james.jmap.model;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.mail.internet.AddressException;
+import java.util.stream.Stream;
 
 import org.apache.james.core.MailAddress;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.james.util.StreamUtils;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 
 public class Envelope {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Envelope.class);
 
     public static Envelope fromMessage(Message jmapMessage) {
         MailAddress sender = jmapMessage.getFrom()
-            .map(Envelope::emailerToMailAddress)
+            .map(Emailer::toMailAddress)
             .orElseThrow(() -> new RuntimeException("Sender is mandatory"));
-        Set<MailAddress> to = emailersToMailAddressSet(jmapMessage.getTo());
-        Set<MailAddress> cc = emailersToMailAddressSet(jmapMessage.getCc());
-        Set<MailAddress> bcc = emailersToMailAddressSet(jmapMessage.getBcc());
 
-        return new Envelope(sender, to, cc, bcc);
+        Stream<MailAddress> to = emailersToMailAddresses(jmapMessage.getTo());
+        Stream<MailAddress> cc = emailersToMailAddresses(jmapMessage.getCc());
+        Stream<MailAddress> bcc = emailersToMailAddresses(jmapMessage.getBcc());
+
+        return new Envelope(sender,
+            StreamUtils.flatten(Stream.of(to, cc, bcc))
+                .collect(Guavate.toImmutableSet()));
     }
 
-    private static Set<MailAddress> emailersToMailAddressSet(List<Emailer> emailers) {
+    private static Stream<MailAddress> emailersToMailAddresses(List<Emailer> emailers) {
         return emailers.stream()
-            .map(Envelope::emailerToMailAddress)
-            .collect(Collectors.toSet());
+            .map(Emailer::toMailAddress);
     }
 
-    private static MailAddress emailerToMailAddress(Emailer emailer) {
-        Preconditions.checkArgument(emailer.getEmail().isPresent(), "eMailer mail address should be present when sending a mail using JMAP");
-        try {
-            return new MailAddress(emailer.getEmail().get());
-        } catch (AddressException e) {
-            LOGGER.error("Invalid mail address", emailer.getEmail());
-            throw Throwables.propagate(e);
-        }
-    }
 
     private final MailAddress from;
-    private final Set<MailAddress> to;
-    private final Set<MailAddress> cc;
-    private final Set<MailAddress> bcc;
+    private final Set<MailAddress> recipients;
 
-    private Envelope(MailAddress from, Set<MailAddress> to, Set<MailAddress> cc, Set<MailAddress> bcc) {
+    private Envelope(MailAddress from, Set<MailAddress> recipients) {
         Preconditions.checkNotNull(from);
-        Preconditions.checkNotNull(to);
-        Preconditions.checkNotNull(cc);
-        Preconditions.checkNotNull(bcc);
+        Preconditions.checkNotNull(recipients);
 
         this.from = from;
-        this.to = to;
-        this.cc = cc;
-        this.bcc = bcc;
+        this.recipients = recipients;
     }
 
     public MailAddress getFrom() {
         return from;
     }
 
-    public Set<MailAddress> getTo() {
-        return to;
-    }
-
-    public Set<MailAddress> getCc() {
-        return cc;
-    }
-
-    public Set<MailAddress> getBcc() {
-        return bcc;
+    public Set<MailAddress> getRecipients() {
+        return recipients;
     }
 
     @Override
@@ -102,15 +77,13 @@ public class Envelope {
             Envelope envelope = (Envelope) o;
 
             return Objects.equals(this.from, envelope.from)
-                && Objects.equals(this.to, envelope.to)
-                && Objects.equals(this.cc, envelope.cc)
-                && Objects.equals(this.bcc, envelope.bcc);
+                && Objects.equals(this.recipients, envelope.recipients);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(from, to, cc, bcc);
+        return Objects.hash(from, recipients);
     }
 }
