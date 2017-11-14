@@ -165,11 +165,6 @@ public class MailImpl implements Disposable, Mail {
         }
     }
 
-    /**
-     * @param mail
-     * @param newName
-     * @throws MessagingException
-     */
     @SuppressWarnings("unchecked")
     private MailImpl(Mail mail, String newName) throws MessagingException {
         this(newName, mail.getSender(), mail.getRecipients(), mail.getMessage());
@@ -218,11 +213,6 @@ public class MailImpl implements Disposable, Mail {
     /**
      * A constructor that creates a MailImpl with the specified name, sender,
      * recipients, and MimeMessage.
-     *
-     * @param name       the name of the MailImpl
-     * @param sender     the sender for this MailImpl
-     * @param recipients the collection of recipients of this MailImpl
-     * @param message    the MimeMessage associated with this MailImpl
      */
     public MailImpl(String name, MailAddress sender, Collection<MailAddress> recipients, MimeMessage message) {
         this(name, sender, recipients);
@@ -245,101 +235,51 @@ public class MailImpl implements Disposable, Mail {
         return null;
     }
 
-    /**
-     * Get the error message associated with this MailImpl.
-     *
-     * @return the error message associated with this MailImpl
-     */
     @Override
     public String getErrorMessage() {
         return errorMessage;
     }
 
-    /**
-     * Get the MimeMessage associated with this MailImpl.
-     *
-     * @return the MimeMessage associated with this MailImpl
-     */
     @Override
     public MimeMessage getMessage() throws MessagingException {
         return message;
     }
 
-    /**
-     * Set the name of this MailImpl.
-     *
-     * @param name the name of this MailImpl
-     */
     @Override
     public void setName(String name) {
         this.name = name;
     }
 
-    /**
-     * Get the name of this MailImpl.
-     *
-     * @return the name of this MailImpl
-     */
     @Override
     public String getName() {
         return name;
     }
 
-    /**
-     * Get the recipients of this MailImpl.
-     *
-     * @return the recipients of this MailImpl
-     */
     @Override
     public Collection<MailAddress> getRecipients() {
         return recipients;
     }
 
-    /**
-     * Get the sender of this MailImpl.
-     *
-     * @return the sender of this MailImpl
-     */
     @Override
     public MailAddress getSender() {
         return sender;
     }
 
-    /**
-     * Get the state of this MailImpl.
-     *
-     * @return the state of this MailImpl
-     */
     @Override
     public String getState() {
         return state;
     }
 
-    /**
-     * Get the remote host associated with this MailImpl.
-     *
-     * @return the remote host associated with this MailImpl
-     */
     @Override
     public String getRemoteHost() {
         return remoteHost;
     }
 
-    /**
-     * Get the remote address associated with this MailImpl.
-     *
-     * @return the remote address associated with this MailImpl
-     */
     @Override
     public String getRemoteAddr() {
         return remoteAddr;
     }
 
-    /**
-     * Get the last updated time for this MailImpl.
-     *
-     * @return the last updated time for this MailImpl
-     */
     @Override
     public Date getLastUpdated() {
         return lastUpdated;
@@ -364,11 +304,6 @@ public class MailImpl implements Disposable, Mail {
         return MimeMessageUtil.getMessageSize(message);
     }
 
-    /**
-     * Set the error message associated with this MailImpl.
-     *
-     * @param msg the new error message associated with this MailImpl
-     */
     @Override
     public void setErrorMessage(String msg) {
         this.errorMessage = msg;
@@ -402,47 +337,22 @@ public class MailImpl implements Disposable, Mail {
         this.recipients = ImmutableList.copyOf(recipients);
     }
 
-    /**
-     * Set the sender of this MailImpl.
-     *
-     * @param sender the sender of this MailImpl
-     */
     public void setSender(MailAddress sender) {
         this.sender = sender;
     }
 
-    /**
-     * Set the state of this MailImpl.
-     *
-     * @param state the state of this MailImpl
-     */
     public void setState(String state) {
         this.state = state;
     }
 
-    /**
-     * Set the remote address associated with this MailImpl.
-     *
-     * @param remoteHost the new remote host associated with this MailImpl
-     */
     public void setRemoteHost(String remoteHost) {
         this.remoteHost = remoteHost;
     }
 
-    /**
-     * Set the remote address associated with this MailImpl.
-     *
-     * @param remoteAddr the new remote address associated with this MailImpl
-     */
     public void setRemoteAddr(String remoteAddr) {
         this.remoteAddr = remoteAddr;
     }
 
-    /**
-     * Set the date this mail was last updated.
-     *
-     * @param lastUpdated the date the mail was last updated
-     */
     public void setLastUpdated(Date lastUpdated) {
         // Make a defensive copy to ensure that the date
         // doesn't get changed external to the class
