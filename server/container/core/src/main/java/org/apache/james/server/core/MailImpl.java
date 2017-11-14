@@ -49,6 +49,7 @@ import org.apache.mailet.PerRecipientHeaders.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 /**
@@ -170,7 +171,7 @@ public class MailImpl implements Disposable, Mail {
      * @throws MessagingException
      */
     @SuppressWarnings("unchecked")
-    public MailImpl(Mail mail, String newName) throws MessagingException {
+    private MailImpl(Mail mail, String newName) throws MessagingException {
         this(newName, mail.getSender(), mail.getRecipients(), mail.getMessage());
         setRemoteHost(mail.getRemoteHost());
         setRemoteAddr(mail.getRemoteAddr());
@@ -229,22 +230,13 @@ public class MailImpl implements Disposable, Mail {
     }
 
     /**
-     * Duplicate the MailImpl.
-     *
-     * @return a MailImpl that is a duplicate of this one
-     */
-    public Mail duplicate() {
-        return duplicate(name);
-    }
-
-    /**
      * Duplicate the MailImpl, replacing the mail name with the one passed in as
      * an argument.
      *
      * @param newName the name for the duplicated mail
      * @return a MailImpl that is a duplicate of this one with a different name
      */
-    public Mail duplicate(String newName) {
+    @VisibleForTesting Mail duplicate(String newName) {
         try {
             return new MailImpl(this, newName);
         } catch (MessagingException me) {

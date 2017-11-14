@@ -18,15 +18,14 @@
  ****************************************************************/
 package org.apache.james.server.core;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -35,83 +34,110 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.MailUtil;
+import org.junit.Before;
 import org.junit.Test;
 
-public class MailImplTest extends MailTestAllImplementations {
+import com.google.common.collect.ImmutableList;
+
+public class MailImplTest {
 
     private static final Session NO_SESSION = null;
-    
-    @Override
-    protected Mail createMailImplementation() {
-        return new MailImpl();
+    private MimeMessage emptyMessage;
+
+    @Before
+    public void setup() throws MessagingException {
+        emptyMessage = new MimeMessage(NO_SESSION, new ByteArrayInputStream(new byte[0]));
     }
 
     @Test
-    public void testConstr1() throws MessagingException {
+    public void mailImplShouldHaveSensibleInitialValues() throws MessagingException {
         MailImpl mail = new MailImpl();
 
-        helperTestInitialState(mail);
-        helperTestMessageSize(mail, 0); // MimeMessageWrapper default is 0
-        assertNull("no initial message", mail.getMessage());
-        assertNull("no initial sender", mail.getSender());
-        assertNull("no initial name", mail.getName());
+        assertThat(mail.hasAttributes()).describedAs("no initial attributes").isFalse();
+        assertThat(mail.getErrorMessage()).describedAs("no initial error").isNull();
+        assertThat(mail.getLastUpdated()).isCloseTo(new Date(), TimeUnit.SECONDS.toMillis(1));
+        assertThat(mail.getRecipients()).describedAs("no initial recipient").isNullOrEmpty();
+        assertThat(mail.getRemoteAddr()).describedAs("initial remote address is localhost ip").isEqualTo("127.0.0.1");
+        assertThat(mail.getRemoteHost()).describedAs("initial remote host is localhost").isEqualTo("localhost");
+        assertThat(mail.getState()).describedAs("default initial state").isEqualTo(Mail.DEFAULT);
+        assertThat(mail.getMessage()).isNull();
+        assertThat(mail.getSender()).isNull();
+        assertThat(mail.getName()).isNull();
     }
 
     @Test
-    public void testConstr2() throws MessagingException {
-        ArrayList<MailAddress> recepients = new ArrayList<>();
+    public void mailImplShouldThrowWhenComputingSizeOnDefaultInstance() throws MessagingException {
+        MailImpl mail = new MailImpl();
+
+        assertThatThrownBy(mail::getMessageSize).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void mailImplConstructionShouldSetDefaultValuesOnUnspecifiedFields() throws MessagingException {
+        ArrayList<MailAddress> recipients = new ArrayList<>();
         String name = MailUtil.newId();
         String sender = "sender@localhost";
         MailAddress senderMailAddress = new MailAddress(sender);
-        MailImpl mail = new MailImpl(name, senderMailAddress, recepients);
+        MailImpl mail = new MailImpl(name, senderMailAddress, recipients);
 
-        helperTestInitialState(mail); // MimeMessageWrapper default is 0
-        helperTestMessageSize(mail, 0); // MimeMessageWrapper default is 0
-        assertNull("no initial message", mail.getMessage());
-        assertEquals("sender", sender, mail.getSender().toString());
-        assertEquals("name", name, mail.getName());
 
-        mail.setMessage(new MimeMessage(NO_SESSION));
-        assertNotNull("message", mail.getMessage());
+        MailImpl expected = new MailImpl();
+        assertThat(mail).isEqualToIgnoringGivenFields(expected, "sender", "name", "recipients", "lastUpdated");
+        assertThat(mail.getLastUpdated()).isCloseTo(new Date(), TimeUnit.SECONDS.toMillis(1));
     }
 
     @Test
-    public void testConstr3() throws MessagingException {
-        ArrayList<MailAddress> recepients = new ArrayList<>();
+    public void mailImplConstructionShouldSetSpecifiedFields() throws MessagingException {
+        ImmutableList<MailAddress> recipients = ImmutableList.of();
         String name = MailUtil.newId();
         String sender = "sender@localhost";
         MailAddress senderMailAddress = new MailAddress(sender);
-        MimeMessage mimeMessage = new MimeMessage(NO_SESSION, new ByteArrayInputStream(new byte[0]));
-        MailImpl mail = new MailImpl(name, senderMailAddress, recepients, mimeMessage);
+        MailImpl mail = new MailImpl(name, senderMailAddress, recipients);
 
-        helperTestInitialState(mail);
-        helperTestMessageSize(mail, 0);
-        assertEquals("initial message", mimeMessage.getMessageID(), mail.getMessage().getMessageID());
-        assertEquals("sender", sender, mail.getSender().toString());
-        assertEquals("name", name, mail.getName());
-        mail.dispose();
+        assertThat(mail.getSender().asString()).isEqualTo(sender);
+        assertThat(mail.getName()).isEqualTo(name);
+
+     }
+
+    @Test
+    public void mailImplConstructionWithMimeMessageShouldSetSpecifiedFields() throws MessagingException {
+        ImmutableList<MailAddress> recipients = ImmutableList.of();
+        String name = MailUtil.newId();
+        String sender = "sender@localhost";
+        MailAddress senderMailAddress = new MailAddress(sender);
+
+        MailImpl expected = new MailImpl(name, senderMailAddress, recipients);
+        MailImpl mail = new MailImpl(name, senderMailAddress, recipients, emptyMessage);
+
+        assertThat(mail).isEqualToIgnoringGivenFields(expected, "message", "lastUpdated");
+        assertThat(mail.getLastUpdated()).isCloseTo(new Date(), TimeUnit.SECONDS.toMillis(1));
     }
 
     @Test
-    public void testDuplicate() throws MessagingException {
-        MailImpl mail = new MailImpl();
-        MailImpl duplicate = (MailImpl) mail.duplicate();
-        assertNotSame("is real duplicate", mail, duplicate);
-        helperTestInitialState(duplicate);
-        helperTestMessageSize(duplicate, 0);
+    public void mailImplConstructionWithMimeMessageShouldNotOverwriteMessageId() throws MessagingException {
+        ImmutableList<MailAddress> recipients = ImmutableList.of();
+        String name = MailUtil.newId();
+        String sender = "sender@localhost";
+        MailAddress senderMailAddress = new MailAddress(sender);
+
+        MailImpl mail = new MailImpl(name, senderMailAddress, recipients, emptyMessage);
+
+        assertThat(mail.getMessage().getMessageID()).isEqualTo(emptyMessage.getMessageID());
     }
 
     @Test
-    public void testDuplicateNewName() throws MessagingException {
-        String newName = "aNewName";
+    public void duplicateShouldGenerateNewObjectWithSameValuesButName() throws MessagingException, IOException {
+        ImmutableList<MailAddress> recipients = ImmutableList.of();
+        String name = MailUtil.newId();
+        String sender = "sender@localhost";
+        MailAddress senderMailAddress = new MailAddress(sender);
 
-        MailImpl mail = new MailImpl();
-        assertFalse("before + after names differ", newName.equals(mail.getName()));
+        MailImpl mail = new MailImpl(name, senderMailAddress, recipients, emptyMessage);
+        MailImpl duplicate = (MailImpl) mail.duplicate("new name");
 
-        MailImpl duplicate = (MailImpl) mail.duplicate(newName);
-        assertEquals("new name set", newName, duplicate.getName());
-        helperTestInitialState(duplicate);
-        helperTestMessageSize(duplicate, 0);
+        assertThat(duplicate).isNotSameAs(mail).isEqualToIgnoringGivenFields(mail, "message", "name");
+        assertThat(duplicate.getName()).isEqualTo("new name");
+        assertThat(duplicate.getMessage().getInputStream()).hasSameContentAs(mail.getMessage().getInputStream());
     }
 
     @Test
@@ -121,4 +147,5 @@ public class MailImplTest extends MailTestAllImplementations {
         assertThatThrownBy(() -> mail.setAttribute(null, "toto"))
             .isInstanceOf(NullPointerException.class);
     }
+
 }
