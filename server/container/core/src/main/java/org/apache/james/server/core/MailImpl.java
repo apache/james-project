@@ -28,6 +28,7 @@ import java.io.ObjectOutputStream;
 import java.io.OptionalDataException;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -35,7 +36,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.mail.Address;
 import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.ParseException;
 
@@ -49,6 +53,8 @@ import org.apache.mailet.PerRecipientHeaders.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -82,6 +88,29 @@ public class MailImpl implements Disposable, Mail {
      */
     public static MailImpl duplicate(Mail mail) throws MessagingException {
         return new MailImpl(mail, deriveNewName(mail.getName()));
+    }
+
+    public static MailImpl fromMimeMessage(String name, MimeMessage mimeMessage) throws MessagingException {
+        MailAddress sender = getSender(mimeMessage);
+        ImmutableList<MailAddress> recipients = getRecipients(mimeMessage);
+        return new MailImpl(name, sender, recipients, mimeMessage);
+    }
+
+    private static ImmutableList<MailAddress> getRecipients(MimeMessage mimeMessage) throws MessagingException {
+        return Arrays.stream(mimeMessage.getAllRecipients())
+            .map(Throwing.function(MailImpl::castToMailAddress).sneakyThrow())
+            .collect(Guavate.toImmutableList());
+    }
+
+    private static MailAddress getSender(MimeMessage mimeMessage) throws MessagingException {
+        Address[] sender = mimeMessage.getFrom();
+        Preconditions.checkArgument(sender.length == 1);
+        return castToMailAddress(sender[0]);
+    }
+
+    private static MailAddress castToMailAddress(Address address) throws AddressException {
+        Preconditions.checkArgument(address instanceof InternetAddress);
+        return new MailAddress((InternetAddress) address);
     }
 
     /**

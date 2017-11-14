@@ -198,6 +198,11 @@ public abstract class SetMessagesMethodTest {
         return getMailboxId(accessToken, Role.DRAFTS);
     }
 
+    private String getInboxId(AccessToken accessToken) {
+        return getMailboxId(accessToken, Role.INBOX);
+    }
+
+
     private String getMailboxId(AccessToken accessToken, Role role) {
         return getAllMailboxesIds(accessToken).stream()
             .filter(x -> x.get("role").equalsIgnoreCase(role.serialize()))
@@ -564,7 +569,7 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    @Ignore("gitlab-446 should allowed in drafts mailbox, rejected outside")
+    @Ignore("JAMES-2220 should allowed in drafts mailbox, rejected outside")
     public void setMessagesShouldReturnAnErrorWhenKeywordsWithAddingDraftArePassed() throws MailboxException {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
@@ -700,7 +705,7 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    @Ignore("gitlab-446 should allowed outside drafts mailbox, rejected inside")
+    @Ignore("JAMES-2220 should allowed outside drafts mailbox, rejected inside")
     public void setMessagesShouldReturnAnErrorWhenKeywordsWithRemoveDraftArePassed() throws MailboxException {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
@@ -1445,7 +1450,7 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    public void setMessageShouldAllowDraftCreationWhenUsingIsDraftProperty() {
+    public void setMessagesShouldAllowDraftCreationWhenUsingIsDraftProperty() {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         String requestBody = "[" +
@@ -1892,6 +1897,209 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].properties", contains("mailboxIds"))
             .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].description", endsWith("MailboxId invalid"));
     }
+
+    @Test
+    public void setMessagesShouldSendMessageByMovingDraftToOutbox() {
+        String draftCreationId = "creationId1337";
+        String fromAddress = USERNAME;
+        String createDraft = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + draftCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + BOB + "\"}]," +
+            "        \"subject\": \"subject\"," +
+            "        \"keywords\": {\"$Draft\": true}," +
+            "        \"mailboxIds\": [\"" + getDraftId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        String draftId =
+            with()
+                .header("Authorization", accessToken.serialize())
+                .body(createDraft)
+                .post("/jmap")
+            .then()
+                .extract()
+                .path(ARGUMENTS + ".created[\"" + draftCreationId + "\"].id");
+
+        String moveDraftToOutBox = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"update\": { \"" + draftId + "\" : {" +
+            "        \"keywords\": {}," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        with()
+            .header("Authorization", accessToken.serialize())
+            .body(moveDraftToOutBox)
+            .post("/jmap");
+
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
+    }
+
+    @Test
+    @Ignore("WIP")
+    public void setMessagesShouldRejectDraftCopyToOutbox() {
+        String draftCreationId = "creationId1337";
+        String fromAddress = USERNAME;
+        String createDraft = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + draftCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + BOB + "\"}]," +
+            "        \"subject\": \"subject\"," +
+            "        \"keywords\": {\"$Draft\": true}," +
+            "        \"mailboxIds\": [\"" + getDraftId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        String draftId =
+            with()
+                .header("Authorization", accessToken.serialize())
+                .body(createDraft)
+                .post("/jmap")
+            .then()
+                .extract()
+                .path(ARGUMENTS + ".created[\"" + draftCreationId + "\"].id");
+
+        String copyDraftToOutBox = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"update\": { \"" + draftId + "\" : {" +
+            "        \"keywords\": {}," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\",\"" + getDraftId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+        
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(copyDraftToOutBox)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".notUpdated", hasKey(draftId))
+            .body(ARGUMENTS + ".notUpdated[\""+draftId+"\"].type", equalTo("invalidArguments"))
+            .body(ARGUMENTS + ".notUpdated[\""+draftId+"\"].description", endsWith("One can not have a message in mailboxes that don't have all the `draft` role"))
+            .body(ARGUMENTS + ".notUpdated[\""+draftId+"\"].properties", hasSize(1))
+            .body(ARGUMENTS + ".notUpdated[\""+draftId+"\"].properties", contains("mailboxIds"))
+            .body(ARGUMENTS + ".created", aMapWithSize(0));
+    }
+
+    @Test
+    public void setMessagesShouldRejectMovingMessageToOutboxWhenNotInDraft() throws MailboxException {
+        ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, MailboxPath.forUser(USERNAME, MailboxConstants.INBOX),
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+        await();
+
+        String messageId = message.getMessageId().serialize();
+        String moveMessageToOutBox = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"update\": { \"" + messageId + "\" : {" +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(moveMessageToOutBox)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".notUpdated", hasKey(messageId))
+            .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].type", equalTo("invalidProperties"))
+            .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].description", endsWith("only drafts can be moved to Outbox"))
+            .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].properties", hasSize(1))
+            .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].properties", contains("mailboxIds"))
+            .body(ARGUMENTS + ".created", aMapWithSize(0));
+    }
+
+    @Test
+    public void setMessagesShouldRejectMovingMessageToOutboxWhenDraftKeyworkSet() throws MailboxException {
+        String draftCreationId = "creationId1337";
+        String fromAddress = USERNAME;
+        String createDraft = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + draftCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + BOB + "\"}]," +
+            "        \"subject\": \"subject\"," +
+            "        \"keywords\": {\"$Draft\": true}," +
+            "        \"mailboxIds\": [\"" + getDraftId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        String draftId =
+            with()
+                .header("Authorization", accessToken.serialize())
+                .body(createDraft)
+                .post("/jmap")
+                .then()
+                .extract()
+                .path(ARGUMENTS + ".created[\"" + draftCreationId + "\"].id");
+
+        String moveDraftToOutBox = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"update\": { \"" + draftId + "\" : {" +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(moveDraftToOutBox)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".notUpdated", hasKey(draftId))
+            .body(ARGUMENTS + ".notUpdated[\""+draftId+"\"].type", equalTo("invalidProperties"))
+            .body(ARGUMENTS + ".notUpdated[\""+draftId+"\"].description", endsWith("message with $Draft keyword can't be moved outside outbox"))
+            .body(ARGUMENTS + ".notUpdated[\""+draftId+"\"].properties", hasSize(1))
+            .body(ARGUMENTS + ".notUpdated[\""+draftId+"\"].properties", contains("keywords"))
+            .body(ARGUMENTS + ".created", aMapWithSize(0));
+    }
+
 
     @Test
     public void setMessagesShouldSupportArbitraryMessageId() {

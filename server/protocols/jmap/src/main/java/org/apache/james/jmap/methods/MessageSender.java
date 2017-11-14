@@ -22,6 +22,7 @@ package org.apache.james.jmap.methods;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.model.Envelope;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.send.MailFactory;
@@ -30,6 +31,7 @@ import org.apache.james.jmap.send.MailSpool;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.mailet.Mail;
 
 public class MessageSender {
@@ -55,9 +57,22 @@ public class MessageSender {
         }
     }
 
+    public void sendMessage(MessageId messageId,
+                            Mail mail,
+                            MailboxSession session) throws MailboxException, MessagingException {
+        assertUserIsSender(session, mail.getSender());
+        MailMetadata metadata = new MailMetadata(messageId, session.getUser().getUserName());
+        mailSpool.send(mail, metadata);
+    }
+
     private void assertUserIsInSenders(Envelope envelope, MailboxSession session) throws MailboxSendingNotAllowedException {
-        String allowedSender = session.getUser().getUserName();
-        if (!session.getUser().isSameUser(envelope.getFrom().asString())) {
+        MailAddress sender = envelope.getFrom();
+        assertUserIsSender(session, sender);
+    }
+
+    private void assertUserIsSender(MailboxSession session, MailAddress sender) throws MailboxSendingNotAllowedException {
+        if (!session.getUser().isSameUser(sender.asString())) {
+            String allowedSender = session.getUser().getUserName();
             throw new MailboxSendingNotAllowedException(allowedSender);
         }
     }

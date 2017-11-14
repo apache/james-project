@@ -17,29 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.send;
+package org.apache.james.jmap.exceptions;
 
-import javax.mail.MessagingException;
-
-import org.apache.james.jmap.model.Envelope;
-import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
-import org.apache.james.server.core.MailImpl;
-import org.apache.mailet.Mail;
-
-import com.google.common.annotations.VisibleForTesting;
-
-public class MailFactory {
-    
-    @VisibleForTesting MailFactory() {
-    }
-
-    public Mail build(MetaDataWithContent message, Envelope envelope) throws MessagingException {
-        return new MailImpl(message.getMessageId().serialize(),
-            envelope.getFrom(),
-            envelope.getRecipients(),
-            message.getContent());
-    }
-
-
-
+public class InvalidOutboxMoveException extends RuntimeException {
 }
