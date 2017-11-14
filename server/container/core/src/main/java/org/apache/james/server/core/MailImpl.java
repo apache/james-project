@@ -72,6 +72,16 @@ import com.google.common.base.Preconditions;
  */
 public class MailImpl implements Disposable, Mail {
 
+    /**
+     * Create a copy of the input mail and assign it a new name
+     *
+     * @param mail original mail
+     * @throws MessagingException when the message is not clonable
+     */
+    public static MailImpl duplicate(Mail mail) throws MessagingException {
+        return new MailImpl(mail, newName(mail));
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(MailImpl.class);
 
     /**
@@ -153,16 +163,6 @@ public class MailImpl implements Disposable, Mail {
             this.recipients = new ArrayList<>();
             this.recipients.addAll(recipients);
         }
-    }
-
-    /**
-     * Create a copy of the input mail and assign it a new name
-     *
-     * @param mail original mail
-     * @throws MessagingException when the message is not clonable
-     */
-    public MailImpl(Mail mail) throws MessagingException {
-        this(mail, newName(mail));
     }
 
     /**

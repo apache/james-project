@@ -60,7 +60,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         MimeMessageCopyOnWriteProxy messageFromSources = (MimeMessageCopyOnWriteProxy) getMessageFromSources(
                 content + sep + body);
         MailImpl mail = new MailImpl("test", new MailAddress("test@test.com"), r, messageFromSources);
-        MailImpl m2 = (MailImpl) mail.duplicate("clone");
+        MailImpl m2 = MailImpl.duplicate(mail);
         System.out.println("mail: " + getReferences(mail.getMessage()) + " m2: " + getReferences(m2.getMessage()));
         assertNotSame(m2, mail);
         assertNotSame(m2.getMessage(), mail.getMessage());
@@ -86,7 +86,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         MimeMessageCopyOnWriteProxy messageFromSources = (MimeMessageCopyOnWriteProxy) getMessageFromSources(
                 content + sep + body);
         MailImpl mail = new MailImpl("test", new MailAddress("test@test.com"), r, messageFromSources);
-        MailImpl m2 = (MailImpl) mail.duplicate("clone");
+        MailImpl m2 = MailImpl.duplicate(mail);
         System.out.println("mail: " + getReferences(mail.getMessage()) + " m2: " + getReferences(m2.getMessage()));
         assertNotSame(m2, mail);
         assertNotSame(m2.getMessage(), mail.getMessage());
@@ -137,7 +137,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
                 content + sep + body);
         MailImpl mail = new MailImpl("test", new MailAddress("test@test.com"), r, messageFromSources);
         // cloning the message
-        Mail mailClone = mail.duplicate("clone");
+        Mail mailClone = MailImpl.duplicate(mail);
         assertTrue(isSameMimeMessage(mailClone.getMessage(), mail.getMessage()));
         MimeMessage mm = getWrappedMessage(mail.getMessage());
         assertNotSame(mail.getMessage(), mailClone.getMessage());
@@ -194,7 +194,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
                 content + sep + body);
         MailImpl mail = new MailImpl("test", new MailAddress("test@test.com"), r, messageFromSources);
         // cloning the message
-        MailImpl mailClone = (MailImpl) mail.duplicate("clone");
+        MailImpl mailClone = MailImpl.duplicate(mail);
         LifecycleUtil.dispose(mail);
 
         assertNotNull(getWrappedMessage(mailClone.getMessage()));

@@ -242,7 +242,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     }
 
     private void trySendBounce(Mail originalMail) throws MessagingException {
-        MailImpl newMail = new MailImpl(originalMail);
+        MailImpl newMail = MailImpl.duplicate(originalMail);
         try {
             newMail.setRemoteHost(getRemoteHost());
             newMail.setRemoteAddr(getRemoteAddr());

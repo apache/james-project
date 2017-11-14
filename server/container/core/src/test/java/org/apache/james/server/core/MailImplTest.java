@@ -126,6 +126,21 @@ public class MailImplTest {
     }
 
     @Test
+    public void duplicateFactoryMethodShouldGenerateNewObjectWithSameValuesButName() throws MessagingException, IOException {
+        ImmutableList<MailAddress> recipients = ImmutableList.of();
+        String name = MailUtil.newId();
+        String sender = "sender@localhost";
+        MailAddress senderMailAddress = new MailAddress(sender);
+
+        MailImpl mail = new MailImpl(name, senderMailAddress, recipients, emptyMessage);
+        MailImpl duplicate = MailImpl.duplicate(mail);
+
+        assertThat(duplicate).isNotSameAs(mail).isEqualToIgnoringGivenFields(mail, "message", "name");
+        assertThat(duplicate.getName()).isNotEqualTo(name);
+        assertThat(duplicate.getMessage().getInputStream()).hasSameContentAs(mail.getMessage().getInputStream());
+    }
+
+    @Test
     public void duplicateShouldGenerateNewObjectWithSameValuesButName() throws MessagingException, IOException {
         ImmutableList<MailAddress> recipients = ImmutableList.of();
         String name = MailUtil.newId();
@@ -133,10 +148,10 @@ public class MailImplTest {
         MailAddress senderMailAddress = new MailAddress(sender);
 
         MailImpl mail = new MailImpl(name, senderMailAddress, recipients, emptyMessage);
-        MailImpl duplicate = (MailImpl) mail.duplicate("new name");
+        MailImpl duplicate = MailImpl.duplicate(mail);
 
         assertThat(duplicate).isNotSameAs(mail).isEqualToIgnoringGivenFields(mail, "message", "name");
-        assertThat(duplicate.getName()).isEqualTo("new name");
+        assertThat(duplicate.getName()).isNotEqualTo(name);
         assertThat(duplicate.getMessage().getInputStream()).hasSameContentAs(mail.getMessage().getInputStream());
     }
 

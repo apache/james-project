@@ -87,7 +87,7 @@ public class MemoryMailQueueFactory implements MailQueueFactory {
         }
 
         private Mail cloneMail(Mail mail) throws MessagingException {
-            MailImpl mailImpl = new MailImpl(mail);
+            MailImpl mailImpl = MailImpl.duplicate(mail);
             Optional.ofNullable(mail.getMessage())
                     .ifPresent(Throwing.consumer(message -> mailImpl.setMessage(new MimeMessage(message))));
             return mailImpl;

@@ -176,7 +176,7 @@ public abstract class AbstractRecipientRewriteTable extends GenericMailet {
 
             // duplicates the Mail object, to be able to modify the new mail
             // keeping the original untouched
-            MailImpl newMail = new MailImpl(mail);
+            MailImpl newMail = MailImpl.duplicate(mail);
             try {
                 try {
                     newMail.setRemoteAddr(dns.getLocalHost().getHostAddress());
