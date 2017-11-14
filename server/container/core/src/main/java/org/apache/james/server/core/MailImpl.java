@@ -51,6 +51,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 /**
  * <p>
@@ -142,6 +143,7 @@ public class MailImpl implements Disposable, Mail {
         setState(Mail.DEFAULT);
         attributes = new HashMap<>();
         perRecipientSpecificHeaders = new PerRecipientHeaders();
+        this.recipients = null;
     }
 
     /**
@@ -156,12 +158,10 @@ public class MailImpl implements Disposable, Mail {
         this();
         this.name = name;
         this.sender = sender;
-        this.recipients = null;
 
         // Copy the recipient list
         if (recipients != null) {
-            this.recipients = new ArrayList<>();
-            this.recipients.addAll(recipients);
+            setRecipients(recipients);
         }
     }
 
@@ -397,14 +397,9 @@ public class MailImpl implements Disposable, Mail {
         }
     }
 
-    /**
-     * Set the recipients for this MailImpl.
-     *
-     * @param recipients the recipients for this MailImpl
-     */
     @Override
     public void setRecipients(Collection<MailAddress> recipients) {
-        this.recipients = recipients;
+        this.recipients = ImmutableList.copyOf(recipients);
     }
 
     /**
