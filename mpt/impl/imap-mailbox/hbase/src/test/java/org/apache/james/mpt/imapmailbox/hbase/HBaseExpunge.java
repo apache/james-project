@@ -24,7 +24,9 @@ import org.apache.james.mpt.imapmailbox.hbase.host.HBaseHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.Expunge;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 
+@Ignore
 public class HBaseExpunge extends Expunge {
 
     private ImapHostSystem system;

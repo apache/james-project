@@ -24,7 +24,9 @@ import org.apache.james.mpt.imapmailbox.hbase.host.HBaseHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.AuthenticatedState;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 
+@Ignore
 public class HBaseAuthenticatedState extends AuthenticatedState {
 
     private ImapHostSystem system;

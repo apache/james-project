@@ -24,7 +24,9 @@ import org.apache.james.mpt.imapmailbox.hbase.host.HBaseHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.Security;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 
+@Ignore
 public class HBaseSecurity extends Security {
 
     private ImapHostSystem system;

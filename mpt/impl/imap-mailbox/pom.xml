@@ -46,18 +46,6 @@
         <module>maildir</module>
     </modules>
 
-    <properties>
-        <cassandra.includes>empty</cassandra.includes>
-        <hbase.includes>empty</hbase.includes>
-        <inmemory.includes>empty</inmemory.includes>
-        <jcr.includes>empty</jcr.includes>
-        <jpa.includes>empty</jpa.includes>
-        <maildir.includes>empty</maildir.includes>
-        <cyrus.includes>empty</cyrus.includes>
-        <elasticsearch.includes>empty</elasticsearch.includes>
-        <jpa-lucene.includes>empty</jpa-lucene.includes>
-    </properties>
-
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -134,10 +122,6 @@
                             <exclude>**/suite/*.java</exclude>
                             <exclude>**/suite/**/*.java</exclude>
                         </excludes>
-                        <includes>
-                            <include>${cassandra.includes}, ${hbase.includes}, ${inmemory.includes}, ${jcr.includes}, ${jpa.includes}, ${maildir.includes}, ${cyrus.includes}, 
-${elasticsearch.includes}, ${jpa-lucene.includes}</include>
-                        </includes>
                     </configuration>
                 </plugin>
             </plugins>
