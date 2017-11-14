@@ -63,7 +63,7 @@ public class SMTPChannelUpstreamHandler extends BasicChannelUpstreamHandler {
 
     @Override
     public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        super.channelClosed(ctx, e);
+        super.channelDisconnected(ctx, e);
         smtpMetrics.getConnectionMetric().decrement();
     }
 
