@@ -364,7 +364,7 @@ Feature: GetMessages method
             |"text/html; charset=iso-8859-1"                    |quoted-printable   |"Dans le cadre du stage effectu=E9 Mlle 2017, =E0 sign=E9e d=E8s que possible, =E0, tr=E8s, journ=E9e.."    |effectué, à, signée dès, très, journée                                                                        |
 
   Scenario Outline: Retrieving message should display keywords as jmap flag
-    Given "alice@domain.tld" has a message "m1" in the "inbox" mailbox with flags <flags>
+    Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with flags <flags>
     When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
@@ -375,7 +375,7 @@ Feature: GetMessages method
             |"$Flagged,$Answered,$Draft"    |$Flagged,$Answered,$Draft      |
 
   Scenario Outline: GetMessages should filter invalid keywords
-    Given "alice@domain.tld" has a message "m1" in the "inbox" mailbox with flags <flags>
+    Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with flags <flags>
     When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
@@ -386,7 +386,7 @@ Feature: GetMessages method
       |"$Draft,@ert,t^a,op§,$user_flag"    |$Draft,$user_flag      |
 
   Scenario Outline: Retrieving message should display keywords without unsupported jmap flag
-    Given "alice@domain.tld" has a message "m1" in the "inbox" mailbox with flags <flags>
+    Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with flags <flags>
     When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
@@ -397,7 +397,7 @@ Feature: GetMessages method
             |"$Flagged,$Answered,$Deleted,$Recent"  |$Flagged,$Answered      |
 
   Scenario Outline: Retrieving message should display keywords with custom user jmap flag
-    Given "alice@domain.tld" has a message "m1" in the "inbox" mailbox with flags <flags>
+    Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with flags <flags>
     When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
@@ -408,14 +408,14 @@ Feature: GetMessages method
             |"$Flagged,$Forwarded"    |$Forwarded,$Flagged     |
 
   Scenario: Retrieving message should include true isForwarded property when set
-    Given "alice@domain.tld" has a message "m1" in the "inbox" mailbox with flags "$Forwarded"
+    Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with flags "$Forwarded"
     When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the isForwarded property of the message is "true"
 
   Scenario: Retrieving message should include false isForwarded property when not set
-    Given "alice@domain.tld" has a message "m1" in the "inbox" mailbox with flags "$Answered"
+    Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with flags "$Answered"
     When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message

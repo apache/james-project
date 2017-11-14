@@ -38,7 +38,6 @@ import javax.mail.Flags;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
-import org.apache.james.jmap.DefaultMailboxes;
 import org.apache.james.jmap.methods.integration.cucumber.util.TableRow;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -365,14 +364,14 @@ public class GetMessagesMethodStepdefs {
 
     @Given("^the user has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with flags \"([^\"]*)\"$")
     public void appendMessageWithFlags(String messageName, String mailbox, List<String> flagList) throws Exception {
-        appendMessage(messageName, StringListToFlags.fromFlagList(flagList));
+        appendMessage(messageName, mailbox, StringListToFlags.fromFlagList(flagList));
     }
 
-    private void appendMessage(String messageName, Flags flags) throws Exception {
+    private void appendMessage(String messageName, String mailbox, Flags flags) throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         boolean isRecent = flags.contains(Flags.Flag.RECENT);
         MessageId id = mainStepdefs.mailboxProbe.appendMessage(userStepdefs.getConnectedUser(),
-            MailboxPath.forUser(userStepdefs.getConnectedUser(), DefaultMailboxes.INBOX),
+            MailboxPath.forUser(userStepdefs.getConnectedUser(), mailbox),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
             Date.from(dateTime.toInstant()), isRecent, flags)
             .getMessageId();
