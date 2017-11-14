@@ -157,7 +157,7 @@ public class MailImpl implements Disposable, Mail {
     public MailImpl(String name, MailAddress sender, Collection<MailAddress> recipients) {
         this();
         setName(name);
-        this.sender = sender;
+        setSender(sender);
 
         // Copy the recipient list
         if (recipients != null) {
