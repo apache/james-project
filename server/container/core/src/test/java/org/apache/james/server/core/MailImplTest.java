@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -35,8 +36,10 @@ import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 public class MailImplTest {
@@ -163,4 +166,51 @@ public class MailImplTest {
             .isInstanceOf(NullPointerException.class);
     }
 
+    @Test
+    public void deriveNewNameShouldThrowOnNull() {
+        assertThatThrownBy(() -> MailImpl.deriveNewName(null)).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void deriveNewNameShouldGenerateNonEmptyStringOnEmpty() throws MessagingException {
+        assertThat(MailImpl.deriveNewName("")).isNotEmpty();
+    }
+
+    @Test
+    public void deriveNewNameShouldNeverGenerateMoreThan86Characters() throws MessagingException {
+        String longString = "mu1Eeseemu1Eeseemu1Eeseemu1Eeseemu1Eeseemu1Eeseemu1Eeseemu1Eeseemu1Eeseeseemu1Eesee";
+        assertThat(MailImpl.deriveNewName(longString).length()).isLessThan(86);
+    }
+
+    @Test
+    public void deriveNewNameShouldThrowWhenMoreThan8NestedCalls() throws MessagingException {
+        String called6Times = IntStream.range(0, 8)
+            .mapToObj(String::valueOf)
+            .reduce("average value ", Throwing.binaryOperator((left, right) -> MailImpl.deriveNewName(left)));
+        assertThatThrownBy(() -> MailImpl.deriveNewName(called6Times)).isInstanceOf(MessagingException.class);
+    }
+
+    @Test
+    @Ignore("short value doesn't trigger the assertion")
+    public void deriveNewNameShouldThrowWhenMoreThan8NestedCallsAndSmallInitialValue() throws MessagingException {
+        String called6Times = IntStream.range(0, 8)
+            .mapToObj(String::valueOf)
+            .reduce("small", Throwing.binaryOperator((left, right) -> MailImpl.deriveNewName(left)));
+        assertThatThrownBy(() -> MailImpl.deriveNewName(called6Times)).isInstanceOf(MessagingException.class);
+    }
+
+    @Test
+    @Ignore("truncation make impossible to detect 8 calls")
+    public void deriveNewNameShouldThrowWhenMoreThan8NestedCallsAndLongInitialValue() throws MessagingException {
+        String called6Times = IntStream.range(0, 8)
+            .mapToObj(String::valueOf)
+            .reduce("looooooonnnnnngggggggggggggggg", Throwing.binaryOperator((left, right) -> MailImpl.deriveNewName(left)));
+        assertThatThrownBy(() -> MailImpl.deriveNewName(called6Times)).isInstanceOf(MessagingException.class);
+    }
+
+
+    @Test
+    public void deriveNewNameShouldGenerateNotEqualsCurrentName() throws MessagingException {
+        assertThat(MailImpl.deriveNewName("current")).isNotEqualTo("current");
+    }
 }

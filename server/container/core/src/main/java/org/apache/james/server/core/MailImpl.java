@@ -28,7 +28,6 @@ import java.io.ObjectOutputStream;
 import java.io.OptionalDataException;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -80,8 +79,46 @@ public class MailImpl implements Disposable, Mail {
      * @throws MessagingException when the message is not clonable
      */
     public static MailImpl duplicate(Mail mail) throws MessagingException {
-        return new MailImpl(mail, newName(mail));
+        return new MailImpl(mail, deriveNewName(mail.getName()));
     }
+
+    private static final java.util.Random random = new java.util.Random(); // Used
+    // to
+    // generate
+    // new
+    // mail
+    // names
+
+    /**
+     * Create a unique new primary key name for the given MailObject.
+     *
+     * @param currentName the mail to use as the basis for the new mail name
+     * @return a new name
+     */
+    @VisibleForTesting static String deriveNewName(String currentName) throws MessagingException {
+
+        // Checking if the original mail name is too long, perhaps because of a
+        // loop caused by a configuration error.
+        // it could cause a "null pointer exception" in AvalonMailRepository
+        // much
+        // harder to understand.
+        if (currentName.length() > 76) {
+            int count = 0;
+            int index = 0;
+            while ((index = currentName.indexOf('!', index + 1)) >= 0) {
+                count++;
+            }
+            // It looks like a configuration loop. It's better to stop.
+            if (count > 7) {
+                throw new MessagingException("Unable to create a new message name: too long." + " Possible loop in config.xml.");
+            } else {
+                currentName = currentName.substring(0, 76);
+            }
+        }
+
+        return currentName + "-!" + random.nextInt(1048576);
+    }
+
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MailImpl.class);
 
@@ -530,44 +567,6 @@ public class MailImpl implements Disposable, Mail {
         ByteArrayInputStream bi = new ByteArrayInputStream(b.toByteArray());
         ObjectInputStream in = new ObjectInputStream(bi);
         return in.readObject();
-    }
-
-    private static final java.util.Random random = new java.util.Random(); // Used
-    // to
-    // generate
-    // new
-    // mail
-    // names
-
-    /**
-     * Create a unique new primary key name for the given MailObject.
-     *
-     * @param mail the mail to use as the basis for the new mail name
-     * @return a new name
-     */
-    public static String newName(Mail mail) throws MessagingException {
-        String oldName = mail.getName();
-
-        // Checking if the original mail name is too long, perhaps because of a
-        // loop caused by a configuration error.
-        // it could cause a "null pointer exception" in AvalonMailRepository
-        // much
-        // harder to understand.
-        if (oldName.length() > 76) {
-            int count = 0;
-            int index = 0;
-            while ((index = oldName.indexOf('!', index + 1)) >= 0) {
-                count++;
-            }
-            // It looks like a configuration loop. It's better to stop.
-            if (count > 7) {
-                throw new MessagingException("Unable to create a new message name: too long." + " Possible loop in config.xml.");
-            } else {
-                oldName = oldName.substring(0, 76);
-            }
-        }
-
-        return oldName + "-!" + random.nextInt(1048576);
     }
 
     /**
