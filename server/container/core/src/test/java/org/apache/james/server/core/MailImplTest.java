@@ -191,7 +191,6 @@ public class MailImplTest {
     }
 
     @Test
-    @Ignore("short value doesn't trigger the assertion")
     public void deriveNewNameShouldThrowWhenMoreThan8NestedCallsAndSmallInitialValue() throws MessagingException {
         String called6Times = IntStream.range(0, 8)
             .mapToObj(String::valueOf)
@@ -200,14 +199,12 @@ public class MailImplTest {
     }
 
     @Test
-    @Ignore("truncation make impossible to detect 8 calls")
     public void deriveNewNameShouldThrowWhenMoreThan8NestedCallsAndLongInitialValue() throws MessagingException {
         String called6Times = IntStream.range(0, 8)
             .mapToObj(String::valueOf)
             .reduce("looooooonnnnnngggggggggggggggg", Throwing.binaryOperator((left, right) -> MailImpl.deriveNewName(left)));
         assertThatThrownBy(() -> MailImpl.deriveNewName(called6Times)).isInstanceOf(MessagingException.class);
     }
-
 
     @Test
     public void deriveNewNameShouldGenerateNotEqualsCurrentName() throws MessagingException {

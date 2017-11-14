@@ -39,6 +39,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.ParseException;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.james.core.MailAddress;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
@@ -51,6 +52,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.primitives.Chars;
 
 /**
  * <p>
@@ -82,41 +84,45 @@ public class MailImpl implements Disposable, Mail {
         return new MailImpl(mail, deriveNewName(mail.getName()));
     }
 
-    private static final java.util.Random random = new java.util.Random(); // Used
-    // to
-    // generate
-    // new
-    // mail
-    // names
-
     /**
      * Create a unique new primary key name for the given MailObject.
+     * Detect if this has been called more than 8 times recursively
      *
      * @param currentName the mail to use as the basis for the new mail name
      * @return a new name
      */
     @VisibleForTesting static String deriveNewName(String currentName) throws MessagingException {
+        char separator = '!';
+        int loopThreshold = 7;
+        int suffixLength = 9;
+        int suffixMaxLength = loopThreshold * suffixLength;
+        int nameMaxLength = suffixMaxLength + 13;
+
+        detectPossibleLoop(currentName, loopThreshold, separator);
 
         // Checking if the original mail name is too long, perhaps because of a
         // loop caused by a configuration error.
         // it could cause a "null pointer exception" in AvalonMailRepository
-        // much
-        // harder to understand.
-        if (currentName.length() > 76) {
-            int count = 0;
-            int index = 0;
-            while ((index = currentName.indexOf('!', index + 1)) >= 0) {
-                count++;
-            }
-            // It looks like a configuration loop. It's better to stop.
-            if (count > 7) {
-                throw new MessagingException("Unable to create a new message name: too long." + " Possible loop in config.xml.");
-            } else {
-                currentName = currentName.substring(0, 76);
-            }
-        }
+        // much harder to understand.
+        String newName = currentName + generateRandomSuffix(suffixLength, separator);
+        return stripFirstCharsIfNeeded(nameMaxLength, newName);
+    }
 
-        return currentName + "-!" + random.nextInt(1048576);
+    private static String stripFirstCharsIfNeeded(int nameMaxLength, String newName) {
+        return newName.substring(Math.max(0, newName.length() - nameMaxLength));
+    }
+
+    private static String generateRandomSuffix(int suffixLength, char separator) {
+        return "-" + separator + RandomStringUtils.randomNumeric(suffixLength - 2);
+    }
+
+    private static void detectPossibleLoop(String currentName, int loopThreshold, char separator) throws MessagingException {
+        long occurrences = currentName.chars().filter(c -> Chars.saturatedCast(c) == separator).count();
+
+        // It looks like a configuration loop. It's better to stop.
+        if (occurrences > loopThreshold) {
+            throw new MessagingException("Unable to create a new message name: too long. Possible loop in config.xml.");
+        }
     }
 
 
