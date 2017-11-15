@@ -110,6 +110,11 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         .setMaxLineLen(-1)
         .build();
 
+    private static final MailboxCounters ZERO_MAILBOX_COUNTERS = MailboxCounters.builder()
+        .count(0)
+        .unseen(0)
+        .build();
+
     /**
      * The minimal Permanent flags the {@link MessageManager} must support. <br>
      * 
@@ -232,7 +237,10 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
     @Override
     public MailboxCounters getMailboxCounters(MailboxSession mailboxSession) throws MailboxException {
-        return mapperFactory.createMessageMapper(mailboxSession).getMailboxCounters(mailbox);
+        if (storeRightManager.hasRight(mailbox, MailboxACL.Right.Read, mailboxSession)) {
+            return mapperFactory.createMessageMapper(mailboxSession).getMailboxCounters(mailbox);
+        }
+        return ZERO_MAILBOX_COUNTERS;
     }
 
     /**
@@ -463,17 +471,21 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
     @Override
     public MetaData getMetaData(boolean resetRecent, MailboxSession mailboxSession, MetaData.FetchGroup fetchGroup) throws MailboxException {
-
-        final List<MessageUid> recent;
-        final Flags permanentFlags = getPermanentFlags(mailboxSession);
-        final long uidValidity = getMailboxEntity().getUidValidity();
+        MailboxACL resolvedAcl = storeRightManager.getResolvedMailboxACL(mailbox, mailboxSession);
+        boolean hasReadRight = storeRightManager.hasRight(mailbox, MailboxACL.Right.Read, mailboxSession);
+        if (!hasReadRight) {
+            return MailboxMetaData.sensibleInformationFree(resolvedAcl, getMailboxEntity().getUidValidity(), isWriteable(mailboxSession), isModSeqPermanent(mailboxSession));
+        }
+        List<MessageUid> recent;
+        Flags permanentFlags = getPermanentFlags(mailboxSession);
+        long uidValidity = getMailboxEntity().getUidValidity();
         MessageUid uidNext = mapperFactory.getMessageMapper(mailboxSession).getLastUid(mailbox)
                 .map(MessageUid::next)
                 .orElse(MessageUid.MIN_VALUE);
-        final long highestModSeq = mapperFactory.getMessageMapper(mailboxSession).getHighestModSeq(mailbox);
-        final long messageCount;
-        final long unseenCount;
-        final MessageUid firstUnseen;
+        long highestModSeq = mapperFactory.getMessageMapper(mailboxSession).getHighestModSeq(mailbox);
+        long messageCount;
+        long unseenCount;
+        MessageUid firstUnseen;
         switch (fetchGroup) {
         case UNSEEN_COUNT:
             unseenCount = countUnseenMessagesInMailbox(mailboxSession);
@@ -507,7 +519,6 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             recent = new ArrayList<>();
             break;
         }
-        MailboxACL resolvedAcl = storeRightManager.getResolvedMailboxACL(mailbox, mailboxSession);
         return new MailboxMetaData(recent, permanentFlags, uidValidity, uidNext, highestModSeq, messageCount, unseenCount, firstUnseen, isWriteable(mailboxSession), isModSeqPermanent(mailboxSession), resolvedAcl);
     }
 
