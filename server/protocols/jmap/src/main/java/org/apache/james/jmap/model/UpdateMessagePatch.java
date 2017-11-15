@@ -149,13 +149,8 @@ public class UpdateMessagePatch {
     }
 
     public Flags applyToState(Flags currentFlags) {
-        return keywords.map(keyword -> keyword.asFlagsWithRecentAndDeletedFrom(currentFlags))
-            .orElse(new Flags());
-    }
-
-    public Flags applyToStateNoReset(Flags currentFlags) {
-        return keywords.map(keyword -> keyword.asFlagsWithRecentAndDeletedFrom(currentFlags))
+        return keywords
+            .map(keyword -> keyword.asFlagsWithRecentAndDeletedFrom(currentFlags))
             .orElse(currentFlags);
     }
-
 }

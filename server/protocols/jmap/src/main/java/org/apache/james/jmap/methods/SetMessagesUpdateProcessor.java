@@ -185,7 +185,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     private List<Flags> patchFlags(List<MessageResult> messagesToBeUpdated, UpdateMessagePatch updateMessagePatch) {
         return messagesToBeUpdated.stream()
             .map(MessageResult::getFlags)
-            .map(updateMessagePatch::applyToStateNoReset)
+            .map(updateMessagePatch::applyToState)
             .collect(Guavate.toImmutableList());
     }
 

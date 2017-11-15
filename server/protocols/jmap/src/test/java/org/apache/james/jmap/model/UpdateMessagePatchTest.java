@@ -257,4 +257,14 @@ public class UpdateMessagePatchTest {
 
         messagePatch.isFlagsIdentity();
     }
+
+    @Test
+    public void applyStateShouldKeepKeywordsWhenNoKeywordPatchDefined() {
+        UpdateMessagePatch messagePatch = UpdateMessagePatch.builder()
+            .build();
+        Flags flags = FlagsBuilder.builder()
+            .add(Flags.Flag.DELETED, Flags.Flag.RECENT, Flags.Flag.DRAFT)
+            .build();
+        assertThat(messagePatch.applyToState(flags)).isEqualTo(flags);
+    }
 }
