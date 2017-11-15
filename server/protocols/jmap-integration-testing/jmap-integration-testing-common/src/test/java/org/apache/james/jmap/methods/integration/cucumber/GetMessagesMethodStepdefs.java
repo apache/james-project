@@ -94,6 +94,10 @@ public class GetMessagesMethodStepdefs {
         return messageIdsByName.get(name);
     }
 
+    public MessageId addMessageId(String name, MessageId messageId) {
+        return messageIdsByName.put(name, messageId);
+    }
+
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" and \"([^\"]*)\" mailboxes with subject \"([^\"]*)\", content \"([^\"]*)\"$")
     public void appendMessageInTwoMailboxes(String messageName, String mailbox1, String mailbox2, String subject, String content) throws Exception {
         MessageId id = appendMessage(mailbox1, ContentType.noContentType(), subject, content, NO_HEADERS);
@@ -438,7 +442,7 @@ public class GetMessagesMethodStepdefs {
         askMessages(requestedMessageIds);
     }
 
-    @When("^\"(.*?)\" ask for messages \"(.*?)\"$")
+    @When("^\"(.*?)\" ask for (?:messages|message) \"(.*?)\"$")
     public void postWithAListOfIds(String user, List<String> ids) throws Throwable {
         userStepdefs.execWithUser(user, () -> postWithAListOfIds(ids));
     }
@@ -526,8 +530,9 @@ public class GetMessagesMethodStepdefs {
     }
 
     @Then("^the notFound list should contain \"([^\"]*)\"$")
-    public void assertNotFoundListContains(String ids) throws Exception {
-        assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".notFound")).contains(ids);
+    public void assertNotFoundListContains(String id) throws Exception {
+        MessageId messageId = messageIdsByName.get(id);
+        assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".notFound")).contains(messageId.serialize());
     }
 
     @Then("^the notFound list should contain the requested message id$")

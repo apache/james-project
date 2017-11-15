@@ -564,30 +564,6 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    public void setMessagesShouldReturnAnErrorWhenKeywordsWithAddingDraftArePassed() throws MailboxException {
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
-
-        ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.ANSWERED));
-        await();
-
-        String messageId = message.getMessageId().serialize();
-
-        given()
-            .header("Authorization", accessToken.serialize())
-            .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"keywords\": {\"$Draft\": true} } } }, \"#0\"]]", messageId))
-        .when()
-            .post("/jmap")
-        .then()
-            .log().ifValidationFails()
-            .body(NOT_UPDATED, hasKey(messageId))
-            .body(NOT_UPDATED + "[\""+messageId+"\"].type", equalTo("invalidProperties"))
-            .body(NOT_UPDATED + "[\""+messageId+"\"].properties[0]", equalTo("keywords"))
-            .body(NOT_UPDATED + "[\""+messageId+"\"].description", equalTo("keywords: Cannot add or remove draft flag"))
-            .body(ARGUMENTS + ".updated", hasSize(0));
-    }
-
-    @Test
     public void setMessagesShouldReturnAnErrorWhenKeywordsWithDeletedArePassed() throws MailboxException {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 

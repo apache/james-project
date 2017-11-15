@@ -28,10 +28,12 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
+import org.apache.james.jmap.DefaultMailboxes;
 import org.apache.james.jmap.model.Keywords;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.modules.MailboxProbeImpl;
 
 import com.google.common.collect.ImmutableList;
@@ -174,6 +176,49 @@ public class SetMessagesMethodStepdefs {
     @When("^\"([^\"]*)\" sets flags \"([^\"]*)\" on message \"([^\"]*)\"")
     public void setFlags(String username, List<String> keywords, String message) throws Throwable {
         userStepdefs.execWithUser(username, () -> setFlags(keywords, message));
+    }
+
+    @When("^\"([^\"]*)\" destroys message \"([^\"]*)\"")
+    public void destroyMessage(String username, String message) throws Throwable {
+        MessageId messageId = getMessagesMethodStepdefs.getMessageId(message);
+        userStepdefs.execWithUser(username, () -> {
+            httpClient.post("[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"destroy\": [ \"" + messageId.serialize() + "\" ]" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]");
+            mainStepdefs.awaitMethod.run();
+        });
+    }
+
+
+    @Given("^\"([^\"]*)\" creates a draft message \"([^\"]*)\"")
+    public void createDraft(String username, String message) throws Throwable {
+        userStepdefs.execWithUser(username, () -> {
+            Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE,
+                username,
+                DefaultMailboxes.DRAFTS);
+            httpClient.post("[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\": { \"" + message  + "\" : {" +
+                "        \"subject\": \"subject\"," +
+                "        \"keywords\": {\"$Draft\": true}," +
+                "        \"mailboxIds\": [\"" + mailbox.getMailboxId().serialize() + "\"]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]");
+            mainStepdefs.awaitMethod.run();
+            String messageId = httpClient.jsonPath.read("[0][1].created." + message + ".id");
+            getMessagesMethodStepdefs.addMessageId(message, mainStepdefs.messageIdFactory.fromString(messageId));
+        });
     }
 
     @When("^the user sets flags \"([^\"]*)\" on message \"([^\"]*)\"")
