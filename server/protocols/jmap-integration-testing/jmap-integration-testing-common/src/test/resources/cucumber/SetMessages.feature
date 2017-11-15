@@ -128,3 +128,25 @@ Feature: SetMessages method on shared folders
     Given "bob@domain.tld" has a mailbox "Outbox"
     When "bob@domain.tld" creates a draft message "mDraft" in mailbox "Outbox"
     Then message "mDraft" is not created
+
+  Scenario: A user can not move draft out of draft mailbox
+    Given "bob@domain.tld" has a mailbox "Drafts"
+    And "bob@domain.tld" creates a draft message "mDraft" in mailbox "Drafts"
+    When "bob@domain.tld" moves "mDraft" to user mailbox "shared"
+    Then message "mDraft" is not updated
+
+  Scenario: A user can not copy draft out of draft mailbox
+    Given "bob@domain.tld" has a mailbox "Drafts"
+    And "bob@domain.tld" creates a draft message "mDraft" in mailbox "Drafts"
+    When "bob@domain.tld" copies "mDraft" from mailbox "Drafts" to mailbox "shared"
+    Then message "mDraft" is not updated
+
+  Scenario: A user can not copy draft out of draft mailbox
+    Given "bob@domain.tld" has a mailbox "Drafts"
+    When "bob@domain.tld" moves "mBob" to user mailbox "Drafts"
+    Then message "mBob" is not updated
+
+  Scenario: A user can not copy draft out of draft mailbox
+    Given "bob@domain.tld" has a mailbox "Drafts"
+    When "bob@domain.tld" copies "mBob" from mailbox "shared" to mailbox "Drafts"
+    Then message "mBob" is not updated
