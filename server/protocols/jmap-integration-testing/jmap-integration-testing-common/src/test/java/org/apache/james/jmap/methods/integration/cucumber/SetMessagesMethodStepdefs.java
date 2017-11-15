@@ -23,12 +23,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
 
-import org.apache.james.jmap.DefaultMailboxes;
 import org.apache.james.jmap.model.Keywords;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
@@ -195,13 +195,12 @@ public class SetMessagesMethodStepdefs {
         });
     }
 
-
-    @Given("^\"([^\"]*)\" creates a draft message \"([^\"]*)\"")
-    public void createDraft(String username, String message) throws Throwable {
+    @Given("^\"([^\"]*)\" creates a draft message \"([^\"]*)\" in mailbox \"([^\"]*)\"")
+    public void createDraft(String username, String message, String mailboxName) throws Throwable {
         userStepdefs.execWithUser(username, () -> {
             Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE,
                 username,
-                DefaultMailboxes.DRAFTS);
+                mailboxName);
             httpClient.post("[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -216,8 +215,10 @@ public class SetMessagesMethodStepdefs {
                 "  ]" +
                 "]");
             mainStepdefs.awaitMethod.run();
-            String messageId = httpClient.jsonPath.read("[0][1].created." + message + ".id");
-            getMessagesMethodStepdefs.addMessageId(message, mainStepdefs.messageIdFactory.fromString(messageId));
+            Optional.ofNullable(
+                httpClient.jsonPath.<String>read("[0][1].created." + message + ".id"))
+                .map(mainStepdefs.messageIdFactory::fromString)
+                .ifPresent(id -> getMessagesMethodStepdefs.addMessageId(message, id));
         });
     }
 
@@ -262,6 +263,12 @@ public class SetMessagesMethodStepdefs {
         MessageId id = getMessagesMethodStepdefs.getMessageId(messageName);
         assertThat(httpClient.jsonPath.<Map<String, String>>read("[0][1].notUpdated"))
             .containsOnlyKeys(id.serialize());
+    }
+
+    @Then("^message \"([^\"]*)\" is not created")
+    public void assertNotCreated(String messageName) throws Exception {;
+        assertThat(httpClient.jsonPath.<Map<String, String>>read("[0][1].notCreated"))
+            .containsOnlyKeys(messageName);
     }
 
 }

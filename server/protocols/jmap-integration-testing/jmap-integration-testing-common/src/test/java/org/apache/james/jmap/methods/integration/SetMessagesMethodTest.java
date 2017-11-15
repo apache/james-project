@@ -1288,7 +1288,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
                 "        \"subject\": \"subject\"," +
                 "        \"isDraft\": true," +
-                "        \"keywords\": {\"$Draft\": true}," +
+                "        \"keywords\": {\"$Answered\": true}," +
                 "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
                 "      }}" +
                 "    }," +
@@ -1321,7 +1321,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
                 "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
                 "        \"subject\": \"subject\"," +
-                "        \"keywords\": {\"$Draft\": true, \"$Flagged\": true}," +
+                "        \"keywords\": {\"$Answered\": true, \"$Flagged\": true}," +
                 "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
                 "      }}" +
                 "    }," +
@@ -1341,7 +1341,7 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".notCreated", aMapWithSize(0))
             .body(ARGUMENTS + ".created", aMapWithSize(1))
             .body(ARGUMENTS + ".created", hasKey(messageCreationId))
-            .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].keywords.$Draft", equalTo(true))
+            .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].keywords.$Answered", equalTo(true))
             .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].keywords.$Flagged", equalTo(true));
     }
 
@@ -4497,7 +4497,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
                 "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
                 "        \"subject\": \"subject\"," +
-                "        \"keywords\": {\"$Draft\": true, \"$Unknown\": true}," +
+                "        \"keywords\": {\"$Answered\": true, \"$Unknown\": true}," +
                 "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
                 "      }}" +
                 "    }," +
@@ -4530,7 +4530,7 @@ public abstract class SetMessagesMethodTest {
             "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
             "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
             "        \"subject\": \"subject\"," +
-            "        \"keywords\": {\"$Draft\": true, \"$Deleted\": true}," +
+            "        \"keywords\": {\"$Answered\": true, \"$Deleted\": true}," +
             "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
             "      }}" +
             "    }," +

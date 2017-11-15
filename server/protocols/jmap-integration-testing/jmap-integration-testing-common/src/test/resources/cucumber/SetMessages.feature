@@ -106,20 +106,25 @@ Feature: SetMessages method on shared folders
 
   Scenario: A user can update the flags on a draft
     Given "bob@domain.tld" has a mailbox "Drafts"
-    And "bob@domain.tld" creates a draft message "mDraft"
+    And "bob@domain.tld" creates a draft message "mDraft" in mailbox "Drafts"
     When "bob@domain.tld" sets flags "$Draft,$Seen" on message "mDraft"
     Then "bob@domain.tld" should see message "mDraft" with keywords $Draft,$Seen
 
   Scenario: A user can not remove a draft flag on a draft messages
     Given "bob@domain.tld" has a mailbox "Drafts"
-    And "bob@domain.tld" creates a draft message "mDraft"
+    And "bob@domain.tld" creates a draft message "mDraft" in mailbox "Drafts"
     When "bob@domain.tld" sets flags "$Seen" on message "mDraft"
     Then message "mDraft" is not updated
     And "bob@domain.tld" should see message "mDraft" with keywords $Draft
 
   Scenario: A user can destroy a draft
     Given "bob@domain.tld" has a mailbox "Drafts"
-    And "bob@domain.tld" creates a draft message "mDraft"
+    And "bob@domain.tld" creates a draft message "mDraft" in mailbox "Drafts"
     When "bob@domain.tld" destroys message "mDraft"
     Then "bob@domain.tld" ask for message "mDraft"
     And the notFound list should contain "mDraft"
+
+  Scenario: Draft creation in outbox is not allowed
+    Given "bob@domain.tld" has a mailbox "Outbox"
+    When "bob@domain.tld" creates a draft message "mDraft" in mailbox "Outbox"
+    Then message "mDraft" is not created

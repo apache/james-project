@@ -126,7 +126,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                 SetError.builder()
                     .type("invalidProperties")
                     .properties(MessageProperty.keywords)
-                    .description("A draft message should be flagged as Draft")
+                    .description(e.getMessage())
                     .build());
 
         } catch (AttachmentsNotFoundException e) {
@@ -188,6 +188,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
     private void sendMailViaOutbox(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session) throws AttachmentsNotFoundException, MailboxException, MessagingException {
         validateArguments(entry, session);
+        assertNoDraftKeywords(entry);
         MessageWithId created = handleOutboxMessages(entry, session);
         responseBuilder.created(created.getCreationId(), created.getValue());
     }
@@ -200,13 +201,22 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     }
 
     private void assertDraftKeywords(CreationMessageEntry entry) {
-        Boolean isDraft = entry.getValue()
+        if (!isDraft(entry)) {
+            throw new InvalidDraftKeywordsException("A draft message should be flagged as Draft");
+        }
+    }
+
+    private void assertNoDraftKeywords(CreationMessageEntry entry) {
+        if (isDraft(entry)) {
+            throw new InvalidDraftKeywordsException("A draft message can not be created out of draft mailbox");
+        }
+    }
+
+    private Boolean isDraft(CreationMessageEntry entry) {
+        return entry.getValue()
             .getKeywords()
             .map(keywords -> keywords.contains(Keyword.DRAFT))
             .orElse(false);
-        if (!isDraft) {
-            throw new InvalidDraftKeywordsException();
-        }
     }
 
     private void validateArguments(CreationMessageEntry entry, MailboxSession session) throws MailboxInvalidMessageCreationException, AttachmentsNotFoundException, MailboxException {
