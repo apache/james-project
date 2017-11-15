@@ -130,9 +130,20 @@ public class SetMailboxesMethodStepdefs {
         shareMailboxWithRight(owner, mailboxName, rights, shareTo);
     }
 
-    @When("^renaming mailbox \"([^\"]*)\" to \"([^\"]*)\"")
-    public void renamingMailbox(String actualMailboxName, String newMailboxName) throws Throwable {
-        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", userStepdefs.getConnectedUser(), actualMailboxName);
+    @When("^\"([^\"]*)\" renames the mailbox, owned by \"([^\"]*)\", \"([^\"]*)\" to \"([^\"]*)\"$")
+    public void renamingMailbox(String user, String mailboxOwner, String currentMailboxName, String newMailboxName) throws Throwable {
+        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", mailboxOwner, currentMailboxName);
+        userStepdefs.connectUser(user);
+        renamingMailbox(mailbox, newMailboxName);
+    }
+
+    @When("^\"([^\"]*)\" renames (?:her|his) mailbox \"([^\"]*)\" to \"([^\"]*)\"$")
+    public void renamingMailbox(String user, String actualMailboxName, String newMailboxName) throws Throwable {
+        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", user, actualMailboxName);
+        renamingMailbox(mailbox, newMailboxName);
+    }
+
+    private void renamingMailbox(Mailbox mailbox, String newMailboxName) throws Exception {
         String mailboxId = mailbox.getMailboxId().serialize();
         String requestBody =
                 "[" +
@@ -148,6 +159,11 @@ public class SetMailboxesMethodStepdefs {
                     "  ]" +
                     "]";
         httpClient.post(requestBody);
+    }
+
+    @When("^renaming mailbox \"([^\"]*)\" to \"([^\"]*)\"")
+    public void renamingMailbox(String actualMailboxName, String newMailboxName) throws Throwable {
+        renamingMailbox(userStepdefs.getConnectedUser(), actualMailboxName, newMailboxName);
     }
 
     @When("^moving mailbox \"([^\"]*)\" to \"([^\"]*)\"$")
@@ -205,5 +221,12 @@ public class SetMailboxesMethodStepdefs {
         Map<String, String> parameters = notUpdated.get(mailbox.getMailboxId().serialize());
         assertThat(parameters).contains(Maps.immutableEntry("type", type),
                 Maps.immutableEntry("description", message));
+    }
+
+    @Then("^mailbox \"([^\"]*)\" owned by \"([^\"]*)\" is not updated")
+    public void assertNotUpdated(String mailboxName, String owner) throws Exception {
+        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, owner, mailboxName);
+        assertThat(httpClient.jsonPath.<Map<String, String>>read("[0][1].notUpdated"))
+            .containsOnlyKeys(mailbox.getMailboxId().serialize());
     }
 }

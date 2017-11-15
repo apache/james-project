@@ -37,6 +37,7 @@ import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSession.SessionType;
+import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.MailboxSessionIdGenerator;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
@@ -548,8 +549,16 @@ public class StoreMailboxManager implements MailboxManager {
             throw new MailboxExistsException(to.toString());
         }
 
+        assertIsOwner(session.getUser(), from);
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         mapper.execute(Mapper.toTransaction(() -> doRenameMailbox(from, to, session, mapper)));
+    }
+
+    private void assertIsOwner(User user, MailboxPath mailboxPath) throws MailboxNotFoundException {
+        if (!user.isSameUser(mailboxPath.getUser())) {
+            LOGGER.info("Mailbox " + mailboxPath.asString() + " does not belong to " + user.getUserName());
+            throw new MailboxNotFoundException(mailboxPath.asString());
+        }
     }
 
     private void doRenameMailbox(MailboxPath from, MailboxPath to, MailboxSession session, MailboxMapper mapper) throws MailboxException {

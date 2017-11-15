@@ -46,7 +46,7 @@ public class GetMailboxesMethodStepdefs {
         this.httpClient = httpClient;
     }
 
-    @When("^\"([^\"]*)\" ask for mailboxes$")
+    @When("^\"([^\"]*)\" lists mailboxes$")
     public void getMailboxes(String user) throws Throwable {
         userStepdefs.execWithUser(user, 
                 () -> httpClient.post("[[\"getMailboxes\", {}, \"#0\"]]"));
