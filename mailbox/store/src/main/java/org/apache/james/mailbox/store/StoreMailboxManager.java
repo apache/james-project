@@ -523,6 +523,7 @@ public class StoreMailboxManager implements MailboxManager {
     @Override
     public void deleteMailbox(final MailboxPath mailboxPath, final MailboxSession session) throws MailboxException {
         LOGGER.info("deleteMailbox " + mailboxPath);
+        assertIsOwner(session.getUser(), mailboxPath);
         final MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
         Mailbox mailbox = mapper.execute((Mapper.Transaction<Mailbox>) () -> {

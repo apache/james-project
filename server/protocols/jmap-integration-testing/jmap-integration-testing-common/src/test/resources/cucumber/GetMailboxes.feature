@@ -277,3 +277,12 @@ Feature: GetMailboxes method
   Scenario: A sharee should receive a not updated response when trying to rename a shared mailbox
     Given "bob@domain.tld" renames the mailbox, owned by "alice@domain.tld", "shared" to "mySharedMailbox"
     Then mailbox "shared" owned by "alice@domain.tld" is not updated
+
+  Scenario: A sharee should receive a not destroyed response when trying to destroy a shared mailbox
+    Given "bob@domain.tld" deletes the mailbox "shared" owned by "alice@domain.tld"
+    Then mailbox "shared" owned by "alice@domain.tld" is not destroyed
+
+  Scenario: A sharee should not be able to delete a shared mailbox
+    Given "bob@domain.tld" deletes the mailbox "shared" owned by "alice@domain.tld"
+    When "alice@domain.tld" lists mailboxes
+    Then the mailboxes should contain "shared" in "Personal" namespace

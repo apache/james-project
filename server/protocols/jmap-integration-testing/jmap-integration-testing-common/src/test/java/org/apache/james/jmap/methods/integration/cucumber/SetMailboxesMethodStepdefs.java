@@ -166,6 +166,23 @@ public class SetMailboxesMethodStepdefs {
         renamingMailbox(userStepdefs.getConnectedUser(), actualMailboxName, newMailboxName);
     }
 
+    @When("^\"([^\"]*)\" deletes the mailbox \"([^\"]*)\" owned by \"([^\"]*)\"$")
+    public void deletesMailbox(String user, String mailboxName, String owner) throws Throwable {
+        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", owner, mailboxName);
+        String mailboxId = mailbox.getMailboxId().serialize();
+        userStepdefs.connectUser(user);
+        String requestBody =
+                "[" +
+                    "  [ \"setMailboxes\"," +
+                    "    {" +
+                    "      \"destroy\": [ \"" + mailboxId + "\" ]" +
+                    "    }," +
+                    "    \"#0\"" +
+                    "  ]" +
+                    "]";
+        httpClient.post(requestBody);
+    }
+
     @When("^moving mailbox \"([^\"]*)\" to \"([^\"]*)\"$")
     public void movingMailbox(String actualMailboxPath, String newParentMailboxPath) throws Throwable {
         String username = userStepdefs.getConnectedUser();
@@ -227,6 +244,13 @@ public class SetMailboxesMethodStepdefs {
     public void assertNotUpdated(String mailboxName, String owner) throws Exception {
         Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, owner, mailboxName);
         assertThat(httpClient.jsonPath.<Map<String, String>>read("[0][1].notUpdated"))
+            .containsOnlyKeys(mailbox.getMailboxId().serialize());
+    }
+
+    @Then("^mailbox \"([^\"]*)\" owned by \"([^\"]*)\" is not destroyed$")
+    public void assertNotDestroyed(String mailboxName, String owner) throws Exception {
+        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, owner, mailboxName);
+        assertThat(httpClient.jsonPath.<Map<String, String>>read("[0][1].notDestroyed"))
             .containsOnlyKeys(mailbox.getMailboxId().serialize());
     }
 }
