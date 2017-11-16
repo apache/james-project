@@ -295,3 +295,72 @@ Feature: GetMailboxes method
   Scenario: A sharee should receive a not created response when trying to create a shared mailbox child
     When "bob@domain.tld" creates mailbox "sharedChild" with creationId "c-01" in mailbox "shared" owned by "alice@domain.tld"
     Then mailbox with creationId "c-01" is not created
+
+  Scenario: A sharee moving a delegated mailbox as top level should be rejected
+    Given "alice@domain.tld" has a mailbox "shared.sharedChild"
+    And "alice@domain.tld" shares her mailbox "shared.sharedChild" with "bob@domain.tld" with "aeilrwt" rights
+    When "bob@domain.tld" moves the mailbox "shared.sharedChild" owned by "alice@domain.tld" as top level mailbox
+    Then mailbox "shared.sharedChild" owned by "alice@domain.tld" is not updated
+
+  Scenario: A sharee moving a delegated mailbox as top level should not move mailbox
+    Given "alice@domain.tld" has a mailbox "shared.sharedChild"
+    And "alice@domain.tld" shares her mailbox "shared.sharedChild" with "bob@domain.tld" with "aeilrwt" rights
+    When "bob@domain.tld" moves the mailbox "shared.sharedChild" owned by "alice@domain.tld" as top level mailbox
+    Then "alice@domain.tld" lists mailboxes
+    And the mailboxes should contain "sharedChild" in "Personal" namespace, with parent mailbox "shared" of user "alice@domain.tld"
+
+  Scenario: A sharee moving a delegated mailbox into sharer mailboxes should be rejected
+    Given "alice@domain.tld" has a mailbox "shared.sharedChild"
+    And "alice@domain.tld" has a mailbox "otherShared"
+    And "alice@domain.tld" shares her mailbox "shared.sharedChild" with "bob@domain.tld" with "aeilrwt" rights
+    And "alice@domain.tld" shares her mailbox "otherShared" with "bob@domain.tld" with "aeilrwt" rights
+    When "bob@domain.tld" moves the mailbox "shared.sharedChild" owned by "alice@domain.tld", into mailbox "otherShared" owned by "alice@domain.tld"
+    Then mailbox "shared.sharedChild" owned by "alice@domain.tld" is not updated
+
+  Scenario: A sharee moving a delegated mailbox into another delegated mailbox should not move mailbox
+    Given "alice@domain.tld" has a mailbox "shared.sharedChild"
+    And "alice@domain.tld" has a mailbox "otherShared"
+    And "alice@domain.tld" shares her mailbox "shared.sharedChild" with "bob@domain.tld" with "aeilrwt" rights
+    And "alice@domain.tld" shares her mailbox "otherShared" with "bob@domain.tld" with "aeilrwt" rights
+    When "bob@domain.tld" moves the mailbox "shared.sharedChild" owned by "alice@domain.tld", into mailbox "otherShared" owned by "alice@domain.tld"
+    Then "alice@domain.tld" lists mailboxes
+    And the mailboxes should contain "sharedChild" in "Personal" namespace, with parent mailbox "shared" of user "alice@domain.tld"
+
+  Scenario: A sharee moving a delegated mailbox to his mailboxes should be rejected
+    Given "alice@domain.tld" has a mailbox "shared.sharedChild"
+    And "bob@domain.tld" has a mailbox "other"
+    And "alice@domain.tld" shares her mailbox "shared.sharedChild" with "bob@domain.tld" with "aeilrwt" rights
+    When "bob@domain.tld" moves the mailbox "shared.sharedChild" owned by "alice@domain.tld", into mailbox "other" owned by "bob@domain.tld"
+    Then mailbox "shared.sharedChild" owned by "alice@domain.tld" is not updated
+
+  Scenario: A sharee moving a delegated mailbox into his mailbox should not move mailbox
+    Given "alice@domain.tld" has a mailbox "shared.sharedChild"
+    And "bob@domain.tld" has a mailbox "other"
+    And "alice@domain.tld" shares her mailbox "shared.sharedChild" with "bob@domain.tld" with "aeilrwt" rights
+    When "bob@domain.tld" moves the mailbox "shared.sharedChild" owned by "alice@domain.tld", into mailbox "other" owned by "bob@domain.tld"
+    Then "alice@domain.tld" lists mailboxes
+    And the mailboxes should contain "sharedChild" in "Personal" namespace, with parent mailbox "shared" of user "alice@domain.tld"
+
+  Scenario: A sharee should be able to retrieve a mailbox after sharer moved it as a top level mailbox
+    Given "alice@domain.tld" has a mailbox "shared.sharedChild"
+    And "alice@domain.tld" shares her mailbox "shared.sharedChild" with "bob@domain.tld" with "aeilrwt" rights
+    When "alice@domain.tld" moves the mailbox "shared.sharedChild" owned by "alice@domain.tld" as top level mailbox
+    Then "bob@domain.tld" lists mailboxes
+    And the mailboxes should contain "sharedChild" in "Delegated" namespace, with no parent mailbox
+
+  Scenario: A sharee should be able to retrieve a mailbox after sharer moved it into another mailbox
+    Given "alice@domain.tld" has a mailbox "shared.sharedChild"
+    And "alice@domain.tld" has a mailbox "other"
+    And "alice@domain.tld" shares her mailbox "shared.sharedChild" with "bob@domain.tld" with "aeilrwt" rights
+    When "alice@domain.tld" moves the mailbox "shared.sharedChild" owned by "alice@domain.tld", into mailbox "other" owned by "alice@domain.tld"
+    Then "bob@domain.tld" lists mailboxes
+    And the mailboxes should contain "sharedChild" in "Delegated" namespace, with parent mailbox "other" of user "alice@domain.tld"
+
+  Scenario: A sharer can not move its mailboxes to someone else delegated mailboxes
+    Given "alice@domain.tld" has a mailbox "shared.sharedChild"
+    And "bob@domain.tld" has a mailbox "other"
+    And "alice@domain.tld" shares her mailbox "shared.sharedChild" with "bob@domain.tld" with "aeilrwt" rights
+    And "bob@domain.tld" shares her mailbox "other" with "alice@domain.tld" with "aeilrwt" rights
+    When "alice@domain.tld" moves the mailbox "shared.sharedChild" owned by "alice@domain.tld", into mailbox "other" owned by "bob@domain.tld"
+    Then mailbox "shared.sharedChild" owned by "alice@domain.tld" is not updated
+

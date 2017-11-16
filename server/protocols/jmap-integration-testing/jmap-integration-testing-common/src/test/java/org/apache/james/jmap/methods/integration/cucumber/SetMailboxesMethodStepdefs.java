@@ -137,6 +137,45 @@ public class SetMailboxesMethodStepdefs {
         renamingMailbox(mailbox, newMailboxName);
     }
 
+    @When("^\"([^\"]*)\" moves the mailbox \"([^\"]*)\" owned by \"([^\"]*)\", into mailbox \"([^\"]*)\" owned by \"([^\"]*)\"$")
+    public void movingMailbox(String user, String mailboxName, String mailboxOwner, String newParentName, String newParentOwner) throws Throwable {
+        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", mailboxOwner, mailboxName);
+        Mailbox newParent = mainStepdefs.mailboxProbe.getMailbox("#private", newParentOwner, newParentName);
+        String requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"update\": {" +
+                "        \"" + mailbox.getMailboxId().serialize() + "\" : {" +
+                "          \"parentId\" : \"" + newParent.getMailboxId().serialize() + "\"" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+        userStepdefs.execWithUser(user, () -> httpClient.post(requestBody));
+    }
+
+    @When("^\"([^\"]*)\" moves the mailbox \"([^\"]*)\" owned by \"([^\"]*)\" as top level mailbox$")
+    public void movingMailboxAsTopLevel(String user, String mailboxName, String mailboxOwner) throws Throwable {
+        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", mailboxOwner, mailboxName);
+        String requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"update\": {" +
+                "        \"" + mailbox.getMailboxId().serialize() + "\" : {" +
+                "          \"parentId\" : null" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+        userStepdefs.execWithUser(user, () -> httpClient.post(requestBody));
+    }
+
     @When("^\"([^\"]*)\" creates mailbox \"([^\"]*)\" with creationId \"([^\"]*)\" in mailbox \"([^\"]*)\" owned by \"([^\"]*)\"$")
     public void createChildMailbox(String user, String mailboxName, String creationId, String parentMailboxName, String parentOwner) throws Throwable {
         Mailbox parentMailbox = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, parentOwner, parentMailboxName);

@@ -23,9 +23,13 @@ import static com.jayway.jsonpath.Criteria.where;
 import static com.jayway.jsonpath.Filter.filter;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
+
+import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
@@ -39,11 +43,13 @@ public class GetMailboxesMethodStepdefs {
 
     private final UserStepdefs userStepdefs;
     private final HttpClient httpClient;
+    private final MainStepdefs mainStepdefs;
 
     @Inject
-    private GetMailboxesMethodStepdefs(UserStepdefs userStepdefs, HttpClient httpClient) {
+    private GetMailboxesMethodStepdefs(UserStepdefs userStepdefs, HttpClient httpClient, MainStepdefs mainStepdefs) {
         this.userStepdefs = userStepdefs;
         this.httpClient = httpClient;
+        this.mainStepdefs = mainStepdefs;
     }
 
     @When("^\"([^\"]*)\" lists mailboxes$")
@@ -69,6 +75,32 @@ public class GetMailboxesMethodStepdefs {
         assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".list[?].namespace.type",
                 filter(where("name").is(mailboxName))))
             .containsOnly(namespace);
+    }
+
+    @Then("^the mailboxes should contain \"([^\"]*)\" in \"([^\"]*)\" namespace, with parent mailbox \"([^\"]*)\" of user \"([^\"]*)\"$")
+    public void assertMailboxesNames(String mailboxName, String namespace, String parentName, String parentOwner) throws Exception {
+        Mailbox parentMailbox = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, parentOwner, parentName);
+        assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".list[*].name")).contains(mailboxName);
+        assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".list[?].namespace.type",
+                filter(where("name").is(mailboxName))))
+            .containsOnly(namespace);
+        assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".list[?].parentId",
+                filter(where("name").is(mailboxName))))
+            .containsOnly(parentMailbox.getMailboxId().serialize());
+    }
+
+    @Then("^the mailboxes should contain \"([^\"]*)\" in \"([^\"]*)\" namespace, with no parent mailbox$")
+    public void assertMailboxesNamesNoParent(String mailboxName, String namespace) throws Exception {
+        ArrayList<Object> noParent = new ArrayList<>();
+        noParent.add(null); // Trick to allow collection with null element matching
+
+        assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".list[*].name")).contains(mailboxName);
+        assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".list[?].namespace.type",
+                filter(where("name").is(mailboxName))))
+            .containsOnly(namespace);
+        assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".list[?].parentId",
+                filter(where("name").is(mailboxName))))
+            .isEqualTo(noParent);
     }
 
     @Then("^the mailboxes should not contain \"([^\"]*)\"$")

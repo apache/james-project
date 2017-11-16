@@ -26,6 +26,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.jmap.exceptions.MailboxHasChildException;
+import org.apache.james.jmap.exceptions.MailboxNotOwnedException;
 import org.apache.james.jmap.exceptions.MailboxParentNotFoundException;
 import org.apache.james.jmap.exceptions.SystemMailboxNotUpdatableException;
 import org.apache.james.jmap.model.MailboxFactory;
@@ -40,6 +41,7 @@ import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.jmap.utils.MailboxUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.DifferentDomainException;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -130,6 +132,11 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
                     .type("invalidArguments")
                     .description("Cannot update a parent mailbox.")
                     .build());
+        } catch (MailboxNotOwnedException e) {
+            responseBuilder.notUpdated(mailboxId, SetError.builder()
+                    .type("invalidArguments")
+                    .description("Parent mailbox is not owned.")
+                    .build());
         } catch (MailboxExistsException e) {
             responseBuilder.notUpdated(mailboxId, SetError.builder()
                     .type("invalidArguments")
@@ -188,17 +195,33 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
     }
 
     private void validateParent(Mailbox mailbox, MailboxUpdateRequest updateRequest, MailboxSession mailboxSession) throws MailboxException, MailboxHasChildException {
-
         if (isParentIdInRequest(updateRequest)) {
             MailboxId newParentId = updateRequest.getParentId().get();
-            try {
-                mailboxManager.getMailbox(newParentId, mailboxSession);
-            } catch (MailboxNotFoundException e) {
-                throw new MailboxParentNotFoundException(newParentId);
+            MessageManager parent = retrieveParent(mailboxSession, newParentId);
+            if (mustChangeParent(mailbox.getParentId(), newParentId)) {
+                assertNoChildren(mailbox, mailboxSession);
+                assertOwned(mailboxSession, parent);
             }
-            if (mustChangeParent(mailbox.getParentId(), newParentId) && mailboxUtils.hasChildren(mailbox.getId(), mailboxSession)) {
-                throw new MailboxHasChildException();
-            }
+        }
+    }
+
+    private void assertNoChildren(Mailbox mailbox, MailboxSession mailboxSession) throws MailboxException, MailboxHasChildException {
+        if (mailboxUtils.hasChildren(mailbox.getId(), mailboxSession)) {
+            throw new MailboxHasChildException();
+        }
+    }
+
+    private void assertOwned(MailboxSession mailboxSession, MessageManager parent) throws MailboxException {
+        if (!parent.getMailboxPath().belongsTo(mailboxSession)) {
+            throw new MailboxNotOwnedException();
+        }
+    }
+
+    private MessageManager retrieveParent(MailboxSession mailboxSession, MailboxId newParentId) throws MailboxException {
+        try {
+            return mailboxManager.getMailbox(newParentId, mailboxSession);
+        } catch (MailboxNotFoundException e) {
+            throw new MailboxParentNotFoundException(newParentId);
         }
     }
 
