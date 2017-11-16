@@ -113,7 +113,7 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
             Map<MailboxCreationId, MailboxId> creationIdsToCreatedMailboxId, SetMailboxesResponse.Builder builder) {
         try {
             ensureValidMailboxName(mailboxRequest, mailboxSession);
-            MailboxPath mailboxPath = getMailboxPath(mailboxRequest, creationIdsToCreatedMailboxId, mailboxSession);
+            MailboxPath mailboxPath = computeMailboxPath(mailboxRequest, creationIdsToCreatedMailboxId, mailboxSession);
             Optional<MailboxId> mailboxId = mailboxManager.createMailbox(mailboxPath, mailboxSession);
             Optional<Mailbox> mailbox = mailboxId.flatMap(id -> mailboxFactory.builder()
                     .id(id)
@@ -163,24 +163,24 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
         }
     }
 
-    private MailboxPath getMailboxPath(MailboxCreateRequest mailboxRequest, Map<MailboxCreationId, MailboxId> creationIdsToCreatedMailboxId, MailboxSession mailboxSession) throws MailboxException {
+    private MailboxPath computeMailboxPath(MailboxCreateRequest mailboxRequest, Map<MailboxCreationId, MailboxId> creationIdsToCreatedMailboxId, MailboxSession mailboxSession) throws MailboxException {
         if (mailboxRequest.getParentId().isPresent()) {
             MailboxCreationId parentId = mailboxRequest.getParentId().get();
-            String parentName = getMailboxNameFromId(parentId, mailboxSession)
-                    .orElseGet(Throwing.supplier(() ->
-                        getMailboxNameFromId(Optional.ofNullable(creationIdsToCreatedMailboxId.get(parentId)),
-                            mailboxSession)
-                            .orElseThrow(() -> new MailboxParentNotFoundException(parentId))
-                    ));
+            MailboxPath parentPath = getMailboxPath(creationIdsToCreatedMailboxId, mailboxSession, parentId);
 
             return MailboxPath.forUser(mailboxSession.getUser().getUserName(),
-                    parentName + mailboxSession.getPathDelimiter() + mailboxRequest.getName());
+                parentPath.getName() + mailboxSession.getPathDelimiter() + mailboxRequest.getName());
         }
         return MailboxPath.forUser(mailboxSession.getUser().getUserName(), mailboxRequest.getName());
     }
 
-    private Optional<String> getMailboxNameFromId(MailboxCreationId creationId, MailboxSession mailboxSession) throws MailboxException {
-        return getMailboxNameFromId(getMailboxIdFromCreationId(creationId), mailboxSession);
+    private MailboxPath getMailboxPath(Map<MailboxCreationId, MailboxId> creationIdsToCreatedMailboxId, MailboxSession mailboxSession, MailboxCreationId parentId) throws MailboxException {
+        Optional<MailboxId> mailboxId = getMailboxIdFromCreationId(parentId);
+        Optional<MailboxId> mailboxIdFromCreationId = Optional.ofNullable(creationIdsToCreatedMailboxId.get(parentId));
+
+        return getMailboxPathFromId(mailboxId, mailboxSession)
+            .orElseGet(() -> getMailboxPathFromId(mailboxIdFromCreationId, mailboxSession)
+                .orElseThrow(() -> new MailboxParentNotFoundException(parentId)));
     }
 
     private Optional<MailboxId> getMailboxIdFromCreationId(MailboxCreationId creationId) {
@@ -192,10 +192,10 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
     }
 
     @VisibleForTesting
-    Optional<String> getMailboxNameFromId(Optional<MailboxId> mailboxId, MailboxSession mailboxSession) throws MailboxException {
-        FunctionChainer<MailboxId, Optional<String>> fromMailboxIdToMailboxPath = Throwing.function(id -> {
+    Optional<MailboxPath> getMailboxPathFromId(Optional<MailboxId> mailboxId, MailboxSession mailboxSession) {
+        FunctionChainer<MailboxId, Optional<MailboxPath>> fromMailboxIdToMailboxPath = Throwing.function(id -> {
             try {
-                return Optional.of(mailboxManager.getMailbox(id, mailboxSession).getMailboxPath().getName());
+                return Optional.of(mailboxManager.getMailbox(id, mailboxSession).getMailboxPath());
             } catch (MailboxNotFoundException e) {
                 return Optional.empty();
             }
