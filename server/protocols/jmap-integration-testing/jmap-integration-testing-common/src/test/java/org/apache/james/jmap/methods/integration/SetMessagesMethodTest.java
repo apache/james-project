@@ -198,11 +198,6 @@ public abstract class SetMessagesMethodTest {
         return getMailboxId(accessToken, Role.DRAFTS);
     }
 
-    private String getInboxId(AccessToken accessToken) {
-        return getMailboxId(accessToken, Role.INBOX);
-    }
-
-
     private String getMailboxId(AccessToken accessToken, Role role) {
         return getAllMailboxesIds(accessToken).stream()
             .filter(x -> x.get("role").equalsIgnoreCase(role.serialize()))
@@ -4718,5 +4713,58 @@ public abstract class SetMessagesMethodTest {
             .body(message + ".attachments", hasSize(1))
             .body(firstAttachment + ".type", equalTo("text/calendar"))
             .body(firstAttachment + ".blobId", not(isEmptyOrNullString()));
+    }
+
+    @Test
+    public void setMessagesShouldSetTheSeenKeywordOnMessageInSentMailbox() throws Exception {
+        // Sender
+        String sentMailboxId = getMailboxId(accessToken, Role.SENT);
+
+        // Recipient
+        String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
+        String password = "password";
+        dataProbe.addUser(recipientAddress, password);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
+        await();
+
+        String messageCreationId = "creationId1337";
+        String fromAddress = USERNAME;
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"recipient\", \"email\": \"" + recipientAddress + "\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        // Given
+        given()
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
+        // When
+        .when()
+            .post("/jmap");
+
+        // Then
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> messageHasBeenMovedToSentBox(sentMailboxId));
+        with()
+            .header("Authorization", this.accessToken.serialize())
+            .body("[[\"getMessageList\", {\"fetchMessages\":true, \"fetchMessageProperties\": [\"keywords\"], \"filter\":{\"inMailboxes\":[\"" + sentMailboxId + "\"]}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(SECOND_NAME, equalTo("messages"))
+            .body(SECOND_ARGUMENTS + ".list", hasSize(1))
+            .body(SECOND_ARGUMENTS + ".list[0].keywords.$Seen", equalTo(true));
     }
 }
