@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayInputStream;
 import java.time.ZonedDateTime;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -77,25 +76,17 @@ public class GetMessagesMethodStepdefs {
     private final MainStepdefs mainStepdefs;
     private final UserStepdefs userStepdefs;
     private final HttpClient httpClient;
-    private final Map<String, MessageId> messageIdsByName;
+    private final MessageIdStepdefs messageIdStepdefs;
 
     private List<MessageId> requestedMessageIds;
 
     @Inject
     private GetMessagesMethodStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs,
-                                      HttpClient httpClient) {
+                                      HttpClient httpClient, MessageIdStepdefs messageIdStepdefs) {
         this.mainStepdefs = mainStepdefs;
         this.userStepdefs = userStepdefs;
         this.httpClient = httpClient;
-        this.messageIdsByName = new HashMap<>();
-    }
-
-    public MessageId getMessageId(String name) {
-        return messageIdsByName.get(name);
-    }
-
-    public MessageId addMessageId(String name, MessageId messageId) {
-        return messageIdsByName.put(name, messageId);
+        this.messageIdStepdefs = messageIdStepdefs;
     }
 
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" and \"([^\"]*)\" mailboxes with subject \"([^\"]*)\", content \"([^\"]*)\"$")
@@ -105,7 +96,7 @@ public class GetMessagesMethodStepdefs {
         MailboxId mailboxId2 = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.getConnectedUser(), mailbox2).getMailboxId();
 
         mainStepdefs.jmapServer.getProbe(JmapGuiceProbe.class).setInMailboxes(id, userStepdefs.getConnectedUser(), mailboxId1, mailboxId2);
-        messageIdsByName.put(messageName, id);
+        messageIdStepdefs.addMessageId(messageName, id);
         mainStepdefs.awaitMethod.run();
     }
 
@@ -117,7 +108,7 @@ public class GetMessagesMethodStepdefs {
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with subject \"([^\"]*)\", content \"([^\"]*)\"$")
     public void appendMessage(String messageName, String mailbox, String subject, String content) throws Exception {
         MessageId id = appendMessage(mailbox, ContentType.noContentType(), subject, content, NO_HEADERS);
-        messageIdsByName.put(messageName, id);
+        messageIdStepdefs.addMessageId(messageName, id);
     }
 
     @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with subject \"([^\"]*)\", content \"([^\"]*)\"$")
@@ -133,7 +124,7 @@ public class GetMessagesMethodStepdefs {
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with content-type \"([^\"]*)\" subject \"([^\"]*)\", content \"([^\"]*)\"$")
     public void appendMessageWithContentType(String messageName, String mailbox, String contentType, String subject, String content) throws Throwable {
         MessageId id = appendMessage(mailbox, ContentType.from(contentType), subject, content, NO_HEADERS);
-        messageIdsByName.put(messageName, id);
+        messageIdStepdefs.addMessageId(messageName, id);
     }
 
     @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with content-type \"([^\"]*)\" subject \"([^\"]*)\", content \"([^\"]*)\", headers$")
@@ -144,13 +135,13 @@ public class GetMessagesMethodStepdefs {
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with content-type \"([^\"]*)\" subject \"([^\"]*)\", content \"([^\"]*)\", headers$")
     public void appendMessage(String messageName, String mailbox, String contentType, String subject, String content, DataTable headers) throws Exception {
         MessageId id = appendMessage(mailbox, ContentType.from(contentType), subject, content, Optional.of(headers.asMap(String.class, String.class)));
-        messageIdsByName.put(messageName, id);
+        messageIdStepdefs.addMessageId(messageName, id);
     }
 
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with subject \"([^\"]*)\", content \"([^\"]*)\", headers$")
     public void appendMessageWithHeader(String messageName, String mailbox, String subject, String content, DataTable headers) throws Exception {
         MessageId id = appendMessage(mailbox, ContentType.noContentType(), subject, content, Optional.of(headers.asMap(String.class, String.class)));
-        messageIdsByName.put(messageName, id);
+        messageIdStepdefs.addMessageId(messageName, id);
     }
 
     @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox with subject \"([^\"]*)\", content \"([^\"]*)\", headers$")
@@ -171,7 +162,7 @@ public class GetMessagesMethodStepdefs {
             ClassLoader.getSystemResourceAsStream("eml/inlinedMultipart.eml"),
             Date.from(dateTime.toInstant()), false, new Flags())
             .getMessageId();
-        messageIdsByName.put(messageName, id);
+        messageIdStepdefs.addMessageId(messageName, id);
         mainStepdefs.awaitMethod.run();
     }
 
@@ -379,7 +370,7 @@ public class GetMessagesMethodStepdefs {
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
             Date.from(dateTime.toInstant()), isRecent, flags)
             .getMessageId();
-        messageIdsByName.put(messageName, id);
+        messageIdStepdefs.addMessageId(messageName, id);
     }
 
     private void appendMessage(String messageName, String mailbox, String emlFileName) throws Exception {
@@ -391,7 +382,7 @@ public class GetMessagesMethodStepdefs {
                 Date.from(dateTime.toInstant()), false, new Flags())
                     .getMessageId();
 
-        messageIdsByName.put(messageName, id);
+        messageIdStepdefs.addMessageId(messageName, id);
     }
 
     @When("^\"([^\"]*)\" ask for messages using its accountId$")
@@ -437,7 +428,7 @@ public class GetMessagesMethodStepdefs {
     @When("^the user ask for messages \"(.*?)\"$")
     public void postWithAListOfIds(List<String> ids) throws Exception {
         requestedMessageIds = ids.stream()
-            .map(messageIdsByName::get)
+            .map(messageIdStepdefs::getMessageId)
             .collect(Guavate.toImmutableList());
         askMessages(requestedMessageIds);
     }
@@ -478,7 +469,7 @@ public class GetMessagesMethodStepdefs {
     @When("^the user is getting messages \"(.*?)\" with properties \"(.*?)\"$")
     public void postWithParameters(List<String> ids, List<String> properties) throws Exception {
         requestedMessageIds = ids.stream()
-            .map(messageIdsByName::get)
+            .map(messageIdStepdefs::getMessageId)
             .collect(Guavate.toImmutableList());
 
         String serializedIds = requestedMessageIds.stream()
@@ -531,7 +522,7 @@ public class GetMessagesMethodStepdefs {
 
     @Then("^the notFound list should contain \"([^\"]*)\"$")
     public void assertNotFoundListContains(String id) throws Exception {
-        MessageId messageId = messageIdsByName.get(id);
+        MessageId messageId = messageIdStepdefs.getMessageId(id);
         assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".notFound")).contains(messageId.serialize());
     }
 
@@ -549,7 +540,7 @@ public class GetMessagesMethodStepdefs {
 
     @Then("^the id of the message is \"([^\"]*)\"$")
     public void assertIdOfTheFirstMessage(String messageName) throws Exception {
-        MessageId id = messageIdsByName.get(messageName);
+        MessageId id = messageIdStepdefs.getMessageId(messageName);
         assertThat(httpClient.jsonPath.<String>read(FIRST_MESSAGE + ".id")).isEqualTo(id.serialize());
     }
 
@@ -588,7 +579,7 @@ public class GetMessagesMethodStepdefs {
 
     @Then("^the threadId of the message is \"([^\"]*)\"$")
     public void assertThreadIdOfTheFirstMessage(String threadId) throws Exception {
-        MessageId id = messageIdsByName.get(threadId);
+        MessageId id = messageIdStepdefs.getMessageId(threadId);
         assertThat(httpClient.jsonPath.<String>read(FIRST_MESSAGE + ".threadId")).isEqualTo(id.serialize());
     }
 

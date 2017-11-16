@@ -43,13 +43,13 @@ public class GetMessageListMethodStepdefs {
     private static final String ARGUMENTS = "[0][1]";
     private final MainStepdefs mainStepdefs;
     private final HttpClient httpClient;
-    private final GetMessagesMethodStepdefs messagesMethodStepdefs;
+    private final MessageIdStepdefs messageIdStepdefs;
 
     @Inject
-    private GetMessageListMethodStepdefs(MainStepdefs mainStepdefs, HttpClient httpClient, GetMessagesMethodStepdefs messagesMethodStepdefs) {
+    private GetMessageListMethodStepdefs(MainStepdefs mainStepdefs, HttpClient httpClient, MessageIdStepdefs messageIdStepdefs) {
         this.mainStepdefs = mainStepdefs;
         this.httpClient = httpClient;
-        this.messagesMethodStepdefs = messagesMethodStepdefs;
+        this.messageIdStepdefs = messageIdStepdefs;
     }
 
     @When("^\"([^\"]*)\" asks for message list in mailboxes \"([^\"]*)\" with flag \"([^\"]*)\"$")
@@ -111,7 +111,7 @@ public class GetMessageListMethodStepdefs {
 
     @Then("^the message list contains \"([^\"]*)\"")
     public void assertContains(String messsage) throws Exception {
-        MessageId messageId = messagesMethodStepdefs.getMessageId(messsage);
+        MessageId messageId = messageIdStepdefs.getMessageId(messsage);
         assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
         assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".messageIds")).contains(messageId.serialize());
     }
