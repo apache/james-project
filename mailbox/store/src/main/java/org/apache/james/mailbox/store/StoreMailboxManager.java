@@ -37,7 +37,6 @@ import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSession.SessionType;
-import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.MailboxSessionIdGenerator;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
@@ -477,7 +476,7 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     private boolean belongsToCurrentUser(Mailbox mailbox, MailboxSession session) {
-        return session.getUser().isSameUser(mailbox.getUser());
+        return mailbox.generateAssociatedPath().belongsTo(session);
     }
 
     private boolean userHasLookupRightsOn(Mailbox mailbox, MailboxSession session) throws MailboxException {
@@ -523,7 +522,7 @@ public class StoreMailboxManager implements MailboxManager {
     @Override
     public void deleteMailbox(final MailboxPath mailboxPath, final MailboxSession session) throws MailboxException {
         LOGGER.info("deleteMailbox " + mailboxPath);
-        assertIsOwner(session.getUser(), mailboxPath);
+        assertIsOwner(session, mailboxPath);
         final MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
         Mailbox mailbox = mapper.execute((Mapper.Transaction<Mailbox>) () -> {
@@ -550,14 +549,14 @@ public class StoreMailboxManager implements MailboxManager {
             throw new MailboxExistsException(to.toString());
         }
 
-        assertIsOwner(session.getUser(), from);
+        assertIsOwner(session, from);
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         mapper.execute(Mapper.toTransaction(() -> doRenameMailbox(from, to, session, mapper)));
     }
 
-    private void assertIsOwner(User user, MailboxPath mailboxPath) throws MailboxNotFoundException {
-        if (!user.isSameUser(mailboxPath.getUser())) {
-            LOGGER.info("Mailbox " + mailboxPath.asString() + " does not belong to " + user.getUserName());
+    private void assertIsOwner(MailboxSession mailboxSession, MailboxPath mailboxPath) throws MailboxNotFoundException {
+        if (!mailboxPath.belongsTo(mailboxSession)) {
+            LOGGER.info("Mailbox " + mailboxPath.asString() + " does not belong to " + mailboxSession.getUser().getUserName());
             throw new MailboxNotFoundException(mailboxPath.asString());
         }
     }

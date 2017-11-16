@@ -27,6 +27,7 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.james.jmap.exceptions.MailboxNotOwnedException;
 import org.apache.james.jmap.exceptions.MailboxParentNotFoundException;
 import org.apache.james.jmap.model.MailboxCreationId;
 import org.apache.james.jmap.model.MailboxFactory;
@@ -134,6 +135,11 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
                 .type("invalidArguments")
                 .description("The mailbox name length is too long")
                 .build());
+        } catch (MailboxNotOwnedException e) {
+            builder.notCreated(mailboxCreationId, SetError.builder()
+                .type("invalidArguments")
+                .description("The mailbox can not be created with a parent mailbox belonging to another user")
+                .build());
         } catch (MailboxNameException | MailboxParentNotFoundException e) {
             builder.notCreated(mailboxCreationId, SetError.builder()
                     .type("invalidArguments")
@@ -168,10 +174,18 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
             MailboxCreationId parentId = mailboxRequest.getParentId().get();
             MailboxPath parentPath = getMailboxPath(creationIdsToCreatedMailboxId, mailboxSession, parentId);
 
+            assertBelongsToUser(parentPath, mailboxSession);
+
             return MailboxPath.forUser(mailboxSession.getUser().getUserName(),
                 parentPath.getName() + mailboxSession.getPathDelimiter() + mailboxRequest.getName());
         }
         return MailboxPath.forUser(mailboxSession.getUser().getUserName(), mailboxRequest.getName());
+    }
+
+    private void assertBelongsToUser(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxNotOwnedException {
+        if (!mailboxPath.belongsTo(mailboxSession)) {
+            throw new MailboxNotOwnedException();
+        }
     }
 
     private MailboxPath getMailboxPath(Map<MailboxCreationId, MailboxId> creationIdsToCreatedMailboxId, MailboxSession mailboxSession, MailboxCreationId parentId) throws MailboxException {

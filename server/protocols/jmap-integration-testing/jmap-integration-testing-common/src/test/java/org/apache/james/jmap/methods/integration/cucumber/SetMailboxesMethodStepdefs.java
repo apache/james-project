@@ -137,6 +137,28 @@ public class SetMailboxesMethodStepdefs {
         renamingMailbox(mailbox, newMailboxName);
     }
 
+    @When("^\"([^\"]*)\" creates mailbox \"([^\"]*)\" with creationId \"([^\"]*)\" in mailbox \"([^\"]*)\" owned by \"([^\"]*)\"$")
+    public void createChildMailbox(String user, String mailboxName, String creationId, String parentMailboxName, String parentOwner) throws Throwable {
+        Mailbox parentMailbox = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, parentOwner, parentMailboxName);
+        userStepdefs.execWithUser(user, () -> {
+            String requestBody =
+                "[" +
+                    "  [ \"setMailboxes\"," +
+                    "    {" +
+                    "      \"create\": {" +
+                    "        \"" + creationId + "\" : {" +
+                    "          \"name\" : \"" + mailboxName + "\"," +
+                    "          \"parentId\" : \"" + parentMailbox.getMailboxId().serialize() + "\"" +
+                    "        }" +
+                    "      }" +
+                    "    }," +
+                    "    \"#0\"" +
+                    "  ]" +
+                    "]";
+            httpClient.post(requestBody);
+        });
+    }
+
     @When("^\"([^\"]*)\" renames (?:her|his) mailbox \"([^\"]*)\" to \"([^\"]*)\"$")
     public void renamingMailbox(String user, String actualMailboxName, String newMailboxName) throws Throwable {
         Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", user, actualMailboxName);
@@ -252,5 +274,12 @@ public class SetMailboxesMethodStepdefs {
         Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, owner, mailboxName);
         assertThat(httpClient.jsonPath.<Map<String, String>>read("[0][1].notDestroyed"))
             .containsOnlyKeys(mailbox.getMailboxId().serialize());
+    }
+
+
+    @Then("^mailbox with creationId \"([^\"]*)\" is not created")
+    public void assertNotCreated(String creationId) throws Exception {
+        assertThat(httpClient.jsonPath.<Map<String, String>>read("[0][1].notCreated"))
+            .containsOnlyKeys(creationId);
     }
 }

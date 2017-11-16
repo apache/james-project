@@ -229,7 +229,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
             .map(mailboxIdFactory::fromString)
             .map(findMailbox.sneakyThrow())
             .map(Throwing.function(MessageManager::getMailboxPath))
-            .anyMatch(path -> !session.getUser().isSameUser(path.getUser()));
+            .anyMatch(path -> !path.belongsTo(session));
     }
 
     private MessageWithId handleOutboxMessages(CreationMessageEntry entry, MailboxSession session) throws MailboxException, MessagingException {

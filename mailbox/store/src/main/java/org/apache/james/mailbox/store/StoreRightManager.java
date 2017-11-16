@@ -241,7 +241,7 @@ public class StoreRightManager implements RightManager {
      */
     @VisibleForTesting
     static MailboxACL filteredForSession(Mailbox mailbox, MailboxACL acl, MailboxSession mailboxSession) throws UnsupportedRightException {
-        if (mailboxSession.getUser().isSameUser(mailbox.getUser())) {
+        if (mailbox.generateAssociatedPath().belongsTo(mailboxSession)) {
             return acl;
         }
 

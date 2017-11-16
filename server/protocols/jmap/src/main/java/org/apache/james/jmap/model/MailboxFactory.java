@@ -100,7 +100,7 @@ public class MailboxFactory {
     private Mailbox fromMessageManager(MessageManager messageManager, Optional<List<MailboxMetaData>> userMailboxesMetadata,
                                                  MailboxSession mailboxSession) throws MailboxException {
         MailboxPath mailboxPath = messageManager.getMailboxPath();
-        boolean isOwner = isSameUser(mailboxSession, mailboxPath);
+        boolean isOwner = mailboxPath.belongsTo(mailboxSession);
         Optional<Role> role = Role.from(mailboxPath.getName());
         MailboxCounters mailboxCounters = messageManager.getMailboxCounters(mailboxSession);
         MessageManager.MetaData metaData = messageManager.getMetaData(NO_RESET_RECENT, mailboxSession, MessageManager.MetaData.FetchGroup.NO_COUNT);
@@ -133,10 +133,6 @@ public class MailboxFactory {
             return MailboxNamespace.personal();
         }
         return MailboxNamespace.delegated(mailboxPath.getUser());
-    }
-
-    private boolean isSameUser(MailboxSession mailboxSession, MailboxPath mailboxPath) {
-        return mailboxSession.getUser().isSameUser(mailboxPath.getUser());
     }
 
     @VisibleForTesting String getName(MailboxPath mailboxPath, MailboxSession mailboxSession) {

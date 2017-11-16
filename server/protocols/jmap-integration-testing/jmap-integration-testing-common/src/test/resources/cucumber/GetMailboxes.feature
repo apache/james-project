@@ -286,3 +286,12 @@ Feature: GetMailboxes method
     Given "bob@domain.tld" deletes the mailbox "shared" owned by "alice@domain.tld"
     When "alice@domain.tld" lists mailboxes
     Then the mailboxes should contain "shared" in "Personal" namespace
+
+  Scenario: A sharee should not be able to create a shared mailbox child
+    Given "bob@domain.tld" creates mailbox "sharedChild" with creationId "c-01" in mailbox "shared" owned by "alice@domain.tld"
+    When "alice@domain.tld" lists mailboxes
+    Then the mailboxes should contain "shared" in "Personal" namespace
+
+  Scenario: A sharee should receive a not created response when trying to create a shared mailbox child
+    When "bob@domain.tld" creates mailbox "sharedChild" with creationId "c-01" in mailbox "shared" owned by "alice@domain.tld"
+    Then mailbox with creationId "c-01" is not created
