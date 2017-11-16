@@ -51,6 +51,7 @@ import org.apache.james.mailbox.model.MailboxId.Factory;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -189,15 +190,15 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
     }
 
     private MailboxPath getMailboxPath(Map<MailboxCreationId, MailboxId> creationIdsToCreatedMailboxId, MailboxSession mailboxSession, MailboxCreationId parentId) throws MailboxException {
-        Optional<MailboxId> mailboxId = getMailboxIdFromCreationId(parentId);
-        Optional<MailboxId> mailboxIdFromCreationId = Optional.ofNullable(creationIdsToCreatedMailboxId.get(parentId));
+        Optional<MailboxId> mailboxId = OptionalUtils.or(
+            readCreationIdAsMailboxId(parentId),
+            Optional.ofNullable(creationIdsToCreatedMailboxId.get(parentId)));
 
         return getMailboxPathFromId(mailboxId, mailboxSession)
-            .orElseGet(() -> getMailboxPathFromId(mailboxIdFromCreationId, mailboxSession)
-                .orElseThrow(() -> new MailboxParentNotFoundException(parentId)));
+                .orElseThrow(() -> new MailboxParentNotFoundException(parentId));
     }
 
-    private Optional<MailboxId> getMailboxIdFromCreationId(MailboxCreationId creationId) {
+    private Optional<MailboxId> readCreationIdAsMailboxId(MailboxCreationId creationId) {
         try {
             return Optional.of(mailboxIdFactory.fromString(creationId.getCreationId()));
         } catch (Exception e) {
