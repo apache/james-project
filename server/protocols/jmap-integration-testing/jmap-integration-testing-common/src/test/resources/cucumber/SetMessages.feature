@@ -106,38 +106,49 @@ Feature: SetMessages method on shared folders
 
   Scenario: A user can update the flags on a draft
     Given "bob@domain.tld" has a mailbox "Drafts"
-    And "bob@domain.tld" creates a draft message "mDraft" in mailbox "Drafts"
+    And "bob@domain.tld" tries to create a draft message "mDraft" in mailbox "Drafts"
     When "bob@domain.tld" sets flags "$Draft,$Seen" on message "mDraft"
     Then "bob@domain.tld" should see message "mDraft" with keywords $Draft,$Seen
 
   Scenario: A user can not remove a draft flag on a draft messages
     Given "bob@domain.tld" has a mailbox "Drafts"
-    And "bob@domain.tld" creates a draft message "mDraft" in mailbox "Drafts"
+    And "bob@domain.tld" tries to create a draft message "mDraft" in mailbox "Drafts"
     When "bob@domain.tld" sets flags "$Seen" on message "mDraft"
     Then message "mDraft" is not updated
     And "bob@domain.tld" should see message "mDraft" with keywords $Draft
 
   Scenario: A user can destroy a draft
     Given "bob@domain.tld" has a mailbox "Drafts"
-    And "bob@domain.tld" creates a draft message "mDraft" in mailbox "Drafts"
+    And "bob@domain.tld" tries to create a draft message "mDraft" in mailbox "Drafts"
     When "bob@domain.tld" destroys message "mDraft"
     Then "bob@domain.tld" ask for message "mDraft"
     And the notFound list should contain "mDraft"
 
   Scenario: Draft creation in outbox is not allowed
     Given "bob@domain.tld" has a mailbox "Outbox"
-    When "bob@domain.tld" creates a draft message "mDraft" in mailbox "Outbox"
+    When "bob@domain.tld" tries to create a draft message "mDraft" in mailbox "Outbox"
     Then message "mDraft" is not created
 
   Scenario: A user can not move draft out of draft mailbox
     Given "bob@domain.tld" has a mailbox "Drafts"
-    And "bob@domain.tld" creates a draft message "mDraft" in mailbox "Drafts"
+    And "bob@domain.tld" tries to create a draft message "mDraft" in mailbox "Drafts"
     When "bob@domain.tld" moves "mDraft" to user mailbox "shared"
     Then message "mDraft" is not updated
 
+  Scenario: A user can move draft out of draft mailbox when removing draft flag
+    Given "bob@domain.tld" has a mailbox "Drafts"
+    And "bob@domain.tld" tries to create a draft message "mDraft" in mailbox "Drafts"
+    When the user moves "mDraft" to user mailbox "shared" and set flags ""
+    Then message "mDraft" is updated
+
+  Scenario: A user can move non-draft messages to draft mailbox when setting $Draft
+    Given "bob@domain.tld" has a mailbox "Drafts"
+    When the user moves "mBob" to user mailbox "Drafts" and set flags "$Draft"
+    Then message "mBob" is updated
+
   Scenario: A user can not copy draft out of draft mailbox
     Given "bob@domain.tld" has a mailbox "Drafts"
-    And "bob@domain.tld" creates a draft message "mDraft" in mailbox "Drafts"
+    And "bob@domain.tld" tries to create a draft message "mDraft" in mailbox "Drafts"
     When "bob@domain.tld" copies "mDraft" from mailbox "Drafts" to mailbox "shared"
     Then message "mDraft" is not updated
 

@@ -149,12 +149,13 @@ public class UpdateMessagePatch {
     }
 
     public Flags applyToState(Flags currentFlags) {
-        return keywords.map(keyword -> {
-            if (currentFlags.contains(Flags.Flag.DRAFT) != keyword.getKeywords().contains(Keyword.DRAFT)) {
-                throw new IllegalArgumentException("Cannot add or remove draft flag");
-            }
-            return keyword.asFlagsWithRecentAndDeletedFrom(currentFlags);
-        }).orElse(new Flags());
+        return keywords.map(keyword -> keyword.asFlagsWithRecentAndDeletedFrom(currentFlags))
+            .orElse(new Flags());
+    }
+
+    public Flags applyToStateNoReset(Flags currentFlags) {
+        return keywords.map(keyword -> keyword.asFlagsWithRecentAndDeletedFrom(currentFlags))
+            .orElse(currentFlags);
     }
 
 }

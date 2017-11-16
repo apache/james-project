@@ -23,7 +23,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 
 public class DraftMessageMailboxUpdateException extends MailboxException {
 
-    public DraftMessageMailboxUpdateException() {
-        super();
+    public DraftMessageMailboxUpdateException(String message) {
+        super(message);
     }
 }
