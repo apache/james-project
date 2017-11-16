@@ -54,7 +54,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.fge.lambdas.functions.ThrowingFunction;
+import com.github.fge.lambdas.functions.FunctionChainer;
 import com.google.common.annotations.VisibleForTesting;
 
 public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
@@ -168,7 +168,8 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
             MailboxCreationId parentId = mailboxRequest.getParentId().get();
             String parentName = getMailboxNameFromId(parentId, mailboxSession)
                     .orElseGet(Throwing.supplier(() ->
-                        getMailboxNameFromId(creationIdsToCreatedMailboxId.get(parentId), mailboxSession)
+                        getMailboxNameFromId(Optional.ofNullable(creationIdsToCreatedMailboxId.get(parentId)),
+                            mailboxSession)
                             .orElseThrow(() -> new MailboxParentNotFoundException(parentId))
                     ));
 
@@ -178,10 +179,8 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
         return MailboxPath.forUser(mailboxSession.getUser().getUserName(), mailboxRequest.getName());
     }
 
-    private Optional<String> getMailboxNameFromId(MailboxCreationId creationId, MailboxSession mailboxSession) {
-        ThrowingFunction<? super MailboxId, Optional<String>> toName = parentId -> getMailboxNameFromId(parentId, mailboxSession);
-        return getMailboxIdFromCreationId(creationId)
-                .flatMap(Throwing.function(toName).sneakyThrow());
+    private Optional<String> getMailboxNameFromId(MailboxCreationId creationId, MailboxSession mailboxSession) throws MailboxException {
+        return getMailboxNameFromId(getMailboxIdFromCreationId(creationId), mailboxSession);
     }
 
     private Optional<MailboxId> getMailboxIdFromCreationId(MailboxCreationId creationId) {
@@ -193,15 +192,16 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
     }
 
     @VisibleForTesting
-    Optional<String> getMailboxNameFromId(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
-        if (mailboxId == null) {
-            return Optional.empty();
-        }
-        try {
-            return Optional.of(mailboxManager.getMailbox(mailboxId, mailboxSession).getMailboxPath().getName());
-        } catch (MailboxNotFoundException e) {
-            return Optional.empty();
-        }
+    Optional<String> getMailboxNameFromId(Optional<MailboxId> mailboxId, MailboxSession mailboxSession) throws MailboxException {
+        FunctionChainer<MailboxId, Optional<String>> fromMailboxIdToMailboxPath = Throwing.function(id -> {
+            try {
+                return Optional.of(mailboxManager.getMailbox(id, mailboxSession).getMailboxPath().getName());
+            } catch (MailboxNotFoundException e) {
+                return Optional.empty();
+            }
+        });
+        return mailboxId
+            .flatMap(fromMailboxIdToMailboxPath.sneakyThrow());
     }
 
 }
