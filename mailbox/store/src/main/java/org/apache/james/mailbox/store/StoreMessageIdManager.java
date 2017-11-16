@@ -190,7 +190,7 @@ public class StoreMessageIdManager implements MessageIdManager {
     }
 
     @Override
-    public void setInMailboxes(MessageId messageId, List<MailboxId> targetMailboxIds, MailboxSession mailboxSession) throws MailboxException {
+    public void setInMailboxes(MessageId messageId, Collection<MailboxId> targetMailboxIds, MailboxSession mailboxSession) throws MailboxException {
         assertRightsOnMailboxes(targetMailboxIds, mailboxSession, Right.Read);
 
         List<MailboxMessage> currentMailboxMessages = findRelatedMailboxMessages(messageId, mailboxSession);

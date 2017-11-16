@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -32,6 +33,7 @@ import org.apache.james.jmap.model.Keywords;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.modules.MailboxProbeImpl;
 
 import com.google.common.collect.ImmutableList;
@@ -47,24 +49,24 @@ public class SetMessagesMethodStepdefs {
     private final MainStepdefs mainStepdefs;
     private final UserStepdefs userStepdefs;
     private final HttpClient httpClient;
-    private final GetMessagesMethodStepdefs getMessagesMethodStepdefs;
+    private final MessageIdStepdefs messageIdStepdefs;
 
     @Inject
-    private SetMessagesMethodStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs, HttpClient httpClient, GetMessagesMethodStepdefs getMessagesMethodStepdefs) {
+    private SetMessagesMethodStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs, HttpClient httpClient, MessageIdStepdefs messageIdStepdefs) {
         this.mainStepdefs = mainStepdefs;
         this.userStepdefs = userStepdefs;
         this.httpClient = httpClient;
-        this.getMessagesMethodStepdefs = getMessagesMethodStepdefs;
+        this.messageIdStepdefs = messageIdStepdefs;
     }
 
-    @When("^\"([^\"]*)\" moves \"([^\"]*)\" to user mailbox \"([^\"]*)\"")
+    @When("^\"([^\"]*)\" moves \"([^\"]*)\" to user mailbox \"([^\"]*)\"$")
     public void moveMessageToMailboxWithUser(String username, String message, String mailbox) throws Throwable {
         userStepdefs.execWithUser(username, () -> moveMessageToMailbox(message, mailbox));
     }
 
-    @When("^the user moves \"([^\"]*)\" to user mailbox \"([^\"]*)\"")
+    @When("^the user moves \"([^\"]*)\" to user mailbox \"([^\"]*)\"$")
     public void moveMessageToMailbox(String message, String mailbox) throws Throwable {
-        MessageId messageId = getMessagesMethodStepdefs.getMessageId(message);
+        MessageId messageId = messageIdStepdefs.getMessageId(message);
         MailboxId mailboxId = mainStepdefs.jmapServer
             .getProbe(MailboxProbeImpl.class)
             .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.getConnectedUser(), mailbox)
@@ -84,14 +86,38 @@ public class SetMessagesMethodStepdefs {
         mainStepdefs.awaitMethod.run();
     }
 
-    @When("^\"([^\"]*)\" copies \"([^\"]*)\" from mailbox \"([^\"]*)\" to mailbox \"([^\"]*)\"")
+    @When("^the user moves \"([^\"]*)\" to user mailbox \"([^\"]*)\" and set flags \"([^\"]*)\"$")
+    public void moveMessageToMailboxAndChangeFlags(String message, String mailbox, List<String> keywords) throws Throwable {
+        MessageId messageId = messageIdStepdefs.getMessageId(message);
+        MailboxId mailboxId = mainStepdefs.jmapServer
+            .getProbe(MailboxProbeImpl.class)
+            .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.getConnectedUser(), mailbox)
+            .getMailboxId();
+        String keywordString = toKeywordsString(keywords);
+
+        httpClient.post("[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"update\": { \"" + messageId.serialize() + "\" : {" +
+            "        \"mailboxIds\": [\"" + mailboxId.serialize() + "\"]," +
+            "        \"keywords\": {" + keywordString + "}" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]");
+        mainStepdefs.awaitMethod.run();
+    }
+
+    @When("^\"([^\"]*)\" copies \"([^\"]*)\" from mailbox \"([^\"]*)\" to mailbox \"([^\"]*)\"$")
     public void copyMessageToMailbox(String username, String message, String sourceMailbox, String destinationMailbox) throws Throwable {
         userStepdefs.execWithUser(username, () -> copyMessageToMailbox(message, sourceMailbox, destinationMailbox));
     }
 
-    @When("^the user copies \"([^\"]*)\" from mailbox \"([^\"]*)\" to mailbox \"([^\"]*)\"")
+    @When("^the user copies \"([^\"]*)\" from mailbox \"([^\"]*)\" to mailbox \"([^\"]*)\"$")
     public void copyMessageToMailbox(String message, String sourceMailbox, String destinationMailbox) throws Throwable {
-        MessageId messageId = getMessagesMethodStepdefs.getMessageId(message);
+        MessageId messageId = messageIdStepdefs.getMessageId(message);
         MailboxId sourceMailboxId = mainStepdefs.jmapServer
             .getProbe(MailboxProbeImpl.class)
             .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.getConnectedUser(), sourceMailbox)
@@ -115,13 +141,13 @@ public class SetMessagesMethodStepdefs {
         mainStepdefs.awaitMethod.run();
     }
 
-    @When("^\"([^\"]*)\" copies \"([^\"]*)\" from mailbox \"([^\"]*)\" of user \"([^\"]*)\" to mailbox \"([^\"]*)\" of user \"([^\"]*)\"")
+    @When("^\"([^\"]*)\" copies \"([^\"]*)\" from mailbox \"([^\"]*)\" of user \"([^\"]*)\" to mailbox \"([^\"]*)\" of user \"([^\"]*)\"$")
     public void copyMessageToMailbox(String username, String message, String sourceMailbox, String sourceUser, String destinationMailbox, String destinationUser) throws Throwable {
         userStepdefs.execWithUser(username, () -> copyMessageToMailbox(message, sourceMailbox, sourceUser, destinationMailbox, destinationUser));
     }
 
     private void copyMessageToMailbox(String message, String sourceMailbox, String sourceUser, String destinationMailbox, String destinationUser) throws Throwable {
-        MessageId messageId = getMessagesMethodStepdefs.getMessageId(message);
+        MessageId messageId = messageIdStepdefs.getMessageId(message);
         MailboxId sourceMailboxId = mainStepdefs.jmapServer
             .getProbe(MailboxProbeImpl.class)
             .getMailbox(MailboxConstants.USER_NAMESPACE, sourceUser, sourceMailbox)
@@ -145,13 +171,13 @@ public class SetMessagesMethodStepdefs {
         mainStepdefs.awaitMethod.run();
     }
 
-    @Given("^\"([^\"]*)\" moves \"([^\"]*)\" to mailbox \"([^\"]*)\" of user \"([^\"]*)\"")
+    @Given("^\"([^\"]*)\" moves \"([^\"]*)\" to mailbox \"([^\"]*)\" of user \"([^\"]*)\"$")
     public void moveMessageToMailbox(String username, String message, String destinationMailbox, String destinationUser) throws Throwable {
         userStepdefs.execWithUser(username, () -> moveMessageToMailbox(message, destinationMailbox, destinationUser));
     }
 
     private void moveMessageToMailbox(String message, String destinationMailbox, String destinationUser) throws Throwable {
-        MessageId messageId = getMessagesMethodStepdefs.getMessageId(message);
+        MessageId messageId = messageIdStepdefs.getMessageId(message);
         MailboxId destinationMailboxId = mainStepdefs.jmapServer
             .getProbe(MailboxProbeImpl.class)
             .getMailbox(MailboxConstants.USER_NAMESPACE, destinationUser, destinationMailbox)
@@ -171,18 +197,59 @@ public class SetMessagesMethodStepdefs {
         mainStepdefs.awaitMethod.run();
     }
 
-    @When("^\"([^\"]*)\" sets flags \"([^\"]*)\" on message \"([^\"]*)\"")
+    @When("^\"([^\"]*)\" sets flags \"([^\"]*)\" on message \"([^\"]*)\"$")
     public void setFlags(String username, List<String> keywords, String message) throws Throwable {
         userStepdefs.execWithUser(username, () -> setFlags(keywords, message));
     }
 
-    @When("^the user sets flags \"([^\"]*)\" on message \"([^\"]*)\"")
+    @When("^\"([^\"]*)\" destroys message \"([^\"]*)\"$")
+    public void destroyMessage(String username, String message) throws Throwable {
+        MessageId messageId = messageIdStepdefs.getMessageId(message);
+        userStepdefs.execWithUser(username, () -> {
+            httpClient.post("[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"destroy\": [ \"" + messageId.serialize() + "\" ]" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]");
+            mainStepdefs.awaitMethod.run();
+        });
+    }
+
+    @Given("^\"([^\"]*)\" tries to create a draft message \"([^\"]*)\" in mailbox \"([^\"]*)\"$")
+    public void createDraft(String username, String message, String mailboxName) throws Throwable {
+        userStepdefs.execWithUser(username, () -> {
+            Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE,
+                username,
+                mailboxName);
+            httpClient.post("[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\": { \"" + message  + "\" : {" +
+                "        \"subject\": \"subject\"," +
+                "        \"keywords\": {\"$Draft\": true}," +
+                "        \"mailboxIds\": [\"" + mailbox.getMailboxId().serialize() + "\"]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]");
+            mainStepdefs.awaitMethod.run();
+            Optional.ofNullable(
+                httpClient.jsonPath.<String>read("[0][1].created." + message + ".id"))
+                .map(mainStepdefs.messageIdFactory::fromString)
+                .ifPresent(id -> messageIdStepdefs.addMessageId(message, id));
+        });
+    }
+
+    @When("^the user sets flags \"([^\"]*)\" on message \"([^\"]*)\"$")
     public void setFlags(List<String> keywords, String message) throws Throwable {
-        MessageId messageId = getMessagesMethodStepdefs.getMessageId(message);
-        String keywordString = keywords
-            .stream()
-            .map(value -> "\"" + value + "\" : true")
-            .collect(Collectors.joining(","));
+        MessageId messageId = messageIdStepdefs.getMessageId(message);
+        String keywordString = toKeywordsString(keywords);
 
         httpClient.post("[" +
             "  [" +
@@ -198,11 +265,18 @@ public class SetMessagesMethodStepdefs {
         mainStepdefs.awaitMethod.run();
     }
 
-    @When("^message \"([^\"]*)\" has flags (.*) in mailbox \"([^\"]*)\" of user \"([^\"]*)\"")
+    private String toKeywordsString(List<String> keywords) {
+        return keywords
+                .stream()
+                .map(value -> "\"" + value + "\" : true")
+                .collect(Collectors.joining(","));
+    }
+
+    @When("^message \"([^\"]*)\" has flags (.*) in mailbox \"([^\"]*)\" of user \"([^\"]*)\"$")
     public void setMessageFlagsInSpecifiedMailbox(String message, List<String> flags, String mailbox, String mailboxOwner) throws Exception {
         Flags newFlags = Keywords.factory().fromList(flags).asFlags();
         String username = userStepdefs.getConnectedUser();
-        MessageId messageId = getMessagesMethodStepdefs.getMessageId(message);
+        MessageId messageId = messageIdStepdefs.getMessageId(message);
         MailboxId mailboxId = mainStepdefs.jmapServer
             .getProbe(MailboxProbeImpl.class)
             .getMailbox(MailboxConstants.USER_NAMESPACE, mailboxOwner, mailbox)
@@ -213,10 +287,23 @@ public class SetMessagesMethodStepdefs {
     }
 
     @Then("^message \"([^\"]*)\" is not updated$")
-    public void assertIdOfTheFirstMessage(String messageName) throws Exception {
-        MessageId id = getMessagesMethodStepdefs.getMessageId(messageName);
+    public void assertNotUpdate(String messageName) throws Exception {
+        MessageId id = messageIdStepdefs.getMessageId(messageName);
         assertThat(httpClient.jsonPath.<Map<String, String>>read("[0][1].notUpdated"))
             .containsOnlyKeys(id.serialize());
+    }
+
+    @Then("^message \"([^\"]*)\" is updated$")
+    public void assertUpdated(String messageName) throws Exception {
+        MessageId id = messageIdStepdefs.getMessageId(messageName);
+        assertThat(httpClient.jsonPath.<List<String>>read("[0][1].updated"))
+            .containsOnly(id.serialize());
+    }
+
+    @Then("^message \"([^\"]*)\" is not created$")
+    public void assertNotCreated(String messageName) throws Exception {;
+        assertThat(httpClient.jsonPath.<Map<String, String>>read("[0][1].notCreated"))
+            .containsOnlyKeys(messageName);
     }
 
 }

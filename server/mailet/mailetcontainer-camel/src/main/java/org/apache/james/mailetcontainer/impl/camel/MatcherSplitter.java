@@ -157,7 +157,7 @@ public class MatcherSplitter {
                 } else {
                     mail.setRecipients(rcpts);
 
-                    Mail newMail = new MailImpl(mail);
+                    Mail newMail = MailImpl.duplicate(mail);
                     newMail.setRecipients(matchedRcpts);
 
                     // Set a header because the matcher matched. This can be

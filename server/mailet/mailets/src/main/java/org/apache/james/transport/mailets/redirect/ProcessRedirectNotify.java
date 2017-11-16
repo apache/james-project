@@ -47,7 +47,7 @@ public class ProcessRedirectNotify {
 
         // duplicates the Mail object, to be able to modify the new mail keeping
         // the original untouched
-        MailImpl newMail = new MailImpl(originalMail);
+        MailImpl newMail = MailImpl.duplicate(originalMail);
         try {
             MailModifier mailModifier = MailModifier.builder()
                     .mailet(mailet)

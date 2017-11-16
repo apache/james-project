@@ -20,5 +20,7 @@
 package org.apache.james.jmap.exceptions;
 
 public class InvalidDraftKeywordsException extends IllegalArgumentException {
-
+    public InvalidDraftKeywordsException(String s) {
+        super(s);
+    }
 }

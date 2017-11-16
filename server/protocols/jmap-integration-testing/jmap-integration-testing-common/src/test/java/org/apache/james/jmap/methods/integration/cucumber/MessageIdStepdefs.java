@@ -17,30 +17,33 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox;
+package org.apache.james.jmap.methods.integration.cucumber;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
-import javax.mail.Flags;
+import javax.inject.Inject;
 
-import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 
-public interface MessageIdManager {
+import cucumber.runtime.java.guice.ScenarioScoped;
 
-    Set<MessageId> accessibleMessages(Collection<MessageId> messageIds, final MailboxSession mailboxSession) throws MailboxException;
+@ScenarioScoped
+public class MessageIdStepdefs {
 
-    void setFlags(Flags newState, FlagsUpdateMode replace, MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException;
+    private final Map<String, MessageId> messageIdsByName;
 
-    List<MessageResult> getMessages(List<MessageId> messageId, FetchGroup minimal, MailboxSession mailboxSession) throws MailboxException;
+    @Inject
+    private MessageIdStepdefs() {
+        this.messageIdsByName = new HashMap<>();
+    }
 
-    void delete(MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException;
+    public MessageId getMessageId(String name) {
+        return messageIdsByName.get(name);
+    }
 
-    void setInMailboxes(MessageId messageId, Collection<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException;
+    public MessageId addMessageId(String name, MessageId messageId) {
+        return messageIdsByName.put(name, messageId);
+    }
+
 }

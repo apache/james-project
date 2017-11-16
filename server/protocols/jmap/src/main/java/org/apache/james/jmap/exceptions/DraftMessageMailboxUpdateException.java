@@ -17,30 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox;
+package org.apache.james.jmap.exceptions;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-
-import javax.mail.Flags;
-
-import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 
-public interface MessageIdManager {
+public class DraftMessageMailboxUpdateException extends MailboxException {
 
-    Set<MessageId> accessibleMessages(Collection<MessageId> messageIds, final MailboxSession mailboxSession) throws MailboxException;
-
-    void setFlags(Flags newState, FlagsUpdateMode replace, MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException;
-
-    List<MessageResult> getMessages(List<MessageId> messageId, FetchGroup minimal, MailboxSession mailboxSession) throws MailboxException;
-
-    void delete(MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException;
-
-    void setInMailboxes(MessageId messageId, Collection<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException;
+    public DraftMessageMailboxUpdateException(String message) {
+        super(message);
+    }
 }
