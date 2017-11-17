@@ -55,8 +55,7 @@ public class CassandraMessageIdManagerStorageTest extends AbstractMessageIdManag
 
     private CassandraCluster cassandra;
 
-    public static ContainerLifecycleConfiguration cassandraLifecycleConfiguration = ContainerLifecycleConfiguration.builder()
-        .iterationsBetweenRestart(20)
+    public static ContainerLifecycleConfiguration cassandraLifecycleConfiguration = ContainerLifecycleConfiguration.withDefaultIterationsBetweenRestart()
         .container(cassandraServer.getRawContainer())
         .build();
 

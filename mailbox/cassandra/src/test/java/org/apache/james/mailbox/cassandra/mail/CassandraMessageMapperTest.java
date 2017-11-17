@@ -48,8 +48,7 @@ public class CassandraMessageMapperTest extends MessageMapperTest {
     
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
-    public static ContainerLifecycleConfiguration cassandraLifecycleConfiguration = ContainerLifecycleConfiguration.builder()
-        .iterationsBetweenRestart(20)
+    public static ContainerLifecycleConfiguration cassandraLifecycleConfiguration = ContainerLifecycleConfiguration.withDefaultIterationsBetweenRestart()
         .container(cassandraServer.getRawContainer())
         .build();
 
