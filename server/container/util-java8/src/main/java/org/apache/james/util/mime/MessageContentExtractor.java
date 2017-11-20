@@ -173,7 +173,8 @@ public class MessageContentExtractor {
     }
 
     private boolean isInlinedWithoutCid(Entity part) {
-        return part.getDispositionType().equals(MimeMessage.INLINE) && part.getHeader().getField(CONTENT_ID) == null;
+        return Objects.equals(part.getDispositionType(), MimeMessage.INLINE)
+            && part.getHeader().getField(CONTENT_ID) == null;
     }
 
     public static class MessageContent {
