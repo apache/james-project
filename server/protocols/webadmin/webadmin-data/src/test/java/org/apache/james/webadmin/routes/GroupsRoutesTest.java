@@ -71,6 +71,8 @@ public class GroupsRoutesTest {
     private static final String GROUP_WITH_ENCODED_SLASH = "group10%2F10" + "@" + DOMAIN;
     private static final String USER_A = "a" + "@" + DOMAIN;
     private static final String USER_B = "b" + "@" + DOMAIN;
+    private static final String USER_WITH_SLASH = "user/@" + DOMAIN;
+    private static final String USER_WITH_ENCODED_SLASH = "user%2F@" + DOMAIN;
 
     private WebAdminServer webAdminServer;
 
@@ -158,6 +160,32 @@ public class GroupsRoutesTest {
                 .put(GROUP1 + SEPARATOR + USER_A)
             .then()
                 .statusCode(HttpStatus.CREATED_201);
+        }
+
+        @Test
+        public void putUserWithSlashInGroupShouldReturnCreated() {
+            when()
+                .put(GROUP1 + SEPARATOR + USER_WITH_ENCODED_SLASH)
+            .then()
+                .statusCode(HttpStatus.CREATED_201);
+        }
+
+        @Test
+        public void putUserWithSlashInGroupShouldCreateUser() {
+            when()
+                .put(GROUP1 + SEPARATOR + USER_WITH_ENCODED_SLASH);
+
+            List<String> addresses =
+                when()
+                    .get(GROUP1)
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.OK_200)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getList(".");
+            assertThat(addresses).containsExactly(USER_WITH_SLASH);
         }
 
         @Test
@@ -360,6 +388,14 @@ public class GroupsRoutesTest {
         public void putUserInGroupWithSlashShouldReturnNotFound() {
             when()
                 .put(GROUP_WITH_SLASH + SEPARATOR + USER_A)
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404);
+        }
+
+        @Test
+        public void putUserWithSlashInGroupShouldReturnNotFound() {
+            when()
+                .put(GROUP1 + SEPARATOR + USER_WITH_SLASH)
             .then()
                 .statusCode(HttpStatus.NOT_FOUND_404);
         }
