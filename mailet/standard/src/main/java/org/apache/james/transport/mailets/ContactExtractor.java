@@ -105,8 +105,9 @@ public class ContactExtractor extends GenericMailet implements Mailet {
             .map(Throwing.function(extractedContacts -> objectMapper.writeValueAsString(extractedContacts)));
     }
 
-    private boolean hasRecipients(MimeMessage mimeMessage) throws MessagingException {
-        return mimeMessage.getAllRecipients().length > 0;
+    @VisibleForTesting boolean hasRecipients(MimeMessage mimeMessage) throws MessagingException {
+        return mimeMessage.getAllRecipients() != null 
+                && mimeMessage.getAllRecipients().length > 0;
     }
 
     private ImmutableList<String> recipients(MimeMessage mimeMessage) throws MessagingException {

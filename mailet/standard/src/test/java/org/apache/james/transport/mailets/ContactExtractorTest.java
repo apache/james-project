@@ -233,6 +233,18 @@ public class ContactExtractorTest {
         mailet.service(mail);
 
         assertThat(mail.getAttribute(ATTRIBUTE)).isNull();
+    }
 
+    @Test
+    public void hasRecipientsShouldNotThrowWhenNoRecipient() throws Exception {
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+                .setSender(SENDER)
+                .setSubject("Contact collection Rocks")
+                .setText("This is my email")
+                .build();
+
+        boolean hasRecipients = mailet.hasRecipients(message);
+
+        assertThat(hasRecipients).isFalse();
     }
 }
