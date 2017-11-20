@@ -67,6 +67,8 @@ public class GroupsRoutesTest {
     private static final String DOMAIN = "b.com";
     private static final String GROUP1 = "group1" + "@" + DOMAIN;
     private static final String GROUP2 = "group2" + "@" + DOMAIN;
+    private static final String GROUP_WITH_SLASH = "group10/10" + "@" + DOMAIN;
+    private static final String GROUP_WITH_ENCODED_SLASH = "group10%2F10" + "@" + DOMAIN;
     private static final String USER_A = "a" + "@" + DOMAIN;
     private static final String USER_B = "b" + "@" + DOMAIN;
 
@@ -166,6 +168,32 @@ public class GroupsRoutesTest {
             List<String> addresses =
                 when()
                     .get(GROUP1)
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.OK_200)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getList(".");
+            assertThat(addresses).containsExactly(USER_A);
+        }
+
+        @Test
+        public void putUserInGroupWithEncodedSlashShouldReturnCreated() {
+            when()
+                .put(GROUP_WITH_ENCODED_SLASH + SEPARATOR + USER_A)
+            .then()
+                .statusCode(HttpStatus.CREATED_201);
+        }
+
+        @Test
+        public void putUserInGroupWithEncodedSlashShouldCreateGroup() {
+            when()
+                .put(GROUP_WITH_ENCODED_SLASH + SEPARATOR + USER_A);
+
+            List<String> addresses =
+                when()
+                    .get(GROUP_WITH_ENCODED_SLASH)
                 .then()
                     .contentType(ContentType.JSON)
                     .statusCode(HttpStatus.OK_200)
@@ -326,6 +354,14 @@ public class GroupsRoutesTest {
                 .put("not-an-address" + SEPARATOR + USER_A)
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400);
+        }
+
+        @Test
+        public void putUserInGroupWithSlashShouldReturnNotFound() {
+            when()
+                .put(GROUP_WITH_SLASH + SEPARATOR + USER_A)
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404);
         }
 
         @Test
