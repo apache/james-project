@@ -434,6 +434,26 @@ public class GroupMappingTest {
     }
 
     @Test
+    public void messageShouldRedirectToGroupContainingSlash() throws Exception {
+        String groupWithSlash = "a/a@" + DOMAIN1;
+        String groupWithEncodedSlash = "a%2Fa@" + DOMAIN1;
+        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + groupWithEncodedSlash + "/" + USER_DOMAIN1);
+
+        Mail mail = FakeMail.builder()
+            .mimeMessage(message)
+            .sender(new MailAddress(SENDER))
+            .recipient(new MailAddress(groupWithSlash))
+            .build();
+
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1);
+             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+            messageSender.sendMessage(mail);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(USER_DOMAIN1, PASSWORD));
+        }
+    }
+
+    @Test
     public void sendMessageShouldSendAMessageToAnExternalGroupMember() throws Exception {
         String externalMail = "ray@yopmail.com";
         restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + externalMail);

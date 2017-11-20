@@ -22,6 +22,8 @@ package org.apache.james.webadmin.routes;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static spark.Spark.halt;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -50,6 +52,8 @@ import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
@@ -72,6 +76,9 @@ import spark.Service;
 public class GroupsRoutes implements Routes {
 
     public static final String ROOT_PATH = "address/groups";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GroupsRoutes.class);
+
     private static final String GROUP_ADDRESS = "groupAddress";
     private static final String GROUP_ADDRESS_PATH = ROOT_PATH + SEPARATOR + ":" + GROUP_ADDRESS;
     private static final String USER_ADDRESS = "userAddress";
@@ -200,9 +207,13 @@ public class GroupsRoutes implements Routes {
 
     private MailAddress parseMailAddress(String address) {
         try {
-            return new MailAddress(address);
+            String decodedAddress = URLDecoder.decode(address, "UTF-8");
+            return new MailAddress(decodedAddress);
         } catch (AddressException e) {
             throw halt(HttpStatus.BAD_REQUEST_400);
+        } catch (UnsupportedEncodingException e) {
+            LOGGER.error("UTF-8 should be a valid encoding");
+            throw halt(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
     }
 
