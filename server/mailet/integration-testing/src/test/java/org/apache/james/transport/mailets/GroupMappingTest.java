@@ -434,7 +434,7 @@ public class GroupMappingTest {
     }
 
     @Test
-    public void externalGroupMemberAreNotSupported() throws Exception {
+    public void sendMessageShouldSendAMessageToAnExternalGroupMember() throws Exception {
         String externalMail = "ray@yopmail.com";
         restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + externalMail);
 
