@@ -36,6 +36,7 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.exceptions.DraftMessageMailboxUpdateException;
 import org.apache.james.jmap.exceptions.InvalidOutboxMoveException;
 import org.apache.james.jmap.model.MessageProperties;
@@ -163,10 +164,18 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                     .findFirst();
             if (messagesToSend.isPresent()) {
                 MailImpl mail = buildMailFromMessage(messagesToSend.get());
+                assertUserIsSender(mailboxSession, mail.getSender());
                 messageSender.sendMessage(messageId, mail, mailboxSession);
             } else {
                 addMessageIdNotFoundToResponse(messageId, builder);
             }
+        }
+    }
+
+    private void assertUserIsSender(MailboxSession session, MailAddress sender) throws MailboxSendingNotAllowedException {
+        if (!session.getUser().isSameUser(sender.asString())) {
+            String allowedSender = session.getUser().getUserName();
+            throw new MailboxSendingNotAllowedException(allowedSender);
         }
     }
 

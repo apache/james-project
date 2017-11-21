@@ -36,6 +36,7 @@ import org.apache.james.jmap.exceptions.MailboxNotOwnedException;
 import org.apache.james.jmap.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.methods.ValueWithId.MessageWithId;
 import org.apache.james.jmap.model.CreationMessage;
+import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.model.Envelope;
 import org.apache.james.jmap.model.Keyword;
 import org.apache.james.jmap.model.Message;
@@ -243,12 +244,22 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     }
 
     private MessageWithId handleOutboxMessages(CreationMessageEntry entry, MailboxSession session) throws MailboxException, MessagingException {
+        assertUserIsSender(session, entry.getValue().getFrom());
         MessageManager outbox = getMailboxWithRole(session, Role.OUTBOX).orElseThrow(() -> new MailboxNotFoundException(Role.OUTBOX.serialize()));
         MetaDataWithContent newMessage = messageAppender.appendMessageInMailbox(entry, outbox, session);
         Message jmapMessage = messageFactory.fromMetaDataWithContent(newMessage);
         Envelope envelope = Envelope.fromMessage(jmapMessage);
         messageSender.sendMessage(newMessage, envelope, session);
         return new ValueWithId.MessageWithId(entry.getCreationId(), jmapMessage);
+    }
+
+    private void assertUserIsSender(MailboxSession session, Optional<DraftEmailer> from) throws MailboxSendingNotAllowedException {
+        if (!from.flatMap(DraftEmailer::getEmail)
+                .filter(email -> session.getUser().isSameUser(email))
+                .isPresent()) {
+            String allowedSender = session.getUser().getUserName();
+            throw new MailboxSendingNotAllowedException(allowedSender);
+        }
     }
 
     private MessageWithId handleDraftMessages(CreationMessageEntry entry, MailboxSession session) throws MailboxException, MessagingException {
