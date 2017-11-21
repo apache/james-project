@@ -41,12 +41,12 @@ public class Role {
     public static final Role OUTBOX = new Role("outbox", DefaultMailboxes.OUTBOX);
     public static final Role SENT = new Role("sent", DefaultMailboxes.SENT);
     public static final Role TRASH = new Role("trash", DefaultMailboxes.TRASH);
-    public static final Role ARCHIVE = new Role("archive");
-    public static final Role SPAM = new Role("spam");
-    public static final Role TEMPLATES = new Role("templates");
+    public static final Role ARCHIVE = new Role("archive", DefaultMailboxes.ARCHIVE);
+    public static final Role SPAM = new Role("spam", DefaultMailboxes.SPAM);
+    public static final Role TEMPLATES = new Role("templates", DefaultMailboxes.TEMPLATES);
     
     private static final Map<String, Role> ROLES = 
-            ImmutableList.<Role>of(INBOX, ARCHIVE, DRAFTS, OUTBOX, SENT, TRASH, SPAM, TEMPLATES)
+            ImmutableList.<Role>of(INBOX, DRAFTS, OUTBOX, SENT, TRASH, ARCHIVE, SPAM, TEMPLATES)
                 .stream()
                 .collect(Collectors.toMap((Role x) -> x.name.toLowerCase(Locale.US), Function.identity()));
     

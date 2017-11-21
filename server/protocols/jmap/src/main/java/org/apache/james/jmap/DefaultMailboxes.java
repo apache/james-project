@@ -31,6 +31,9 @@ public interface DefaultMailboxes {
     String SENT = "Sent";
     String TRASH = "Trash";
     String DRAFTS = "Drafts";
+    String ARCHIVE = "Archive";
+    String SPAM = "Spam";
+    String TEMPLATES = "Templates";
 
     List<String> DEFAULT_MAILBOXES = ImmutableList.of(INBOX, OUTBOX, SENT, TRASH, DRAFTS);
 }
