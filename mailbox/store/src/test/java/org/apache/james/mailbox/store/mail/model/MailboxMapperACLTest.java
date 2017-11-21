@@ -20,10 +20,7 @@
 package org.apache.james.mailbox.store.mail.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import org.apache.james.mailbox.acl.ACLDiff;
-import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;

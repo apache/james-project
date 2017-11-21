@@ -23,7 +23,6 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.apache.james.mailbox.acl.ACLDiff;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.UpdatedFlags;
