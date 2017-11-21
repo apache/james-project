@@ -2058,7 +2058,7 @@ public abstract class SetMailboxesMethodTest {
                     "    {" +
                     "      \"update\": {" +
                     "        \"" + mailboxId.serialize() + "\" : {" +
-                    "          \"name\" : \"outbox\"" +
+                    "          \"name\" : \"Outbox\"" +
                     "        }" +
                     "      }" +
                     "    }," +
@@ -2076,7 +2076,7 @@ public abstract class SetMailboxesMethodTest {
             .body(NAME, equalTo("mailboxesSet"))
             .body(ARGUMENTS + ".notUpdated", hasEntry(equalTo(mailboxId.serialize()), Matchers.allOf(
                     hasEntry(equalTo("type"), equalTo("invalidArguments")),
-                    hasEntry(equalTo("description"), equalTo("The mailbox 'outbox' is a system mailbox.")))));
+                    hasEntry(equalTo("description"), equalTo("The mailbox 'Outbox' is a system mailbox.")))));
     }
 
     @Test
