@@ -56,8 +56,8 @@ public class Mailbox {
         private boolean mayCreateChild;
         private boolean mayRename;
         private boolean mayDelete;
-        private long totalMessages;
-        private long unreadMessages;
+        private Optional<Long> totalMessages;
+        private Optional<Long> unreadMessages;
         private long totalThreads;
         private long unreadThreads;
         private Optional<Rights> sharedWith;
@@ -67,6 +67,8 @@ public class Mailbox {
             parentId = Optional.empty();
             sharedWith = Optional.empty();
             namespace = Optional.empty();
+            totalMessages = Optional.empty();
+            unreadMessages = Optional.empty();
         }
 
         public Builder id(MailboxId id) {
@@ -132,12 +134,12 @@ public class Mailbox {
         }
 
         public Builder totalMessages(long totalMessages) {
-            this.totalMessages = totalMessages;
+            this.totalMessages = Optional.of(totalMessages);
             return this;
         }
 
         public Builder unreadMessages(long unreadMessages) {
-            this.unreadMessages = unreadMessages;
+            this.unreadMessages = Optional.of(unreadMessages);
             return this;
         }
 
@@ -166,7 +168,12 @@ public class Mailbox {
             Preconditions.checkState(id != null, "'id' is mandatory");
 
             return new Mailbox(id, name, parentId, role, sortOrder, mustBeOnlyMailbox, mayReadItems, mayAddItems, mayRemoveItems, mayCreateChild, mayRename, mayDelete,
-                    totalMessages, unreadMessages, totalThreads, unreadThreads, sharedWith.orElse(Rights.EMPTY), namespace.orElse(MailboxNamespace.personal()));
+                    negativeToZero(totalMessages), negativeToZero(unreadMessages), totalThreads, unreadThreads, sharedWith.orElse(Rights.EMPTY), namespace.orElse(MailboxNamespace.personal()));
+        }
+
+        private long negativeToZero(Optional<Long> number) {
+            return number.filter(value -> value >= 0)
+                .orElse(0L);
         }
     }
 

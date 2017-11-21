@@ -96,4 +96,70 @@ public class MailboxTest {
 
         assertThat(mailbox.getParentId()).isEmpty();
     }
+
+    @Test
+    public void totalMessagesShouldNeverBeNegative() {
+        Mailbox mailbox = Mailbox.builder()
+                .id(InMemoryId.of(1))
+                .name("name")
+                .totalMessages(-1234)
+                .build();
+
+        assertThat(mailbox.getTotalMessages()).isEqualTo(0);
+    }
+
+    @Test
+    public void unreadMessagesShouldNeverBeNegative() {
+        Mailbox mailbox = Mailbox.builder()
+                .id(InMemoryId.of(1))
+                .name("name")
+                .unreadMessages(-1234)
+                .build();
+
+        assertThat(mailbox.getUnreadMessages()).isEqualTo(0);
+    }
+
+    @Test
+    public void totalMessagesShouldReturnZeroWhenZero() {
+        Mailbox mailbox = Mailbox.builder()
+                .id(InMemoryId.of(1))
+                .name("name")
+                .totalMessages(0)
+                .build();
+
+        assertThat(mailbox.getTotalMessages()).isEqualTo(0);
+    }
+
+    @Test
+    public void unreadMessagesShouldReturnZeroWhenZero() {
+        Mailbox mailbox = Mailbox.builder()
+                .id(InMemoryId.of(1))
+                .name("name")
+                .unreadMessages(0)
+                .build();
+
+        assertThat(mailbox.getUnreadMessages()).isEqualTo(0);
+    }
+
+    @Test
+    public void totalMessagesShouldAcceptPositiveValue() {
+        Mailbox mailbox = Mailbox.builder()
+                .id(InMemoryId.of(1))
+                .name("name")
+                .totalMessages(1234)
+                .build();
+
+        assertThat(mailbox.getTotalMessages()).isEqualTo(1234);
+    }
+
+    @Test
+    public void unreadMessagesShouldAcceptPositiveValue() {
+        Mailbox mailbox = Mailbox.builder()
+                .id(InMemoryId.of(1))
+                .name("name")
+                .unreadMessages(1234)
+                .build();
+
+        assertThat(mailbox.getUnreadMessages()).isEqualTo(1234);
+    }
 }
