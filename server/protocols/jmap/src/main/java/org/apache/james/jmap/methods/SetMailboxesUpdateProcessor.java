@@ -53,12 +53,14 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 
@@ -96,7 +98,8 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
         try {
             validateMailboxName(updateRequest, mailboxSession);
             Mailbox mailbox = getMailbox(mailboxId, mailboxSession);
-            checkRole(mailbox.getRole());
+            assertNotSharedOutboxOrDraftMailbox(mailbox, updateRequest);
+            assertSystemMailboxesAreNotUpdated(mailbox, updateRequest);
             validateParent(mailbox, updateRequest, mailboxSession);
 
             updateMailbox(mailbox, updateRequest, mailboxSession);
@@ -147,6 +150,11 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
                 .type("invalidArguments")
                 .description("Cannot share a mailbox to another domain")
                 .build());
+        } catch (IllegalArgumentException e) {
+            responseBuilder.notUpdated(mailboxId, SetError.builder()
+                .type("invalidArguments")
+                .description(e.getMessage())
+                .build());
         } catch (MailboxException e) {
             LOGGER.error("Error while updating mailbox", e);
             responseBuilder.notUpdated(mailboxId, SetError.builder()
@@ -156,10 +164,27 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
         }
    }
 
-    private void checkRole(Optional<Role> role) throws SystemMailboxNotUpdatableException {
-        if (role.map(Role::isSystemRole).orElse(false)) {
-            throw new SystemMailboxNotUpdatableException();
+    private void assertNotSharedOutboxOrDraftMailbox(Mailbox mailbox, MailboxUpdateRequest updateRequest) {
+        Preconditions.checkArgument(!updateRequest.getSharedWith().isPresent() || !mailbox.hasRole(Role.OUTBOX), "Sharing 'Outbox' is forbidden");
+        Preconditions.checkArgument(!updateRequest.getSharedWith().isPresent() || !mailbox.hasRole(Role.DRAFTS), "Sharing 'Draft' is forbidden");
+    }
+
+    private void assertSystemMailboxesAreNotUpdated(Mailbox mailbox, MailboxUpdateRequest updateRequest) throws SystemMailboxNotUpdatableException {
+        if (mailbox.hasSystemRole()) {
+            if (OptionalUtils.containsDifferent(updateRequest.getName(), mailbox.getName())
+                || requestChanged(updateRequest.getParentId(), mailbox.getParentId())
+                || requestChanged(updateRequest.getRole(), mailbox.getRole())
+                || OptionalUtils.containsDifferent(updateRequest.getSortOrder(), mailbox.getSortOrder())) {
+                throw new SystemMailboxNotUpdatableException();
+            }
         }
+    }
+
+    @VisibleForTesting
+    <T> boolean requestChanged(Optional<T> requestValue, Optional<T> storeValue) {
+        return requestValue
+            .filter(value -> !requestValue.equals(storeValue))
+            .isPresent();
     }
 
     private Mailbox getMailbox(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxNotFoundException {

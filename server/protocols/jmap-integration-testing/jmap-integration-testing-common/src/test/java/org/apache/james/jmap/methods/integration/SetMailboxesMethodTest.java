@@ -89,6 +89,7 @@ public abstract class SetMailboxesMethodTest {
     private String username;
     private GuiceJamesServer jmapServer;
     private MailboxProbe mailboxProbe;
+    private MailboxId inboxId;
 
     @Before
     public void setup() throws Throwable {
@@ -109,7 +110,7 @@ public abstract class SetMailboxesMethodTest {
         String password = "password";
         dataProbe.addDomain(USERS_DOMAIN);
         dataProbe.addUser(username, password);
-        mailboxProbe.createMailbox("#private", username, DefaultMailboxes.INBOX);
+        inboxId = mailboxProbe.createMailbox("#private", username, DefaultMailboxes.INBOX);
         accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), username, password);
 
         await();
@@ -2111,5 +2112,94 @@ public abstract class SetMailboxesMethodTest {
           .body(ARGUMENTS + ".notUpdated", hasEntry(equalTo(mailboxChildToMoveCId.serialize()), Matchers.allOf(
                   hasEntry(equalTo("type"), equalTo("invalidArguments")),
                   hasEntry(equalTo("description"), equalTo("Cannot rename a mailbox to an already existing mailbox.")))));
+    }
+
+    @Test
+    public void setMailboxesShouldReturnUpdatedWhenShareSystemMailbox() {
+        String requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"update\": {" +
+                "        \"" + inboxId.serialize() + "\" : {" +
+                "          \"sharedWith\" : {\"user@" + USERS_DOMAIN + "\": [\"a\", \"w\"]}" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxesSet"))
+            .body(ARGUMENTS + ".updated", contains(inboxId.serialize()));
+    }
+
+    @Test
+    public void setMailboxesShouldReturnNotUpdatedWhenShareOutboxMailbox() {
+        MailboxId outboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, DefaultMailboxes.OUTBOX);
+        String requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"update\": {" +
+                "        \"" + outboxId.serialize() + "\" : {" +
+                "          \"sharedWith\" : {\"user@" + USERS_DOMAIN + "\": [\"a\", \"w\"]}" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxesSet"))
+            .body(ARGUMENTS + ".notUpdated", aMapWithSize(1))
+            .body(ARGUMENTS + ".notUpdated", hasEntry(equalTo(outboxId.serialize()), Matchers.allOf(
+                hasEntry(equalTo("type"), equalTo("invalidArguments")),
+                hasEntry(equalTo("description"), equalTo("Sharing 'Outbox' is forbidden")))));
+    }
+
+    @Test
+    public void setMailboxesShouldReturnNotUpdatedWhenShareDraftMailbox() {
+        MailboxId draftId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, DefaultMailboxes.DRAFTS);
+        String requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"update\": {" +
+                "        \"" + draftId.serialize() + "\" : {" +
+                "          \"sharedWith\" : {\"user@" + USERS_DOMAIN + "\": [\"a\", \"w\"]}" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxesSet"))
+            .body(ARGUMENTS + ".notUpdated", aMapWithSize(1))
+            .body(ARGUMENTS + ".notUpdated", hasEntry(equalTo(draftId.serialize()), Matchers.allOf(
+                hasEntry(equalTo("type"), equalTo("invalidArguments")),
+                hasEntry(equalTo("description"), equalTo("Sharing 'Draft' is forbidden")))));
     }
 }
