@@ -22,12 +22,16 @@ import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.base.AbstractImapCommandParser;
 import org.apache.james.imap.message.request.CreateRequest;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.protocols.imap.DecodingException;
+
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 
 /**
  * Parse CREATE commands
@@ -63,7 +67,16 @@ public class CreateCommandParser extends AbstractImapCommandParser {
             }
         }
         request.eol();
+        assertMailboxNameJustContainDelimiter(mailboxName, mailboxSession.getPathDelimiter());
         return new CreateRequest(command, mailboxName, tag);
     }
 
+    private void assertMailboxNameJustContainDelimiter(String mailboxName, char delimiter) throws DecodingException {
+        Splitter.on(delimiter)
+            .splitToList(mailboxName)
+            .stream()
+            .filter(s -> !Strings.isNullOrEmpty(s))
+            .findAny()
+            .orElseThrow(() -> new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid mailbox name"));
+    }
 }
