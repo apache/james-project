@@ -20,6 +20,7 @@
 package org.apache.james.imap.decode.parser;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -59,20 +60,22 @@ public class CreateCommandParserTest {
         parser = new CreateCommandParser();
     }
 
-    @Test(expected = DecodingException.class)
+    @Test
     public void decodeShouldThrowWhenCommandHasEmptyMailbox() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream(" \n".getBytes(Charsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, mockImapSession);
+        assertThatThrownBy(() -> parser.decode(command, lineReader, TAG, mockImapSession))
+            .isInstanceOf(DecodingException.class);
     }
 
-    @Test(expected = DecodingException.class)
+    @Test
     public void decodeShouldThrowWhenCommandHasOnlySeparatorMailbox() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream("..\n".getBytes(Charsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, mockImapSession);
+        assertThatThrownBy(() -> parser.decode(command, lineReader, TAG, mockImapSession))
+            .isInstanceOf(DecodingException.class);
     }
 
     @Test
