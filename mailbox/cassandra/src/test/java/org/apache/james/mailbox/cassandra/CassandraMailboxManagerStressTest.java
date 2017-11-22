@@ -41,9 +41,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 
-@Ignore("https://issues.apache.org/jira/browse/JAMES-2009")
 public class CassandraMailboxManagerStressTest extends MailboxManagerStressTest {
     
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();

@@ -58,7 +58,7 @@ public abstract class MailboxManagerStressTest {
     public void testStressTest() throws InterruptedException, MailboxException {
 
         final CountDownLatch latch = new CountDownLatch(APPEND_OPERATIONS);
-        final ExecutorService pool = Executors.newFixedThreadPool(APPEND_OPERATIONS / 2);
+        final ExecutorService pool = Executors.newFixedThreadPool(APPEND_OPERATIONS / 20);
         final Collection<MessageUid> uList = new ConcurrentLinkedDeque<>();
         final String username = "username";
         MailboxSession session = mailboxManager.createSystemSession(username);
