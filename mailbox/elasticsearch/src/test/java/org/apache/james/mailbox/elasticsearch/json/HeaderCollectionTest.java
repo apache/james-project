@@ -96,6 +96,16 @@ public class HeaderCollectionTest {
     }
 
     @Test
+    public void getHeadersShouldIgnoreHeadersWithDots() {
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("a.b.c", "value"))
+            .build();
+
+        assertThat(headerCollection.getHeaders().get("a.b.c"))
+            .isEmpty();
+    }
+
+    @Test
     public void addressWithTwoDisplayNamesOnTheSameFieldShouldBeRetrieved() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("From", "Christophe Hamerling <chri.hamerling@linagora.com>, Graham CROSMARIE <grah.crosmarie@linagora.com>"))

@@ -405,6 +405,23 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
+    public void messageWithDotsInHeaderShouldBeIndexed() throws MailboxException {
+
+        ComposedMessageId mailWithDotsInHeader = myFolderMessageManager.appendMessage(
+                ClassLoader.getSystemResourceAsStream("eml/headerWithDot.eml"),
+                new Date(1409608900000L),
+                session,
+                RECENT,
+                new Flags());
+        await();
+        
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.all());
+
+        assertThat(messageSearchIndex.search(session, mailbox2, searchQuery))
+            .contains(mailWithDotsInHeader.getUid());
+    }
+
+    @Test
     public void hasNoAttachmenShouldOnlyReturnMessageThatHasNoAttachmentWhichAreNotInline() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.hasNoAttachment());
 
