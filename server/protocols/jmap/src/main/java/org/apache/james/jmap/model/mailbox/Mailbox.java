@@ -70,6 +70,7 @@ public class Mailbox {
             namespace = Optional.empty();
             totalMessages = Optional.empty();
             unreadMessages = Optional.empty();
+            role = Optional.empty();
         }
 
         public Builder id(MailboxId id) {
