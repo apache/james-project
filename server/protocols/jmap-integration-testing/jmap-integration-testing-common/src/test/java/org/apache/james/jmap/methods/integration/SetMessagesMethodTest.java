@@ -2213,6 +2213,91 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
+    public void setMessagesShouldReturnNotCreatedWhenSendingMessageWithAnotherFromAddressThanTheConnectedUser() {
+        String messageCreationId = "creationId1337";
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"email\": \"wrongaddress@otherdomain.org\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".notCreated", aMapWithSize(1))
+            .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
+            .body(ARGUMENTS + ".notCreated." + messageCreationId + ".type", equalTo("invalidProperties"))
+            .body(ARGUMENTS + ".notCreated." + messageCreationId + ".description", equalTo("Invalid 'from' field. Must be " + USERNAME));
+    }
+
+    @Test
+    public void setMessagesShouldNotCreateMessageInOutboxWhenSendingMessageWithAnotherFromAddressThanTheConnectedUser() {
+        String messageCreationId = "creationId1337";
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"email\": \"wrongaddress@otherdomain.org\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200);
+
+        String outboxId = getMailboxId(accessToken, Role.OUTBOX);
+        assertThat(hasNoMessageIn(bobAccessToken, outboxId)).isTrue();
+    }
+    
+    private boolean hasNoMessageIn(AccessToken accessToken, String mailboxId) {
+        try {
+            with()
+                .header("Authorization", accessToken.serialize())
+                .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]")
+            .when()
+                .post("/jmap")
+            .then()
+                .statusCode(200)
+                .body(NAME, equalTo("messageList"))
+                .body(ARGUMENTS + ".messageIds", empty());
+            return true;
+        } catch (AssertionError e) {
+            return false;
+        } 
+    }
+
+    @Test
     public void setMessagesShouldSucceedWhenSendingMessageWithOnlyFromAddress() {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;

@@ -22,7 +22,6 @@ package org.apache.james.jmap.methods;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
-import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.model.Envelope;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.send.MailFactory;
@@ -47,7 +46,6 @@ public class MessageSender {
     public void sendMessage(MessageFactory.MetaDataWithContent message,
                             Envelope envelope,
                             MailboxSession session) throws MailboxException, MessagingException {
-        assertUserIsInSenders(envelope, session);
         Mail mail = mailFactory.build(message, envelope);
         try {
             MailMetadata metadata = new MailMetadata(message.getMessageId(), session.getUser().getUserName());
@@ -60,20 +58,7 @@ public class MessageSender {
     public void sendMessage(MessageId messageId,
                             Mail mail,
                             MailboxSession session) throws MailboxException, MessagingException {
-        assertUserIsSender(session, mail.getSender());
         MailMetadata metadata = new MailMetadata(messageId, session.getUser().getUserName());
         mailSpool.send(mail, metadata);
-    }
-
-    private void assertUserIsInSenders(Envelope envelope, MailboxSession session) throws MailboxSendingNotAllowedException {
-        MailAddress sender = envelope.getFrom();
-        assertUserIsSender(session, sender);
-    }
-
-    private void assertUserIsSender(MailboxSession session, MailAddress sender) throws MailboxSendingNotAllowedException {
-        if (!session.getUser().isSameUser(sender.asString())) {
-            String allowedSender = session.getUser().getUserName();
-            throw new MailboxSendingNotAllowedException(allowedSender);
-        }
     }
 }
