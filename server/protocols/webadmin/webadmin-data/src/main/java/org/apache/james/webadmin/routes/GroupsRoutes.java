@@ -83,6 +83,8 @@ public class GroupsRoutes implements Routes {
     private static final String GROUP_ADDRESS_PATH = ROOT_PATH + SEPARATOR + ":" + GROUP_ADDRESS;
     private static final String USER_ADDRESS = "userAddress";
     private static final String USER_IN_GROUP_ADDRESS_PATH = GROUP_ADDRESS_PATH + SEPARATOR + ":" + USER_ADDRESS;
+    private static final String MAILADDRESS_ASCII_DISCLAIMER = "Note that email addresses are restricted to ASCII character set. " +
+        "Mail addresses not matching this criteria will be rejected.";
 
     private final UsersRepository usersRepository;
     private final DomainList domainList;
@@ -130,8 +132,13 @@ public class GroupsRoutes implements Routes {
     @Path(ROOT_PATH + "/{" + GROUP_ADDRESS + "}/{" + USER_ADDRESS + "}")
     @ApiOperation(value = "adding a member into a group")
     @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = GROUP_ADDRESS, paramType = "path"),
-        @ApiImplicitParam(required = true, dataType = "string", name = USER_ADDRESS, paramType = "path")
+        @ApiImplicitParam(required = true, dataType = "string", name = GROUP_ADDRESS, paramType = "path",
+            value = "Mail address of the group. Sending a mail to that address will send it to all group members.\n" +
+            MAILADDRESS_ASCII_DISCLAIMER),
+        @ApiImplicitParam(required = true, dataType = "string", name = USER_ADDRESS, paramType = "path",
+            value = "Mail address of the group. Sending a mail to the group mail address will send an email to " +
+                "that email address (as well as other members).\n" +
+                MAILADDRESS_ASCII_DISCLAIMER)
     })
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = "OK", response = List.class),

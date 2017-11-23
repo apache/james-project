@@ -435,6 +435,8 @@ This feature uses [Recipients rewrite table](/server/config-recipientrewritetabl
 the [RecipientRewriteTable mailet](https://github.com/apache/james-project/blob/master/server/mailet/mailets/src/main/java/org/apache/james/transport/mailets/RecipientRewriteTable.java)
 to be configured.
 
+Note that email addresses are restricted to ASCII character set. Mail addresses not matching this criteria will be rejected.
+
 ### Listing groups
 
 ```
