@@ -23,12 +23,15 @@ import java.util.Date;
 import java.util.Optional;
 
 import javax.inject.Inject;
+import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.jmap.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.model.Attachment;
+import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.Keywords;
 import org.apache.james.jmap.model.MessageFactory;
+import org.apache.james.jmap.model.OldKeyword;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -71,16 +74,13 @@ public class MessageAppender {
         SharedByteArrayInputStream content = new SharedByteArrayInputStream(messageContent);
         Date internalDate = Date.from(createdEntry.getValue().getDate().toInstant());
 
-        Keywords keywords = createdEntry.getValue()
-            .getKeywords()
-            .orElse(Keywords.DEFAULT_VALUE);
         boolean notRecent = false;
 
-        ComposedMessageId message = mailbox.appendMessage(content, internalDate, session, notRecent, keywords.asFlags());
+        ComposedMessageId message = mailbox.appendMessage(content, internalDate, session, notRecent, getFlags(createdEntry.getValue()));
 
         return MessageFactory.MetaDataWithContent.builder()
             .uid(message.getUid())
-            .keywords(keywords)
+            .keywords(keywordsOrDefault(createdEntry.getValue()))
             .internalDate(internalDate.toInstant())
             .sharedContent(content)
             .size(messageContent.length)
@@ -88,6 +88,18 @@ public class MessageAppender {
             .mailboxId(mailbox.getId())
             .messageId(message.getMessageId())
             .build();
+    }
+
+    private Flags getFlags(CreationMessage message) {
+        return message.getOldKeyword()
+                .map(OldKeyword::asFlags)
+                .orElseGet(() -> keywordsOrDefault(message)
+                                    .asFlags());
+    }
+
+    private Keywords keywordsOrDefault(CreationMessage message) {
+        return message.getKeywords()
+                .orElse(Keywords.DEFAULT_VALUE);
     }
 
     public MessageFactory.MetaDataWithContent appendMessageInMailbox(CreationMessageEntry createdEntry,

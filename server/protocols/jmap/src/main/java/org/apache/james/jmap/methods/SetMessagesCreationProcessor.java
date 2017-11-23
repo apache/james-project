@@ -189,32 +189,37 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
     private void sendMailViaOutbox(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session) throws AttachmentsNotFoundException, MailboxException, MessagingException {
         validateArguments(entry, session);
-        assertNoDraftKeywords(entry);
+        assertNoDraftKeywords(entry.getValue());
         MessageWithId created = handleOutboxMessages(entry, session);
         responseBuilder.created(created.getCreationId(), created.getValue());
     }
 
     private void saveDraft(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session) throws AttachmentsNotFoundException, MailboxException, MessagingException {
         attachmentChecker.assertAttachmentsExist(entry, session);
-        assertDraftKeywords(entry);
+        assertDraftKeywords(entry.getValue());
         MessageWithId created = handleDraftMessages(entry, session);
         responseBuilder.created(created.getCreationId(), created.getValue());
     }
 
-    private void assertDraftKeywords(CreationMessageEntry entry) {
-        if (!isDraft(entry)) {
+    private void assertDraftKeywords(CreationMessage creationMessage) {
+        if (!isDraft(creationMessage)) {
             throw new InvalidDraftKeywordsException("A draft message should be flagged as Draft");
         }
     }
 
-    private void assertNoDraftKeywords(CreationMessageEntry entry) {
-        if (isDraft(entry)) {
+    private void assertNoDraftKeywords(CreationMessage creationMessage) {
+        if (isDraft(creationMessage)) {
             throw new InvalidDraftKeywordsException("A draft message can not be created out of draft mailbox");
         }
     }
 
-    private Boolean isDraft(CreationMessageEntry entry) {
-        return entry.getValue()
+    private Boolean isDraft(CreationMessage creationMessage) {
+        if (creationMessage.getOldKeyword().isPresent()) {
+            return creationMessage.getOldKeyword().get()
+                        .isDraft()
+                        .orElse(false);
+        }
+        return creationMessage
             .getKeywords()
             .map(keywords -> keywords.contains(Keyword.DRAFT))
             .orElse(false);

@@ -43,7 +43,7 @@ import com.google.common.collect.ImmutableSet;
 
 public class Keywords {
 
-    public static final Keywords DEFAULT_VALUE = factory().fromSet(ImmutableSet.of());
+    public static final Keywords DEFAULT_VALUE = factory().fromSet(ImmutableSet.of(), Optional.empty());
     private static final Logger LOGGER = LoggerFactory.getLogger(Keywords.class);
 
     public interface KeywordsValidator {
@@ -78,24 +78,27 @@ public class Keywords {
             return this;
         }
 
-        public Keywords fromSet(Set<Keyword> setKeywords) {
+        public Keywords fromSet(Set<Keyword> setKeywords, Optional<OldKeyword> oldKeyword) {
             validator.orElse(keywords -> {})
                 .validate(setKeywords);
 
             return new Keywords(setKeywords.stream()
-                .filter(filter.orElse(keyword -> true))
-                .collect(Guavate.toImmutableSet()));
+                    .filter(filter.orElse(keyword -> true))
+                    .collect(Guavate.toImmutableSet()),
+                oldKeyword);
         }
 
         public Keywords from(Keyword... keywords) {
             return fromSet(Arrays.stream(keywords)
-                .collect(Guavate.toImmutableSet()));
+                    .collect(Guavate.toImmutableSet()),
+                Optional.empty());
         }
 
         public Keywords fromList(List<String> keywords) {
             return fromSet(keywords.stream()
-                .map(Keyword::new)
-                .collect(Guavate.toImmutableSet()));
+                    .map(Keyword::new)
+                    .collect(Guavate.toImmutableSet()),
+                Optional.empty());
         }
 
         @VisibleForTesting
@@ -108,37 +111,17 @@ public class Keywords {
                 .map(Keyword::new)
                 .collect(Guavate.toImmutableSet());
 
-            return fromSet(setKeywords);
-        }
-
-        @VisibleForTesting
-        Keywords fromOldKeyword(OldKeyword oldKeyword) {
-            ImmutableSet.Builder<Keyword> builder = ImmutableSet.builder();
-            if (oldKeyword.isAnswered().orElse(false)) {
-                builder.add(Keyword.ANSWERED);
-            }
-            if (oldKeyword.isDraft().orElse(false)) {
-                builder.add(Keyword.DRAFT);
-            }
-            if (oldKeyword.isFlagged().orElse(false)) {
-                builder.add(Keyword.FLAGGED);
-            }
-            if (oldKeyword.isUnread().isPresent() && oldKeyword.isUnread().get() == false) {
-                builder.add(Keyword.SEEN);
-            }
-            if (oldKeyword.isForwarded().orElse(false)) {
-                builder.add(Keyword.FORWARDED);
-            }
-            return fromSet(builder.build());
+            return fromSet(setKeywords, Optional.empty());
         }
 
         public Keywords fromFlags(Flags flags) {
             return fromSet(Stream.concat(
-                    Stream.of(flags.getUserFlags())
-                        .flatMap(this::asKeyword),
-                    Stream.of(flags.getSystemFlags())
-                        .map(Keyword::fromFlag))
-                .collect(Guavate.toImmutableSet()));
+                        Stream.of(flags.getUserFlags())
+                            .flatMap(this::asKeyword),
+                        Stream.of(flags.getSystemFlags())
+                            .map(Keyword::fromFlag))
+                    .collect(Guavate.toImmutableSet()),
+                Optional.empty());
         }
 
         private Stream<Keyword> asKeyword(String flagName) {
@@ -149,15 +132,6 @@ public class Keywords {
                 return Stream.of();
             }
         }
-
-        public Optional<Keywords> fromMapOrOldKeyword(Optional<Map<String, Boolean>> mapKeyword, Optional<OldKeyword> oldKeyword) {
-            Preconditions.checkArgument(!(mapKeyword.isPresent() && oldKeyword.isPresent()), "Does not support keyword and is* at the same time");
-
-            Keywords keywords = mapKeyword.map(this::fromMap)
-                .orElse(oldKeyword.map(this::fromOldKeyword)
-                    .orElse(null));
-            return Optional.ofNullable(keywords);
-        }
     }
 
     public static KeywordsFactory factory() {
@@ -165,9 +139,11 @@ public class Keywords {
     }
 
     private final ImmutableSet<Keyword> keywords;
+    private final Optional<OldKeyword> oldKeyword;
 
-    private Keywords(ImmutableSet<Keyword> keywords) {
+    private Keywords(ImmutableSet<Keyword> keywords, Optional<OldKeyword> oldKeyword) {
         this.keywords = keywords;
+        this.oldKeyword = oldKeyword;
     }
 
     public Flags asFlags() {
@@ -205,20 +181,22 @@ public class Keywords {
     public final boolean equals(Object other) {
         if (other instanceof Keywords) {
             Keywords otherKeyword = (Keywords) other;
-            return Objects.equal(keywords, otherKeyword.keywords);
+            return Objects.equal(keywords, otherKeyword.keywords)
+                && Objects.equal(oldKeyword, otherKeyword.oldKeyword);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hashCode(keywords);
+        return Objects.hashCode(keywords, oldKeyword);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
             .add("keywords", keywords)
+            .add("oldKeyword", oldKeyword)
             .toString();
     }
 

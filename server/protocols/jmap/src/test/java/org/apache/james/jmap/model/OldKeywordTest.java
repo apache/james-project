@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *   http://www.apache.org/licenses/LICENSE 2.0                 *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -19,8 +19,16 @@
 
 package org.apache.james.jmap.model;
 
-import nl.jqno.equalsverifier.EqualsVerifier;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.Optional;
+
+import javax.mail.Flags;
+import javax.mail.Flags.Flag;
+
 import org.junit.Test;
+
+import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class OldKeywordTest {
     @Test
@@ -28,4 +36,51 @@ public class OldKeywordTest {
         EqualsVerifier.forClass(OldKeyword.class).verify();
     }
 
+    @Test
+    public void applyStateShouldSetFlaggedOnlyWhenIsFlagged() {
+        Optional<Boolean> isUnread = Optional.empty();
+        Optional<Boolean> isFlagged = Optional.of(true);
+        Optional<Boolean> isAnswered = Optional.empty();
+        Optional<Boolean> isDraft = Optional.empty();
+        Optional<Boolean> isForwarded = Optional.empty();
+        OldKeyword testee = new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded);
+        
+        assertThat(testee.applyToState(new Flags())).isEqualTo(new Flags(Flag.FLAGGED));
+    }
+
+    @Test
+    public void applyStateShouldRemoveFlaggedWhenEmptyIsFlaggedOnFlaggedMessage() {
+        Optional<Boolean> isUnread = Optional.empty();
+        Optional<Boolean> isFlagged = Optional.of(false);
+        Optional<Boolean> isAnswered = Optional.empty();
+        Optional<Boolean> isDraft = Optional.empty();
+        Optional<Boolean> isForwarded = Optional.empty();
+        OldKeyword testee = new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded);
+        
+        assertThat(testee.applyToState(new Flags(Flag.FLAGGED))).isEqualTo(new Flags());
+    }
+
+    @Test
+    public void applyStateShouldReturnUnreadFlagWhenUnreadSetOnSeenMessage() {
+        Optional<Boolean> isUnread = Optional.of(true);
+        Optional<Boolean> isFlagged = Optional.empty();
+        Optional<Boolean> isAnswered = Optional.empty();
+        Optional<Boolean> isDraft = Optional.empty();
+        Optional<Boolean> isForwarded = Optional.empty();
+        OldKeyword testee = new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded);
+        
+        assertThat(testee.applyToState(new Flags(Flag.SEEN))).isEqualTo(new Flags());
+    }
+
+    @Test
+    public void applyStateShouldReturnSeenWhenPatchSetsSeenOnSeenMessage() {
+        Optional<Boolean> isUnread = Optional.of(false);
+        Optional<Boolean> isFlagged = Optional.empty();
+        Optional<Boolean> isAnswered = Optional.empty();
+        Optional<Boolean> isDraft = Optional.empty();
+        Optional<Boolean> isForwarded = Optional.empty();
+        OldKeyword testee = new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded);
+        
+        assertThat(testee.applyToState(new Flags(Flag.SEEN))).isEqualTo(new Flags(Flag.SEEN));
+    }
 }

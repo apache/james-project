@@ -21,6 +21,8 @@ package org.apache.james.jmap.model;
 
 import java.util.Optional;
 
+import javax.mail.Flags;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -68,6 +70,50 @@ public class OldKeyword {
 
     public Optional<Boolean> isForwarded() {
         return isForwarded;
+    }
+
+    public Flags applyToState(Flags currentFlags) {
+        Flags newStateFlags = new Flags();
+
+        if (isFlagged().orElse(currentFlags.contains(Flags.Flag.FLAGGED))) {
+            newStateFlags.add(Flags.Flag.FLAGGED);
+        }
+        if (isAnswered().orElse(currentFlags.contains(Flags.Flag.ANSWERED))) {
+            newStateFlags.add(Flags.Flag.ANSWERED);
+        }
+        if (isDraft().orElse(currentFlags.contains(Flags.Flag.DRAFT))) {
+            newStateFlags.add(Flags.Flag.DRAFT);
+        }
+        if (isForwarded().orElse(currentFlags.contains(new Flags("$Forwarded")))) {
+            newStateFlags.add(new Flags("$Forwarded"));
+        }
+        boolean shouldMessageBeMarkSeen = isUnread().map(b -> !b).orElse(currentFlags.contains(Flags.Flag.SEEN));
+        if (shouldMessageBeMarkSeen) {
+            newStateFlags.add(Flags.Flag.SEEN);
+        }
+        return newStateFlags;
+    }
+
+    public Flags asFlags() {
+        Flags newStateFlags = new Flags();
+
+        if (isFlagged().orElse(false)) {
+            newStateFlags.add(Flags.Flag.FLAGGED);
+        }
+        if (isAnswered().orElse(false)) {
+            newStateFlags.add(Flags.Flag.ANSWERED);
+        }
+        if (isDraft().orElse(false)) {
+            newStateFlags.add(Flags.Flag.DRAFT);
+        }
+        if (isForwarded().orElse(false)) {
+            newStateFlags.add(new Flags("$Forwarded"));
+        }
+        boolean shouldMessageBeMarkSeen = isUnread().map(b -> !b).orElse(false);
+        if (shouldMessageBeMarkSeen) {
+            newStateFlags.add(Flags.Flag.SEEN);
+        }
+        return newStateFlags;
     }
 
     @Override

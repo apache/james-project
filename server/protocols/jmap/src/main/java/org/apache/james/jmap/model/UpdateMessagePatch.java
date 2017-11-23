@@ -31,6 +31,7 @@ import org.apache.james.jmap.methods.ValidationResult;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -96,11 +97,17 @@ public class UpdateMessagePatch {
                     .build()));
             }
 
-            Optional<Keywords> updateKeywords = Keywords.factory()
-                .throwOnImapNonExposedKeywords()
-                .fromMapOrOldKeyword(keywords, getOldKeywords());
+            Optional<Keywords> mayBeKeywords = creationKeywords();
+            Optional<OldKeyword> oldKeywords = getOldKeywords();
+            Preconditions.checkArgument(!(mayBeKeywords.isPresent() && oldKeywords.isPresent()), "Does not support keyword and is* at the same time");
 
-            return new UpdateMessagePatch(mailboxIds, updateKeywords, ImmutableList.copyOf(validationResult));
+            return new UpdateMessagePatch(mailboxIds, mayBeKeywords, oldKeywords, ImmutableList.copyOf(validationResult));
+        }
+
+        private Optional<Keywords> creationKeywords() {
+            return keywords.map(map -> Keywords.factory()
+                    .throwOnImapNonExposedKeywords()
+                    .fromMap(map));
         }
 
         private Optional<OldKeyword> getOldKeywords() {
@@ -115,16 +122,18 @@ public class UpdateMessagePatch {
 
     private final Optional<List<String>> mailboxIds;
     private final Optional<Keywords> keywords;
-
+    private final Optional<OldKeyword> oldKeywords;
     private final ImmutableList<ValidationResult> validationErrors;
 
     @VisibleForTesting
     UpdateMessagePatch(Optional<List<String>> mailboxIds,
                        Optional<Keywords> keywords,
+                       Optional<OldKeyword> oldKeywords,
                        ImmutableList<ValidationResult> validationResults) {
 
         this.mailboxIds = mailboxIds;
         this.keywords = keywords;
+        this.oldKeywords = oldKeywords;
         this.validationErrors = validationResults;
     }
 
@@ -136,8 +145,12 @@ public class UpdateMessagePatch {
         return keywords;
     }
 
+    public Optional<OldKeyword> getOldKeyword() {
+        return oldKeywords;
+    }
+
     public boolean isFlagsIdentity() {
-        return !keywords.isPresent();
+        return !oldKeywords.isPresent() && !keywords.isPresent();
     }
 
     public ImmutableList<ValidationResult> getValidationErrors() {
