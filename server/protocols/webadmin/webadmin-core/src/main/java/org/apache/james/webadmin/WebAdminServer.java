@@ -29,6 +29,8 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
+import org.apache.james.webadmin.mdc.LoggingRequestFilter;
+import org.apache.james.webadmin.mdc.LoggingResponseFilter;
 import org.apache.james.webadmin.mdc.MDCCleanupFilter;
 import org.apache.james.webadmin.mdc.MDCFilter;
 import org.apache.james.webadmin.metric.MetricPostFilter;
@@ -80,6 +82,8 @@ public class WebAdminServer implements Configurable {
 
     private void configureMDC() {
         service.before(new MDCFilter());
+        service.before(new LoggingRequestFilter());
+        service.after(new LoggingResponseFilter());
         service.after(new MDCCleanupFilter());
     }
 
