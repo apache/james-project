@@ -155,11 +155,75 @@ public class MailboxTest {
     @Test
     public void unreadMessagesShouldAcceptPositiveValue() {
         Mailbox mailbox = Mailbox.builder()
-                .id(InMemoryId.of(1))
-                .name("name")
-                .unreadMessages(1234)
-                .build();
+            .id(InMemoryId.of(1))
+            .name("name")
+            .unreadMessages(1234)
+            .build();
 
         assertThat(mailbox.getUnreadMessages()).isEqualTo(1234);
+    }
+
+    @Test
+    public void hasRoleShouldReturnFalseWhenMailboxEmptyRole() {
+        Mailbox mailbox = Mailbox.builder()
+            .id(InMemoryId.of(0))
+            .name("name")
+            .build();
+
+        assertThat(mailbox.hasRole(Role.OUTBOX)).isFalse();
+    }
+
+    @Test
+    public void hasRoleShouldReturnFalseWhenMailboxDoesNotHaveSameRole() {
+        Mailbox mailbox = Mailbox.builder()
+            .id(InMemoryId.of(0))
+            .name("name")
+            .role(Optional.of(Role.DRAFTS))
+            .build();
+
+        assertThat(mailbox.hasRole(Role.OUTBOX)).isFalse();
+    }
+
+    @Test
+    public void hasRoleShouldReturnTrueWhenMailboxHasSameRole() {
+        Mailbox mailbox = Mailbox.builder()
+            .id(InMemoryId.of(0))
+            .name("name")
+            .role(Optional.of(Role.DRAFTS))
+            .build();
+
+        assertThat(mailbox.hasRole(Role.DRAFTS)).isTrue();
+    }
+
+    @Test
+    public void hasSystemRoleShouldReturnFalseWhenMailboxHasNotSameRole() throws Exception {
+        Mailbox mailbox = Mailbox.builder()
+            .name("mailbox")
+            .id(InMemoryId.of(0))
+            .build();
+
+        assertThat(mailbox.hasSystemRole()).isFalse();
+    }
+
+    @Test
+    public void hasSystemRoleShouldReturnFalseWhenMailboxHasNotSystemRole() throws Exception {
+        Mailbox mailbox = Mailbox.builder()
+            .name("mailbox")
+            .id(InMemoryId.of(0))
+            .role(Role.from("any"))
+            .build();
+
+        assertThat(mailbox.hasSystemRole()).isFalse();
+    }
+
+    @Test
+    public void hasSystemRoleShouldReturnTrueWhenMailboxHasSystemRole() throws Exception {
+        Mailbox mailbox = Mailbox.builder()
+            .name("mailbox")
+            .id(InMemoryId.of(0))
+            .role(Optional.of(Role.OUTBOX))
+            .build();
+
+        assertThat(mailbox.hasSystemRole()).isTrue();
     }
 }

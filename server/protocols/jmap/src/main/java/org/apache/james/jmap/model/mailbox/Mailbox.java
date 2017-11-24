@@ -26,6 +26,7 @@ import org.apache.james.jmap.methods.JmapResponseWriterImpl;
 import org.apache.james.mailbox.model.MailboxId;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
@@ -290,6 +291,18 @@ public class Mailbox {
 
     public MailboxNamespace getNamespace() {
         return namespace;
+    }
+
+    @JsonIgnore
+    public boolean hasRole(Role role) {
+        return this.role
+            .map(currentRole -> Objects.equals(currentRole, role))
+            .orElse(false);
+    }
+
+    @JsonIgnore
+    public boolean hasSystemRole() {
+        return role.map(Role::isSystemRole).orElse(false);
     }
 
     @Override
