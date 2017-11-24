@@ -45,4 +45,10 @@ public class OptionalUtils {
             .filter(Optional::isPresent)
             .orElse(optional2);
     }
+
+    public static <T> boolean containsDifferent(Optional<T> requestValue, T storeValue) {
+        return requestValue
+            .filter(value -> !value.equals(storeValue))
+            .isPresent();
+    }
 }
