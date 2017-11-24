@@ -2530,8 +2530,8 @@
                     <configuration>
                         <argLine>-Xms256m -Xmx512m</argLine>
                         <reuseForks>false</reuseForks>
-                        <!-- Fail tests longer than 1 hour, prevent form random locking tests -->
-                        <forkedProcessTimeoutInSeconds>3600</forkedProcessTimeoutInSeconds>
+                        <!-- Fail tests longer than 2 hours, prevent form random locking tests -->
+                        <forkedProcessTimeoutInSeconds>7200</forkedProcessTimeoutInSeconds>
                     </configuration>
                 </plugin>
                 <plugin>
