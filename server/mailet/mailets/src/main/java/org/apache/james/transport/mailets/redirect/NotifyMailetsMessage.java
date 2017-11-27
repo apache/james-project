@@ -24,6 +24,7 @@ import java.util.List;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.transport.util.SizeUtils;
 import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.RFC2822Headers;
@@ -78,7 +79,7 @@ public class NotifyMailetsMessage {
         appendAddresses(builder, "To", message.getHeader(RFC2822Headers.TO));
         appendAddresses(builder, "CC", message.getHeader(RFC2822Headers.CC));
 
-        builder.append("  Size (in bytes): " + message.getSize())
+        builder.append("  Size: " + SizeUtils.humanReadableSize(message.getSize()))
             .append(LINE_BREAK);
         if (message.getLineCount() >= 0) {
             builder.append("  Number of lines: " + message.getLineCount())
