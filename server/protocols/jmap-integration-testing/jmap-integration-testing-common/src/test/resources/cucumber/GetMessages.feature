@@ -428,3 +428,9 @@ Feature: GetMessages method
     And the list should contain 1 message
     And the hasAttachment of the message is "true"
     And the list of attachments of the message contains 1 attachments
+    And the first attachment is:
+      |key      | value                        |
+      |type     |"application/octet-stream"    |
+      |cid      |null                          |
+      |name     |"encrypted.asc"               |
+      |isInline |true                          |
