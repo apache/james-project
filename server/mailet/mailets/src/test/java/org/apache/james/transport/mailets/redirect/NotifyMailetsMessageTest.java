@@ -100,11 +100,7 @@ public class NotifyMailetsMessageTest {
 
         String generateMessage = new NotifyMailetsMessage().generateMessage("my message", mail);
 
-        assertThat(generateMessage).isEqualTo("my message\n" +
-                "\n" +
-                "Message details:\n" +
-                "  Subject: my subject\n" +
-                "  MAIL FROM: null\n");
+        assertThat(generateMessage).contains("Subject: my subject");
     }
 
     @Test
@@ -115,11 +111,7 @@ public class NotifyMailetsMessageTest {
 
         String generateMessage = new NotifyMailetsMessage().generateMessage("my message", mail);
 
-        assertThat(generateMessage).isEqualTo("my message\n" +
-                "\n" +
-                "Message details:\n" +
-                "  Sent date: Thu Sep 08 14:25:52 UTC 2016\n" +
-                "  MAIL FROM: null\n");
+        assertThat(generateMessage).contains("Sent date: Thu Sep 08 14:25:52 UTC 2016");
     }
 
     @Test
@@ -130,12 +122,8 @@ public class NotifyMailetsMessageTest {
 
         String generateMessage = new NotifyMailetsMessage().generateMessage("my message", mail);
 
-        assertThat(generateMessage).isEqualTo("my message\n" +
-                "\n" +
-                "Message details:\n" +
-                "  MAIL FROM: null\n" +
-                "  RCPT TO: user@james.org\n" +
-                "           user2@james.org\n");
+        assertThat(generateMessage).contains("RCPT TO: user@james.org\n" +
+            "           user2@james.org");
     }
 
     @Test
@@ -146,13 +134,8 @@ public class NotifyMailetsMessageTest {
 
         String generateMessage = new NotifyMailetsMessage().generateMessage("my message", mail);
 
-        assertThat(generateMessage).isEqualTo("my message\n" +
-                "\n" +
-                "Message details:\n" +
-                "  MAIL FROM: null\n" +
-                "  From: \n" +
-                "user@james.org \n" +
-                "\n");
+        assertThat(generateMessage).contains("From: \n" +
+            "user@james.org");
     }
 
     @Test
@@ -163,14 +146,9 @@ public class NotifyMailetsMessageTest {
 
         String generateMessage = new NotifyMailetsMessage().generateMessage("my message", mail);
 
-        assertThat(generateMessage).isEqualTo("my message\n" +
-                "\n" +
-                "Message details:\n" +
-                "  MAIL FROM: null\n" +
-                "  To: \n" +
-                "user@james.org \n" +
-                "user2@james.org \n" +
-                "\n");
+        assertThat(generateMessage).contains("To: \n" +
+            "user@james.org \n" +
+            "user2@james.org");
     }
 
     @Test
@@ -181,14 +159,9 @@ public class NotifyMailetsMessageTest {
 
         String generateMessage = new NotifyMailetsMessage().generateMessage("my message", mail);
 
-        assertThat(generateMessage).isEqualTo("my message\n" +
-                "\n" +
-                "Message details:\n" +
-                "  MAIL FROM: null\n" +
-                "  CC: \n" +
-                "user@james.org \n" +
-                "user2@james.org \n" +
-                "\n");
+        assertThat(generateMessage).contains("CC: \n" +
+            "user@james.org \n" +
+            "user2@james.org");
     }
 
     @Test
@@ -203,11 +176,7 @@ public class NotifyMailetsMessageTest {
 
         String generateMessage = new NotifyMailetsMessage().generateMessage("my message", mail);
 
-        assertThat(generateMessage).isEqualTo("my message\n" +
-                "\n" +
-                "Message details:\n" +
-                "  MAIL FROM: null\n" +
-                "  Size: 6 B\n");
+        assertThat(generateMessage).contains("Size: 6 B");
     }
 
     @Test
@@ -223,11 +192,7 @@ public class NotifyMailetsMessageTest {
 
         String generateMessage = new NotifyMailetsMessage().generateMessage("my message", mail);
 
-        assertThat(generateMessage).isEqualTo("my message\n" +
-            "\n" +
-            "Message details:\n" +
-            "  MAIL FROM: null\n" +
-            "  Size: 5.9 KiB\n");
+        assertThat(generateMessage).contains("Size: 5.9 KiB");
     }
 
     @Test
@@ -249,7 +214,7 @@ public class NotifyMailetsMessageTest {
     }
 
     @Test
-    public void getMessageInternalSizeShouldTransformNegatifIntoEmpty() throws MessagingException {
+    public void getMessageInternalSizeShouldTransformNegativeIntoEmpty() throws MessagingException {
         Mail mail = mock(Mail.class);
         when(mail.getMessageSize()).thenReturn(-1L);
 
