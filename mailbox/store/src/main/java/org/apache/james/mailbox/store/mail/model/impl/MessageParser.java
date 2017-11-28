@@ -35,7 +35,6 @@ import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.Body;
 import org.apache.james.mime4j.dom.Entity;
 import org.apache.james.mime4j.dom.Message;
-import org.apache.james.mime4j.dom.MessageWriter;
 import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.dom.field.ContentDispositionField;
 import org.apache.james.mime4j.dom.field.ContentIdField;
@@ -88,7 +87,7 @@ public class MessageParser {
             Optional<ContentDispositionField> contentDisposition = readHeader(message, CONTENT_DISPOSITION, ContentDispositionField.class);
 
             if (isMessageWithOnlyOneAttachment(contentDisposition)) {
-                return ImmutableList.of(retrieveAttachment(new DefaultMessageWriter(), message));
+                return ImmutableList.of(retrieveAttachment(message));
             }
 
             if (body instanceof Multipart) {
@@ -108,14 +107,14 @@ public class MessageParser {
 
     private List<MessageAttachment> listAttachments(Multipart multipart, Context context) throws IOException {
         ImmutableList.Builder<MessageAttachment> attachments = ImmutableList.builder();
-        MessageWriter messageWriter = new DefaultMessageWriter();
+
         for (Entity entity : multipart.getBodyParts()) {
             if (isMultipart(entity)) {
                 attachments.addAll(listAttachments((Multipart) entity.getBody(), Context.fromEntity(entity)));
             } else {
                 if (isAttachment(entity, context)) {
                     try {
-                        attachments.add(retrieveAttachment(messageWriter, entity));
+                        attachments.add(retrieveAttachment(entity));
                     } catch (IllegalStateException e) {
                         LOGGER.error("The attachment is not well-formed: " + e.getCause());
                     } catch (IOException e) {
@@ -127,7 +126,7 @@ public class MessageParser {
         return attachments.build();
     }
 
-    private MessageAttachment retrieveAttachment(MessageWriter messageWriter, Entity entity) throws IOException {
+    private MessageAttachment retrieveAttachment(Entity entity) throws IOException {
         Optional<ContentTypeField> contentTypeField = getContentTypeField(entity);
         Optional<ContentDispositionField> contentDispositionField = getContentDispositionField(entity);
         Optional<String> contentType = contentType(contentTypeField);
@@ -137,7 +136,7 @@ public class MessageParser {
 
         return MessageAttachment.builder()
                 .attachment(Attachment.builder()
-                    .bytes(getBytes(messageWriter, entity.getBody()))
+                    .bytes(getBytes(entity.getBody()))
                     .type(contentType.orElse(DEFAULT_CONTENT_TYPE))
                     .build())
                 .name(name.orElse(null))
@@ -220,7 +219,8 @@ public class MessageParser {
         return false;
     }
 
-    private byte[] getBytes(MessageWriter messageWriter, Body body) throws IOException {
+    private byte[] getBytes(Body body) throws IOException {
+        DefaultMessageWriter messageWriter = new DefaultMessageWriter();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         messageWriter.writeBody(body, out);
         return out.toByteArray();
