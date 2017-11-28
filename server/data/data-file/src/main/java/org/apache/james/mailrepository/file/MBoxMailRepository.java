@@ -51,8 +51,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -72,12 +70,14 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.io.FileUtils;
-import org.apache.james.server.core.MailImpl;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.hash.Hashing;
 
 /**
  * Implementation of a MailRepository using UNIX mbox files.
@@ -136,8 +136,8 @@ public class MBoxMailRepository implements MailRepository, Configurable {
     private static boolean BUFFERING = true;
 
     /**
-     * The internal list of the emails The key is an adapted MD5 checksum of the
-     * mail
+     * The internal list of emails.
+     * The key is an adapted SHA-256 fingerprint of the email body.
      */
     private Hashtable<String, Long> mList = null;
     /**
@@ -250,20 +250,10 @@ public class MBoxMailRepository implements MailRepository, Configurable {
     }
 
     /**
-     * Generate a hex representation of an MD5 checksum on the emailbody
-     * 
-     * @param emailBody
-     * @return A hex representation of the text
-     * @throws NoSuchAlgorithmException
+     * Generate a hex representation of a SHA-256 checksum on the email body
      */
-    private String generateKeyValue(String emailBody) throws NoSuchAlgorithmException {
-        // MD5 the email body for a reilable (ha ha) key
-        byte[] digArray = MessageDigest.getInstance("MD5").digest(emailBody.getBytes());
-        StringBuilder digest = new StringBuilder();
-        for (byte aDigArray : digArray) {
-            digest.append(Integer.toString(aDigArray, Character.MAX_RADIX).toUpperCase(Locale.US));
-        }
-        return digest.toString();
+    private String generateKeyValue(String emailBody) {
+        return Hashing.sha256().hashUnencodedChars(emailBody).toString();
     }
 
     /**
@@ -440,13 +430,9 @@ public class MBoxMailRepository implements MailRepository, Configurable {
                 }
 
                 public MimeMessage messageAction(String messageSeparator, String bodyText, long messageStart) {
-                    try {
-                        if (key.equals(generateKeyValue(bodyText))) {
-                            LOGGER.debug(this.getClass().getName() + " Located message. Returning MIME message");
-                            return convertTextToMimeMessage(bodyText);
-                        }
-                    } catch (NoSuchAlgorithmException e) {
-                        LOGGER.error("MD5 not supported! ", e);
+                    if (key.equals(generateKeyValue(bodyText))) {
+                        LOGGER.debug(this.getClass().getName() + " Located message. Returning MIME message");
+                        return convertTextToMimeMessage(bodyText);
                     }
                     return null;
                 }
@@ -498,16 +484,12 @@ public class MBoxMailRepository implements MailRepository, Configurable {
                 }
 
                 public MimeMessage messageAction(String messageSeparator, String bodyText, long messageStart) {
-                    try {
-                        String key = generateKeyValue(bodyText);
-                        mList.put(key, messageStart);
-                        if ((LOGGER.isDebugEnabled())) {
-                            LOGGER.debug(this.getClass().getName() + " Key " + key + " at " + messageStart);
-                        }
-
-                    } catch (NoSuchAlgorithmException e) {
-                        LOGGER.error("MD5 not supported! ", e);
+                    String key = generateKeyValue(bodyText);
+                    mList.put(key, messageStart);
+                    if ((LOGGER.isDebugEnabled())) {
+                        LOGGER.debug(this.getClass().getName() + " Key " + key + " at " + messageStart);
                     }
+
                     return null;
                 }
             });
@@ -722,8 +704,6 @@ public class MBoxMailRepository implements MailRepository, Configurable {
                             outputFile.writeBytes(bodyText);
 
                         }
-                    } catch (NoSuchAlgorithmException e) {
-                        LOGGER.error("MD5 not supported! ", e);
                     } catch (IOException e) {
                         LOGGER.error("Unable to write file (General I/O problem) " + mboxFile, e);
                     }
