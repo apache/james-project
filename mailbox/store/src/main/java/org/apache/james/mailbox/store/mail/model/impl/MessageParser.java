@@ -122,9 +122,9 @@ public class MessageParser {
             try {
                 return Stream.of(retrieveAttachment(entity));
             } catch (IllegalStateException e) {
-                LOGGER.error("The attachment is not well-formed: " + e.getCause());
+                LOGGER.error("The attachment is not well-formed", e);
             } catch (IOException e) {
-                LOGGER.error("There is error on retrieve attachment: " + e.getCause());
+                LOGGER.error("There is an error when retrieving attachment", e);
             }
         }
         return Stream.empty();
