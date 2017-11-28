@@ -23,12 +23,16 @@ import com.jakewharton.byteunits.BinaryByteUnit;
 
 public class SizeUtils {
 
-    public static String humanReadableSize(long size) {
+
+    public static String humanReadableSize(Number size) {
+        return humanReadableSize(size.longValue());
+    }
+
+    private static String humanReadableSize(long size) {
         if (size < 0) {
             return "-" + humanReadableSize(-size);
         } else {
             return BinaryByteUnit.format(size, "#.#");
         }
     }
-
 }

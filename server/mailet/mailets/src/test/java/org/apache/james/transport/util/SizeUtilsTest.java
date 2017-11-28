@@ -63,11 +63,11 @@ public class SizeUtilsTest {
 
     @Test
     public void humanSizeShouldNotUseMoreThanOneDigitAfterComma() {
-        assertThat(humanReadableSize((long)(1.42*1024))).isEqualTo("1.4 KiB");
+        assertThat(humanReadableSize(1.42*1024)).isEqualTo("1.4 KiB");
     }
 
     @Test
     public void humanSizeShouldNotUseMoreThanOneDigitAfterCommaAndRoundUpCorrectly() {
-        assertThat(humanReadableSize((long)(1.48*1024))).isEqualTo("1.5 KiB");
+        assertThat(humanReadableSize(1.48*1024)).isEqualTo("1.5 KiB");
     }
 }
