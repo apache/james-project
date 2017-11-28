@@ -205,14 +205,10 @@ public class MessageParser {
     }
 
     private boolean isTextPart(Entity part) {
-        Optional<ContentTypeField> contentTypeField = getContentTypeField(part);
-        if (contentTypeField.isPresent()) {
-            String mediaType = contentTypeField.get().getMediaType();
-            if (mediaType != null && mediaType.equals(TEXT_MEDIA_TYPE)) {
-                return true;
-            }
-        }
-        return false;
+        return getContentTypeField(part)
+            .map(ContentTypeField::getMediaType)
+            .map(TEXT_MEDIA_TYPE::equals)
+            .orElse(false);
     }
 
     private byte[] getBytes(Body body) throws IOException {
