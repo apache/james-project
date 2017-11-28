@@ -218,17 +218,22 @@ public class CreationMessage {
             ImmutableMap<BlobId, SubMessage> attachedMessages = this.attachedMessages.build();
             Preconditions.checkState(areAttachedMessagesKeysInAttachments(attachments, attachedMessages), "'attachedMessages' keys must be in 'attachments'");
 
-            Optional<Keywords> creationKeywords = Keywords.factory()
-                .throwOnImapNonExposedKeywords()
-                .fromMapOrOldKeyword(keywords, getOldKeywords());
-
             if (date == null) {
                 date = ZonedDateTime.now();
             }
 
+            Optional<Keywords> maybeKeywords = creationKeywords();
+            Optional<OldKeyword> oldKeywords = getOldKeywords();
+            Preconditions.checkArgument(!(maybeKeywords.isPresent() && oldKeywords.isPresent()), "Does not support keyword and is* at the same time");
             return new CreationMessage(mailboxIds, Optional.ofNullable(inReplyToMessageId), headers.build(), from,
                     to.build(), cc.build(), bcc.build(), replyTo.build(), subject, date, Optional.ofNullable(textBody), Optional.ofNullable(htmlBody),
-                    attachments, attachedMessages, creationKeywords);
+                    attachments, attachedMessages, maybeKeywords, oldKeywords);
+        }
+
+        private Optional<Keywords> creationKeywords() {
+            return keywords.map(map -> Keywords.factory()
+                    .throwOnImapNonExposedKeywords()
+                    .fromMap(map));
         }
 
         private Optional<OldKeyword> getOldKeywords() {
@@ -254,11 +259,12 @@ public class CreationMessage {
     private final ImmutableList<Attachment> attachments;
     private final ImmutableMap<BlobId, SubMessage> attachedMessages;
     private final Optional<Keywords> keywords;
+    private final Optional<OldKeyword> oldKeyword;
 
     @VisibleForTesting
     CreationMessage(ImmutableList<String> mailboxIds, Optional<String> inReplyToMessageId, ImmutableMap<String, String> headers, Optional<DraftEmailer> from,
                     ImmutableList<DraftEmailer> to, ImmutableList<DraftEmailer> cc, ImmutableList<DraftEmailer> bcc, ImmutableList<DraftEmailer> replyTo, String subject, ZonedDateTime date, Optional<String> textBody, Optional<String> htmlBody, ImmutableList<Attachment> attachments,
-                    ImmutableMap<BlobId, SubMessage> attachedMessages, Optional<Keywords> keywords) {
+                    ImmutableMap<BlobId, SubMessage> attachedMessages, Optional<Keywords> keywords, Optional<OldKeyword> oldKeyword) {
         this.mailboxIds = mailboxIds;
         this.inReplyToMessageId = inReplyToMessageId;
         this.headers = headers;
@@ -274,6 +280,7 @@ public class CreationMessage {
         this.attachments = attachments;
         this.attachedMessages = attachedMessages;
         this.keywords = keywords;
+        this.oldKeyword = oldKeyword;
     }
 
     public ImmutableList<String> getMailboxIds() {
@@ -338,6 +345,10 @@ public class CreationMessage {
 
     public Optional<Keywords> getKeywords() {
         return keywords;
+    }
+
+    public Optional<OldKeyword> getOldKeyword() {
+        return oldKeyword;
     }
 
     public List<ValidationResult> validate() {

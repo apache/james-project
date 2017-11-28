@@ -80,6 +80,11 @@ Feature: SetMessages method on shared folders
 
 # Flags update
 
+  Scenario: A user can update the flags on a message
+    Given "alice@domain.tld" sets flags "$Flagged,$Seen" on message "mAlice"
+    When "alice@domain.tld" sets flags "$Flagged,$Forwarded" on message "mAlice"
+    Then "alice@domain.tld" should see message "mAlice" with keywords $Flagged,$Forwarded
+
   Scenario: A delegated user add keywords on a delegated message when having "write" right
     Given "bob@domain.tld" shares his mailbox "shared" with "alice@domain.tld" with "lrw" rights
     When "alice@domain.tld" sets flags "$Flagged" on message "mBob"
@@ -116,6 +121,12 @@ Feature: SetMessages method on shared folders
     When "bob@domain.tld" sets flags "$Seen" on message "mDraft"
     Then message "mDraft" is not updated
     And "bob@domain.tld" should see message "mDraft" with keywords $Draft
+
+  Scenario: A user can add a flag on a draft
+    Given "bob@domain.tld" has a mailbox "Drafts"
+    And "bob@domain.tld" tries to create a draft message "mDraft" in mailbox "Drafts"
+    When "bob@domain.tld" marks the message "mDraft" as flagged
+    Then "bob@domain.tld" should see message "mDraft" with keywords $Draft,$Flagged
 
   Scenario: A user can destroy a draft
     Given "bob@domain.tld" has a mailbox "Drafts"

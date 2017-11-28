@@ -20,6 +20,7 @@
 package org.apache.james.jmap.utils;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BinaryOperator;
 
@@ -45,8 +46,9 @@ public class KeywordsCombiner implements BinaryOperator<Keywords> {
     public Keywords apply(Keywords keywords, Keywords keywords2) {
         return keywordsFactory
             .fromSet(Sets.union(
-                union(keywords.getKeywords(), keywords2.getKeywords(), KEYWORD_NOT_TO_UNION),
-                intersect(keywords.getKeywords(), keywords2.getKeywords(), KEYWORD_TO_INTERSECT)));
+                        union(keywords.getKeywords(), keywords2.getKeywords(), KEYWORD_NOT_TO_UNION),
+                        intersect(keywords.getKeywords(), keywords2.getKeywords(), KEYWORD_TO_INTERSECT)),
+                    Optional.empty());
     }
 
     public Set<Keyword> union(Set<Keyword> set1, Set<Keyword> set2, List<Keyword> exceptKeywords) {

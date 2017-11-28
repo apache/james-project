@@ -21,9 +21,6 @@ package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Arrays;
-import java.util.List;
-
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.FlagsBuilder;
@@ -47,38 +44,6 @@ public class UpdateMessagePatchTest {
     @Test
     public void builderShouldSetUnreadFalseWhenBuiltWithIsUnreadFalse() {
         UpdateMessagePatch.builder().isUnread(false).build();
-    }
-
-    @Test
-    public void applyStateShouldSetFlaggedOnlyWhenIsFlagged() {
-        UpdateMessagePatch testee = UpdateMessagePatch.builder().isFlagged(true).build();
-        List<Flags.Flag> updatedFlags = Arrays.asList(testee.applyToState(new Flags()).getSystemFlags());
-        assertThat(updatedFlags).containsExactly(Flags.Flag.FLAGGED);
-    }
-
-
-    @Test
-    public void applyStateShouldRemoveFlaggedWhenEmptyIsFlaggedOnFlaggedMessage() {
-        UpdateMessagePatch testee = UpdateMessagePatch.builder().isAnswered(true).build();
-        Flags isFlagged = new Flags(Flags.Flag.FLAGGED);
-        List<Flags.Flag> updatedFlags = Arrays.asList(testee.applyToState(isFlagged).getSystemFlags());
-        assertThat(updatedFlags).doesNotContain(Flags.Flag.FLAGGED);
-    }
-
-    @Test
-    public void applyStateShouldReturnUnreadFlagWhenUnreadSetOnSeenMessage() {
-        UpdateMessagePatch testee = UpdateMessagePatch.builder().isUnread(true).build();
-        Flags isSeen = new Flags(Flags.Flag.SEEN);
-        List<Flags.Flag> updatedFlags = Arrays.asList(testee.applyToState(isSeen).getSystemFlags());
-        assertThat(updatedFlags).doesNotContain(Flags.Flag.SEEN);
-    }
-
-    @Test
-    public void applyStateShouldReturnSeenWhenPatchSetsSeenOnSeenMessage() {
-        UpdateMessagePatch testee = UpdateMessagePatch.builder().isUnread(false).build();
-        Flags isSeen = new Flags(Flags.Flag.SEEN);
-        List<Flags.Flag> updatedFlags = Arrays.asList(testee.applyToState(isSeen).getSystemFlags());
-        assertThat(updatedFlags).containsExactly(Flags.Flag.SEEN);
     }
 
     @Test

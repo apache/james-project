@@ -20,6 +20,9 @@
 package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.util.Optional;
 
 import org.apache.james.jmap.methods.ValidationResult;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
@@ -39,6 +42,18 @@ public class CreationMessageTest {
         testedBuilder = CreationMessage.builder()
                 .mailboxIds(ImmutableList.of("ba9-0f-dead-beef"))
                 .headers(ImmutableMap.of());
+    }
+
+    @Test
+    public void buildShouldThrowWhenBothMapAndOldKeyword() {
+        assertThatThrownBy(() -> CreationMessage.builder()
+                .mailboxIds(ImmutableList.of("ba9-0f-dead-beef"))
+                .headers(ImmutableMap.of())
+                .keywords(ImmutableMap.of("$Draft", true))
+                .isAnswered(Optional.of(true))
+                .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Does not support keyword and is* at the same time");
     }
 
     @Test

@@ -1429,6 +1429,47 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
+    public void setMessagesShouldMarkAsDraftWhenIsDraftPassed() {
+        String messageCreationId = "creationId1337";
+        String fromAddress = USERNAME;
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"subject\"," +
+            "        \"isDraft\": true," +
+            "        \"mailboxIds\": [\"" + getDraftId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        String messageId = given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .extract()
+            .body()
+            .<String>path(ARGUMENTS + ".created." + messageCreationId + ".id");
+
+        with()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(ARGUMENTS + ".list[0].isDraft", equalTo(true));
+    }
+
+    @Test
     public void setMessagesShouldRejectCreateInDraftAndOutboxForASingleMessage() {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
@@ -4851,5 +4892,321 @@ public abstract class SetMessagesMethodTest {
             .body(SECOND_NAME, equalTo("messages"))
             .body(SECOND_ARGUMENTS + ".list", hasSize(1))
             .body(SECOND_ARGUMENTS + ".list[0].keywords.$Seen", equalTo(true));
+    }
+
+    @Test
+    public void setMessagesShouldCreateMessageWithFlagsWhenFlagsAttributesAreGiven() {
+        String messageCreationId = "creationId1337";
+        String fromAddress = USERNAME;
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"subject\"," +
+            "        \"isUnread\": true," +
+            "        \"isFlagged\": true," +
+            "        \"isAnswered\": true," +
+            "        \"isDraft\": true," +
+            "        \"isForwarded\": true," +
+            "        \"mailboxIds\": [\"" + getDraftId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        String messageId = given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .extract()
+            .body()
+            .<String>path(ARGUMENTS + ".created."+ messageCreationId +".id");
+
+        with()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(ARGUMENTS + ".list[0].isUnread", equalTo(true))
+            .body(ARGUMENTS + ".list[0].isFlagged", equalTo(true))
+            .body(ARGUMENTS + ".list[0].isAnswered", equalTo(true))
+            .body(ARGUMENTS + ".list[0].isDraft", equalTo(true))
+            .body(ARGUMENTS + ".list[0].isForwarded", equalTo(true));
+    }
+
+    @Test
+    public void setMessagesShouldUpdateFlagsWhenSomeAreAlreadySet() {
+        String messageCreationId = "creationId1337";
+        String fromAddress = USERNAME;
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"subject\"," +
+            "        \"isDraft\": true," +
+            "        \"isForwarded\": true," +
+            "        \"mailboxIds\": [\"" + getDraftId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        String messageId = given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .extract()
+            .body()
+            .<String>path(ARGUMENTS + ".created."+ messageCreationId +".id");
+
+        String updateRequestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"update\": { \"" + messageId  + "\" : {" +
+                "        \"isUnread\": true," +
+                "        \"isFlagged\": true," +
+                "        \"isAnswered\": true," +
+                "        \"mailboxIds\": [\"" + getDraftId(accessToken) + "\"]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(updateRequestBody)
+        .when()
+            .post("/jmap");
+
+        with()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(ARGUMENTS + ".list[0].isUnread", equalTo(true))
+            .body(ARGUMENTS + ".list[0].isFlagged", equalTo(true))
+            .body(ARGUMENTS + ".list[0].isAnswered", equalTo(true))
+            .body(ARGUMENTS + ".list[0].isDraft", equalTo(true))
+            .body(ARGUMENTS + ".list[0].isForwarded", equalTo(true));
+    }
+
+    @Test
+    public void setMessagesShouldRemoveFlagsWhenAskedFor() {
+        String messageCreationId = "creationId1337";
+        String fromAddress = USERNAME;
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"subject\"," +
+            "        \"isUnread\": true," +
+            "        \"isFlagged\": true," +
+            "        \"isAnswered\": true," +
+            "        \"isDraft\": true," +
+            "        \"isForwarded\": true," +
+            "        \"mailboxIds\": [\"" + getDraftId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        String messageId = given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .extract()
+            .body()
+            .<String>path(ARGUMENTS + ".created." + messageCreationId + ".id");
+
+        String updateRequestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"update\": { \"" + messageId  + "\" : {" +
+                "        \"isUnread\": false," +
+                "        \"isFlagged\": false," +
+                "        \"isAnswered\": false," +
+                "        \"mailboxIds\": [\"" + getDraftId(accessToken) + "\"]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(updateRequestBody)
+        .when()
+            .post("/jmap");
+
+        with()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(ARGUMENTS + ".list[0].isUnread", equalTo(false))
+            .body(ARGUMENTS + ".list[0].isFlagged", equalTo(false))
+            .body(ARGUMENTS + ".list[0].isAnswered", equalTo(false))
+            .body(ARGUMENTS + ".list[0].isDraft", equalTo(true))
+            .body(ARGUMENTS + ".list[0].isForwarded", equalTo(true));
+    }
+
+    @Test
+    public void setMessagesShouldReturnErrorWhenTryingToChangeDraftFlagAmongOthers() {
+        String messageCreationId = "creationId1337";
+        String fromAddress = USERNAME;
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"subject\"," +
+            "        \"isUnread\": true," +
+            "        \"isFlagged\": true," +
+            "        \"isAnswered\": true," +
+            "        \"isDraft\": true," +
+            "        \"isForwarded\": true," +
+            "        \"mailboxIds\": [\"" + getDraftId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        String messageId = given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .extract()
+            .body()
+            .<String>path(ARGUMENTS + ".created." + messageCreationId + ".id");
+
+        String updateRequestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"update\": { \"" + messageId  + "\" : {" +
+                "        \"isUnread\": false," +
+                "        \"isFlagged\": false," +
+                "        \"isAnswered\": false," +
+                "        \"isDraft\": false," +
+                "        \"mailboxIds\": [\"" + getDraftId(accessToken) + "\"]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(updateRequestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(400);
+    }
+
+    @Test
+    public void setMessagesShouldNotModifyTheMessageWhenTryingToChangeDraftFlagAmongOthers() {
+        String messageCreationId = "creationId1337";
+        String fromAddress = USERNAME;
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"subject\"," +
+            "        \"isUnread\": true," +
+            "        \"isFlagged\": true," +
+            "        \"isAnswered\": true," +
+            "        \"isDraft\": true," +
+            "        \"isForwarded\": true," +
+            "        \"mailboxIds\": [\"" + getDraftId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        String messageId = given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .extract()
+            .body()
+            .<String>path(ARGUMENTS + ".created." + messageCreationId + ".id");
+
+        String updateRequestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"update\": { \"" + messageId  + "\" : {" +
+                "        \"isUnread\": false," +
+                "        \"isFlagged\": false," +
+                "        \"isAnswered\": false," +
+                "        \"isDraft\": false," +
+                "        \"mailboxIds\": [\"" + getDraftId(accessToken) + "\"]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(updateRequestBody)
+        .when()
+            .post("/jmap");
+
+        with()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(ARGUMENTS + ".list[0].isUnread", equalTo(true))
+            .body(ARGUMENTS + ".list[0].isFlagged", equalTo(true))
+            .body(ARGUMENTS + ".list[0].isAnswered", equalTo(true))
+            .body(ARGUMENTS + ".list[0].isDraft", equalTo(true))
+            .body(ARGUMENTS + ".list[0].isForwarded", equalTo(true));
     }
 }
