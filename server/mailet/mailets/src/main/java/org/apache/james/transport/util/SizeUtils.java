@@ -23,13 +23,12 @@ import com.jakewharton.byteunits.BinaryByteUnit;
 
 public class SizeUtils {
 
-    /**
-     * Return a human-readable version of the file size, where the input represents a specific number of bytes.
-     *
-     * @param size >= 0
-     */
     public static String humanReadableSize(long size) {
-        return BinaryByteUnit.format(size, "#.#");
+        if (size < 0) {
+            return "-" + humanReadableSize(-size);
+        } else {
+            return BinaryByteUnit.format(size, "#.#");
+        }
     }
 
 }

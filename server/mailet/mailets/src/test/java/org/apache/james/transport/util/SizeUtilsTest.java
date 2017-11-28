@@ -19,17 +19,12 @@
 
 package org.apache.james.transport.util;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import static org.apache.james.transport.util.SizeUtils.humanReadableSize;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class SizeUtilsTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     @Test
     public void humanSizeShouldAddByteUnitForSmallSize() {
@@ -47,9 +42,8 @@ public class SizeUtilsTest {
     }
 
     @Test
-    public void humanSizeShouldThrowAnErrorWithNegativeValue() {
-        expectedException.expect(IllegalArgumentException.class);
-        humanReadableSize(-1);
+    public void humanSizeShouldWorkWithNegative() {
+        assertThat(humanReadableSize(-1)).isEqualTo("-1 B");
     }
 
     @Test
