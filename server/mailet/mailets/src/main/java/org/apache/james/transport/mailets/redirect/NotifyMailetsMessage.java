@@ -20,19 +20,25 @@
 package org.apache.james.transport.mailets.redirect;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.transport.util.SizeUtils;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.RFC2822Headers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
 public class NotifyMailetsMessage {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(NotifyMailetsMessage.class);
 
     private static final char LINE_BREAK = '\n';
 
@@ -79,14 +85,29 @@ public class NotifyMailetsMessage {
         appendAddresses(builder, "To", message.getHeader(RFC2822Headers.TO));
         appendAddresses(builder, "CC", message.getHeader(RFC2822Headers.CC));
 
-        builder.append("  Size: " + SizeUtils.humanReadableSize(message.getSize()))
-            .append(LINE_BREAK);
+        getMessageSizeEstimation(originalMail).ifPresent(size ->
+            builder
+                .append("  Size: ")
+                .append(SizeUtils.humanReadableSize(size))
+                .append(LINE_BREAK));
+
         if (message.getLineCount() >= 0) {
             builder.append("  Number of lines: " + message.getLineCount())
                 .append(LINE_BREAK);
         }
 
         return builder.toString();
+    }
+
+    @VisibleForTesting static Optional<Long> getMessageSizeEstimation(Mail mail) {
+        try  {
+            return Optional.of(mail.getMessageSize())
+                .filter(size -> size > 0);
+        } catch (MessagingException e) {
+            LOGGER.debug("Could not estimate mail size", e);
+
+            return Optional.empty();
+        }
     }
 
     private void appendAddresses(StringBuilder builder, String title, String[] addresses) {
