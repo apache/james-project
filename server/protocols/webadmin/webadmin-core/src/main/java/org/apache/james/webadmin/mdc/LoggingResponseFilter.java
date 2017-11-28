@@ -19,9 +19,7 @@
 
 package org.apache.james.webadmin.mdc;
 
-import java.io.Closeable;
-
-import org.apache.james.util.MDCBuilder;
+import org.apache.james.util.MDCStructuredLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,16 +30,13 @@ import spark.Response;
 public class LoggingResponseFilter implements Filter {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggingResponseFilter.class);
     private static final String STATUS = "status";
-    private static final String BODY = "body";
+    private static final String RESPONSE_BODY = "response-body";
 
     @Override
     public void handle(Request request, Response response) throws Exception {
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addContext(STATUS, response.status())
-                     .addContext(BODY, response.body())
-                     .build()) {
-            LOGGER.info("Received request");
-        }
+        MDCStructuredLogger.forLogger(LOGGER)
+            .addField(STATUS, response.status())
+            .addField(RESPONSE_BODY, response.body())
+            .log(logger -> logger.info("WebAdmin response received"));
     }
 }
