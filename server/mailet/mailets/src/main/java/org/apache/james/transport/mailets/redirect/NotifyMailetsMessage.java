@@ -19,11 +19,13 @@
 
 package org.apache.james.transport.mailets.redirect;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Optional;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeUtility;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.transport.util.SizeUtils;
@@ -59,7 +61,8 @@ public class NotifyMailetsMessage {
             .append(LINE_BREAK);
 
         if (message.getSubject() != null) {
-            builder.append("  Subject: " + message.getSubject())
+            builder.append("  Subject: ")
+                .append(safelyDecode(message.getSubject()))
                 .append(LINE_BREAK);
         }
         if (message.getSentDate() != null) {
@@ -110,12 +113,23 @@ public class NotifyMailetsMessage {
         }
     }
 
+    private String safelyDecode(String text) {
+        try {
+            return MimeUtility.decodeText(text);
+        } catch (UnsupportedEncodingException e) {
+            LOGGER.error("Could not decode following value {}", text, e);
+
+            return text;
+        }
+    }
+
     private void appendAddresses(StringBuilder builder, String title, String[] addresses) {
         if (addresses != null) {
             builder.append("  " + title + ": ")
                 .append(LINE_BREAK);
             for (String address : flatten(addresses)) {
-                builder.append(address + " ")
+                builder.append(safelyDecode(address))
+                    .append(" ")
                     .append(LINE_BREAK);
             }
             builder.append(LINE_BREAK);
