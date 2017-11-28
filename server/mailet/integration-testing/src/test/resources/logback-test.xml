@@ -8,8 +8,10 @@
                 </encoder>
         </appender>
 
-        <root level="INFO">
+        <root level="WARN">
                 <appender-ref ref="CONSOLE" />
         </root>
+
+        <logger name="org.apache.james" level="DEBUG"/>
 
 </configuration>
