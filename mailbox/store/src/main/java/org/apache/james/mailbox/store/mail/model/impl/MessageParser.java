@@ -68,6 +68,7 @@ public class MessageParser {
     private static final List<String> ATTACHMENT_CONTENT_DISPOSITIONS = ImmutableList.of(
             ContentDispositionField.DISPOSITION_TYPE_ATTACHMENT.toLowerCase(Locale.US),
             ContentDispositionField.DISPOSITION_TYPE_INLINE.toLowerCase(Locale.US));
+    private static final ImmutableList<String> ATTACHMENT_CONTENT_TYPES = ImmutableList.of("application/pgp-signature");
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageParser.class);
 
     private final Cid.CidParser cidParser;
@@ -192,16 +193,29 @@ public class MessageParser {
         if (context == Context.BODY && isTextPart(part)) {
             return false;
         }
-        return Optional.ofNullable(part.getDispositionType())
-                .map(dispositionType -> ATTACHMENT_CONTENT_DISPOSITIONS.contains(
-                    dispositionType.toLowerCase(Locale.US)))
-            .orElse(false);
+        return attachmentDispositionCriterion(part) || attachmentContentTypeCriterion(part);
     }
 
     private boolean isTextPart(Entity part) {
         return getContentTypeField(part)
             .map(ContentTypeField::getMediaType)
             .map(TEXT_MEDIA_TYPE::equals)
+            .orElse(false);
+    }
+
+    private Boolean attachmentContentTypeCriterion(Entity part) {
+        return getContentTypeField(part)
+            .map(ContentTypeField::getMimeType)
+            .map(dispositionType -> dispositionType.toLowerCase(Locale.US))
+            .map(ATTACHMENT_CONTENT_TYPES::contains)
+            .orElse(false);
+    }
+
+    private Boolean attachmentDispositionCriterion(Entity part) {
+        return getContentDispositionField(part)
+            .map(ContentDispositionField::getDispositionType)
+            .map(dispositionType -> dispositionType.toLowerCase(Locale.US))
+            .map(ATTACHMENT_CONTENT_DISPOSITIONS::contains)
             .orElse(false);
     }
 
