@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.Cid;
@@ -48,6 +49,7 @@ import org.apache.james.mime4j.util.MimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class MessageParser {
@@ -91,8 +93,9 @@ public class MessageParser {
             }
 
             if (body instanceof Multipart) {
-                Multipart multipartBody = (Multipart)body;
-                return listAttachments(multipartBody, Context.fromSubType(multipartBody.getSubType()));
+                Multipart multipartBody = (Multipart) body;
+                return listAttachments(multipartBody, Context.fromSubType(multipartBody.getSubType()))
+                    .collect(Guavate.toImmutableList());
             } else {
                 return ImmutableList.of();
             }
@@ -105,25 +108,26 @@ public class MessageParser {
         return contentDisposition.isPresent() && contentDisposition.get().isAttachment();
     }
 
-    private List<MessageAttachment> listAttachments(Multipart multipart, Context context) throws IOException {
-        ImmutableList.Builder<MessageAttachment> attachments = ImmutableList.builder();
+    private Stream<MessageAttachment> listAttachments(Multipart multipart, Context context) {
+        return multipart.getBodyParts()
+            .stream()
+            .flatMap(entity -> listAttachments(entity, context));
+    }
 
-        for (Entity entity : multipart.getBodyParts()) {
-            if (isMultipart(entity)) {
-                attachments.addAll(listAttachments((Multipart) entity.getBody(), Context.fromEntity(entity)));
-            } else {
-                if (isAttachment(entity, context)) {
-                    try {
-                        attachments.add(retrieveAttachment(entity));
-                    } catch (IllegalStateException e) {
-                        LOGGER.error("The attachment is not well-formed: " + e.getCause());
-                    } catch (IOException e) {
-                        LOGGER.error("There is error on retrieve attachment: " + e.getCause());
-                    }
-                }
+    private Stream<MessageAttachment> listAttachments(Entity entity, Context context) {
+        if (isMultipart(entity)) {
+            return listAttachments((Multipart) entity.getBody(), Context.fromEntity(entity));
+        }
+        if (isAttachment(entity, context)) {
+            try {
+                return Stream.of(retrieveAttachment(entity));
+            } catch (IllegalStateException e) {
+                LOGGER.error("The attachment is not well-formed: " + e.getCause());
+            } catch (IOException e) {
+                LOGGER.error("There is error on retrieve attachment: " + e.getCause());
             }
         }
-        return attachments.build();
+        return Stream.empty();
     }
 
     private MessageAttachment retrieveAttachment(Entity entity) throws IOException {
