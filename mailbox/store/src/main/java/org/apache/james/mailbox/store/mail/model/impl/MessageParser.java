@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.apache.james.mailbox.model.Attachment;
@@ -182,15 +181,8 @@ public class MessageParser {
     }
 
     private Optional<Cid> cid(Optional<ContentIdField> contentIdField) {
-        if (!contentIdField.isPresent()) {
-            return Optional.empty();
-        }
-        return contentIdField.map(toCid())
-            .get();
-    }
-
-    private Function<ContentIdField, Optional<Cid>> toCid() {
-        return contentIdField -> cidParser.parse(contentIdField.getId());
+        return contentIdField.map(ContentIdField::getId)
+            .flatMap(cidParser::parse);
     }
 
     private boolean isMultipart(Entity entity) {
