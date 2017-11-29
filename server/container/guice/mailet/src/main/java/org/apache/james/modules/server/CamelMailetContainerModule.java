@@ -73,6 +73,8 @@ public class CamelMailetContainerModule extends AbstractModule {
         bind(JamesMailSpooler.class).in(Scopes.SINGLETON);
         bind(MailSpoolerMBean.class).to(JamesMailSpooler.class);
 
+        bind(MailetContext.class).to(JamesMailetContext.class);
+
         bind(MailetLoader.class).to(GuiceMailetLoader.class);
         bind(MatcherLoader.class).to(GuiceMatcherLoader.class);
 
@@ -84,7 +86,7 @@ public class CamelMailetContainerModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private MailetContext provideMailetContext(MailQueueFactory mailQueueFactory,
+    private JamesMailetContext provideMailetContext(MailQueueFactory mailQueueFactory,
                                                     DNSService dns,
                                                     UsersRepository localusers,
                                                     DomainList domains) {
