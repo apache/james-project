@@ -21,18 +21,25 @@ package org.apache.james.mailetcontainer.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.AbstractDomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
+import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.server.core.MailImpl;
 import org.apache.james.user.memory.MemoryUsersRepository;
-import org.apache.james.core.MailAddress;
+import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
 
 public class JamesMailetContextTest {
     public static final String DOMAIN_COM = "domain.com";
@@ -57,6 +64,9 @@ public class JamesMailetContextTest {
         usersRepository = MemoryUsersRepository.withVirtualHosting();
         usersRepository.setDomainList(domainList);
         testee = new JamesMailetContext();
+        MailQueueFactory mailQueueFactory = mock(MailQueueFactory.class);
+        when(mailQueueFactory.getQueue(anyString())).thenReturn(mock(MailQueue.class));
+        testee.retrieveRootMailQueue(mailQueueFactory);
         testee.setDomainList(domainList);
         testee.setUsersRepository(usersRepository);
         mailAddress = new MailAddress(USERMAIL);
@@ -140,5 +150,14 @@ public class JamesMailetContextTest {
     @Test
     public void isLocalEmailShouldBeFalseWhenMailIsNull() throws Exception {
         assertThat(testee.isLocalEmail(null)).isFalse();
+    }
+
+    @Test
+    public void bounceShouldNotFailWhenNonConfiguredPostmaster() throws Exception {
+        MailImpl mail = new MailImpl();
+        mail.setSender(mailAddress);
+        mail.setRecipients(ImmutableList.of(mailAddress));
+        mail.setMessage(MimeMessageBuilder.defaultMimeMessage());
+        testee.bounce(mail, "message");
     }
 }

@@ -27,6 +27,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Vector;
 
 import javax.inject.Inject;
@@ -40,7 +41,7 @@ import javax.mail.internet.ParseException;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.james.server.core.MailImpl;
+import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.TemporaryResolutionException;
 import org.apache.james.dnsservice.library.MXHostAddressIterator;
@@ -50,17 +51,19 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.server.core.MailImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.HostAddress;
 import org.apache.mailet.LookupException;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.consumers.ConsumerChainer;
 import com.google.common.collect.ImmutableSet;
 
 @SuppressWarnings("deprecation")
@@ -193,8 +196,12 @@ public class JamesMailetContext implements MailetContext, Configurable {
         }
 
         MailImpl reply = rawBounce(mail, message);
+
         // Change the sender...
-        reply.getMessage().setFrom(bouncer.toInternetAddress());
+        if (bouncer != null) {
+            reply.getMessage().setFrom(bouncer.toInternetAddress());
+        }
+
         reply.getMessage().saveChanges();
         // Send it off ... with null reverse-path
         reply.setSender(null);
