@@ -21,11 +21,13 @@ package org.apache.james.transport.mailets;
 
 import java.util.List;
 import java.util.Optional;
+
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.transport.mailets.redirect.AddressExtractor;
 import org.apache.james.transport.mailets.redirect.InitParameters;
@@ -39,7 +41,6 @@ import org.apache.james.transport.util.ReplyToUtils;
 import org.apache.james.transport.util.SenderUtils;
 import org.apache.james.transport.util.TosUtils;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +80,7 @@ import com.google.common.collect.ImmutableList;
  * <pre>
  * <code>
  * &lt;mailet match="All" class="Resend">
- *   &lt;recipients&gt;comma delimited list of email addresses&lt;/recipients&gt;
+ *   &lt;forwardTo&gt;comma delimited list of email addresses&lt;/recipients&gt;
  *   &lt;passThrough&gt;true or false&lt;/passThrough&gt;
  *   &lt;fakeDomainCheck&gt;<i>true or false</i>&lt;/fakeDomainCheck&gt;
  *   &lt;debug&gt;<i>true or false</i>&lt;/debug&gt;
