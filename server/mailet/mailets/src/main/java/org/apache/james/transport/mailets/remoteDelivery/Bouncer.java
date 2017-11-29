@@ -28,8 +28,8 @@ import java.net.UnknownHostException;
 import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
 
-import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,9 +70,9 @@ public class Bouncer {
         try {
             mailetContext.bounce(mail, explanationText(mail, ex));
         } catch (MessagingException me) {
-            LOGGER.warn("Encountered unexpected messaging exception while bouncing message: {}", me.getMessage());
+            LOGGER.warn("Encountered unexpected messaging exception while bouncing message", me);
         } catch (Exception e) {
-            LOGGER.warn("Encountered unexpected exception while bouncing message: {}", e.getMessage());
+            LOGGER.warn("Encountered unexpected exception while bouncing message", e);
         }
     }
 
