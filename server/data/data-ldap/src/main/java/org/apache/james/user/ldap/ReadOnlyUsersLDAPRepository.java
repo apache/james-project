@@ -50,6 +50,7 @@ import org.apache.james.util.retry.naming.ldap.RetryingLdapContext;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.lang.StringUtils;
+import org.apache.directory.api.ldap.model.filter.FilterEncoder;
 import org.apache.james.core.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -562,7 +563,6 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         return results;
     }
 
-
     /**
      * For a given name, this method makes ldap search in userBase with filter {@link #userIdAttribute}=name and objectClass={@link #userObjectClass}
      * and builds {@link User} based on search result.
@@ -576,36 +576,34 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      *             Propagated by the underlying LDAP communication layer.
      */
     private ReadOnlyLDAPUser searchAndBuildUser(String name) throws NamingException {
-      SearchControls sc = new SearchControls();
-      sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
-      sc.setReturningAttributes(new String[] { userIdAttribute });
-      sc.setCountLimit(1);
+        SearchControls sc = new SearchControls();
+        sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
+        sc.setReturningAttributes(new String[] { userIdAttribute });
+        sc.setCountLimit(1);
 
-      StringBuilder builderFilter = new StringBuilder("(&(");
-      builderFilter.append(userIdAttribute).append("=").append(name).append(")")
-                   .append("(objectClass=").append(userObjectClass).append(")");
+        String filterTemplate = "(&({0}={1})(objectClass={2})" +
+            StringUtils.defaultString(filter, "") +
+            ")";
 
-     if(StringUtils.isNotEmpty(filter)){
-    	 builderFilter.append(filter).append(")");
-    	 }
-     else{
-    	 builderFilter.append(")");
-     }
+        String sanitizedFilter = FilterEncoder.format(
+            filterTemplate,
+            userIdAttribute,
+            name,
+            userObjectClass);
 
-      NamingEnumeration<SearchResult> sr = ldapContext.search(userBase, builderFilter.toString(),
-          sc);
+        NamingEnumeration<SearchResult> sr = ldapContext.search(userBase, sanitizedFilter, sc);
 
-      if (!sr.hasMore())
+        if (!sr.hasMore())
+            return null;
+
+        SearchResult r = sr.next();
+        Attribute userName = r.getAttributes().get(userIdAttribute);
+
+        if (!restriction.isActivated()
+            || userInGroupsMembershipList(r.getNameInNamespace(), restriction.getGroupMembershipLists(ldapContext)))
+            return new ReadOnlyLDAPUser(userName.get().toString(), r.getNameInNamespace(), ldapContext);
+
         return null;
-
-      SearchResult r = sr.next();
-      Attribute userName = r.getAttributes().get(userIdAttribute);
-
-      if (!restriction.isActivated()
-          || userInGroupsMembershipList(r.getNameInNamespace(), restriction.getGroupMembershipLists(ldapContext)))
-        return new ReadOnlyLDAPUser(userName.get().toString(), r.getNameInNamespace(), ldapContext);
-
-      return null;
     }
 
     /**

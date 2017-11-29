@@ -59,6 +59,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.directory.api</groupId>
+            <artifactId>api-ldap-model</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.geronimo.specs</groupId>
             <artifactId>geronimo-annotation_1.1_spec</artifactId>
         </dependency>
