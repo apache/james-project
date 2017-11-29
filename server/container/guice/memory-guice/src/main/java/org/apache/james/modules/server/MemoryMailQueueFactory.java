@@ -27,10 +27,10 @@ import java.util.concurrent.TimeUnit;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.server.core.MailImpl;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
+import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
 
 import com.github.fge.lambdas.Throwing;
@@ -88,6 +88,7 @@ public class MemoryMailQueueFactory implements MailQueueFactory {
 
         private Mail cloneMail(Mail mail) throws MessagingException {
             MailImpl mailImpl = MailImpl.duplicate(mail);
+            mailImpl.setState(mail.getState());
             Optional.ofNullable(mail.getMessage())
                     .ifPresent(Throwing.consumer(message -> mailImpl.setMessage(new MimeMessage(message))));
             return mailImpl;
