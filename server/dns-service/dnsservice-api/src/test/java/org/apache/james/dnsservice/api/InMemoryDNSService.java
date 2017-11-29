@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.net.InetAddresses;
@@ -65,12 +66,20 @@ public class InMemoryDNSService implements DNSService {
 
     @Override
     public Collection<String> findMXRecords(String hostname) throws TemporaryResolutionException {
-        return hostRecord(hostname).mxRecords;
+        try {
+            return hostRecord(hostname).mxRecords;
+        } catch (UnknownHostException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     @Override
     public Collection<String> findTXTRecords(String hostname) {
-        return hostRecord(hostname).txtRecords;
+        try {
+            return hostRecord(hostname).txtRecords;
+        } catch (UnknownHostException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     @Override
@@ -83,7 +92,7 @@ public class InMemoryDNSService implements DNSService {
         return hostRecord(host).addresses.get(0);
     }
 
-    private DNSRecord hostRecord(final String host) {
+    private DNSRecord hostRecord(final String host) throws UnknownHostException {
         Predicate<? super Entry<String, DNSRecord>> filterByKey = entry -> entry.getKey().equals(host);
         return getDNSEntry(filterByKey).getValue();
     }
@@ -97,14 +106,18 @@ public class InMemoryDNSService implements DNSService {
     public String getHostName(final InetAddress addr) {
         Predicate<? super Entry<String, DNSRecord>> filterByValue = entry -> entry.getValue().contains(addr);
 
-        return getDNSEntry(filterByValue).getKey();
+        try {
+            return getDNSEntry(filterByValue).getKey();
+        } catch (UnknownHostException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
-    private Entry<String, DNSRecord> getDNSEntry(Predicate<? super Entry<String, DNSRecord>> filter) {
+    private Entry<String, DNSRecord> getDNSEntry(Predicate<? super Entry<String, DNSRecord>> filter) throws UnknownHostException {
         return records.entrySet().stream()
             .filter(filter)
             .findFirst()
-            .get();
+            .orElseThrow(() -> new UnknownHostException());
     }
 
     private static class DNSRecord {
