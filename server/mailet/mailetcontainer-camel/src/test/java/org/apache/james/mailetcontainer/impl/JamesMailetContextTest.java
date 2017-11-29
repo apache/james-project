@@ -21,10 +21,13 @@ package org.apache.james.mailetcontainer.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+
+import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.core.MailAddress;
@@ -35,9 +38,11 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.user.memory.MemoryUsersRepository;
+import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import com.google.common.collect.ImmutableList;
 
@@ -52,6 +57,7 @@ public class JamesMailetContextTest {
     private MemoryUsersRepository usersRepository;
     private JamesMailetContext testee;
     private MailAddress mailAddress;
+    private MailQueue spoolMailQueue;
 
     @Before
     public void setUp() throws Exception {
@@ -65,7 +71,8 @@ public class JamesMailetContextTest {
         usersRepository.setDomainList(domainList);
         testee = new JamesMailetContext();
         MailQueueFactory mailQueueFactory = mock(MailQueueFactory.class);
-        when(mailQueueFactory.getQueue(anyString())).thenReturn(mock(MailQueue.class));
+        spoolMailQueue = mock(MailQueue.class);
+        when(mailQueueFactory.getQueue(MailQueueFactory.SPOOL)).thenReturn(spoolMailQueue);
         testee.retrieveRootMailQueue(mailQueueFactory);
         testee.setDomainList(domainList);
         testee.setUsersRepository(usersRepository);
@@ -159,5 +166,107 @@ public class JamesMailetContextTest {
         mail.setRecipients(ImmutableList.of(mailAddress));
         mail.setMessage(MimeMessageBuilder.defaultMimeMessage());
         testee.bounce(mail, "message");
+    }
+
+    @Test
+    public void bounceShouldEnqueueEmailWithRootState() throws Exception {
+        MailImpl mail = new MailImpl();
+        mail.setSender(mailAddress);
+        mail.setRecipients(ImmutableList.of(mailAddress));
+        mail.setMessage(MimeMessageBuilder.defaultMimeMessage());
+        testee.bounce(mail, "message");
+
+        ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
+        verify(spoolMailQueue).enQueue(mailArgumentCaptor.capture());
+        verifyNoMoreInteractions(spoolMailQueue);
+
+        assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(Mail.DEFAULT);
+    }
+
+    @Test
+    public void sendMailShouldEnqueueEmailWithRootState() throws Exception {
+        MailImpl mail = new MailImpl();
+        mail.setSender(mailAddress);
+        mail.setRecipients(ImmutableList.of(mailAddress));
+        mail.setMessage(MimeMessageBuilder.defaultMimeMessage());
+        testee.sendMail(mail);
+
+        ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
+        verify(spoolMailQueue).enQueue(mailArgumentCaptor.capture());
+        verifyNoMoreInteractions(spoolMailQueue);
+
+        assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(Mail.DEFAULT);
+    }
+
+    @Test
+    public void sendMailShouldEnqueueEmailWithOtherStateWhenSpecified() throws Exception {
+        MailImpl mail = new MailImpl();
+        mail.setSender(mailAddress);
+        mail.setRecipients(ImmutableList.of(mailAddress));
+        mail.setMessage(MimeMessageBuilder.defaultMimeMessage());
+        String other = "other";
+        testee.sendMail(mail, other);
+
+        ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
+        verify(spoolMailQueue).enQueue(mailArgumentCaptor.capture());
+        verifyNoMoreInteractions(spoolMailQueue);
+
+        assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(other);
+    }
+
+    @Test
+    public void sendMailForMessageShouldEnqueueEmailWithRootState() throws Exception {
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .addFrom(mailAddress.asString())
+            .addToRecipient(mailAddress.asString())
+            .setText("Simple text")
+            .build();
+
+        testee.sendMail(message);
+
+        ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
+        verify(spoolMailQueue).enQueue(mailArgumentCaptor.capture());
+        verifyNoMoreInteractions(spoolMailQueue);
+
+        assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(Mail.DEFAULT);
+    }
+
+    @Test
+    public void sendMailForMessageAndEnvelopeShouldEnqueueEmailWithRootState() throws Exception {
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .addFrom(mailAddress.asString())
+            .addToRecipient(mailAddress.asString())
+            .setText("Simple text")
+            .build();
+
+        MailAddress sender = mailAddress;
+        ImmutableList<MailAddress> recipients = ImmutableList.of(mailAddress);
+        testee.sendMail(sender, recipients, message);
+
+        ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
+        verify(spoolMailQueue).enQueue(mailArgumentCaptor.capture());
+        verifyNoMoreInteractions(spoolMailQueue);
+
+        assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(Mail.DEFAULT);
+    }
+
+    @Test
+    public void sendMailForMessageAndEnvelopeShouldEnqueueEmailWithOtherStateWhenSpecified() throws Exception {
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .addFrom(mailAddress.asString())
+            .addToRecipient(mailAddress.asString())
+            .setText("Simple text")
+            .build();
+
+        MailAddress sender = mailAddress;
+        ImmutableList<MailAddress> recipients = ImmutableList.of(mailAddress);
+        String otherState = "other";
+        testee.sendMail(sender, recipients, message, otherState);
+
+        ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
+        verify(spoolMailQueue).enQueue(mailArgumentCaptor.capture());
+        verifyNoMoreInteractions(spoolMailQueue);
+
+        assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(otherState);
     }
 }

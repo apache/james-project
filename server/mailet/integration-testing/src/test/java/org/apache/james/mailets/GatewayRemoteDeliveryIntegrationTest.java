@@ -52,7 +52,6 @@ import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -220,13 +219,6 @@ public class GatewayRemoteDeliveryIntegrationTest {
                 .body("", hasSize(0));
         }
     }
-
-    @Ignore("JAMES-2242" +
-        "https://issues.apache.org/jira/browse/JAMES-2242?focusedCommentId=16270289&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-16270289" +
-        "Bouncing is failing due to several issues:" +
-        " - A loop in Bounce processor, keeps posting in bounce processor (DSNBounce processor don't rest mail state)" +
-        " - Memory mail queue don't preserve state field like other Mail Queue implementations" +
-        " - Memory DNS returns RuntimeExceptions upon absent address, not DNS failures")
     @Test
     public void remoteDeliveryShouldBounceUponFailure() throws Exception {
         String gatewayProperty = "invalid.domain";

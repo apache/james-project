@@ -52,9 +52,8 @@ public class Bouncer {
         } else {
             if (configuration.getBounceProcessor() != null) {
                 mail.setAttribute(DELIVERY_ERROR, getErrorMsg(ex));
-                mail.setState(configuration.getBounceProcessor());
                 try {
-                    mailetContext.sendMail(mail);
+                    mailetContext.sendMail(mail, configuration.getBounceProcessor());
                 } catch (MessagingException e) {
                     LOGGER.warn("Exception re-inserting failed mail: ", e);
                 }

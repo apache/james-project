@@ -406,15 +406,20 @@ public class JamesMailetContext implements MailetContext, Configurable {
 
     @Override
     public void sendMail(Mail mail) throws MessagingException {
+        sendMail(mail, Mail.DEFAULT);
+    }
+
+    @Override
+    public void sendMail(Mail mail, String state) throws MessagingException {
         mail.setAttribute(Mail.SENT_BY_MAILET, "true");
+        mail.setState(state);
         rootMailQueue.enQueue(mail);
     }
 
     public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage message, String state) throws MessagingException {
         MailImpl mail = new MailImpl(MailImpl.getId(), sender, recipients, message);
         try {
-            mail.setState(state);
-            sendMail(mail);
+            sendMail(mail, state);
         } finally {
             LifecycleUtil.dispose(mail);
         }

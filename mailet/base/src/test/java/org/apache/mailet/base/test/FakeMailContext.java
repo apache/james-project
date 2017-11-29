@@ -27,13 +27,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.HostAddress;
 import org.apache.mailet.LookupException;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
 
@@ -404,6 +405,12 @@ public class FakeMailContext implements MailetContext {
     }
 
     public void sendMail(Mail mail) throws MessagingException {
+        sendMail(mail, Mail.DEFAULT);
+    }
+
+    @Override
+    public void sendMail(Mail mail, String state) throws MessagingException {
+        mail.setState(state);
         sentMails.add(fromMail(mail));
     }
 
