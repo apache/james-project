@@ -24,12 +24,12 @@ import static org.mockito.Mockito.mock;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.mailetcontainer.api.MailProcessor;
-import org.apache.james.mailetcontainer.api.mock.MockMailetContext;
 import org.apache.james.mailetcontainer.api.mock.MockMailetLoader;
 import org.apache.james.mailetcontainer.api.mock.MockMatcherLoader;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessorTest;
 import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.mailet.base.test.FakeMailContext;
 
 public class CamelMailetProcessorTest extends AbstractStateMailetProcessorTest {
 
@@ -39,7 +39,7 @@ public class CamelMailetProcessorTest extends AbstractStateMailetProcessorTest {
         try {
             processor = new CamelMailetProcessor(new NoopMetricFactory());
             processor.setCamelContext(new DefaultCamelContext());
-            processor.setMailetContext(new MockMailetContext());
+            processor.setMailetContext(FakeMailContext.defaultContext());
             processor.setMailetLoader(new MockMailetLoader());
             processor.setMatcherLoader(new MockMatcherLoader());
             processor.setRootMailProcessor(mock(MailProcessor.class));
