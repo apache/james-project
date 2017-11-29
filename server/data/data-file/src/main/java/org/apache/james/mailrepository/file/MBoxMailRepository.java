@@ -227,22 +227,6 @@ public class MBoxMailRepository implements MailRepository, Configurable {
             LOGGER.debug("Mime message is null");
         }
 
-        /*
-         * String toAddr = null; try { // Attempt to read the TO field and see
-         * if it errors toAddr =
-         * mimeMessage.getRecipients(javax.mail.Message.RecipientType
-         * .TO).toString(); } catch (Exception e) { // It has errored, so time
-         * for plan B // use the from field I suppose try {
-         * mimeMessage.setRecipients(javax.mail.Message.RecipientType.TO,
-         * mimeMessage.getFrom()); if (LOGGER.isDebugEnabled()) {
-         * StringBuffer logBuffer = new StringBuffer(128)
-         * .append(this.getClass().getName())
-         * .append(" Patching To: field for message ")
-         * .append(" with  From: field");
-         * LOGGER.debug(logBuffer.toString()); } } catch
-         * (MessagingException e1) {
-         * LOGGER.error("Unable to set to: field to from: field", e); } }
-         */
         return mimeMessage;
     }
 
@@ -281,11 +265,6 @@ public class MBoxMailRepository implements MailRepository, Configurable {
                     foundSep = sepMatchPattern.matcher(line).matches();
 
                     if (foundSep && inMessage) {
-                        // if ((DEEP_DEBUG) && (LOGGER.isDebugEnabled())) {
-                        // LOGGER.debug(this.getClass().getName() +
-                        // " Invoking " + messAct.getClass() + " at " +
-                        // prevMessageStart);
-                        // }
                         MimeMessage endResult = messAct.messageAction(previousMessageSeparator, messageBuffer.toString(), prevMessageStart);
                         if (messAct.isComplete()) {
                             // I've got what I want so just exit
@@ -311,12 +290,6 @@ public class MBoxMailRepository implements MailRepository, Configurable {
                     if (c == 10) {
                         foundSep = sepMatchPattern.matcher(line).matches();
                         if (foundSep && inMessage) {
-                            // if ((DEEP_DEBUG) &&
-                            // (LOGGER.isDebugEnabled())) {
-                            // LOGGER.debug(this.getClass().getName() +
-                            // " Invoking " + messAct.getClass() + " at " +
-                            // prevMessageStart);
-                            // }
                             MimeMessage endResult = messAct.messageAction(previousMessageSeparator, messageBuffer.toString(), prevMessageStart);
                             if (messAct.isComplete()) {
                                 // I've got what I want so just exit
