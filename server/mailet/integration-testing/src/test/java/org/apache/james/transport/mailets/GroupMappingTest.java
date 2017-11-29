@@ -58,6 +58,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.testcontainers.containers.wait.HostPortWaitStrategy;
 
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
@@ -90,7 +91,9 @@ public class GroupMappingTest {
 
     @Rule
     public final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer("weave/rest-smtp-sink:latest")
-        .withExposedPorts(25);
+        .withExposedPorts(25)
+        .withAffinityToContainer()
+        .waitingFor(new HostPortWaitStrategy());
 
     private final InMemoryDNSService inMemoryDNSService = new InMemoryDNSService();
     @Rule
