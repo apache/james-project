@@ -20,6 +20,7 @@
 package org.apache.james.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.stream.Stream;
 
@@ -77,4 +78,24 @@ public class StreamUtilsTest {
             .containsExactly(1, 2, 3);
     }
 
+    @Test
+    public void flattenShouldAcceptEmptyVarArg() {
+        assertThat(
+            StreamUtils.flatten()
+                .collect(Guavate.toImmutableList()))
+            .isEmpty();
+    }
+
+    @Test
+    public void flattenShouldThrowOnNullVarArg() {
+        Stream<String>[] streams = null;
+        assertThatThrownBy(() -> StreamUtils.flatten(streams).collect(Guavate.toImmutableList()))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void flattenShouldFlattenNonEmptyVarArg() {
+        assertThat(StreamUtils.flatten(Stream.of(1), Stream.of(2)).collect(Guavate.toImmutableList()))
+            .containsExactly(1, 2);
+    }
 }
