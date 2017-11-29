@@ -20,17 +20,22 @@
 package org.apache.james.transport.mailets.redirect;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.TimeZone;
 
 import javax.mail.Message.RecipientType;
+import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.joda.time.DateTime;
 import org.junit.After;
@@ -67,8 +72,7 @@ public class NotifyMailetsMessageTest {
         assertThat(generateMessage).isEqualTo("my message\n" +
                 "\n" +
                 "Message details:\n" +
-                "  MAIL FROM: user@james.org\n" +
-                "  Size (in bytes): -1\n");
+                "  MAIL FROM: user@james.org\n");
     }
 
     @Test
@@ -85,8 +89,7 @@ public class NotifyMailetsMessageTest {
                 "error message\n" +
                 "\n" +
                 "Message details:\n" +
-                "  MAIL FROM: null\n" +
-                "  Size (in bytes): -1\n");
+                "  MAIL FROM: null\n");
     }
 
     @Test
@@ -97,12 +100,7 @@ public class NotifyMailetsMessageTest {
 
         String generateMessage = new NotifyMailetsMessage().generateMessage("my message", mail);
 
-        assertThat(generateMessage).isEqualTo("my message\n" +
-                "\n" +
-                "Message details:\n" +
-                "  Subject: my subject\n" +
-                "  MAIL FROM: null\n" +
-                "  Size (in bytes): -1\n");
+        assertThat(generateMessage).contains("Subject: my subject");
     }
 
     @Test
@@ -113,12 +111,7 @@ public class NotifyMailetsMessageTest {
 
         String generateMessage = new NotifyMailetsMessage().generateMessage("my message", mail);
 
-        assertThat(generateMessage).isEqualTo("my message\n" +
-                "\n" +
-                "Message details:\n" +
-                "  Sent date: Thu Sep 08 14:25:52 UTC 2016\n" +
-                "  MAIL FROM: null\n" +
-                "  Size (in bytes): -1\n");
+        assertThat(generateMessage).contains("Sent date: Thu Sep 08 14:25:52 UTC 2016");
     }
 
     @Test
@@ -129,13 +122,8 @@ public class NotifyMailetsMessageTest {
 
         String generateMessage = new NotifyMailetsMessage().generateMessage("my message", mail);
 
-        assertThat(generateMessage).isEqualTo("my message\n" +
-                "\n" +
-                "Message details:\n" +
-                "  MAIL FROM: null\n" +
-                "  RCPT TO: user@james.org\n" +
-                "           user2@james.org\n" +
-                "  Size (in bytes): -1\n");
+        assertThat(generateMessage).contains("RCPT TO: user@james.org\n" +
+            "           user2@james.org");
     }
 
     @Test
@@ -146,14 +134,8 @@ public class NotifyMailetsMessageTest {
 
         String generateMessage = new NotifyMailetsMessage().generateMessage("my message", mail);
 
-        assertThat(generateMessage).isEqualTo("my message\n" +
-                "\n" +
-                "Message details:\n" +
-                "  MAIL FROM: null\n" +
-                "  From: \n" +
-                "user@james.org \n" +
-                "\n" +
-                "  Size (in bytes): -1\n");
+        assertThat(generateMessage).contains("From: \n" +
+            "user@james.org");
     }
 
     @Test
@@ -164,15 +146,9 @@ public class NotifyMailetsMessageTest {
 
         String generateMessage = new NotifyMailetsMessage().generateMessage("my message", mail);
 
-        assertThat(generateMessage).isEqualTo("my message\n" +
-                "\n" +
-                "Message details:\n" +
-                "  MAIL FROM: null\n" +
-                "  To: \n" +
-                "user@james.org \n" +
-                "user2@james.org \n" +
-                "\n" +
-                "  Size (in bytes): -1\n");
+        assertThat(generateMessage).contains("To: \n" +
+            "user@james.org \n" +
+            "user2@james.org");
     }
 
     @Test
@@ -183,32 +159,77 @@ public class NotifyMailetsMessageTest {
 
         String generateMessage = new NotifyMailetsMessage().generateMessage("my message", mail);
 
-        assertThat(generateMessage).isEqualTo("my message\n" +
-                "\n" +
-                "Message details:\n" +
-                "  MAIL FROM: null\n" +
-                "  CC: \n" +
-                "user@james.org \n" +
-                "user2@james.org \n" +
-                "\n" +
-                "  Size (in bytes): -1\n");
+        assertThat(generateMessage).contains("CC: \n" +
+            "user@james.org \n" +
+            "user2@james.org");
     }
 
     @Test
-    public void generateMessageShouldAddSizeWhenMimeMessageAsSome() throws Exception {
+    public void generateMessageShouldAddSizeWhenPossible() throws Exception {
         String content = "MIME-Version: 1.0\r\n" +
                 "Content-Type: text/plain; charset=utf-8\r\n" +
                 "\r\n" +
                 "test\r\n";
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()), new ByteArrayInputStream(content.getBytes()));
         FakeMail mail = FakeMail.from(message);
+        mail.setMessageSize(6);
 
         String generateMessage = new NotifyMailetsMessage().generateMessage("my message", mail);
 
-        assertThat(generateMessage).isEqualTo("my message\n" +
-                "\n" +
-                "Message details:\n" +
-                "  MAIL FROM: null\n" +
-                "  Size (in bytes): 6\n");
+        assertThat(generateMessage).contains("Size: 6 B");
+    }
+
+    @Test
+    public void generateMessageShouldSpecifySizeInAReadableWay() throws Exception {
+        String content = "MIME-Version: 1.0\r\n" +
+            "Content-Type: text/plain; charset=utf-8\r\n" +
+            "\r\n" +
+            "test\r\n";
+
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()), new ByteArrayInputStream(content.getBytes()));
+        FakeMail mail = FakeMail.from(message);
+        mail.setMessageSize((long)(5.9*1024));
+
+        String generateMessage = new NotifyMailetsMessage().generateMessage("my message", mail);
+
+        assertThat(generateMessage).contains("Size: 5.9 KiB");
+    }
+
+    @Test
+    public void getMessageInternalSizeShouldTransformMessagingErrorIntoEmpty() throws MessagingException {
+        Mail mail = mock(Mail.class);
+        when(mail.getMessageSize()).thenThrow(MessagingException.class);
+
+        assertThat(NotifyMailetsMessage.getMessageSizeEstimation(mail))
+            .isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void getMessageInternalSizeShouldTransformZeroSizeIntoEmpty() throws MessagingException {
+        Mail mail = mock(Mail.class);
+        when(mail.getMessageSize()).thenReturn(0L);
+
+        assertThat(NotifyMailetsMessage.getMessageSizeEstimation(mail))
+            .isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void getMessageInternalSizeShouldTransformNegativeIntoEmpty() throws MessagingException {
+        Mail mail = mock(Mail.class);
+        when(mail.getMessageSize()).thenReturn(-1L);
+
+        assertThat(NotifyMailetsMessage.getMessageSizeEstimation(mail))
+            .isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void getMessageInternalSizeShouldReturnSizeWhenAvailable() throws MessagingException {
+        long size = 42L;
+
+        Mail mail = mock(Mail.class);
+        when(mail.getMessageSize()).thenReturn(size);
+
+        assertThat(NotifyMailetsMessage.getMessageSizeEstimation(mail))
+            .isEqualTo(Optional.of(size));
     }
 }
