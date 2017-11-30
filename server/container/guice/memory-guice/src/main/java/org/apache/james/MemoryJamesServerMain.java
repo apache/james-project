@@ -19,6 +19,7 @@
 
 package org.apache.james;
 
+import org.apache.james.jmap.send.PostDequeueDecoratorFactory;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.data.MemoryDataJmapModule;
 import org.apache.james.modules.data.MemoryDataModule;
@@ -36,6 +37,7 @@ import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.MemoryMailQueueModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
+import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -43,32 +45,39 @@ import com.google.inject.util.Modules;
 public class MemoryJamesServerMain {
 
     public static final Module webadmin = Modules.combine(
-            new WebAdminServerModule(),
-            new DataRoutesModules(),
-            new MailboxRoutesModule(),
-            new SwaggerRoutesModule());
+        new WebAdminServerModule(),
+        new DataRoutesModules(),
+        new MailboxRoutesModule(),
+        new SwaggerRoutesModule());
 
     public static final Module protocols = Modules.combine(
-            new IMAPServerModule(),
-            new JMAPServerModule(),
-            new LMTPServerModule(),
-            new ManageSieveServerModule(),
-            new POP3ServerModule(),
-            new ProtocolHandlerModule(),
-            new SMTPServerModule(),
-            webadmin);
+        new IMAPServerModule(),
+        new LMTPServerModule(),
+        new ManageSieveServerModule(),
+        new POP3ServerModule(),
+        new ProtocolHandlerModule(),
+        new SMTPServerModule());
+
+    public static final Module jmap = Modules.combine(
+        new MemoryDataJmapModule(),
+        new JMAPServerModule(),
+        binder -> binder.bind(MailQueueItemDecoratorFactory.class).to(PostDequeueDecoratorFactory.class));
 
     public static final Module inMemoryServerModule = Modules.combine(
-            new MemoryDataModule(),
-            new MemoryDataJmapModule(),
-            new MemoryMailboxModule(),
-            new MemoryMailQueueModule(),
-            new MailboxModule(),
-            protocols);
+        new MemoryDataModule(),
+        new MemoryMailboxModule(),
+        new MemoryMailQueueModule(),
+        new MailboxModule());
+
+    public static final Module inMemoryServerAggregateModule = Modules.combine(
+        inMemoryServerModule,
+        protocols,
+        jmap,
+        webadmin);
 
     public static void main(String[] args) throws Exception {
         new GuiceJamesServer()
-            .combineWith(inMemoryServerModule, new JMXServerModule())
+            .combineWith(inMemoryServerAggregateModule, new JMXServerModule())
             .start();
     }
 

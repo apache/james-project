@@ -54,7 +54,7 @@ public class TemporaryJamesServer {
         appendMailetConfigurations(temporaryFolder, mailetContainer);
 
         jamesServer = new GuiceJamesServer()
-            .combineWith(MemoryJamesServerMain.inMemoryServerModule)
+            .combineWith(MemoryJamesServerMain.inMemoryServerAggregateModule)
             .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
             .overrideWith(additionalModules)
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))
