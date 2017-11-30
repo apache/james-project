@@ -115,6 +115,22 @@ public class MemoryMailQueueFactoryTest {
     }
 
     @Test
+    public void dequeueShouldPreserveName() throws Exception{
+        Mail mail = FakeMail.builder()
+            .name(NAME_1)
+            .build();
+        memoryMailQueueFactory.getQueue(KEY).enQueue(mail);
+
+        String newName = memoryMailQueueFactory
+            .getQueue(KEY)
+            .deQueue()
+            .getMail()
+            .getName();
+
+        assertThat(newName).isEqualTo(NAME_1);
+    }
+
+    @Test
     public void dequeueShouldWorkWithMultipleMessages() throws Exception{
         Mail mail1 = FakeMail.builder()
                 .name(NAME_1)
