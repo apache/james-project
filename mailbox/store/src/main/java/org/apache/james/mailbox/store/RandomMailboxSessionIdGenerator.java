@@ -25,9 +25,8 @@ import org.apache.james.mailbox.MailboxSessionIdGenerator;
 
 
 /**
- * {@link MailboxSessionIdGenerator} which use a {@link SecureRandom} to generate the next Id to use
- * 
- *
+ * {@link MailboxSessionIdGenerator} which use a {@link SecureRandom} to
+ * generate the next Id to use
  */
 public class RandomMailboxSessionIdGenerator extends AbstractMailboxSessionIdGenerator {
     private final static SecureRandom RANDOM = new SecureRandom();
