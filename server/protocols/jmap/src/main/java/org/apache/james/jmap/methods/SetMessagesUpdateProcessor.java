@@ -139,7 +139,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
         } catch (InvalidOutboxMoveException e) {
             ValidationResult invalidPropertyMailboxIds = ValidationResult.builder()
                 .property(MessageProperties.MessageProperty.mailboxIds.asFieldName())
-                .message("only drafts can be moved to Outbox")
+                .message(e.getMessage())
                 .build();
 
             handleInvalidRequest(builder, messageId, ImmutableList.of(invalidPropertyMailboxIds));
@@ -180,58 +180,33 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     }
 
     private void assertValidUpdate(List<MessageResult> messagesToBeUpdated, UpdateMessagePatch updateMessagePatch, MailboxSession session) throws MailboxException {
-        List<MailboxId> draftMailboxes = mailboxIdFor(Role.DRAFTS, session);
         List<MailboxId> outboxMailboxes = mailboxIdFor(Role.OUTBOX, session);
 
         ImmutableList<MailboxId> previousMailboxes = messagesToBeUpdated.stream()
             .map(MessageResult::getMailboxId)
             .collect(Guavate.toImmutableList());
-        List<Flags> futureFlags = patchFlags(messagesToBeUpdated, updateMessagePatch);
         List<MailboxId> targetMailboxes = getTargetedMailboxes(previousMailboxes, updateMessagePatch);
 
-        boolean originIsDraft = previousMailboxes.stream().allMatch(draftMailboxes::contains);
-        boolean targetIsOutbox = targetMailboxes.stream().anyMatch(outboxMailboxes::contains);
-        boolean targetHasDraft = targetMailboxes.stream().anyMatch(draftMailboxes::contains);
-        boolean targetHasNonDraft = targetMailboxes.stream().anyMatch(id -> !draftMailboxes.contains(id));
+        boolean allMessagesWereDrafts = messagesToBeUpdated.stream()
+            .map(MessageResult::getFlags)
+            .allMatch(flags -> flags.contains(Flags.Flag.DRAFT));
 
-        assertValidUpdate(futureFlags, targetHasDraft, targetHasNonDraft, targetIsOutbox, originIsDraft);
+        boolean targetContainsOutbox = targetMailboxes.stream().anyMatch(outboxMailboxes::contains);
+        boolean targetIsOnlyOutbox = targetMailboxes.stream().allMatch(outboxMailboxes::contains);
+
+        assertOutboxMoveTargetsOnlyOutBox(targetContainsOutbox, targetIsOnlyOutbox);
+        assertOutboxMoveOriginallyHasDraftKeywordSet(targetContainsOutbox, allMessagesWereDrafts);
     }
 
-    private void assertValidUpdate(List<Flags> futureFlags, boolean targetHasDraft, boolean targetHasNonDraft,
-                                   boolean targetIsOutbox, boolean originIsDraft) throws DraftMessageMailboxUpdateException {
-        assertMessageIsNotInDraftAndNonDraftMailboxes(targetHasDraft, targetHasNonDraft);
-        assertNoNonDraftMessageInsideDraftMailbox(futureFlags, targetHasDraft);
-        assertNoDraftMessageOutOfDraftMailbox(futureFlags, targetHasNonDraft);
-        assertOutboxMoveOnlyFromDraft(targetIsOutbox, originIsDraft);
-    }
-
-    private void assertOutboxMoveOnlyFromDraft(boolean targetIsOutbox, boolean originIsDraft) {
-        if (targetIsOutbox && !originIsDraft) {
-            throw new InvalidOutboxMoveException();
+    private void assertOutboxMoveTargetsOnlyOutBox(boolean targetContainsOutbox, boolean targetIsOnlyOutbox) {
+        if (targetContainsOutbox && !targetIsOnlyOutbox) {
+            throw new InvalidOutboxMoveException("When moving a message to Outbox, only Outboxes mailboxes should be targeted.");
         }
     }
 
-    private void assertMessageIsNotInDraftAndNonDraftMailboxes(boolean targetHasDraft, boolean targetHasNonDraft) throws DraftMessageMailboxUpdateException {
-        if (targetHasDraft && targetHasNonDraft) {
-            throw new DraftMessageMailboxUpdateException("One can not have a message in mailboxes that don't have all the `draft` role");
-        }
-    }
-
-    private void assertNoNonDraftMessageInsideDraftMailbox(List<Flags> futureFlags, boolean targetHasDraft) throws DraftMessageMailboxUpdateException {
-        if (targetHasDraft) {
-            boolean anyNonDraftMessage = futureFlags.stream().anyMatch(flags -> !flags.contains(Flags.Flag.DRAFT));
-            if (anyNonDraftMessage) {
-                throw new DraftMessageMailboxUpdateException("Messages without '$Draft' keyword are prohibited in drafts mailboxes");
-            }
-        }
-    }
-
-    private void assertNoDraftMessageOutOfDraftMailbox(List<Flags> futureFlags, boolean targetHasNonDraft) throws DraftMessageMailboxUpdateException {
-        if (targetHasNonDraft) {
-            boolean anyDraftMessage = futureFlags.stream().anyMatch(flags -> flags.contains(Flags.Flag.DRAFT));
-            if (anyDraftMessage) {
-                throw new DraftMessageMailboxUpdateException("Messages with '$Draft' keyword are prohibited in non drafts mailboxes");
-            }
+    private void assertOutboxMoveOriginallyHasDraftKeywordSet(boolean targetIsOutbox, boolean allMessagesWereDrafts) {
+        if (targetIsOutbox && !allMessagesWereDrafts) {
+            throw new InvalidOutboxMoveException("Only message with `$Draft` keyword can be moved to Outbox");
         }
     }
 
@@ -241,23 +216,10 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
             .orElse(previousMailboxes);
     }
 
-    private List<Flags> patchFlags(List<MessageResult> messagesToBeUpdated, UpdateMessagePatch updateMessagePatch) {
-        return updateMessagePatch.getOldKeyword()
-                .map(oldKeyword -> flagsFromOldKeyword(messagesToBeUpdated, oldKeyword))
-                .orElse(flagsFromKeywords(messagesToBeUpdated, updateMessagePatch));
-    }
-
     private List<Flags> flagsFromOldKeyword(List<MessageResult> messagesToBeUpdated, OldKeyword oldKeyword) {
         return messagesToBeUpdated.stream()
                 .map(MessageResult::getFlags)
                 .map(oldKeyword::applyToState)
-                .collect(Guavate.toImmutableList());
-    }
-
-    private ImmutableList<Flags> flagsFromKeywords(List<MessageResult> messagesToBeUpdated, UpdateMessagePatch updateMessagePatch) {
-        return messagesToBeUpdated.stream()
-                .map(MessageResult::getFlags)
-                .map(updateMessagePatch::applyToState)
                 .collect(Guavate.toImmutableList());
     }
 

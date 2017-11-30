@@ -20,4 +20,7 @@
 package org.apache.james.jmap.exceptions;
 
 public class InvalidOutboxMoveException extends RuntimeException {
+    public InvalidOutboxMoveException(String message) {
+        super(message);
+    }
 }

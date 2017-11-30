@@ -249,6 +249,8 @@ public class SetMessagesMethodStepdefs {
                 "    {" +
                 "      \"create\": { \"" + message  + "\" : {" +
                 "        \"subject\": \"subject\"," +
+                "        \"from\": { \"name\": \"Me\", \"email\": \"" + username + "\"}," +
+                "        \"to\": [{ \"name\": \"Me\", \"email\": \"" + username + "\"}]," +
                 "        \"keywords\": {\"$Draft\": true}," +
                 "        \"mailboxIds\": [\"" + mailbox.getMailboxId().serialize() + "\"]" +
                 "      }}" +
@@ -319,8 +321,14 @@ public class SetMessagesMethodStepdefs {
     }
 
     @Then("^message \"([^\"]*)\" is not created$")
-    public void assertNotCreated(String messageName) throws Exception {;
+    public void assertNotCreated(String messageName) throws Exception {
         assertThat(httpClient.jsonPath.<Map<String, String>>read("[0][1].notCreated"))
+            .containsOnlyKeys(messageName);
+    }
+
+    @Then("^message \"([^\"]*)\" is created$")
+    public void assertCreated(String messageName) throws Exception {
+        assertThat(httpClient.jsonPath.<Map<String, String>>read("[0][1].created"))
             .containsOnlyKeys(messageName);
     }
 

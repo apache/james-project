@@ -697,7 +697,7 @@ public class GetMessagesMethodStepdefs {
             .isNullOrEmpty();
     }
 
-    @Then("^\"([^\"]*)\" should see message \"([^\"]*)\" with keywords (.*)$")
+    @Then("^\"([^\"]*)\" should see message \"([^\"]*)\" with keywords \"([^\"]*)\"$")
     public void assertKeywordsOfMessage(String user, String messageId, List<String> keywords) throws Exception {
         userStepdefs.execWithUser(user, () -> postWithAListOfIds(ImmutableList.of(messageId)));
 
