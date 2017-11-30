@@ -123,9 +123,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
             if (messages.isEmpty()) {
                 addMessageIdNotFoundToResponse(messageId, builder);
             } else {
-                setInMailboxes(messageId, updateMessagePatch,
-                    messages.stream().map(MessageResult::getFlags),
-                    mailboxSession);
+                setInMailboxes(messageId, updateMessagePatch, mailboxSession);
                 Optional<MailboxException> updateError = messages.stream()
                     .flatMap(message -> updateFlags(messageId, updateMessagePatch, mailboxSession, message))
                     .findAny();
@@ -252,7 +250,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     private List<Flags> flagsFromOldKeyword(List<MessageResult> messagesToBeUpdated, OldKeyword oldKeyword) {
         return messagesToBeUpdated.stream()
                 .map(MessageResult::getFlags)
-                .map(flags -> oldKeyword.applyToState(flags))
+                .map(oldKeyword::applyToState)
                 .collect(Guavate.toImmutableList());
     }
 
@@ -320,7 +318,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                 .orElse(null);
     }
 
-    private void setInMailboxes(MessageId messageId, UpdateMessagePatch updateMessagePatch, Stream<Flags> originalFlags, MailboxSession mailboxSession) throws MailboxException {
+    private void setInMailboxes(MessageId messageId, UpdateMessagePatch updateMessagePatch, MailboxSession mailboxSession) throws MailboxException {
         Optional<List<String>> serializedMailboxIds = updateMessagePatch.getMailboxIds();
         if (serializedMailboxIds.isPresent()) {
             List<MailboxId> mailboxIds = serializedMailboxIds.get()
