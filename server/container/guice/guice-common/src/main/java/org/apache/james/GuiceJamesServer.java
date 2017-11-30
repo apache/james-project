@@ -19,6 +19,7 @@
 package org.apache.james;
 
 import java.util.Arrays;
+import java.util.List;
 
 import javax.annotation.PreDestroy;
 
@@ -59,6 +60,10 @@ public class GuiceJamesServer {
     }
 
     public GuiceJamesServer overrideWith(Module... overrides) {
+        return new GuiceJamesServer(Modules.override(module).with(overrides));
+    }
+
+    public GuiceJamesServer overrideWith(List<Module> overrides) {
         return new GuiceJamesServer(Modules.override(module).with(overrides));
     }
 

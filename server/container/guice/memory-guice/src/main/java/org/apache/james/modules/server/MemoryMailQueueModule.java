@@ -19,7 +19,6 @@
 
 package org.apache.james.modules.server;
 
-import org.apache.james.jmap.send.PostDequeueDecoratorFactory;
 import org.apache.james.queue.api.MailQueueFactory;
 
 import com.google.inject.AbstractModule;
@@ -30,7 +29,6 @@ public class MemoryMailQueueModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(MemoryMailQueueFactory.class).in(Scopes.SINGLETON);
-        bind(PostDequeueDecoratorFactory.class).in(Scopes.SINGLETON);
 
         bind(MailQueueFactory.class).to(MemoryMailQueueFactory.class);
     }

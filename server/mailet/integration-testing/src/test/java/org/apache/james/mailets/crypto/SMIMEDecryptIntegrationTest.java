@@ -104,8 +104,9 @@ public class SMIMEDecryptIntegrationTest {
                 .build())
             .build();
 
-        jamesServer = new TemporaryJamesServer(temporaryFolder, mailetContainer,
-                binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(() -> DATE_2015));
+        jamesServer = TemporaryJamesServer.builder()
+            .withOverrides(binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(() -> DATE_2015))
+            .build(temporaryFolder, mailetContainer);
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
 

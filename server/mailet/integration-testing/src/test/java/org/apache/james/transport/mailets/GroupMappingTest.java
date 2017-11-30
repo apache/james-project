@@ -166,7 +166,9 @@ public class GroupMappingTest {
                 .build())
             .build();
 
-        jamesServer = new TemporaryJamesServer(temporaryFolder, mailetContainer, (binder) -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));
+        jamesServer = TemporaryJamesServer.builder()
+            .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
+            .build(temporaryFolder, mailetContainer);
 
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();

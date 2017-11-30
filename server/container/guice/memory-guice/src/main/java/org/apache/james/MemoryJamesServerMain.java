@@ -19,7 +19,6 @@
 
 package org.apache.james;
 
-import org.apache.james.jmap.send.PostDequeueDecoratorFactory;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.data.MemoryDataJmapModule;
 import org.apache.james.modules.data.MemoryDataModule;
@@ -37,7 +36,6 @@ import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.MemoryMailQueueModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
-import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -60,8 +58,7 @@ public class MemoryJamesServerMain {
 
     public static final Module jmap = Modules.combine(
         new MemoryDataJmapModule(),
-        new JMAPServerModule(),
-        binder -> binder.bind(MailQueueItemDecoratorFactory.class).to(PostDequeueDecoratorFactory.class));
+        new JMAPServerModule());
 
     public static final Module inMemoryServerModule = Modules.combine(
         new MemoryDataModule(),

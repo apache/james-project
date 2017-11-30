@@ -22,11 +22,11 @@ package org.apache.james.mailets;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetContainer;
-import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
-import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.SMTPMessageSender;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -66,7 +66,7 @@ public class CommonMailetConfigurationTest {
             .addProcessor(CommonProcessors.sieveManagerCheck())
             .build();
 
-        jamesServer = new TemporaryJamesServer(temporaryFolder, mailetContainer);
+        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder, mailetContainer);
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
     }

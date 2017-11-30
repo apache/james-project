@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.TemporaryJamesServer;
@@ -30,17 +31,16 @@ import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
-import org.apache.james.transport.matchers.All;
-import org.apache.james.transport.matchers.RecipientIsLocal;
-import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.amqp.AmqpRule;
+import org.apache.james.transport.matchers.All;
+import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.util.streams.SwarmGenericContainer;
-import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.SMTPMessageSender;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.After;
@@ -130,7 +130,7 @@ public class AmqpForwardAttachmentTest {
                     .build())
             .build();
 
-        jamesServer = new TemporaryJamesServer(temporaryFolder, mailetContainer);
+        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder, mailetContainer);
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         calmlyAwait = Awaitility.with()
             .pollInterval(slowPacedPollInterval)

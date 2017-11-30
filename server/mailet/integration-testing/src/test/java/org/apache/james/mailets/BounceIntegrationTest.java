@@ -89,7 +89,7 @@ public class BounceIntegrationTest {
 
     @Test
     public void dsnBounceMailetShouldDeliverBounce() throws Exception {
-        jamesServer = new TemporaryJamesServer(temporaryFolder,
+        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder,
             generateMailetContainerConfiguration(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(DSNBounce.class)
@@ -111,7 +111,7 @@ public class BounceIntegrationTest {
 
     @Test
     public void bounceMailetShouldDeliverBounce() throws Exception {
-        jamesServer = new TemporaryJamesServer(temporaryFolder,
+        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder,
             generateMailetContainerConfiguration(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(Bounce.class)
@@ -133,7 +133,7 @@ public class BounceIntegrationTest {
 
     @Test
     public void forwardMailetShouldDeliverBounce() throws Exception {
-        jamesServer = new TemporaryJamesServer(temporaryFolder,
+        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder,
             generateMailetContainerConfiguration(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(Forward.class)
@@ -156,7 +156,7 @@ public class BounceIntegrationTest {
 
     @Test
     public void redirectMailetShouldDeliverBounce() throws Exception {
-        jamesServer = new TemporaryJamesServer(temporaryFolder,
+        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder,
             generateMailetContainerConfiguration(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(Redirect.class)
@@ -179,7 +179,7 @@ public class BounceIntegrationTest {
 
     @Test
     public void resendMailetShouldDeliverBounce() throws Exception {
-        jamesServer = new TemporaryJamesServer(temporaryFolder,
+        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder,
             generateMailetContainerConfiguration(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(Resend.class)
@@ -202,7 +202,7 @@ public class BounceIntegrationTest {
 
     @Test
     public void notifySenderMailetShouldDeliverBounce() throws Exception {
-        jamesServer = new TemporaryJamesServer(temporaryFolder,
+        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder,
             generateMailetContainerConfiguration(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(NotifySender.class)
@@ -224,7 +224,7 @@ public class BounceIntegrationTest {
 
     @Test
     public void notifyPostmasterMailetShouldDeliverBounce() throws Exception {
-        jamesServer = new TemporaryJamesServer(temporaryFolder,
+        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder,
             generateMailetContainerConfiguration(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(NotifyPostmaster.class)

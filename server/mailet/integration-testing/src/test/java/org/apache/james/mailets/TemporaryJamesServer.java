@@ -25,6 +25,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
@@ -39,9 +42,42 @@ import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.junit.rules.TemporaryFolder;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
 
 public class TemporaryJamesServer {
+
+    public static class Builder {
+        private ImmutableList.Builder<Module> overrideModules;
+        private Optional<Module> module;
+
+        private Builder() {
+            overrideModules = ImmutableList.builder();
+            module = Optional.empty();
+        }
+
+        public Builder withBase(Module module) {
+            this.module = Optional.of(module);
+            return this;
+        }
+
+        public Builder withOverrides(Module... modules) {
+            this.overrideModules.addAll(Arrays.asList(modules));
+            return this;
+        }
+
+        public TemporaryJamesServer build(TemporaryFolder temporaryFolder, MailetContainer mailetContainer) throws Exception {
+            return new TemporaryJamesServer(
+                temporaryFolder,
+                mailetContainer,
+                module.orElse(MemoryJamesServerMain.inMemoryServerAggregateModule),
+                overrideModules.build());
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     private static final String MAILETCONTAINER_CONFIGURATION_FILENAME = "mailetcontainer.xml";
 
@@ -49,12 +85,12 @@ public class TemporaryJamesServer {
 
     private final GuiceJamesServer jamesServer;
 
-
-    public TemporaryJamesServer(TemporaryFolder temporaryFolder, MailetContainer mailetContainer, Module... additionalModules) throws Exception {
+    private TemporaryJamesServer(TemporaryFolder temporaryFolder, MailetContainer mailetContainer,
+                                 Module serverBaseModule, List<Module> additionalModules) throws Exception {
         appendMailetConfigurations(temporaryFolder, mailetContainer);
 
         jamesServer = new GuiceJamesServer()
-            .combineWith(MemoryJamesServerMain.inMemoryServerAggregateModule)
+            .combineWith(serverBaseModule)
             .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
             .overrideWith(additionalModules)
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))

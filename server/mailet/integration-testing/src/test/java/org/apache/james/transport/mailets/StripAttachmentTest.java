@@ -111,7 +111,7 @@ public class StripAttachmentTest {
                     .build())
             .build();
 
-        jamesServer = new TemporaryJamesServer(temporaryFolder, mailetContainer);
+        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder, mailetContainer);
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
 

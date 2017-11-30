@@ -114,7 +114,7 @@ public class ContactExtractorTest {
                         .build())
                     .build())
             .build();
-        jamesServer = new TemporaryJamesServer(folder, mailets);
+        jamesServer = TemporaryJamesServer.builder().build(folder, mailets);
         DataProbeImpl probe = jamesServer.getProbe(DataProbeImpl.class);
         probe.addDomain(JAMES_ORG);
         probe.addUser(SENDER, PASSWORD);
