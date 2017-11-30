@@ -1496,9 +1496,12 @@ public abstract class SetMessagesMethodTest {
             .log().ifValidationFails()
             .statusCode(200)
             .body(NAME, equalTo("messagesSet"))
-            .body(ARGUMENTS + ".notCreated", aMapWithSize(0))
-            .body(ARGUMENTS + ".created", aMapWithSize(1))
-            .body(ARGUMENTS + ".created", hasKey(messageCreationId));
+            .body(ARGUMENTS + ".created", aMapWithSize(0))
+            .body(ARGUMENTS + ".notCreated", aMapWithSize(1))
+            .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
+            .body(ARGUMENTS + ".notCreated." + messageCreationId + ".type", equalTo("invalidProperties"))
+            .body(ARGUMENTS + ".notCreated." + messageCreationId + ".description", equalTo("Message creation is only supported in mailboxes with role Draft and Outbox"))
+            .body(ARGUMENTS + ".notCreated." + messageCreationId + ".properties", contains("mailboxIds"));
     }
 
     @Test
