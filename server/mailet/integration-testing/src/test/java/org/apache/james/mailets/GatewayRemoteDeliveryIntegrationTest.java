@@ -86,7 +86,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
     private static final String FROM = "from@" + JAMES_APACHE_ORG;
     private static final String RECIPIENT = "touser@" + JAMES_ANOTHER_DOMAIN;
     private static final Module SMTP_ONLY_MODULE = Modules.combine(
-        MemoryJamesServerMain.inMemoryServerModule,
+        MemoryJamesServerMain.IN_MEMORY_SERVER_MODULE,
         new ProtocolHandlerModule(),
         new SMTPServerModule(),
         new RawPostDequeueDecoratorModule(),

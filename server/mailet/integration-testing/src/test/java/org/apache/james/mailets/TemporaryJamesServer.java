@@ -70,7 +70,7 @@ public class TemporaryJamesServer {
             return new TemporaryJamesServer(
                 temporaryFolder,
                 mailetContainer,
-                module.orElse(MemoryJamesServerMain.inMemoryServerAggregateModule),
+                module.orElse(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE),
                 overrideModules.build());
         }
     }

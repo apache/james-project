@@ -42,13 +42,13 @@ import com.google.inject.util.Modules;
 
 public class MemoryJamesServerMain {
 
-    public static final Module webadmin = Modules.combine(
+    public static final Module WEBADMIN = Modules.combine(
         new WebAdminServerModule(),
         new DataRoutesModules(),
         new MailboxRoutesModule(),
         new SwaggerRoutesModule());
 
-    public static final Module protocols = Modules.combine(
+    public static final Module PROTOCOLS = Modules.combine(
         new IMAPServerModule(),
         new LMTPServerModule(),
         new ManageSieveServerModule(),
@@ -56,25 +56,25 @@ public class MemoryJamesServerMain {
         new ProtocolHandlerModule(),
         new SMTPServerModule());
 
-    public static final Module jmap = Modules.combine(
+    public static final Module JMAP = Modules.combine(
         new MemoryDataJmapModule(),
         new JMAPServerModule());
 
-    public static final Module inMemoryServerModule = Modules.combine(
+    public static final Module IN_MEMORY_SERVER_MODULE = Modules.combine(
         new MemoryDataModule(),
         new MemoryMailboxModule(),
         new MemoryMailQueueModule(),
         new MailboxModule());
 
-    public static final Module inMemoryServerAggregateModule = Modules.combine(
-        inMemoryServerModule,
-        protocols,
-        jmap,
-        webadmin);
+    public static final Module IN_MEMORY_SERVER_AGGREGATE_MODULE = Modules.combine(
+        IN_MEMORY_SERVER_MODULE,
+        PROTOCOLS,
+        JMAP,
+        WEBADMIN);
 
     public static void main(String[] args) throws Exception {
         new GuiceJamesServer()
-            .combineWith(inMemoryServerAggregateModule, new JMXServerModule())
+            .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE, new JMXServerModule())
             .start();
     }
 

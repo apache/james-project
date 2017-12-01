@@ -52,7 +52,7 @@ public class MemoryStepdefs {
         temporaryFolder.create();
         mainStepdefs.messageIdFactory = new InMemoryMessageId.Factory();
         mainStepdefs.jmapServer = new GuiceJamesServer()
-                .combineWith(MemoryJamesServerMain.inMemoryServerAggregateModule)
+                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
                 .overrideWith(new MemoryJmapServerModule(temporaryFolder),
                 		(binder) -> binder.bind(MessageId.Factory.class).toInstance(mainStepdefs.messageIdFactory))
                 .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class));

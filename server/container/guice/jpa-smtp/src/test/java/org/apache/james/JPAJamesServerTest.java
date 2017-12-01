@@ -57,7 +57,7 @@ public class JPAJamesServerTest {
 
     private org.apache.james.GuiceJamesServer createJamesServer() {
         return new GuiceJamesServer()
-                .combineWith(JPAJamesServerMain.jpaServerModule, JPAJamesServerMain.protocols)
+                .combineWith(JPAJamesServerMain.JPA_SERVER_MODULE, JPAJamesServerMain.PROTOCOLS)
                 .overrideWith(
                         new TestFilesystemModule(temporaryFolder),
                         new TestJPAConfigurationModule(),

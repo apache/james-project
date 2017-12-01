@@ -48,7 +48,7 @@ public class CassandraJmapTestRule implements TestRule {
 
     public GuiceJamesServer jmapServer(Module... additionals) {
         return new GuiceJamesServer()
-            .combineWith(CassandraJamesServerMain.cassandraServerModule, CassandraJamesServerMain.protocols)
+            .combineWith(CassandraJamesServerMain.CASSANDRA_SERVER_MODULE, CassandraJamesServerMain.PROTOCOLS)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))
             .overrideWith(new TestESMetricReporterModule())

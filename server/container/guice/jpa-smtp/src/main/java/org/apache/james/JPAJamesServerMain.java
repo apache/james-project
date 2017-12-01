@@ -38,7 +38,7 @@ import com.google.inject.util.Modules;
 
 public class JPAJamesServerMain {
 
-    public static final Module protocols = Modules.combine(
+    public static final Module PROTOCOLS = Modules.combine(
         new ProtocolHandlerModule(),
         new SMTPServerModule(),
         new WebAdminServerModule(),
@@ -46,7 +46,7 @@ public class JPAJamesServerMain {
         new NoJwtModule(),
         new DefaultProcessorsConfigurationProviderModule());
     
-    public static final Module jpaServerModule = Modules.combine(
+    public static final Module JPA_SERVER_MODULE = Modules.combine(
         new JPADataModule(),
         (binder) -> binder.bind(EntityManagerFactory.class).toProvider(OpenJPAPersistence::getEntityManagerFactory),
         new ActiveMQQueueModule(),
@@ -55,7 +55,7 @@ public class JPAJamesServerMain {
 
     public static void main(String[] args) throws Exception {
         GuiceJamesServer server = new GuiceJamesServer()
-                    .combineWith(jpaServerModule, protocols);
+                    .combineWith(JPA_SERVER_MODULE, PROTOCOLS);
         server.start();
     }
 

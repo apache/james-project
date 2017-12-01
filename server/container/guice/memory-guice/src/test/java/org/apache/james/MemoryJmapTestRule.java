@@ -42,7 +42,7 @@ public class MemoryJmapTestRule implements TestRule {
 
     public GuiceJamesServer jmapServer(Module... modules) {
         return new GuiceJamesServer()
-            .combineWith(MemoryJamesServerMain.inMemoryServerAggregateModule)
+            .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
             .overrideWith(modules)
             .overrideWith(new TestFilesystemModule(temporaryFolder),
                 new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))

@@ -51,14 +51,14 @@ import com.google.inject.util.Modules;
 
 public class CassandraJamesServerMain {
 
-    public static final Module webadmin = Modules.combine(
+    public static final Module WEBADMIN = Modules.combine(
         new CassandraRoutesModule(),
         new DataRoutesModules(),
         new MailboxRoutesModule(),
         new SwaggerRoutesModule(),
         new WebAdminServerModule());
 
-    public static final Module protocols = Modules.combine(
+    public static final Module PROTOCOLS = Modules.combine(
         new IMAPServerModule(),
         new LMTPServerModule(),
         new ManageSieveServerModule(),
@@ -66,9 +66,9 @@ public class CassandraJamesServerMain {
         new ProtocolHandlerModule(),
         new SMTPServerModule(),
         new JMAPServerModule(),
-        webadmin);
+        WEBADMIN);
 
-    public static final Module cassandraServerModule = Modules.combine(
+    public static final Module CASSANDRA_SERVER_MODULE = Modules.combine(
         new ActiveMQQueueModule(),
         new CassandraDomainListModule(),
         new CassandraJmapModule(),
@@ -85,7 +85,7 @@ public class CassandraJamesServerMain {
 
     public static void main(String[] args) throws Exception {
         GuiceJamesServer server = new GuiceJamesServer()
-                    .combineWith(cassandraServerModule, protocols, new JMXServerModule());
+                    .combineWith(CASSANDRA_SERVER_MODULE, PROTOCOLS, new JMXServerModule());
         server.start();
     }
 
