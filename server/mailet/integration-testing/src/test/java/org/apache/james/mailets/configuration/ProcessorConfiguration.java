@@ -20,6 +20,8 @@
 
 package org.apache.james.mailets.configuration;
 
+import java.util.Optional;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -37,7 +39,7 @@ public class ProcessorConfiguration implements SerializableAsXml {
     public static class Builder {
 
         private String state;
-        private boolean enableJmx;
+        private Optional<Boolean> enableJmx = Optional.empty();
         private ImmutableList.Builder<MailetConfiguration> mailets;
 
         private Builder() {
@@ -50,7 +52,7 @@ public class ProcessorConfiguration implements SerializableAsXml {
         }
 
         public Builder enableJmx(boolean enableJmx) {
-            this.enableJmx = enableJmx;
+            this.enableJmx = Optional.of(enableJmx);
             return this;
         }
 
@@ -61,7 +63,7 @@ public class ProcessorConfiguration implements SerializableAsXml {
 
         public ProcessorConfiguration build() {
             Preconditions.checkState(!Strings.isNullOrEmpty(state), "'state' is mandatory");
-            return new ProcessorConfiguration(state, enableJmx, mailets.build());
+            return new ProcessorConfiguration(state, enableJmx.orElse(false), mailets.build());
         }
     }
 
