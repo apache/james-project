@@ -189,6 +189,9 @@ public class Rights {
             LOGGER.info("Negative keys are not supported");
             return false;
         }
+        if (key.equals(MailboxACL.OWNER_KEY)) {
+            return false;
+        }
         if (key.getNameType() != MailboxACL.NameType.user) {
             LOGGER.info(key.getNameType() + " is not supported. Only 'user' is.");
             return false;
