@@ -1356,7 +1356,7 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    public void setMessagesShouldFailWhenSavingADraftInSeveralMailboxes() {
+    public void setMessagesShouldNotFailWhenSavingADraftInSeveralMailboxes() {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
@@ -1386,12 +1386,9 @@ public abstract class SetMessagesMethodTest {
             .log().ifValidationFails()
             .statusCode(200)
             .body(NAME, equalTo("messagesSet"))
-            .body(ARGUMENTS + ".created", aMapWithSize(0))
-            .body(ARGUMENTS + ".notCreated", aMapWithSize(1))
-            .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
-            .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].type", equalTo("invalidProperties"))
-            .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].properties", contains("mailboxIds"))
-            .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].description", equalTo("Message creation is only supported in mailboxes with role Draft and Outbox"));
+            .body(ARGUMENTS + ".notCreated", aMapWithSize(0))
+            .body(ARGUMENTS + ".created", aMapWithSize(1))
+            .body(ARGUMENTS + ".created", hasKey(messageCreationId));
     }
 
     @Test
@@ -1502,9 +1499,9 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".created", aMapWithSize(0))
             .body(ARGUMENTS + ".notCreated", aMapWithSize(1))
             .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
-            .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].type", equalTo("invalidProperties"))
-            .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].properties", contains("mailboxIds"))
-            .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].description", equalTo("Message creation is only supported in mailboxes with role Draft and Outbox"));
+            .body(ARGUMENTS + ".notCreated." + messageCreationId + ".type", equalTo("invalidProperties"))
+            .body(ARGUMENTS + ".notCreated." + messageCreationId + ".description", equalTo("Message creation is only supported in mailboxes with role Draft and Outbox"))
+            .body(ARGUMENTS + ".notCreated." + messageCreationId + ".properties", contains("mailboxIds"));
     }
 
     @Test
@@ -1985,8 +1982,8 @@ public abstract class SetMessagesMethodTest {
             .statusCode(200)
             .body(NAME, equalTo("messagesSet"))
             .body(ARGUMENTS + ".notUpdated", hasKey(draftId))
-            .body(ARGUMENTS + ".notUpdated[\""+draftId+"\"].type", equalTo("invalidArguments"))
-            .body(ARGUMENTS + ".notUpdated[\""+draftId+"\"].description", endsWith("One can not have a message in mailboxes that don't have all the `draft` role"))
+            .body(ARGUMENTS + ".notUpdated[\""+draftId+"\"].type", equalTo("invalidProperties"))
+            .body(ARGUMENTS + ".notUpdated[\""+draftId+"\"].description", endsWith("When moving a message to Outbox, only Outboxes mailboxes should be targeted."))
             .body(ARGUMENTS + ".notUpdated[\""+draftId+"\"].properties", hasSize(1))
             .body(ARGUMENTS + ".notUpdated[\""+draftId+"\"].properties", contains("mailboxIds"))
             .body(ARGUMENTS + ".created", aMapWithSize(0));
@@ -2021,7 +2018,7 @@ public abstract class SetMessagesMethodTest {
             .body(NAME, equalTo("messagesSet"))
             .body(ARGUMENTS + ".notUpdated", hasKey(messageId))
             .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].type", equalTo("invalidProperties"))
-            .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].description", endsWith("only drafts can be moved to Outbox"))
+            .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].description", endsWith("Only message with `$Draft` keyword can be moved to Outbox"))
             .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].properties", hasSize(1))
             .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].properties", contains("mailboxIds"))
             .body(ARGUMENTS + ".created", aMapWithSize(0));

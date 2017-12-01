@@ -178,40 +178,37 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     }
     
     private void performCreate(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session) throws MailboxException, InvalidMailboxForCreationException, MessagingException, AttachmentsNotFoundException {
-        if (isAppendToMailboxWithRole(Role.DRAFTS, entry.getValue(), session)) {
-            saveDraft(entry, responseBuilder, session);
-        } else if (isAppendToMailboxWithRole(Role.OUTBOX, entry.getValue(), session)) {
+        if (isAppendToMailboxWithRole(Role.OUTBOX, entry.getValue(), session)) {
             sendMailViaOutbox(entry, responseBuilder, session);
+        } else if (isDraft(entry.getValue())) {
+            assertNoOutbox(entry, session);
+            saveDraft(entry, responseBuilder, session);
         } else {
+            if (isAppendToMailboxWithRole(Role.DRAFTS, entry.getValue(), session)) {
+                throw new InvalidDraftKeywordsException("A draft message should be flagged as Draft");
+            }
             throw new InvalidMailboxForCreationException("The only implemented feature is sending via outbox and draft saving");
+        }
+    }
+
+    private void assertNoOutbox(CreationMessageEntry entry, MailboxSession session) throws MailboxException {
+        if (isTargettingAMailboxWithRole(Role.OUTBOX, entry.getValue(), session)) {
+            throw new InvalidMailboxForCreationException("Mailbox ids can combine Outbox with other mailbox");
         }
     }
 
     private void sendMailViaOutbox(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session) throws AttachmentsNotFoundException, MailboxException, MessagingException {
         validateArguments(entry, session);
-        assertNoDraftKeywords(entry.getValue());
         MessageWithId created = handleOutboxMessages(entry, session);
         responseBuilder.created(created.getCreationId(), created.getValue());
     }
 
     private void saveDraft(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session) throws AttachmentsNotFoundException, MailboxException, MessagingException {
         attachmentChecker.assertAttachmentsExist(entry, session);
-        assertDraftKeywords(entry.getValue());
         MessageWithId created = handleDraftMessages(entry, session);
         responseBuilder.created(created.getCreationId(), created.getValue());
     }
 
-    private void assertDraftKeywords(CreationMessage creationMessage) {
-        if (!isDraft(creationMessage)) {
-            throw new InvalidDraftKeywordsException("A draft message should be flagged as Draft");
-        }
-    }
-
-    private void assertNoDraftKeywords(CreationMessage creationMessage) {
-        if (isDraft(creationMessage)) {
-            throw new InvalidDraftKeywordsException("A draft message can not be created out of draft mailbox");
-        }
-    }
 
     private Boolean isDraft(CreationMessage creationMessage) {
         if (creationMessage.getOldKeyword().isPresent()) {
@@ -277,6 +274,12 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     private boolean isAppendToMailboxWithRole(Role role, CreationMessage entry, MailboxSession mailboxSession) throws MailboxException {
         return getMailboxWithRole(mailboxSession, role)
                 .map(entry::isOnlyIn)
+                .orElse(false);
+    }
+
+    private boolean isTargettingAMailboxWithRole(Role role, CreationMessage entry, MailboxSession mailboxSession) throws MailboxException {
+        return getMailboxWithRole(mailboxSession, role)
+                .map(entry::isIn)
                 .orElse(false);
     }
 

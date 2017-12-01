@@ -55,7 +55,7 @@ Feature: SetMessages method on shared folders
     Given "bob@domain.tld" shares his mailbox "shared" with "alice@domain.tld" with "lriws" rights
     And "alice@domain.tld" sets flags "$Flagged" on message "mAlice"
     And "alice@domain.tld" moves "mAlice" to mailbox "shared" of user "bob@domain.tld"
-    Then "alice@domain.tld" should see message "mAlice" with keywords $Flagged
+    Then "alice@domain.tld" should see message "mAlice" with keywords "$Flagged"
 
   Scenario: A delegated user can add sanitized messages to a shared mailbox when missing "write" right
     Given "bob@domain.tld" shares his mailbox "shared" with "alice@domain.tld" with "lri" rights
@@ -83,12 +83,12 @@ Feature: SetMessages method on shared folders
   Scenario: A user can update the flags on a message
     Given "alice@domain.tld" sets flags "$Flagged,$Seen" on message "mAlice"
     When "alice@domain.tld" sets flags "$Flagged,$Forwarded" on message "mAlice"
-    Then "alice@domain.tld" should see message "mAlice" with keywords $Flagged,$Forwarded
+    Then "alice@domain.tld" should see message "mAlice" with keywords "$Flagged,$Forwarded"
 
   Scenario: A delegated user add keywords on a delegated message when having "write" right
     Given "bob@domain.tld" shares his mailbox "shared" with "alice@domain.tld" with "lrw" rights
     When "alice@domain.tld" sets flags "$Flagged" on message "mBob"
-    Then "alice@domain.tld" should see message "mBob" with keywords $Flagged
+    Then "alice@domain.tld" should see message "mBob" with keywords "$Flagged"
 
   Scenario: A delegated user can not add keywords on a delegated message when missing "write" right
     Given "bob@domain.tld" shares his mailbox "shared" with "alice@domain.tld" with "latires" rights
@@ -113,20 +113,20 @@ Feature: SetMessages method on shared folders
     Given "bob@domain.tld" has a mailbox "Drafts"
     And "bob@domain.tld" tries to create a draft message "mDraft" in mailbox "Drafts"
     When "bob@domain.tld" sets flags "$Draft,$Seen" on message "mDraft"
-    Then "bob@domain.tld" should see message "mDraft" with keywords $Draft,$Seen
+    Then "bob@domain.tld" should see message "mDraft" with keywords "$Draft,$Seen"
 
-  Scenario: A user can not remove a draft flag on a draft messages
+  Scenario: A user can remove a draft flag on a draft messages
     Given "bob@domain.tld" has a mailbox "Drafts"
     And "bob@domain.tld" tries to create a draft message "mDraft" in mailbox "Drafts"
     When "bob@domain.tld" sets flags "$Seen" on message "mDraft"
-    Then message "mDraft" is not updated
-    And "bob@domain.tld" should see message "mDraft" with keywords $Draft
+    Then message "mDraft" is updated
+    And "bob@domain.tld" should see message "mDraft" with keywords "$Seen"
 
   Scenario: A user can add a flag on a draft
     Given "bob@domain.tld" has a mailbox "Drafts"
     And "bob@domain.tld" tries to create a draft message "mDraft" in mailbox "Drafts"
     When "bob@domain.tld" marks the message "mDraft" as flagged
-    Then "bob@domain.tld" should see message "mDraft" with keywords $Draft,$Flagged
+    Then "bob@domain.tld" should see message "mDraft" with keywords "$Draft,$Flagged"
 
   Scenario: A user can destroy a draft
     Given "bob@domain.tld" has a mailbox "Drafts"
@@ -135,16 +135,21 @@ Feature: SetMessages method on shared folders
     Then "bob@domain.tld" ask for message "mDraft"
     And the notFound list should contain "mDraft"
 
-  Scenario: Draft creation in outbox is not allowed
+  Scenario: Draft creation in outbox is allowed
     Given "bob@domain.tld" has a mailbox "Outbox"
     When "bob@domain.tld" tries to create a draft message "mDraft" in mailbox "Outbox"
-    Then message "mDraft" is not created
+    Then message "mDraft" is created
 
-  Scenario: A user can not move draft out of draft mailbox
+  Scenario: Draft creation in any mailbox is allowed
+    Given "bob@domain.tld" has a mailbox "Outbox"
+    When "bob@domain.tld" tries to create a draft message "mDraft" in mailbox "shared"
+    Then message "mDraft" is created
+
+  Scenario: A user can move draft out of draft mailbox
     Given "bob@domain.tld" has a mailbox "Drafts"
     And "bob@domain.tld" tries to create a draft message "mDraft" in mailbox "Drafts"
     When "bob@domain.tld" moves "mDraft" to user mailbox "shared"
-    Then message "mDraft" is not updated
+    Then message "mDraft" is updated
 
   Scenario: A user can move draft out of draft mailbox when removing draft flag
     Given "bob@domain.tld" has a mailbox "Drafts"
@@ -164,18 +169,18 @@ Feature: SetMessages method on shared folders
     When the user moves "mBob" to user mailbox "Drafts" and set flags "$Draft"
     Then message "mBob" is updated
 
-  Scenario: A user can not copy draft out of draft mailbox
+  Scenario: A user can copy draft out of draft mailbox
     Given "bob@domain.tld" has a mailbox "Drafts"
     And "bob@domain.tld" tries to create a draft message "mDraft" in mailbox "Drafts"
     When "bob@domain.tld" copies "mDraft" from mailbox "Drafts" to mailbox "shared"
-    Then message "mDraft" is not updated
+    Then message "mDraft" is updated
 
-  Scenario: A user can not copy draft out of draft mailbox
+  Scenario: A user can copy draft out of draft mailbox
     Given "bob@domain.tld" has a mailbox "Drafts"
     When "bob@domain.tld" moves "mBob" to user mailbox "Drafts"
-    Then message "mBob" is not updated
+    Then message "mBob" is updated
 
-  Scenario: A user can not copy draft out of draft mailbox
+  Scenario: A user can copy draft out of draft mailbox
     Given "bob@domain.tld" has a mailbox "Drafts"
     When "bob@domain.tld" copies "mBob" from mailbox "shared" to mailbox "Drafts"
-    Then message "mBob" is not updated
+    Then message "mBob" is updated
