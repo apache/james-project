@@ -49,6 +49,8 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.streams.Iterators;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.utils.ErrorResponder;
+import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
@@ -158,13 +160,21 @@ public class GroupsRoutes implements Routes {
 
     private void ensureRegisteredDomain(String domain) throws DomainListException {
         if (!domainList.containsDomain(domain)) {
-            throw halt(HttpStatus.FORBIDDEN_403);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.FORBIDDEN_403)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("Server doesn't own the domain: " + domain)
+                .haltError();
         }
     }
 
     private void ensureNotShadowingAnotherAddress(MailAddress groupAddress) throws UsersRepositoryException {
         if (usersRepository.contains(groupAddress.asString())) {
-            throw halt(HttpStatus.CONFLICT_409);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.CONFLICT_409)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("Requested group address is already used for another purpose")
+                .haltError();
         }
     }
 
@@ -217,16 +227,30 @@ public class GroupsRoutes implements Routes {
             String decodedAddress = URLDecoder.decode(address, "UTF-8");
             return new MailAddress(decodedAddress);
         } catch (AddressException e) {
-            throw halt(HttpStatus.BAD_REQUEST_400);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("The group is not an email address")
+                .cause(e)
+                .haltError();
         } catch (UnsupportedEncodingException e) {
             LOGGER.error("UTF-8 should be a valid encoding");
-            throw halt(HttpStatus.INTERNAL_SERVER_ERROR_500);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .type(ErrorType.SERVER_ERROR)
+                .message("Internal server error - Something went bad on the server side.")
+                .cause(e)
+                .haltError();
         }
     }
 
     private void ensureNonEmptyMappings(Mappings mappings) {
         if (mappings == null || mappings.isEmpty()) {
-            throw halt(HttpStatus.NOT_FOUND_404);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("The group does not exist")
+                .haltError();
         }
     }
 }

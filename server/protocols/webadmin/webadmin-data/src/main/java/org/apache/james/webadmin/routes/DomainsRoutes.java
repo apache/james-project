@@ -22,6 +22,7 @@ package org.apache.james.webadmin.routes;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
 import java.util.List;
+
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -33,7 +34,15 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.utils.ErrorResponder;
+import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.eclipse.jetty.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -41,12 +50,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-
 import spark.Request;
 import spark.Response;
 import spark.Service;
@@ -160,15 +163,26 @@ public class DomainsRoutes implements Routes {
     }
 
     private String addDomain(Request request, Response response) {
+        String domainName = request.params(DOMAIN_NAME);
         try {
-            addDomain(request.params(DOMAIN_NAME));
+            addDomain(domainName);
             response.status(204);
         } catch (DomainListException e) {
-            LOGGER.info("{} already exists", request.params(DOMAIN_NAME));
-            response.status(204);
+            LOGGER.info("{} already exists", domainName);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.NO_CONTENT_204)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message(domainName + " already exists")
+                .cause(e)
+                .haltError();
         } catch (IllegalArgumentException e) {
             LOGGER.info("Invalid request for domain creation");
-            response.status(400);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("Invalid request for domain creation " + domainName)
+                .cause(e)
+                .haltError();
         }
         return Constants.EMPTY_BODY;
     }
@@ -181,8 +195,13 @@ public class DomainsRoutes implements Routes {
     }
 
     private String exists(Request request, Response response) throws DomainListException {
-        if (!domainList.containsDomain(request.params(DOMAIN_NAME))) {
-            response.status(404);
+        String domainName = request.params(DOMAIN_NAME);
+        if (!domainList.containsDomain(domainName)) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("The domain list does not contain: " + domainName)
+                .haltError();
         } else {
             response.status(204);
         }

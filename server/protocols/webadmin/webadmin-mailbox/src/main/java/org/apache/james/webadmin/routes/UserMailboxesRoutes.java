@@ -29,9 +29,14 @@ import javax.ws.rs.Produces;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.service.UserMailboxesService;
+import org.apache.james.webadmin.utils.ErrorResponder;
+import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.MailboxHaveChildrenException;
 import org.apache.james.webadmin.validation.MailboxName;
+import org.eclipse.jetty.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -39,8 +44,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import spark.Service;
 
 @Api(tags = "User's Mailbox")
@@ -100,8 +103,12 @@ public class UserMailboxesRoutes implements Routes {
                 return userMailboxesService.listMailboxes(request.params(USER_NAME));
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid get on user mailboxes", e);
-                response.status(404);
-                return Constants.EMPTY_BODY;
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Invalid get on user mailboxes")
+                    .cause(e)
+                    .haltError();
             }
         }, jsonTransformer);
     }
@@ -127,13 +134,28 @@ public class UserMailboxesRoutes implements Routes {
                 response.status(204);
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid delete on user mailbox", e);
-                response.status(404);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Invalid delete on user mailboxes")
+                    .cause(e)
+                    .haltError();
             } catch (MailboxHaveChildrenException e) {
                 LOGGER.info("Attempt to delete a mailbox with children");
-                response.status(409);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.CONFLICT_409)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Attempt to delete a mailbox with children")
+                    .cause(e)
+                    .haltError();
             } catch (IllegalArgumentException e) {
                 LOGGER.info("Attempt to create an invalid mailbox");
-                response.status(400);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Attempt to create an invalid mailbox")
+                    .cause(e)
+                    .haltError();
             }
             return Constants.EMPTY_BODY;
         });
@@ -157,7 +179,12 @@ public class UserMailboxesRoutes implements Routes {
                 response.status(204);
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid delete on user mailboxes", e);
-                response.status(404);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Invalid delete on user mailboxes")
+                    .cause(e)
+                    .haltError();
             }
             return Constants.EMPTY_BODY;
         });
@@ -183,14 +210,28 @@ public class UserMailboxesRoutes implements Routes {
                 if (userMailboxesService.testMailboxExists(request.params(USER_NAME), new MailboxName(request.params(MAILBOX_NAME)))) {
                     response.status(204);
                 } else {
-                    response.status(404);
+                    throw ErrorResponder.builder()
+                        .statusCode(HttpStatus.NOT_FOUND_404)
+                        .type(ErrorType.INVALID_ARGUMENT)
+                        .message("Invalid get on user mailboxes")
+                        .haltError();
                 }
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid get on user mailbox", e);
-                response.status(404);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Invalid get on user mailboxes")
+                    .cause(e)
+                    .haltError();
             } catch (IllegalArgumentException e) {
                 LOGGER.info("Attempt to create an invalid mailbox");
-                response.status(400);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Attempt to create an invalid mailbox")
+                    .cause(e)
+                    .haltError();
             }
             return Constants.EMPTY_BODY;
         });
@@ -217,10 +258,20 @@ public class UserMailboxesRoutes implements Routes {
                 response.status(204);
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid put on user mailbox", e);
-                response.status(404);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Invalid get on user mailboxes")
+                    .cause(e)
+                    .haltError();
             } catch (IllegalArgumentException e) {
                 LOGGER.info("Attempt to create an invalid mailbox");
-                response.status(400);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Attempt to create an invalid mailbox")
+                    .cause(e)
+                    .haltError();
             }
             return Constants.EMPTY_BODY;
         });

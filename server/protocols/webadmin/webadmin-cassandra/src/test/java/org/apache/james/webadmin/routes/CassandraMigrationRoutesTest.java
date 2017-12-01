@@ -145,12 +145,23 @@ public class CassandraMigrationRoutesTest {
     public void postShouldReturnErrorCodeWhenInvalidVersion() throws Exception {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(OLDER_VERSION)));
 
-        given()
+        Map<String, Object> errors = given()
             .body(String.valueOf("NonInt"))
         .with()
             .post("/upgrade")
         .then()
-            .statusCode(400);
+            .statusCode(400)
+            .contentType(ContentType.JSON)
+            .extract()
+            .body()
+            .jsonPath()
+            .getMap(".");
+
+        assertThat(errors)
+            .containsEntry("statusCode", 400)
+            .containsEntry("type", "InvalidArgument")
+            .containsEntry("message", "Invalid request for version upgrade")
+            .containsEntry("cause", "For input string: \"NonInt\"");
 
         verifyNoMoreInteractions(schemaVersionDAO);
     }
@@ -175,12 +186,23 @@ public class CassandraMigrationRoutesTest {
     public void postShouldNotDoMigrationWhenCurrentVersionIsNewerThan() throws Exception {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(CURRENT_VERSION)));
 
-        given()
+        Map<String, Object> errors = given()
             .body(String.valueOf(OLDER_VERSION))
         .with()
             .post("/upgrade")
         .then()
-            .statusCode(410);
+            .statusCode(410)
+            .contentType(ContentType.JSON)
+            .extract()
+            .body()
+            .jsonPath()
+            .getMap(".");
+
+        assertThat(errors)
+            .containsEntry("statusCode", 410)
+            .containsEntry("type", "WrongState")
+            .containsEntry("message", "The migration requested can not be performed")
+            .containsEntry("cause", "Current version is already up to date");
 
         verify(schemaVersionDAO, times(1)).getCurrentSchemaVersion();
         verifyNoMoreInteractions(schemaVersionDAO);
@@ -205,10 +227,21 @@ public class CassandraMigrationRoutesTest {
     public void postShouldNotDoMigrationToLatestVersionWhenItIsUpToDate() throws Exception {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(LATEST_VERSION)));
 
-        when()
+        Map<String, Object> errors = when()
             .post("/upgrade/latest")
         .then()
-            .statusCode(410);
+            .statusCode(410)
+            .contentType(ContentType.JSON)
+            .extract()
+            .body()
+            .jsonPath()
+            .getMap(".");
+
+        assertThat(errors)
+            .containsEntry("statusCode", 410)
+            .containsEntry("type", "WrongState")
+            .containsEntry("message", "The migration requested can not be performed")
+            .containsEntry("cause", "Current version is already up to date");
 
         verify(schemaVersionDAO, times(1)).getCurrentSchemaVersion();
         verifyNoMoreInteractions(schemaVersionDAO);

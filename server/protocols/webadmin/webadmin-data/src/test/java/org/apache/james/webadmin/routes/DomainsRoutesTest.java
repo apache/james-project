@@ -27,6 +27,8 @@ import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -35,6 +37,7 @@ import static org.mockito.Mockito.when;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
@@ -157,10 +160,20 @@ public class DomainsRoutesTest {
 
         @Test
         public void putShouldReturnUserErrorWhenNameContainsAT() {
-            when()
+            Map<String, Object> errors = when()
                 .put(DOMAIN + "@" + DOMAIN)
             .then()
-                .statusCode(400);
+                .statusCode(400)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", 400)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "Invalid request for domain creation domain@domain");
         }
 
         @Test
@@ -173,12 +186,21 @@ public class DomainsRoutesTest {
 
         @Test
         public void putShouldReturnUserErrorWhenNameIsTooLong() {
-            when()
+            Map<String, Object> errors = when()
                 .put(DOMAIN + "0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789." +
                     "0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789." +
                     "0123456789.0123456789.0123456789.")
             .then()
-                .statusCode(400);
+                .statusCode(400)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", 400)
+                .containsEntry("type", "InvalidArgument");
         }
 
         @Test

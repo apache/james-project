@@ -26,7 +26,10 @@ import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.CassandraVersionRequest;
 import org.apache.james.webadmin.service.CassandraMigrationService;
 import org.apache.james.webadmin.service.MigrationException;
+import org.apache.james.webadmin.utils.ErrorResponder;
+import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,9 +44,6 @@ public class CassandraMigrationRoutes implements Routes {
     private static final String VERSION_UPGRADE_BASE = VERSION_BASE + "/upgrade";
     private static final String VERSION_UPGRADE_TO_LATEST_BASE = VERSION_UPGRADE_BASE + "/latest";
     private static final int NO_CONTENT = 204;
-    private static final int INVALID_VERSION = 400;
-    private static final int MIGRATION_CAN_NOT_BE_PERFORMED = 410;
-    private static final int INTERNAL_ERROR = 500;
 
     private final CassandraMigrationService cassandraMigrationService;
     private final JsonTransformer jsonTransformer;
@@ -72,15 +72,28 @@ public class CassandraMigrationRoutes implements Routes {
                 response.status(NO_CONTENT);
             } catch (NullPointerException | IllegalArgumentException e) {
                 LOGGER.info("Invalid request for version upgrade");
-                response.status(INVALID_VERSION);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Invalid request for version upgrade")
+                    .cause(e)
+                    .haltError();
             } catch (IllegalStateException e) {
                 LOGGER.info("The migration requested can not be performed.", e);
-                response.status(MIGRATION_CAN_NOT_BE_PERFORMED);
-                response.body(e.getMessage());
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.GONE_410)
+                    .type(ErrorType.WRONG_STATE)
+                    .message("The migration requested can not be performed")
+                    .cause(e)
+                    .haltError();
             } catch (MigrationException e) {
                 LOGGER.error("An error lead to partial migration process", e);
-                response.status(INTERNAL_ERROR);
-                response.body(e.getMessage());
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                    .type(ErrorType.SERVER_ERROR)
+                    .message("An error lead to partial migration process")
+                    .cause(e)
+                    .haltError();
             }
             return Constants.EMPTY_BODY;
         });
@@ -90,12 +103,20 @@ public class CassandraMigrationRoutes implements Routes {
                 cassandraMigrationService.upgradeToLastVersion();
             } catch (IllegalStateException e) {
                 LOGGER.info("The migration requested can not be performed.", e);
-                response.status(MIGRATION_CAN_NOT_BE_PERFORMED);
-                response.body(e.getMessage());
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.GONE_410)
+                    .type(ErrorType.WRONG_STATE)
+                    .message("The migration requested can not be performed")
+                    .cause(e)
+                    .haltError();
             } catch (MigrationException e) {
                 LOGGER.error("An error lead to partial migration process", e);
-                response.status(INTERNAL_ERROR);
-                response.body(e.getMessage());
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                    .type(ErrorType.SERVER_ERROR)
+                    .message("An error lead to partial migration process")
+                    .cause(e)
+                    .haltError();
             }
 
             return Constants.EMPTY_BODY;

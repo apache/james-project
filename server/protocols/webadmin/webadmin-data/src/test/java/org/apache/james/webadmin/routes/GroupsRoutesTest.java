@@ -26,6 +26,7 @@ import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -33,6 +34,7 @@ import static org.mockito.Mockito.mock;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
@@ -59,6 +61,7 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.filter.log.LogDetail;
 import com.jayway.restassured.http.ContentType;
+
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 
 @RunWith(HierarchicalContextRunner.class)
@@ -148,10 +151,20 @@ public class GroupsRoutesTest {
 
         @Test
         public void getUnregisteredGroupShouldReturnNotFound() {
-            when()
+            Map<String, Object> errors = when()
                 .get("unknown@domain.travel")
             .then()
-                .statusCode(HttpStatus.NOT_FOUND_404);
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", 404)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "The group does not exist");
         }
 
         @Test
@@ -276,11 +289,20 @@ public class GroupsRoutesTest {
 
         @Test
         public void putUserInGroupShouldNotAllowGroupOnUnregisteredDomain() throws UsersRepositoryException, DomainListException {
-            when()
+            Map<String, Object> errors = when()
                 .put("group@unregisteredDomain" + SEPARATOR + USER_A)
             .then()
+                .statusCode(HttpStatus.FORBIDDEN_403)
                 .contentType(ContentType.JSON)
-                .statusCode(HttpStatus.FORBIDDEN_403);
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", 403)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "Server doesn't own the domain: unregisteredDomain");
         }
 
 
@@ -288,11 +310,20 @@ public class GroupsRoutesTest {
         public void putUserInGroupShouldNotAllowUserShadowing() throws UsersRepositoryException, DomainListException {
             usersRepository.addUser(USER_A, "whatever");
 
-            when()
+            Map<String, Object> errors = when()
                 .put(USER_A + SEPARATOR + USER_B)
             .then()
+                .statusCode(HttpStatus.CONFLICT_409)
                 .contentType(ContentType.JSON)
-                .statusCode(HttpStatus.CONFLICT_409);
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", 409)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "Requested group address is already used for another purpose");
         }
 
         @Test
@@ -370,18 +401,40 @@ public class GroupsRoutesTest {
 
         @Test
         public void getMalformedGroupShouldReturnBadRequest() {
-            when()
+            Map<String, Object> errors = when()
                 .get("not-an-address")
             .then()
-                .statusCode(HttpStatus.BAD_REQUEST_400);
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", 400)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "The group is not an email address")
+                .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
         }
 
         @Test
         public void putMalformedGroupShouldReturnBadRequest() {
-            when()
+            Map<String, Object> errors = when()
                 .put("not-an-address" + SEPARATOR + USER_A)
             .then()
-                .statusCode(HttpStatus.BAD_REQUEST_400);
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", 400)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "The group is not an email address")
+                .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
         }
 
         @Test
@@ -389,7 +442,8 @@ public class GroupsRoutesTest {
             when()
                 .put(GROUP_WITH_SLASH + SEPARATOR + USER_A)
             .then()
-                .statusCode(HttpStatus.NOT_FOUND_404);
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .body(containsString("404 Not found"));
         }
 
         @Test
@@ -397,15 +451,27 @@ public class GroupsRoutesTest {
             when()
                 .put(GROUP1 + SEPARATOR + USER_WITH_SLASH)
             .then()
-                .statusCode(HttpStatus.NOT_FOUND_404);
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .body(containsString("404 Not found"));
         }
 
         @Test
         public void putMalformedAddressShouldReturnBadRequest() {
-            when()
+            Map<String, Object> errors = when()
                 .put(GROUP1 + SEPARATOR + "not-an-address")
             .then()
-                .statusCode(HttpStatus.BAD_REQUEST_400);
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", 400)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "The group is not an email address")
+                .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
         }
 
         @Test
@@ -413,23 +479,46 @@ public class GroupsRoutesTest {
             when()
                 .put(GROUP1)
             .then()
-                .statusCode(HttpStatus.BAD_REQUEST_400);
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body(is(""));
         }
 
         @Test
         public void deleteMalformedGroupShouldReturnBadRequest() {
-            when()
+            Map<String, Object> errors = when()
                 .delete("not-an-address" + SEPARATOR + USER_A)
             .then()
-                .statusCode(HttpStatus.BAD_REQUEST_400);
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", 400)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "The group is not an email address")
+                .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
         }
 
         @Test
         public void deleteMalformedAddressShouldReturnBadRequest() {
-            when()
+            Map<String, Object> errors = when()
                 .delete(GROUP1 + SEPARATOR + "not-an-address")
             .then()
-                .statusCode(HttpStatus.BAD_REQUEST_400);
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", 400)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "The group is not an email address")
+                .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
         }
 
         @Test
@@ -437,7 +526,8 @@ public class GroupsRoutesTest {
             when()
                 .delete(GROUP1)
             .then()
-                .statusCode(HttpStatus.BAD_REQUEST_400);
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body(is(""));
         }
 
         @Test
@@ -449,7 +539,8 @@ public class GroupsRoutesTest {
             when()
                 .put(GROUP1 + SEPARATOR + GROUP2)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .body(containsString("500 Internal Server Error"));
         }
 
         @Test
@@ -461,7 +552,8 @@ public class GroupsRoutesTest {
             when()
                 .put(GROUP1 + SEPARATOR + GROUP2)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .body(containsString("500 Internal Server Error"));
         }
 
         @Test
@@ -473,7 +565,8 @@ public class GroupsRoutesTest {
             when()
                 .put(GROUP1 + SEPARATOR + GROUP2)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .body(containsString("500 Internal Server Error"));
         }
 
         @Test
@@ -485,7 +578,8 @@ public class GroupsRoutesTest {
             when()
                 .get()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .body(containsString("500 Internal Server Error"));
         }
 
         @Test
@@ -497,7 +591,8 @@ public class GroupsRoutesTest {
             when()
                 .get()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .body(containsString("500 Internal Server Error"));
         }
 
         @Test
@@ -509,7 +604,8 @@ public class GroupsRoutesTest {
             when()
                 .get()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .body(containsString("500 Internal Server Error"));
         }
 
         @Test
@@ -521,7 +617,8 @@ public class GroupsRoutesTest {
             when()
                 .delete(GROUP1 + SEPARATOR + GROUP2)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .body(containsString("500 Internal Server Error"));
         }
 
         @Test
@@ -533,7 +630,8 @@ public class GroupsRoutesTest {
             when()
                 .delete(GROUP1 + SEPARATOR + GROUP2)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .body(containsString("500 Internal Server Error"));
         }
 
         @Test
@@ -545,7 +643,8 @@ public class GroupsRoutesTest {
             when()
                 .delete(GROUP1 + SEPARATOR + GROUP2)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .body(containsString("500 Internal Server Error"));
         }
 
         @Test
@@ -557,7 +656,8 @@ public class GroupsRoutesTest {
             when()
                 .get(GROUP1)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .body(containsString("500 Internal Server Error"));
         }
 
         @Test
@@ -569,7 +669,8 @@ public class GroupsRoutesTest {
             when()
                 .get(GROUP1)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .body(containsString("500 Internal Server Error"));
         }
 
         @Test
@@ -581,7 +682,8 @@ public class GroupsRoutesTest {
             when()
                 .get(GROUP1)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .body(containsString("500 Internal Server Error"));
         }
     }
 

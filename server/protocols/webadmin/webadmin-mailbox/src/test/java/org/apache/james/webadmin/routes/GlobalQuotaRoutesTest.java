@@ -24,6 +24,9 @@ import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.CoreMatchers.is;
+
+import java.util.Map;
 
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.model.Quota;
@@ -101,20 +104,41 @@ public class GlobalQuotaRoutesTest {
 
     @Test
     public void putCountShouldRejectInvalid() throws Exception {
-        given()
+        Map<String, Object> errors = given()
             .body("invalid")
             .put(GlobalQuotaRoutes.COUNT_ENDPOINT)
         .then()
-            .statusCode(400);
+            .statusCode(400)
+            .contentType(ContentType.JSON)
+            .extract()
+            .body()
+            .jsonPath()
+            .getMap(".");
+
+        assertThat(errors)
+            .containsEntry("statusCode", 400)
+            .containsEntry("type", "InvalidArgument")
+            .containsEntry("message", "Invalid quota. Need to be an integer value greater than 0")
+            .containsEntry("cause", "For input string: \"invalid\"");
     }
 
     @Test
     public void putCountShouldRejectNegative() throws Exception {
-        given()
+        Map<String, Object> errors = given()
             .body("-1")
             .put(GlobalQuotaRoutes.COUNT_ENDPOINT)
         .then()
-            .statusCode(400);
+            .statusCode(400)
+            .contentType(ContentType.JSON)
+            .extract()
+            .body()
+            .jsonPath()
+            .getMap(".");
+
+        assertThat(errors)
+            .containsEntry("statusCode", 400)
+            .containsEntry("type", "InvalidArgument")
+            .containsEntry("message", "Invalid quota. Need to be an integer value greater than 0");
     }
 
     @Test
@@ -174,20 +198,41 @@ public class GlobalQuotaRoutesTest {
 
     @Test
     public void putSizeShouldRejectInvalid() throws Exception {
-        given()
+        Map<String, Object> errors = given()
             .body("invalid")
             .put(GlobalQuotaRoutes.SIZE_ENDPOINT)
         .then()
-            .statusCode(400);
+            .statusCode(400)
+            .contentType(ContentType.JSON)
+            .extract()
+            .body()
+            .jsonPath()
+            .getMap(".");
+
+        assertThat(errors)
+            .containsEntry("statusCode", 400)
+            .containsEntry("type", "InvalidArgument")
+            .containsEntry("message", "Invalid quota. Need to be an integer value greater than 0")
+            .containsEntry("cause", "For input string: \"invalid\"");
     }
 
     @Test
     public void putSizeShouldRejectNegative() throws Exception {
-        given()
+        Map<String, Object> errors = given()
             .body("-1")
             .put(GlobalQuotaRoutes.SIZE_ENDPOINT)
         .then()
-            .statusCode(400);
+            .statusCode(400)
+            .contentType(ContentType.JSON)
+            .extract()
+            .body()
+            .jsonPath()
+            .getMap(".");
+
+        assertThat(errors)
+            .containsEntry("statusCode", 400)
+            .containsEntry("type", "InvalidArgument")
+            .containsEntry("message", "Invalid quota. Need to be an integer value greater than 0");
     }
 
     @Test

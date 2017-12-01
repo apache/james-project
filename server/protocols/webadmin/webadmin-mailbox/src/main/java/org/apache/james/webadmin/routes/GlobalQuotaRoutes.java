@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.routes;
 
+import static spark.Spark.halt;
+
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -32,9 +34,14 @@ import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.QuotaDTO;
 import org.apache.james.webadmin.dto.QuotaRequest;
+import org.apache.james.webadmin.utils.ErrorResponder;
+import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.eclipse.jetty.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -42,8 +49,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import spark.Service;
 
 @Api(tags = "GlobalQuota")
@@ -108,10 +113,20 @@ public class GlobalQuotaRoutes implements Routes {
                 response.status(204);
             } catch (JsonExtractException e) {
                 LOGGER.info("Malformed JSON", e);
-                response.status(400);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Malformed JSON input")
+                    .cause(e)
+                    .haltError();
             } catch (IllegalArgumentException e) {
                 LOGGER.info("Quota should be positive or unlimited (-1)", e);
-                response.status(400);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Quota should be positive or unlimited (-1)")
+                    .cause(e)
+                    .haltError();
             }
             return Constants.EMPTY_BODY;
         }));
@@ -170,7 +185,12 @@ public class GlobalQuotaRoutes implements Routes {
                 response.status(204);
             } catch (IllegalArgumentException e) {
                 LOGGER.info("Invalid quota. Need to be an integer value greater than 0");
-                response.status(400);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Invalid quota. Need to be an integer value greater than 0")
+                    .cause(e)
+                    .haltError();
             }
             return Constants.EMPTY_BODY;
         });
@@ -225,7 +245,12 @@ public class GlobalQuotaRoutes implements Routes {
                 response.status(204);
             } catch (IllegalArgumentException e) {
                 LOGGER.info("Invalid quota. Need to be an integer value greater than 0");
-                response.status(400);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Invalid quota. Need to be an integer value greater than 0")
+                    .cause(e)
+                    .haltError();
             }
             return Constants.EMPTY_BODY;
         });
