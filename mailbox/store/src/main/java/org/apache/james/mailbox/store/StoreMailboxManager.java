@@ -19,11 +19,11 @@
 
 package org.apache.james.mailbox.store;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -112,7 +112,7 @@ public class StoreMailboxManager implements MailboxManager {
 
     private final StoreRightManager storeRightManager;
 
-    private final static Random RANDOM = new Random();
+    private final static SecureRandom RANDOM = new SecureRandom();
 
     private MessageBatcher copyBatcher;
 

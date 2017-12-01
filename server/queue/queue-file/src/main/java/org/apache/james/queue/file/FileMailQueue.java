@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.security.SecureRandom;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
@@ -73,6 +74,7 @@ public class FileMailQueue implements ManageableMailQueue {
     private final static String OBJECT_EXTENSION = ".obj";
     private final static String NEXT_DELIVERY = "FileQueueNextDelivery";
     private final static int SPLITCOUNT = 10;
+    private final static SecureRandom RANDOM = new SecureRandom();
 
     public FileMailQueue(MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, File parentDir, String queuename, boolean sync) throws IOException {
         this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
@@ -154,8 +156,7 @@ public class FileMailQueue implements ManageableMailQueue {
         FileOutputStream foout = null;
         ObjectOutputStream oout = null;
         try {
-            int i = (int) (Math.random() * SPLITCOUNT + 1);
-
+            int i = RANDOM.nextInt(SPLITCOUNT) + 1;
 
             String name = queueDirName + "/" + i + "/" + key;
 

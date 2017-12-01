@@ -24,8 +24,8 @@ import java.io.FilenameFilter;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.security.SecureRandom;
 import java.util.Date;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -66,7 +66,7 @@ public class MaildirMessageName {
     /**
      * A random generator for the random part in the unique message names
      */
-    private static final Random random = new Random();
+    private static final SecureRandom random = new SecureRandom();
 
     /**
      * The process id of the server process
