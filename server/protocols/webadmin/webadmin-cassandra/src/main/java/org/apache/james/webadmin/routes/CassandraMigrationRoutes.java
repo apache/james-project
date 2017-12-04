@@ -43,10 +43,13 @@ public class CassandraMigrationRoutes implements Routes {
     private static final String VERSION_BASE_LATEST = VERSION_BASE + "/latest";
     private static final String VERSION_UPGRADE_BASE = VERSION_BASE + "/upgrade";
     private static final String VERSION_UPGRADE_TO_LATEST_BASE = VERSION_UPGRADE_BASE + "/latest";
-    private static final int NO_CONTENT = 204;
 
     private final CassandraMigrationService cassandraMigrationService;
     private final JsonTransformer jsonTransformer;
+
+    public static String INVALID_VERSION_UPGRADE_REQUEST = "Invalid request for version upgrade";
+    public static String MIGRATION_REQUEST_CAN_NOT_BE_DONE = "The migration requested can not be performed";
+    public static String PARTIAL_MIGRATION_PROCESS = "An error lead to partial migration process";
 
     @Inject
     public CassandraMigrationRoutes(CassandraMigrationService cassandraMigrationService, JsonTransformer jsonTransformer) {
@@ -69,29 +72,29 @@ public class CassandraMigrationRoutes implements Routes {
             try {
                 CassandraVersionRequest cassandraVersionRequest = CassandraVersionRequest.parse(request.body());
                 cassandraMigrationService.upgradeToVersion(cassandraVersionRequest.getValue());
-                response.status(NO_CONTENT);
+                response.status(HttpStatus.NO_CONTENT_204);
             } catch (NullPointerException | IllegalArgumentException e) {
-                LOGGER.info("Invalid request for version upgrade");
+                LOGGER.info(INVALID_VERSION_UPGRADE_REQUEST);
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .type(ErrorType.INVALID_ARGUMENT)
-                    .message("Invalid request for version upgrade")
+                    .message(INVALID_VERSION_UPGRADE_REQUEST)
                     .cause(e)
                     .haltError();
             } catch (IllegalStateException e) {
-                LOGGER.info("The migration requested can not be performed.", e);
+                LOGGER.info(MIGRATION_REQUEST_CAN_NOT_BE_DONE, e);
                 throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.GONE_410)
+                    .statusCode(HttpStatus.CONFLICT_409)
                     .type(ErrorType.WRONG_STATE)
-                    .message("The migration requested can not be performed")
+                    .message(MIGRATION_REQUEST_CAN_NOT_BE_DONE)
                     .cause(e)
                     .haltError();
             } catch (MigrationException e) {
-                LOGGER.error("An error lead to partial migration process", e);
+                LOGGER.error(PARTIAL_MIGRATION_PROCESS, e);
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                     .type(ErrorType.SERVER_ERROR)
-                    .message("An error lead to partial migration process")
+                    .message(PARTIAL_MIGRATION_PROCESS)
                     .cause(e)
                     .haltError();
             }
@@ -102,19 +105,19 @@ public class CassandraMigrationRoutes implements Routes {
             try {
                 cassandraMigrationService.upgradeToLastVersion();
             } catch (IllegalStateException e) {
-                LOGGER.info("The migration requested can not be performed.", e);
+                LOGGER.info(MIGRATION_REQUEST_CAN_NOT_BE_DONE, e);
                 throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.GONE_410)
+                    .statusCode(HttpStatus.CONFLICT_409)
                     .type(ErrorType.WRONG_STATE)
-                    .message("The migration requested can not be performed")
+                    .message(MIGRATION_REQUEST_CAN_NOT_BE_DONE)
                     .cause(e)
                     .haltError();
             } catch (MigrationException e) {
-                LOGGER.error("An error lead to partial migration process", e);
+                LOGGER.error(PARTIAL_MIGRATION_PROCESS, e);
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                     .type(ErrorType.SERVER_ERROR)
-                    .message("An error lead to partial migration process")
+                    .message(PARTIAL_MIGRATION_PROCESS)
                     .cause(e)
                     .haltError();
             }

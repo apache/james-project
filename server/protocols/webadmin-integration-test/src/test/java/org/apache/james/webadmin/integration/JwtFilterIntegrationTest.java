@@ -37,6 +37,7 @@ import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.JwtFilter;
 import org.apache.james.webadmin.routes.DomainsRoutes;
+import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -108,7 +109,7 @@ public class JwtFilterIntegrationTest {
         .when()
             .put(SPECIFIC_DOMAIN)
         .then()
-            .statusCode(204);
+            .statusCode(HttpStatus.NO_CONTENT_204);
 
         assertThat(dataProbe.listDomains())
             .contains(DOMAIN);
@@ -122,7 +123,7 @@ public class JwtFilterIntegrationTest {
         .when()
             .put(SPECIFIC_DOMAIN)
         .then()
-            .statusCode(401);
+            .statusCode(HttpStatus.UNAUTHORIZED_401);
 
         assertThat(dataProbe.listDomains())
             .doesNotContain(DOMAIN);
@@ -136,7 +137,7 @@ public class JwtFilterIntegrationTest {
         .when()
             .put(SPECIFIC_DOMAIN)
         .then()
-            .statusCode(401);
+            .statusCode(HttpStatus.UNAUTHORIZED_401);
 
         assertThat(dataProbe.listDomains())
             .doesNotContain(DOMAIN);

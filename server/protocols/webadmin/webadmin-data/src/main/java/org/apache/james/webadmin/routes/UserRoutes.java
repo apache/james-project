@@ -94,9 +94,10 @@ public class UserRoutes implements Routes {
             @ApiImplicitParam(required = true, dataType = "string", name = "username", paramType = "path")
     })
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "OK. User is removed."),
-            @ApiResponse(code = 400, message = "Invalid input user."),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. User is removed."),
+            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid input user."),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+                message = "Internal server error - Something went bad on the server side.")
     })
     public void defineDeleteUser() {
         service.delete(USERS + SEPARATOR + USER_NAME, this::removeUser);
@@ -110,9 +111,10 @@ public class UserRoutes implements Routes {
             @ApiImplicitParam(required = true, dataType = "org.apache.james.webadmin.dto.AddUserRequest", paramType = "body")
     })
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "OK. New user is added."),
-            @ApiResponse(code = 400, message = "Invalid input user."),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. New user is added."),
+            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid input user."),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+                message = "Internal server error - Something went bad on the server side.")
     })
     public void defineCreateUser() {
         service.put(USERS + SEPARATOR + USER_NAME, this::upsertUser);
@@ -121,8 +123,9 @@ public class UserRoutes implements Routes {
     @GET
     @ApiOperation(value = "Getting all users")
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "OK.", response = UserResponse.class),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK.", response = UserResponse.class),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+                message = "Internal server error - Something went bad on the server side.")
     })
     public void defineGetUsers() {
         service.get(USERS,
@@ -134,7 +137,7 @@ public class UserRoutes implements Routes {
         String username = request.params(USER_NAME);
         try {
             userService.removeUser(username);
-            response.status(204);
+            response.status(HttpStatus.NO_CONTENT_204);
             return Constants.EMPTY_BODY;
         } catch (UsersRepositoryException e) {
             throw ErrorResponder.builder()

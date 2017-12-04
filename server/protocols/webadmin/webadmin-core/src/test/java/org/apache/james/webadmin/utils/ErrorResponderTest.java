@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Test;
 
 import com.jayway.jsonpath.DocumentContext;
@@ -45,7 +46,7 @@ public class ErrorResponderTest {
     @Test
     public void haltErrorShouldThrowWhenNoType() throws Exception {
         assertThatThrownBy(() -> ErrorResponder.builder()
-            .statusCode(400)
+            .statusCode(HttpStatus.BAD_REQUEST_400)
             .haltError())
             .isInstanceOf(NullPointerException.class);
     }
@@ -53,7 +54,7 @@ public class ErrorResponderTest {
     @Test
     public void haltErrorShouldThrowWhenNoMessage() throws Exception {
         assertThatThrownBy(() -> ErrorResponder.builder()
-            .statusCode(400)
+            .statusCode(HttpStatus.BAD_REQUEST_400)
             .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
             .haltError())
             .isInstanceOf(NullPointerException.class);
@@ -62,63 +63,63 @@ public class ErrorResponderTest {
     @Test
     public void haltErrorShouldReturnBodyWithStatusCodeWhenSetting() throws Exception {
         assertThatThrownBy(() -> ErrorResponder.builder()
-                .statusCode(404)
+                .statusCode(HttpStatus.NOT_FOUND_404)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .message("Error")
                 .haltError())
             .isInstanceOf(HaltException.class)
-            .matches(e -> hasStatus(e, 404))
-            .matches(e -> bodyHasErrorDetail(e, new ErrorResponder.ErrorDetail(404, "InvalidArgument", "Error", NO_CAUSE)));
+            .matches(e -> hasStatus(e, HttpStatus.NOT_FOUND_404))
+            .matches(e -> bodyHasErrorDetail(e, new ErrorResponder.ErrorDetail(HttpStatus.NOT_FOUND_404, "InvalidArgument", "Error", NO_CAUSE)));
     }
 
     @Test
     public void haltErrorShouldReturnBodyWithErrorTypeWhenSetting() throws Exception {
         assertThatThrownBy(() -> ErrorResponder.builder()
-                .statusCode(400)
+                .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.WRONG_STATE)
                 .message("Error")
                 .haltError())
             .isInstanceOf(HaltException.class)
-            .matches(e -> hasStatus(e, 400))
-            .matches(e -> bodyHasErrorDetail(e, new ErrorResponder.ErrorDetail(400, "WrongState", "Error", NO_CAUSE)));
+            .matches(e -> hasStatus(e, HttpStatus.BAD_REQUEST_400))
+            .matches(e -> bodyHasErrorDetail(e, new ErrorResponder.ErrorDetail(HttpStatus.BAD_REQUEST_400, "WrongState", "Error", NO_CAUSE)));
     }
 
     @Test
     public void haltErrorShouldReturnBodyWithErrorMessageWhenSetting() throws Exception {
         assertThatThrownBy(() -> ErrorResponder.builder()
-                .statusCode(400)
+                .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .message("It has error")
                 .haltError())
             .isInstanceOf(HaltException.class)
-            .matches(e -> hasStatus(e, 400))
-            .matches(e -> bodyHasErrorDetail(e, new ErrorResponder.ErrorDetail(400, "InvalidArgument", "It has error", NO_CAUSE)));
+            .matches(e -> hasStatus(e, HttpStatus.BAD_REQUEST_400))
+            .matches(e -> bodyHasErrorDetail(e, new ErrorResponder.ErrorDetail(HttpStatus.BAD_REQUEST_400, "InvalidArgument", "It has error", NO_CAUSE)));
     }
 
     @Test
     public void haltErrorShouldReturnBodyWithCauseTypeWhenSetting() throws Exception {
         assertThatThrownBy(() -> ErrorResponder.builder()
-                .statusCode(400)
+                .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .message("Error")
                 .cause(new IllegalArgumentException("The input data is invalid"))
                 .haltError())
             .isInstanceOf(HaltException.class)
-            .matches(e -> hasStatus(e, 400))
-            .matches(e -> bodyHasErrorDetail(e, new ErrorResponder.ErrorDetail(400, "InvalidArgument", "Error", Optional.of("The input data is invalid"))));
+            .matches(e -> hasStatus(e, HttpStatus.BAD_REQUEST_400))
+            .matches(e -> bodyHasErrorDetail(e, new ErrorResponder.ErrorDetail(HttpStatus.BAD_REQUEST_400, "InvalidArgument", "Error", Optional.of("The input data is invalid"))));
     }
 
     @Test
     public void haltErrorShouldReturnBodyWithErrorDetail() throws Exception {
         assertThatThrownBy(() -> ErrorResponder.builder()
-                .statusCode(400)
+                .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .message("Error")
                 .cause(new IllegalArgumentException("The input data is invalid"))
             .haltError())
             .isInstanceOf(HaltException.class)
-            .matches(e -> hasStatus(e, 400))
-            .matches(e -> bodyHasErrorDetail(e, new ErrorResponder.ErrorDetail(400, "InvalidArgument", "Error", Optional.of("The input data is invalid"))));
+            .matches(e -> hasStatus(e, HttpStatus.BAD_REQUEST_400))
+            .matches(e -> bodyHasErrorDetail(e, new ErrorResponder.ErrorDetail(HttpStatus.BAD_REQUEST_400, "InvalidArgument", "Error", Optional.of("The input data is invalid"))));
     }
 
     private boolean hasStatus(Throwable throwable, int status) {

@@ -88,7 +88,7 @@ public class ErrorResponder {
             return halt(statusCode, new JsonTransformer().render(new ErrorDetail(statusCode,
                 type.getType(),
                 message,
-                cause.map(e -> Optional.of(e.getMessage())).orElse(Optional.empty()))));
+                cause.map(e -> Optional.ofNullable(e.getMessage())).orElse(Optional.empty()))));
         } catch (JsonProcessingException e) {
             return halt(statusCode);
         }

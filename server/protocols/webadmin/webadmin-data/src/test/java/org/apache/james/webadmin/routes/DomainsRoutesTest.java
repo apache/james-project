@@ -27,8 +27,6 @@ import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.startsWith;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -47,6 +45,7 @@ import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -105,7 +104,7 @@ public class DomainsRoutesTest {
                 given()
                     .get()
                 .then()
-                    .statusCode(200)
+                    .statusCode(HttpStatus.OK_200)
                     .contentType(ContentType.JSON)
                     .extract()
                     .body()
@@ -120,7 +119,7 @@ public class DomainsRoutesTest {
             given()
                 .put(SEPARATOR)
             .then()
-                .statusCode(404);
+                .statusCode(HttpStatus.NOT_FOUND_404);
         }
 
         @Test
@@ -128,7 +127,7 @@ public class DomainsRoutesTest {
             given()
                 .delete(SEPARATOR)
             .then()
-                .statusCode(404);
+                .statusCode(HttpStatus.NOT_FOUND_404);
         }
 
         @Test
@@ -136,7 +135,7 @@ public class DomainsRoutesTest {
             given()
                 .put(DOMAIN)
             .then()
-                .statusCode(204);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
@@ -149,7 +148,7 @@ public class DomainsRoutesTest {
                     .get()
                 .then()
                     .contentType(ContentType.JSON)
-                    .statusCode(200)
+                    .statusCode(HttpStatus.OK_200)
                     .extract()
                     .body()
                     .jsonPath()
@@ -163,7 +162,7 @@ public class DomainsRoutesTest {
             Map<String, Object> errors = when()
                 .put(DOMAIN + "@" + DOMAIN)
             .then()
-                .statusCode(400)
+                .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -171,7 +170,7 @@ public class DomainsRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 400)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Invalid request for domain creation domain@domain");
         }
@@ -181,7 +180,7 @@ public class DomainsRoutesTest {
             when()
                 .put(DOMAIN + "/" + DOMAIN)
             .then()
-                .statusCode(404);
+                .statusCode(HttpStatus.NOT_FOUND_404);
         }
 
         @Test
@@ -191,7 +190,7 @@ public class DomainsRoutesTest {
                     "0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789." +
                     "0123456789.0123456789.0123456789.")
             .then()
-                .statusCode(400)
+                .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -199,7 +198,7 @@ public class DomainsRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 400)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument");
         }
 
@@ -211,7 +210,7 @@ public class DomainsRoutesTest {
             when()
                 .put(DOMAIN)
             .then()
-                .statusCode(204);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
@@ -222,14 +221,14 @@ public class DomainsRoutesTest {
             when()
                 .delete(DOMAIN)
             .then()
-                .statusCode(204);
+                .statusCode(HttpStatus.NO_CONTENT_204);
 
             List<String> domains =
                 when()
                     .get()
                 .then()
                     .contentType(ContentType.JSON)
-                    .statusCode(200)
+                    .statusCode(HttpStatus.OK_200)
                     .extract()
                     .body()
                     .jsonPath()
@@ -243,7 +242,7 @@ public class DomainsRoutesTest {
             given()
                 .delete(DOMAIN)
             .then()
-                .statusCode(204);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
@@ -254,7 +253,7 @@ public class DomainsRoutesTest {
             when()
                 .get(DOMAIN)
             .then()
-                .statusCode(204);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
@@ -262,7 +261,7 @@ public class DomainsRoutesTest {
             given()
                 .get(DOMAIN)
             .then()
-                .statusCode(404);
+                .statusCode(HttpStatus.NOT_FOUND_404);
         }
 
     }
@@ -286,7 +285,7 @@ public class DomainsRoutesTest {
             when()
                 .delete(DOMAIN)
             .then()
-                .statusCode(500);
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -296,7 +295,7 @@ public class DomainsRoutesTest {
             when()
                 .put(DOMAIN)
             .then()
-                .statusCode(500);
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -306,7 +305,7 @@ public class DomainsRoutesTest {
             when()
                 .get(DOMAIN)
             .then()
-                .statusCode(500);
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -316,7 +315,7 @@ public class DomainsRoutesTest {
             when()
                 .get()
             .then()
-                .statusCode(500);
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -326,7 +325,7 @@ public class DomainsRoutesTest {
             when()
                 .delete(DOMAIN)
             .then()
-                .statusCode(204);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
@@ -336,7 +335,7 @@ public class DomainsRoutesTest {
             when()
                 .put(DOMAIN)
             .then()
-                .statusCode(204);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
@@ -346,7 +345,7 @@ public class DomainsRoutesTest {
             when()
                 .get(DOMAIN)
             .then()
-                .statusCode(500);
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -356,7 +355,7 @@ public class DomainsRoutesTest {
             when()
                 .get()
             .then()
-                .statusCode(500);
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
     }

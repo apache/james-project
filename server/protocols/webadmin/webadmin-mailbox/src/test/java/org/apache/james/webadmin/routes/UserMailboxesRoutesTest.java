@@ -55,6 +55,7 @@ import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.service.UserMailboxesService;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -117,7 +118,7 @@ public class UserMailboxesRoutesTest {
             Map<String, Object> errors = when()
                 .get()
             .then()
-                .statusCode(404)
+                .statusCode(HttpStatus.NOT_FOUND_404)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -125,7 +126,7 @@ public class UserMailboxesRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 404)
+                .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Invalid get on user mailboxes");
         }
@@ -137,7 +138,7 @@ public class UserMailboxesRoutesTest {
             Map<String, Object> errors = when()
                 .get(MAILBOX_NAME)
             .then()
-                .statusCode(404)
+                .statusCode(HttpStatus.NOT_FOUND_404)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -145,7 +146,7 @@ public class UserMailboxesRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 404)
+                .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Invalid get on user mailboxes");
         }
@@ -157,7 +158,7 @@ public class UserMailboxesRoutesTest {
             Map<String, Object> errors = when()
                 .put(MAILBOX_NAME)
             .then()
-                .statusCode(404)
+                .statusCode(HttpStatus.NOT_FOUND_404)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -165,7 +166,7 @@ public class UserMailboxesRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 404)
+                .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Invalid get on user mailboxes");
         }
@@ -177,7 +178,7 @@ public class UserMailboxesRoutesTest {
             Map<String, Object> errors = when()
                 .put(MAILBOX_NAME)
             .then()
-                .statusCode(404)
+                .statusCode(HttpStatus.NOT_FOUND_404)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -185,7 +186,7 @@ public class UserMailboxesRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 404)
+                .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Invalid get on user mailboxes");
         }
@@ -197,7 +198,7 @@ public class UserMailboxesRoutesTest {
             Map<String, Object> errors = when()
                 .get(MAILBOX_NAME + "*")
             .then()
-                .statusCode(400)
+                .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -205,7 +206,7 @@ public class UserMailboxesRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 400)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Attempt to create an invalid mailbox");
         }
@@ -217,7 +218,7 @@ public class UserMailboxesRoutesTest {
             Map<String, Object> errors = when()
                 .put(MAILBOX_NAME+ "*")
             .then()
-                .statusCode(400)
+                .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -225,7 +226,7 @@ public class UserMailboxesRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 400)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Attempt to create an invalid mailbox");
         }
@@ -237,7 +238,7 @@ public class UserMailboxesRoutesTest {
             Map<String, Object> errors = when()
                 .put(MAILBOX_NAME + "*")
             .then()
-                .statusCode(400)
+                .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -245,7 +246,7 @@ public class UserMailboxesRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 400)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Attempt to create an invalid mailbox");
         }
@@ -257,7 +258,7 @@ public class UserMailboxesRoutesTest {
             Map<String, Object> errors = when()
                 .get(MAILBOX_NAME + "%")
             .then()
-                .statusCode(400)
+                .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -265,7 +266,7 @@ public class UserMailboxesRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 400)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Attempt to create an invalid mailbox");
         }
@@ -277,7 +278,7 @@ public class UserMailboxesRoutesTest {
             Map<String, Object> errors = when()
                 .put(MAILBOX_NAME+ "%")
             .then()
-                .statusCode(400)
+                .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -285,7 +286,7 @@ public class UserMailboxesRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 400)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Attempt to create an invalid mailbox");
         }
@@ -297,7 +298,7 @@ public class UserMailboxesRoutesTest {
             Map<String, Object> errors = when()
                 .put(MAILBOX_NAME + "%")
             .then()
-                .statusCode(400)
+                .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -305,7 +306,7 @@ public class UserMailboxesRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 400)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Attempt to create an invalid mailbox");
         }
@@ -317,7 +318,7 @@ public class UserMailboxesRoutesTest {
             Map<String, Object> errors = when()
                 .get(MAILBOX_NAME + "#")
             .then()
-                .statusCode(400)
+                .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -325,7 +326,7 @@ public class UserMailboxesRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 400)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Attempt to create an invalid mailbox");
         }
@@ -337,7 +338,7 @@ public class UserMailboxesRoutesTest {
             Map<String, Object> errors = when()
                 .put(MAILBOX_NAME+ "#")
             .then()
-                .statusCode(400)
+                .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -345,7 +346,7 @@ public class UserMailboxesRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 400)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Attempt to create an invalid mailbox");
         }
@@ -357,7 +358,7 @@ public class UserMailboxesRoutesTest {
             Map<String, Object> errors = when()
                 .put(MAILBOX_NAME + "#")
             .then()
-                .statusCode(400)
+                .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -365,7 +366,7 @@ public class UserMailboxesRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 400)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Attempt to create an invalid mailbox");
         }
@@ -377,7 +378,7 @@ public class UserMailboxesRoutesTest {
             Map<String, Object> errors = when()
                 .get(MAILBOX_NAME + "&")
             .then()
-                .statusCode(400)
+                .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -385,7 +386,7 @@ public class UserMailboxesRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 400)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Attempt to create an invalid mailbox");
         }
@@ -397,7 +398,7 @@ public class UserMailboxesRoutesTest {
             Map<String, Object> errors = when()
                 .put(MAILBOX_NAME+ "&")
             .then()
-                .statusCode(400)
+                .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -405,7 +406,7 @@ public class UserMailboxesRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 400)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Attempt to create an invalid mailbox");
         }
@@ -417,7 +418,7 @@ public class UserMailboxesRoutesTest {
             Map<String, Object> errors = when()
                 .put(MAILBOX_NAME + "&")
             .then()
-                .statusCode(400)
+                .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -425,7 +426,7 @@ public class UserMailboxesRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 400)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Attempt to create an invalid mailbox");
         }
@@ -437,7 +438,7 @@ public class UserMailboxesRoutesTest {
             Map<String, Object> errors = when()
                 .delete()
             .then()
-                .statusCode(404)
+                .statusCode(HttpStatus.NOT_FOUND_404)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -445,7 +446,7 @@ public class UserMailboxesRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 404)
+                .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Invalid delete on user mailboxes");
         }
@@ -456,7 +457,7 @@ public class UserMailboxesRoutesTest {
                 when()
                     .get()
                 .then()
-                    .statusCode(200)
+                    .statusCode(HttpStatus.OK_200)
                     .contentType(ContentType.JSON)
                     .extract()
                     .body()
@@ -471,8 +472,8 @@ public class UserMailboxesRoutesTest {
             when()
                 .put()
             .then()
-                .statusCode(404)
-                .body(containsString("404 Not found"));
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .body(containsString(HttpStatus.NOT_FOUND_404 + " Not found"));
         }
 
         @Test
@@ -480,8 +481,8 @@ public class UserMailboxesRoutesTest {
             when()
                 .put(SEPARATOR)
             .then()
-                .statusCode(404)
-                .body(containsString("404 Not found"));
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .body(containsString(HttpStatus.NOT_FOUND_404 + " Not found"));
         }
 
         @Test
@@ -489,7 +490,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .put(MAILBOX_NAME)
             .then()
-                .statusCode(204);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
@@ -500,7 +501,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .put(MAILBOX_NAME)
             .then()
-                .statusCode(204);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
@@ -511,7 +512,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .get()
             .then()
-                .statusCode(200)
+                .statusCode(HttpStatus.OK_200)
                 .body(is("[{\"mailboxName\":\"myMailboxName\"}]"));
         }
 
@@ -520,7 +521,7 @@ public class UserMailboxesRoutesTest {
             Map<String, Object> errors = when()
                 .get(MAILBOX_NAME)
             .then()
-                .statusCode(404)
+                .statusCode(HttpStatus.NOT_FOUND_404)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -528,7 +529,7 @@ public class UserMailboxesRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 404)
+                .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Invalid get on user mailboxes");
         }
@@ -541,7 +542,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .get(MAILBOX_NAME)
             .then()
-                .statusCode(204);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
@@ -549,7 +550,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .delete(MAILBOX_NAME)
             .then()
-                .statusCode(204);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
@@ -560,7 +561,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .delete(MAILBOX_NAME)
             .then()
-                .statusCode(204);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
@@ -574,7 +575,7 @@ public class UserMailboxesRoutesTest {
             Map<String, Object> errors = when()
                 .get(MAILBOX_NAME)
             .then()
-                .statusCode(404)
+                .statusCode(HttpStatus.NOT_FOUND_404)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -582,7 +583,7 @@ public class UserMailboxesRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 404)
+                .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Invalid get on user mailboxes");
         }
@@ -592,7 +593,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .delete()
             .then()
-                .statusCode(204);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
@@ -603,7 +604,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .delete()
                 .then()
-                .statusCode(204);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
@@ -621,7 +622,7 @@ public class UserMailboxesRoutesTest {
                 when()
                     .get()
                 .then()
-                    .statusCode(200)
+                    .statusCode(HttpStatus.OK_200)
                     .contentType(ContentType.JSON)
                     .extract()
                     .body()
@@ -642,7 +643,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .delete(MAILBOX_NAME)
             .then()
-                .statusCode(204);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
@@ -660,7 +661,7 @@ public class UserMailboxesRoutesTest {
                 when()
                     .get()
                 .then()
-                    .statusCode(200)
+                    .statusCode(HttpStatus.OK_200)
                     .contentType(ContentType.JSON)
                     .extract()
                     .body()
@@ -686,7 +687,7 @@ public class UserMailboxesRoutesTest {
                 when()
                     .get()
                 .then()
-                    .statusCode(200)
+                    .statusCode(HttpStatus.OK_200)
                     .contentType(ContentType.JSON)
                     .extract()
                     .body()
@@ -707,7 +708,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .delete(MAILBOX_NAME + ".child")
             .then()
-                .statusCode(204);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
@@ -725,7 +726,7 @@ public class UserMailboxesRoutesTest {
                 when()
                     .get()
                 .then()
-                    .statusCode(200)
+                    .statusCode(HttpStatus.OK_200)
                     .contentType(ContentType.JSON)
                     .extract()
                     .body()
@@ -755,7 +756,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .put(MAILBOX_NAME)
             .then()
-                .statusCode(500)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                 .body(containsString("500 Internal Server Error"));
         }
 
@@ -766,7 +767,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .put(MAILBOX_NAME)
             .then()
-                .statusCode(500)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                 .body(containsString("500 Internal Server Error"));
         }
 
@@ -777,7 +778,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .put(MAILBOX_NAME)
             .then()
-                .statusCode(204);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
@@ -793,7 +794,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .delete(MAILBOX_NAME)
             .then()
-                .statusCode(500)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                 .body(containsString("500 Internal Server Error"));
         }
 
@@ -804,7 +805,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .delete(MAILBOX_NAME)
             .then()
-                .statusCode(500)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                 .body(containsString("500 Internal Server Error"));
         }
 
@@ -820,7 +821,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .delete(MAILBOX_NAME)
             .then()
-                .statusCode(500)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                 .body(containsString("500 Internal Server Error"));
         }
 
@@ -831,7 +832,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .delete(MAILBOX_NAME)
             .then()
-                .statusCode(500)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                 .body(containsString("500 Internal Server Error"));
         }
 
@@ -842,7 +843,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .delete(MAILBOX_NAME)
             .then()
-                .statusCode(204);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
@@ -852,7 +853,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .delete()
             .then()
-                .statusCode(500)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                 .body(containsString("500 Internal Server Error"));
         }
 
@@ -863,7 +864,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .delete()
                 .then()
-                .statusCode(500)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                 .body(containsString("500 Internal Server Error"));
         }
 
@@ -880,7 +881,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .delete()
             .then()
-                .statusCode(500)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                 .body(containsString("500 Internal Server Error"));
         }
 
@@ -895,7 +896,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .delete()
             .then()
-                .statusCode(204);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
@@ -909,7 +910,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .delete()
             .then()
-                .statusCode(500)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                 .body(containsString("500 Internal Server Error"));
         }
 
@@ -920,7 +921,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .get(MAILBOX_NAME)
             .then()
-                .statusCode(500)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                 .body(containsString("500 Internal Server Error"));
         }
 
@@ -931,7 +932,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .get(MAILBOX_NAME)
             .then()
-                .statusCode(500)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                 .body(containsString("500 Internal Server Error"));
         }
 
@@ -942,7 +943,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .get()
             .then()
-                .statusCode(500)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                 .body(containsString("500 Internal Server Error"));
         }
 
@@ -953,7 +954,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .get()
             .then()
-                .statusCode(500)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                 .body(containsString("500 Internal Server Error"));
         }
 
@@ -964,7 +965,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .get()
             .then()
-                .statusCode(500)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                 .body(containsString("500 Internal Server Error"));
         }
 
@@ -975,7 +976,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .get(MAILBOX_NAME)
             .then()
-                .statusCode(500)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                 .body(containsString("500 Internal Server Error"));
         }
 
@@ -986,7 +987,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .put(MAILBOX_NAME)
             .then()
-                .statusCode(500)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                 .body(containsString("500 Internal Server Error"));
         }
 
@@ -997,7 +998,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .delete(MAILBOX_NAME)
             .then()
-                .statusCode(500)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                 .body(containsString("500 Internal Server Error"));
         }
 
@@ -1008,7 +1009,7 @@ public class UserMailboxesRoutesTest {
             when()
                 .delete()
                 .then()
-                .statusCode(500)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                 .body(containsString("500 Internal Server Error"));
         }
 

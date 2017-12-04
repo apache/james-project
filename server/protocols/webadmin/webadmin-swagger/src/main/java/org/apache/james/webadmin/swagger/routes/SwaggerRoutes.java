@@ -26,6 +26,7 @@ import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.swagger.SwaggerParser;
 
+import org.eclipse.jetty.http.HttpStatus;
 import spark.Service;
 
 public class SwaggerRoutes implements Routes {
@@ -41,7 +42,7 @@ public class SwaggerRoutes implements Routes {
     @Override
     public void define(Service service) {
         service.get(SWAGGER_ENDPOINT, (request, response) -> {
-            response.status(200);
+            response.status(HttpStatus.OK_200);
             return SwaggerParser.getSwaggerJson(APP_PACKAGE, webAdminConfiguration);
         });
     }

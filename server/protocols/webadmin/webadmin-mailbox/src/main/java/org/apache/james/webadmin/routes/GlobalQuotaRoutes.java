@@ -19,8 +19,6 @@
 
 package org.apache.james.webadmin.routes;
 
-import static spark.Spark.halt;
-
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -100,9 +98,9 @@ public class GlobalQuotaRoutes implements Routes {
             @ApiImplicitParam(required = true, dataType = "org.apache.james.webadmin.dto.QuotaDTO", paramType = "body")
     })
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "OK. The value has been updated."),
-            @ApiResponse(code = 400, message = "The body is not a positive integer or not unlimited value (-1)."),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. The value has been updated."),
+            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The body is not a positive integer or not unlimited value (-1)."),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineUpdateQuota() {
         service.put(QUOTA_ENDPOINT, ((request, response) -> {
@@ -110,7 +108,7 @@ public class GlobalQuotaRoutes implements Routes {
                 QuotaDTO quotaDTO = jsonExtractor.parse(request.body());
                 maxQuotaManager.setDefaultMaxMessage(quotaDTO.getCount());
                 maxQuotaManager.setDefaultMaxStorage(quotaDTO.getSize());
-                response.status(204);
+                response.status(HttpStatus.NO_CONTENT_204);
             } catch (JsonExtractException e) {
                 LOGGER.info("Malformed JSON", e);
                 throw ErrorResponder.builder()
@@ -138,15 +136,15 @@ public class GlobalQuotaRoutes implements Routes {
         notes = "If there is no limitation for count and/or size, the returned value will be -1"
 	)
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK", response = QuotaDTO.class),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = QuotaDTO.class),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineGetQuota() {
         service.get(QUOTA_ENDPOINT, (request, response) -> {
             QuotaDTO quotaDTO = QuotaDTO.builder()
                 .count(maxQuotaManager.getDefaultMaxMessage())
                 .size(maxQuotaManager.getDefaultMaxStorage()).build();
-            response.status(200);
+            response.status(HttpStatus.OK_200);
             return quotaDTO;
         }, jsonTransformer);
     }
@@ -155,13 +153,13 @@ public class GlobalQuotaRoutes implements Routes {
     @Path("/size")
     @ApiOperation(value = "Removing per quotaroot mail size limitation by updating to unlimited value")
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "The value is updated to unlimited value."),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "The value is updated to unlimited value."),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineDeleteQuotaSize() {
         service.delete(SIZE_ENDPOINT, (request, response) -> {
             maxQuotaManager.setDefaultMaxStorage(Quota.UNLIMITED);
-            response.status(204);
+            response.status(HttpStatus.NO_CONTENT_204);
             return Constants.EMPTY_BODY;
         });
     }
@@ -173,16 +171,16 @@ public class GlobalQuotaRoutes implements Routes {
             @ApiImplicitParam(required = true, dataType = "integer", paramType = "body")
     })
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "OK. The value has been updated."),
-            @ApiResponse(code = 400, message = "The body is not a positive integer."),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. The value has been updated."),
+            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The body is not a positive integer."),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineUpdateQuotaSize() {
         service.put(SIZE_ENDPOINT, (request, response) -> {
             try {
                 QuotaRequest quotaRequest = QuotaRequest.parse(request.body());
                 maxQuotaManager.setDefaultMaxStorage(quotaRequest.getValue());
-                response.status(204);
+                response.status(HttpStatus.NO_CONTENT_204);
             } catch (IllegalArgumentException e) {
                 LOGGER.info("Invalid quota. Need to be an integer value greater than 0");
                 throw ErrorResponder.builder()
@@ -200,13 +198,13 @@ public class GlobalQuotaRoutes implements Routes {
     @Path("/size")
     @ApiOperation(value = "Reading per quotaroot mail size limitation")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK", response = Long.class),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = Long.class),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineGetQuotaSize() {
         service.get(SIZE_ENDPOINT, (request, response) -> {
             long value = maxQuotaManager.getDefaultMaxStorage();
-            response.status(200);
+            response.status(HttpStatus.OK_200);
             return value;
         }, jsonTransformer);
     }
@@ -215,13 +213,13 @@ public class GlobalQuotaRoutes implements Routes {
     @Path("/count")
     @ApiOperation(value = "Removing per quotaroot mail count limitation by updating to unlimited value")
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "The value is updated to unlimited value."),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "The value is updated to unlimited value."),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineDeleteQuotaCount() {
         service.delete(COUNT_ENDPOINT, (request, response) -> {
             maxQuotaManager.setDefaultMaxMessage(Quota.UNLIMITED);
-            response.status(204);
+            response.status(HttpStatus.NO_CONTENT_204);
             return Constants.EMPTY_BODY;
         });
     }
@@ -233,16 +231,16 @@ public class GlobalQuotaRoutes implements Routes {
             @ApiImplicitParam(required = true, dataType = "integer", paramType = "body")
     })
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "OK. The value has been updated."),
-            @ApiResponse(code = 400, message = "The body is not a positive integer."),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. The value has been updated."),
+            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The body is not a positive integer."),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineUpdateQuotaCount() {
         service.put(COUNT_ENDPOINT, (request, response) -> {
             try {
                 QuotaRequest quotaRequest = QuotaRequest.parse(request.body());
                 maxQuotaManager.setDefaultMaxMessage(quotaRequest.getValue());
-                response.status(204);
+                response.status(HttpStatus.NO_CONTENT_204);
             } catch (IllegalArgumentException e) {
                 LOGGER.info("Invalid quota. Need to be an integer value greater than 0");
                 throw ErrorResponder.builder()
@@ -260,13 +258,13 @@ public class GlobalQuotaRoutes implements Routes {
     @Path("/count")
     @ApiOperation(value = "Reading per quotaroot mail count limitation")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK", response = Long.class),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = Long.class),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineGetQuotaCount() {
         service.get(COUNT_ENDPOINT, (request, response) -> {
             long value = maxQuotaManager.getDefaultMaxMessage();
-            response.status(200);
+            response.status(HttpStatus.OK_200);
             return value;
         }, jsonTransformer);
     }

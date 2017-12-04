@@ -23,6 +23,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.jwt.JwtTokenVerifier;
+import org.eclipse.jetty.http.HttpStatus;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -44,7 +45,7 @@ public class JwtFilterTest {
         public boolean matches(Object o) {
             if (o instanceof HaltException) {
                 HaltException haltException = (HaltException) o;
-                return haltException.statusCode() == 401;
+                return haltException.statusCode() == HttpStatus.UNAUTHORIZED_401;
             }
             return false;
         }

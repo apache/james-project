@@ -117,8 +117,9 @@ public class GroupsRoutes implements Routes {
     @Path(ROOT_PATH)
     @ApiOperation(value = "getting groups list")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "OK", response = List.class),
-        @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+            message = "Internal server error - Something went bad on the server side.")
     })
     public Set<String> listGroups(Request request, Response response) throws RecipientRewriteTableException {
         return Optional.ofNullable(recipientRewriteTable.getAllMappings())
@@ -143,11 +144,12 @@ public class GroupsRoutes implements Routes {
                 MAILADDRESS_ASCII_DISCLAIMER)
     })
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "OK", response = List.class),
-        @ApiResponse(code = 400, message = GROUP_ADDRESS + " or group structure format is not valid"),
-        @ApiResponse(code = 403, message = "server doesn't own the domain"),
-        @ApiResponse(code = 409, message = "requested group address is already used for another purpose"),
-        @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = GROUP_ADDRESS + " or group structure format is not valid"),
+        @ApiResponse(code = HttpStatus.FORBIDDEN_403, message = "server doesn't own the domain"),
+        @ApiResponse(code = HttpStatus.CONFLICT_409, message = "requested group address is already used for another purpose"),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+            message = "Internal server error - Something went bad on the server side.")
     })
     public HaltException addToGroup(Request request, Response response) throws JsonExtractException, AddressException, RecipientRewriteTableException, UsersRepositoryException, DomainListException {
         MailAddress groupAddress = parseMailAddress(request.params(GROUP_ADDRESS));
@@ -187,9 +189,11 @@ public class GroupsRoutes implements Routes {
         @ApiImplicitParam(required = true, dataType = "string", name = USER_ADDRESS, paramType = "path")
     })
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "OK", response = List.class),
-        @ApiResponse(code = 400, message = GROUP_ADDRESS + " or group structure format is not valid"),
-        @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400,
+            message = GROUP_ADDRESS + " or group structure format is not valid"),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+            message = "Internal server error - Something went bad on the server side.")
     })
     public HaltException removeFromGroup(Request request, Response response) throws JsonExtractException, AddressException, RecipientRewriteTableException {
         MailAddress groupAddress = parseMailAddress(request.params(GROUP_ADDRESS));
@@ -205,10 +209,11 @@ public class GroupsRoutes implements Routes {
         @ApiImplicitParam(required = true, dataType = "string", name = GROUP_ADDRESS, paramType = "path")
     })
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "OK", response = List.class),
-        @ApiResponse(code = 400, message = "The group is not an address"),
-        @ApiResponse(code = 404, message = "The group does not exist"),
-        @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The group is not an address"),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The group does not exist"),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+            message = "Internal server error - Something went bad on the server side.")
     })
     public ImmutableSortedSet<String> listGroupMembers(Request request, Response response) throws RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException {
         MailAddress groupAddress = parseMailAddress(request.params(GROUP_ADDRESS));

@@ -42,6 +42,7 @@ import org.apache.james.webadmin.routes.DomainsRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
 import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
+import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -103,7 +104,7 @@ public class WebAdminServerIntegrationTest {
         .when()
             .put(SPECIFIC_DOMAIN)
         .then()
-            .statusCode(204);
+            .statusCode(HttpStatus.NO_CONTENT_204);
 
         assertThat(dataProbe.listDomains()).contains(DOMAIN);
     }
@@ -117,7 +118,7 @@ public class WebAdminServerIntegrationTest {
         .when()
             .delete(SPECIFIC_DOMAIN)
         .then()
-            .statusCode(204);
+            .statusCode(HttpStatus.NO_CONTENT_204);
 
         assertThat(dataProbe.listDomains()).doesNotContain(DOMAIN);
     }
@@ -132,7 +133,7 @@ public class WebAdminServerIntegrationTest {
         .when()
             .put(SPECIFIC_USER)
         .then()
-            .statusCode(204);
+            .statusCode(HttpStatus.NO_CONTENT_204);
 
         assertThat(dataProbe.listUsers()).contains(USERNAME);
     }
@@ -148,7 +149,7 @@ public class WebAdminServerIntegrationTest {
         .when()
             .delete(SPECIFIC_USER)
         .then()
-            .statusCode(204);
+            .statusCode(HttpStatus.NO_CONTENT_204);
 
         assertThat(dataProbe.listUsers()).doesNotContain(USERNAME);
     }
@@ -163,7 +164,7 @@ public class WebAdminServerIntegrationTest {
         .when()
             .get(UserRoutes.USERS)
         .then()
-            .statusCode(200)
+            .statusCode(HttpStatus.OK_200)
             .contentType(JSON_CONTENT_TYPE)
             .body(is("[{\"username\":\"username@domain\"}]"));
     }
@@ -178,7 +179,7 @@ public class WebAdminServerIntegrationTest {
         .when()
             .put(SPECIFIC_MAILBOX)
         .then()
-            .statusCode(204);
+            .statusCode(HttpStatus.NO_CONTENT_204);
 
         assertThat(guiceJamesServer.getProbe(MailboxProbeImpl.class).listUserMailboxes(USERNAME)).containsExactly(MAILBOX);
     }
@@ -194,7 +195,7 @@ public class WebAdminServerIntegrationTest {
         .when()
             .delete(SPECIFIC_MAILBOX)
         .then()
-            .statusCode(204);
+            .statusCode(HttpStatus.NO_CONTENT_204);
 
         assertThat(guiceJamesServer.getProbe(MailboxProbeImpl.class).listUserMailboxes(USERNAME)).isEmpty();
     }
@@ -206,7 +207,7 @@ public class WebAdminServerIntegrationTest {
         .when()
             .get(VERSION)
         .then()
-            .statusCode(200)
+            .statusCode(HttpStatus.OK_200)
             .contentType(JSON_CONTENT_TYPE)
             .body(is("{\"version\":null}"));
     }
@@ -218,7 +219,7 @@ public class WebAdminServerIntegrationTest {
         .when()
             .get(VERSION_LATEST)
         .then()
-            .statusCode(200)
+            .statusCode(HttpStatus.OK_200)
             .contentType(JSON_CONTENT_TYPE)
             .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION + "}"));
     }
@@ -231,14 +232,14 @@ public class WebAdminServerIntegrationTest {
         .when()
             .post(UPGRADE_VERSION)
         .then()
-            .statusCode(204);
+            .statusCode(HttpStatus.NO_CONTENT_204);
 
         given()
             .port(webAdminGuiceProbe.getWebAdminPort())
         .when()
             .get(VERSION)
         .then()
-            .statusCode(200)
+            .statusCode(HttpStatus.OK_200)
             .contentType(JSON_CONTENT_TYPE)
             .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION + "}"));
     }
@@ -250,14 +251,14 @@ public class WebAdminServerIntegrationTest {
         .when()
             .post(UPGRADE_TO_LATEST_VERSION)
         .then()
-            .statusCode(200);
+            .statusCode(HttpStatus.OK_200);
 
         given()
             .port(webAdminGuiceProbe.getWebAdminPort())
         .when()
             .get(VERSION)
         .then()
-            .statusCode(200)
+            .statusCode(HttpStatus.OK_200)
             .contentType(JSON_CONTENT_TYPE)
             .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION + "}"));
     }
@@ -272,7 +273,7 @@ public class WebAdminServerIntegrationTest {
             .when()
             .get("/address/groups/group@domain.com")
             .then()
-            .statusCode(200)
+            .statusCode(HttpStatus.OK_200)
             .contentType(JSON_CONTENT_TYPE)
             .extract()
             .jsonPath()
@@ -287,7 +288,7 @@ public class WebAdminServerIntegrationTest {
         .when()
             .get(SwaggerRoutes.SWAGGER_ENDPOINT)
         .then()
-            .statusCode(200)
+            .statusCode(HttpStatus.OK_200)
             .body(containsString("\"swagger\":\"2.0\""))
             .body(containsString("\"info\":{\"description\":\"All the web administration API for JAMES\",\"version\":\"V1.0\",\"title\":\"JAMES Web Admin API\"}"))
             .body(containsString("\"tags\":[\"User's Mailbox\"]"))

@@ -162,7 +162,7 @@ public class GroupsRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 404)
+                .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The group does not exist");
         }
@@ -300,7 +300,7 @@ public class GroupsRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 403)
+                .containsEntry("statusCode", HttpStatus.FORBIDDEN_403)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Server doesn't own the domain: unregisteredDomain");
         }
@@ -321,7 +321,7 @@ public class GroupsRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 409)
+                .containsEntry("statusCode", HttpStatus.CONFLICT_409)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Requested group address is already used for another purpose");
         }
@@ -412,7 +412,7 @@ public class GroupsRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 400)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The group is not an email address")
                 .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
@@ -431,7 +431,7 @@ public class GroupsRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 400)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The group is not an email address")
                 .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
@@ -468,7 +468,7 @@ public class GroupsRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 400)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The group is not an email address")
                 .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
@@ -496,7 +496,7 @@ public class GroupsRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 400)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The group is not an email address")
                 .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
@@ -515,7 +515,7 @@ public class GroupsRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", 400)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The group is not an email address")
                 .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
