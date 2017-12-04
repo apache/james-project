@@ -174,6 +174,8 @@ public class GroupMappingTest {
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
 
+        calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> fakeSmtp.tryConnect(25));
+
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DOMAIN1);
         dataProbe.addDomain(DOMAIN2);

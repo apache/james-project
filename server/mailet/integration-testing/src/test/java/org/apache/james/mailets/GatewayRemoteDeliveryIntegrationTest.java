@@ -123,6 +123,8 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .pollDelay(slowPacedPollInterval)
             .await();
 
+        calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> fakeSmtp.tryConnect(25));
+
         RestAssured.requestSpecification = new RequestSpecBuilder()
             .setContentType(ContentType.JSON)
             .setAccept(ContentType.JSON)

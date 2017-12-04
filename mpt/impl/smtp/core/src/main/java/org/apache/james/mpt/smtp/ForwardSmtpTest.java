@@ -27,6 +27,7 @@ import java.net.InetAddress;
 import java.util.Locale;
 
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.apache.james.util.streams.ContainerNames;
 import org.apache.james.util.streams.SwarmGenericContainer;
 import org.junit.Before;
 import org.junit.Rule;
@@ -36,6 +37,9 @@ import org.junit.rules.TemporaryFolder;
 import org.testcontainers.containers.wait.HostPortWaitStrategy;
 
 import com.google.common.base.Charsets;
+import com.jayway.awaitility.Awaitility;
+import com.jayway.awaitility.Duration;
+import com.jayway.awaitility.core.ConditionFactory;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
@@ -48,7 +52,7 @@ public abstract class ForwardSmtpTest {
     public static final String PASSWORD = "secret";
 
     private final TemporaryFolder folder = new TemporaryFolder();
-    private final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer("weave/rest-smtp-sink:latest")
+    private final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer(ContainerNames.FAKE_SMTP)
             .withExposedPorts(25)
             .withAffinityToContainer()
             .waitingFor(new HostPortWaitStrategy());
@@ -82,6 +86,16 @@ public abstract class ForwardSmtpTest {
         		.setPort(80)
         		.setBaseUri("http://" + containerIp.getHostAddress())
         		.build();
+
+        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
+        ConditionFactory calmlyAwait = Awaitility.with()
+            .pollInterval(slowPacedPollInterval)
+            .and()
+            .with()
+            .pollDelay(slowPacedPollInterval)
+            .await();
+
+        calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> fakeSmtp.tryConnect(25));
     }
 
     @Test

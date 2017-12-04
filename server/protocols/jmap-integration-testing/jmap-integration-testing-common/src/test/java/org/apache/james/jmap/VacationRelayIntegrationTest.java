@@ -116,6 +116,8 @@ public abstract class VacationRelayIntegrationTest {
             .pollInterval(slowPacedPollInterval)
             .and()
             .pollDelay(slowPacedPollInterval).await();
+
+        calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> fakeSmtp.tryConnect(25));
     }
 
     @After

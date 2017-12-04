@@ -19,8 +19,11 @@
 
 package org.apache.james.util.streams;
 
+import java.net.Socket;
 import java.time.Duration;
 import java.util.List;
+
+import javax.net.SocketFactory;
 
 import org.junit.Assume;
 import org.junit.rules.TestRule;
@@ -129,6 +132,16 @@ public class SwarmGenericContainer implements TestRule {
 
     public InspectContainerResponse getContainerInfo() {
         return container.getContainerInfo();
+    }
+
+    public boolean tryConnect(int port) {
+        try {
+            Socket socket = SocketFactory.getDefault().createSocket(getContainerIp(), port);
+            socket.close();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override
