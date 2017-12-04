@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
+import org.apache.james.util.streams.ContainerNames;
 import org.apache.james.util.streams.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
@@ -66,7 +67,7 @@ public abstract class VacationRelayIntegrationTest {
     private static final int REST_SMTP_SINK_PORT = 25;
 
     @Rule
-    public final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer("weave/rest-smtp-sink:latest")
+    public final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer(ContainerNames.FAKE_SMTP)
         .withExposedPorts(REST_SMTP_SINK_PORT)
         .waitingFor(new HostPortWaitStrategy());
 
