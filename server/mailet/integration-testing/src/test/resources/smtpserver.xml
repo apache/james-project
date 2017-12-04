@@ -33,11 +33,13 @@
         <connectiontimeout>360</connectiontimeout>
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
-        <authRequired>false</authRequired>
-        <authorizedAddresses>0.0.0.0/0</authorizedAddresses>
-        <verifyIdentity>true</verifyIdentity>
-        <maxmessagesize>0</maxmessagesize>
-        <addressBracketsEnforcement>true</addressBracketsEnforcement>
+        <authRequired>{{authRequired}}</authRequired>
+{{#hasAuthorizedAddresses}}
+        <authorizedAddresses>{{authorizedAddresses}}</authorizedAddresses>
+{{/hasAuthorizedAddresses}}
+        <verifyIdentity>{{verifyIdentity}}</verifyIdentity>
+        <maxmessagesize>{{maxmessagesize}}</maxmessagesize>
+        <addressBracketsEnforcement>{{bracketEnforcement}}</addressBracketsEnforcement>
         <smtpGreeting>JAMES Linagora's SMTP awesome Server</smtpGreeting>
         <handlerchain>
             <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
@@ -61,11 +63,13 @@
            Authorize only local users
         -->
         <authRequired>true</authRequired>
-        <authorizedAddresses>0.0.0.0/0</authorizedAddresses>
+        {{#hasAuthorizedAddresses}}
+        <authorizedAddresses>{{authorizedAddresses}}</authorizedAddresses>
+        {{/hasAuthorizedAddresses}}
         <!-- Trust authenticated users -->
         <verifyIdentity>false</verifyIdentity>
-        <maxmessagesize>0</maxmessagesize>
-        <addressBracketsEnforcement>true</addressBracketsEnforcement>
+        <maxmessagesize>{{maxmessagesize}}</maxmessagesize>
+        <addressBracketsEnforcement>{{bracketEnforcement}}</addressBracketsEnforcement>
         <smtpGreeting>JAMES Linagora's SMTP awesome Server</smtpGreeting>
         <handlerchain>
             <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
@@ -89,11 +93,13 @@
            Authorize only local users
         -->
         <authRequired>true</authRequired>
-        <authorizedAddresses>0.0.0.0/0</authorizedAddresses>
+        {{#hasAuthorizedAddresses}}
+        <authorizedAddresses>{{authorizedAddresses}}</authorizedAddresses>
+        {{/hasAuthorizedAddresses}}
         <!-- Trust authenticated users -->
         <verifyIdentity>false</verifyIdentity>
-        <maxmessagesize>0</maxmessagesize>
-        <addressBracketsEnforcement>true</addressBracketsEnforcement>
+        <maxmessagesize>{{maxmessagesize}}</maxmessagesize>
+        <addressBracketsEnforcement>{{bracketEnforcement}}</addressBracketsEnforcement>
         <smtpGreeting>JAMES Linagora's SMTP awesome Server</smtpGreeting>
         <handlerchain>
             <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>

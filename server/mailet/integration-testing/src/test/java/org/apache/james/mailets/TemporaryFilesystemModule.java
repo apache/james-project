@@ -30,10 +30,10 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.modules.CommonServicesModule;
+import org.apache.james.server.core.JamesServerResourceLoader;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Throwables;
@@ -52,7 +52,6 @@ public class TemporaryFilesystemModule extends AbstractModule {
             "managesieveserver.xml",
             "pop3server.xml",
             "recipientrewritetable.xml",
-            "smtpserver.xml",
             "usersrepository.xml",
             "smime.p12");
 

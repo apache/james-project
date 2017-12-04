@@ -36,6 +36,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.configuration.MailetContainer;
+import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.webadmin.WebAdminConfiguration;
@@ -50,14 +51,21 @@ public class TemporaryJamesServer {
     public static class Builder {
         private ImmutableList.Builder<Module> overrideModules;
         private Optional<Module> module;
+        private Optional<SmtpConfiguration> smtpConfiguration;
 
         private Builder() {
             overrideModules = ImmutableList.builder();
             module = Optional.empty();
+            smtpConfiguration = Optional.empty();
         }
 
         public Builder withBase(Module module) {
             this.module = Optional.of(module);
+            return this;
+        }
+
+        public Builder withSmtpConfiguration(SmtpConfiguration smtpConfiguration) {
+            this.smtpConfiguration = Optional.of(smtpConfiguration);
             return this;
         }
 
@@ -70,6 +78,7 @@ public class TemporaryJamesServer {
             return new TemporaryJamesServer(
                 temporaryFolder,
                 mailetContainer,
+                smtpConfiguration.orElse(SmtpConfiguration.DEFAULT),
                 module.orElse(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE),
                 overrideModules.build());
         }
@@ -80,14 +89,16 @@ public class TemporaryJamesServer {
     }
 
     private static final String MAILETCONTAINER_CONFIGURATION_FILENAME = "mailetcontainer.xml";
+    private static final String SMTP_CONFIGURATION_FILENAME = "smtpserver.xml";
 
     private static final int LIMIT_TO_3_MESSAGES = 3;
 
     private final GuiceJamesServer jamesServer;
 
-    private TemporaryJamesServer(TemporaryFolder temporaryFolder, MailetContainer mailetContainer,
+    private TemporaryJamesServer(TemporaryFolder temporaryFolder, MailetContainer mailetContainer, SmtpConfiguration smtpConfiguration,
                                  Module serverBaseModule, List<Module> additionalModules) throws Exception {
         appendMailetConfigurations(temporaryFolder, mailetContainer);
+        appendSmtpConfigurations(temporaryFolder, smtpConfiguration);
 
         jamesServer = new GuiceJamesServer()
             .combineWith(serverBaseModule)
@@ -106,9 +117,20 @@ public class TemporaryJamesServer {
         }
     }
 
+    private void appendSmtpConfigurations(TemporaryFolder temporaryFolder, SmtpConfiguration smtpConfiguration) throws ConfigurationException, IOException {
+        try (OutputStream outputStream = createSmtpConfigurationFile(temporaryFolder)) {
+            IOUtils.write(smtpConfiguration.serializeAsXml(), outputStream, StandardCharsets.UTF_8);
+        }
+    }
+
     private FileOutputStream createMailetConfigurationFile(TemporaryFolder temporaryFolder) throws IOException {
         File configurationFolder = temporaryFolder.newFolder("conf");
         return new FileOutputStream(Paths.get(configurationFolder.getAbsolutePath(), MAILETCONTAINER_CONFIGURATION_FILENAME).toFile());
+    }
+
+    private FileOutputStream createSmtpConfigurationFile(TemporaryFolder temporaryFolder) throws IOException {
+        File configurationFolder = temporaryFolder.getRoot().listFiles()[0];
+        return new FileOutputStream(Paths.get(configurationFolder.getAbsolutePath(), SMTP_CONFIGURATION_FILENAME).toFile());
     }
 
     public void shutdown() {

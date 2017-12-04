@@ -20,7 +20,9 @@
 
 package org.apache.james.mailets.configuration;
 
+import java.io.IOException;
+
 public interface SerializableAsXml {
 
-    String serializeAsXml();
+    String serializeAsXml() throws IOException;
 }
