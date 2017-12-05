@@ -210,9 +210,9 @@ Feature: GetMessages method
     And the list should contain 1 message
     And the hasAttachment of the message is "true"
     And the list of attachments of the message contains 2 attachments
-    And the preview of the message is "html\n"
+    And the preview of the message is "html  tiramisu"
     And the property "textBody" of the message is null
-    And the htmlBody of the message is "<b>html</b>\n"
+    And the htmlBody of the message is "<b>html tiramisu</b>\n"
 
   Scenario: Retrieving message should return attachments and text body when some attachments and text message
     Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with two attachments in text

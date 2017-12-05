@@ -85,6 +85,7 @@ public abstract class GetMessageListMethodTest {
     protected abstract void await();
 
     private AccessToken aliceAccessToken;
+    private AccessToken bobAccessToken;
     private String alice;
     private String bob;
     private String domain;
@@ -118,6 +119,7 @@ public abstract class GetMessageListMethodTest {
         this.bob = "bob@" + domain;
         String bobPassword = "bobPassword";
         dataProbe.addUser(bob, bobPassword);
+        this.bobAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), bob, bobPassword);
     }
 
     private URIBuilder baseUri() {
@@ -174,6 +176,75 @@ public abstract class GetMessageListMethodTest {
         given()
             .header("Authorization", aliceAccessToken.serialize())
             .body("[[\"getMessageList\", {}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messageList"))
+            .body(ARGUMENTS + ".messageIds", contains(message.getMessageId().serialize()));
+    }
+
+    @Test
+    public void getMessageListShouldNotFilterMessagesWhenTextFilterMatchesBodyAfterTheMessageMailboxHasBeenChanged() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
+        MailboxId otherMailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "otherMailbox");
+
+        ComposedMessageId message = mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
+            ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags());
+        await();
+
+        String messageId = message.getMessageId().serialize();
+
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"setMessages\", {\"update\":{\"" + messageId + "\":{\"mailboxIds\": [\"" + otherMailboxId.serialize() + "\"]}}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200);
+        await();
+
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"text\":\"tiramisu\"}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(ARGUMENTS + ".messageIds", contains(messageId));
+    }
+
+    @Test
+    public void getMessageListShouldListMessageThatHasBeenMovedInAMailboxWhereTheUserHasOnlyReadRight() throws Exception {
+        MailboxId delegatedMailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, "delegated");
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob, "not_delegated");
+
+        MailboxPath notDelegatedMailboxPath = MailboxPath.forUser(bob, "not_delegated");
+        MailboxPath delegatedMailboxPath = MailboxPath.forUser(bob, "delegated");
+
+        ComposedMessageId message = mailboxProbe.appendMessage(bob, notDelegatedMailboxPath,
+            new ByteArrayInputStream("Subject: chaussette\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+
+        await();
+
+        aclProbe.replaceRights(delegatedMailboxPath,
+            alice,
+            new Rfc4314Rights(Right.Read));
+
+        String messageId = message.getMessageId().serialize();
+
+        given()
+            .header("Authorization", bobAccessToken.serialize())
+            .body("[[\"setMessages\", {\"update\":{\"" + messageId + "\":{\"mailboxIds\": [\"" + delegatedMailboxId.serialize() + "\"]}}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200);
+        await();
+
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"subject\":\"chaussette\"}}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()

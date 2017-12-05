@@ -209,7 +209,7 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     private List<MailboxMessage> findRelatedMailboxMessages(MessageId messageId, MailboxSession mailboxSession) throws MailboxException {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
-        return messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata)
+        return messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Full)
             .stream()
             .filter(hasRightsOn(mailboxSession, Right.Read))
             .collect(Guavate.toImmutableList());
