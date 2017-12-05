@@ -22,14 +22,14 @@ package org.apache.james.mailets;
 import static com.jayway.restassured.RestAssured.when;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static org.apache.james.MemoryJamesServerMain.SMTP_AND_IMAP_MODULE;
+import static org.apache.james.MemoryJamesServerMain.SMTP_ONLY_MODULE;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
 import java.net.InetAddress;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
-import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -37,11 +37,6 @@ import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
-import org.apache.james.modules.protocols.IMAPServerModule;
-import org.apache.james.modules.protocols.ProtocolHandlerModule;
-import org.apache.james.modules.protocols.SMTPServerModule;
-import org.apache.james.modules.server.CamelMailetContainerModule;
-import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.LocalDelivery;
 import org.apache.james.transport.mailets.Null;
@@ -66,8 +61,6 @@ import org.junit.rules.TemporaryFolder;
 import org.testcontainers.containers.wait.HostPortWaitStrategy;
 
 import com.google.common.base.Charsets;
-import com.google.inject.Module;
-import com.google.inject.util.Modules;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
@@ -86,16 +79,6 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
     private static final String FROM = "from@" + JAMES_APACHE_ORG;
     private static final String RECIPIENT = "touser@" + JAMES_ANOTHER_DOMAIN;
-    private static final Module SMTP_ONLY_MODULE = Modules.combine(
-        MemoryJamesServerMain.IN_MEMORY_SERVER_MODULE,
-        new ProtocolHandlerModule(),
-        new SMTPServerModule(),
-        new RawPostDequeueDecoratorModule(),
-        binder -> binder.bind(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
-            .toInstance(DefaultConfigurationBuilder::new));
-    private static final Module SMTP_AND_IMAP_MODULE = Modules.combine(
-        SMTP_ONLY_MODULE,
-        new IMAPServerModule());
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();

@@ -19,6 +19,7 @@
 
 package org.apache.james;
 
+import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.data.MemoryDataJmapModule;
 import org.apache.james.modules.data.MemoryDataModule;
@@ -30,10 +31,12 @@ import org.apache.james.modules.protocols.ManageSieveServerModule;
 import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
+import org.apache.james.modules.server.CamelMailetContainerModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.MemoryMailQueueModule;
+import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 
@@ -65,6 +68,19 @@ public class MemoryJamesServerMain {
         new MemoryMailboxModule(),
         new MemoryMailQueueModule(),
         new MailboxModule());
+
+    public static final Module SMTP_ONLY_MODULE = Modules.combine(
+        MemoryJamesServerMain.IN_MEMORY_SERVER_MODULE,
+        new ProtocolHandlerModule(),
+        new SMTPServerModule(),
+        new RawPostDequeueDecoratorModule(),
+        binder -> binder.bind(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
+            .toInstance(DefaultConfigurationBuilder::new));
+
+
+    public static final Module SMTP_AND_IMAP_MODULE = Modules.combine(
+        SMTP_ONLY_MODULE,
+        new IMAPServerModule());
 
     public static final Module IN_MEMORY_SERVER_AGGREGATE_MODULE = Modules.combine(
         IN_MEMORY_SERVER_MODULE,
