@@ -79,6 +79,21 @@ public class SMTPMessageSender implements Closeable {
         }
     }
 
+    public void sendMessageNoBracket(String from, String recipient) {
+        try {
+            smtpClient.helo(senderDomain);
+            smtpClient.setSender(from);
+            smtpClient.rcpt(recipient);
+            smtpClient.sendShortMessageData("FROM: " + from + "\r\n" +
+                "subject: test\r\n" +
+                "\r\n" +
+                "content\r\n" +
+                ".\r\n");
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
     public void sendMessageWithHeaders(String from, String recipient, String message) {
         try {
             smtpClient.helo(senderDomain);
