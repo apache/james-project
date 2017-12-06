@@ -22,11 +22,12 @@ package org.apache.james.mailetcontainer.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.mail.Address;
@@ -60,8 +61,6 @@ import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
-import com.github.fge.lambdas.consumers.ConsumerChainer;
 import com.google.common.collect.ImmutableSet;
 
 @SuppressWarnings("deprecation")
@@ -71,7 +70,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
     /**
      * A hash table of server attributes These are the MailetContext attributes
      */
-    private final Hashtable<String, Object> attributes = new Hashtable<>();
+    private final Map<String, Object> attributes = new HashMap<>();
     protected DNSService dns;
 
     private UsersRepository localusers;
@@ -130,11 +129,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
 
     @Override
     public Iterator<String> getAttributeNames() {
-        final List<String> names;
-        synchronized (attributes) {
-            names = new ArrayList<>(attributes.keySet());
-        }
-        return names.iterator();
+        return attributes.keySet().iterator();
     }
 
     /**
