@@ -4,6 +4,8 @@ C: mail from:<matthieu@yopmail.com>
 C: rcpt to:<starttls@mydomain.tld>
 C: data
 S: 250.*
+S: 250-AUTH LOGIN PLAIN
+S: 250-AUTH=LOGIN PLAIN
 S: 250-PIPELINING
 S: 250-ENHANCEDSTATUSCODES
 S: 250-8BITMIME

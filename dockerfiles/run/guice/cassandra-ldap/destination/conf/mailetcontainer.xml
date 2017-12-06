@@ -73,6 +73,9 @@
             <mailet match="SMTPAuthSuccessful" class="ToProcessor">
                 <processor>relay</processor>
             </mailet>
+            <mailet match="SMTPIsAuthNetwork" class="ToProcessor">
+                <processor>relay</processor>
+            </mailet>
             <mailet match="org.apache.james.jmap.mailet.SentByJmap" class="ToProcessor">
                 <processor>relay</processor>
             </mailet>
