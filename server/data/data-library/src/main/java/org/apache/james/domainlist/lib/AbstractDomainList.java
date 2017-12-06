@@ -24,6 +24,7 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Stream;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -158,8 +159,9 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
         // https://stackoverflow.com/questions/37919648/concatenating-immutablelists
         // A work-around is to use Iterables.concat() until something like
         // https://github.com/google/guava/issues/1029 is implemented.
-        ImmutableList<String> detectedIps = detectIps(Iterables.concat(domains, detectedDomains));
-        Iterable<String> allDomains = Iterables.concat(domains, detectedDomains, detectedIps);
+        Iterable<String> domainsWithoutIp = (detectedDomains.isEmpty() ? domains : Iterables.concat(domains, detectedDomains));
+        ImmutableList<String> detectedIps = detectIps(domainsWithoutIp);
+        ImmutableList<String> allDomains = ImmutableList.copyOf(detectedIps.isEmpty() ? domainsWithoutIp : Iterables.concat(domainsWithoutIp, detectedIps));
 
         if (LOGGER.isDebugEnabled()) {
             for (String domain : allDomains) {
@@ -167,12 +169,13 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
             }
         }
 
-        return ImmutableList.copyOf(allDomains);
+        return allDomains;
     }
 
     private ImmutableList<String> detectIps(Iterable<String> domains) {
         if (autoDetectIP) {
-            return getDomainsIP(domains, dns, LOGGER);
+            return getDomainsIpStream(domains, dns, LOGGER)
+                .collect(Guavate.toImmutableList());
         }
         return ImmutableList.of();
     }
@@ -195,31 +198,29 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     }
 
     /**
-     * Return a List which holds all ipAddress of the domains in the given List
+     * Return a stream of all IP addresses of the given domains.
      * 
      * @param domains
      *            Iterable of domains
-     * @return domainIP List of ipaddress for domains
+     * @return Stream of ipaddress for domains
      */
-    private static ImmutableList<String> getDomainsIP(Iterable<String> domains, DNSService dns, Logger log) {
+    private static Stream<String> getDomainsIpStream(Iterable<String> domains, DNSService dns, Logger log) {
         return Guavate.stream(domains)
-            .flatMap(domain -> getDomainIP(domain, dns, log).stream())
-            .distinct()
-            .collect(Guavate.toImmutableList());
+            .flatMap(domain -> getDomainIpStream(domain, dns, log))
+            .distinct();
     }
 
     /**
      * @see #getDomainsIP(List, DNSService, Logger)
      */
-    private static ImmutableList<String> getDomainIP(String domain, DNSService dns, Logger log) {
+    private static Stream<String> getDomainIpStream(String domain, DNSService dns, Logger log) {
         try {
             return dns.getAllByName(domain).stream()
                 .map(InetAddress::getHostAddress)
-                .distinct()
-                .collect(Guavate.toImmutableList());
+                .distinct();
         } catch (UnknownHostException e) {
             log.error("Cannot get IP address(es) for " + domain);
-            return ImmutableList.of();
+            return Stream.of();
         }
     }
 
