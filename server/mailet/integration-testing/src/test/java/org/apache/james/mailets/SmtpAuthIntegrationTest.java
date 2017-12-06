@@ -21,8 +21,6 @@ package org.apache.james.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.concurrent.TimeUnit;
-
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
@@ -30,13 +28,14 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.LocalDelivery;
-import org.apache.james.transport.mailets.Null;
 import org.apache.james.transport.mailets.RemoveMimeHeader;
 import org.apache.james.transport.mailets.ToProcessor;
+import org.apache.james.transport.mailets.ToRepository;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.SMTPAuthSuccessful;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.junit.After;
 import org.junit.Before;
@@ -56,6 +55,7 @@ public class SmtpAuthIntegrationTest {
 
     private static final String JAMES_APACHE_ORG = "james.org";
     private static final String FROM = "fromuser@" + JAMES_APACHE_ORG;
+    private static final String DROPPED_MAILS = "file://var/mail/dropped-mails/";
 
 
     @Rule
@@ -128,7 +128,8 @@ public class SmtpAuthIntegrationTest {
             .enableJmx(true)
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
-                .mailet(Null.class)
+                .mailet(ToRepository.class)
+                .addProperty("repositoryPath", DROPPED_MAILS)
                 .build())
             .build();
     }
@@ -162,8 +163,8 @@ public class SmtpAuthIntegrationTest {
 
             calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
 
-            Thread.sleep(TimeUnit.SECONDS.toMillis(10));
-
+            MailRepositoryProbeImpl repositoryProbe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
+            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> repositoryProbe.getRepositoryMailCount(DROPPED_MAILS) == 1);
             assertThat(imapMessageReader.userReceivedMessage(FROM, PASSWORD)).isFalse();
         }
     }

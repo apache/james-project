@@ -28,7 +28,9 @@ import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.file.FileMailRepository;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
+import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InMemoryMailRepositoryStore;
+import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.MailRepositoryProvider;
 
 import com.google.common.base.Throwables;
@@ -49,6 +51,7 @@ public class MailStoreRepositoryModule extends AbstractModule {
         Multibinder<MailRepositoryProvider> multibinder = Multibinder.newSetBinder(binder(), MailRepositoryProvider.class);
         multibinder.addBinding().to(FileMailRepositoryProvider.class);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MailRepositoryStoreModuleConfigurationPerformer.class);
+        Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(MailRepositoryProbeImpl.class);
     }
 
     public static class FileMailRepositoryProvider implements MailRepositoryProvider {
