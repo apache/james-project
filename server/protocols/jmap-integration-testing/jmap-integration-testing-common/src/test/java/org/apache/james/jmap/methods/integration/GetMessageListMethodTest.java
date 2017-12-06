@@ -988,6 +988,23 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
+    public void getMessageListShouldNotFilterMessagesWhenSubjectFilterMatchesSubject() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
+        ComposedMessageId message = mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
+            ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags());
+        await();
+
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body(String.format("[[\"getMessageList\", {\"filter\":{\"subject\":\"Image\"}}, \"#0\"]]"))
+            .when()
+            .post("/jmap")
+            .then()
+            .statusCode(200)
+            .body(ARGUMENTS + ".messageIds", contains(message.getMessageId().serialize()));
+    }
+
+    @Test
     public void getMessageListShouldFilterMessagesWhenAttachmentFilterDoesntMatches() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
         byte[] attachmentContent = IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/attachment.pdf"));
