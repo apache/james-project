@@ -25,7 +25,6 @@ import java.io.StringReader;
 import java.sql.Connection;
 import java.text.DecimalFormat;
 import java.util.Collection;
-import java.util.Iterator;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -42,6 +41,8 @@ import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Joiner;
 
 /**
  * <p>
@@ -370,15 +371,9 @@ public class BayesianAnalysis extends GenericMailet {
             return "null";
         }
 
-        Iterator<MailAddress> iter = addresses.iterator();
         StringBuilder sb = new StringBuilder();
         sb.append('[');
-        for (int i = 0; iter.hasNext(); i++) {
-            if (i > 0) {
-                sb.append(", ");
-            }
-            sb.append(iter.next());
-        }
+        Joiner.on(", ").appendTo(sb, addresses);
         sb.append(']');
         return sb.toString();
     }
