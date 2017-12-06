@@ -25,6 +25,7 @@ import java.util.List;
 
 import javax.net.SocketFactory;
 
+import com.github.dockerjava.api.model.Bind;
 import org.junit.Assume;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -38,6 +39,7 @@ import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.google.common.base.Strings;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 public class SwarmGenericContainer implements TestRule {
     private static final Logger LOGGER = LoggerFactory.getLogger(SwarmGenericContainer.class);
@@ -88,6 +90,11 @@ public class SwarmGenericContainer implements TestRule {
 
     public SwarmGenericContainer withExposedPorts(Integer... ports) {
         container.withExposedPorts(ports);
+        return this;
+    }
+
+    public SwarmGenericContainer portBinding(int hostPort, int dockerPort) {
+        container.setPortBindings(ImmutableList.of("0.0.0.0:" + hostPort + ":" + dockerPort));
         return this;
     }
 
