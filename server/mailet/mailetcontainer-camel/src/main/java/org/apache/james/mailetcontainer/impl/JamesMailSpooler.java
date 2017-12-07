@@ -166,7 +166,7 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
                             queueItem.done(true);
                         } catch (Exception e) {
                             if (active.get()) {
-                                LOGGER.error("Exception processing mail while spooling {}", e.getMessage(), e);
+                                LOGGER.error("Exception processing mail while spooling", e);
                             }
                             queueItem.done(false);
 
@@ -176,7 +176,7 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
                         }
                     } catch (Throwable e) {
                         if (active.get()) {
-                            LOGGER.error("Exception processing mail while spooling {}", e.getMessage(), e);
+                            LOGGER.error("Exception processing mail while spooling", e);
 
                         }
                     } finally {

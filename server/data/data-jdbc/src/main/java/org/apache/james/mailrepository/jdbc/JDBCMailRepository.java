@@ -252,9 +252,8 @@ public class JDBCMailRepository extends AbstractMailRepository {
 
             LOGGER.debug("{} created according to {}", getClass().getName(), destination);
         } catch (Exception e) {
-            String message = "Failed to retrieve Store component:" + e.getMessage();
-            LOGGER.error(message, e);
-            throw new ConfigurationException(message, e);
+            LOGGER.error("Failed to retrieve Store component", e);
+            throw new ConfigurationException("Failed to retrieve Store component", e);
         }
 
         theJDBCUtil = new JDBCUtil();

@@ -145,7 +145,7 @@ public class FileMailRepository extends AbstractMailRepository {
             }
             LOGGER.debug("{} created in {}", getClass().getName(), destination);
         } catch (Exception e) {
-            LOGGER.error("Failed to retrieve Store component:{}", e.getMessage(), e);
+            LOGGER.error("Failed to retrieve Store component", e);
             throw e;
         }
     }
