@@ -32,5 +32,3 @@ SuccessExitStatus=143
 
 [Install]
 WantedBy=multi-user.target
-
-# Built for Distribution: Deb-2.2.1 (deb)

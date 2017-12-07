@@ -1,0 +1,7 @@
+#! /bin/sh -e
+ 
+#Workaround waiting for https://github.com/jordansissel/fpm/issues/1163 to be released
+systemctl stop james
+systemctl disable james
+rm /etc/systemd/system/james.service
+

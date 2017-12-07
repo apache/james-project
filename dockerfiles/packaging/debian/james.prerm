@@ -1,5 +1,0 @@
-#! /bin/sh -e
-
-deluser james
-delgroup james
-

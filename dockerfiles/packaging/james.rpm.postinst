@@ -1,0 +1,8 @@
+#! /bin/sh -e
+ 
+ln -s /etc/james /var/lib/james/conf
+
+#Workaround waiting for https://github.com/jordansissel/fpm/issues/1163 to be released
+cp /usr/share/james/james.service /etc/systemd/system/
+systemctl enable james
+

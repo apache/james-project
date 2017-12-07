@@ -1,0 +1,6 @@
+#! /bin/sh -e
+
+ln -s /etc/james /var/lib/james/conf
+
+systemctl enable james
+
