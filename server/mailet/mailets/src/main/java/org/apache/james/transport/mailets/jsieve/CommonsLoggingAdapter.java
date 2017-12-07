@@ -163,13 +163,13 @@ public class CommonsLoggingAdapter implements Log {
 
     public void trace(Object message) {
         if (isTraceEnabled()) {
-            logger.debug("{}", (message == null ? "NULL" : message));
+            logger.trace("{}", (message == null ? "NULL" : message));
         }
     }
 
     public void trace(Object message, Throwable t) {
         if (isTraceEnabled()) {
-            logger.debug("{}", (message == null ? "NULL" : message), t);
+            logger.trace("{}", (message == null ? "NULL" : message), t);
         }
     }
 
