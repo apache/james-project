@@ -834,71 +834,75 @@ public class ClamAVScan extends GenericMailet {
 
     private void logMailInfo(Mail mail) {
 
-        // writes the error message to the log
-        StringWriter sout = new StringWriter();
-        PrintWriter out = new PrintWriter(sout, true);
+        if (LOGGER.isDebugEnabled()) {
+            // writes the error message to the log
+            StringWriter sout = new StringWriter();
+            PrintWriter out = new PrintWriter(sout, true);
 
-        out.print("Mail details:");
-        out.print(" MAIL FROM: " + mail.getSender());
-        Iterator<MailAddress> rcptTo = mail.getRecipients().iterator();
-        out.print(", RCPT TO: " + rcptTo.next());
-        while (rcptTo.hasNext()) {
-            out.print(", " + rcptTo.next());
+            out.print("Mail details:");
+            out.print(" MAIL FROM: " + mail.getSender());
+            Iterator<MailAddress> rcptTo = mail.getRecipients().iterator();
+            out.print(", RCPT TO: " + rcptTo.next());
+            while (rcptTo.hasNext()) {
+                out.print(", " + rcptTo.next());
+            }
+
+            LOGGER.debug(sout.toString());
         }
-
-        LOGGER.debug(sout.toString());
     }
 
     private void logMessageInfo(MimeMessage mimeMessage) {
 
-        // writes the error message to the log
-        StringWriter sout = new StringWriter();
-        PrintWriter out = new PrintWriter(sout, true);
+        if (LOGGER.isDebugEnabled()) {
+            // writes the error message to the log
+            StringWriter sout = new StringWriter();
+            PrintWriter out = new PrintWriter(sout, true);
 
-        out.println("MimeMessage details:");
+            out.println("MimeMessage details:");
 
-        try {
-            if (mimeMessage.getSubject() != null) {
-                out.println("  Subject: " + mimeMessage.getSubject());
-            }
-            if (mimeMessage.getSentDate() != null) {
-                out.println("  Sent date: " + mimeMessage.getSentDate());
-            }
-            String[] sender;
-            sender = mimeMessage.getHeader(RFC2822Headers.FROM);
-            if (sender != null) {
-                out.print("  From: ");
-                for (String aSender : sender) {
-                    out.print(aSender + " ");
+            try {
+                if (mimeMessage.getSubject() != null) {
+                    out.println("  Subject: " + mimeMessage.getSubject());
                 }
-                out.println();
-            }
-            String[] rcpts;
-            rcpts = mimeMessage.getHeader(RFC2822Headers.TO);
-            if (rcpts != null) {
-                out.print("  To: ");
-                for (String rcpt : rcpts) {
-                    out.print(rcpt + " ");
+                if (mimeMessage.getSentDate() != null) {
+                    out.println("  Sent date: " + mimeMessage.getSentDate());
                 }
-                out.println();
-            }
-            rcpts = mimeMessage.getHeader(RFC2822Headers.CC);
-            if (rcpts != null) {
-                out.print("  CC: ");
-                for (String rcpt : rcpts) {
-                    out.print(rcpt + " ");
+                String[] sender;
+                sender = mimeMessage.getHeader(RFC2822Headers.FROM);
+                if (sender != null) {
+                    out.print("  From: ");
+                    for (String aSender : sender) {
+                        out.print(aSender + " ");
+                    }
+                    out.println();
                 }
-                out.println();
+                String[] rcpts;
+                rcpts = mimeMessage.getHeader(RFC2822Headers.TO);
+                if (rcpts != null) {
+                    out.print("  To: ");
+                    for (String rcpt : rcpts) {
+                        out.print(rcpt + " ");
+                    }
+                    out.println();
+                }
+                rcpts = mimeMessage.getHeader(RFC2822Headers.CC);
+                if (rcpts != null) {
+                    out.print("  CC: ");
+                    for (String rcpt : rcpts) {
+                        out.print(rcpt + " ");
+                    }
+                    out.println();
+                }
+                out.print("  Size (in bytes): " + mimeMessage.getSize());
+                if (mimeMessage.getLineCount() >= 0) {
+                    out.print(", Number of lines: " + mimeMessage.getLineCount());
+                }
+            } catch (MessagingException me) {
+                LOGGER.error("Exception caught reporting message details", me);
             }
-            out.print("  Size (in bytes): " + mimeMessage.getSize());
-            if (mimeMessage.getLineCount() >= 0) {
-                out.print(", Number of lines: " + mimeMessage.getLineCount());
-            }
-        } catch (MessagingException me) {
-            LOGGER.error("Exception caught reporting message details", me);
+
+            LOGGER.debug(sout.toString());
         }
-
-        LOGGER.debug(sout.toString());
     }
 
 }

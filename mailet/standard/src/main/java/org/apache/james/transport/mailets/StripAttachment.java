@@ -173,29 +173,31 @@ public class StripAttachment extends GenericMailet {
         }
     }
 
-      private void logConfiguration() {
-      StringBuilder logMessage = new StringBuilder();
-      logMessage.append("StripAttachment is initialised with regex pattern [");
-      if (regExPattern != null) {
-          logMessage.append(regExPattern.pattern());
-      }
-      logMessage.append(" / ");
-      if (notRegExPattern != null) {
-          logMessage.append(notRegExPattern.pattern());
-      }
-      logMessage.append("]");
+    private void logConfiguration() {
+        if (LOGGER.isDebugEnabled()) {
+            StringBuilder logMessage = new StringBuilder();
+            logMessage.append("StripAttachment is initialised with regex pattern [");
+            if (regExPattern != null) {
+                logMessage.append(regExPattern.pattern());
+            }
+            logMessage.append(" / ");
+            if (notRegExPattern != null) {
+                logMessage.append(notRegExPattern.pattern());
+            }
+            logMessage.append(']');
 
-      if (directoryName != null) {
-          logMessage.append(" and will save to directory [");
-          logMessage.append(directoryName);
-          logMessage.append("]");
-      }
-      if (attributeName != null) {
-          logMessage.append(" and will store attachments to attribute [");
-          logMessage.append(attributeName);
-          logMessage.append("]");
-      }
-      LOGGER.debug(logMessage.toString());
+            if (directoryName != null) {
+                logMessage.append(" and will save to directory [");
+                logMessage.append(directoryName);
+                logMessage.append(']');
+            }
+            if (attributeName != null) {
+                logMessage.append(" and will store attachments to attribute [");
+                logMessage.append(attributeName);
+                logMessage.append(']');
+            }
+            LOGGER.debug(logMessage.toString());
+        }
     }
     
     /**

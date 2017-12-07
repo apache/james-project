@@ -86,7 +86,9 @@ public class MockMailQueue implements MailQueue {
         try {
             baos = new ByteArrayOutputStream();
             ((MailImpl) mail).writeMessageTo(baos);
-            log.trace("mimemessage stream: >>>" + new String(baos.toByteArray()) + "<<<");
+            if (log.isTraceEnabled()) {
+                log.trace("mimemessage stream: >>>" + new String(baos.toByteArray()) + "<<<");
+            }
             bais = new ByteArrayInputStream(baos.toByteArray());
             return new MailImpl("MockMailCopy" + new Random().nextLong(),
                     mail.getSender(), mail.getRecipients(), bais);
