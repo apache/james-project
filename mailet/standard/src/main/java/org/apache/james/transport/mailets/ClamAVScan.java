@@ -743,7 +743,7 @@ public class ClamAVScan extends GenericMailet {
                 socket = new Socket(address, getPort());
                 break;
             } catch (ConnectException ce) {
-                LOGGER.debug("Trial #{}/{} - exception caught: {} while creating socket connected to {} on port {}", ping, getMaxPings(), ce, address, getPort());
+                LOGGER.debug("Trial #{}/{} - exception caught while creating socket connected to {} on port {}", ping, getMaxPings(), address, getPort(), ce);
                 ping++;
                 if (ping <= getMaxPings()) {
                     LOGGER.debug("Waiting {} milliseconds before retrying ...", getPingIntervalMilli());
