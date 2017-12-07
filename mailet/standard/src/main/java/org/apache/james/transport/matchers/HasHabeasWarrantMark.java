@@ -107,7 +107,7 @@ public class HasHabeasWarrantMark extends GenericMatcher
 
                 if (!(requiredValue.equals(headerValue))) return null;
             } catch (Exception e) {
-                LOGGER.info(e.toString());
+                LOGGER.info("Caught an exception while reading message", e);
                 return null;            //if we get an exception, don't validate the mark
             }
 
