@@ -43,7 +43,7 @@ public class JamesAppSpringMain implements Daemon {
 
         long end = Calendar.getInstance().getTimeInMillis();
 
-        log.info("Apache James Server is successfully started in " + (end - start) + " milliseconds.");
+        log.info("Apache James Server is successfully started in {} milliseconds.", end - start);
 
     }
 

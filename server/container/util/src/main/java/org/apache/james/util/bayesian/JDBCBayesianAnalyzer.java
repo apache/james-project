@@ -402,9 +402,7 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
             createStatement = conn.prepareStatement(sqlQueries.getSqlString(createSqlStringName, true));
             createStatement.execute();
 
-            StringBuffer logBuffer;
-            logBuffer = new StringBuffer(64).append("Created table '").append(tableName).append("' using sqlResources string '").append(createSqlStringName).append("'.");
-            LOGGER.error(logBuffer.toString());
+            LOGGER.error("Created table '{}' using sqlResources string '{}'.", tableName, createSqlStringName);
 
         } finally {
             theJDBCUtil.closeJDBCStatement(createStatement);
