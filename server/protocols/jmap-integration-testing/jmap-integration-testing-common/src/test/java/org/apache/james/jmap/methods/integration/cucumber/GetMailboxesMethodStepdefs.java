@@ -77,6 +77,13 @@ public class GetMailboxesMethodStepdefs {
             .containsOnly(namespace);
     }
 
+    @Then("^the mailboxes should not contain \"([^\"]*)\" in \"([^\"]*)\" namespace$")
+    public void assertNotMailboxesNames(String mailboxName, String namespace) throws Exception {
+        assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".list[?].namespace.type",
+            filter(where("name").is(mailboxName))))
+            .doesNotContain(namespace);
+    }
+
     @Then("^the mailboxes should contain \"([^\"]*)\" in \"([^\"]*)\" namespace, with parent mailbox \"([^\"]*)\" of user \"([^\"]*)\"$")
     public void assertMailboxesNames(String mailboxName, String namespace, String parentName, String parentOwner) throws Exception {
         Mailbox parentMailbox = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, parentOwner, parentName);
@@ -87,6 +94,14 @@ public class GetMailboxesMethodStepdefs {
         assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".list[?].parentId",
                 filter(where("name").is(mailboxName))))
             .containsOnly(parentMailbox.getMailboxId().serialize());
+    }
+
+    @Then("^the mailboxes should not contain \"([^\"]*)\" in \"([^\"]*)\" namespace, with parent mailbox \"([^\"]*)\" of user \"([^\"]*)\"$")
+    public void assertNotMailboxesNames(String mailboxName, String namespace, String parentName, String parentOwner) throws Exception {
+        Mailbox parentMailbox = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, parentOwner, parentName);
+        assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".list[?].parentId",
+            filter(where("name").is(mailboxName).and("namespace.type").is(namespace))))
+            .doesNotContain(parentMailbox.getMailboxId().serialize());
     }
 
     @Then("^the mailboxes should contain \"([^\"]*)\" in \"([^\"]*)\" namespace, with no parent mailbox$")

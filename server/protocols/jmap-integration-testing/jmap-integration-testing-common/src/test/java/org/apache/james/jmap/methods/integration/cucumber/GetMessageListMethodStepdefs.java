@@ -44,16 +44,18 @@ public class GetMessageListMethodStepdefs {
     private final MainStepdefs mainStepdefs;
     private final HttpClient httpClient;
     private final MessageIdStepdefs messageIdStepdefs;
+    private final UserStepdefs userStepdefs;
 
     @Inject
-    private GetMessageListMethodStepdefs(MainStepdefs mainStepdefs, HttpClient httpClient, MessageIdStepdefs messageIdStepdefs) {
+    private GetMessageListMethodStepdefs(MainStepdefs mainStepdefs, HttpClient httpClient, MessageIdStepdefs messageIdStepdefs, UserStepdefs userStepdefs) {
         this.mainStepdefs = mainStepdefs;
         this.httpClient = httpClient;
         this.messageIdStepdefs = messageIdStepdefs;
+        this.userStepdefs = userStepdefs;
     }
 
     @When("^\"([^\"]*)\" asks for message list in mailboxes \"([^\"]*)\" with flag \"([^\"]*)\"$")
-    public void getMessageList(String username, List<String> mailboxes, String flag) throws Exception {
+    public void getMessageListWithFlag(String username, List<String> mailboxes, String flag) throws Exception {
         String mailboxIds = Joiner.on("\",\"")
             .join(mailboxes.stream()
                 .map(mailbox -> mainStepdefs.jmapServer
@@ -70,6 +72,42 @@ public class GetMessageListMethodStepdefs {
                 "}}, \"#0\"]]",
             mailboxIds,
             flag));
+    }
+
+    @When("^\"([^\"]*)\" asks for message list in (?:mailboxes|mailbox) \"([^\"]*)\"$")
+    public void getMessageList(String username, List<String> mailboxes) throws Exception {
+        String mailboxIds = Joiner.on("\",\"")
+            .join(mailboxes.stream()
+                .map(mailbox -> mainStepdefs.jmapServer
+                    .getProbe(MailboxProbeImpl.class)
+                    .getMailbox(MailboxConstants.USER_NAMESPACE, username, mailbox)
+                    .getMailboxId()
+                    .serialize())
+                .collect(Guavate.toImmutableList()));
+
+        getMessageListFromMailboxIds(mailboxIds);
+    }
+
+    @When("^\"([^\"]*)\" asks for message list in delegated (?:mailboxes|mailbox) \"([^\"]*)\" from \"([^\"]*)\"$")
+    public void getMessageListFromDelegated(String sharee, List<String> mailboxes, String sharer) throws Exception {
+        String mailboxIds = Joiner.on("\",\"")
+            .join(mailboxes.stream()
+                .map(mailbox -> mainStepdefs.jmapServer
+                    .getProbe(MailboxProbeImpl.class)
+                    .getMailbox(MailboxConstants.USER_NAMESPACE, sharer, mailbox)
+                    .getMailboxId()
+                    .serialize())
+                .collect(Guavate.toImmutableList()));
+
+        userStepdefs.execWithUser(sharee, () -> getMessageListFromMailboxIds(mailboxIds));
+    }
+
+    private void getMessageListFromMailboxIds(String mailboxIds) throws Exception {
+        httpClient.post(String.format(
+            "[[\"getMessageList\", {\"filter\":{" +
+                "    \"inMailboxes\":[\"%s\"]" +
+                "}}, \"#0\"]]",
+            mailboxIds));
     }
 
     @When("^\"([^\"]*)\" asks for message list in mailbox \"([^\"]*)\" with flag \"([^\"]*)\"$")
