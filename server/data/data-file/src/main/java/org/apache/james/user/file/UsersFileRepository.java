@@ -100,7 +100,7 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
             objectRepository.init();
             LOGGER.debug("{} created in {}", getClass().getName(), destination);
         } catch (Exception e) {
-            LOGGER.error("Failed to initialize repository: {}", e.getMessage(), e);
+            LOGGER.error("Failed to initialize repository", e);
             throw e;
         }
     }
