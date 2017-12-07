@@ -19,15 +19,14 @@
 
 package org.apache.james.mailetcontainer.impl;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
 import javax.mail.Address;
@@ -70,7 +69,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
     /**
      * A hash table of server attributes These are the MailetContext attributes
      */
-    private final Map<String, Object> attributes = new HashMap<>();
+    private final Map<String, Object> attributes = new ConcurrentHashMap<>();
     protected DNSService dns;
 
     private UsersRepository localusers;
