@@ -130,6 +130,11 @@ public class SMTPMessageSender implements Closeable {
             .contains("250 2.6.0 Message received");
     }
 
+    public boolean messageSendingFailed() throws IOException {
+        String replyString = smtpClient.getReplyString().trim();
+        return replyString.startsWith("4") || replyString.startsWith("5");
+    }
+
     public boolean messageHaveNotBeenSent() throws IOException {
         return !messageHasBeenSent();
     }
