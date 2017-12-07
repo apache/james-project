@@ -261,9 +261,7 @@ public abstract class AbstractSQLWhitelistMatcher extends GenericMatcher {
             createStatement = conn.prepareStatement(sqlQueries.getSqlString(createSqlStringName, true));
             createStatement.execute();
 
-            StringBuffer logBuffer;
-            logBuffer = new StringBuffer(64).append("Created table '").append(tableName).append("' using sqlResources string '").append(createSqlStringName).append("'.");
-            LOGGER.info(logBuffer.toString());
+            LOGGER.info("Created table '{}' using sqlResources string '{}'.", tableName, createSqlStringName);
 
         } finally {
             theJDBCUtil.closeJDBCStatement(createStatement);
