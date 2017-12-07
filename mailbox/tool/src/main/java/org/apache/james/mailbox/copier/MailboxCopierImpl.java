@@ -78,9 +78,11 @@ public class MailboxCopierImpl implements MailboxCopier {
         mailboxPathList = srcMailboxManager.list(srcMailboxSession);
         srcMailboxManager.endProcessingRequest(srcMailboxSession);
 
-        LOGGER.info("Found " + mailboxPathList.size() + " mailboxes in source mailbox manager.");
-        for (int i=0; i < mailboxPathList.size(); i++) {
-            LOGGER.info("Mailbox#" + i + " path=" + mailboxPathList.get(i));
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info("Found " + mailboxPathList.size() + " mailboxes in source mailbox manager.");
+            for (int i=0; i < mailboxPathList.size(); i++) {
+                LOGGER.info("Mailbox#" + i + " path=" + mailboxPathList.get(i));
+            }
         }
 
         MailboxPath mailboxPath = null;
