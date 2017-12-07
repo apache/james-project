@@ -338,8 +338,9 @@ public class MaildirFolder {
                 reader = new BufferedReader(fileReader);
                 String uidString = String.valueOf(uid.asLong());
                 String line = reader.readLine(); // the header
-                int lineNumber = 1;
-                for (; (line = reader.readLine()) != null; lineNumber++) {
+                int lineNumber = 1; // already read the first line
+                while ((line = reader.readLine()) != null) {
+                    lineNumber++;
                     if (!line.equals("")) {
                         int gap = line.indexOf(" ");
                         if (gap == -1) {
@@ -581,8 +582,9 @@ public class MaildirFolder {
             // the first line in the file contains the next uid and message count
             if (line != null)
                 readUidListHeader(line);
-            int lineNumber = 1;
-            for (; (line = reader.readLine()) != null; lineNumber++) {
+            int lineNumber = 1; // already read the first line
+            while ((line = reader.readLine()) != null) {
+                lineNumber++;
                 if (!line.equals("")) {
                     int gap = line.indexOf(" ");
                     if (gap == -1) {
@@ -630,8 +632,9 @@ public class MaildirFolder {
             // count
             if (line != null)
                 readUidListHeader(line);
-            int lineNumber = 1;
-            for (; (line = reader.readLine()) != null; lineNumber++) {
+            int lineNumber = 1; // already read the first line
+            while ((line = reader.readLine()) != null) {
+                lineNumber++;
                 if (!line.equals("")) {
                     int gap = line.indexOf(" ");
 
@@ -856,8 +859,9 @@ public class MaildirFolder {
                 // It may be possible that message count is 0 so we should better not try to calculate the size of the ArrayList
                 ArrayList<String> lines = new ArrayList<>();
                 String line;
-                int lineNumber = 1;
-                for (; (line = reader.readLine()) != null; lineNumber++) {
+                int lineNumber = 0;
+                while ((line = reader.readLine()) != null) {
+                    lineNumber++;
                     int gap = line.indexOf(" ");
                     if (gap == -1) {
                         // there must be some issues in the file if no gap can be found
