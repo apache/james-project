@@ -159,9 +159,9 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
         // https://stackoverflow.com/questions/37919648/concatenating-immutablelists
         // A work-around is to use Iterables.concat() until something like
         // https://github.com/google/guava/issues/1029 is implemented.
-        Iterable<String> domainsWithoutIp = (detectedDomains.isEmpty() ? domains : Iterables.concat(domains, detectedDomains));
+        Iterable<String> domainsWithoutIp = Iterables.concat(domains, detectedDomains);
         ImmutableList<String> detectedIps = detectIps(domainsWithoutIp);
-        ImmutableList<String> allDomains = ImmutableList.copyOf(detectedIps.isEmpty() ? domainsWithoutIp : Iterables.concat(domainsWithoutIp, detectedIps));
+        ImmutableList<String> allDomains = ImmutableList.copyOf(Iterables.concat(domainsWithoutIp, detectedIps));
 
         if (LOGGER.isDebugEnabled()) {
             for (String domain : allDomains) {
