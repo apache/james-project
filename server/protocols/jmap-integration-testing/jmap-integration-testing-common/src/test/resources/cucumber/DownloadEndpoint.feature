@@ -23,7 +23,7 @@ Feature: Download endpoint
 
   Background:
     Given a domain named "domain.tld"
-    And some users "usera@domain.tld", "userb@domain.tld", "userc@domain.tld"
+    And some users "usera@domain.tld", "userb@domain.tld"
     And "usera@domain.tld" has a mailbox "INBOX"
     And "usera@domain.tld" mailbox "INBOX" contains a message "m1" with an attachment "a1"
 
@@ -84,12 +84,6 @@ Feature: Download endpoint
     Given "userb@domain.tld" is connected
     When "userb@domain.tld" downloads "a1"
     Then the user should receive a not found response
-
-  Scenario: An authenticated user should have access to a shared attachment
-    Given "usera@domain.tld" shares his mailbox "INBOX" with "userb@domain.tld" with "lr" rights
-    And "userb@domain.tld" is connected
-    When "userb@domain.tld" downloads "a1"
-    Then the user should be authorized
 
   Scenario: A user should have access to an inlined attachment
     Given "usera@domain.tld" is connected

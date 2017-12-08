@@ -16,15 +16,27 @@
 # specific language governing permissions and limitations      *
 # under the License.                                           *
 # **************************************************************/
-Feature: SetMailboxes method
+Feature: Download endpoint and shared mailbox
+  As a James user
+  I want to access to the download endpoint in order to download attachment from mail of mailbox that has been shared to me
 
   Background:
     Given a domain named "domain.tld"
-    And a user "alice@domain.tld"
+    And some users "alice@domain.tld", "bob@domain.tld", "someone@domain.tld"
     And "alice@domain.tld" has a mailbox "shared"
+    And "alice@domain.tld" mailbox "shared" contains a message "m1" with an attachment "a1"
+    And "alice@domain.tld" shares his mailbox "shared" with "bob@domain.tld" with "lr" rights
 
-  Scenario: setMailboxes should reject sharing a mailbox to another domain
-    Given a domain named "otherdomain.tld"
-    And a user "bob@otherdomain.tld"
-    When "alice@domain.tld" shares its mailbox "shared" with rights "lrw" with "bob@otherdomain.tld"
-    Then "alice@domain.tld" receives not updated on mailbox "shared" with kind "invalidArguments" and message "Cannot share a mailbox to another domain"
+  Scenario: Bob should have access to a shared attachment
+    Given "bob@domain.tld" is connected
+    When "bob@domain.tld" downloads "a1"
+    Then the user should be authorized
+
+  Scenario: Bob can download attachment of another user when shared mailbox
+    When "bob@domain.tld" downloads "a1"
+    Then he can read that blob
+    And the blob size is 3071
+
+  Scenario: Someone should not be able to download mail's attachment of mailbox shared to others
+    When "someone@domain.tld" downloads "a1"
+    Then "someone@domain.tld" should receive a not found response

@@ -16,21 +16,27 @@
 # specific language governing permissions and limitations      *
 # under the License.                                           *
 # **************************************************************/
-
-Feature: Alternative authentication mechanism for getting attachment via a POST request returning a specific authentication token
+Feature: Sharing children mailbox
   As a James user
-  I want to retrieve my attachments without an alternative authentication mechanism
+  I want to be able to share a children mailbox without sharing it's parent one
 
   Background:
     Given a domain named "domain.tld"
-    And a connected user "username@domain.tld"
-    And "username@domain.tld" has a mailbox "INBOX"
+    And a user "alice@domain.tld"
+    And a user "bob@domain.tld"
+    And "alice@domain.tld" has a mailbox "shared"
+    And "alice@domain.tld" shares her mailbox "shared" with "bob@domain.tld" with "aeilrwt" rights
+    And "alice@domain.tld" has a mailbox "mailbox1"
+    And "alice@domain.tld" has a mailbox "mailbox1.shared"
 
-  Scenario: Asking for an attachment access token with an unknown blobId
-    When "username@domain.tld" asks for a token for attachment "123"
-    Then the user should receive a not found response
+  Scenario: User can share sub-mailbox without sharing its parent
+    Given "alice@domain.tld" shares her mailbox "mailbox1.shared" with "bob@domain.tld" with "aeirwt" rights
+    When "bob@domain.tld" lists mailboxes
+    Then the mailboxes should contain "shared" in "Delegated" namespace
+    And the mailboxes should not contain "mailbox1"
 
-  Scenario: Asking for an attachment access token with a previously stored blobId
-    Given "username@domain.tld" mailbox "INBOX" contains a message "1" with an attachment "2"
-    When "username@domain.tld" asks for a token for attachment "2"
-    Then the user should receive an attachment access token
+  Scenario: User can share sub-mailbox without sharing its parent and then sharee can see the parent mailbox
+    Given "alice@domain.tld" shares her mailbox "mailbox1.shared" with "bob@domain.tld" with "l" rights
+    When "bob@domain.tld" lists mailboxes
+    Then the mailboxes should contain "shared" in "Delegated" namespace
+    And the mailboxes should contain "mailbox1" in "Delegated" namespace

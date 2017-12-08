@@ -19,14 +19,29 @@
 
 package org.apache.james.jmap.memory.cucumber;
 
-import org.junit.runner.RunWith;
-
 import cucumber.api.CucumberOptions;
 import cucumber.api.junit.Cucumber;
+import org.junit.runner.RunWith;
 
 @RunWith(Cucumber.class)
-@CucumberOptions(features="classpath:cucumber/KeywordsConsistencyOnDelegationMailbox.feature",
-    glue={"org.apache.james.jmap.methods.integration", "org.apache.james.jmap.memory.cucumber"},
+@CucumberOptions(features= {
+    "classpath:cucumber/sharing/SharingParentMailboxWithAndWithoutChildren.feature",
+    "classpath:cucumber/sharing/SharingChildrenWithoutSharingParent.feature",
+    "classpath:cucumber/sharing/GetMessageAndSharing.feature",
+    "classpath:cucumber/sharing/SharingMailboxWithOtherDomain.feature",
+    "classpath:cucumber/sharing/MailboxCreationAndSharing.feature",
+    "classpath:cucumber/sharing/MailboxDeletionAndSharing.feature",
+    "classpath:cucumber/sharing/SetMessagesOnSharedMailbox.feature",
+    "classpath:cucumber/sharing/DownloadAndSharing.feature",
+    "classpath:cucumber/sharing/KeywordsConsistencyOnDelegationMailbox.feature",
+    "classpath:cucumber/sharing/GetMessageListAndSharing.feature",
+    "classpath:cucumber/sharing/MoveMessageAndSharing.feature",
+    "classpath:cucumber/sharing/MoveMailboxAndSharing.feature",
+    "classpath:cucumber/sharing/SetFlagAndSharing.feature",
+    "classpath:cucumber/sharing/RenamingMailboxAndSharing.feature",
+    "classpath:cucumber/sharing/CopyAndSharing.feature" },
+    glue= { "org.apache.james.jmap.methods.integration", "org.apache.james.jmap.memory.cucumber" },
+    tags = {"~@Ignore"},
     strict = true)
-public class MemoryKeywordsConsistencyOnDelegationMailboxTest {
+public class MemorySharingTest {
 }

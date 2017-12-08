@@ -16,21 +16,21 @@
 # specific language governing permissions and limitations      *
 # under the License.                                           *
 # **************************************************************/
-
-Feature: Alternative authentication mechanism for getting attachment via a POST request returning a specific authentication token
-  As a James user
-  I want to retrieve my attachments without an alternative authentication mechanism
+Feature: Mailbox deletion and shared mailbox
+  As a James user I don't want user to delete the mailbox I share to them
 
   Background:
     Given a domain named "domain.tld"
-    And a connected user "username@domain.tld"
-    And "username@domain.tld" has a mailbox "INBOX"
+    And a user "alice@domain.tld"
+    And a user "bob@domain.tld"
+    And "alice@domain.tld" has a mailbox "shared"
+    And "alice@domain.tld" shares her mailbox "shared" with "bob@domain.tld" with "aeilrwt" rights
 
-  Scenario: Asking for an attachment access token with an unknown blobId
-    When "username@domain.tld" asks for a token for attachment "123"
-    Then the user should receive a not found response
+  Scenario: A sharee should receive a not destroyed response when trying to destroy a shared mailbox
+    Given "bob@domain.tld" deletes the mailbox "shared" owned by "alice@domain.tld"
+    Then mailbox "shared" owned by "alice@domain.tld" is not destroyed
 
-  Scenario: Asking for an attachment access token with a previously stored blobId
-    Given "username@domain.tld" mailbox "INBOX" contains a message "1" with an attachment "2"
-    When "username@domain.tld" asks for a token for attachment "2"
-    Then the user should receive an attachment access token
+  Scenario: A sharee should not be able to delete a shared mailbox
+    Given "bob@domain.tld" deletes the mailbox "shared" owned by "alice@domain.tld"
+    When "alice@domain.tld" lists mailboxes
+    Then the mailboxes should contain "shared" in "Personal" namespace

@@ -16,21 +16,16 @@
 # specific language governing permissions and limitations      *
 # under the License.                                           *
 # **************************************************************/
-
-Feature: Alternative authentication mechanism for getting attachment via a POST request returning a specific authentication token
-  As a James user
-  I want to retrieve my attachments without an alternative authentication mechanism
+Feature: Delegation with other domain
+  As a James user I can not share a mailbox with a other from an other domain
 
   Background:
     Given a domain named "domain.tld"
-    And a connected user "username@domain.tld"
-    And "username@domain.tld" has a mailbox "INBOX"
+    And a user "alice@domain.tld"
+    And "alice@domain.tld" has a mailbox "shared"
 
-  Scenario: Asking for an attachment access token with an unknown blobId
-    When "username@domain.tld" asks for a token for attachment "123"
-    Then the user should receive a not found response
-
-  Scenario: Asking for an attachment access token with a previously stored blobId
-    Given "username@domain.tld" mailbox "INBOX" contains a message "1" with an attachment "2"
-    When "username@domain.tld" asks for a token for attachment "2"
-    Then the user should receive an attachment access token
+  Scenario: alice should not be able to share her mailbox with a user from an other domain
+    Given a domain named "otherdomain.tld"
+    And a user "bob@otherdomain.tld"
+    When "alice@domain.tld" shares its mailbox "shared" with rights "lrw" with "bob@otherdomain.tld"
+    Then "alice@domain.tld" receives not updated on mailbox "shared" with kind "invalidArguments" and message "Cannot share a mailbox to another domain"

@@ -16,21 +16,21 @@
 # specific language governing permissions and limitations      *
 # under the License.                                           *
 # **************************************************************/
-
-Feature: Alternative authentication mechanism for getting attachment via a POST request returning a specific authentication token
+Feature: Mailbox creation and sharing
   As a James user
-  I want to retrieve my attachments without an alternative authentication mechanism
+  I don't want other user to create mailbox in my mailbox even I shared it to them
 
   Background:
     Given a domain named "domain.tld"
-    And a connected user "username@domain.tld"
-    And "username@domain.tld" has a mailbox "INBOX"
+    And some users "alice@domain.tld", "bob@domain.tld"
+    And "alice@domain.tld" has a mailbox "shared"
+    And "alice@domain.tld" shares her mailbox "shared" with "bob@domain.tld" with "aeilrwt" rights
 
-  Scenario: Asking for an attachment access token with an unknown blobId
-    When "username@domain.tld" asks for a token for attachment "123"
-    Then the user should receive a not found response
+  Scenario: A sharee should not be able to create a shared mailbox child
+    Given "bob@domain.tld" creates mailbox "sharedChild" with creationId "c-01" in mailbox "shared" owned by "alice@domain.tld"
+    When "alice@domain.tld" lists mailboxes
+    Then the mailboxes should contain "shared" in "Personal" namespace
 
-  Scenario: Asking for an attachment access token with a previously stored blobId
-    Given "username@domain.tld" mailbox "INBOX" contains a message "1" with an attachment "2"
-    When "username@domain.tld" asks for a token for attachment "2"
-    Then the user should receive an attachment access token
+  Scenario: A sharee should receive a not created response when trying to create a shared mailbox child
+    When "bob@domain.tld" creates mailbox "sharedChild" with creationId "c-01" in mailbox "shared" owned by "alice@domain.tld"
+    Then mailbox with creationId "c-01" is not created

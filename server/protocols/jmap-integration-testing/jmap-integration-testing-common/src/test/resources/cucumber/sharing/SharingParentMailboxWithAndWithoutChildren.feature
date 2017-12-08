@@ -16,7 +16,6 @@
 # specific language governing permissions and limitations      *
 # under the License.                                           *
 # **************************************************************/
-
 Feature: Share parent mailbox without sharing submailbox
   As a James user
   I want to be able to retrieve my mailboxes
