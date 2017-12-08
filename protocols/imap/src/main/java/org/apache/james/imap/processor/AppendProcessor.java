@@ -26,6 +26,8 @@ import java.util.Date;
 
 import javax.mail.Flags;
 
+import org.apache.commons.io.IOUtils;
+import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -103,8 +105,9 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
 
     private void consume(InputStream in) {
         try {
-            while (in.read() != -1)
-                ; // NOPMD false positive
+            // IOUtils.copy() buffers the input internally, so there is no need
+            // to use a BufferedInputStream.
+            IOUtils.copy(in, NULL_OUTPUT_STREAM);
         } catch (IOException e1) { // NOPMD false positive
             // just consume
         }
