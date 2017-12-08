@@ -53,6 +53,7 @@ import com.google.common.base.Throwables;
 
 public class GetMessageListMethod implements Method {
 
+    private static final long DEFAULT_POSITION = 0;
     public static final String MAXIMUM_LIMIT = "maximumLimit";
     public static final int DEFAULT_MAXIMUM_LIMIT = 256;
 
@@ -125,9 +126,9 @@ public class GetMessageListMethod implements Method {
             MultimailboxesSearchQuery searchQuery = convertToSearchQuery(messageListRequest);
             mailboxManager.search(searchQuery,
                 mailboxSession,
-                messageListRequest.getLimit().orElse(maximumLimit) + messageListRequest.getPosition())
+                messageListRequest.getLimit().orElse(maximumLimit) + messageListRequest.getPosition().orElse(DEFAULT_POSITION))
                 .stream()
-                .skip(messageListRequest.getPosition())
+                .skip(messageListRequest.getPosition().orElse(DEFAULT_POSITION))
                 .forEach(builder::messageId);
             return builder.build();
         } catch (MailboxException e) {

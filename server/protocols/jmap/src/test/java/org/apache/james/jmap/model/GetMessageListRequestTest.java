@@ -33,7 +33,7 @@ public class GetMessageListRequestTest {
 
     @Test(expected=IllegalStateException.class)
     public void builderShouldThrowWhenPositionIsNegative() {
-        GetMessageListRequest.builder().position(-1).build();
+        GetMessageListRequest.builder().position(-1L).build();
     }
 
     @Test(expected=IllegalStateException.class)
@@ -73,14 +73,14 @@ public class GetMessageListRequestTest {
                 .build();
         List<String> sort = ImmutableList.of("date desc");
         List<String> fetchMessageProperties = ImmutableList.of("id", "blobId");
-        GetMessageListRequest expectedGetMessageListRequest = new GetMessageListRequest(Optional.empty(), Optional.of(filterCondition), sort, Optional.of(true), 1, Optional.empty(), Optional.empty(), Optional.of(2),
+        GetMessageListRequest expectedGetMessageListRequest = new GetMessageListRequest(Optional.empty(), Optional.of(filterCondition), sort, Optional.of(true), Optional.of(1L), Optional.empty(), Optional.empty(), Optional.of(2),
                 Optional.empty(), Optional.of(true), fetchMessageProperties, Optional.empty());
 
         GetMessageListRequest getMessageListRequest = GetMessageListRequest.builder()
             .filter(filterCondition)
             .sort(sort)
             .collapseThreads(true)
-            .position(1)
+            .position(1L)
             .limit(2)
             .fetchMessages(true)
             .fetchMessageProperties(fetchMessageProperties)
