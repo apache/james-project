@@ -74,7 +74,7 @@ import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
 public abstract class GetMessageListMethodTest {
-    private final static String FORWARDED = "$Forwarded";
+    private static final String FORWARDED = "$Forwarded";
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
     private static final ZoneId ZONE_ID = ZoneId.of("Europe/Paris");
