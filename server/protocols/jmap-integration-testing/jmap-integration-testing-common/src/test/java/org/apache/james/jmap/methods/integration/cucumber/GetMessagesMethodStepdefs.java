@@ -376,6 +376,7 @@ public class GetMessagesMethodStepdefs {
             Date.from(dateTime.toInstant()), isRecent, flags)
             .getMessageId();
         messageIdStepdefs.addMessageId(messageName, id);
+        mainStepdefs.awaitMethod.run();
     }
 
     private void appendMessage(String messageName, String mailbox, String emlFileName) throws Exception {
@@ -388,6 +389,7 @@ public class GetMessagesMethodStepdefs {
                     .getMessageId();
 
         messageIdStepdefs.addMessageId(messageName, id);
+        mainStepdefs.awaitMethod.run();
     }
 
     @When("^\"([^\"]*)\" ask for messages using its accountId$")
