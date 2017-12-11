@@ -39,11 +39,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.james.jmap.methods.integration.cucumber.util.TableRow;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.javatuples.Pair;
 

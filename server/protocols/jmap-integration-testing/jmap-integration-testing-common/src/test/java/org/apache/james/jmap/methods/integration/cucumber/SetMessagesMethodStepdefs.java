@@ -30,11 +30,8 @@ import javax.inject.Inject;
 import javax.mail.Flags;
 
 import org.apache.james.jmap.model.Keywords;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.modules.MailboxProbeImpl;
 
 import com.google.common.collect.ImmutableList;
 

@@ -19,9 +19,10 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
-import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Stream;
+
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -36,13 +37,12 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.apache.james.utils.MessageIdProbe;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 
 import cucumber.runtime.java.guice.ScenarioScoped;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Stream;
 
 @ScenarioScoped
 public class MainStepdefs {
