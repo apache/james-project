@@ -42,26 +42,28 @@ Feature: Share parent mailbox without sharing submailbox
 
   Scenario: Bob can not see not explicitly shared children mailbox
     When "bob@domain.tld" lists mailboxes
-    And the mailboxes should not contain "shared.secret" in "Delegated" namespace
+    Then the mailboxes should not contain "shared.secret" in "Delegated" namespace
     And the mailboxes should not contain "secret" in "Personal" namespace
     And the mailboxes should not contain "secret" in "Delegated" namespace, with parent mailbox "shared" of user "alice@domain.tld"
 
   Scenario: Alice can see all her shared mailbox
     When "alice@domain.tld" lists mailboxes
-    And the mailboxes should contain "shared" in "Personal" namespace
+    Then the mailboxes should contain "shared" in "Personal" namespace
     And the mailboxes should contain "notsecret" in "Personal" namespace, with parent mailbox "shared" of user "alice@domain.tld"
     And the mailbox "shared" has 1 messages
     And the mailbox "notsecret" has 1 messages
 
   Scenario: Alice can see all her not shared mailbox
     When "alice@domain.tld" lists mailboxes
-    And the mailboxes should contain "secret" in "Personal" namespace, with parent mailbox "shared" of user "alice@domain.tld"
+    Then the mailboxes should contain "secret" in "Personal" namespace, with parent mailbox "shared" of user "alice@domain.tld"
     And the mailbox "secret" has 1 messages
 
-  Scenario: Alice can get message from her shared mailbox
+  Scenario: Alice can get message from her root shared mailbox
     When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
+
+  Scenario: Alice can get message from her children shared mailbox
     When "alice@domain.tld" ask for messages "m3"
     Then no error is returned
     And the list should contain 1 message
@@ -71,21 +73,25 @@ Feature: Share parent mailbox without sharing submailbox
     Then no error is returned
     And the list should contain 1 message
 
-  Scenario: Bob can get message from all his shared mailbox
+  Scenario: Bob can get message from root shared mailbox
     When "bob@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
+
+  Scenario: Bob can get message from children shared mailbox
     When "bob@domain.tld" ask for messages "m3"
     Then no error is returned
     And the list should contain 1 message
 
   Scenario: Bob can not get message from mailbox not shared with him
     When "bob@domain.tld" ask for messages "m2"
-    And the list should contain 0 message
+    Then the list should contain 0 message
 
-  Scenario: Alice can list message from all her shared mailbox
+  Scenario: Alice can list message from her shared root mailbox
     When "alice@domain.tld" asks for message list in mailbox "shared"
     Then the message list has size 1
+
+  Scenario: Alice can list message from her shared children mailbox
     When "alice@domain.tld" asks for message list in mailbox "shared.notsecret"
     Then the message list has size 1
 
@@ -93,9 +99,11 @@ Feature: Share parent mailbox without sharing submailbox
     When "alice@domain.tld" asks for message list in mailbox "shared.secret"
     Then the message list has size 1
 
-  Scenario: Bob can list message from all mailbox that are shared to him
+  Scenario: Bob can list message from root mailbox that are shared to him
     When "bob@domain.tld" asks for message list in delegated mailbox "shared" from "alice@domain.tld"
     Then the message list has size 1
+
+  Scenario: Bob can list message from children mailbox that are shared to him
     When "bob@domain.tld" asks for message list in delegated mailbox "shared.notsecret" from "alice@domain.tld"
     Then the message list has size 1
 

@@ -29,25 +29,25 @@ Feature: Set flag and sharing
 
   Scenario: Set flags by sharer should update unseen count when read by sharer
     When "alice@domain.tld" sets flags "$Seen" on message "m1"
-    When "alice@domain.tld" lists mailboxes
+    And "alice@domain.tld" lists mailboxes
     Then the mailbox "shared" has 1 message
     And the mailbox "shared" has 0 unseen messages
 
   Scenario: Set flags by sharer should update unseen count when read by sharee
     When "alice@domain.tld" sets flags "$Seen" on message "m1"
-    When "bob@domain.tld" lists mailboxes
+    And "bob@domain.tld" lists mailboxes
     Then the mailbox "shared" has 1 message
     And the mailbox "shared" has 0 unseen messages
 
   Scenario: Set flags by sharee should update unseen count when read by sharer
     When "bob@domain.tld" sets flags "$Seen" on message "m1"
-    When "alice@domain.tld" lists mailboxes
+    And "alice@domain.tld" lists mailboxes
     Then the mailbox "shared" has 1 message
     And the mailbox "shared" has 0 unseen messages
 
   Scenario: Set flags by sharee should update unseen count when read by sharee
     When "bob@domain.tld" sets flags "$Seen" on message "m1"
-    When "bob@domain.tld" lists mailboxes
+    And "bob@domain.tld" lists mailboxes
     Then the mailbox "shared" has 1 message
     And the mailbox "shared" has 0 unseen messages
 
@@ -56,6 +56,6 @@ Feature: Set flag and sharing
     And "alice@domain.tld" shares her mailbox "shared2" with "bob@domain.tld" with "lri" rights
     And "alice@domain.tld" has a message "m2" in "shared2" mailbox
     When "bob@domain.tld" sets flags "$Seen" on message "m2"
-    When "alice@domain.tld" lists mailboxes
+    And "alice@domain.tld" lists mailboxes
     Then the mailbox "shared2" has 1 message
     And the mailbox "shared2" has 1 unseen message
