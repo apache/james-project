@@ -21,14 +21,12 @@ package org.apache.james.mailetcontainer.impl;
 
 import java.util.Collection;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
-import java.util.Vector;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
 import javax.mail.Address;
@@ -62,8 +60,6 @@ import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
-import com.github.fge.lambdas.consumers.ConsumerChainer;
 import com.google.common.collect.ImmutableSet;
 
 @SuppressWarnings("deprecation")
@@ -73,7 +69,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
     /**
      * A hash table of server attributes These are the MailetContext attributes
      */
-    private final Hashtable<String, Object> attributes = new Hashtable<>();
+    private final Map<String, Object> attributes = new ConcurrentHashMap<>();
     protected DNSService dns;
 
     private UsersRepository localusers;
@@ -132,11 +128,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
 
     @Override
     public Iterator<String> getAttributeNames() {
-        Vector<String> names = new Vector<>();
-        for (Enumeration<String> e = attributes.keys(); e.hasMoreElements(); ) {
-            names.add(e.nextElement());
-        }
-        return names.iterator();
+        return attributes.keySet().iterator();
     }
 
     /**

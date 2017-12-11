@@ -365,18 +365,21 @@ public class JDBCMailRepository extends AbstractMailRepository {
 
         if (hasUpdateMessageAttributesSQL && !hasRetrieveMessageAttributesSQL) {
             logBuffer.append("JDBC Mail Attributes support was activated for update but not for retrieval" + "(found 'updateMessageAttributesSQL' but not 'retrieveMessageAttributesSQL'" + "in table '").append(tableName).append("').");
-            LOGGER.error(logBuffer.toString());
-            throw new SQLException(logBuffer.toString());
+            final String logBufferAsString = logBuffer.toString();
+            LOGGER.error(logBufferAsString);
+            throw new SQLException(logBufferAsString);
         }
         if (!hasUpdateMessageAttributesSQL && hasRetrieveMessageAttributesSQL) {
             logBuffer.append("JDBC Mail Attributes support was activated for retrieval but not for update" + "(found 'retrieveMessageAttributesSQL' but not 'updateMessageAttributesSQL'" + "in table '").append(tableName).append("'.");
-            LOGGER.error(logBuffer.toString());
-            throw new SQLException(logBuffer.toString());
+            final String logBufferAsString = logBuffer.toString();
+            LOGGER.error(logBufferAsString);
+            throw new SQLException(logBufferAsString);
         }
         if (!hasMessageAttributesColumn && (hasUpdateMessageAttributesSQL || hasRetrieveMessageAttributesSQL)) {
             logBuffer.append("JDBC Mail Attributes support was activated but column '").append(attributesColumnName).append("' is missing in table '").append(tableName).append("'.");
-            LOGGER.error(logBuffer.toString());
-            throw new SQLException(logBuffer.toString());
+            final String logBufferAsString = logBuffer.toString();
+            LOGGER.error(logBufferAsString);
+            throw new SQLException(logBufferAsString);
         }
         if (hasUpdateMessageAttributesSQL && hasRetrieveMessageAttributesSQL) {
             jdbcMailAttributesReady = true;
@@ -540,8 +543,8 @@ public class JDBCMailRepository extends AbstractMailRepository {
                 PreparedStatement insertMessage = null;
                 try {
                     String insertMessageSQL = sqlQueries.getSqlString("insertMessageSQL", true);
-                    int number_of_parameters = getNumberOfParameters(insertMessageSQL);
                     insertMessage = conn.prepareStatement(insertMessageSQL);
+                    int number_of_parameters = insertMessage.getParameterMetaData().getParameterCount();
                     insertMessage.setString(1, mc.getName());
                     insertMessage.setString(2, repositoryName);
                     insertMessage.setString(3, mc.getState());
@@ -821,24 +824,5 @@ public class JDBCMailRepository extends AbstractMailRepository {
             result = 37 * repositoryName.hashCode();
         }
         return result;
-    }
-
-    /**
-     * This method calculates number of parameters in a prepared statement SQL
-     * String. It does so by counting the number of '?' in the string
-     * 
-     * @param sqlstring
-     *            to return parameter count for
-     * @return number of parameters
-     **/
-    private int getNumberOfParameters(String sqlstring) {
-        // it is alas a java 1.4 feature to be able to call
-        // getParameterMetaData which could provide us with the parameterCount
-        char[] chars = sqlstring.toCharArray();
-        int count = 0;
-        for (char aChar : chars) {
-            count += aChar == '?' ? 1 : 0;
-        }
-        return count;
     }
 }
