@@ -25,13 +25,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.modules.MailboxProbeImpl;
-
-import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Joiner;
 
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
@@ -56,50 +50,24 @@ public class GetMessageListMethodStepdefs {
 
     @When("^\"([^\"]*)\" asks for message list in mailboxes \"([^\"]*)\" with flag \"([^\"]*)\"$")
     public void getMessageListWithFlag(String username, List<String> mailboxes, String flag) throws Exception {
-        String mailboxIds = Joiner.on("\",\"")
-            .join(mailboxes.stream()
-                .map(mailbox -> mainStepdefs.jmapServer
-                    .getProbe(MailboxProbeImpl.class)
-                    .getMailbox(MailboxConstants.USER_NAMESPACE, username, mailbox)
-                    .getMailboxId()
-                    .serialize())
-                .collect(Guavate.toImmutableList()));
-
         httpClient.post(String.format(
                 "[[\"getMessageList\", {\"filter\":{" +
                 "    \"inMailboxes\":[\"%s\"]," +
                 "    \"hasKeyword\":\"%s\"" +
                 "}}, \"#0\"]]",
-            mailboxIds,
+            mainStepdefs.getMailboxIds(username, mailboxes),
             flag));
     }
 
     @When("^\"([^\"]*)\" asks for message list in (?:mailboxes|mailbox) \"([^\"]*)\"$")
     public void getMessageList(String username, List<String> mailboxes) throws Exception {
-        String mailboxIds = Joiner.on("\",\"")
-            .join(mailboxes.stream()
-                .map(mailbox -> mainStepdefs.jmapServer
-                    .getProbe(MailboxProbeImpl.class)
-                    .getMailbox(MailboxConstants.USER_NAMESPACE, username, mailbox)
-                    .getMailboxId()
-                    .serialize())
-                .collect(Guavate.toImmutableList()));
-
-        getMessageListFromMailboxIds(mailboxIds);
+        getMessageListFromMailboxIds(mainStepdefs.getMailboxIds(username, mailboxes));
     }
 
     @When("^\"([^\"]*)\" asks for message list in delegated (?:mailboxes|mailbox) \"([^\"]*)\" from \"([^\"]*)\"$")
     public void getMessageListFromDelegated(String sharee, List<String> mailboxes, String sharer) throws Exception {
-        String mailboxIds = Joiner.on("\",\"")
-            .join(mailboxes.stream()
-                .map(mailbox -> mainStepdefs.jmapServer
-                    .getProbe(MailboxProbeImpl.class)
-                    .getMailbox(MailboxConstants.USER_NAMESPACE, sharer, mailbox)
-                    .getMailboxId()
-                    .serialize())
-                .collect(Guavate.toImmutableList()));
-
-        userStepdefs.execWithUser(sharee, () -> getMessageListFromMailboxIds(mailboxIds));
+        userStepdefs.execWithUser(sharee, () ->
+            getMessageListFromMailboxIds(mainStepdefs.getMailboxIds(sharer, mailboxes)));
     }
 
     private void getMessageListFromMailboxIds(String mailboxIds) throws Exception {
@@ -112,17 +80,15 @@ public class GetMessageListMethodStepdefs {
 
     @When("^\"([^\"]*)\" asks for message list in mailbox \"([^\"]*)\" with flag \"([^\"]*)\"$")
     public void getMessageList(String username, String mailbox, String flag) throws Exception {
-        MailboxId mailboxId = mainStepdefs.jmapServer
-            .getProbe(MailboxProbeImpl.class)
-            .getMailbox(MailboxConstants.USER_NAMESPACE, username, mailbox)
-            .getMailboxId();
 
         httpClient.post(String.format(
                 "[[\"getMessageList\", {\"filter\":{" +
                 "    \"inMailboxes\":[\"%s\"]," +
                 "    \"hasKeyword\":\"%s\"" +
                 "}}, \"#0\"]]",
-            mailboxId.serialize(),
+            mainStepdefs
+                .getMailboxId(username, mailbox)
+                .serialize(),
             flag));
     }
 

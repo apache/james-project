@@ -67,10 +67,7 @@ public class SetMessagesMethodStepdefs {
     @When("^the user moves \"([^\"]*)\" to user mailbox \"([^\"]*)\"$")
     public void moveMessageToMailbox(String message, String mailbox) throws Throwable {
         MessageId messageId = messageIdStepdefs.getMessageId(message);
-        MailboxId mailboxId = mainStepdefs.jmapServer
-            .getProbe(MailboxProbeImpl.class)
-            .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.getConnectedUser(), mailbox)
-            .getMailboxId();
+        MailboxId mailboxId = mainStepdefs.getMailboxId(userStepdefs.getConnectedUser(), mailbox);
 
         httpClient.post("[" +
             "  [" +
@@ -89,10 +86,7 @@ public class SetMessagesMethodStepdefs {
     @When("^the user moves \"([^\"]*)\" to user mailbox \"([^\"]*)\" and set flags \"([^\"]*)\"$")
     public void moveMessageToMailboxAndChangeFlags(String message, String mailbox, List<String> keywords) throws Throwable {
         MessageId messageId = messageIdStepdefs.getMessageId(message);
-        MailboxId mailboxId = mainStepdefs.jmapServer
-            .getProbe(MailboxProbeImpl.class)
-            .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.getConnectedUser(), mailbox)
-            .getMailboxId();
+        MailboxId mailboxId = mainStepdefs.getMailboxId(userStepdefs.getConnectedUser(), mailbox);
         String keywordString = toKeywordsString(keywords);
 
         httpClient.post("[" +
@@ -118,14 +112,9 @@ public class SetMessagesMethodStepdefs {
     @When("^the user copies \"([^\"]*)\" from mailbox \"([^\"]*)\" to mailbox \"([^\"]*)\"$")
     public void copyMessageToMailbox(String message, String sourceMailbox, String destinationMailbox) throws Throwable {
         MessageId messageId = messageIdStepdefs.getMessageId(message);
-        MailboxId sourceMailboxId = mainStepdefs.jmapServer
-            .getProbe(MailboxProbeImpl.class)
-            .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.getConnectedUser(), sourceMailbox)
-            .getMailboxId();
-        MailboxId destinationMailboxId = mainStepdefs.jmapServer
-            .getProbe(MailboxProbeImpl.class)
-            .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.getConnectedUser(), destinationMailbox)
-            .getMailboxId();
+        String user = userStepdefs.getConnectedUser();
+        MailboxId sourceMailboxId = mainStepdefs.getMailboxId(user, sourceMailbox);
+        MailboxId destinationMailboxId = mainStepdefs.getMailboxId(user, destinationMailbox);
 
         httpClient.post("[" +
             "  [" +
@@ -148,14 +137,8 @@ public class SetMessagesMethodStepdefs {
 
     private void copyMessageToMailbox(String message, String sourceMailbox, String sourceUser, String destinationMailbox, String destinationUser) throws Throwable {
         MessageId messageId = messageIdStepdefs.getMessageId(message);
-        MailboxId sourceMailboxId = mainStepdefs.jmapServer
-            .getProbe(MailboxProbeImpl.class)
-            .getMailbox(MailboxConstants.USER_NAMESPACE, sourceUser, sourceMailbox)
-            .getMailboxId();
-        MailboxId destinationMailboxId = mainStepdefs.jmapServer
-            .getProbe(MailboxProbeImpl.class)
-            .getMailbox(MailboxConstants.USER_NAMESPACE, destinationUser, destinationMailbox)
-            .getMailboxId();
+        MailboxId sourceMailboxId = mainStepdefs.getMailboxId(sourceUser, sourceMailbox);
+        MailboxId destinationMailboxId = mainStepdefs.getMailboxId(destinationUser, destinationMailbox);
 
         httpClient.post("[" +
             "  [" +
@@ -178,10 +161,7 @@ public class SetMessagesMethodStepdefs {
 
     private void moveMessageToMailbox(String message, String destinationMailbox, String destinationUser) throws Throwable {
         MessageId messageId = messageIdStepdefs.getMessageId(message);
-        MailboxId destinationMailboxId = mainStepdefs.jmapServer
-            .getProbe(MailboxProbeImpl.class)
-            .getMailbox(MailboxConstants.USER_NAMESPACE, destinationUser, destinationMailbox)
-            .getMailboxId();
+        MailboxId destinationMailboxId = mainStepdefs.getMailboxId(destinationUser, destinationMailbox);
 
         httpClient.post("[" +
             "  [" +
@@ -240,9 +220,7 @@ public class SetMessagesMethodStepdefs {
     @Given("^\"([^\"]*)\" tries to create a draft message \"([^\"]*)\" in mailbox \"([^\"]*)\"$")
     public void createDraft(String username, String message, String mailboxName) throws Throwable {
         userStepdefs.execWithUser(username, () -> {
-            Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE,
-                username,
-                mailboxName);
+            String mailboxId = mainStepdefs.getMailboxId(username, mailboxName).serialize();
             httpClient.post("[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -252,7 +230,7 @@ public class SetMessagesMethodStepdefs {
                 "        \"from\": { \"name\": \"Me\", \"email\": \"" + username + "\"}," +
                 "        \"to\": [{ \"name\": \"Me\", \"email\": \"" + username + "\"}]," +
                 "        \"keywords\": {\"$Draft\": true}," +
-                "        \"mailboxIds\": [\"" + mailbox.getMailboxId().serialize() + "\"]" +
+                "        \"mailboxIds\": [\"" + mailboxId + "\"]" +
                 "      }}" +
                 "    }," +
                 "    \"#0\"" +
@@ -297,10 +275,7 @@ public class SetMessagesMethodStepdefs {
         Flags newFlags = Keywords.factory().fromList(flags).asFlags();
         String username = userStepdefs.getConnectedUser();
         MessageId messageId = messageIdStepdefs.getMessageId(message);
-        MailboxId mailboxId = mainStepdefs.jmapServer
-            .getProbe(MailboxProbeImpl.class)
-            .getMailbox(MailboxConstants.USER_NAMESPACE, mailboxOwner, mailbox)
-            .getMailboxId();
+        MailboxId mailboxId = mainStepdefs.getMailboxId(mailboxOwner, mailbox);
 
         mainStepdefs.messageIdProbe.updateNewFlags(username, newFlags, messageId, ImmutableList.of(mailboxId));
         mainStepdefs.awaitMethod.run();

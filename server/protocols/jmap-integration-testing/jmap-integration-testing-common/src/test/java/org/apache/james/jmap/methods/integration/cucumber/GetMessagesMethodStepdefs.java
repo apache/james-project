@@ -92,8 +92,11 @@ public class GetMessagesMethodStepdefs {
     @Given("^the user has a message \"([^\"]*)\" in \"([^\"]*)\" and \"([^\"]*)\" mailboxes with subject \"([^\"]*)\", content \"([^\"]*)\"$")
     public void appendMessageInTwoMailboxes(String messageName, String mailbox1, String mailbox2, String subject, String content) throws Exception {
         MessageId id = appendMessage(mailbox1, ContentType.noContentType(), subject, content, NO_HEADERS);
-        MailboxId mailboxId1 = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.getConnectedUser(), mailbox1).getMailboxId();
-        MailboxId mailboxId2 = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.getConnectedUser(), mailbox2).getMailboxId();
+
+        String user = userStepdefs.getConnectedUser();
+
+        MailboxId mailboxId1 = mainStepdefs.getMailboxId(user, mailbox1);
+        MailboxId mailboxId2 = mainStepdefs.getMailboxId(user, mailbox2);
 
         mainStepdefs.jmapServer.getProbe(JmapGuiceProbe.class).setInMailboxes(id, userStepdefs.getConnectedUser(), mailboxId1, mailboxId2);
         messageIdStepdefs.addMessageId(messageName, id);
@@ -536,7 +539,8 @@ public class GetMessagesMethodStepdefs {
     @Then("^the notFound list should contain the requested message id$")
     public void assertNotFoundListContainsRequestedMessages() {
         ImmutableList<String> elements = requestedMessageIds.stream().map(MessageId::serialize).collect(Guavate.toImmutableList());
-        assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".notFound")).containsExactlyElementsOf(elements);
+        assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".notFound"))
+            .containsExactlyElementsOf(elements);
     }
 
 
@@ -553,35 +557,27 @@ public class GetMessagesMethodStepdefs {
 
     @Then("^the message is in \"([^\"]*)\" mailboxes")
     public void assertMailboxNamesOfTheFirstMessage(String mailboxNames) {
-        List<String> values = Splitter.on(",")
-            .splitToList(mailboxNames).stream()
-            .map(Throwing.function(name -> mainStepdefs.jmapServer
-                .getProbe(MailboxProbeImpl.class)
-                .getMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.getConnectedUser(), name)
-                .getMailboxId()
-                .serialize()))
-            .distinct()
-            .collect(Guavate.toImmutableList());
+        List<String> mailboxIds = mainStepdefs.getMailboxIdsList(userStepdefs.getConnectedUser(),
+            Splitter.on(",").splitToList(mailboxNames));
+
         assertThat(httpClient.jsonPath.<JSONArray>read(FIRST_MESSAGE + ".mailboxIds"))
-            .hasSize(values.size())
-            .containsOnlyElementsOf(values);
+            .containsExactlyInAnyOrder(mailboxIds.toArray());
     }
 
     @Then("^\"([^\"]*)\" should see message \"([^\"]*)\" in mailboxes:$")
     public void assertMailboxesOfMessage(String user, String messageId, DataTable userMailboxes) throws Exception {
         userStepdefs.execWithUser(user, () -> postWithAListOfIds(ImmutableList.of(messageId)));
 
-        List<String> values = userMailboxes.asMap(String.class, String.class).entrySet().stream()
-            .map(Throwing.function(userMailbox -> mainStepdefs.jmapServer
-                .getProbe(MailboxProbeImpl.class)
-                .getMailbox(MailboxConstants.USER_NAMESPACE, userMailbox.getKey(), userMailbox.getValue())
-                .getMailboxId()
-                .serialize()))
+        List<String> mailboxIds = userMailboxes.asMap(String.class, String.class).entrySet().stream()
+            .map(Throwing.function(userMailbox ->
+                mainStepdefs
+                    .getMailboxId(userMailbox.getKey(), userMailbox.getValue())
+                    .serialize()))
             .distinct()
             .collect(Guavate.toImmutableList());
+
         assertThat(httpClient.jsonPath.<JSONArray>read(FIRST_MESSAGE + ".mailboxIds"))
-            .hasSize(values.size())
-            .containsOnlyElementsOf(values);
+            .containsExactlyInAnyOrder(mailboxIds.toArray());
     }
 
     @Then("^the threadId of the message is \"([^\"]*)\"$")

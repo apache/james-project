@@ -35,6 +35,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
@@ -92,8 +93,9 @@ public class SetMailboxesMethodStepdefs {
     @Given("^\"([^\"]*)\" shares its mailbox \"([^\"]*)\" with rights \"([^\"]*)\" with \"([^\"]*)\"$")
     public void shareMailboxWithRight(String owner, String mailboxName, String rights, String shareTo) throws Throwable {
         userStepdefs.connectUser(owner);
-        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", owner, mailboxName);
-        String mailboxId = mailbox.getMailboxId().serialize();
+
+        String mailboxId = mainStepdefs.getMailboxId(owner, mailboxName).serialize();
+
         String requestBody =
                 "[" +
                     "  [ \"setMailboxes\"," +
@@ -132,40 +134,42 @@ public class SetMailboxesMethodStepdefs {
 
     @When("^\"([^\"]*)\" renames the mailbox, owned by \"([^\"]*)\", \"([^\"]*)\" to \"([^\"]*)\"$")
     public void renamingMailbox(String user, String mailboxOwner, String currentMailboxName, String newMailboxName) throws Throwable {
-        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", mailboxOwner, currentMailboxName);
+        MailboxId mailboxId = mainStepdefs.getMailboxId("#private", mailboxOwner, currentMailboxName);
         userStepdefs.connectUser(user);
-        renamingMailbox(mailbox, newMailboxName);
+        renamingMailbox(mailboxId, newMailboxName);
     }
 
     @When("^\"([^\"]*)\" moves the mailbox \"([^\"]*)\" owned by \"([^\"]*)\", into mailbox \"([^\"]*)\" owned by \"([^\"]*)\"$")
     public void movingMailbox(String user, String mailboxName, String mailboxOwner, String newParentName, String newParentOwner) throws Throwable {
-        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", mailboxOwner, mailboxName);
-        Mailbox newParent = mainStepdefs.mailboxProbe.getMailbox("#private", newParentOwner, newParentName);
+        String mailbox = mainStepdefs.getMailboxId(mailboxOwner, mailboxName).serialize();
+        String newParent = mainStepdefs.getMailboxId(newParentOwner, newParentName).serialize();
+
         String requestBody =
             "[" +
                 "  [ \"setMailboxes\"," +
                 "    {" +
                 "      \"update\": {" +
-                "        \"" + mailbox.getMailboxId().serialize() + "\" : {" +
-                "          \"parentId\" : \"" + newParent.getMailboxId().serialize() + "\"" +
+                "        \"" + mailbox + "\" : {" +
+                "          \"parentId\" : \"" + newParent + "\"" +
                 "        }" +
                 "      }" +
                 "    }," +
                 "    \"#0\"" +
                 "  ]" +
                 "]";
+
         userStepdefs.execWithUser(user, () -> httpClient.post(requestBody));
     }
 
     @When("^\"([^\"]*)\" moves the mailbox \"([^\"]*)\" owned by \"([^\"]*)\" as top level mailbox$")
     public void movingMailboxAsTopLevel(String user, String mailboxName, String mailboxOwner) throws Throwable {
-        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", mailboxOwner, mailboxName);
+        String mailbox = mainStepdefs.getMailboxId(mailboxOwner, mailboxName).serialize();
         String requestBody =
             "[" +
                 "  [ \"setMailboxes\"," +
                 "    {" +
                 "      \"update\": {" +
-                "        \"" + mailbox.getMailboxId().serialize() + "\" : {" +
+                "        \"" + mailbox + "\" : {" +
                 "          \"parentId\" : null" +
                 "        }" +
                 "      }" +
@@ -178,7 +182,7 @@ public class SetMailboxesMethodStepdefs {
 
     @When("^\"([^\"]*)\" creates mailbox \"([^\"]*)\" with creationId \"([^\"]*)\" in mailbox \"([^\"]*)\" owned by \"([^\"]*)\"$")
     public void createChildMailbox(String user, String mailboxName, String creationId, String parentMailboxName, String parentOwner) throws Throwable {
-        Mailbox parentMailbox = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, parentOwner, parentMailboxName);
+        String parentMailbox = mainStepdefs.getMailboxId(parentOwner, parentMailboxName).serialize();
         userStepdefs.execWithUser(user, () -> {
             String requestBody =
                 "[" +
@@ -187,7 +191,7 @@ public class SetMailboxesMethodStepdefs {
                     "      \"create\": {" +
                     "        \"" + creationId + "\" : {" +
                     "          \"name\" : \"" + mailboxName + "\"," +
-                    "          \"parentId\" : \"" + parentMailbox.getMailboxId().serialize() + "\"" +
+                    "          \"parentId\" : \"" + parentMailbox + "\"" +
                     "        }" +
                     "      }" +
                     "    }," +
@@ -200,18 +204,17 @@ public class SetMailboxesMethodStepdefs {
 
     @When("^\"([^\"]*)\" renames (?:her|his) mailbox \"([^\"]*)\" to \"([^\"]*)\"$")
     public void renamingMailbox(String user, String actualMailboxName, String newMailboxName) throws Throwable {
-        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", user, actualMailboxName);
-        renamingMailbox(mailbox, newMailboxName);
+        MailboxId mailboxId = mainStepdefs.getMailboxId(user, actualMailboxName);
+        renamingMailbox(mailboxId, newMailboxName);
     }
 
-    private void renamingMailbox(Mailbox mailbox, String newMailboxName) throws Exception {
-        String mailboxId = mailbox.getMailboxId().serialize();
+    private void renamingMailbox(MailboxId mailboxId, String newMailboxName) throws Exception {
         String requestBody =
                 "[" +
                     "  [ \"setMailboxes\"," +
                     "    {" +
                     "      \"update\": {" +
-                    "        \"" + mailboxId + "\" : {" +
+                    "        \"" + mailboxId.serialize() + "\" : {" +
                     "          \"name\" : \"" + newMailboxName + "\"" +
                     "        }" +
                     "      }" +
@@ -229,8 +232,7 @@ public class SetMailboxesMethodStepdefs {
 
     @When("^\"([^\"]*)\" deletes the mailbox \"([^\"]*)\" owned by \"([^\"]*)\"$")
     public void deletesMailbox(String user, String mailboxName, String owner) throws Throwable {
-        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", owner, mailboxName);
-        String mailboxId = mailbox.getMailboxId().serialize();
+        String mailboxId = mainStepdefs.getMailboxId( owner, mailboxName).serialize();
         userStepdefs.connectUser(user);
         String requestBody =
                 "[" +
@@ -247,10 +249,8 @@ public class SetMailboxesMethodStepdefs {
     @When("^moving mailbox \"([^\"]*)\" to \"([^\"]*)\"$")
     public void movingMailbox(String actualMailboxPath, String newParentMailboxPath) throws Throwable {
         String username = userStepdefs.getConnectedUser();
-        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", username, actualMailboxPath);
-        String mailboxId = mailbox.getMailboxId().serialize();
-        Mailbox parent = mainStepdefs.mailboxProbe.getMailbox("#private", username, newParentMailboxPath);
-        String parentId = parent.getMailboxId().serialize();
+        String mailboxId = mainStepdefs.getMailboxId(username, actualMailboxPath).serialize();
+        String parentId = mainStepdefs.getMailboxId(username, newParentMailboxPath).serialize();
 
         String requestBody =
                 "[" +
@@ -272,8 +272,7 @@ public class SetMailboxesMethodStepdefs {
     public void mailboxContainsMessages(String mailboxName, int messageCount) throws Throwable {
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         String username = userStepdefs.getConnectedUser();
-        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", username, mailboxName);
-        String mailboxId = mailbox.getMailboxId().serialize();
+        String mailboxId = mainStepdefs.getMailboxId(username, mailboxName).serialize();
 
         Awaitility.await().atMost(Duration.FIVE_SECONDS).pollDelay(slowPacedPollInterval).pollInterval(slowPacedPollInterval).until(() -> {
             String requestBody = "[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]";
@@ -290,29 +289,29 @@ public class SetMailboxesMethodStepdefs {
 
     @Then("^\"([^\"]*)\" receives not updated on mailbox \"([^\"]*)\" with kind \"([^\"]*)\" and message \"([^\"]*)\"$")
     public void assertNotUpdatedWithGivenProperties(String userName, String mailboxName, String type, String message) throws Exception {
-        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox("#private", userName, mailboxName);
+        String mailboxId = mainStepdefs.getMailboxId(userName, mailboxName).serialize();
         assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
         assertThat(httpClient.jsonPath.<String>read(NAME)).isEqualTo("mailboxesSet");
         
         Map<String, Map<String, String>> notUpdated = httpClient.jsonPath.<Map<String, Map<String, String>>>read(ARGUMENTS + ".notUpdated");
         assertThat(notUpdated).hasSize(1);
-        Map<String, String> parameters = notUpdated.get(mailbox.getMailboxId().serialize());
+        Map<String, String> parameters = notUpdated.get(mailboxId);
         assertThat(parameters).contains(Maps.immutableEntry("type", type),
                 Maps.immutableEntry("description", message));
     }
 
     @Then("^mailbox \"([^\"]*)\" owned by \"([^\"]*)\" is not updated")
     public void assertNotUpdated(String mailboxName, String owner) throws Exception {
-        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, owner, mailboxName);
+        String mailboxId = mainStepdefs.getMailboxId(owner, mailboxName).serialize();
         assertThat(httpClient.jsonPath.<Map<String, String>>read("[0][1].notUpdated"))
-            .containsOnlyKeys(mailbox.getMailboxId().serialize());
+            .containsOnlyKeys(mailboxId);
     }
 
     @Then("^mailbox \"([^\"]*)\" owned by \"([^\"]*)\" is not destroyed$")
     public void assertNotDestroyed(String mailboxName, String owner) throws Exception {
-        Mailbox mailbox = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, owner, mailboxName);
+        String mailboxId = mainStepdefs.getMailboxId(owner, mailboxName).serialize();
         assertThat(httpClient.jsonPath.<Map<String, String>>read("[0][1].notDestroyed"))
-            .containsOnlyKeys(mailbox.getMailboxId().serialize());
+            .containsOnlyKeys(mailboxId);
     }
 
 
