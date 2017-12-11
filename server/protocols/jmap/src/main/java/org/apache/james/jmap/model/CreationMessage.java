@@ -204,11 +204,9 @@ public class CreationMessage {
         }
 
         private static Predicate<BlobId> inAttachments(ImmutableList<Attachment> attachments) {
-            return (key) -> {
-                return attachments.stream()
-                    .map(Attachment::getBlobId)
-                    .anyMatch(blobId -> blobId.equals(key));
-            };
+            return (key) -> attachments.stream()
+                .map(Attachment::getBlobId)
+                .anyMatch(blobId -> blobId.equals(key));
         }
 
         public CreationMessage build() {
