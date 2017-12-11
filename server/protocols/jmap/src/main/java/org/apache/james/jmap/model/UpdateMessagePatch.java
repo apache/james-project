@@ -47,11 +47,7 @@ public class UpdateMessagePatch {
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
         private Optional<List<String>> mailboxIds = Optional.empty();
-        private Optional<Boolean> isFlagged = Optional.empty();
-        private Optional<Boolean> isUnread = Optional.empty();
-        private Optional<Boolean> isAnswered = Optional.empty();
-        private Optional<Boolean> isForwarded = Optional.empty();
-        private Optional<Boolean> isDraft = Optional.empty();
+        private OldKeyword.Builder oldKeyworkBuilder = OldKeyword.builder();
         private Optional<Map<String, Boolean>> keywords = Optional.empty();
         private Set<ValidationResult> validationResult = Sets.newHashSet();
 
@@ -66,27 +62,27 @@ public class UpdateMessagePatch {
         }
 
         public Builder isFlagged(Boolean isFlagged) {
-            this.isFlagged = Optional.of(isFlagged);
+            oldKeyworkBuilder.isFlagged(isFlagged);
             return this;
         }
 
         public Builder isUnread(Boolean isUnread) {
-            this.isUnread = Optional.of(isUnread);
+            oldKeyworkBuilder.isUnread(isUnread);
             return this;
         }
 
         public Builder isAnswered(Boolean isAnswered) {
-            this.isAnswered = Optional.of(isAnswered);
+            oldKeyworkBuilder.isAnswered(isAnswered);
             return this;
         }
 
-        public Builder isDraft(Boolean isAnswered) {
-            this.isDraft = Optional.of(isAnswered);
+        public Builder isDraft(Boolean isDraft) {
+            oldKeyworkBuilder.isDraft(isDraft);
             return this;
         }
 
         public Builder isForwarded(Boolean isForwarded) {
-            this.isForwarded = Optional.of(isForwarded);
+            oldKeyworkBuilder.isForwarded(isForwarded);
             return this;
         }
 
@@ -104,8 +100,7 @@ public class UpdateMessagePatch {
             }
 
             Optional<Keywords> mayBeKeywords = creationKeywords();
-            Optional<OldKeyword> oldKeywords = OldKeyword.computeOldKeywords(
-                isUnread, isFlagged, isAnswered, isDraft, isForwarded);
+            Optional<OldKeyword> oldKeywords = oldKeyworkBuilder.computeOldKeyword();
             Preconditions.checkArgument(!(mayBeKeywords.isPresent() && oldKeywords.isPresent()), "Does not support keyword and is* at the same time");
 
             return new UpdateMessagePatch(mailboxIds, mayBeKeywords, oldKeywords, ImmutableList.copyOf(validationResult));

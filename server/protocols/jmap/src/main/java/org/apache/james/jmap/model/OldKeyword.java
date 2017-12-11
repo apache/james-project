@@ -28,12 +28,79 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 public class OldKeyword {
-    public static Optional<OldKeyword> computeOldKeywords(Optional<Boolean> isUnread, Optional<Boolean> isFlagged, Optional<Boolean> isAnswered,
-                                                          Optional<Boolean> isDraft, Optional<Boolean> isForwarded) {
-        if (isAnswered.isPresent() || isFlagged.isPresent() || isUnread.isPresent() || isForwarded.isPresent() || isDraft.isPresent()) {
-            return Optional.of(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded));
+
+    public static class Builder {
+        private Optional<Boolean> isUnread;
+        private Optional<Boolean> isFlagged;
+        private Optional<Boolean> isAnswered;
+        private Optional<Boolean> isDraft;
+        private Optional<Boolean> isForwarded;
+
+        private Builder() {
+            isUnread = Optional.empty();
+            isFlagged = Optional.empty();
+            isAnswered = Optional.empty();
+            isDraft = Optional.empty();
+            isForwarded = Optional.empty();
         }
-        return Optional.empty();
+
+        public Builder isFlagged(Optional<Boolean> isFlagged) {
+            this.isFlagged = isFlagged;
+            return this;
+        }
+
+        public Builder isFlagged(boolean isFlagged) {
+            return isFlagged(Optional.of(isFlagged));
+        }
+
+        public Builder isUnread(Optional<Boolean> isUnread) {
+            this.isUnread = isUnread;
+            return this;
+        }
+
+        public Builder isUnread(boolean isUnread) {
+            return isUnread(Optional.of(isUnread));
+        }
+
+        public Builder isAnswered(Optional<Boolean> isAnswered) {
+            this.isAnswered = isAnswered;
+            return this;
+        }
+
+        public Builder isAnswered(boolean isAnswered) {
+            return isAnswered(Optional.of(isAnswered));
+        }
+
+        public Builder isDraft(Optional<Boolean> isDraft) {
+            this.isDraft = isDraft;
+            return this;
+        }
+
+        public Builder isDraft(boolean isDraft) {
+            return isDraft(Optional.of(isDraft));
+        }
+
+        public Builder isForwarded(Optional<Boolean> isForwarded) {
+            this.isForwarded = isForwarded;
+            return this;
+        }
+
+        public Builder isForwarded(boolean isForwarded) {
+            return isForwarded(Optional.of(isForwarded));
+        }
+
+        public Optional<OldKeyword> computeOldKeyword() {
+            if (isAnswered.isPresent() || isFlagged.isPresent() || isUnread.isPresent() || isForwarded.isPresent() || isDraft.isPresent()) {
+                return Optional.of(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded));
+            }
+
+            return Optional.empty();
+        }
+
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     private final Optional<Boolean> isUnread;

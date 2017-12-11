@@ -59,11 +59,7 @@ public class CreationMessage {
     public static class Builder {
         private ImmutableList<String> mailboxIds;
         private String inReplyToMessageId;
-        private Optional<Boolean> isUnread = Optional.empty();
-        private Optional<Boolean> isFlagged = Optional.empty();
-        private Optional<Boolean> isAnswered = Optional.empty();
-        private Optional<Boolean> isDraft = Optional.empty();
-        private Optional<Boolean> isForwarded = Optional.empty();
+        private final OldKeyword.Builder oldKeywordBuilder;
         private final ImmutableMap.Builder<String, String> headers;
         private Optional<DraftEmailer> from = Optional.empty();
         private final ImmutableList.Builder<DraftEmailer> to;
@@ -86,6 +82,7 @@ public class CreationMessage {
             attachments = ImmutableList.builder();
             attachedMessages = ImmutableMap.builder();
             headers = ImmutableMap.builder();
+            oldKeywordBuilder = OldKeyword.builder();
         }
 
         public Builder mailboxId(String... mailboxIds) {
@@ -104,27 +101,27 @@ public class CreationMessage {
         }
 
         public Builder isUnread(Optional<Boolean> isUnread) {
-            this.isUnread = isUnread;
+            oldKeywordBuilder.isUnread(isUnread);
             return this;
         }
 
         public Builder isFlagged(Optional<Boolean> isFlagged) {
-            this.isFlagged = isFlagged;
+            oldKeywordBuilder.isFlagged(isFlagged);
             return this;
         }
 
         public Builder isAnswered(Optional<Boolean> isAnswered) {
-            this.isAnswered = isAnswered;
+            oldKeywordBuilder.isAnswered(isAnswered);
             return this;
         }
 
         public Builder isDraft(Optional<Boolean> isDraft) {
-            this.isDraft = isDraft;
+            oldKeywordBuilder.isDraft(isDraft);
             return this;
         }
 
         public Builder isForwarded(Optional<Boolean> isForwarded) {
-            this.isForwarded = isForwarded;
+            oldKeywordBuilder.isForwarded(isForwarded);
             return this;
         }
 
@@ -221,8 +218,8 @@ public class CreationMessage {
             }
 
             Optional<Keywords> maybeKeywords = creationKeywords();
-            Optional<OldKeyword> oldKeywords = OldKeyword.computeOldKeywords(
-                isUnread, isFlagged, isAnswered, isDraft, isForwarded);
+            Optional<OldKeyword> oldKeywords = oldKeywordBuilder.computeOldKeyword();
+
             Preconditions.checkArgument(!(maybeKeywords.isPresent() && oldKeywords.isPresent()), "Does not support keyword and is* at the same time");
             return new CreationMessage(mailboxIds, Optional.ofNullable(inReplyToMessageId), headers.build(), from,
                     to.build(), cc.build(), bcc.build(), replyTo.build(), subject, date, Optional.ofNullable(textBody), Optional.ofNullable(htmlBody),
