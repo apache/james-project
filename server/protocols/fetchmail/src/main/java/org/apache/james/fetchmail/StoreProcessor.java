@@ -53,14 +53,7 @@ public class StoreProcessor extends ProcessorAbstract {
         Store store = null;
         Folder folder;
 
-        StringBuilder logMessageBuffer = new StringBuilder("Starting fetching mail from server '");
-        logMessageBuffer.append(getHost());
-        logMessageBuffer.append("' for user '");
-        logMessageBuffer.append(getUser());
-        logMessageBuffer.append("' in folder '");
-        logMessageBuffer.append(getJavaMailFolderName());
-        logMessageBuffer.append("'");
-        LOGGER.info(logMessageBuffer.toString());
+        LOGGER.info("Starting fetching mail from server '{}' for user '{}' in folder '{}'", getHost(), getUser(), getJavaMailFolderName());
 
         try {
             // Get a Store object
@@ -75,7 +68,7 @@ public class StoreProcessor extends ProcessorAbstract {
             // Get the Folder
             folder = store.getFolder(getJavaMailFolderName());
             if (folder == null)
-                LOGGER.error(getFetchTaskName() + " No default folder");
+                LOGGER.error("{} No default folder", getFetchTaskName());
 
             // Process the Folder
             new FolderProcessor(folder, getAccount()).process();
@@ -89,14 +82,7 @@ public class StoreProcessor extends ProcessorAbstract {
             } catch (MessagingException ex) {
                 LOGGER.error("A MessagingException occured while closing the Store", ex);
             }
-            logMessageBuffer = new StringBuilder("Finished fetching mail from server '");
-            logMessageBuffer.append(getHost());
-            logMessageBuffer.append("' for user '");
-            logMessageBuffer.append(getUser());
-            logMessageBuffer.append("' in folder '");
-            logMessageBuffer.append(getJavaMailFolderName());
-            logMessageBuffer.append("'");
-            LOGGER.info(logMessageBuffer.toString());
+            LOGGER.info("Finished fetching mail from server '{}' for user '{}' in folder '{}'", getHost(), getUser(), getJavaMailFolderName());
         }
     }
 

@@ -129,7 +129,7 @@ public class HBaseMailboxMapperTest {
         LOG.info("findMailboxByPath");
         HBaseMailbox mailbox;
         for (MailboxPath path : pathsList) {
-            LOG.info("Searching for " + path);
+            LOG.info("Searching for {}", path);
             mailbox = (HBaseMailbox) mapper.findMailboxByPath(path);
             assertEquals(path, new MailboxPath(mailbox.getNamespace(), mailbox.getUser(), mailbox.getName()));
         }
@@ -139,7 +139,7 @@ public class HBaseMailboxMapperTest {
         LOG.info("findMailboxById");
         HBaseMailbox mailbox;
         for (MailboxId id : idsList) {
-            LOG.info("Searching for " + id.serialize());
+            LOG.info("Searching for {}", id.serialize());
             mailbox = (HBaseMailbox) mapper.findMailboxById(id);
             assertEquals(mailbox.getMailboxId(), id);
         }

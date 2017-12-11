@@ -134,7 +134,7 @@ public class ValidRcptMX implements RcptHook, ProtocolHandler {
 
             setBannedNetworks(bannedNetworks, dnsService);
 
-            LOGGER.info("Invalid MX Networks: " + bNetwork.toString());
+            LOGGER.info("Invalid MX Networks: {}", bNetwork);
         } else {
             throw new ConfigurationException("Please configure at least on invalid MX network");
         }

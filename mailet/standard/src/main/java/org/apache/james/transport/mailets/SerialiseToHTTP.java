@@ -99,14 +99,16 @@ public class SerialiseToHTTP extends GenericMailet {
         }
 
         // record the result
-        LOGGER.debug("I will attempt to deliver serialised messages to "
-                + targetUrl
-                + " as "
-                + messageKeyName
-                + ". "
-                + (parameterKey==null || parameterKey.length()<2 ? "I will not add any fields to the post. " : "I will prepend: "	+ parameterKey + "=" + parameterValue + ". ")
-                + (passThrough ? "Messages will pass through."
-                        : "Messages will be ghosted."));
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("I will attempt to deliver serialised messages to "
+                    + targetUrl
+                    + " as "
+                    + messageKeyName
+                    + ". "
+                    + (parameterKey==null || parameterKey.length()<2 ? "I will not add any fields to the post. " : "I will prepend: "	+ parameterKey + "=" + parameterValue + ". ")
+                    + (passThrough ? "Messages will pass through."
+                            : "Messages will be ghosted."));
+        }
     }
 
     /**
@@ -159,7 +161,7 @@ public class SerialiseToHTTP extends GenericMailet {
 
         if( data.length>1 && data[1]!=null ) {
             requestBuilder.addParameter(data[1].getName(),data[1].getValue());
-            LOGGER.debug( data[1].getName() + "::" + data[1].getValue() );
+            LOGGER.debug("{}::{}", data[1].getName(), data[1].getValue());
         }
 
         CloseableHttpClient client = HttpClientBuilder.create().build();
@@ -168,7 +170,7 @@ public class SerialiseToHTTP extends GenericMailet {
             clientResponse = client.execute(requestBuilder.build());
 
             if (clientResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                LOGGER.debug("POST failed: " + clientResponse.getStatusLine());
+                LOGGER.debug("POST failed: {}", clientResponse.getStatusLine());
                 return clientResponse.getStatusLine().toString();
             }
             return null;

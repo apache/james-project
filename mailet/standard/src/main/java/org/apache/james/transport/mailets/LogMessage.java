@@ -87,7 +87,7 @@ public class LogMessage extends GenericMailet {
 
     @Override
     public void service(Mail mail) {
-        logger.info("Logging mail " + mail.getName());
+        logger.info("Logging mail {}", mail.getName());
         logComment();
         try {
             MimeMessage message = mail.getMessage();
@@ -109,7 +109,7 @@ public class LogMessage extends GenericMailet {
 
     @SuppressWarnings("unchecked")
     private void logHeaders(MimeMessage message) throws MessagingException {
-        if (headers) {
+        if (headers && logger.isInfoEnabled()) {
             logger.info("\n");
             for (String header : Collections.list((Enumeration<String>) message.getAllHeaderLines())) {
                 logger.info(header + "\n");
@@ -118,7 +118,7 @@ public class LogMessage extends GenericMailet {
     }
 
     private void logBody(MimeMessage message) throws MessagingException, IOException {
-        if (body) {
+        if (body && logger.isInfoEnabled()) {
             InputStream inputStream = ByteStreams.limit(message.getRawInputStream(), lengthToLog(message));
             logger.info(IOUtils.toString(inputStream, Charsets.UTF_8));
         }

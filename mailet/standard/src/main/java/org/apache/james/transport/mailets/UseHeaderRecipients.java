@@ -99,7 +99,7 @@ public class UseHeaderRecipients extends GenericMailet {
         mail.setRecipients(headersAddresses(message));
 
         if (isDebug) {
-            LOGGER.debug("All recipients = " + mail.getRecipients());
+            LOGGER.debug("All recipients = {}", mail.getRecipients());
             LOGGER.debug("Reprocessing mail using recipients in message headers");
         }
 
@@ -140,7 +140,7 @@ public class UseHeaderRecipients extends GenericMailet {
      */
     private Collection<MailAddress> getHeaderMailAddresses(MimeMessage message, String name) throws MessagingException {
         if (isDebug) {
-            LOGGER.debug("Checking " + name + " headers");
+            LOGGER.debug("Checking {} headers", name);
         }
         String[] headers = message.getHeader(name);
         ImmutableList.Builder<MailAddress> addresses = ImmutableList.builder();
@@ -163,7 +163,7 @@ public class UseHeaderRecipients extends GenericMailet {
         ImmutableList.Builder<MailAddress> result = ImmutableList.builder();
         for (String headerPart : headerParts) {
             if (isDebug) {
-                LOGGER.debug("Address = " + headerPart);
+                LOGGER.debug("Address = {}", headerPart);
             }
             result.addAll(readMailAddresses(headerPart));
         }

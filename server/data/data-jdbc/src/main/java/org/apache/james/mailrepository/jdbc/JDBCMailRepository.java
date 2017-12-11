@@ -163,9 +163,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
 
     protected void doConfigure(HierarchicalConfiguration configuration) throws ConfigurationException {
         super.doConfigure(configuration);
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(this.getClass().getName() + ".configure()");
-        }
+        LOGGER.debug("{}.configure()", getClass().getName());
         destination = configuration.getString("[@destinationURL]");
 
         // normalize the destination, to simplify processing.
@@ -209,10 +207,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
             }
         }
 
-        if (LOGGER.isDebugEnabled()) {
-            String logBuffer = "Parsed URL: table = '" + tableName + "', repositoryName = '" + repositoryName + "'";
-            LOGGER.debug(logBuffer);
-        }
+        LOGGER.debug("Parsed URL: table = '{}', repositoryName = '{}'", tableName, repositoryName);
 
         inMemorySizeLimit = configuration.getInt("inMemorySizeLimit", 409600000);
 
@@ -237,10 +232,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
     @Override
     @PostConstruct
     public void init() throws Exception {
-        StringBuffer logBuffer;
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(this.getClass().getName() + ".initialize()");
-        }
+        LOGGER.debug("{}.initialize()", getClass().getName());
 
         try {
             if (filestore != null) {
@@ -255,19 +247,13 @@ public class JDBCMailRepository extends AbstractMailRepository {
                 sr.configure(streamConfiguration);
                 sr.init();
 
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Got filestore for JdbcMailRepository: " + filestore);
-                }
+                LOGGER.debug("Got filestore for JdbcMailRepository: {}", filestore);
             }
 
-            if (LOGGER.isDebugEnabled()) {
-                String logBuf = this.getClass().getName() + " created according to " + destination;
-                LOGGER.debug(logBuf);
-            }
+            LOGGER.debug("{} created according to {}", getClass().getName(), destination);
         } catch (Exception e) {
-            final String message = "Failed to retrieve Store component:" + e.getMessage();
-            LOGGER.error(message, e);
-            throw new ConfigurationException(message, e);
+            LOGGER.error("Failed to retrieve Store component", e);
+            throw new ConfigurationException("Failed to retrieve Store component", e);
         }
 
         theJDBCUtil = new JDBCUtil();
@@ -287,10 +273,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
                 throw e;
             }
 
-            if (LOGGER.isDebugEnabled()) {
-                logBuffer = new StringBuffer(128).append("Reading SQL resources from file: ").append(sqlFileName).append(", section ").append(this.getClass().getName()).append(".");
-                LOGGER.debug(logBuffer.toString());
-            }
+            LOGGER.debug("Reading SQL resources from file: {}, section {}.", sqlFileName, getClass().getName());
 
             // Build the statement parameters
             Map<String, String> sqlParameters = new HashMap<>();
@@ -314,10 +297,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
                 createStatement = conn.prepareStatement(sqlQueries.getSqlString("createTable", true));
                 createStatement.execute();
 
-                if (LOGGER.isInfoEnabled()) {
-                    logBuffer = new StringBuffer(64).append("JdbcMailRepository: Created table '").append(tableName).append("'.");
-                    LOGGER.info(logBuffer.toString());
-                }
+                LOGGER.info("JdbcMailRepository: Created table '{}'.", tableName);
             }
 
             checkJdbcAttributesSupport(dbMetaData);
@@ -365,29 +345,30 @@ public class JDBCMailRepository extends AbstractMailRepository {
 
         if (hasUpdateMessageAttributesSQL && !hasRetrieveMessageAttributesSQL) {
             logBuffer.append("JDBC Mail Attributes support was activated for update but not for retrieval" + "(found 'updateMessageAttributesSQL' but not 'retrieveMessageAttributesSQL'" + "in table '").append(tableName).append("').");
-            LOGGER.error(logBuffer.toString());
-            throw new SQLException(logBuffer.toString());
+            String logBufferAsString = logBuffer.toString();
+            LOGGER.error(logBufferAsString);
+            throw new SQLException(logBufferAsString);
         }
         if (!hasUpdateMessageAttributesSQL && hasRetrieveMessageAttributesSQL) {
             logBuffer.append("JDBC Mail Attributes support was activated for retrieval but not for update" + "(found 'retrieveMessageAttributesSQL' but not 'updateMessageAttributesSQL'" + "in table '").append(tableName).append("'.");
-            LOGGER.error(logBuffer.toString());
-            throw new SQLException(logBuffer.toString());
+            String logBufferAsString = logBuffer.toString();
+            LOGGER.error(logBufferAsString);
+            throw new SQLException(logBufferAsString);
         }
         if (!hasMessageAttributesColumn && (hasUpdateMessageAttributesSQL || hasRetrieveMessageAttributesSQL)) {
             logBuffer.append("JDBC Mail Attributes support was activated but column '").append(attributesColumnName).append("' is missing in table '").append(tableName).append("'.");
-            LOGGER.error(logBuffer.toString());
-            throw new SQLException(logBuffer.toString());
+            String logBufferAsString = logBuffer.toString();
+            LOGGER.error(logBufferAsString);
+            throw new SQLException(logBufferAsString);
         }
         if (hasUpdateMessageAttributesSQL && hasRetrieveMessageAttributesSQL) {
             jdbcMailAttributesReady = true;
-            if (LOGGER.isInfoEnabled()) {
-                logBuffer.append("JDBC Mail Attributes support ready.");
-                LOGGER.info(logBuffer.toString());
-            }
+            logBuffer.append("JDBC Mail Attributes support ready.");
+            LOGGER.info("{}", logBuffer);
         } else {
             jdbcMailAttributesReady = false;
             logBuffer.append("JDBC Mail Attributes support not activated. " + "Missing both 'updateMessageAttributesSQL' " + "and 'retrieveMessageAttributesSQL' " + "statements for table '").append(tableName).append("' in sqlResources.xml. ").append("Will not persist in the repository '").append(repositoryName).append("'.");
-            LOGGER.warn(logBuffer.toString());
+            LOGGER.warn("{}", logBuffer);
         }
     }
 
@@ -635,10 +616,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
                 System.err.println("ran the query " + key);
             }
             if (!rsMessage.next()) {
-                if (LOGGER.isDebugEnabled()) {
-                    String debugBuffer = "Did not find a record " + key + " in " + repositoryName;
-                    LOGGER.debug(debugBuffer);
-                }
+                LOGGER.debug("Did not find a record {} in {}", key, repositoryName);
                 return null;
             }
             // Determine whether attributes are used and retrieve them
@@ -672,20 +650,13 @@ public class JDBCMailRepository extends AbstractMailRepository {
                                 ois.close();
                             }
                         } catch (IOException ioe) {
-                            if (LOGGER.isDebugEnabled()) {
-                                String debugBuffer = "Exception reading attributes " + key + " in " + repositoryName;
-                                LOGGER.debug(debugBuffer, ioe);
-                            }
+                            LOGGER.debug("Exception reading attributes {} in {}", key, repositoryName, ioe);
                         }
                     } else {
-                        if (LOGGER.isDebugEnabled()) {
-                            String debugBuffer = "Did not find a record (attributes) " + key + " in " + repositoryName;
-                            LOGGER.debug(debugBuffer);
-                        }
+                        LOGGER.debug("Did not find a record (attributes) {} in {}", key, repositoryName);
                     }
                 } catch (SQLException sqle) {
-                    String errorBuffer = "Error retrieving message" + sqle.getMessage() + sqle.getErrorCode() + sqle.getSQLState() + sqle.getNextException();
-                    LOGGER.error(errorBuffer);
+                    LOGGER.error("Error retrieving message{}{}{}{}", sqle.getMessage(), sqle.getErrorCode(), sqle.getSQLState(), String.valueOf(sqle.getNextException()));
                 } finally {
                     theJDBCUtil.closeJDBCResultSet(rsMessageAttr);
                     theJDBCUtil.closeJDBCStatement(retrieveMessageAttr);
@@ -718,8 +689,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
             mc.setMessage(message);
             return mc;
         } catch (SQLException sqle) {
-            String errorBuffer = "Error retrieving message" + sqle.getMessage() + sqle.getErrorCode() + sqle.getSQLState() + sqle.getNextException();
-            LOGGER.error(errorBuffer);
+            LOGGER.error("Error retrieving message{}{}{}{}", sqle.getMessage(), sqle.getErrorCode(), sqle.getSQLState(), String.valueOf(sqle.getNextException()));
             LOGGER.debug("Failed to retrieve mail", sqle);
             throw new MessagingException("Exception while retrieving mail: " + sqle.getMessage(), sqle);
         } catch (Exception me) {

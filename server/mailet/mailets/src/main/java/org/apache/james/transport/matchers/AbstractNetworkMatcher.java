@@ -56,7 +56,7 @@ public abstract class AbstractNetworkMatcher extends GenericMatcher {
     public void init() throws MessagingException {
         if (getCondition() != null) {
             authorizedNetworks = new NetMatcher(getCondition(), dnsServer);
-            LOGGER.info("Authorized addresses: " + authorizedNetworks);
+            LOGGER.info("Authorized addresses: {}", authorizedNetworks);
         }
     }
 

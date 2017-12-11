@@ -100,7 +100,7 @@ public class JamesSignatureHandler implements SignatureHandler {
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             throw Throwables.propagate(e);
         } catch (SignatureException e) {
-            LOGGER.warn("Attempt to use a malformed signature '"+ signature + "' for source '" + source + "'", e);
+            LOGGER.warn("Attempt to use a malformed signature '{}' for source '{}'", signature, source, e);
             return false;
         }
     }

@@ -42,12 +42,8 @@ public class EndImapEncoder implements ImapEncoder {
      * org.apache.james.imap.api.process.ImapSession)
      */
     public void encode(ImapMessage message, ImapResponseComposer composer, ImapSession session) throws IOException {
-        if (LOGGER.isWarnEnabled()) {
-            LOGGER.warn("Unknown message " + message);
-        }
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Chain end reached for " + message);
-        }
+        LOGGER.warn("Unknown message {}", message);
+        LOGGER.debug("Chain end reached for {}", message);
         composer.untaggedNoResponse("Unknown message in pipeline", null);
     }
 }

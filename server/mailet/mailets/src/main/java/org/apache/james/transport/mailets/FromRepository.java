@@ -106,7 +106,7 @@ public class FromRepository extends GenericMailet {
             try {
                 Mail mail = repository.retrieve(key);
                 if (mail != null && mail.getRecipients() != null) {
-                    LOGGER.debug((new StringBuffer(160).append("Spooling mail ").append(mail.getName()).append(" from ").append(repositoryPath)).toString());
+                    LOGGER.debug("Spooling mail {} from {}", mail.getName(), repositoryPath);
 
                     mail.setAttribute("FromRepository", Boolean.TRUE);
                     mail.setState(processor);
@@ -116,7 +116,7 @@ public class FromRepository extends GenericMailet {
                     LifecycleUtil.dispose(mail);
                 }
             } catch (MessagingException e) {
-                LOGGER.error((new StringBuffer(160).append("Unable to re-spool mail ").append(key).append(" from ").append(repositoryPath)).toString(), e);
+                LOGGER.error("Unable to re-spool mail {} from {}", key, repositoryPath, e);
             }
         }
 

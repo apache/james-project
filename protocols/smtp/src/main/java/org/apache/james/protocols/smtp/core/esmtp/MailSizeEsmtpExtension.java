@@ -122,24 +122,11 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
             // This is a malformed option value. We return an error
             return SYNTAX_ERROR;
         }
-        if (LOGGER.isDebugEnabled()) {
-            StringBuilder debugBuffer = new StringBuilder(128).append(
-                    "MAIL command option SIZE received with value ").append(
-                    size).append(".");
-            LOGGER.debug(debugBuffer.toString());
-        }
+        LOGGER.debug("MAIL command option SIZE received with value {}.", size);
         long maxMessageSize = session.getConfiguration().getMaxMessageSize();
         if ((maxMessageSize > 0) && (size > maxMessageSize)) {
             // Let the client know that the size limit has been hit.
-            StringBuilder errorBuffer = new StringBuilder(256).append(
-                    "Rejected message from ").append(
-                    tempSender != null ? tempSender : null).append(
-                    " from ")
-                    .append(session.getRemoteAddress().getAddress().getHostAddress()).append(" of size ")
-                    .append(size).append(
-                            " exceeding system maximum message size of ")
-                    .append(maxMessageSize).append("based on SIZE option.");
-            LOGGER.error(errorBuffer.toString());
+            LOGGER.error("Rejected message from {} from {} of size {} exceeding system maximum message size of {} based on SIZE option.", (tempSender != null ? tempSender : null), session.getRemoteAddress().getAddress().getHostAddress(), size, maxMessageSize);
 
             return QUOTA_EXCEEDED;
         } else {
@@ -208,15 +195,7 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
     public HookResult onMessage(SMTPSession session, MailEnvelope mail) {
         Boolean failed = (Boolean) session.getAttachment(MESG_FAILED, State.Transaction);
         if (failed != null && failed.booleanValue()) {
-            
-            StringBuilder errorBuffer = new StringBuilder(256).append(
-                    "Rejected message from ").append(
-                    session.getAttachment(SMTPSession.SENDER, State.Transaction).toString())
-                    .append(" from ").append(session.getRemoteAddress().getAddress().getHostAddress())
-                    .append(" exceeding system maximum message size of ")
-                    .append(
-                            session.getConfiguration().getMaxMessageSize());
-            LOGGER.error(errorBuffer.toString());
+            LOGGER.error("Rejected message from {} from {} exceeding system maximum message size of {}", session.getAttachment(SMTPSession.SENDER, State.Transaction), session.getRemoteAddress().getAddress().getHostAddress(), session.getConfiguration().getMaxMessageSize());
             return QUOTA_EXCEEDED;
         } else {
             return HookResult.declined();

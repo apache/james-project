@@ -83,9 +83,7 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
             unsolicitedResponses(session, responder, false);
             okComplete(command, tag, responder);
         } catch (EnableException e) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Unable to enable extension", e);
-            }
+            LOGGER.info("Unable to enable extension", e);
             taggedBad(command, tag, responder, HumanReadableText.FAILED);
         }
     }

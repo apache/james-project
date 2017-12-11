@@ -91,49 +91,49 @@ public class CommonsLoggingAdapter implements Log {
 
     public void debug(Object message) {
         if (isDebugEnabled()) {
-            logger.debug(message == null ? "NULL" : message.toString());
+            logger.debug("{}", (message == null ? "NULL" : message));
         }
     }
 
     public void debug(Object message, Throwable t) {
         if (isDebugEnabled()) {
-            logger.debug(message == null ? "NULL" : message.toString(), t);
+            logger.debug("{}", (message == null ? "NULL" : message), t);
         } 
     }
 
     public void error(Object message) {
         if (isErrorEnabled()) {
-            logger.error(message == null ? "NULL" : message.toString());
+            logger.error("{}", (message == null ? "NULL" : message));
         }
     }
 
     public void error(Object message, Throwable t) {
         if (isErrorEnabled()) {
-            logger.error(message == null ? "NULL" : message.toString(), t);
+            logger.error("{}", (message == null ? "NULL" : message), t);
         }
     }
 
     public void fatal(Object message) {
         if (isFatalEnabled()) {
-            logger.error(message == null ? "NULL" : message.toString());
+            logger.error("{}", (message == null ? "NULL" : message));
         }
     }
 
     public void fatal(Object message, Throwable t) {
         if (isFatalEnabled()) {
-            logger.error(message == null ? "NULL" : message.toString(), t);
+            logger.error("{}", (message == null ? "NULL" : message), t);
         }
     }
 
     public void info(Object message) {
         if (isInfoEnabled()) {
-            logger.info(message == null ? "NULL" : message.toString());
+            logger.info("{}", (message == null ? "NULL" : message));
         }
     }
 
     public void info(Object message, Throwable t) {
         if (isInfoEnabled()) {
-            logger.info(message == null ? "NULL" : message.toString(), t);
+            logger.info("{}", (message == null ? "NULL" : message), t);
         }
     }
 
@@ -163,25 +163,25 @@ public class CommonsLoggingAdapter implements Log {
 
     public void trace(Object message) {
         if (isTraceEnabled()) {
-            logger.debug(message == null ? "NULL" : message.toString());
+            logger.trace("{}", (message == null ? "NULL" : message));
         }
     }
 
     public void trace(Object message, Throwable t) {
         if (isTraceEnabled()) {
-            logger.debug(message == null ? "NULL" : message.toString(), t);
+            logger.trace("{}", (message == null ? "NULL" : message), t);
         }
     }
 
     public void warn(Object message) {
         if (isWarnEnabled()) {
-            logger.warn(message == null ? "NULL" : message.toString());
+            logger.warn("{}", (message == null ? "NULL" : message));
         }
     }
 
     public void warn(Object message, Throwable t) {
         if (isWarnEnabled()) {
-            logger.warn(message == null ? "NULL" : message.toString(), t);
+            logger.warn("{}", (message == null ? "NULL" : message), t);
         }
     }
 

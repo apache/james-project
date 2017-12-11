@@ -174,7 +174,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
     {
         final List<Action> actions = getActions();
         for (final Action action: actions) {
-            LOGGER.info("Executing action: " + action.toString());
+            LOGGER.info("Executing action: {}", action);
             try
             {
                 dispatcher.execute(action, getMail(), this);

@@ -76,76 +76,79 @@ public class InstrumentationMailet implements Mailet {
 
         MimeMessage message = mail.getMessage();
 
-        LOGGER.info("Mail named: " + mail.getName());
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info("Mail named: " + mail.getName());
 
-        for (Iterator<String> it = mail.getAttributeNames(); it.hasNext();) {
-            String attributeName = it.next();
-            LOGGER.info("Attribute " + attributeName);
-        }
-        LOGGER.info("Message size: " + mail.getMessageSize());
-        LOGGER.info("Last updated: " + mail.getLastUpdated());
-        LOGGER.info("Remote Address: " + mail.getRemoteAddr());
-        LOGGER.info("Remote Host: " + mail.getRemoteHost());
-        LOGGER.info("State: " + mail.getState());
-        LOGGER.info("Sender host: " + mail.getSender().getDomain());
-        LOGGER.info("Sender user: " + mail.getSender().getLocalPart());
-        Collection<MailAddress> recipients = mail.getRecipients();
-        for (MailAddress address : recipients) {
-            LOGGER.info("Recipient: " + address.getLocalPart() + "@" + address.getDomain());
-        }
-
-        LOGGER.info("Subject: " + message.getSubject());
-        LOGGER.info("MessageID: " + message.getMessageID());
-        LOGGER.info("Received: " + message.getReceivedDate());
-        LOGGER.info("Sent: " + message.getSentDate());
-
-        @SuppressWarnings("unchecked")
-        Enumeration<String> allHeadersLines = message.getAllHeaderLines();
-        while (allHeadersLines.hasMoreElements()) {
-            String header = (String) allHeadersLines.nextElement();
-            LOGGER.info("Header Line:= " + header);
-        }
-
-        @SuppressWarnings("unchecked")
-        Enumeration<Header> allHeadersEnumeration = message.getAllHeaders();
-        while (allHeadersEnumeration.hasMoreElements()) {
-            Header header = (Header) allHeadersEnumeration.nextElement();
-            LOGGER.info("Header: " + header.getName() + "=" + header.getValue());
-        }
-
-        Address[] to = message.getRecipients(RecipientType.TO);
-        printAddresses(to, "TO: ");
-        Address[] cc = message.getRecipients(RecipientType.CC);
-        printAddresses(cc, "CC: ");
-        Address[] bcc = message.getRecipients(RecipientType.BCC);
-        printAddresses(bcc, "BCC: ");
-
-        Flags flags = message.getFlags();
-        Flag[] systemFlags = flags.getSystemFlags();
-        for (Flag systemFlag : systemFlags) {
-            LOGGER.info("System Flag:" + systemFlag);
-        }
-        String[] userFlags = flags.getUserFlags();
-        for (String userFlag : userFlags) {
-            LOGGER.info("User flag: " + userFlag);
-        }
-
-        String mimeType = message.getContentType();
-        LOGGER.info("Mime type: " + mimeType);
-        if ("text/plain".equals(mimeType)) {
-            try {
-                Object content = message.getContent();
-                LOGGER.info("Content: " + content);
-            } catch (IOException e) {
-                e.printStackTrace();
+            for (Iterator<String> it = mail.getAttributeNames(); it.hasNext();) {
+                String attributeName = it.next();
+                LOGGER.info("Attribute " + attributeName);
+            }
+            LOGGER.info("Message size: " + mail.getMessageSize());
+            LOGGER.info("Last updated: " + mail.getLastUpdated());
+            LOGGER.info("Remote Address: " + mail.getRemoteAddr());
+            LOGGER.info("Remote Host: " + mail.getRemoteHost());
+            LOGGER.info("State: " + mail.getState());
+            LOGGER.info("Sender host: " + mail.getSender().getDomain());
+            LOGGER.info("Sender user: " + mail.getSender().getLocalPart());
+            Collection<MailAddress> recipients = mail.getRecipients();
+            for (MailAddress address : recipients) {
+                LOGGER.info("Recipient: " + address.getLocalPart() + "@" + address.getDomain());
             }
 
+            LOGGER.info("Subject: " + message.getSubject());
+            LOGGER.info("MessageID: " + message.getMessageID());
+            LOGGER.info("Received: " + message.getReceivedDate());
+            LOGGER.info("Sent: " + message.getSentDate());
+
+            @SuppressWarnings("unchecked")
+            Enumeration<String> allHeadersLines = message.getAllHeaderLines();
+            while (allHeadersLines.hasMoreElements()) {
+                String header = allHeadersLines.nextElement();
+                LOGGER.info("Header Line:= " + header);
+            }
+
+            @SuppressWarnings("unchecked")
+            Enumeration<Header> allHeadersEnumeration = message.getAllHeaders();
+            while (allHeadersEnumeration.hasMoreElements()) {
+                Header header = allHeadersEnumeration.nextElement();
+                LOGGER.info("Header: " + header.getName() + "=" + header.getValue());
+            }
+
+            Address[] to = message.getRecipients(RecipientType.TO);
+            printAddresses(to, "TO: ");
+            Address[] cc = message.getRecipients(RecipientType.CC);
+            printAddresses(cc, "CC: ");
+            Address[] bcc = message.getRecipients(RecipientType.BCC);
+            printAddresses(bcc, "BCC: ");
+
+            Flags flags = message.getFlags();
+            Flag[] systemFlags = flags.getSystemFlags();
+            for (Flag systemFlag : systemFlags) {
+                LOGGER.info("System Flag:" + systemFlag);
+            }
+            String[] userFlags = flags.getUserFlags();
+            for (String userFlag : userFlags) {
+                LOGGER.info("User flag: " + userFlag);
+            }
+
+            String mimeType = message.getContentType();
+            LOGGER.info("Mime type: " + mimeType);
+            if ("text/plain".equals(mimeType)) {
+                try {
+                    Object content = message.getContent();
+                    LOGGER.info("Content: " + content);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
         }
 
         LOGGER.info("");
         LOGGER.info("######## MAIL ENDS");
     }
 
+    @SuppressWarnings("Slf4jStringConcat")
     private void printAddresses(Address[] addresses, String prefix) {
         for (Address address1 : addresses) {
             if (address1 instanceof InternetAddress) {

@@ -110,7 +110,7 @@ public class ReIndexerImpl implements ReIndexer {
                         MessageRange.all(),
                         MessageMapper.FetchType.Full,
                         NO_LIMIT));
-            LOGGER.info("Finish to reindex " + path);
+            LOGGER.info("Finish to reindex {}", path);
         } finally {
             mailboxManager.removeListener(path, mailboxRegistration, mailboxSession);
         }

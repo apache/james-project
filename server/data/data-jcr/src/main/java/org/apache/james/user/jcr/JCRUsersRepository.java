@@ -115,9 +115,7 @@ public class JCRUsersRepository extends AbstractUsersRepository {
             }
 
         } catch (RepositoryException e) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Failed to add user: " + username, e);
-            }
+            LOGGER.info("Failed to add user: {}", username, e);
             user = null;
         }
         return user;
@@ -169,9 +167,7 @@ public class JCRUsersRepository extends AbstractUsersRepository {
                 }
 
             } catch (RepositoryException e) {
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info("Failed to add user: " + userName, e);
-                }
+                LOGGER.info("Failed to add user: {}", userName, e);
                 throw new UsersRepositoryException("Failed to add user: " + userName, e);
 
             }
@@ -203,11 +199,8 @@ public class JCRUsersRepository extends AbstractUsersRepository {
             }
 
         } catch (RepositoryException e) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Failed to remove user: " + username, e);
-            }
+            LOGGER.info("Failed to remove user: {}", username, e);
             throw new UsersRepositoryException("Failed to remove user: " + username, e);
-
         }
     }
 
@@ -231,9 +224,7 @@ public class JCRUsersRepository extends AbstractUsersRepository {
                 session.logout();
             }
         } catch (PathNotFoundException e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("User not found: " + name, e);
-            }
+            LOGGER.debug("User not found: {}", name, e);
         } catch (RepositoryException e) {
             throw new UsersRepositoryException("Failed to search for user: " + name, e);
 
@@ -282,13 +273,9 @@ public class JCRUsersRepository extends AbstractUsersRepository {
             }
 
         } catch (RepositoryException e) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Failed to search user: " + username, e);
-            }
+            LOGGER.info("Failed to search user: {}", username, e);
             throw new UsersRepositoryException("Failed to search for user: " + username, e);
-
         }
-
     }
 
     /**
@@ -315,11 +302,8 @@ public class JCRUsersRepository extends AbstractUsersRepository {
                 session.logout();
             }
         } catch (RepositoryException e) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Failed to count user", e);
-            }
+            LOGGER.info("Failed to count user", e);
             throw new UsersRepositoryException("Failed to count user", e);
-
         }
     }
 
@@ -356,9 +340,7 @@ public class JCRUsersRepository extends AbstractUsersRepository {
                 session.logout();
             }
         } catch (RepositoryException e) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Failed to list users", e);
-            }
+            LOGGER.info("Failed to list users", e);
             throw new UsersRepositoryException("Failed to list users", e);
         }
         return userNames.iterator();
@@ -408,13 +390,9 @@ public class JCRUsersRepository extends AbstractUsersRepository {
             }
 
         } catch (RepositoryException e) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Failed to add user: " + lowerCasedUsername, e);
-            }
+            LOGGER.info("Failed to add user: {}", lowerCasedUsername, e);
             throw new UsersRepositoryException("Failed to add user: " + lowerCasedUsername, e);
-
         }
-
     }
 
 }

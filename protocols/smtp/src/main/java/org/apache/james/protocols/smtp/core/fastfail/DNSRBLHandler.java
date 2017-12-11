@@ -122,7 +122,7 @@ public class DNSRBLHandler implements RcptHook {
          * This whould make no sense.
          */
         if (session.isRelayingAllowed()) {
-            LOGGER.info("Ipaddress " + session.getRemoteAddress().getAddress() + " is allowed to relay. Don't check it");
+            LOGGER.info("Ipaddress {} is allowed to relay. Don't check it", session.getRemoteAddress().getAddress());
             return;
         }
         
@@ -138,15 +138,10 @@ public class DNSRBLHandler implements RcptHook {
                 String[] rblList = whitelist;
                 for (String rbl : rblList) {
                     if (resolve(reversedOctets + rbl)) {
-                        if (LOGGER.isInfoEnabled()) {
-                            LOGGER.info("Connection from " + ipAddress + " whitelisted by " + rbl);
-                        }
-
+                        LOGGER.info("Connection from {} whitelisted by {}", ipAddress, rbl);
                         return;
                     } else {
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug("IpAddress " + session.getRemoteAddress().getAddress() + " not listed on " + rbl);
-                        }
+                        LOGGER.debug("IpAddress {} not listed on {}", session.getRemoteAddress().getAddress(), rbl);
                     }
                 }
             }
@@ -155,9 +150,7 @@ public class DNSRBLHandler implements RcptHook {
                 String[] rblList = blacklist;
                 for (String rbl : rblList) {
                     if (resolve(reversedOctets + rbl)) {
-                        if (LOGGER.isInfoEnabled()) {
-                            LOGGER.info("Connection from " + ipAddress + " restricted by " + rbl + " to SMTP AUTH/postmaster/abuse.");
-                        }
+                        LOGGER.info("Connection from {} restricted by {} to SMTP AUTH/postmaster/abuse.", ipAddress, rbl);
 
                         // we should try to retrieve details
                         if (getDetail) {
@@ -176,9 +169,7 @@ public class DNSRBLHandler implements RcptHook {
                         return;
                     } else {
                         // if it is unknown, it isn't blocked
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug("unknown host exception thrown:" + rbl);
-                        }
+                        LOGGER.debug("unknown host exception thrown: {}", rbl);
                     }
 
                 }

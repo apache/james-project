@@ -188,9 +188,9 @@ public class RecipientRewriteTableProcessor {
         if (!remoteAddress.isEmpty()) {
             try {
                 mailetContext.sendMail(sender, remoteAddress, message);
-                LOGGER.info("Mail for " + recipient + " forwarded to " + remoteAddress);
+                LOGGER.info("Mail for {} forwarded to {}", recipient, remoteAddress);
             } catch (MessagingException ex) {
-                LOGGER.warn("Error forwarding mail to " + remoteAddress);
+                LOGGER.warn("Error forwarding mail to {}", remoteAddress);
             }
         }
     }

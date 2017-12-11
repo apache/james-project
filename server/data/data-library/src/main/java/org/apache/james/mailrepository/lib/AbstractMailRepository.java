@@ -89,10 +89,10 @@ public abstract class AbstractMailRepository implements MailRepository, Configur
             }
             internalStore(mc);
         } catch (MessagingException e) {
-            LOGGER.error("Exception caught while storing mail " + key, e);
+            LOGGER.error("Exception caught while storing mail {}", key, e);
             throw e;
         } catch (Exception e) {
-            LOGGER.error("Exception caught while storing mail " + key, e);
+            LOGGER.error("Exception caught while storing mail {}", key, e);
             throw new MessagingException("Exception caught while storing mail " + key, e);
         } finally {
             if (!wasLocked) {
