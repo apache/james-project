@@ -320,13 +320,13 @@ public class GetMessagesMethodStepdefs {
         appendMessage(messageName, mailbox, "eml/htmlBodyWithManyEmptyTags.eml");
     }
 
-    @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with multiple same inlined attachments \"([^\"]*)\"$")
-    public void appendMessageWithSameInlinedAttachmentsToMailbox(String username, String messageName, String mailbox, String attachmentId) throws Throwable {
-        userStepdefs.execWithUser(username, () -> appendMessageWithSameInlinedAttachmentsToMailbox(messageName, mailbox, attachmentId));
+    @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with multiple same inlined attachments \"(?:[^\"]*)\"$")
+    public void appendMessageWithSameInlinedAttachmentsToMailbox(String username, String messageName, String mailbox) throws Throwable {
+        userStepdefs.execWithUser(username, () -> appendMessageWithSameInlinedAttachmentsToMailbox(messageName, mailbox));
     }
 
-    @Given("^the user has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with multiple same inlined attachments \"([^\"]*)\"$")
-    public void appendMessageWithSameInlinedAttachmentsToMailbox(String messageName, String mailbox, String attachmentId) throws Exception {
+    @Given("^the user has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with multiple same inlined attachments \"(?:[^\"]*)\"$")
+    public void appendMessageWithSameInlinedAttachmentsToMailbox(String messageName, String mailbox) throws Exception {
         appendMessage(messageName, mailbox, "eml/sameInlinedImages.eml");
     }
 

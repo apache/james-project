@@ -246,8 +246,8 @@ public class DownloadStepdefs {
                     blobId));
     }
 
-    @When("^\"([^\"]*)\" downloads \"([^\"]*)\" with a valid authentication token but a bad blobId$")
-    public void downloadsWithValidToken(String username, String attachmentId) throws Throwable {
+    @When("^\"([^\"]*)\" downloads \"(?:[^\"]*)\" with a valid authentication token but a bad blobId$")
+    public void downloadsWithValidToken(String username) throws Throwable {
         userStepdefs.execWithUser(username, () -> {
             URIBuilder uriBuilder = mainStepdefs.baseUri().setPath("/download/badblobId");
             response = Request.Get(uriBuilder.build())
@@ -258,16 +258,16 @@ public class DownloadStepdefs {
         });
     }
 
-    @When("^\"([^\"]*)\" downloads \"([^\"]*)\" without any authentication token$")
-    public void getDownloadWithoutToken(String username, String attachmentId) throws Exception {
+    @When("^\"(?:[^\"]*)\" downloads \"([^\"]*)\" without any authentication token$")
+    public void getDownloadWithoutToken(String attachmentId) throws Exception {
         String blobId = blobIdByAttachmentId.get(attachmentId);
         response = Request.Get(mainStepdefs.baseUri().setPath("/download/" + blobId).build())
             .execute()
             .returnResponse();
     }
 
-    @When("^\"([^\"]*)\" downloads \"([^\"]*)\" with an empty authentication token$")
-    public void getDownloadWithEmptyToken(String username, String attachmentId) throws Exception {
+    @When("^\"(?:[^\"]*)\" downloads \"([^\"]*)\" with an empty authentication token$")
+    public void getDownloadWithEmptyToken(String attachmentId) throws Exception {
         String blobId = blobIdByAttachmentId.get(attachmentId);
         response = Request.Get(
                 mainStepdefs.baseUri()
@@ -278,8 +278,8 @@ public class DownloadStepdefs {
                 .returnResponse();
     }
 
-    @When("^\"([^\"]*)\" downloads \"([^\"]*)\" with a bad authentication token$")
-    public void getDownloadWithBadToken(String username, String attachmentId) throws Exception {
+    @When("^\"(?:[^\"]*)\" downloads \"([^\"]*)\" with a bad authentication token$")
+    public void getDownloadWithBadToken(String attachmentId) throws Exception {
         String blobId = blobIdByAttachmentId.get(attachmentId);
         response = Request.Get(
                 mainStepdefs.baseUri()
@@ -290,8 +290,8 @@ public class DownloadStepdefs {
                 .returnResponse();
     }
 
-    @When("^\"([^\"]*)\" downloads \"([^\"]*)\" with an invalid authentication token$")
-    public void getDownloadWithUnknownToken(String username, String attachmentId) throws Exception {
+    @When("^\"(?:[^\"]*)\" downloads \"([^\"]*)\" with an invalid authentication token$")
+    public void getDownloadWithUnknownToken(String attachmentId) throws Exception {
         String blobId = blobIdByAttachmentId.get(attachmentId);
         response = Request.Get(
                 mainStepdefs.baseUri()
@@ -347,8 +347,8 @@ public class DownloadStepdefs {
                 .returnResponse();
     }
 
-    @When("^\"([^\"]*)\" downloads \"([^\"]*)\" with an expired token$")
-    public void getDownloadWithExpiredToken(String username, String attachmentId) throws Exception {
+    @When("^\"(?:[^\"]*)\" downloads \"([^\"]*)\" with an expired token$")
+    public void getDownloadWithExpiredToken(String attachmentId) throws Exception {
         String blobId = blobIdByAttachmentId.get(attachmentId);
         response = Request.Get(mainStepdefs.baseUri().setPath("/download/" + blobId)
                 .addParameter("access_token", EXPIRED_ATTACHMENT_TOKEN)
