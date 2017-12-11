@@ -53,7 +53,7 @@ public class ImapStepdefs {
 
     @Then("^the user has a IMAP message in mailbox \"([^\"]*)\"$")
     public void hasMessageInMailbox(String mailbox) throws Throwable {
-        try (IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST, IMAP_PORT);) {
+        try (IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST, IMAP_PORT)) {
             assertThat(
                 imapMessageReader.userReceivedMessageInMailbox(userStepdefs.getConnectedUser(),
                     userStepdefs.getUserPassword(userStepdefs.getConnectedUser()),
@@ -64,7 +64,7 @@ public class ImapStepdefs {
 
     @Then("^the message has IMAP flag \"([^\"]*)\" in mailbox \"([^\"]*)\" for \"([^\"]*)\"$")
     public void hasMessageWithFlagInMailbox(String flags, String mailbox, String username) throws Throwable {
-        try (IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST, IMAP_PORT);) {
+        try (IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST, IMAP_PORT)) {
             assertThat(
                 imapMessageReader.userReceivedMessageWithFlagsInMailbox(username,
                     userStepdefs.getUserPassword(username),
@@ -76,7 +76,7 @@ public class ImapStepdefs {
 
     @Then("^the user has a IMAP notification about (\\d+) new message when selecting mailbox \"([^\"]*)\"$")
     public void hasANotificationAboutNewMessagesInMailbox(int numOfNewMessage, String mailbox) throws Throwable {
-        try (IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST, IMAP_PORT);) {
+        try (IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST, IMAP_PORT)) {
             assertThat(
                 imapMessageReader.userGetNotifiedForNewMessagesWhenSelectingMailbox(userStepdefs.getConnectedUser(),
                     userStepdefs.getUserPassword(userStepdefs.getConnectedUser()),
@@ -87,7 +87,7 @@ public class ImapStepdefs {
 
     @Then("^the user does not have a IMAP message in mailbox \"([^\"]*)\"$")
     public void hasNoMessageInMailbox(String mailbox) throws Throwable {
-        try (IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST, IMAP_PORT);) {
+        try (IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST, IMAP_PORT)) {
             assertThat(
                 imapMessageReader.userDoesNotReceiveMessageInMailbox(userStepdefs.getConnectedUser(),
                     userStepdefs.getUserPassword(userStepdefs.getConnectedUser()),

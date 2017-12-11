@@ -612,13 +612,13 @@ public class GetMessagesMethodStepdefs {
 
     @Then("^the preview of the message is not empty$")
     public void assertPreviewOfTheFirstMessageIsNotEmpty() {
-        String actual = httpClient.jsonPath.<String>read(FIRST_MESSAGE + ".preview");
+        String actual = httpClient.jsonPath.read(FIRST_MESSAGE + ".preview");
         assertThat(actual).isNotEmpty();
     }
 
     @Then("^the preview should not contain consecutive spaces or blank characters$")
     public void assertPreviewShouldBeNormalized() {
-        String actual = httpClient.jsonPath.<String>read(FIRST_MESSAGE + ".preview");
+        String actual = httpClient.jsonPath.read(FIRST_MESSAGE + ".preview");
         assertThat(actual).hasSize(MessagePreviewGenerator.MAX_PREVIEW_LENGTH)
             .doesNotMatch("  ")
             .doesNotContain(StringUtils.CR)
