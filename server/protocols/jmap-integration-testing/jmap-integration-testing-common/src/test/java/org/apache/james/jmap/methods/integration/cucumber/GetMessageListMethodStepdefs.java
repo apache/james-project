@@ -136,20 +136,20 @@ public class GetMessageListMethodStepdefs {
     }
 
     @Then("^the message list is empty$")
-    public void assertEmpty() throws Exception {
+    public void assertEmpty() {
         assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
         assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".messageIds")).isEmpty();
     }
 
     @Then("^the message list has size (\\d+)")
-    public void assertSize(int size) throws Exception {
+    public void assertSize(int size) {
         assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
         assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".messageIds")).hasSize(size);
     }
 
     @Then("^the message list contains \"([^\"]*)\"")
-    public void assertContains(String messsage) throws Exception {
-        MessageId messageId = messageIdStepdefs.getMessageId(messsage);
+    public void assertContains(String message) {
+        MessageId messageId = messageIdStepdefs.getMessageId(message);
         assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
         assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".messageIds")).contains(messageId.serialize());
     }

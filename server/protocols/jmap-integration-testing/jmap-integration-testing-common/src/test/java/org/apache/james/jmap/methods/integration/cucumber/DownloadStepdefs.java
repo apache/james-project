@@ -35,7 +35,6 @@ import javax.mail.Flags;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.client.utils.URIBuilder;
@@ -176,7 +175,7 @@ public class DownloadStepdefs {
         downLoad(username, getMessagesMethodStepdefs.getBlobId());
     }
 
-    private void downLoad(String username, String blobId) throws IOException, ClientProtocolException, URISyntaxException {
+    private void downLoad(String username, String blobId) throws IOException, URISyntaxException {
         URIBuilder uriBuilder = mainStepdefs.baseUri().setPath("/download/" + blobId);
         response = authenticatedDownloadRequest(uriBuilder, blobId, username).execute().returnResponse();
     }
@@ -359,12 +358,12 @@ public class DownloadStepdefs {
     }
 
     @When("^\"([^\"]*)\" delete mailbox \"([^\"]*)\"$")
-    public void deleteMailboxButNotAttachment(String username, String mailboxName) throws Exception {
+    public void deleteMailboxButNotAttachment(String username, String mailboxName) {
         mainStepdefs.mailboxProbe.deleteMailbox(MailboxConstants.USER_NAMESPACE, username, mailboxName);
     }
 
     @Then("^the user should be authorized$")
-    public void httpStatusDifferentFromUnauthorized() throws IOException {
+    public void httpStatusDifferentFromUnauthorized() {
         assertThat(response.getStatusLine().getStatusCode()).isIn(200, 404);
     }
 
@@ -374,7 +373,7 @@ public class DownloadStepdefs {
     }
 
     @Then("^the user should not be authorized$")
-    public void httpUnauthorizedStatus() throws IOException {
+    public void httpUnauthorizedStatus() {
         assertThat(response.getStatusLine().getStatusCode()).isEqualTo(401);
     }
 
@@ -384,7 +383,7 @@ public class DownloadStepdefs {
     }
 
     @Then("^the user should receive a bad request response$")
-    public void httpBadRequestStatus() throws IOException {
+    public void httpBadRequestStatus() {
         assertThat(response.getStatusLine().getStatusCode()).isEqualTo(400);
     }
 
@@ -400,7 +399,7 @@ public class DownloadStepdefs {
     }
 
     @Then("^the user should receive a not found response$")
-    public void httpNotFoundStatus() throws IOException {
+    public void httpNotFoundStatus() {
         assertThat(response.getStatusLine().getStatusCode()).isEqualTo(404);
     }
 
@@ -422,7 +421,7 @@ public class DownloadStepdefs {
     }
 
     @Then("^the attachment is named \"([^\"]*)\"$")
-    public void assertContentDisposition(String name) throws IOException {
+    public void assertContentDisposition(String name) {
         if (!CharMatcher.ASCII.matchesAllOf(name)) {
             assertEncodedFilenameMatches(name);
         } else {
@@ -431,7 +430,7 @@ public class DownloadStepdefs {
     }
 
     @Then("^the blob size is (\\d+)$")
-    public void assertContentLength(int size) throws IOException {
+    public void assertContentLength(int size) {
         assertThat(response.getFirstHeader("Content-Length").getValue()).isEqualTo(String.valueOf(size));
     }
 

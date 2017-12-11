@@ -59,7 +59,7 @@ public class GetMailboxesMethodStepdefs {
     }
 
     @Then("^a mailboxes answer is returned without error$")
-    public void assertGetMailboxesOkStatus() throws Exception {
+    public void assertGetMailboxesOkStatus() {
         assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
         assertThat(httpClient.jsonPath.<String>read(NAME)).isEqualTo("mailboxes");
     }

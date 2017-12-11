@@ -500,14 +500,14 @@ public class GetMessagesMethodStepdefs {
     }
 
     @Then("^an error \"([^\"]*)\" is returned$")
-    public void error(String type) throws Exception {
+    public void error(String type) {
         assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
         assertThat(httpClient.jsonPath.<String>read(NAME)).isEqualTo("error");
         assertThat(httpClient.jsonPath.<String>read(ARGUMENTS + ".type")).isEqualTo(type);
     }
 
     @Then("^no error is returned$")
-    public void noError() throws Exception {
+    public void noError() {
         assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
         assertThat(httpClient.jsonPath.<String>read(NAME)).isEqualTo("messages");
     }
@@ -523,36 +523,36 @@ public class GetMessagesMethodStepdefs {
     }
 
     @Then("^the description is \"(.*?)\"$")
-    public void assertDescription(String description) throws Exception {
+    public void assertDescription(String description) {
         assertThat(httpClient.jsonPath.<String>read(ARGUMENTS + ".description")).isEqualTo(description);
     }
 
     @Then("^the notFound list should contain \"([^\"]*)\"$")
-    public void assertNotFoundListContains(String id) throws Exception {
+    public void assertNotFoundListContains(String id) {
         MessageId messageId = messageIdStepdefs.getMessageId(id);
         assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".notFound")).contains(messageId.serialize());
     }
 
     @Then("^the notFound list should contain the requested message id$")
-    public void assertNotFoundListContainsRequestedMessages() throws Exception {
+    public void assertNotFoundListContainsRequestedMessages() {
         ImmutableList<String> elements = requestedMessageIds.stream().map(MessageId::serialize).collect(Guavate.toImmutableList());
         assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".notFound")).containsExactlyElementsOf(elements);
     }
 
 
     @Then("^the list should contain (\\d+) message$")
-    public void assertListContains(int numberOfMessages) throws Exception {
+    public void assertListContains(int numberOfMessages) {
         assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".list")).hasSize(numberOfMessages);
     }
 
     @Then("^the id of the message is \"([^\"]*)\"$")
-    public void assertIdOfTheFirstMessage(String messageName) throws Exception {
+    public void assertIdOfTheFirstMessage(String messageName) {
         MessageId id = messageIdStepdefs.getMessageId(messageName);
         assertThat(httpClient.jsonPath.<String>read(FIRST_MESSAGE + ".id")).isEqualTo(id.serialize());
     }
 
     @Then("^the message is in \"([^\"]*)\" mailboxes")
-    public void assertMailboxNamesOfTheFirstMessage(String mailboxNames) throws Exception {
+    public void assertMailboxNamesOfTheFirstMessage(String mailboxNames) {
         List<String> values = Splitter.on(",")
             .splitToList(mailboxNames).stream()
             .map(Throwing.function(name -> mainStepdefs.jmapServer
@@ -585,45 +585,45 @@ public class GetMessagesMethodStepdefs {
     }
 
     @Then("^the threadId of the message is \"([^\"]*)\"$")
-    public void assertThreadIdOfTheFirstMessage(String threadId) throws Exception {
+    public void assertThreadIdOfTheFirstMessage(String threadId) {
         MessageId id = messageIdStepdefs.getMessageId(threadId);
         assertThat(httpClient.jsonPath.<String>read(FIRST_MESSAGE + ".threadId")).isEqualTo(id.serialize());
     }
 
     @Then("^the subject of the message is \"([^\"]*)\"$")
-    public void assertSubjectOfTheFirstMessage(String subject) throws Exception {
+    public void assertSubjectOfTheFirstMessage(String subject) {
         assertThat(httpClient.jsonPath.<String>read(FIRST_MESSAGE + ".subject")).isEqualTo(subject);
     }
 
     @Then("^the textBody of the message is \"([^\"]*)\"$")
-    public void assertTextBodyOfTheFirstMessage(String textBody) throws Exception {
+    public void assertTextBodyOfTheFirstMessage(String textBody) {
         assertThat(httpClient.jsonPath.<String>read(FIRST_MESSAGE + ".textBody")).isEqualTo(StringEscapeUtils.unescapeJava(textBody));
     }
 
     @Then("^the htmlBody of the message is \"([^\"]*)\"$")
-    public void assertHtmlBodyOfTheFirstMessage(String htmlBody) throws Exception {
+    public void assertHtmlBodyOfTheFirstMessage(String htmlBody) {
         assertThat(httpClient.jsonPath.<String>read(FIRST_MESSAGE + ".htmlBody")).isEqualTo(StringEscapeUtils.unescapeJava(htmlBody));
     }
 
     @Then("^the isUnread of the message is \"([^\"]*)\"$")
-    public void assertIsUnreadOfTheFirstMessage(String isUnread) throws Exception {
+    public void assertIsUnreadOfTheFirstMessage(String isUnread) {
         assertThat(httpClient.jsonPath.<Boolean>read(FIRST_MESSAGE + ".isUnread")).isEqualTo(Boolean.valueOf(isUnread));
     }
 
     @Then("^the preview of the message is \"([^\"]*)\"$")
-    public void assertPreviewOfTheFirstMessage(String preview) throws Exception {
+    public void assertPreviewOfTheFirstMessage(String preview) {
         String actual = httpClient.jsonPath.<String>read(FIRST_MESSAGE + ".preview").replace("\n", " ");
         assertThat(actual).isEqualToIgnoringWhitespace(StringEscapeUtils.unescapeJava(preview));
     }
 
     @Then("^the preview of the message is not empty$")
-    public void assertPreviewOfTheFirstMessageIsNotEmpty() throws Exception {
+    public void assertPreviewOfTheFirstMessageIsNotEmpty() {
         String actual = httpClient.jsonPath.<String>read(FIRST_MESSAGE + ".preview");
         assertThat(actual).isNotEmpty();
     }
 
     @Then("^the preview should not contain consecutive spaces or blank characters$")
-    public void assertPreviewShouldBeNormalized() throws Exception {
+    public void assertPreviewShouldBeNormalized() {
         String actual = httpClient.jsonPath.<String>read(FIRST_MESSAGE + ".preview");
         assertThat(actual).hasSize(MessagePreviewGenerator.MAX_PREVIEW_LENGTH)
             .doesNotMatch("  ")
@@ -632,69 +632,69 @@ public class GetMessagesMethodStepdefs {
     }
 
     @Then("^the headers of the message contains:$")
-    public void assertHeadersOfTheFirstMessage(DataTable headers) throws Exception {
+    public void assertHeadersOfTheFirstMessage(DataTable headers) {
         assertThat(httpClient.jsonPath.<Map<String, String>>read(FIRST_MESSAGE + ".headers")).containsAllEntriesOf(headers.asMap(String.class, String.class));
     }
 
     @Then("^the date of the message is \"([^\"]*)\"$")
-    public void assertDateOfTheFirstMessage(String date) throws Exception {
+    public void assertDateOfTheFirstMessage(String date) {
         assertThat(httpClient.jsonPath.<String>read(FIRST_MESSAGE + ".date")).isEqualTo(date);
     }
 
     @Then("^the hasAttachment of the message is \"([^\"]*)\"$")
-    public void assertHasAttachmentOfTheFirstMessage(String hasAttachment) throws Exception {
+    public void assertHasAttachmentOfTheFirstMessage(String hasAttachment) {
         assertThat(httpClient.jsonPath.<Boolean>read(FIRST_MESSAGE + ".hasAttachment")).isEqualTo(Boolean.valueOf(hasAttachment));
     }
 
     @Then("^the isForwarded property of the message is \"([^\"]*)\"$")
-    public void assertIsForwardedOfTheFirstMessage(String isForwarded) throws Exception {
+    public void assertIsForwardedOfTheFirstMessage(String isForwarded) {
         assertThat(httpClient.jsonPath.<Boolean>read(FIRST_MESSAGE + ".isForwarded")).isEqualTo(Boolean.valueOf(isForwarded));
     }
 
     @Then("^the list of attachments of the message is empty$")
-    public void assertAttachmentsOfTheFirstMessageIsEmpty() throws Exception {
+    public void assertAttachmentsOfTheFirstMessageIsEmpty() {
         assertThat(httpClient.jsonPath.<List<Object>>read(ATTACHMENTS)).isEmpty();
     }
 
     @Then("^the property \"([^\"]*)\" of the message is null$")
-    public void assertPropertyIsNull(String property) throws Exception {
+    public void assertPropertyIsNull(String property) {
         assertThat(httpClient.jsonPath.<String>read(FIRST_MESSAGE + "." + property + ".date")).isNull();
     }
 
     @Then("^the list of attachments of the message contains (\\d+) attachments?$")
-    public void assertAttachmentsHasSize(int numberOfAttachments) throws Exception {
+    public void assertAttachmentsHasSize(int numberOfAttachments) {
         assertThat(httpClient.jsonPath.<List<Object>>read(ATTACHMENTS)).hasSize(numberOfAttachments);
     }
 
     @Then("^the list of attachments of the message contains only one attachment with cid \"([^\"]*)\"?$")
-    public void assertAttachmentsAndItsCid(String cid) throws Exception {
+    public void assertAttachmentsAndItsCid(String cid) {
         assertThat(httpClient.jsonPath.<String>read(FIRST_ATTACHMENT + ".cid")).isEqualTo(cid);
     }
 
     @Then("^the first attachment is:$")
-    public void assertFirstAttachment(DataTable attachmentProperties) throws Exception {
+    public void assertFirstAttachment(DataTable attachmentProperties) {
         assertAttachment(FIRST_ATTACHMENT, attachmentProperties);
     }
 
     @Then("^the second attachment is:$")
-    public void assertSecondAttachment(DataTable attachmentProperties) throws Exception {
+    public void assertSecondAttachment(DataTable attachmentProperties) {
         assertAttachment(SECOND_ATTACHMENT, attachmentProperties);
     }
 
     @Then("^the preview of the message contains: (.*)$")
-    public void assertPreviewOfMessageShouldBePrintedWithEncoding(List<String> preview) throws Exception {
+    public void assertPreviewOfMessageShouldBePrintedWithEncoding(List<String> preview) {
         String actual = httpClient.jsonPath.<String>read(FIRST_MESSAGE + ".preview");
         assertThat(actual).contains(preview);
     }
 
     @Then("^the keywords of the message is (.*)$")
-    public void assertKeywordsOfMessageShouldDisplay(List<String> keywords) throws Exception {
+    public void assertKeywordsOfMessageShouldDisplay(List<String> keywords) {
         assertThat(httpClient.jsonPath.<Map<String, Boolean>>read(FIRST_MESSAGE + ".keywords").keySet())
             .containsOnlyElementsOf(keywords);
     }
 
     @Then("^the message has no keyword$")
-    public void assertMessageHasNoKeyword() throws Exception {
+    public void assertMessageHasNoKeyword() {
         assertThat(httpClient.jsonPath.<Map<String, Boolean>>read(FIRST_MESSAGE + ".keywords"))
             .isNullOrEmpty();
     }
