@@ -53,7 +53,7 @@ public class GetMailboxesMethodStepdefs {
     }
 
     @When("^\"([^\"]*)\" lists mailboxes$")
-    public void getMailboxes(String user) throws Throwable {
+    public void getMailboxes(String user) {
         userStepdefs.execWithUser(user, 
                 () -> httpClient.post("[[\"getMailboxes\", {}, \"#0\"]]"));
     }
@@ -65,7 +65,7 @@ public class GetMailboxesMethodStepdefs {
     }
 
     @Then("^the list should contain (\\d+) (?:mailbox|mailboxes)$")
-    public void assertNumberOfMailboxes(int numberOfMailboxes) throws Exception {
+    public void assertNumberOfMailboxes(int numberOfMailboxes) {
         assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".list")).hasSize(numberOfMailboxes);
     }
 

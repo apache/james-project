@@ -247,7 +247,7 @@ public class DownloadStepdefs {
     }
 
     @When("^\"([^\"]*)\" downloads \"(?:[^\"]*)\" with a valid authentication token but a bad blobId$")
-    public void downloadsWithValidToken(String username) throws Throwable {
+    public void downloadsWithValidToken(String username) {
         userStepdefs.execWithUser(username, () -> {
             URIBuilder uriBuilder = mainStepdefs.baseUri().setPath("/download/badblobId");
             response = Request.Get(uriBuilder.build())
@@ -368,7 +368,7 @@ public class DownloadStepdefs {
     }
 
     @Then("^\"([^\"]*)\" be authorized$")
-    public void httpStatusDifferentFromUnauthorized(String username) throws Throwable {
+    public void httpStatusDifferentFromUnauthorized(String username) {
         userStepdefs.execWithUser(username, this::httpStatusDifferentFromUnauthorized);
     }
 
@@ -378,7 +378,7 @@ public class DownloadStepdefs {
     }
 
     @Then("^\"([^\"]*)\" should not be authorized$")
-    public void httpUnauthorizedStatus(String username) throws Throwable {
+    public void httpUnauthorizedStatus(String username) {
         userStepdefs.execWithUser(username, this::httpUnauthorizedStatus);
     }
 
@@ -388,7 +388,7 @@ public class DownloadStepdefs {
     }
 
     @Then("^\"([^\"]*)\" should receive a bad request response$")
-    public void httpBadRequestStatus(String username) throws Throwable {
+    public void httpBadRequestStatus(String username) {
         userStepdefs.execWithUser(username, this::httpBadRequestStatus);
     }
 
@@ -404,7 +404,7 @@ public class DownloadStepdefs {
     }
 
     @Then("^\"([^\"]*)\" should receive a not found response$")
-    public void httpNotFoundStatus(String username) throws Throwable {
+    public void httpNotFoundStatus(String username) {
         userStepdefs.execWithUser(username, this::httpNotFoundStatus);
     }
 
@@ -416,7 +416,7 @@ public class DownloadStepdefs {
     }
 
     @Then("^\"([^\"]*)\" should receive an attachment access token$")
-    public void accessTokenResponse(String username) throws Throwable {
+    public void accessTokenResponse(String username) {
         userStepdefs.execWithUser(username, this::accessTokenResponse);
     }
 

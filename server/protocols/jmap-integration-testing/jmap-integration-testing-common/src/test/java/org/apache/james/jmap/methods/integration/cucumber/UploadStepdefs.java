@@ -72,7 +72,7 @@ public class UploadStepdefs {
     }
 
     @Given("^\"([^\"]*)\" is starting uploading a content$")
-    public void userStartUploadContent(String username) throws Throwable {
+    public void userStartUploadContent(String username) {
         AccessToken accessToken = userStepdefs.authenticate(username);
 
         CountDownLatch startSignal = new CountDownLatch(2);
@@ -155,32 +155,32 @@ public class UploadStepdefs {
     }
 
     @Then("^the user disconnect$")
-    public void stopUpload() throws Throwable {
+    public void stopUpload() {
         async.cancel(true);
     }
 
     @Then("^the user should receive an authorized response$")
-    public void httpAuthorizedStatus() throws Exception {
+    public void httpAuthorizedStatus() {
         assertThat(response.getStatusLine().getStatusCode()).isEqualTo(200);
     }
 
     @Then("^the user should receive a created response$")
-    public void httpCreatedStatus() throws Exception {
+    public void httpCreatedStatus() {
         assertThat(response.getStatusLine().getStatusCode()).isEqualTo(201);
     }
 
     @Then("^the user should receive bad request response$")
-    public void httpBadRequestStatus() throws Throwable {
+    public void httpBadRequestStatus() {
         assertThat(response.getStatusLine().getStatusCode()).isEqualTo(400);
     }
 
     @Then("^the user should receive a not authorized response$")
-    public void httpUnauthorizedStatus() throws Exception {
+    public void httpUnauthorizedStatus() {
         assertThat(response.getStatusLine().getStatusCode()).isEqualTo(401);
     }
 
     @Then("^the user should receive a request entity too large response$")
-    public void httpRequestEntityTooBigStatus() throws Exception {
+    public void httpRequestEntityTooBigStatus() {
         assertThat(response.getStatusLine().getStatusCode()).isEqualTo(413);
     }
 
@@ -213,7 +213,7 @@ public class UploadStepdefs {
     }
 
     @Then("^the request should be marked as canceled$")
-    public void requestHasBeenCanceled() throws Exception {
+    public void requestHasBeenCanceled() {
         assertThat(isCanceled).isTrue();
     }
 }

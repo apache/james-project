@@ -60,7 +60,7 @@ public class SetMessagesMethodStepdefs {
     }
 
     @When("^\"([^\"]*)\" moves \"([^\"]*)\" to user mailbox \"([^\"]*)\"$")
-    public void moveMessageToMailboxWithUser(String username, String message, String mailbox) throws Throwable {
+    public void moveMessageToMailboxWithUser(String username, String message, String mailbox) {
         userStepdefs.execWithUser(username, () -> moveMessageToMailbox(message, mailbox));
     }
 
@@ -105,7 +105,7 @@ public class SetMessagesMethodStepdefs {
     }
 
     @When("^\"([^\"]*)\" copies \"([^\"]*)\" from mailbox \"([^\"]*)\" to mailbox \"([^\"]*)\"$")
-    public void copyMessageToMailbox(String username, String message, String sourceMailbox, String destinationMailbox) throws Throwable {
+    public void copyMessageToMailbox(String username, String message, String sourceMailbox, String destinationMailbox) {
         userStepdefs.execWithUser(username, () -> copyMessageToMailbox(message, sourceMailbox, destinationMailbox));
     }
 
@@ -131,7 +131,7 @@ public class SetMessagesMethodStepdefs {
     }
 
     @When("^\"([^\"]*)\" copies \"([^\"]*)\" from mailbox \"([^\"]*)\" of user \"([^\"]*)\" to mailbox \"([^\"]*)\" of user \"([^\"]*)\"$")
-    public void copyMessageToMailbox(String username, String message, String sourceMailbox, String sourceUser, String destinationMailbox, String destinationUser) throws Throwable {
+    public void copyMessageToMailbox(String username, String message, String sourceMailbox, String sourceUser, String destinationMailbox, String destinationUser) {
         userStepdefs.execWithUser(username, () -> copyMessageToMailbox(message, sourceMailbox, sourceUser, destinationMailbox, destinationUser));
     }
 
@@ -155,7 +155,7 @@ public class SetMessagesMethodStepdefs {
     }
 
     @Given("^\"([^\"]*)\" moves \"([^\"]*)\" to mailbox \"([^\"]*)\" of user \"([^\"]*)\"$")
-    public void moveMessageToMailbox(String username, String message, String destinationMailbox, String destinationUser) throws Throwable {
+    public void moveMessageToMailbox(String username, String message, String destinationMailbox, String destinationUser) {
         userStepdefs.execWithUser(username, () -> moveMessageToMailbox(message, destinationMailbox, destinationUser));
     }
 
@@ -178,12 +178,12 @@ public class SetMessagesMethodStepdefs {
     }
 
     @When("^\"([^\"]*)\" sets flags \"([^\"]*)\" on message \"([^\"]*)\"$")
-    public void setFlags(String username, List<String> keywords, String message) throws Throwable {
+    public void setFlags(String username, List<String> keywords, String message) {
         userStepdefs.execWithUser(username, () -> setFlags(keywords, message));
     }
 
     @When("^\"([^\"]*)\" marks the message \"([^\"]*)\" as flagged$")
-    public void flag(String username, String message) throws Throwable {
+    public void flag(String username, String message) {
         userStepdefs.execWithUser(username, () -> {
             MessageId messageId = messageIdStepdefs.getMessageId(message);
 
@@ -203,7 +203,7 @@ public class SetMessagesMethodStepdefs {
     }
 
     @When("^\"([^\"]*)\" destroys message \"([^\"]*)\"$")
-    public void destroyMessage(String username, String message) throws Throwable {
+    public void destroyMessage(String username, String message) {
         MessageId messageId = messageIdStepdefs.getMessageId(message);
         userStepdefs.execWithUser(username, () -> {
             httpClient.post("[" +
@@ -220,7 +220,7 @@ public class SetMessagesMethodStepdefs {
     }
 
     @Given("^\"([^\"]*)\" tries to create a draft message \"([^\"]*)\" in mailbox \"([^\"]*)\"$")
-    public void createDraft(String username, String message, String mailboxName) throws Throwable {
+    public void createDraft(String username, String message, String mailboxName) {
         userStepdefs.execWithUser(username, () -> {
             String mailboxId = mainStepdefs.getMailboxId(username, mailboxName).serialize();
             httpClient.post("[" +
@@ -284,27 +284,27 @@ public class SetMessagesMethodStepdefs {
     }
 
     @Then("^message \"([^\"]*)\" is not updated$")
-    public void assertNotUpdate(String messageName) throws Exception {
+    public void assertNotUpdate(String messageName) {
         MessageId id = messageIdStepdefs.getMessageId(messageName);
         assertThat(httpClient.jsonPath.<Map<String, String>>read("[0][1].notUpdated"))
             .containsOnlyKeys(id.serialize());
     }
 
     @Then("^message \"([^\"]*)\" is updated$")
-    public void assertUpdated(String messageName) throws Exception {
+    public void assertUpdated(String messageName) {
         MessageId id = messageIdStepdefs.getMessageId(messageName);
         assertThat(httpClient.jsonPath.<List<String>>read("[0][1].updated"))
             .containsOnly(id.serialize());
     }
 
     @Then("^message \"([^\"]*)\" is not created$")
-    public void assertNotCreated(String messageName) throws Exception {
+    public void assertNotCreated(String messageName) {
         assertThat(httpClient.jsonPath.<Map<String, String>>read("[0][1].notCreated"))
             .containsOnlyKeys(messageName);
     }
 
     @Then("^message \"([^\"]*)\" is created$")
-    public void assertCreated(String messageName) throws Exception {
+    public void assertCreated(String messageName) {
         assertThat(httpClient.jsonPath.<Map<String, String>>read("[0][1].created"))
             .containsOnlyKeys(messageName);
     }

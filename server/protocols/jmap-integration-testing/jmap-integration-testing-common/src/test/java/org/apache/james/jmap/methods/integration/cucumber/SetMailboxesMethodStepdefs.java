@@ -69,7 +69,7 @@ public class SetMailboxesMethodStepdefs {
     }
 
     @Given("^mailbox \"([^\"]*)\" with (\\d+) messages$")
-    public void mailboxWithMessages(String mailboxName, int messageCount) throws Throwable {
+    public void mailboxWithMessages(String mailboxName, int messageCount) {
         mainStepdefs.mailboxProbe.createMailbox("#private", userStepdefs.getConnectedUser(), mailboxName);
         MailboxPath mailboxPath = MailboxPath.forUser(userStepdefs.getConnectedUser(), mailboxName);
         IntStream
@@ -86,7 +86,7 @@ public class SetMailboxesMethodStepdefs {
     }
 
     @Given("^\"([^\"]*)\" has a mailbox \"([^\"]*)\"$")
-    public void createMailbox(String username, String mailbox) throws Throwable {
+    public void createMailbox(String username, String mailbox) {
         mainStepdefs.mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, mailbox);
     }
 
@@ -269,7 +269,7 @@ public class SetMailboxesMethodStepdefs {
     }
 
     @Then("^mailbox \"([^\"]*)\" contains (\\d+) messages$")
-    public void mailboxContainsMessages(String mailboxName, int messageCount) throws Throwable {
+    public void mailboxContainsMessages(String mailboxName, int messageCount) {
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         String username = userStepdefs.getConnectedUser();
         String mailboxId = mainStepdefs.getMailboxId(username, mailboxName).serialize();
@@ -288,7 +288,7 @@ public class SetMailboxesMethodStepdefs {
     }
 
     @Then("^\"([^\"]*)\" receives not updated on mailbox \"([^\"]*)\" with kind \"([^\"]*)\" and message \"([^\"]*)\"$")
-    public void assertNotUpdatedWithGivenProperties(String userName, String mailboxName, String type, String message) throws Exception {
+    public void assertNotUpdatedWithGivenProperties(String userName, String mailboxName, String type, String message) {
         String mailboxId = mainStepdefs.getMailboxId(userName, mailboxName).serialize();
         assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
         assertThat(httpClient.jsonPath.<String>read(NAME)).isEqualTo("mailboxesSet");
@@ -301,14 +301,14 @@ public class SetMailboxesMethodStepdefs {
     }
 
     @Then("^mailbox \"([^\"]*)\" owned by \"([^\"]*)\" is not updated")
-    public void assertNotUpdated(String mailboxName, String owner) throws Exception {
+    public void assertNotUpdated(String mailboxName, String owner) {
         String mailboxId = mainStepdefs.getMailboxId(owner, mailboxName).serialize();
         assertThat(httpClient.jsonPath.<Map<String, String>>read("[0][1].notUpdated"))
             .containsOnlyKeys(mailboxId);
     }
 
     @Then("^mailbox \"([^\"]*)\" owned by \"([^\"]*)\" is not destroyed$")
-    public void assertNotDestroyed(String mailboxName, String owner) throws Exception {
+    public void assertNotDestroyed(String mailboxName, String owner) {
         String mailboxId = mainStepdefs.getMailboxId(owner, mailboxName).serialize();
         assertThat(httpClient.jsonPath.<Map<String, String>>read("[0][1].notDestroyed"))
             .containsOnlyKeys(mailboxId);
@@ -316,7 +316,7 @@ public class SetMailboxesMethodStepdefs {
 
 
     @Then("^mailbox with creationId \"([^\"]*)\" is not created")
-    public void assertNotCreated(String creationId) throws Exception {
+    public void assertNotCreated(String creationId) {
         assertThat(httpClient.jsonPath.<Map<String, String>>read("[0][1].notCreated"))
             .containsOnlyKeys(creationId);
     }
