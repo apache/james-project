@@ -221,7 +221,8 @@ public class CreationMessage {
             }
 
             Optional<Keywords> maybeKeywords = creationKeywords();
-            Optional<OldKeyword> oldKeywords = getOldKeywords();
+            Optional<OldKeyword> oldKeywords = OldKeyword.computeOldKeywords(
+                isUnread, isFlagged, isAnswered, isDraft, isForwarded);
             Preconditions.checkArgument(!(maybeKeywords.isPresent() && oldKeywords.isPresent()), "Does not support keyword and is* at the same time");
             return new CreationMessage(mailboxIds, Optional.ofNullable(inReplyToMessageId), headers.build(), from,
                     to.build(), cc.build(), bcc.build(), replyTo.build(), subject, date, Optional.ofNullable(textBody), Optional.ofNullable(htmlBody),
@@ -234,12 +235,6 @@ public class CreationMessage {
                     .fromMap(map));
         }
 
-        private Optional<OldKeyword> getOldKeywords() {
-            if (isAnswered.isPresent() || isFlagged.isPresent() || isUnread.isPresent() || isDraft.isPresent() || isForwarded.isPresent()) {
-                return Optional.of(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded));
-            }
-            return Optional.empty();
-        }
     }
 
     private final ImmutableList<String> mailboxIds;

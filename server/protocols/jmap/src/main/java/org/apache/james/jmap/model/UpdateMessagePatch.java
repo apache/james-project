@@ -51,6 +51,7 @@ public class UpdateMessagePatch {
         private Optional<Boolean> isUnread = Optional.empty();
         private Optional<Boolean> isAnswered = Optional.empty();
         private Optional<Boolean> isForwarded = Optional.empty();
+        private Optional<Boolean> isDraft = Optional.empty();
         private Optional<Map<String, Boolean>> keywords = Optional.empty();
         private Set<ValidationResult> validationResult = Sets.newHashSet();
 
@@ -79,6 +80,11 @@ public class UpdateMessagePatch {
             return this;
         }
 
+        public Builder isDraft(Boolean isAnswered) {
+            this.isDraft = Optional.of(isAnswered);
+            return this;
+        }
+
         public Builder isForwarded(Boolean isForwarded) {
             this.isForwarded = Optional.of(isForwarded);
             return this;
@@ -98,7 +104,8 @@ public class UpdateMessagePatch {
             }
 
             Optional<Keywords> mayBeKeywords = creationKeywords();
-            Optional<OldKeyword> oldKeywords = getOldKeywords();
+            Optional<OldKeyword> oldKeywords = OldKeyword.computeOldKeywords(
+                isUnread, isFlagged, isAnswered, isDraft, isForwarded);
             Preconditions.checkArgument(!(mayBeKeywords.isPresent() && oldKeywords.isPresent()), "Does not support keyword and is* at the same time");
 
             return new UpdateMessagePatch(mailboxIds, mayBeKeywords, oldKeywords, ImmutableList.copyOf(validationResult));
@@ -108,14 +115,6 @@ public class UpdateMessagePatch {
             return keywords.map(map -> Keywords.factory()
                     .throwOnImapNonExposedKeywords()
                     .fromMap(map));
-        }
-
-        private Optional<OldKeyword> getOldKeywords() {
-            if (isAnswered.isPresent() || isFlagged.isPresent() || isUnread.isPresent() || isForwarded.isPresent()) {
-                Optional<Boolean> isDraft = Optional.empty();
-                return Optional.of(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded));
-            }
-            return Optional.empty();
         }
 
     }

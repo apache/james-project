@@ -98,6 +98,11 @@ Feature: SetMessages method
     When "bob@domain.tld" moves "mBob" to user mailbox "Drafts"
     Then message "mBob" is updated
 
+  Scenario: A user can update $Draft keyword using isDraft property
+    Given "bob@domain.tld" has a mailbox "Drafts"
+    When "bob@domain.tld" marks the message "mBob" as draft
+    Then message "mBob" is updated
+
   Scenario: A user can copy draft out of draft mailbox
     Given "bob@domain.tld" has a mailbox "Drafts"
     When "bob@domain.tld" copies "mBob" from mailbox "mailbox" to mailbox "Drafts"

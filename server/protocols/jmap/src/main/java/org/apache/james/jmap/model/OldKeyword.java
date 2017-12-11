@@ -28,6 +28,14 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 public class OldKeyword {
+    public static Optional<OldKeyword> computeOldKeywords(Optional<Boolean> isUnread, Optional<Boolean> isFlagged, Optional<Boolean> isAnswered,
+                                                          Optional<Boolean> isDraft, Optional<Boolean> isForwarded) {
+        if (isAnswered.isPresent() || isFlagged.isPresent() || isUnread.isPresent() || isForwarded.isPresent() || isDraft.isPresent()) {
+            return Optional.of(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded));
+        }
+        return Optional.empty();
+    }
+
     private final Optional<Boolean> isUnread;
     private final Optional<Boolean> isFlagged;
     private final Optional<Boolean> isAnswered;
@@ -43,7 +51,7 @@ public class OldKeyword {
         this.isForwarded = Optional.of(isForwarded);
     }
 
-    public OldKeyword(Optional<Boolean> isUnread, Optional<Boolean> isFlagged, Optional<Boolean> isAnswered,
+    private OldKeyword(Optional<Boolean> isUnread, Optional<Boolean> isFlagged, Optional<Boolean> isAnswered,
                       Optional<Boolean> isDraft, Optional<Boolean> isForwarded) {
         this.isUnread = isUnread;
         this.isFlagged = isFlagged;

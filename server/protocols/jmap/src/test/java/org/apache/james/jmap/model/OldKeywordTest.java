@@ -37,15 +37,27 @@ public class OldKeywordTest {
     }
 
     @Test
+    public void computeOldKeywordsShouldReturnEmptyWhenAllEmpty() {
+        Optional<Boolean> isUnread = Optional.empty();
+        Optional<Boolean> isFlagged = Optional.empty();
+        Optional<Boolean> isAnswered = Optional.empty();
+        Optional<Boolean> isDraft = Optional.empty();
+        Optional<Boolean> isForwarded = Optional.empty();
+        Optional<OldKeyword> testee = OldKeyword.computeOldKeywords(isUnread, isFlagged, isAnswered, isDraft, isForwarded);
+
+        assertThat(testee).isEmpty();
+    }
+
+    @Test
     public void applyStateShouldSetFlaggedOnlyWhenIsFlagged() {
         Optional<Boolean> isUnread = Optional.empty();
         Optional<Boolean> isFlagged = Optional.of(true);
         Optional<Boolean> isAnswered = Optional.empty();
         Optional<Boolean> isDraft = Optional.empty();
         Optional<Boolean> isForwarded = Optional.empty();
-        OldKeyword testee = new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded);
-        
-        assertThat(testee.applyToState(new Flags())).isEqualTo(new Flags(Flag.FLAGGED));
+        Optional<OldKeyword> testee = OldKeyword.computeOldKeywords(isUnread, isFlagged, isAnswered, isDraft, isForwarded);
+
+        assertThat(testee.get().applyToState(new Flags())).isEqualTo(new Flags(Flag.FLAGGED));
     }
 
     @Test
@@ -55,9 +67,9 @@ public class OldKeywordTest {
         Optional<Boolean> isAnswered = Optional.empty();
         Optional<Boolean> isDraft = Optional.empty();
         Optional<Boolean> isForwarded = Optional.empty();
-        OldKeyword testee = new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded);
+        Optional<OldKeyword> testee = OldKeyword.computeOldKeywords(isUnread, isFlagged, isAnswered, isDraft, isForwarded);
         
-        assertThat(testee.applyToState(new Flags(Flag.FLAGGED))).isEqualTo(new Flags());
+        assertThat(testee.get().applyToState(new Flags(Flag.FLAGGED))).isEqualTo(new Flags());
     }
 
     @Test
@@ -67,9 +79,9 @@ public class OldKeywordTest {
         Optional<Boolean> isAnswered = Optional.empty();
         Optional<Boolean> isDraft = Optional.empty();
         Optional<Boolean> isForwarded = Optional.empty();
-        OldKeyword testee = new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded);
-        
-        assertThat(testee.applyToState(new Flags(Flag.SEEN))).isEqualTo(new Flags());
+        Optional<OldKeyword> testee = OldKeyword.computeOldKeywords(isUnread, isFlagged, isAnswered, isDraft, isForwarded);
+
+        assertThat(testee.get().applyToState(new Flags(Flag.SEEN))).isEqualTo(new Flags());
     }
 
     @Test
@@ -79,8 +91,8 @@ public class OldKeywordTest {
         Optional<Boolean> isAnswered = Optional.empty();
         Optional<Boolean> isDraft = Optional.empty();
         Optional<Boolean> isForwarded = Optional.empty();
-        OldKeyword testee = new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded);
-        
-        assertThat(testee.applyToState(new Flags(Flag.SEEN))).isEqualTo(new Flags(Flag.SEEN));
+        Optional<OldKeyword> testee = OldKeyword.computeOldKeywords(isUnread, isFlagged, isAnswered, isDraft, isForwarded);
+
+        assertThat(testee.get().applyToState(new Flags(Flag.SEEN))).isEqualTo(new Flags(Flag.SEEN));
     }
 }
