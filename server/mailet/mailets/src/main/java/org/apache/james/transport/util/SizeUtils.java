@@ -19,10 +19,15 @@
 
 package org.apache.james.transport.util;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
+
 import com.jakewharton.byteunits.BinaryByteUnit;
 
 public class SizeUtils {
 
+    public static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.#", DecimalFormatSymbols.getInstance(Locale.US));
 
     public static String humanReadableSize(Number size) {
         return humanReadableSize(size.longValue());
@@ -32,7 +37,7 @@ public class SizeUtils {
         if (size < 0) {
             return "-" + humanReadableSize(-size);
         } else {
-            return BinaryByteUnit.format(size, "#.#");
+            return BinaryByteUnit.format(size, DECIMAL_FORMAT);
         }
     }
 }
