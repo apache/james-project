@@ -44,6 +44,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.model.Number;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
@@ -1904,7 +1905,7 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListShouldAcceptLessThan2Pow53NumberForPosition() throws Exception {
         given()
             .header("Authorization", aliceAccessToken.serialize())
-            .body("[[\"getMessageList\", {\"position\":" + Math.pow(2, 53) + "}, \"#0\"]]")
+            .body("[[\"getMessageList\", {\"position\":" + Number.MAX_VALUE + "}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
@@ -1916,13 +1917,13 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListShouldErrorWhenPositionOver2Pow53() throws Exception {
         given()
             .header("Authorization", aliceAccessToken.serialize())
-            .body("[[\"getMessageList\", {\"position\":" + Math.pow(2, 54) + "}, \"#0\"]]")
+            .body("[[\"getMessageList\", {\"position\":" + Number.MAX_VALUE + 1 + "}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
             .statusCode(200)
             .body(NAME, equalTo("error"))
             .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
-            .body(ARGUMENTS + ".description", containsString("'position' should be positive and less than 2^53 or empty"));
+            .body(ARGUMENTS + ".description", containsString("value should be positive and less than 2^53 or empty"));
     }
 }
