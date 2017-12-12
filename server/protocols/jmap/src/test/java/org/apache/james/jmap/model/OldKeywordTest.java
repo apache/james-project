@@ -259,7 +259,7 @@ public class OldKeywordTest {
     }
 
     @Test
-    public void applyStateShouldDeletedFlag() {
+    public void applyStateShouldPreserveDeletedFlag() {
         Optional<OldKeyword> testee = OldKeyword.builder()
             .isUnread(Optional.of(false))
             .isFlagged(Optional.empty())
@@ -270,5 +270,16 @@ public class OldKeywordTest {
 
         assertThat(testee.get().applyToState(new Flags(Flag.DELETED)))
             .isEqualTo(new FlagsBuilder().add(Flag.DELETED, Flag.SEEN).build());
+    }
+
+    @Test
+    public void applyStateShouldPreserveCustomFlag() {
+        Optional<OldKeyword> testee = OldKeyword.builder()
+            .isUnread(Optional.of(false))
+            .computeOldKeyword();
+
+        String customFlag = "custom";
+        assertThat(testee.get().applyToState(new Flags(customFlag)))
+            .isEqualTo(new FlagsBuilder().add(Flag.SEEN).add(customFlag).build());
     }
 }

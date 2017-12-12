@@ -40,7 +40,6 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.exceptions.DraftMessageMailboxUpdateException;
 import org.apache.james.jmap.exceptions.InvalidOutboxMoveException;
 import org.apache.james.jmap.model.MessageProperties;
-import org.apache.james.jmap.model.OldKeyword;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMessagesRequest;
 import org.apache.james.jmap.model.SetMessagesResponse;
@@ -216,13 +215,6 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
             .orElse(previousMailboxes);
     }
 
-    private List<Flags> flagsFromOldKeyword(List<MessageResult> messagesToBeUpdated, OldKeyword oldKeyword) {
-        return messagesToBeUpdated.stream()
-                .map(MessageResult::getFlags)
-                .map(oldKeyword::applyToState)
-                .collect(Guavate.toImmutableList());
-    }
-
     private List<MailboxId> mailboxIdFor(Role role, MailboxSession session) throws MailboxException {
         return systemMailboxesProvider.getMailboxByRole(role, session)
             .map(MessageManager::getId)
@@ -260,24 +252,14 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     private Stream<MailboxException> updateFlags(MessageId messageId, UpdateMessagePatch updateMessagePatch, MailboxSession mailboxSession, MessageResult messageResult) {
         try {
             if (!updateMessagePatch.isFlagsIdentity()) {
-                messageIdManager.setFlags(newState(messageResult, updateMessagePatch), FlagsUpdateMode.REPLACE, messageId, ImmutableList.of(messageResult.getMailboxId()), mailboxSession);
+                messageIdManager.setFlags(
+                    updateMessagePatch.applyToState(messageResult.getFlags()),
+                    FlagsUpdateMode.REPLACE, messageId, ImmutableList.of(messageResult.getMailboxId()), mailboxSession);
             }
             return Stream.of();
         } catch (MailboxException e) {
             return Stream.of(e);
         }
-    }
-
-    private Flags newState(MessageResult messageResult, UpdateMessagePatch updateMessagePatch) {
-        return updateMessagePatch.getOldKeyword()
-                .map(oldKeyword -> firstFlagsFromOldKeyword(ImmutableList.of(messageResult), oldKeyword))
-                .orElse(updateMessagePatch.applyToState(messageResult.getFlags()));
-    }
-
-    private Flags firstFlagsFromOldKeyword(List<MessageResult> messagesToBeUpdated, OldKeyword oldKeyword) {
-        return flagsFromOldKeyword(messagesToBeUpdated, oldKeyword).stream()
-                .findFirst()
-                .orElse(null);
     }
 
     private void setInMailboxes(MessageId messageId, UpdateMessagePatch updateMessagePatch, MailboxSession mailboxSession) throws MailboxException {

@@ -135,14 +135,6 @@ public class UpdateMessagePatch {
         return mailboxIds;
     }
 
-    public Optional<Keywords> getKeywords() {
-        return keywords;
-    }
-
-    public Optional<OldKeyword> getOldKeyword() {
-        return oldKeywords;
-    }
-
     public boolean isFlagsIdentity() {
         return !oldKeywords.isPresent() && !keywords.isPresent();
     }
@@ -156,8 +148,10 @@ public class UpdateMessagePatch {
     }
 
     public Flags applyToState(Flags currentFlags) {
-        return keywords
-            .map(keyword -> keyword.asFlagsWithRecentAndDeletedFrom(currentFlags))
-            .orElse(currentFlags);
+        return oldKeywords
+            .map(oldKeyword -> oldKeyword.applyToState(currentFlags))
+            .orElse(keywords
+                .map(keyword -> keyword.asFlagsWithRecentAndDeletedFrom(currentFlags))
+                .orElse(currentFlags));
     }
 }

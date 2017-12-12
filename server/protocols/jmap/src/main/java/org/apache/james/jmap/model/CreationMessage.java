@@ -34,6 +34,7 @@ import javax.mail.internet.InternetAddress;
 import org.apache.james.jmap.methods.ValidationResult;
 import org.apache.james.jmap.model.MessageProperties.MessageProperty;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.util.OptionalUtils;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
@@ -220,16 +221,23 @@ public class CreationMessage {
             Optional<Keywords> maybeKeywords = creationKeywords();
             Optional<OldKeyword> oldKeywords = oldKeywordBuilder.computeOldKeyword();
 
-            Preconditions.checkArgument(!(maybeKeywords.isPresent() && oldKeywords.isPresent()), "Does not support keyword and is* at the same time");
             return new CreationMessage(mailboxIds, Optional.ofNullable(inReplyToMessageId), headers.build(), from,
                     to.build(), cc.build(), bcc.build(), replyTo.build(), subject, date, Optional.ofNullable(textBody), Optional.ofNullable(htmlBody),
-                    attachments, attachedMessages, maybeKeywords, oldKeywords);
+                    attachments, attachedMessages, computeKeywords(maybeKeywords, oldKeywords));
         }
 
         private Optional<Keywords> creationKeywords() {
             return keywords.map(map -> Keywords.factory()
                     .throwOnImapNonExposedKeywords()
                     .fromMap(map));
+        }
+
+        public Keywords computeKeywords(Optional<Keywords> keywords, Optional<OldKeyword> oldKeywords) {
+            Preconditions.checkArgument(!(keywords.isPresent() && oldKeywords.isPresent()), "Does not support keyword and is* at the same time");
+            return OptionalUtils
+                .or(keywords,
+                    oldKeywords.map(OldKeyword::asKeywords))
+                .orElse(Keywords.DEFAULT_VALUE);
         }
 
     }
@@ -248,13 +256,12 @@ public class CreationMessage {
     private final Optional<String> htmlBody;
     private final ImmutableList<Attachment> attachments;
     private final ImmutableMap<BlobId, SubMessage> attachedMessages;
-    private final Optional<Keywords> keywords;
-    private final Optional<OldKeyword> oldKeyword;
+    private final Keywords keywords;
 
     @VisibleForTesting
     CreationMessage(ImmutableList<String> mailboxIds, Optional<String> inReplyToMessageId, ImmutableMap<String, String> headers, Optional<DraftEmailer> from,
                     ImmutableList<DraftEmailer> to, ImmutableList<DraftEmailer> cc, ImmutableList<DraftEmailer> bcc, ImmutableList<DraftEmailer> replyTo, String subject, ZonedDateTime date, Optional<String> textBody, Optional<String> htmlBody, ImmutableList<Attachment> attachments,
-                    ImmutableMap<BlobId, SubMessage> attachedMessages, Optional<Keywords> keywords, Optional<OldKeyword> oldKeyword) {
+                    ImmutableMap<BlobId, SubMessage> attachedMessages, Keywords keywords) {
         this.mailboxIds = mailboxIds;
         this.inReplyToMessageId = inReplyToMessageId;
         this.headers = headers;
@@ -270,7 +277,10 @@ public class CreationMessage {
         this.attachments = attachments;
         this.attachedMessages = attachedMessages;
         this.keywords = keywords;
-        this.oldKeyword = oldKeyword;
+    }
+
+    public Keywords getKeywords() {
+        return keywords;
     }
 
     public ImmutableList<String> getMailboxIds() {
@@ -334,18 +344,7 @@ public class CreationMessage {
     }
 
     public boolean isDraft() {
-        return oldKeyword
-            .map(OldKeyword::isDraft)
-            .orElse(keywords.map(keywords -> keywords.contains(Keyword.DRAFT)))
-            .orElse(false);
-    }
-
-    public Optional<Keywords> getKeywords() {
-        return keywords;
-    }
-
-    public Optional<OldKeyword> getOldKeyword() {
-        return oldKeyword;
+        return keywords.contains(Keyword.DRAFT);
     }
 
     public List<ValidationResult> validate() {

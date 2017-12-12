@@ -30,9 +30,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.james.jmap.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.model.Attachment;
 import org.apache.james.jmap.model.CreationMessage;
-import org.apache.james.jmap.model.Keywords;
 import org.apache.james.jmap.model.MessageFactory;
-import org.apache.james.jmap.model.OldKeyword;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -89,7 +87,7 @@ public class MessageAppender {
 
         return MessageFactory.MetaDataWithContent.builder()
             .uid(message.getUid())
-            .keywords(keywordsOrDefault(createdEntry.getValue()))
+            .keywords(createdEntry.getValue().getKeywords())
             .internalDate(internalDate.toInstant())
             .sharedContent(content)
             .size(messageContent.length)
@@ -106,17 +104,7 @@ public class MessageAppender {
     }
 
     private Flags getFlags(CreationMessage message) {
-        return message.getOldKeyword()
-            .map(OldKeyword::asKeywords)
-            .map(Optional::of)
-            .orElse(message.getKeywords())
-            .orElse(Keywords.DEFAULT_VALUE)
-            .asFlags();
-    }
-
-    private Keywords keywordsOrDefault(CreationMessage message) {
-        return message.getKeywords()
-                .orElse(Keywords.DEFAULT_VALUE);
+        return message.getKeywords().asFlags();
     }
 
     private ImmutableList<MessageAttachment> getMessageAttachments(MailboxSession session, ImmutableList<Attachment> attachments) throws MailboxException {

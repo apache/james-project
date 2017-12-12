@@ -47,6 +47,39 @@ public class UpdateMessagePatchTest {
     }
 
     @Test
+    public void applyToStateShouldNotResetSystemFlagsWhenUsingOldKeywords() {
+        UpdateMessagePatch testee = UpdateMessagePatch.builder()
+            .isAnswered(true)
+            .build();
+
+        Flags isSeen = new Flags(Flags.Flag.SEEN);
+        assertThat(testee.applyToState(isSeen).getSystemFlags())
+            .containsExactly(Flags.Flag.ANSWERED, Flags.Flag.SEEN);
+    }
+
+    @Test
+    public void applyToStateShouldNotModifySpecifiedOldKeywordsWhenAlreadySet() {
+        UpdateMessagePatch testee = UpdateMessagePatch.builder()
+            .isAnswered(true)
+            .build();
+
+        Flags isSeen = new Flags(Flags.Flag.ANSWERED);
+        assertThat(testee.applyToState(isSeen).getSystemFlags())
+            .containsExactly(Flags.Flag.ANSWERED);
+    }
+
+    @Test
+    public void applyToStateShouldResetSpecifiedOldKeywords() {
+        UpdateMessagePatch testee = UpdateMessagePatch.builder()
+            .isAnswered(false)
+            .build();
+
+        Flags isSeen = new Flags(Flags.Flag.ANSWERED);
+        assertThat(testee.applyToState(isSeen).getSystemFlags())
+            .containsExactly();
+    }
+
+    @Test
     public void applyStateShouldReturnNewFlagsWhenKeywords() {
         ImmutableMap<String, Boolean> keywords = ImmutableMap.of(
                 "$Answered", true,
