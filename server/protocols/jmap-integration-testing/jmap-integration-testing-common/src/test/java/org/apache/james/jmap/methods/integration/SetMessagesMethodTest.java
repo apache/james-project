@@ -5192,8 +5192,9 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".list[0].isForwarded", equalTo(true));
     }
 
+    @Ignore("JAMES-2257 isDraft is rejected during message creation")
     @Test
-    public void setMessagesShouldReturnErrorWhenTryingToChangeDraftFlagAmongOthers() {
+    public void setMessagesShouldNotReturnAnErrorWhenTryingToChangeDraftFlagAmongOthers() {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         String requestBody = "[" +
@@ -5248,11 +5249,15 @@ public abstract class SetMessagesMethodTest {
         .when()
             .post("/jmap")
         .then()
-            .statusCode(400);
+            .statusCode(200)
+            .body(ARGUMENTS + ".updated", hasSize(1))
+            .body(ARGUMENTS + ".updated", contains(messageId));
+
     }
 
+    @Ignore("JAMES-2257 isDraft is rejected during message creation")
     @Test
-    public void setMessagesShouldNotModifyTheMessageWhenTryingToChangeDraftFlagAmongOthers() {
+    public void setMessagesShouldModifyTheMessageWhenTryingToChangeDraftFlagAmongOthers() {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         String requestBody = "[" +
@@ -5315,10 +5320,10 @@ public abstract class SetMessagesMethodTest {
             .log().ifValidationFails()
             .body(NAME, equalTo("messages"))
             .body(ARGUMENTS + ".list", hasSize(1))
-            .body(ARGUMENTS + ".list[0].isUnread", equalTo(true))
-            .body(ARGUMENTS + ".list[0].isFlagged", equalTo(true))
-            .body(ARGUMENTS + ".list[0].isAnswered", equalTo(true))
-            .body(ARGUMENTS + ".list[0].isDraft", equalTo(true))
+            .body(ARGUMENTS + ".list[0].isUnread", equalTo(false))
+            .body(ARGUMENTS + ".list[0].isFlagged", equalTo(false))
+            .body(ARGUMENTS + ".list[0].isAnswered", equalTo(false))
+            .body(ARGUMENTS + ".list[0].isDraft", equalTo(false))
             .body(ARGUMENTS + ".list[0].isForwarded", equalTo(true));
     }
 }
