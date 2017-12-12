@@ -23,7 +23,10 @@ import java.util.Optional;
 
 import javax.mail.Flags;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.james.util.OptionalUtils;
+import org.apache.james.util.StreamUtils;
+
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
@@ -109,15 +112,6 @@ public class OldKeyword {
     private final Optional<Boolean> isDraft;
     private final Optional<Boolean> isForwarded;
 
-    @VisibleForTesting
-    OldKeyword(boolean isUnread, boolean isFlagged, boolean isAnswered, boolean isDraft, boolean isForwarded) {
-        this.isUnread = Optional.of(isUnread);
-        this.isFlagged = Optional.of(isFlagged);
-        this.isAnswered = Optional.of(isAnswered);
-        this.isDraft = Optional.of(isDraft);
-        this.isForwarded = Optional.of(isForwarded);
-    }
-
     private OldKeyword(Optional<Boolean> isUnread, Optional<Boolean> isFlagged, Optional<Boolean> isAnswered,
                       Optional<Boolean> isDraft, Optional<Boolean> isForwarded) {
         this.isUnread = isUnread;
@@ -189,6 +183,18 @@ public class OldKeyword {
             newStateFlags.add(Flags.Flag.SEEN);
         }
         return newStateFlags;
+    }
+
+    public Keywords asKeywords() {
+        return Keywords.factory()
+            .fromSet(StreamUtils
+                .flatten(
+                    OptionalUtils.toStream(isAnswered.filter(b -> b).map(b -> Keyword.ANSWERED)),
+                    OptionalUtils.toStream(isDraft.filter(b -> b).map(b -> Keyword.DRAFT)),
+                    OptionalUtils.toStream(isForwarded.filter(b -> b).map(b -> Keyword.FORWARDED)),
+                    OptionalUtils.toStream(isFlagged.filter(b -> b).map(b -> Keyword.FLAGGED)),
+                    OptionalUtils.toStream(isUnread.filter(b -> !b).map(b -> Keyword.SEEN)))
+                .collect(Guavate.toImmutableSet()));
     }
 
     @Override

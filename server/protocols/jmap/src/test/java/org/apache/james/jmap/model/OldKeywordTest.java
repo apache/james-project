@@ -37,6 +37,147 @@ public class OldKeywordTest {
     }
 
     @Test
+    public void asKeywordsShouldContainFlaggedWhenIsFlagged() {
+        Optional<OldKeyword> testee = OldKeyword.builder()
+            .isUnread(Optional.empty())
+            .isFlagged(Optional.of(true))
+            .isAnswered(Optional.empty())
+            .isDraft(Optional.empty())
+            .isForwarded(Optional.empty())
+            .computeOldKeyword();
+
+        assertThat(testee.get().asKeywords())
+            .isEqualTo(Keywords.factory().from(Keyword.FLAGGED));
+    }
+
+    @Test
+    public void asKeywordsShouldNotContainFlaggedWhenIsNotFlagged() {
+        Optional<OldKeyword> testee = OldKeyword.builder()
+            .isUnread(Optional.empty())
+            .isFlagged(Optional.of(false))
+            .isAnswered(Optional.empty())
+            .isDraft(Optional.empty())
+            .isForwarded(Optional.empty())
+            .computeOldKeyword();
+
+        assertThat(testee.get().asKeywords())
+            .isEqualTo(Keywords.factory().from());
+    }
+
+    @Test
+    public void asKeywordsShouldNotContainSeenWhenIsUnRead() {
+        Optional<OldKeyword> testee = OldKeyword.builder()
+            .isUnread(Optional.of(true))
+            .isFlagged(Optional.empty())
+            .isAnswered(Optional.empty())
+            .isDraft(Optional.empty())
+            .isForwarded(Optional.empty())
+            .computeOldKeyword();
+
+        assertThat(testee.get().asKeywords())
+            .isEqualTo(Keywords.factory().from());
+    }
+
+    @Test
+    public void asKeywordsShouldContainSeenWhenIsRead() {
+        Optional<OldKeyword> testee = OldKeyword.builder()
+            .isUnread(Optional.of(false))
+            .isFlagged(Optional.empty())
+            .isAnswered(Optional.empty())
+            .isDraft(Optional.empty())
+            .isForwarded(Optional.empty())
+            .computeOldKeyword();
+
+
+        assertThat(testee.get().asKeywords())
+            .isEqualTo(Keywords.factory().from(Keyword.SEEN));
+    }
+
+    @Test
+    public void asKeywordsShouldContainAnsweredWhenIsAnswered() {
+        Optional<OldKeyword> testee = OldKeyword.builder()
+            .isUnread(Optional.empty())
+            .isFlagged(Optional.empty())
+            .isAnswered(Optional.of(true))
+            .isDraft(Optional.empty())
+            .isForwarded(Optional.empty())
+            .computeOldKeyword();
+
+        assertThat(testee.get().asKeywords())
+            .isEqualTo(Keywords.factory().from(Keyword.ANSWERED));
+    }
+
+    @Test
+    public void asKeywordsShouldNotContainAnsweredWhenIsNotAnswered() {
+        Optional<OldKeyword> testee = OldKeyword.builder()
+            .isUnread(Optional.empty())
+            .isFlagged(Optional.empty())
+            .isAnswered(Optional.of(false))
+            .isDraft(Optional.empty())
+            .isForwarded(Optional.empty())
+            .computeOldKeyword();
+
+        assertThat(testee.get().asKeywords())
+            .isEqualTo(Keywords.factory().from());
+    }
+
+    @Test
+    public void asKeywordsShouldContainDraftWhenIsDraft() {
+        Optional<OldKeyword> testee = OldKeyword.builder()
+            .isUnread(Optional.empty())
+            .isFlagged(Optional.empty())
+            .isAnswered(Optional.empty())
+            .isDraft(Optional.of(true))
+            .isForwarded(Optional.empty())
+            .computeOldKeyword();
+
+        assertThat(testee.get().asKeywords())
+            .isEqualTo(Keywords.factory().from(Keyword.DRAFT));
+    }
+
+    @Test
+    public void asKeywordsShouldNotContainDraftWhenIsNotDraft() {
+        Optional<OldKeyword> testee = OldKeyword.builder()
+            .isUnread(Optional.empty())
+            .isFlagged(Optional.empty())
+            .isAnswered(Optional.empty())
+            .isDraft(Optional.of(false))
+            .isForwarded(Optional.empty())
+            .computeOldKeyword();
+
+        assertThat(testee.get().asKeywords())
+            .isEqualTo(Keywords.factory().from());
+    }
+
+    @Test
+    public void asKeywordsShouldContainForwardedWhenIsForwarded() {
+        Optional<OldKeyword> testee = OldKeyword.builder()
+            .isUnread(Optional.empty())
+            .isFlagged(Optional.empty())
+            .isAnswered(Optional.empty())
+            .isDraft(Optional.empty())
+            .isForwarded(Optional.of(true))
+            .computeOldKeyword();
+
+        assertThat(testee.get().asKeywords())
+            .isEqualTo(Keywords.factory().from(Keyword.FORWARDED));
+    }
+
+    @Test
+    public void asKeywordsShouldNotContainForwardedWhenIsNotForwarded() {
+        Optional<OldKeyword> testee = OldKeyword.builder()
+            .isUnread(Optional.empty())
+            .isFlagged(Optional.empty())
+            .isAnswered(Optional.empty())
+            .isDraft(Optional.empty())
+            .isForwarded(Optional.of(false))
+            .computeOldKeyword();
+
+        assertThat(testee.get().asKeywords())
+            .isEqualTo(Keywords.factory().from());
+    }
+
+    @Test
     public void computeOldKeywordsShouldReturnEmptyWhenAllEmpty() {
         Optional<OldKeyword> testee = OldKeyword.builder()
             .isUnread(Optional.empty())
