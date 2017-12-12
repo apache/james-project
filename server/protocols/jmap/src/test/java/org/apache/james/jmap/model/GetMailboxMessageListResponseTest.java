@@ -75,7 +75,8 @@ public class GetMailboxMessageListResponseTest {
                 .build();
         List<String> sort = ImmutableList.of("date desc");
         List<MessageId> messageIds = ImmutableList.of(TestMessageId.of(3), TestMessageId.of(4));
-        GetMessageListResponse expectedGetMessageListResponse = new GetMessageListResponse(null, filterCondition, sort, false, null, false, 0, 0, ImmutableList.of(), messageIds);
+        GetMessageListResponse expectedGetMessageListResponse = new GetMessageListResponse(null, filterCondition, sort, false, null, false,
+            Number.ZERO, Number.ZERO, ImmutableList.of(), messageIds);
 
         GetMessageListResponse getMessageListResponse = GetMessageListResponse.builder()
             .filter(filterCondition)

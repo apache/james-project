@@ -23,6 +23,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.jmap.methods.JmapResponseWriterImpl;
+import org.apache.james.jmap.model.Number;
 import org.apache.james.mailbox.model.MailboxId;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
@@ -57,10 +58,10 @@ public class Mailbox {
         private boolean mayCreateChild;
         private boolean mayRename;
         private boolean mayDelete;
-        private Optional<Long> totalMessages;
-        private Optional<Long> unreadMessages;
-        private long totalThreads;
-        private long unreadThreads;
+        private Optional<Number> totalMessages;
+        private Optional<Number> unreadMessages;
+        private Optional<Number> totalThreads;
+        private Optional<Number> unreadThreads;
         private Optional<Rights> sharedWith;
         private Optional<MailboxNamespace> namespace;
 
@@ -70,6 +71,8 @@ public class Mailbox {
             namespace = Optional.empty();
             totalMessages = Optional.empty();
             unreadMessages = Optional.empty();
+            totalThreads = Optional.empty();
+            unreadThreads = Optional.empty();
             role = Optional.empty();
         }
 
@@ -136,22 +139,22 @@ public class Mailbox {
         }
 
         public Builder totalMessages(long totalMessages) {
-            this.totalMessages = Optional.of(totalMessages);
+            this.totalMessages = Optional.of(Number.fromOutboundLong(totalMessages));
             return this;
         }
 
         public Builder unreadMessages(long unreadMessages) {
-            this.unreadMessages = Optional.of(unreadMessages);
+            this.unreadMessages = Optional.of(Number.fromOutboundLong(unreadMessages));
             return this;
         }
 
         public Builder totalThreads(long totalThreads) {
-            this.totalThreads = totalThreads;
+            this.totalThreads = Optional.of(Number.fromOutboundLong(totalThreads));
             return this;
         }
 
         public Builder unreadThreads(long unreadThreads) {
-            this.unreadThreads = unreadThreads;
+            this.unreadThreads = Optional.of(Number.fromOutboundLong(unreadThreads));
             return this;
         }
 
@@ -170,12 +173,7 @@ public class Mailbox {
             Preconditions.checkState(id != null, "'id' is mandatory");
 
             return new Mailbox(id, name, parentId, role, sortOrder, mustBeOnlyMailbox, mayReadItems, mayAddItems, mayRemoveItems, mayCreateChild, mayRename, mayDelete,
-                    negativeToZero(totalMessages), negativeToZero(unreadMessages), totalThreads, unreadThreads, sharedWith.orElse(Rights.EMPTY), namespace.orElse(MailboxNamespace.personal()));
-        }
-
-        private long negativeToZero(Optional<Long> number) {
-            return number.filter(value -> value >= 0)
-                .orElse(0L);
+                    totalMessages.orElse(Number.ZERO), unreadMessages.orElse(Number.ZERO), totalThreads.orElse(Number.ZERO), unreadThreads.orElse(Number.ZERO), sharedWith.orElse(Rights.EMPTY), namespace.orElse(MailboxNamespace.personal()));
         }
     }
 
@@ -191,16 +189,16 @@ public class Mailbox {
     private final boolean mayCreateChild;
     private final boolean mayRename;
     private final boolean mayDelete;
-    private final long totalMessages;
-    private final long unreadMessages;
-    private final long totalThreads;
-    private final long unreadThreads;
+    private final Number totalMessages;
+    private final Number unreadMessages;
+    private final Number totalThreads;
+    private final Number unreadThreads;
     private final Rights sharedWith;
     private final MailboxNamespace namespace;
 
     @VisibleForTesting Mailbox(MailboxId id, String name, Optional<MailboxId> parentId, Optional<Role> role, SortOrder sortOrder, boolean mustBeOnlyMailbox,
                                boolean mayReadItems, boolean mayAddItems, boolean mayRemoveItems, boolean mayCreateChild, boolean mayRename, boolean mayDelete,
-                               long totalMessages, long unreadMessages, long totalThreads, long unreadThreads, Rights sharedWith, MailboxNamespace namespace) {
+                               Number totalMessages, Number unreadMessages, Number totalThreads, Number unreadThreads, Rights sharedWith, MailboxNamespace namespace) {
 
         this.id = id;
         this.name = name;
@@ -270,19 +268,19 @@ public class Mailbox {
         return mayDelete;
     }
 
-    public long getTotalMessages() {
+    public Number getTotalMessages() {
         return totalMessages;
     }
 
-    public long getUnreadMessages() {
+    public Number getUnreadMessages() {
         return unreadMessages;
     }
 
-    public long getTotalThreads() {
+    public Number getTotalThreads() {
         return totalThreads;
     }
 
-    public long getUnreadThreads() {
+    public Number getUnreadThreads() {
         return unreadThreads;
     }
 
