@@ -33,6 +33,7 @@ import org.apache.james.jmap.exceptions.AttachmentsNotFoundException;
 import org.apache.james.jmap.exceptions.InvalidDraftKeywordsException;
 import org.apache.james.jmap.exceptions.InvalidMailboxForCreationException;
 import org.apache.james.jmap.exceptions.MailboxNotOwnedException;
+import org.apache.james.jmap.exceptions.MessageHasNoMailboxException;
 import org.apache.james.jmap.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.methods.ValueWithId.MessageWithId;
 import org.apache.james.jmap.model.CreationMessage;
@@ -111,6 +112,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
     private void handleCreate(CreationMessageEntry create, Builder responseBuilder, MailboxSession mailboxSession) {
         try {
+            assertAtLeastOneMailbox(create);
             assertIsUserOwnerOfMailboxes(create, mailboxSession);
             performCreate(create, responseBuilder, mailboxSession);
         } catch (MailboxSendingNotAllowedException e) {
@@ -145,6 +147,14 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                         .type("invalidProperties")
                         .properties(MessageProperty.mailboxIds)
                         .description("Message creation is only supported in mailboxes with role Draft and Outbox")
+                        .build());
+
+        } catch (MessageHasNoMailboxException e) {
+            responseBuilder.notCreated(create.getCreationId(),
+                    SetError.builder()
+                        .type("invalidProperties")
+                        .properties(MessageProperty.mailboxIds)
+                        .description("Message needs to be in at least one mailbox")
                         .build());
 
         } catch (MailboxInvalidMessageCreationException e) {
@@ -194,6 +204,12 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     private void assertNoOutbox(CreationMessageEntry entry, MailboxSession session) throws MailboxException {
         if (isTargettingAMailboxWithRole(Role.OUTBOX, entry.getValue(), session)) {
             throw new InvalidMailboxForCreationException("Mailbox ids can combine Outbox with other mailbox");
+        }
+    }
+
+    private void assertAtLeastOneMailbox(CreationMessageEntry entry) throws MailboxException {
+        if (entry.getValue().getMailboxIds().isEmpty()) {
+            throw new MessageHasNoMailboxException();
         }
     }
 
