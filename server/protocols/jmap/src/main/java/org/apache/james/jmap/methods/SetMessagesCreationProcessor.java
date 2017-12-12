@@ -65,8 +65,10 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.FunctionChainer;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 
 
 public class SetMessagesCreationProcessor implements SetMessagesProcessor {
@@ -112,8 +114,9 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
     private void handleCreate(CreationMessageEntry create, Builder responseBuilder, MailboxSession mailboxSession) {
         try {
-            assertAtLeastOneMailbox(create);
-            assertIsUserOwnerOfMailboxes(create, mailboxSession);
+            List<MailboxId> mailboxIds = toMailboxIds(create);
+            assertAtLeastOneMailbox(mailboxIds);
+            assertIsUserOwnerOfMailboxes(mailboxIds, mailboxSession);
             performCreate(create, responseBuilder, mailboxSession);
         } catch (MailboxSendingNotAllowedException e) {
             responseBuilder.notCreated(create.getCreationId(), 
@@ -186,7 +189,15 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                         .build());
         }
     }
-    
+
+    private ImmutableList<MailboxId> toMailboxIds(CreationMessageEntry create) {
+        return create.getValue().getMailboxIds()
+            .stream()
+            .distinct()
+            .map(mailboxIdFactory::fromString)
+            .collect(Guavate.toImmutableList());
+    }
+
     private void performCreate(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session) throws MailboxException, InvalidMailboxForCreationException, MessagingException, AttachmentsNotFoundException {
         if (isAppendToMailboxWithRole(Role.OUTBOX, entry.getValue(), session)) {
             sendMailViaOutbox(entry, responseBuilder, session);
@@ -207,8 +218,8 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         }
     }
 
-    private void assertAtLeastOneMailbox(CreationMessageEntry entry) throws MailboxException {
-        if (entry.getValue().getMailboxIds().isEmpty()) {
+    private void assertAtLeastOneMailbox(List<MailboxId> mailboxIds) throws MailboxException {
+        if (mailboxIds.isEmpty()) {
             throw new MessageHasNoMailboxException();
         }
     }
@@ -246,16 +257,15 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         attachmentChecker.assertAttachmentsExist(entry, session);
     }
 
-    @VisibleForTesting void assertIsUserOwnerOfMailboxes(CreationMessageEntry entry, MailboxSession session) throws MailboxNotOwnedException {
-        if (containsMailboxNotOwn(entry.getValue().getMailboxIds(), session)) {
+    @VisibleForTesting void assertIsUserOwnerOfMailboxes(List<MailboxId> mailboxIds, MailboxSession session) throws MailboxNotOwnedException {
+        if (containsMailboxNotOwn(mailboxIds, session)) {
             throw new MailboxNotOwnedException();
         }
     }
 
-    private boolean containsMailboxNotOwn(List<String> mailboxIds, MailboxSession session) {
+    private boolean containsMailboxNotOwn(List<MailboxId> mailboxIds, MailboxSession session) {
         FunctionChainer<MailboxId, MessageManager> findMailbox = Throwing.function(mailboxId -> mailboxManager.getMailbox(mailboxId, session));
         return mailboxIds.stream()
-            .map(mailboxIdFactory::fromString)
             .map(findMailbox.sneakyThrow())
             .map(Throwing.function(MessageManager::getMailboxPath))
             .anyMatch(path -> !path.belongsTo(session));
@@ -263,8 +273,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
     private MessageWithId handleOutboxMessages(CreationMessageEntry entry, MailboxSession session) throws MailboxException, MessagingException {
         assertUserIsSender(session, entry.getValue().getFrom());
-        MessageManager outbox = getMailboxWithRole(session, Role.OUTBOX).orElseThrow(() -> new MailboxNotFoundException(Role.OUTBOX.serialize()));
-        MetaDataWithContent newMessage = messageAppender.appendMessageInMailbox(entry, outbox, session);
+        MetaDataWithContent newMessage = messageAppender.appendMessageInMailbox(entry, toMailboxIds(entry), session);
         Message jmapMessage = messageFactory.fromMetaDataWithContent(newMessage);
         Envelope envelope = Envelope.fromMessage(jmapMessage);
         messageSender.sendMessage(newMessage, envelope, session);
@@ -282,7 +291,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
     private MessageWithId handleDraftMessages(CreationMessageEntry entry, MailboxSession session) throws MailboxException, MessagingException {
         MessageManager draftMailbox = getMailboxWithRole(session, Role.DRAFTS).orElseThrow(() -> new MailboxNotFoundException(Role.DRAFTS.serialize()));
-        MetaDataWithContent newMessage = messageAppender.appendMessageInMailbox(entry, draftMailbox, session);
+        MetaDataWithContent newMessage = messageAppender.appendMessageInMailbox(entry, ImmutableList.of(draftMailbox.getId()), session);
         Message jmapMessage = messageFactory.fromMetaDataWithContent(newMessage);
         return new ValueWithId.MessageWithId(entry.getCreationId(), jmapMessage);
     }
