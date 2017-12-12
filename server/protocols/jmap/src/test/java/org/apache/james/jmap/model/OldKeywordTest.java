@@ -26,6 +26,7 @@ import java.util.Optional;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
+import org.apache.james.mailbox.FlagsBuilder;
 import org.junit.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -241,5 +242,33 @@ public class OldKeywordTest {
             .computeOldKeyword();
 
         assertThat(testee.get().applyToState(new Flags(Flag.SEEN))).isEqualTo(new Flags(Flag.SEEN));
+    }
+
+    @Test
+    public void applyStateShouldPreserveRecentFlag() {
+        Optional<OldKeyword> testee = OldKeyword.builder()
+            .isUnread(Optional.of(false))
+            .isFlagged(Optional.empty())
+            .isAnswered(Optional.empty())
+            .isDraft(Optional.empty())
+            .isForwarded(Optional.empty())
+            .computeOldKeyword();
+
+        assertThat(testee.get().applyToState(new Flags(Flag.RECENT)))
+            .isEqualTo(new FlagsBuilder().add(Flag.RECENT, Flag.SEEN).build());
+    }
+
+    @Test
+    public void applyStateShouldDeletedFlag() {
+        Optional<OldKeyword> testee = OldKeyword.builder()
+            .isUnread(Optional.of(false))
+            .isFlagged(Optional.empty())
+            .isAnswered(Optional.empty())
+            .isDraft(Optional.empty())
+            .isForwarded(Optional.empty())
+            .computeOldKeyword();
+
+        assertThat(testee.get().applyToState(new Flags(Flag.DELETED)))
+            .isEqualTo(new FlagsBuilder().add(Flag.DELETED, Flag.SEEN).build());
     }
 }

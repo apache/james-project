@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.model;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 import javax.mail.Flags;
@@ -159,6 +160,14 @@ public class OldKeyword {
         boolean shouldMessageBeMarkSeen = isUnread().map(b -> !b).orElse(currentFlags.contains(Flags.Flag.SEEN));
         if (shouldMessageBeMarkSeen) {
             newStateFlags.add(Flags.Flag.SEEN);
+        }
+        Arrays.stream(currentFlags.getUserFlags())
+            .forEach(newStateFlags::add);
+        if (currentFlags.contains(Flags.Flag.RECENT)) {
+            newStateFlags.add(Flags.Flag.RECENT);
+        }
+        if (currentFlags.contains(Flags.Flag.DELETED)) {
+            newStateFlags.add(Flags.Flag.DELETED);
         }
         return newStateFlags;
     }
