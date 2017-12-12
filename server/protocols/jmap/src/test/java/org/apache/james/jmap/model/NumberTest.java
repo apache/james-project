@@ -90,4 +90,11 @@ public class NumberTest {
         assertThat(number.ensureLessThan(11))
             .isEqualTo(number);
     }
+
+    @Test
+    public void fromIntShouldThrowWhenOver2Pow31Value() throws Exception {
+        assertThatThrownBy(() ->
+            Number.fromInt(Integer.MAX_VALUE + 1))
+            .isInstanceOf(IllegalStateException.class);
+    }
 }

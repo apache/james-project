@@ -46,8 +46,8 @@ public class FilterCondition implements Filter {
         private Optional<List<String>> notInMailboxes;
         private ZonedDateTime before;
         private ZonedDateTime after;
-        private Integer minSize;
-        private Integer maxSize;
+        private Number minSize;
+        private Number maxSize;
         private Boolean isFlagged;
         private Boolean isUnread;
         private Boolean isAnswered;
@@ -118,12 +118,12 @@ public class FilterCondition implements Filter {
         }
 
         public Builder minSize(int minSize) {
-            this.minSize = minSize;
+            this.minSize = Number.fromInt(minSize);
             return this;
         }
 
         public Builder maxSize(int maxSize) {
-            this.maxSize = maxSize;
+            this.maxSize = Number.fromInt(maxSize);
             return this;
         }
 
@@ -217,8 +217,8 @@ public class FilterCondition implements Filter {
     private final Optional<List<String>> notInMailboxes;
     private final Optional<ZonedDateTime> before;
     private final Optional<ZonedDateTime> after;
-    private final Optional<Integer> minSize;
-    private final Optional<Integer> maxSize;
+    private final Optional<Number> minSize;
+    private final Optional<Number> maxSize;
     private final Optional<Boolean> isFlagged;
     private final Optional<Boolean> isUnread;
     private final Optional<Boolean> isAnswered;
@@ -237,7 +237,7 @@ public class FilterCondition implements Filter {
     private final Optional<String> hasKeyword;
     private final Optional<String> notKeyword;
 
-    @VisibleForTesting FilterCondition(Optional<List<String>> inMailboxes, Optional<List<String>> notInMailboxes, Optional<ZonedDateTime> before, Optional<ZonedDateTime> after, Optional<Integer> minSize, Optional<Integer> maxSize,
+    @VisibleForTesting FilterCondition(Optional<List<String>> inMailboxes, Optional<List<String>> notInMailboxes, Optional<ZonedDateTime> before, Optional<ZonedDateTime> after, Optional<Number> minSize, Optional<Number> maxSize,
                                        Optional<Boolean> isFlagged, Optional<Boolean> isUnread, Optional<Boolean> isAnswered, Optional<Boolean> isDraft, Optional<Boolean> isForwarded,
                                        Optional<Boolean> hasAttachment,
                                        Optional<String> text, Optional<String> from, Optional<String> to, Optional<String> cc, Optional<String> bcc, Optional<String> subject,
@@ -284,11 +284,11 @@ public class FilterCondition implements Filter {
         return after;
     }
 
-    public Optional<Integer> getMinSize() {
+    public Optional<Number> getMinSize() {
         return minSize;
     }
 
-    public Optional<Integer> getMaxSize() {
+    public Optional<Number> getMaxSize() {
         return maxSize;
     }
 

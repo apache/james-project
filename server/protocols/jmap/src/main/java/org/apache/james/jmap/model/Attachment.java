@@ -41,11 +41,11 @@ public class Attachment {
         private BlobId blobId;
         private String type;
         private String name;
-        private Long size;
+        private Number size;
         private String cid;
         private boolean isInline;
-        private Long width;
-        private Long height;
+        private Number width;
+        private Number height;
 
         public Builder blobId(BlobId blobId) {
             this.blobId = blobId;
@@ -69,7 +69,7 @@ public class Attachment {
         }
 
         public Builder size(long size) {
-            this.size = size;
+            this.size = Number.fromLong(size);
             return this;
         }
 
@@ -90,12 +90,12 @@ public class Attachment {
         }
 
         public Builder width(long width) {
-            this.width = width;
+            this.width = Number.fromLong(width);
             return this;
         }
 
         public Builder height(long height) {
-            this.height = height;
+            this.height = Number.fromLong(height);
             return this;
         }
 
@@ -110,13 +110,13 @@ public class Attachment {
     private final BlobId blobId;
     private final String type;
     private final Optional<String> name;
-    private final long size;
+    private final Number size;
     private final Optional<String> cid;
     private final boolean isInline;
-    private final Optional<Long> width;
-    private final Optional<Long> height;
+    private final Optional<Number> width;
+    private final Optional<Number> height;
 
-    @VisibleForTesting Attachment(BlobId blobId, String type, Optional<String> name, long size, Optional<String> cid, boolean isInline, Optional<Long> width, Optional<Long> height) {
+    @VisibleForTesting Attachment(BlobId blobId, String type, Optional<String> name, Number size, Optional<String> cid, boolean isInline, Optional<Number> width, Optional<Number> height) {
         this.blobId = blobId;
         this.type = type;
         this.name = name;
@@ -139,7 +139,7 @@ public class Attachment {
         return name;
     }
 
-    public long getSize() {
+    public Number getSize() {
         return size;
     }
 
@@ -155,11 +155,11 @@ public class Attachment {
         return isInline && cid.isPresent();
     }
 
-    public Optional<Long> getWidth() {
+    public Optional<Number> getWidth() {
         return width;
     }
 
-    public Optional<Long> getHeight() {
+    public Optional<Number> getHeight() {
         return height;
     }
 

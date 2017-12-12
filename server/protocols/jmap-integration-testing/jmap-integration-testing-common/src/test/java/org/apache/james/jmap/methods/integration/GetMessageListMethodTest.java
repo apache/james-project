@@ -1924,6 +1924,6 @@ public abstract class GetMessageListMethodTest {
             .statusCode(200)
             .body(NAME, equalTo("error"))
             .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
-            .body(ARGUMENTS + ".description", containsString("value should be positive and less than 2^53 or empty"));
+            .body(ARGUMENTS + ".description", containsString("value should be positive and less than 2^53"));
     }
 }
