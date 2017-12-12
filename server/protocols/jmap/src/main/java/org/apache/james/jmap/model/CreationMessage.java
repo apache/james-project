@@ -333,6 +333,13 @@ public class CreationMessage {
         return validate().isEmpty();
     }
 
+    public boolean isDraft() {
+        return oldKeyword
+            .map(OldKeyword::isDraft)
+            .orElse(keywords.map(keywords -> keywords.contains(Keyword.DRAFT)))
+            .orElse(false);
+    }
+
     public Optional<Keywords> getKeywords() {
         return keywords;
     }

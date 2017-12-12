@@ -159,4 +159,69 @@ public class CreationMessageTest {
 
         assertThat(message.getMailboxIds()).containsExactly(mailboxId);
     }
+
+    @Test
+    public void isDraftShouldBeFalseWhenNoKeywordsSpecified() {
+        String mailboxId = "123";
+        CreationMessage message = CreationMessage.builder()
+            .mailboxId(mailboxId)
+            .build();
+
+        assertThat(message.isDraft()).isFalse();
+    }
+
+    @Test
+    public void isDraftShouldBeTrueWhenOldKeywordDraft() {
+        String mailboxId = "123";
+        CreationMessage message = CreationMessage.builder()
+            .mailboxId(mailboxId)
+            .isDraft(Optional.of(true))
+            .build();
+
+        assertThat(message.isDraft()).isTrue();
+    }
+
+    @Test
+    public void isDraftShouldBeFalseWhenOldKeywordNonDraft() {
+        String mailboxId = "123";
+        CreationMessage message = CreationMessage.builder()
+            .mailboxId(mailboxId)
+            .isAnswered(Optional.of(true))
+            .build();
+
+        assertThat(message.isDraft()).isFalse();
+    }
+
+    @Test
+    public void isDraftShouldBeFalseWhenEmptyKeywords() {
+        String mailboxId = "123";
+        CreationMessage message = CreationMessage.builder()
+            .keywords(ImmutableMap.of())
+            .mailboxId(mailboxId)
+            .build();
+
+        assertThat(message.isDraft()).isFalse();
+    }
+
+    @Test
+    public void isDraftShouldBeFalseWhenKeywordsDoesNotContainsDraft() {
+        String mailboxId = "123";
+        CreationMessage message = CreationMessage.builder()
+            .keywords(ImmutableMap.of(Keyword.ANSWERED.getFlagName(), true))
+            .mailboxId(mailboxId)
+            .build();
+
+        assertThat(message.isDraft()).isFalse();
+    }
+
+    @Test
+    public void isDraftShouldBeTrueWhenKeywordsContainsDraft() {
+        String mailboxId = "123";
+        CreationMessage message = CreationMessage.builder()
+            .keywords(ImmutableMap.of(Keyword.DRAFT.getFlagName(), true))
+            .mailboxId(mailboxId)
+            .build();
+
+        assertThat(message.isDraft()).isTrue();
+    }
 }
