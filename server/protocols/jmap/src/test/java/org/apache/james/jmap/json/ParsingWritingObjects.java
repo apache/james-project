@@ -77,7 +77,7 @@ public interface ParsingWritingObjects {
             .threadId(Common.THREAD_ID)
             .mailboxIds(Common.MAILBOX_IDS)
             .inReplyToMessageId(Common.IN_REPLY_TO_MESSAGE_ID)
-            .keywords(Keywords.factory().fromSet(Common.KEYWORDS, Optional.empty()))
+            .keywords(Keywords.factory().fromSet(Common.KEYWORDS))
             .headers(Common.HEADERS)
             .from(Common.FROM)
             .to(Common.TO)

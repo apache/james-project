@@ -22,7 +22,6 @@ package org.apache.james.jmap.model;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
-import java.util.Optional;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -77,7 +76,7 @@ public class KeywordsTest {
     @Test
     public void fromSetShouldReturnKeywordsFromSetOfKeywords() throws Exception {
         Keywords keywords = Keywords.factory()
-            .fromSet(ImmutableSet.of(Keyword.ANSWERED), Optional.empty());
+            .fromSet(ImmutableSet.of(Keyword.ANSWERED));
 
         assertThat(keywords.getKeywords())
             .containsOnly(Keyword.ANSWERED);
@@ -86,7 +85,7 @@ public class KeywordsTest {
     @Test
     public void asFlagsShouldBuildFlagsFromKeywords() throws Exception {
         assertThat(Keywords.factory()
-                .fromSet(ImmutableSet.of(Keyword.ANSWERED), Optional.empty())
+                .fromSet(ImmutableSet.of(Keyword.ANSWERED))
                 .asFlags())
             .isEqualTo(new Flags(Flags.Flag.ANSWERED));
     }
@@ -102,7 +101,7 @@ public class KeywordsTest {
             .build();
 
         assertThat(Keywords.factory()
-                .fromSet(ImmutableSet.of(Keyword.ANSWERED), Optional.empty())
+                .fromSet(ImmutableSet.of(Keyword.ANSWERED))
                 .asFlagsWithRecentAndDeletedFrom(originFlags))
             .isEqualTo(expectedFlags);
     }
@@ -118,7 +117,7 @@ public class KeywordsTest {
             .build();
 
         assertThat(Keywords.factory()
-                .fromSet(ImmutableSet.of(Keyword.ANSWERED), Optional.empty())
+                .fromSet(ImmutableSet.of(Keyword.ANSWERED))
                 .asFlagsWithRecentAndDeletedFrom(originFlags))
             .isEqualTo(expectedFlags);
     }
@@ -126,7 +125,7 @@ public class KeywordsTest {
     @Test
     public void asMapShouldReturnEmptyWhenEmptyMapOfStringAndBoolean() throws Exception {
         assertThat(Keywords.factory()
-                .fromSet(ImmutableSet.of(), Optional.empty())
+                .fromSet(ImmutableSet.of())
                 .asMap())
             .isEmpty();;
     }
@@ -135,7 +134,7 @@ public class KeywordsTest {
     public void asMapShouldReturnMapOfStringAndBoolean() throws Exception {
         Map<String, Boolean> expectedMap = ImmutableMap.of("$Answered", Keyword.FLAG_VALUE);
         assertThat(Keywords.factory()
-                .fromSet(ImmutableSet.of(Keyword.ANSWERED), Optional.empty())
+                .fromSet(ImmutableSet.of(Keyword.ANSWERED))
                 .asMap())
             .isEqualTo(expectedMap);
     }
@@ -146,14 +145,14 @@ public class KeywordsTest {
 
         Keywords.factory()
             .throwOnImapNonExposedKeywords()
-            .fromSet(ImmutableSet.of(Keyword.DRAFT, Keyword.DELETED), Optional.empty());
+            .fromSet(ImmutableSet.of(Keyword.DRAFT, Keyword.DELETED));
     }
 
     @Test
     public void throwWhenUnsupportedKeywordShouldNotThrowWhenHaveDraft() throws Exception {
         Keywords keywords = Keywords.factory()
             .throwOnImapNonExposedKeywords()
-            .fromSet(ImmutableSet.of(Keyword.ANSWERED, Keyword.DRAFT), Optional.empty());
+            .fromSet(ImmutableSet.of(Keyword.ANSWERED, Keyword.DRAFT));
 
         assertThat(keywords.getKeywords())
             .containsOnly(Keyword.ANSWERED, Keyword.DRAFT);
@@ -163,7 +162,7 @@ public class KeywordsTest {
     public void filterUnsupportedShouldFilter() throws Exception {
         Keywords keywords = Keywords.factory()
             .filterImapNonExposedKeywords()
-            .fromSet(ImmutableSet.of(Keyword.ANSWERED, Keyword.DELETED, Keyword.RECENT, Keyword.DRAFT), Optional.empty());
+            .fromSet(ImmutableSet.of(Keyword.ANSWERED, Keyword.DELETED, Keyword.RECENT, Keyword.DRAFT));
 
         assertThat(keywords.getKeywords())
             .containsOnly(Keyword.ANSWERED, Keyword.DRAFT);
@@ -172,7 +171,7 @@ public class KeywordsTest {
     @Test
     public void containsShouldReturnTrueWhenKeywordsContainKeyword() {
         Keywords keywords = Keywords.factory()
-            .fromSet(ImmutableSet.of(Keyword.SEEN), Optional.empty());
+            .fromSet(ImmutableSet.of(Keyword.SEEN));
 
         assertThat(keywords.contains(Keyword.SEEN)).isTrue();
     }
@@ -180,7 +179,7 @@ public class KeywordsTest {
     @Test
     public void containsShouldReturnFalseWhenKeywordsDoNotContainKeyword() {
         Keywords keywords = Keywords.factory()
-            .fromSet(ImmutableSet.of(), Optional.empty());
+            .fromSet(ImmutableSet.of());
 
         assertThat(keywords.contains(Keyword.SEEN)).isFalse();
     }

@@ -43,7 +43,7 @@ import com.google.common.collect.ImmutableSet;
 
 public class Keywords {
 
-    public static final Keywords DEFAULT_VALUE = factory().fromSet(ImmutableSet.of(), Optional.empty());
+    public static final Keywords DEFAULT_VALUE = factory().fromSet(ImmutableSet.of());
     private static final Logger LOGGER = LoggerFactory.getLogger(Keywords.class);
 
     public interface KeywordsValidator {
@@ -78,27 +78,24 @@ public class Keywords {
             return this;
         }
 
-        public Keywords fromSet(Set<Keyword> setKeywords, Optional<OldKeyword> oldKeyword) {
+        public Keywords fromSet(Set<Keyword> setKeywords) {
             validator.orElse(keywords -> {})
                 .validate(setKeywords);
 
             return new Keywords(setKeywords.stream()
                     .filter(filter.orElse(keyword -> true))
-                    .collect(Guavate.toImmutableSet()),
-                oldKeyword);
+                    .collect(Guavate.toImmutableSet()));
         }
 
         public Keywords from(Keyword... keywords) {
             return fromSet(Arrays.stream(keywords)
-                    .collect(Guavate.toImmutableSet()),
-                Optional.empty());
+                    .collect(Guavate.toImmutableSet()));
         }
 
         public Keywords fromList(List<String> keywords) {
             return fromSet(keywords.stream()
                     .map(Keyword::new)
-                    .collect(Guavate.toImmutableSet()),
-                Optional.empty());
+                    .collect(Guavate.toImmutableSet()));
         }
 
         @VisibleForTesting
@@ -111,7 +108,7 @@ public class Keywords {
                 .map(Keyword::new)
                 .collect(Guavate.toImmutableSet());
 
-            return fromSet(setKeywords, Optional.empty());
+            return fromSet(setKeywords);
         }
 
         public Keywords fromFlags(Flags flags) {
@@ -120,8 +117,7 @@ public class Keywords {
                             .flatMap(this::asKeyword),
                         Stream.of(flags.getSystemFlags())
                             .map(Keyword::fromFlag))
-                    .collect(Guavate.toImmutableSet()),
-                Optional.empty());
+                    .collect(Guavate.toImmutableSet()));
         }
 
         private Stream<Keyword> asKeyword(String flagName) {
@@ -139,11 +135,9 @@ public class Keywords {
     }
 
     private final ImmutableSet<Keyword> keywords;
-    private final Optional<OldKeyword> oldKeyword;
 
-    private Keywords(ImmutableSet<Keyword> keywords, Optional<OldKeyword> oldKeyword) {
+    private Keywords(ImmutableSet<Keyword> keywords) {
         this.keywords = keywords;
-        this.oldKeyword = oldKeyword;
     }
 
     public Flags asFlags() {
@@ -181,22 +175,20 @@ public class Keywords {
     public final boolean equals(Object other) {
         if (other instanceof Keywords) {
             Keywords otherKeyword = (Keywords) other;
-            return Objects.equal(keywords, otherKeyword.keywords)
-                && Objects.equal(oldKeyword, otherKeyword.oldKeyword);
+            return Objects.equal(keywords, otherKeyword.keywords);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hashCode(keywords, oldKeyword);
+        return Objects.hashCode(keywords);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
             .add("keywords", keywords)
-            .add("oldKeyword", oldKeyword)
             .toString();
     }
 
