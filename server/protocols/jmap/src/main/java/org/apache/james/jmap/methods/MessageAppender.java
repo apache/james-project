@@ -107,9 +107,11 @@ public class MessageAppender {
 
     private Flags getFlags(CreationMessage message) {
         return message.getOldKeyword()
-                .map(OldKeyword::asFlags)
-                .orElseGet(() -> keywordsOrDefault(message)
-                                    .asFlags());
+            .map(OldKeyword::asKeywords)
+            .map(Optional::of)
+            .orElse(message.getKeywords())
+            .orElse(Keywords.DEFAULT_VALUE)
+            .asFlags();
     }
 
     private Keywords keywordsOrDefault(CreationMessage message) {

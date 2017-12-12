@@ -45,6 +45,7 @@ import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
 import org.apache.james.jmap.model.MessageProperties;
 import org.apache.james.jmap.model.MessageProperties.MessageProperty;
+import org.apache.james.jmap.model.OldKeyword;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMessagesError;
 import org.apache.james.jmap.model.SetMessagesRequest;
@@ -238,13 +239,10 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
 
     private Boolean isDraft(CreationMessage creationMessage) {
-        if (creationMessage.getOldKeyword().isPresent()) {
-            return creationMessage.getOldKeyword().get()
-                        .isDraft()
-                        .orElse(false);
-        }
-        return creationMessage
-            .getKeywords()
+        return creationMessage.getOldKeyword()
+            .map(OldKeyword::asKeywords)
+            .map(Optional::of)
+            .orElse(creationMessage.getKeywords())
             .map(keywords -> keywords.contains(Keyword.DRAFT))
             .orElse(false);
     }

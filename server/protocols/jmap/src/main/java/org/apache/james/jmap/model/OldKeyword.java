@@ -163,28 +163,6 @@ public class OldKeyword {
         return newStateFlags;
     }
 
-    public Flags asFlags() {
-        Flags newStateFlags = new Flags();
-
-        if (isFlagged().orElse(false)) {
-            newStateFlags.add(Flags.Flag.FLAGGED);
-        }
-        if (isAnswered().orElse(false)) {
-            newStateFlags.add(Flags.Flag.ANSWERED);
-        }
-        if (isDraft().orElse(false)) {
-            newStateFlags.add(Flags.Flag.DRAFT);
-        }
-        if (isForwarded().orElse(false)) {
-            newStateFlags.add(new Flags("$Forwarded"));
-        }
-        boolean shouldMessageBeMarkSeen = isUnread().map(b -> !b).orElse(false);
-        if (shouldMessageBeMarkSeen) {
-            newStateFlags.add(Flags.Flag.SEEN);
-        }
-        return newStateFlags;
-    }
-
     public Keywords asKeywords() {
         return Keywords.factory()
             .fromSet(StreamUtils
