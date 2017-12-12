@@ -258,22 +258,22 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     }
 
     @VisibleForTesting void assertIsUserOwnerOfMailboxes(List<MailboxId> mailboxIds, MailboxSession session) throws MailboxNotOwnedException {
-        if (containsMailboxNotOwn(mailboxIds, session)) {
+        if (!allMailboxOwned(mailboxIds, session)) {
             throw new MailboxNotOwnedException();
         }
     }
 
-    private boolean containsMailboxNotOwn(List<MailboxId> mailboxIds, MailboxSession session) {
+    private boolean allMailboxOwned(List<MailboxId> mailboxIds, MailboxSession session) {
         FunctionChainer<MailboxId, MessageManager> findMailbox = Throwing.function(mailboxId -> mailboxManager.getMailbox(mailboxId, session));
         return mailboxIds.stream()
             .map(findMailbox.sneakyThrow())
             .map(Throwing.function(MessageManager::getMailboxPath))
-            .anyMatch(path -> !path.belongsTo(session));
+            .allMatch(path -> path.belongsTo(session));
     }
 
     private MessageWithId handleOutboxMessages(CreationMessageEntry entry, MailboxSession session) throws MailboxException, MessagingException {
         assertUserIsSender(session, entry.getValue().getFrom());
-        MetaDataWithContent newMessage = messageAppender.appendMessageInMailbox(entry, toMailboxIds(entry), session);
+        MetaDataWithContent newMessage = messageAppender.appendMessageInMailboxes(entry, toMailboxIds(entry), session);
         Message jmapMessage = messageFactory.fromMetaDataWithContent(newMessage);
         Envelope envelope = Envelope.fromMessage(jmapMessage);
         messageSender.sendMessage(newMessage, envelope, session);
@@ -290,8 +290,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     }
 
     private MessageWithId handleDraftMessages(CreationMessageEntry entry, MailboxSession session) throws MailboxException, MessagingException {
-        MessageManager draftMailbox = getMailboxWithRole(session, Role.DRAFTS).orElseThrow(() -> new MailboxNotFoundException(Role.DRAFTS.serialize()));
-        MetaDataWithContent newMessage = messageAppender.appendMessageInMailbox(entry, ImmutableList.of(draftMailbox.getId()), session);
+        MetaDataWithContent newMessage = messageAppender.appendMessageInMailboxes(entry, toMailboxIds(entry), session);
         Message jmapMessage = messageFactory.fromMetaDataWithContent(newMessage);
         return new ValueWithId.MessageWithId(entry.getCreationId(), jmapMessage);
     }

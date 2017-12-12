@@ -22,6 +22,7 @@ package org.apache.james.jmap.methods;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -289,6 +290,7 @@ public class SetMessagesCreationProcessorTest {
                     .build();
         when(mockedMailboxManager.getMailbox(any(MailboxId.class), any()))
             .thenReturn(outbox);
+        when(mockedMailboxIdFactory.fromString(anyString())).thenReturn(OUTBOX_ID);
 
         sut.process(notInOutboxCreationRequest, session);
 
@@ -306,6 +308,7 @@ public class SetMessagesCreationProcessorTest {
                 .build();
         when(mockedMailboxManager.getMailbox(any(MailboxId.class), any()))
             .thenReturn(drafts);
+        when(mockedMailboxIdFactory.fromString(anyString())).thenReturn(DRAFTS_ID);
         
         sut.process(createMessageInDrafts, session);
 
