@@ -276,9 +276,9 @@ Feature: GetMessages method
     And the list of attachments of the message contains 1 attachments
     And the first attachment is:
       |key      | value                                     |
-      |type     |"application/pdf"                               |
+      |type     |"application/pdf"                          |
       |cid      |null                                       |
-      |isInline |true                                      |
+      |isInline |false                                      |
 
   Scenario: Retrieving message with inline attachment and blank CID should convert that inlined attachment to normal attachment
     Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with inline attachment and blank CID
@@ -291,7 +291,7 @@ Feature: GetMessages method
         |key      | value            |
         |type     |"application/pdf" |
         |cid      |null              |
-        |isInline |true              |
+        |isInline |false             |
 
   Scenario: Preview should be computed even when HTML body contains many tags without content
     Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with HTML body with many empty tags
@@ -407,4 +407,4 @@ Feature: GetMessages method
       |type     |"application/octet-stream"    |
       |cid      |null                          |
       |name     |"encrypted.asc"               |
-      |isInline |true                          |
+      |isInline |false                         |

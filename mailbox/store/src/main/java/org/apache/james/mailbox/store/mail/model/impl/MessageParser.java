@@ -130,7 +130,7 @@ public class MessageParser {
         Optional<String> contentType = contentType(contentTypeField);
         Optional<String> name = name(contentTypeField, contentDispositionField);
         Optional<Cid> cid = cid(readHeader(entity, CONTENT_ID, ContentIdField.class));
-        boolean isInline = isInline(readHeader(entity, CONTENT_DISPOSITION, ContentDispositionField.class));
+        boolean isInline = isInline(readHeader(entity, CONTENT_DISPOSITION, ContentDispositionField.class)) && cid.isPresent();
 
         return MessageAttachment.builder()
                 .attachment(Attachment.builder()
