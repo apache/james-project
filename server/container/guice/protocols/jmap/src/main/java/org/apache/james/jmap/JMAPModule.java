@@ -38,9 +38,9 @@ import org.apache.james.jmap.utils.SystemMailboxesProvider;
 import org.apache.james.jmap.utils.SystemMailboxesProviderImpl;
 import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.modules.server.CamelMailetContainerModule;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
@@ -91,13 +91,14 @@ public class JMAPModule extends AbstractModule {
 
         bind(HtmlTextExtractor.class).to(JsoupHtmlTextExtractor.class);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(RequiredCapabilitiesPrecondition.class);
-        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(JmapListenerRegistrationPerformer.class);
 
         Multibinder<CamelMailetContainerModule.TransportProcessorCheck> transportProcessorChecks = Multibinder.newSetBinder(binder(), CamelMailetContainerModule.TransportProcessorCheck.class);
         transportProcessorChecks.addBinding().to(VacationMailetCheck.class);
         
         bind(SystemMailboxesProvider.class).to(SystemMailboxesProviderImpl.class);
         bind(MailQueueItemDecoratorFactory.class).to(PostDequeueDecoratorFactory.class).in(Scopes.SINGLETON);
+
+        Multibinder.newSetBinder(binder(), MailboxListener.class).addBinding().to(PropagateLookupRightListener.class);
     }
 
     @Provides
@@ -128,33 +129,6 @@ public class JMAPModule extends AbstractModule {
 
     private Optional<String> loadPublicKey(FileSystem fileSystem, Optional<String> jwtPublickeyPemUrl) {
         return jwtPublickeyPemUrl.map(Throwing.function(url -> FileUtils.readFileToString(fileSystem.getFile(url), Charsets.US_ASCII)));
-    }
-
-    @Singleton
-    public static class JmapListenerRegistrationPerformer implements ConfigurationPerformer {
-        private final MailboxManager mailboxManager;
-        private final PropagateLookupRightListener propagateLookupRightListener;
-
-        @Inject
-        public JmapListenerRegistrationPerformer(MailboxManager mailboxManager, PropagateLookupRightListener propagateLookupRightListener) {
-            this.mailboxManager = mailboxManager;
-            this.propagateLookupRightListener = propagateLookupRightListener;
-        }
-
-        @Override
-        public void initModule() {
-            try {
-                mailboxManager.addGlobalListener(propagateLookupRightListener,
-                                                 mailboxManager.createSystemSession("storeMailboxManager"));
-            } catch (MailboxException e) {
-                Throwables.propagate(e);
-            }
-        }
-
-        @Override
-        public List<Class<? extends Configurable>> forClasses() {
-            return ImmutableList.of();
-        }
     }
 
     @Singleton
