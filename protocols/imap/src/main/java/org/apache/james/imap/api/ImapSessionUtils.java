@@ -35,7 +35,7 @@ public class ImapSessionUtils {
     public static String getUserName(ImapSession imapSession) {
         final String result;
         final MailboxSession mailboxSession = getMailboxSession(imapSession);
-        if (imapSession == null) {
+        if (mailboxSession == null) {
             result = null;
         } else {
             result = mailboxSession.getUser().getUserName();
