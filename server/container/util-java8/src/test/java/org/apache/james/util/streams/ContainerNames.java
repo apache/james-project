@@ -25,4 +25,5 @@ public interface ContainerNames {
     String ELASTICSEARCH = "elasticsearch:2.2.2";
     String NGINX = "nginx:1.7.1";
     String TIKA = "logicalspark/docker-tikaserver:1.15rc2";
+    String SPAMASSASSIN = "dinkel/spamassassin:3.4.0";
 }
