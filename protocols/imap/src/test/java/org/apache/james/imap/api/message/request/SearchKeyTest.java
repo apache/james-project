@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.api.message.request;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -28,5 +30,12 @@ public class SearchKeyTest {
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(SearchKey.class)
             .verify();
+    }
+
+    @Test
+    public void modSeqSearchKeyShouldBeOfTypeModSeq() {
+        SearchKey searchKey = SearchKey.buildModSeq(36);
+
+        assertThat(searchKey.getType()).isEqualTo(SearchKey.TYPE_MODSEQ);
     }
 }

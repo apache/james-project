@@ -330,7 +330,7 @@ public final class SearchKey {
     }
 
     public static SearchKey buildModSeq(long modSeq) {
-        return new SearchKey(TYPE_ANSWERED, null, null, 0, null, null, null, null, -1, modSeq);
+        return new SearchKey(TYPE_MODSEQ, null, null, 0, null, null, null, null, -1, modSeq);
     }
     private final int type;
 
