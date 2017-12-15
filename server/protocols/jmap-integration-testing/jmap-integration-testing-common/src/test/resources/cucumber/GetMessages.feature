@@ -276,9 +276,9 @@ Feature: GetMessages method
     And the list of attachments of the message contains 1 attachments
     And the first attachment is:
       |key      | value                                     |
-      |type     |"application/pdf"                               |
+      |type     |"application/pdf"                          |
       |cid      |null                                       |
-      |isInline |true                                      |
+      |isInline |false                                      |
 
   Scenario: Retrieving message with inline attachment and blank CID should convert that inlined attachment to normal attachment
     Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with inline attachment and blank CID
@@ -291,7 +291,7 @@ Feature: GetMessages method
         |key      | value            |
         |type     |"application/pdf" |
         |cid      |null              |
-        |isInline |true              |
+        |isInline |false             |
 
   Scenario: Preview should be computed even when HTML body contains many tags without content
     Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with HTML body with many empty tags
@@ -407,4 +407,18 @@ Feature: GetMessages method
       |type     |"application/octet-stream"    |
       |cid      |null                          |
       |name     |"encrypted.asc"               |
-      |isInline |true                          |
+      |isInline |false                         |
+
+  Scenario: Retrieving message should be possible when message with inlined attachment but without content ID
+    Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with inlined image without content ID
+    When "alice@domain.tld" ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the hasAttachment of the message is "true"
+    And the list of attachments of the message contains 1 attachments
+    And the first attachment is:
+    |key      | value                        |
+    |type     |"image/jpeg"                  |
+    |cid      |null                          |
+    |name     |"IMG_6112.JPG"                |
+    |isInline |false                         |
