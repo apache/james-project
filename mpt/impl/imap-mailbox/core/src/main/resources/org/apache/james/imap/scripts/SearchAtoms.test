@@ -1916,5 +1916,12 @@ S: A148 OK SEARCH completed\.
 C: A149 SEARCH UNSEEN
 S: \* SEARCH 3 4 8 9 13 14 18 19
 S: A149 OK SEARCH completed\.
-C: A150 DELETE testmailbox
-S: A150 OK DELETE completed\.
+
+C: A150 SEARCH MODSEQ 150000
+S: \* OK \[HIGHESTMODSEQ .*\] Highest
+S: \* SEARCH
+S: A150 OK SEARCH completed\.
+# We expect no modseq to be over 1500, hence we expect an empty result.
+
+C: A151 DELETE testmailbox
+S: A151 OK DELETE completed\.
