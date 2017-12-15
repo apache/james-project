@@ -19,8 +19,12 @@
 
 package org.apache.james.imap.api;
 
+import java.util.Optional;
+
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.mailbox.MailboxSession;
+
+import com.google.common.base.Preconditions;
 
 public class ImapSessionUtils {
 
@@ -33,13 +37,9 @@ public class ImapSessionUtils {
     }
 
     public static String getUserName(ImapSession imapSession) {
-        final String result;
-        final MailboxSession mailboxSession = getMailboxSession(imapSession);
-        if (mailboxSession == null) {
-            result = null;
-        } else {
-            result = mailboxSession.getUser().getUserName();
-        }
-        return result;
+        Preconditions.checkNotNull(imapSession);
+        return Optional.ofNullable(getMailboxSession(imapSession))
+            .map(mailboxSession -> mailboxSession.getUser().getUserName())
+            .orElse(null);
     }
 }
