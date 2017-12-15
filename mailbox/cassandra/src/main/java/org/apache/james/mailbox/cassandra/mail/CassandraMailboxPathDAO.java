@@ -23,6 +23,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static org.apache.james.mailbox.cassandra.GhostMailbox.TYPE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxPathTable.FIELDS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxPathTable.MAILBOX_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxPathTable.MAILBOX_NAME;
@@ -38,6 +39,7 @@ import javax.inject.Inject;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.mailbox.cassandra.GhostMailbox;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.utils.MailboxBaseTupleUtil;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
@@ -144,16 +146,50 @@ public class CassandraMailboxPathDAO {
                 .setUDTValue(NAMESPACE_AND_USER, mailboxBaseTupleUtil.createMailboxBaseUDT(mailboxPath.getNamespace(), mailboxPath.getUser()))
                 .setString(MAILBOX_NAME, mailboxPath.getName()))
             .thenApply(rowOptional ->
-                rowOptional.map(row -> new CassandraIdAndPath(
-                    CassandraId.of(row.getUUID(MAILBOX_ID)),
-                    mailboxPath)));
+                rowOptional.map(this::fromRowToCassandraIdAndPath))
+            .thenApply(value -> logGhostMailbox(mailboxPath, value));
     }
 
     public CompletableFuture<Stream<CassandraIdAndPath>> listUserMailboxes(String namespace, String user) {
         return cassandraAsyncExecutor.execute(
             selectAll.bind()
                 .setUDTValue(NAMESPACE_AND_USER, mailboxBaseTupleUtil.createMailboxBaseUDT(namespace, user)))
-            .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet).map(this::fromRowToCassandraIdAndPath));
+            .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
+                .map(this::fromRowToCassandraIdAndPath)
+                .peek(this::logReadSuccess));
+    }
+
+    /**
+     * See https://issues.apache.org/jira/browse/MAILBOX-322 to read about the Ghost mailbox bug.
+     *
+     * A missed read on an existing mailbox is the cause of the ghost mailbox bug. Here we log missing reads. Successful
+     * reads and write operations are also added in order to allow audit in order to know if the mailbox existed.
+     */
+    public Optional<CassandraIdAndPath> logGhostMailbox(MailboxPath mailboxPath, Optional<CassandraIdAndPath> value) {
+        if (value.isPresent()) {
+            CassandraIdAndPath cassandraIdAndPath = value.get();
+            logReadSuccess(cassandraIdAndPath);
+        } else {
+            GhostMailbox.logger()
+                .addField(GhostMailbox.MAILBOX_NAME, mailboxPath)
+                .addField(TYPE, "readMiss")
+                .log(logger -> logger.info("Read mailbox missed"));
+        }
+        return value;
+    }
+
+    /**
+     * See https://issues.apache.org/jira/browse/MAILBOX-322 to read about the Ghost mailbox bug.
+     *
+     * Read success allows to know if a mailbox existed before (mailbox write history might be older than this log introduction
+     * or log history might have been dropped)
+     */
+    private void logReadSuccess(CassandraIdAndPath cassandraIdAndPath) {
+        GhostMailbox.logger()
+            .addField(GhostMailbox.MAILBOX_NAME, cassandraIdAndPath.getMailboxPath())
+            .addField(TYPE, "readSuccess")
+            .addField(GhostMailbox.MAILBOX_ID, cassandraIdAndPath.getCassandraId())
+            .log(logger -> logger.info("Read mailbox succeeded"));
     }
 
     private CassandraIdAndPath fromRowToCassandraIdAndPath(Row row) {
