@@ -22,6 +22,7 @@ package org.apache.james.imap.api.message.request;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.imap.api.message.IdRange;
@@ -455,62 +456,30 @@ public final class SearchKey {
     public long getModSeq() {
         return modSeq;
     }
-    /**
-     * @see java.lang.Object#hashCode()
-     */
-    public int hashCode() {
-        final int PRIME = 31;
-        int result = 1;
-        result = PRIME * result + ((date == null) ? 0 : date.hashCode());
-        result = PRIME * result + ((name == null) ? 0 : name.hashCode());
-        if (sequence != null) {
-            result = PRIME * result + sequence.length;
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof SearchKey) {
+            SearchKey searchKey = (SearchKey) o;
+
+            return Objects.equals(this.type, searchKey.type)
+                && Objects.equals(this.size, searchKey.size)
+                && Objects.equals(this.seconds, searchKey.seconds)
+                && Objects.equals(this.modSeq, searchKey.modSeq)
+                && Objects.equals(this.date, searchKey.date)
+                && Objects.equals(this.keys, searchKey.keys)
+                && Objects.equals(this.name, searchKey.name)
+                && Objects.equals(this.value, searchKey.value)
+                && Arrays.equals(this.sequence, searchKey.sequence)
+                && Arrays.equals(this.uids, searchKey.uids);
         }
-        result = PRIME * result + (int) (size ^ (size >>> 32));
-        result = PRIME * result + ((keys == null) ? 0 : keys.hashCode());
-        result = PRIME * result + type;
-        result = PRIME * result + ((value == null) ? 0 : value.hashCode());
-        return result;
+        return false;
     }
 
-    /**
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        final SearchKey other = (SearchKey) obj;
-        if (date == null) {
-            if (other.date != null)
-                return false;
-        } else if (!date.equals(other.date))
-            return false;
-        if (name == null) {
-            if (other.name != null)
-                return false;
-        } else if (!name.equals(other.name))
-            return false;
-        if (!Arrays.equals(sequence, other.sequence))
-            return false;
-        if (size != other.size)
-            return false;
-        if (keys == null) {
-            if (other.keys != null)
-                return false;
-        } else if (!keys.equals(other.keys))
-            return false;
-        if (type != other.type)
-            return false;
-        if (value == null) {
-            if (other.value != null)
-                return false;
-        } else if (!value.equals(other.value))
-            return false;
-        return true;
+    @Override
+    public final int hashCode() {
+        return Objects.hash(type, date, keys, size, name, value,
+            Arrays.hashCode(sequence), Arrays.hashCode(uids), seconds, modSeq);
     }
 
     @Override
