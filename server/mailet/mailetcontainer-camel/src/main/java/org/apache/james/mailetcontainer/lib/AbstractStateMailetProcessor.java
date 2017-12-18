@@ -437,9 +437,9 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
          * @param processTime
          *            in ms
          * @param e
-         *            or null if no {@link MessagingException} was thrown
+         *            or null if no Exception was thrown
          */
-        void afterMailet(Mailet m, String mailName, String state, long processTime, MessagingException e);
+        void afterMailet(Mailet m, String mailName, String state, long processTime, Exception e);
 
         /**
          * Get called after each {@link Matcher} call was complete
@@ -451,9 +451,9 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
          * @param processTime
          *            in ms
          * @param e
-         *            or null if no {@link MessagingException} was thrown
+         *            or null if no Exception was thrown
          */
-        void afterMatcher(Matcher m, String mailName, Collection<MailAddress> recipients, Collection<MailAddress> matches, long processTime, MessagingException e);
+        void afterMatcher(Matcher m, String mailName, Collection<MailAddress> recipients, Collection<MailAddress> matches, long processTime, Exception e);
 
     }
 

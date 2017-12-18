@@ -22,8 +22,6 @@ import java.io.Closeable;
 import java.util.List;
 import java.util.Locale;
 
-import javax.mail.MessagingException;
-
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.james.mailetcontainer.impl.MailetConfigImpl;
@@ -70,7 +68,7 @@ public class CamelProcessor implements Processor {
         Mail mail = exchange.getIn().getBody(Mail.class);
         long start = System.currentTimeMillis();
         TimeMetric timeMetric = metricFactory.timer(mailet.getClass().getSimpleName());
-        MessagingException ex = null;
+        Exception ex = null;
         try (Closeable closeable =
                  MDCBuilder.create()
                      .addContext(MDCBuilder.PROTOCOL, "MAILET")
@@ -84,7 +82,7 @@ public class CamelProcessor implements Processor {
                      .build()) {
             MailetPipelineLogging.logBeginOfMailetProcess(mailet, mail);
             mailet.service(mail);
-        } catch (MessagingException me) {
+        } catch (Exception me) {
             ex = me;
             String onMailetException = null;
 
@@ -101,6 +99,7 @@ public class CamelProcessor implements Processor {
                 // ignore the exception and continue
                 // this option should not be used if the mail object can be
                 // changed by the mailet
+                LOGGER.warn("Encountered error while executing mailet {}. Ignoring it.", mailet, ex);
                 ProcessorUtil.verifyMailAddresses(mail.getRecipients());
             } else {
                 ProcessorUtil.handleException(me, mail, mailet.getMailetConfig().getMailetName(), onMailetException, LOGGER);

@@ -18,31 +18,30 @@
  ****************************************************************/
 package org.apache.james.mailetcontainer.lib;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+import java.io.ByteArrayInputStream;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.concurrent.CountDownLatch;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.james.server.core.MailImpl;
+import org.apache.james.core.MailAddress;
 import org.apache.james.mailetcontainer.api.mock.ExceptionThrowingMailet;
 import org.apache.james.mailetcontainer.api.mock.ExceptionThrowingMatcher;
 import org.apache.james.mailetcontainer.api.mock.MockMailet;
 import org.apache.james.mailetcontainer.api.mock.MockMatcher;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener;
+import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.Matcher;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import org.junit.Test;
-
-import javax.mail.MessagingException;
-import java.io.ByteArrayInputStream;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.concurrent.CountDownLatch;
 
 public abstract class AbstractStateMailetProcessorTest {
 
@@ -78,7 +77,7 @@ public abstract class AbstractStateMailetProcessorTest {
 
             @Override
             public void afterMatcher(Matcher m, String mailName, Collection<MailAddress> recipients,
-                                     Collection<MailAddress> matches, long processTime, MessagingException e) {
+                                     Collection<MailAddress> matches, long processTime, Exception e) {
                 if (MockMatcher.class.equals(m.getClass())) {
                     assertEquals(mail.getName(), mailName);
                     // match one recipient
@@ -90,7 +89,7 @@ public abstract class AbstractStateMailetProcessorTest {
             }
 
             @Override
-            public void afterMailet(Mailet m, String mailName, String state, long processTime, MessagingException e) {
+            public void afterMailet(Mailet m, String mailName, String state, long processTime, Exception e) {
                 // check for class name as the terminating  mailet will kick in too
 
                 if (MockMailet.class.equals(m.getClass())) {
@@ -126,7 +125,7 @@ public abstract class AbstractStateMailetProcessorTest {
 
             @Override
             public void afterMatcher(Matcher m, String mailName, Collection<MailAddress> recipients,
-                                     Collection<MailAddress> matches, long processTime, MessagingException e) {
+                                     Collection<MailAddress> matches, long processTime, Exception e) {
                 if (MockMatcher.class.equals(m.getClass())) {
                     assertEquals(mail.getName(), mailName);
                     // match all recipient
@@ -138,7 +137,7 @@ public abstract class AbstractStateMailetProcessorTest {
             }
 
             @Override
-            public void afterMailet(Mailet m, String mailName, String state, long processTime, MessagingException e) {
+            public void afterMailet(Mailet m, String mailName, String state, long processTime, Exception e) {
                 // check for class name as the terminating  mailet will kick in too
 
                 if (MockMailet.class.equals(m.getClass())) {
@@ -163,7 +162,7 @@ public abstract class AbstractStateMailetProcessorTest {
     }
 
     @Test
-    public void testMatcherThrowException() throws Exception {
+    public void matcherProcessingShouldNotResultInAnExceptionWhenMatcherThrows() throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
         final MailImpl mail = new MailImpl();
         mail.setName(MailImpl.getId());
@@ -176,7 +175,7 @@ public abstract class AbstractStateMailetProcessorTest {
 
             @Override
             public void afterMatcher(Matcher m, String mailName, Collection<MailAddress> recipients,
-                                     Collection<MailAddress> matches, long processTime, MessagingException e) {
+                                     Collection<MailAddress> matches, long processTime, Exception e) {
                 if (ExceptionThrowingMatcher.class.equals(m.getClass())) {
                     assertEquals(mail.getName(), mailName);
                     // match no recipient because of the error
@@ -188,20 +187,14 @@ public abstract class AbstractStateMailetProcessorTest {
             }
 
             @Override
-            public void afterMailet(Mailet m, String mailName, String state, long processTime, MessagingException e) {
+            public void afterMailet(Mailet m, String mailName, String state, long processTime, Exception e) {
                 throw new RuntimeException("Should not call any mailet!");
             }
         });
 
         assertEquals(Mail.DEFAULT, mail.getState());
 
-        boolean catched = false;
-        try {
-            processor.service(mail);
-        } catch (MessagingException e) {
-            catched = true;
-        }
-        assertTrue(catched);
+        processor.service(mail);
 
         // the source mail should have state error as the exception was thrown
         assertEquals(Mail.ERROR, mail.getState());
@@ -211,7 +204,7 @@ public abstract class AbstractStateMailetProcessorTest {
     }
 
     @Test
-    public void testMailetThrowException() throws Exception {
+    public void mailetProcessingShouldNotResultInAnExceptionWhenMailetThrows() throws Exception {
         final CountDownLatch latch = new CountDownLatch(2);
         final MailImpl mail = new MailImpl();
         mail.setName(MailImpl.getId());
@@ -224,7 +217,7 @@ public abstract class AbstractStateMailetProcessorTest {
 
             @Override
             public void afterMatcher(Matcher m, String mailName, Collection<MailAddress> recipients,
-                                     Collection<MailAddress> matches, long processTime, MessagingException e) {
+                                     Collection<MailAddress> matches, long processTime, Exception e) {
                 if (MockMatcher.class.equals(m.getClass())) {
                     assertEquals(mail.getName(), mailName);
                     // match one recipient
@@ -236,7 +229,7 @@ public abstract class AbstractStateMailetProcessorTest {
             }
 
             @Override
-            public void afterMailet(Mailet m, String mailName, String state, long processTime, MessagingException e) {
+            public void afterMailet(Mailet m, String mailName, String state, long processTime, Exception e) {
                 if (ExceptionThrowingMailet.class.equals(m.getClass())) {
                     // the name should be not the same as we have a part match
                     assertFalse(mail.getName().equals(mailName));
@@ -249,13 +242,7 @@ public abstract class AbstractStateMailetProcessorTest {
 
         assertEquals(Mail.DEFAULT, mail.getState());
 
-        boolean catched = false;
-        try {
-            processor.service(mail);
-        } catch (MessagingException e) {
-            catched = true;
-        }
-        assertTrue(catched);
+        processor.service(mail);
 
         latch.await();
         processor.destroy();
