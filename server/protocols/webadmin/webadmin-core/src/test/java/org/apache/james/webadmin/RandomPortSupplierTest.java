@@ -19,8 +19,16 @@
 
 package org.apache.james.webadmin;
 
-public interface Port {
+import static org.assertj.core.api.Assertions.assertThat;
 
-    int toInt();
+import org.junit.Test;
+
+public class RandomPortSupplierTest {
+
+    @Test
+    public void toIntShouldReturnTwoTimeTheSameResult() {
+        RandomPortSupplier testee = new RandomPortSupplier();
+        assertThat(testee.get().getValue()).isEqualTo(testee.get().getValue());
+    }
 
 }

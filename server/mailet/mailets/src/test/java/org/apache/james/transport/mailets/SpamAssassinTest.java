@@ -24,7 +24,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.smtpserver.mock.util.MockSpamd;
 import org.apache.james.smtpserver.mock.util.MockSpamdTestRule;
+import org.apache.james.util.Port;
 import org.apache.james.util.scanner.SpamAssassinInvoker;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
@@ -117,8 +119,8 @@ public class SpamAssassinTest {
         assertThatThrownBy(() -> mailet.init(FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .setProperty(SpamAssassin.SPAMD_PORT,
-                String.valueOf(SpamAssassin.MAX_AVAILABLE_PORT + 1))
-            .build())).isInstanceOf(MessagingException.class);
+                String.valueOf(Port.MAX_PORT_VALUE + 1))
+            .build())).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

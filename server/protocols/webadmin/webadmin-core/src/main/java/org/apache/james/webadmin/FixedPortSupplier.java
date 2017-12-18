@@ -17,12 +17,37 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.cli.exceptions;
+package org.apache.james.webadmin;
 
-public class InvalidPortException extends JamesCliException {
+import java.util.Objects;
 
-    public InvalidPortException(int invalidPortNumber) {
-        super( invalidPortNumber + " is not a valid port number. Please provide one between 1 and 65535");
+import org.apache.james.util.Port;
+
+public class FixedPortSupplier implements PortSupplier {
+
+    private final Port port;
+
+    public FixedPortSupplier(int port) {
+        this.port = new Port(port);
     }
 
+    @Override
+    public Port get() {
+        return port;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof FixedPortSupplier) {
+            FixedPortSupplier that = (FixedPortSupplier) o;
+
+            return Objects.equals(this.port, that.port);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(port);
+    }
 }

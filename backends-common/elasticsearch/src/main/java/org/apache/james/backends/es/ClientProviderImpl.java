@@ -33,7 +33,6 @@ import com.google.common.collect.ImmutableList;
 public class ClientProviderImpl implements ClientProvider {
 
     public static ClientProviderImpl forHost(String address, Integer port) {
-        isValidPort(port);
         return new ClientProviderImpl(ImmutableList.of(Host.from(address, port)));
     }
 
@@ -45,10 +44,6 @@ public class ClientProviderImpl implements ClientProvider {
     public static ClientProviderImpl fromHosts(ImmutableList<Host> hosts) {
         Preconditions.checkNotNull(hosts, "Hosts should not be null");
         return new ClientProviderImpl(hosts);
-    }
-
-    private static boolean isValidPort(Integer port) {
-        return port > 0 && port <= 65535;
     }
 
     private final ImmutableList<Host> hosts;

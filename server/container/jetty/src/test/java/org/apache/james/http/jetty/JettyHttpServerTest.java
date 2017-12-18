@@ -23,7 +23,6 @@ import static com.jayway.restassured.RestAssured.when;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
-import java.util.Random;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -35,6 +34,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.james.util.Port;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
@@ -102,16 +102,9 @@ public class JettyHttpServerTest {
     
     @Test
     public void shouldStartOnConfiguredPort() throws Exception {
-        int port = generateValidUnprivilegedPort();
+        int port = Port.generateValidUnprivilegedPort();
         testee = JettyHttpServer.create(configurationBuilder.port(port).build()).start();
         assertThat(testee.getPort()).isEqualTo(port);
-    }
-    
-
-    private int generateValidUnprivilegedPort() {
-        int portBound = 65535;
-        int privilegedPortBound = 1024;
-        return new Random().nextInt(portBound - privilegedPortBound) + privilegedPortBound;
     }
     
     @Test

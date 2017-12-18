@@ -24,11 +24,12 @@ import java.util.Optional;
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
 
+import org.apache.james.util.Port;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Range;
 
 public class Configuration {
 
@@ -41,8 +42,7 @@ public class Configuration {
     }
     
     public static class Builder {
-        
-        private static final Range<Integer> VALID_PORT_RANGE = Range.closed(1, 65535);
+
         private static final String TEMPLATE_LEVEL1 = "/*";
 
         private final ImmutableMap.Builder<String, Object> mappings;
@@ -130,7 +130,7 @@ public class Configuration {
         }
 
         public Builder port(int port) {
-            Preconditions.checkArgument(VALID_PORT_RANGE.contains(port));
+            Port.assertValid(port);
             this.port = Optional.of(port);
             return this;
         }

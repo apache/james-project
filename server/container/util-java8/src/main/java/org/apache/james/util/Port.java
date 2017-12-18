@@ -17,18 +17,38 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin;
+package org.apache.james.util;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.Random;
 
-import org.junit.Test;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Range;
 
-public class RandomPortTest {
+public class Port {
+    public static final int MAX_PORT_VALUE = 65535;
+    public static final int PRIVILEGED_PORT_BOUND = 1024;
+    private static final Range<Integer> VALID_PORT_RANGE = Range.closed(1, MAX_PORT_VALUE);
 
-    @Test
-    public void toIntShouldReturnTwoTimeTheSameResult() {
-        RandomPort testee = new RandomPort();
-        assertThat(testee.toInt()).isEqualTo(testee.toInt());
+    public static int generateValidUnprivilegedPort() {
+        return new Random().nextInt(Port.MAX_PORT_VALUE - PRIVILEGED_PORT_BOUND) + PRIVILEGED_PORT_BOUND;
     }
 
+    public static void assertValid(int port) {
+        Preconditions.checkArgument(isValid(port), "Port should be between 1 and 65535");
+    }
+
+    public static boolean isValid(int port) {
+        return VALID_PORT_RANGE.contains(port);
+    }
+
+    private final int value;
+
+    public Port(int value) {
+        assertValid(value);
+        this.value = value;
+    }
+
+    public int getValue() {
+        return value;
+    }
 }

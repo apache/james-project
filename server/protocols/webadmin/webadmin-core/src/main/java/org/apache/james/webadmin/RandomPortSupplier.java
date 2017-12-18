@@ -22,11 +22,13 @@ package org.apache.james.webadmin;
 import java.io.IOException;
 import java.net.ServerSocket;
 
+import org.apache.james.util.Port;
+
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
 
-public class RandomPort implements Port {
+public class RandomPortSupplier implements PortSupplier {
 
     public static int findFreePort() {
         try (ServerSocket socket = new ServerSocket(0)) {
@@ -38,13 +40,12 @@ public class RandomPort implements Port {
 
     private final Supplier<Integer> portSupplier;
 
-    public RandomPort() {
-        portSupplier = Suppliers.memoize(RandomPort::findFreePort);
+    public RandomPortSupplier() {
+        portSupplier = Suppliers.memoize(RandomPortSupplier::findFreePort);
     }
 
     @Override
-    public int toInt() {
-        return portSupplier.get();
+    public Port get() {
+        return new Port(portSupplier.get());
     }
-
 }

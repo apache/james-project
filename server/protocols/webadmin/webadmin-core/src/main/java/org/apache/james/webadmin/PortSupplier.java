@@ -19,36 +19,10 @@
 
 package org.apache.james.webadmin;
 
-import java.util.Objects;
+import java.util.function.Supplier;
 
-import com.google.common.base.Preconditions;
+import org.apache.james.util.Port;
 
-public class FixedPort implements Port {
+public interface PortSupplier extends Supplier<Port> {
 
-    private final int port;
-
-    public FixedPort(int port) {
-        Preconditions.checkArgument(port > 0 && port < 65536, "Port should be strictly contained between 0 and 65536");
-        this.port = port;
-    }
-
-    @Override
-    public int toInt() {
-        return port;
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-        if (o instanceof FixedPort) {
-            FixedPort that = (FixedPort) o;
-
-            return Objects.equals(this.port, that.port);
-        }
-        return false;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Objects.hash(port);
-    }
 }

@@ -31,7 +31,7 @@ public class WebAdminUtils {
     public static WebAdminConfiguration webAdminConfigurationForTesting() {
         return WebAdminConfiguration.builder()
             .enabled()
-            .port(new RandomPort())
+            .port(new RandomPortSupplier())
             .build();
     }
 

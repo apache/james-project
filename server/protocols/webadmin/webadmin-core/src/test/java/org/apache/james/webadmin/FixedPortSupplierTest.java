@@ -26,32 +26,32 @@ import org.junit.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class FixedPortTest {
+public class FixedPortSupplierTest {
 
     @Test
     public void toIntShouldThrowOnNegativePort() {
-        assertThatThrownBy(() -> new FixedPort(-1)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new FixedPortSupplier(-1)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void toIntShouldThrowOnNullPort() {
-        assertThatThrownBy(() -> new FixedPort(0)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new FixedPortSupplier(0)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void toIntShouldThrowOnTooBigNumbers() {
-        assertThatThrownBy(() -> new FixedPort(65536)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new FixedPortSupplier(65536)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void toIntShouldReturnedDesiredPort() {
         int expectedPort = 452;
-        assertThat(new FixedPort(expectedPort).toInt()).isEqualTo(expectedPort);
+        assertThat(new FixedPortSupplier(expectedPort).get().getValue()).isEqualTo(expectedPort);
     }
 
     @Test
     public void shouldMatchBeanContract() {
-        EqualsVerifier.forClass(FixedPort.class).verify();
+        EqualsVerifier.forClass(FixedPortSupplier.class).verify();
     }
 
 }

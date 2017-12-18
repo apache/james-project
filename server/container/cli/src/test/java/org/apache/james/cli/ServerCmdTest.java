@@ -31,7 +31,6 @@ import java.util.HashMap;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.apache.james.cli.exceptions.InvalidArgumentNumberException;
-import org.apache.james.cli.exceptions.InvalidPortException;
 import org.apache.james.cli.exceptions.MissingCommandException;
 import org.apache.james.cli.exceptions.UnrecognizedCommandException;
 import org.apache.james.cli.type.CmdType;
@@ -1364,7 +1363,7 @@ public class ServerCmdTest {
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
         assertThatThrownBy(() -> ServerCmd.getPort(commandLine))
-            .isInstanceOf(InvalidPortException.class);
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -1373,7 +1372,7 @@ public class ServerCmdTest {
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
         assertThatThrownBy(() -> ServerCmd.getPort(commandLine))
-            .isInstanceOf(InvalidPortException.class);
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -1382,7 +1381,7 @@ public class ServerCmdTest {
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
         assertThatThrownBy(() -> ServerCmd.getPort(commandLine))
-            .isInstanceOf(InvalidPortException.class);
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
 }

@@ -92,7 +92,7 @@ public class UserMailboxesRoutesTest {
             .setContentType(ContentType.JSON)
             .setAccept(ContentType.JSON)
             .setBasePath(USERS_BASE + SEPARATOR + USERNAME + SEPARATOR + UserMailboxesRoutes.MAILBOXES)
-            .setPort(webAdminServer.getPort().toInt())
+            .setPort(webAdminServer.getPort().get().getValue())
             .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
             .build();
     }

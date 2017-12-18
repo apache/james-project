@@ -74,7 +74,7 @@ public class DomainsRoutesTest {
         		.setContentType(ContentType.JSON)
         		.setAccept(ContentType.JSON)
         		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
-        		.setPort(webAdminServer.getPort().toInt())
+        		.setPort(webAdminServer.getPort().get().getValue())
         		.setBasePath(DomainsRoutes.DOMAINS)
         		.build();
 

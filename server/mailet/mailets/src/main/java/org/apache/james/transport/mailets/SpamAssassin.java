@@ -25,6 +25,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.transport.mailets.managesieve.ManageSieveMailet;
+import org.apache.james.util.Port;
 import org.apache.james.util.scanner.SpamAssassinInvoker;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
@@ -67,7 +68,6 @@ public class SpamAssassin extends GenericMailet {
     public static final String SPAMD_PORT = "spamdPort";
     public static final String DEFAULT_HOST = "127.0.0.1";
     public static final int DEFAULT_PORT = 783;
-    public static final int MAX_AVAILABLE_PORT = 65535;
 
     private String spamdHost;
     private int spamdPort;
@@ -81,9 +81,7 @@ public class SpamAssassin extends GenericMailet {
             .orElse(DEFAULT_HOST);
 
         spamdPort = MailetUtil.getInitParameterAsStrictlyPositiveInteger(getInitParameter(SPAMD_PORT), DEFAULT_PORT);
-        if (spamdPort > MAX_AVAILABLE_PORT) {
-            throw new MessagingException("Please configure a valid port. Not valid: " + spamdPort);
-        }
+        Port.assertValid(spamdPort);
     }
 
     /**

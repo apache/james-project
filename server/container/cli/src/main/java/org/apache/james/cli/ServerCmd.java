@@ -34,7 +34,6 @@ import org.apache.commons.cli.PosixParser;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.james.cli.exceptions.InvalidArgumentNumberException;
-import org.apache.james.cli.exceptions.InvalidPortException;
 import org.apache.james.cli.exceptions.JamesCliException;
 import org.apache.james.cli.exceptions.MissingCommandException;
 import org.apache.james.cli.exceptions.UnrecognizedCommandException;
@@ -52,6 +51,7 @@ import org.apache.james.mailbox.store.probe.QuotaProbe;
 import org.apache.james.mailbox.store.probe.SieveProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.util.Port;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -159,19 +159,14 @@ public class ServerCmd {
         String portNum = cmd.getOptionValue(PORT_OPT_LONG);
         if (!Strings.isNullOrEmpty(portNum)) {
             try {
-                return validatePortNumber(Integer.parseInt(portNum));
+                int portNumber = Integer.parseInt(portNum);
+                Port.assertValid(portNumber);
+                return portNumber;
             } catch (NumberFormatException e) {
                 throw new ParseException("Port must be a number");
             }
         }
         return DEFAULT_PORT;
-    }
-
-    private static int validatePortNumber(int portNumber) {
-        if (portNumber < 1 || portNumber > 65535) {
-            throw new InvalidPortException(portNumber);
-        }
-        return portNumber;
     }
 
     private static void failWithMessage(String s) {

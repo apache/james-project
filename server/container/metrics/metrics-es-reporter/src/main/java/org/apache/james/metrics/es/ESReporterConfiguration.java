@@ -21,6 +21,8 @@ package org.apache.james.metrics.es;
 
 import java.util.Optional;
 
+import org.apache.james.util.Port;
+
 import com.google.common.base.Preconditions;
 
 public class ESReporterConfiguration {
@@ -66,6 +68,9 @@ public class ESReporterConfiguration {
             Preconditions.checkState(enabled.isPresent(), "You must specify either enabled or disabled");
             Preconditions.checkState(!enabled.get() || host.isPresent(), "You must specify host when enabled");
             Preconditions.checkState(!enabled.get() || port.isPresent(), "You must specify port when enabled");
+            if (enabled.get()) {
+                Port.assertValid(port.get());
+            }
             return new ESReporterConfiguration(host, port, enabled.get(), index, periodInSecond);
         }
     }

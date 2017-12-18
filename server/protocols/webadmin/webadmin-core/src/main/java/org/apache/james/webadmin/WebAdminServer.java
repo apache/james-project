@@ -67,7 +67,7 @@ public class WebAdminServer implements Configurable {
     @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
         if (configuration.isEnabled()) {
-            service.port(configuration.getPort().toInt());
+            service.port(configuration.getPort().get().getValue());
             configureHTTPS();
             configureCORS();
             configureMetrics();
@@ -123,7 +123,7 @@ public class WebAdminServer implements Configurable {
         service.awaitInitialization();
     }
 
-    public Port getPort() {
+    public PortSupplier getPort() {
         return configuration.getPort();
     }
 }

@@ -62,7 +62,7 @@ public class GlobalQuotaRoutesTest {
             .setContentType(ContentType.JSON)
             .setAccept(ContentType.JSON)
             .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-            .setPort(webAdminServer.getPort().toInt())
+            .setPort(webAdminServer.getPort().get().getValue())
             .build();
     }
 

@@ -101,7 +101,7 @@ public class Host {
     Host(String hostName, int port) {
         Preconditions.checkNotNull(hostName, "Hostname could not be null");
         Preconditions.checkArgument(!Strings.isNullOrEmpty(hostName), "Hostname could not be empty");
-        Preconditions.checkArgument(port > 0 && port <= 65535, "Port should be between 0 and 65535");
+        Port.assertValid(port);
         this.hostName = hostName;
         this.port = port;
     }

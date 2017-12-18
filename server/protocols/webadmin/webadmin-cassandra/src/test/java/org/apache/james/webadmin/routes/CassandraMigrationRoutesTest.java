@@ -85,7 +85,7 @@ public class CassandraMigrationRoutesTest {
             .setContentType(ContentType.JSON)
             .setAccept(ContentType.JSON)
             .setBasePath(CassandraMigrationRoutes.VERSION_BASE)
-            .setPort(webAdminServer.getPort().toInt())
+            .setPort(webAdminServer.getPort().get().getValue())
             .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
             .build();
     }
