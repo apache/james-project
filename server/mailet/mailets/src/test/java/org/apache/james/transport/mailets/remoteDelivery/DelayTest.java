@@ -94,6 +94,11 @@ public class DelayTest {
     public void stringConstructorShouldWorkForNumberAttemptsAndUnit() throws Exception {
         assertThat(Delay.from("2*36s")).isEqualTo(new Delay(2, 36000));
     }
+    
+    @Test
+    public void stringConstructorShouldWorkForNumberAttemptsAndUnitWithSpaces() throws Exception {
+    	assertThat(Delay.from("2 * 36 s")).isEqualTo(new Delay(2, 36000));
+    }
 
     @Test
     public void stringConstructorShouldThrowOnInvalidInput() throws Exception {
