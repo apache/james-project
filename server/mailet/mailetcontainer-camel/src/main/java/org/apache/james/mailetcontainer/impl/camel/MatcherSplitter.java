@@ -89,7 +89,7 @@ public class MatcherSplitter {
         Collection<MailAddress> matchedRcpts = null;
         Collection<MailAddress> origRcpts = new ArrayList<>(mail.getRecipients());
         long start = System.currentTimeMillis();
-        MessagingException ex = null;
+        Exception ex = null;
         TimeMetric timeMetric = metricFactory.timer(matcher.getClass().getSimpleName());
 
         try {
@@ -120,7 +120,9 @@ public class MatcherSplitter {
                     ProcessorUtil.verifyMailAddresses(matchedRcpts);
                 }
 
-            } catch (MessagingException me) {
+            } catch (IOException e) {
+                throw Throwables.propagate(e);
+            } catch (Exception me) {
                 ex = me;
                 if (onMatchException == null) {
                     onMatchException = Mail.ERROR;
@@ -137,8 +139,6 @@ public class MatcherSplitter {
                 } else {
                     ProcessorUtil.handleException(me, mail, matcher.getMatcherConfig().getMatcherName(), onMatchException, logger);
                 }
-            } catch (IOException e) {
-                throw Throwables.propagate(e);
             }
 
             // check if the matcher matched

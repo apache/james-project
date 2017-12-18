@@ -44,11 +44,8 @@ public class ProcessorUtil {
      *            the matcher or mailet than generated the exception
      * @param nextState
      *            the next state to set
-     *
-     * @throws MessagingException
-     *             thrown always, rethrowing the passed in exception
      */
-    public static void handleException(MessagingException me, Mail mail, String offendersName, String nextState, Logger logger) throws MessagingException {
+    public static void handleException(Exception me, Mail mail, String offendersName, String nextState, Logger logger) {
         mail.setState(nextState);
         StringWriter sout = new StringWriter();
         PrintWriter out = new PrintWriter(sout, true);
@@ -66,7 +63,6 @@ public class ProcessorUtil {
         String errorString = sout.toString();
         mail.setErrorMessage(errorString);
         logger.error(errorString);
-        throw me;
     }
 
     /**
