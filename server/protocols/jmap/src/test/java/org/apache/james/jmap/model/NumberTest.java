@@ -26,28 +26,15 @@ import org.junit.Test;
 
 public class NumberTest {
     @Test
-    public void fromIntShouldReturnMinValueWhenNegativeValueWithLenient() throws Exception {
-        assertThat(Number.fromOutboundLong(-1))
-            .isEqualTo(Number.ZERO);
-    }
-
-    @Test
     public void fromLongShouldReturnMinValueWhenNegativeValueWithLenient() throws Exception {
         assertThat(Number.fromOutboundLong(-1))
             .isEqualTo(Number.ZERO);
     }
 
     @Test
-    public void fromIntShouldThrowWhenNegativeValueWithStrict() throws Exception {
-        assertThatThrownBy(() ->
-            Number.fromInt(-1))
-            .isInstanceOf(IllegalStateException.class);
-    }
-
-    @Test
-    public void fromIntShouldReturnIntegerValue() throws Exception {
-        assertThat(Number.fromInt(1).asLong())
-            .isEqualTo(1);
+    public void fromOutboundLongShouldSanitizeTooBigNumbers() throws Exception {
+        assertThat(Number.fromOutboundLong(Number.MAX_VALUE  + 1))
+            .isEqualTo(Number.MAX_VALUE);
     }
 
     @Test
@@ -65,36 +52,15 @@ public class NumberTest {
     }
 
     @Test
-    public void fromLongShouldReturnLongValue() throws Exception {
-        assertThat(Number.fromLong(1).asLong())
-            .isEqualTo(1);
+    public void fromLongShouldReturnValueWhenZero() throws Exception {
+        assertThat(Number.fromLong(0).asLong())
+            .isEqualTo(0);
     }
 
     @Test
-    public void ensureLessThanShouldThrowWhenOverSpecifiedValue() throws Exception {
-        assertThatThrownBy(() ->
-            Number.fromInt(11).ensureLessThan(10))
-            .isInstanceOf(IllegalStateException.class);
+    public void fromLongShouldReturnValueWhenMaxValue() throws Exception {
+        assertThat(Number.fromLong(Number.MAX_VALUE).asLong())
+            .isEqualTo(Number.MAX_VALUE);
     }
 
-    @Test
-    public void ensureLessThanShouldReturnNumberWhenEqualValue() throws Exception {
-        Number number = Number.fromInt(10);
-        assertThat(number.ensureLessThan(10))
-            .isEqualTo(number);
-    }
-
-    @Test
-    public void ensureLessThanShouldReturnNumberWhenLessThanMaxValue() throws Exception {
-        Number number = Number.fromInt(10);
-        assertThat(number.ensureLessThan(11))
-            .isEqualTo(number);
-    }
-
-    @Test
-    public void fromIntShouldThrowWhenOver2Pow31Value() throws Exception {
-        assertThatThrownBy(() ->
-            Number.fromInt(Integer.MAX_VALUE + 1))
-            .isInstanceOf(IllegalStateException.class);
-    }
 }

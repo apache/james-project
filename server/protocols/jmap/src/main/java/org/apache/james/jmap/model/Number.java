@@ -47,14 +47,6 @@ public class Number {
         return new Number(value);
     }
 
-    public static Number fromOutboundInt(int value) {
-        if (value < ZERO_VALUE) {
-            LOGGER.warn("Received a negative Number");
-            return new Number(ZERO_VALUE);
-        }
-        return new Number(value);
-    }
-
     public static Number fromOutboundLong(long value) {
         if (value < ZERO_VALUE) {
             LOGGER.warn("Received a negative Number");
@@ -75,12 +67,6 @@ public class Number {
 
     private Number(long value) {
         this.value = value;
-    }
-
-    public Number ensureLessThan(long maxValue) {
-        Preconditions.checkState(value >= ZERO_VALUE && value <= maxValue,
-            "value should be positive and less than " + maxValue + " or empty");
-        return new Number(value);
     }
 
     @JsonValue

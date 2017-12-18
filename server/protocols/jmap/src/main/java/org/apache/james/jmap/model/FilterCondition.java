@@ -117,13 +117,13 @@ public class FilterCondition implements Filter {
             return this;
         }
 
-        public Builder minSize(int minSize) {
-            this.minSize = Number.fromInt(minSize);
+        public Builder minSize(long minSize) {
+            this.minSize = Number.fromLong(minSize);
             return this;
         }
 
-        public Builder maxSize(int maxSize) {
-            this.maxSize = Number.fromInt(maxSize);
+        public Builder maxSize(long maxSize) {
+            this.maxSize = Number.fromLong(maxSize);
             return this;
         }
 
