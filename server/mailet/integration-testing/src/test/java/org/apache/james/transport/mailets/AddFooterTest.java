@@ -42,7 +42,6 @@ import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -138,7 +137,6 @@ public class AddFooterTest {
         }
     }
 
-    @Ignore("See JAMES-2253")
     @Test
     public void shouldAddFooterWhenMultipartMessage() throws Exception {
         MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
