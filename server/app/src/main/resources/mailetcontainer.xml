@@ -288,7 +288,7 @@ Regards, Postmaster XXX.YYY
        <!-- Attempt remote delivery using the specified repository for the spool, -->
        <!-- using delay time to retry delivery and the maximum number of retries -->
        <mailet match="All" class="RemoteDelivery">
-          <outgoingQueue>outgoing</outgoingQueue>
+          <outgoing>outgoing</outgoing>
 
           <!-- Delivery Schedule based upon RFC 2821, 4.5.4.1 -->
           <!-- 5 day retry period, with 4 attempts in the first
