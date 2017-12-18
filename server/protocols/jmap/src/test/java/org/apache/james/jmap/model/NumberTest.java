@@ -26,29 +26,29 @@ import org.junit.Test;
 
 public class NumberTest {
     @Test
-    public void fromLongShouldReturnMinValueWhenNegativeValueWithLenient() throws Exception {
-        assertThat(Number.fromOutboundLong(-1))
+    public void fromOutboundLongShouldReturnMinValueWhenNegativeValue() throws Exception {
+        assertThat(Number.BOUND_SANITIZING_FACTORY.from(-1))
             .isEqualTo(Number.ZERO);
     }
 
     @Test
     public void fromOutboundLongShouldSanitizeTooBigNumbers() throws Exception {
-        assertThat(Number.fromOutboundLong(Number.MAX_VALUE  + 1))
-            .isEqualTo(Number.MAX_VALUE);
+        assertThat(Number.BOUND_SANITIZING_FACTORY.from(Number.MAX_VALUE  + 1))
+            .isEqualTo(Number.fromLong(Number.MAX_VALUE));
     }
 
     @Test
     public void fromLongShouldThrowWhenNegativeValue() throws Exception {
         assertThatThrownBy(() ->
             Number.fromLong(-1))
-            .isInstanceOf(IllegalStateException.class);
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromLongShouldThrowWhenOver2Pow53Value() throws Exception {
         assertThatThrownBy(() ->
             Number.fromLong(Number.MAX_VALUE + 1))
-            .isInstanceOf(IllegalStateException.class);
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

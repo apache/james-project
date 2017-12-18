@@ -118,12 +118,14 @@ public class FilterCondition implements Filter {
         }
 
         public Builder minSize(long minSize) {
-            this.minSize = Number.fromLong(minSize);
+            this.minSize = Number.DEFAULT_FACTORY.from(minSize)
+                .orElseThrow(() -> new IllegalArgumentException(Number.VALIDATION_MESSAGE));
             return this;
         }
 
         public Builder maxSize(long maxSize) {
-            this.maxSize = Number.fromLong(maxSize);
+            this.maxSize = Number.DEFAULT_FACTORY.from(maxSize)
+                .orElseThrow(() -> new IllegalArgumentException(Number.VALIDATION_MESSAGE));
             return this;
         }
 

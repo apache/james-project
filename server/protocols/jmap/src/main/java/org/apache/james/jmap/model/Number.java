@@ -20,34 +20,35 @@
 package org.apache.james.jmap.model;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.math.LongMath;
-import com.google.common.primitives.Ints;
 
 public class Number {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(Number.class);
+    public static final String VALIDATION_MESSAGE = "value should be positive and less than 2^53";
 
-    public static Number fromInt(int value) {
-        Preconditions.checkState(value >= ZERO_VALUE,
-            "value should be positive and less than 2^31");
-        return new Number(value);
+    public interface Factory<T> {
+        T from(long value);
     }
 
-    public static Number fromLong(long value) {
-        Preconditions.checkState(value >= ZERO_VALUE && value <= MAX_VALUE,
-            "value should be positive and less than 2^53");
-        return new Number(value);
-    }
 
-    public static Number fromOutboundLong(long value) {
+    private static final int ZERO_VALUE = 0;
+    public static final long MAX_VALUE = LongMath.pow(2, 53);
+    public static final Number ZERO = new Number(ZERO_VALUE);
+
+    public static final Factory<Optional<Number>> DEFAULT_FACTORY = value -> Optional.of(value)
+        .filter(Number::isValid)
+        .map(Number::new);
+
+    public static final Factory<Number> BOUND_SANITIZING_FACTORY = value -> {
         if (value < ZERO_VALUE) {
             LOGGER.warn("Received a negative Number");
             return new Number(ZERO_VALUE);
@@ -57,26 +58,26 @@ public class Number {
             return new Number(MAX_VALUE);
         }
         return new Number(value);
+    };
+
+    public static Number fromLong(long value) {
+        return new Number(value);
     }
 
-    private static final int ZERO_VALUE = 0;
-    public static final long MAX_VALUE = LongMath.pow(2, 53);
-    public static final Number ZERO = new Number(ZERO_VALUE);
+    private static boolean isValid(long value) {
+        return value >= ZERO_VALUE && value <= MAX_VALUE;
+    }
 
     private final long value;
 
     private Number(long value) {
+        Preconditions.checkArgument(isValid(value), VALIDATION_MESSAGE);
         this.value = value;
     }
 
     @JsonValue
     public long asLong() {
         return value;
-    }
-
-    @JsonIgnore
-    public int asInt() {
-        return Ints.checkedCast(value);
     }
 
     @Override

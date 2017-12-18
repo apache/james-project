@@ -56,20 +56,20 @@ public class GetMessageListMethod implements Method {
 
     private static final long DEFAULT_POSITION = 0;
     public static final String MAXIMUM_LIMIT = "maximumLimit";
-    public static final int DEFAULT_MAXIMUM_LIMIT = 256;
+    public static final long DEFAULT_MAXIMUM_LIMIT = 256;
 
     private static final Method.Request.Name METHOD_NAME = Method.Request.name("getMessageList");
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("messageList");
 
     private final MailboxManager mailboxManager;
-    private final int maximumLimit;
+    private final long maximumLimit;
     private final GetMessagesMethod getMessagesMethod;
     private final Factory mailboxIdFactory;
     private final MetricFactory metricFactory;
 
     @Inject
     @VisibleForTesting public GetMessageListMethod(MailboxManager mailboxManager,
-            @Named(MAXIMUM_LIMIT) int maximumLimit, GetMessagesMethod getMessagesMethod, MailboxId.Factory mailboxIdFactory,
+            @Named(MAXIMUM_LIMIT) long maximumLimit, GetMessagesMethod getMessagesMethod, MailboxId.Factory mailboxIdFactory,
             MetricFactory metricFactory) {
 
         this.mailboxManager = mailboxManager;
@@ -128,7 +128,7 @@ public class GetMessageListMethod implements Method {
             Long postionValue = messageListRequest.getPosition().map(Number::asLong).orElse(DEFAULT_POSITION);
             mailboxManager.search(searchQuery,
                 mailboxSession,
-                postionValue + messageListRequest.getLimit().map(Number::asInt).orElse(maximumLimit))
+                postionValue + messageListRequest.getLimit().map(Number::asLong).orElse(maximumLimit))
                 .stream()
                 .skip(postionValue)
                 .forEach(builder::messageId);

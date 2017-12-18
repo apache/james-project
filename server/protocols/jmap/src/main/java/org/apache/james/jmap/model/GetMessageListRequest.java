@@ -78,7 +78,9 @@ public class GetMessageListRequest implements JmapRequest {
         }
 
         public Builder position(long position) {
-            this.position = Optional.of(Number.fromLong(position));
+            this.position = Optional.of(
+                Number.DEFAULT_FACTORY.from(position)
+                    .orElseThrow(() -> new IllegalArgumentException(Number.VALIDATION_MESSAGE)));
             return this;
         }
 
@@ -91,7 +93,8 @@ public class GetMessageListRequest implements JmapRequest {
         }
 
         public Builder limit(long limit) {
-            this.limit = Number.fromLong(limit);
+            this.limit = Number.DEFAULT_FACTORY.from(limit)
+                .orElseThrow(() -> new IllegalArgumentException(Number.VALIDATION_MESSAGE));
             return this;
         }
 

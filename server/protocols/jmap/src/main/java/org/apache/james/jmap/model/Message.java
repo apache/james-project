@@ -163,7 +163,7 @@ public class Message {
         }
 
         public Builder size(long size) {
-            this.size = Number.fromOutboundLong(size);
+            this.size = Number.BOUND_SANITIZING_FACTORY.from(size);
             return this;
         }
 

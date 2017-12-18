@@ -79,8 +79,8 @@ public class FilterConditionTest {
     public void buildShouldWork() {
         ZonedDateTime before = ZonedDateTime.parse("2016-07-19T14:30:00Z");
         ZonedDateTime after = ZonedDateTime.parse("2016-07-19T14:31:00Z");
-        int minSize = 4;
-        int maxSize = 123;
+        long minSize = 4;
+        long maxSize = 123;
         boolean isFlagged = true;
         boolean isUnread = true;
         boolean isAnswered = true;
@@ -100,7 +100,7 @@ public class FilterConditionTest {
         Optional<String> notKeyword = Optional.of("$Flagged");
 
         FilterCondition expectedFilterCondition = new FilterCondition(Optional.of(ImmutableList.of("1")), Optional.of(ImmutableList.of("2")), Optional.of(before), Optional.of(after),
-                Optional.of(Number.fromInt(minSize)), Optional.of(Number.fromInt(maxSize)),
+                Optional.of(Number.fromLong(minSize)), Optional.of(Number.fromLong(maxSize)),
                 Optional.of(isFlagged), Optional.of(isUnread), Optional.of(isAnswered), Optional.of(isDraft), Optional.of(isForwarded), Optional.of(hasAttachment), Optional.of(text), Optional.of(from),
                 Optional.of(to), Optional.of(cc), Optional.of(bcc), Optional.of(subject), Optional.of(body), Optional.of(attachments), Optional.of(header),
                 hasKeyword, notKeyword);

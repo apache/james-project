@@ -69,7 +69,8 @@ public class Attachment {
         }
 
         public Builder size(long size) {
-            this.size = Number.fromLong(size);
+            this.size = Number.DEFAULT_FACTORY.from(size)
+                .orElseThrow(() -> new IllegalArgumentException(Number.VALIDATION_MESSAGE));
             return this;
         }
 
@@ -90,12 +91,14 @@ public class Attachment {
         }
 
         public Builder width(long width) {
-            this.width = Number.fromLong(width);
+            this.width = Number.DEFAULT_FACTORY.from(width)
+                .orElseThrow(() -> new IllegalArgumentException(Number.VALIDATION_MESSAGE));
             return this;
         }
 
         public Builder height(long height) {
-            this.height = Number.fromLong(height);
+            this.height = Number.DEFAULT_FACTORY.from(height)
+                .orElseThrow(() -> new IllegalArgumentException(Number.VALIDATION_MESSAGE));
             return this;
         }
 

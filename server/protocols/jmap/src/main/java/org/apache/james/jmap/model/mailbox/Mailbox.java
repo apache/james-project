@@ -139,22 +139,22 @@ public class Mailbox {
         }
 
         public Builder totalMessages(long totalMessages) {
-            this.totalMessages = Optional.of(Number.fromOutboundLong(totalMessages));
+            this.totalMessages = Optional.of(Number.BOUND_SANITIZING_FACTORY.from(totalMessages));
             return this;
         }
 
         public Builder unreadMessages(long unreadMessages) {
-            this.unreadMessages = Optional.of(Number.fromOutboundLong(unreadMessages));
+            this.unreadMessages = Optional.of(Number.BOUND_SANITIZING_FACTORY.from(unreadMessages));
             return this;
         }
 
         public Builder totalThreads(long totalThreads) {
-            this.totalThreads = Optional.of(Number.fromOutboundLong(totalThreads));
+            this.totalThreads = Optional.of(Number.BOUND_SANITIZING_FACTORY.from(totalThreads));
             return this;
         }
 
         public Builder unreadThreads(long unreadThreads) {
-            this.unreadThreads = Optional.of(Number.fromOutboundLong(unreadThreads));
+            this.unreadThreads = Optional.of(Number.BOUND_SANITIZING_FACTORY.from(unreadThreads));
             return this;
         }
 
@@ -172,8 +172,24 @@ public class Mailbox {
             Preconditions.checkState(!Strings.isNullOrEmpty(name), "'name' is mandatory");
             Preconditions.checkState(id != null, "'id' is mandatory");
 
-            return new Mailbox(id, name, parentId, role, sortOrder, mustBeOnlyMailbox, mayReadItems, mayAddItems, mayRemoveItems, mayCreateChild, mayRename, mayDelete,
-                    totalMessages.orElse(Number.ZERO), unreadMessages.orElse(Number.ZERO), totalThreads.orElse(Number.ZERO), unreadThreads.orElse(Number.ZERO), sharedWith.orElse(Rights.EMPTY), namespace.orElse(MailboxNamespace.personal()));
+            return new Mailbox(id,
+                name,
+                parentId,
+                role,
+                sortOrder,
+                mustBeOnlyMailbox,
+                mayReadItems,
+                mayAddItems,
+                mayRemoveItems,
+                mayCreateChild,
+                mayRename,
+                mayDelete,
+                totalMessages.orElse(Number.ZERO),
+                unreadMessages.orElse(Number.ZERO),
+                totalThreads.orElse(Number.ZERO),
+                unreadThreads.orElse(Number.ZERO),
+                sharedWith.orElse(Rights.EMPTY),
+                namespace.orElse(MailboxNamespace.personal()));
         }
     }
 
