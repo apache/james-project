@@ -27,7 +27,6 @@ import java.util.HashMap;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.protocols.lib.PortUtil;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
@@ -108,9 +107,7 @@ public class SpamAssassinHandlerTest {
 
     @Test
     public void testNonSpam() throws IOException, MessagingException {
-
-        int port = PortUtil.getNonPrivilegedPort();
-        MockSpamd spamd = new MockSpamd(port);
+        MockSpamd spamd = new MockSpamd();
         new Thread(spamd).start();
 
         SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessage("test")));
@@ -118,7 +115,7 @@ public class SpamAssassinHandlerTest {
         SpamAssassinHandler handler = new SpamAssassinHandler();
 
         handler.setSpamdHost(SPAMD_HOST);
-        handler.setSpamdPort(port);
+        handler.setSpamdPort(spamd.getPort());
         handler.setSpamdRejectionHits(200.0);
         HookResult response = handler.onMessage(session, mockedMail);
 
@@ -130,16 +127,15 @@ public class SpamAssassinHandlerTest {
 
     @Test
     public void testSpam() throws IOException, MessagingException {
-
-        int port = PortUtil.getNonPrivilegedPort();
-        new Thread(new MockSpamd(port)).start();
+        MockSpamd spamd = new MockSpamd();
+        new Thread(spamd).start();
 
         SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessage(MockSpamd.GTUBE)));
 
         SpamAssassinHandler handler = new SpamAssassinHandler();
 
         handler.setSpamdHost(SPAMD_HOST);
-        handler.setSpamdPort(port);
+        handler.setSpamdPort(spamd.getPort());
         handler.setSpamdRejectionHits(2000.0);
         HookResult response = handler.onMessage(session, mockedMail);
 
@@ -150,16 +146,15 @@ public class SpamAssassinHandlerTest {
 
     @Test
     public void testSpamReject() throws IOException, MessagingException {
-
-        int port = PortUtil.getNonPrivilegedPort();
-        new Thread(new MockSpamd(port)).start();
+        MockSpamd spamd = new MockSpamd();
+        new Thread(spamd).start();
 
         SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessage(MockSpamd.GTUBE)));
 
         SpamAssassinHandler handler = new SpamAssassinHandler();
 
         handler.setSpamdHost(SPAMD_HOST);
-        handler.setSpamdPort(port);
+        handler.setSpamdPort(spamd.getPort());
         handler.setSpamdRejectionHits(200.0);
         HookResult response = handler.onMessage(session, mockedMail);
 

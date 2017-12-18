@@ -27,6 +27,8 @@ import java.net.Socket;
 
 import org.apache.commons.io.IOUtils;
 
+import com.google.common.base.Preconditions;
+
 /**
  * This class can be used to run a mocked SPAMD daemon
  */
@@ -42,6 +44,7 @@ public class MockSpamd implements Runnable {
     private OutputStream out;
     private Socket spamd;
     private ServerSocket socket;
+    private boolean isBinded;
 
 
     /**
@@ -49,15 +52,26 @@ public class MockSpamd implements Runnable {
      *
      * @throws IOException
      */
-    public MockSpamd(int port) throws IOException {
-        socket = new ServerSocket(port);
+    public MockSpamd() {
+        isBinded = false;
     }
-    
+
+    public int getPort() {
+        Preconditions.checkState(isBinded, "SpamD mock server is not binded");
+        return socket.getLocalPort();
+    }
+
+    public void bind() throws IOException {
+        socket = new ServerSocket(0);
+        isBinded = true;
+    }
+
     /**
      * @see java.lang.Runnable#run()
      */
     @Override
     public void run() {
+
         try {
             boolean spam = false;
 

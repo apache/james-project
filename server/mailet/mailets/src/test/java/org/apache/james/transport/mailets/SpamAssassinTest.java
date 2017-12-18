@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import javax.mail.MessagingException;
 
-import org.apache.james.protocols.lib.PortUtil;
 import org.apache.james.smtpserver.mock.util.MockSpamd;
 import org.apache.james.util.scanner.SpamAssassinInvoker;
 import org.apache.mailet.Mail;
@@ -130,13 +129,13 @@ public class SpamAssassinTest {
 
     @Test
     public void serviceShouldWriteSpamAttributeOnMail() throws Exception {
-        int port = PortUtil.getNonPrivilegedPort();
-        new Thread(new MockSpamd(port)).start();
+        MockSpamd spamd = new MockSpamd();
+        new Thread(spamd).start();
 
         FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .setProperty(SpamAssassin.SPAMD_HOST, "localhost")
-            .setProperty(SpamAssassin.SPAMD_PORT, String.valueOf(port))
+            .setProperty(SpamAssassin.SPAMD_PORT, String.valueOf(spamd.getPort()))
             .build();
         mailet.init(mailetConfiguration);
 
@@ -157,13 +156,13 @@ public class SpamAssassinTest {
 
     @Test
     public void serviceShouldWriteMessageAsNotSpamWhenNotSpam() throws Exception {
-        int port = PortUtil.getNonPrivilegedPort();
-        new Thread(new MockSpamd(port)).start();
+        MockSpamd spamd = new MockSpamd();
+        new Thread(spamd).start();
 
         FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .setProperty(SpamAssassin.SPAMD_HOST, "localhost")
-            .setProperty(SpamAssassin.SPAMD_PORT, String.valueOf(port))
+            .setProperty(SpamAssassin.SPAMD_PORT, String.valueOf(spamd.getPort()))
             .build();
         mailet.init(mailetConfiguration);
 
@@ -183,13 +182,13 @@ public class SpamAssassinTest {
 
     @Test
     public void serviceShouldWriteMessageAsSpamWhenSpam() throws Exception {
-        int port = PortUtil.getNonPrivilegedPort();
-        new Thread(new MockSpamd(port)).start();
+        MockSpamd spamd = new MockSpamd();
+        new Thread(spamd).start();
 
         FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .setProperty(SpamAssassin.SPAMD_HOST, "localhost")
-            .setProperty(SpamAssassin.SPAMD_PORT, String.valueOf(port))
+            .setProperty(SpamAssassin.SPAMD_PORT, String.valueOf(spamd.getPort()))
             .build();
         mailet.init(mailetConfiguration);
 
