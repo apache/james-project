@@ -19,27 +19,42 @@
 
 package org.apache.james.imap.api;
 
-import java.util.Optional;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.junit.Before;
+import org.junit.Test;
 
-import com.google.common.base.Preconditions;
+public class ImapSessionUtilsTest {
+    private static final String USERNAME = "username";
+    private static final MailboxSession MAILBOX_SESSION = new MockMailboxSession(USERNAME);
+    private FakeImapSession fakeImapSession;
 
-public class ImapSessionUtils {
-
-    public static final String MAILBOX_USER_ATTRIBUTE_SESSION_KEY = "org.apache.james.api.imap.MAILBOX_USER_ATTRIBUTE_SESSION_KEY";
-
-    public static final String MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY = "org.apache.james.api.imap.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY";
-
-    public static MailboxSession getMailboxSession(ImapSession session) {
-        return (MailboxSession) session.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY);
+    @Before
+    public void setUp() {
+        fakeImapSession = new FakeImapSession();
     }
 
-    public static String getUserName(ImapSession imapSession) {
-        Preconditions.checkNotNull(imapSession);
-        return Optional.ofNullable(getMailboxSession(imapSession))
-            .map(mailboxSession -> mailboxSession.getUser().getUserName())
-            .orElse(null);
+    @Test
+    public void getUserNameShouldReturnNullWhenNoMailboxSession() {
+        assertThat(ImapSessionUtils.getUserName(fakeImapSession))
+            .isNull();
     }
+
+    @Test
+    public void getUserNameShouldReturnUserWhenMailboxSession() {
+        fakeImapSession.setAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY, MAILBOX_SESSION);
+        assertThat(ImapSessionUtils.getUserName(fakeImapSession))
+            .isEqualTo(USERNAME);
+    }
+
+    @Test
+    public void getUserNameShouldThrowOnNullImapSession() {
+        assertThatThrownBy(() -> ImapSessionUtils.getUserName(null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
 }
