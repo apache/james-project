@@ -81,6 +81,7 @@ public class DelaysAndMaxRetry {
 
         List<String> delayStrings = Splitter.on(',')
             .omitEmptyStrings()
+            .trimResults()
             .splitToList(delaysAsString);
 
         ImmutableList.Builder<Delay> builder = ImmutableList.builder();
