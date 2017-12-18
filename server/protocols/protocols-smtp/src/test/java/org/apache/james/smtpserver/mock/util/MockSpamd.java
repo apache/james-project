@@ -25,6 +25,8 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import org.apache.commons.io.IOUtils;
+
 /**
  * This class can be used to run a mocked SPAMD daemon
  */
@@ -36,30 +38,28 @@ public class MockSpamd implements Runnable {
     public final static String GTUBE = "-SPAM-";
     public final static String NOT_SPAM = "Spam: False ; 3 / 5";
     public final static String SPAM = "Spam: True ; 1000 / 5";
-    BufferedReader in;
-    OutputStream out;
-    Socket spamd;
-    ServerSocket socket;
+    private BufferedReader in;
+    private OutputStream out;
+    private Socket spamd;
+    private ServerSocket socket;
+
 
     /**
      * Init the mocked SPAMD daemon
      *
-     * @param port
-     *            The port on which the mocked SPAMD daemon will be bind
      * @throws IOException
      */
     public MockSpamd(int port) throws IOException {
         socket = new ServerSocket(port);
     }
-
+    
     /**
      * @see java.lang.Runnable#run()
      */
     @Override
     public void run() {
-        boolean spam = false;
-
         try {
+            boolean spam = false;
 
             // Accept connections
             spamd = socket.accept();
@@ -82,16 +82,14 @@ public class MockSpamd implements Runnable {
                 out.write(NOT_SPAM.getBytes());
                 out.flush();
             }
-
-            in.close();
-            out.close();
-            spamd.close();
-            socket.close();
-
         } catch (IOException e) {
             // Should not happen
             e.printStackTrace();
+        } finally {
+            IOUtils.closeQuietly(in);
+            IOUtils.closeQuietly(out);
+            IOUtils.closeQuietly(spamd);
+            IOUtils.closeQuietly(socket);
         }
-
     }
 }
