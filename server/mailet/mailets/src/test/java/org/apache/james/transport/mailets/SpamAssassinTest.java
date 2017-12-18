@@ -24,15 +24,20 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import javax.mail.MessagingException;
 
-import org.apache.james.smtpserver.mock.util.MockSpamd;
+import org.apache.james.smtpserver.mock.util.MockSpamdTestRule;
 import org.apache.james.util.scanner.SpamAssassinInvoker;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MimeMessageBuilder;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class SpamAssassinTest {
+
+    @Rule
+    public MockSpamdTestRule spamd = new MockSpamdTestRule();
+
     private SpamAssassin mailet = new SpamAssassin();
 
     @Test
@@ -129,9 +134,6 @@ public class SpamAssassinTest {
 
     @Test
     public void serviceShouldWriteSpamAttributeOnMail() throws Exception {
-        MockSpamd spamd = new MockSpamd();
-        new Thread(spamd).start();
-
         FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .setProperty(SpamAssassin.SPAMD_HOST, "localhost")
@@ -156,9 +158,6 @@ public class SpamAssassinTest {
 
     @Test
     public void serviceShouldWriteMessageAsNotSpamWhenNotSpam() throws Exception {
-        MockSpamd spamd = new MockSpamd();
-        new Thread(spamd).start();
-
         FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .setProperty(SpamAssassin.SPAMD_HOST, "localhost")
@@ -182,9 +181,6 @@ public class SpamAssassinTest {
 
     @Test
     public void serviceShouldWriteMessageAsSpamWhenSpam() throws Exception {
-        MockSpamd spamd = new MockSpamd();
-        new Thread(spamd).start();
-
         FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .setProperty(SpamAssassin.SPAMD_HOST, "localhost")

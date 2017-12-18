@@ -35,8 +35,10 @@ import org.apache.james.smtpserver.fastfail.SpamAssassinHandler;
 import org.apache.james.smtpserver.mock.MockMimeMessage;
 import org.apache.james.smtpserver.mock.mailet.MockMail;
 import org.apache.james.smtpserver.mock.util.MockSpamd;
+import org.apache.james.smtpserver.mock.util.MockSpamdTestRule;
 import org.apache.james.util.scanner.SpamAssassinInvoker;
 import org.apache.mailet.Mail;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class SpamAssassinHandlerTest {
@@ -91,6 +93,9 @@ public class SpamAssassinHandlerTest {
 
     }
 
+    @Rule
+    public MockSpamdTestRule spamd = new MockSpamdTestRule();
+
     private Mail setupMockedMail(MimeMessage message) {
         MockMail mail = new MockMail();
         mail.setMessage(message);
@@ -107,9 +112,6 @@ public class SpamAssassinHandlerTest {
 
     @Test
     public void testNonSpam() throws IOException, MessagingException {
-        MockSpamd spamd = new MockSpamd();
-        new Thread(spamd).start();
-
         SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessage("test")));
 
         SpamAssassinHandler handler = new SpamAssassinHandler();
@@ -127,9 +129,6 @@ public class SpamAssassinHandlerTest {
 
     @Test
     public void testSpam() throws IOException, MessagingException {
-        MockSpamd spamd = new MockSpamd();
-        new Thread(spamd).start();
-
         SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessage(MockSpamd.GTUBE)));
 
         SpamAssassinHandler handler = new SpamAssassinHandler();
@@ -146,9 +145,6 @@ public class SpamAssassinHandlerTest {
 
     @Test
     public void testSpamReject() throws IOException, MessagingException {
-        MockSpamd spamd = new MockSpamd();
-        new Thread(spamd).start();
-
         SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessage(MockSpamd.GTUBE)));
 
         SpamAssassinHandler handler = new SpamAssassinHandler();
