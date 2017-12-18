@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 
-import org.apache.james.domainlist.api.DomainList;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.base.MailetUtil;
 import org.slf4j.Logger;
@@ -101,7 +101,7 @@ public class RemoteDeliveryConfiguration {
 
         DelaysAndMaxRetry delaysAndMaxRetry = computeDelaysAndMaxRetry(mailetConfig);
         maxRetries = delaysAndMaxRetry.getMaxRetries();
-        delayTimes = delaysAndMaxRetry.getExpendedDelays();
+        delayTimes = delaysAndMaxRetry.getExpandedDelays();
         smtpTimeout = computeSmtpTimeout(mailetConfig);
         connectionTimeout = computeConnectionTimeout(mailetConfig);
         dnsProblemRetry = computeDnsProblemRetry(mailetConfig);

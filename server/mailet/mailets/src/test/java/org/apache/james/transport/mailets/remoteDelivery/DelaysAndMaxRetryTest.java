@@ -114,30 +114,30 @@ public class DelaysAndMaxRetryTest {
     }
 
     @Test
-    public void getExpendedDelaysShouldReturnEmptyWhenNoDelay() throws Exception {
+    public void getExpandedDelaysShouldReturnEmptyWhenNoDelay() throws Exception {
         DelaysAndMaxRetry testee = DelaysAndMaxRetry.from(0, "");
 
-        assertThat(testee.getExpendedDelays()).isEmpty();
+        assertThat(testee.getExpandedDelays()).isEmpty();
     }
 
     @Test
-    public void getExpendedDelaysShouldExpandSingleDelays() throws Exception {
+    public void getExpandedDelaysShouldExpandSingleDelays() throws Exception {
         DelaysAndMaxRetry testee = DelaysAndMaxRetry.from(3, "1*1S,1*2S,1*5S");
 
-        assertThat(testee.getExpendedDelays()).containsExactly(1000L, 2000L, 5000L);
+        assertThat(testee.getExpandedDelays()).containsExactly(1000L, 2000L, 5000L);
     }
 
     @Test
-    public void getExpendedDelaysShouldExpandMultipleDelays() throws Exception {
+    public void getExpandedDelaysShouldExpandMultipleDelays() throws Exception {
         DelaysAndMaxRetry testee = DelaysAndMaxRetry.from(3, "1*1S,2*2S,2*5S");
 
-        assertThat(testee.getExpendedDelays()).containsExactly(1000L, 2000L, 2000L, 5000L, 5000L);
+        assertThat(testee.getExpandedDelays()).containsExactly(1000L, 2000L, 2000L, 5000L, 5000L);
     }
     
     @Test
-    public void getExpendedDelaysShouldExpandMultipleDelaysWithSpaces() throws Exception {
+    public void getExpandedDelaysShouldExpandMultipleDelaysWithSpaces() throws Exception {
     	DelaysAndMaxRetry testee = DelaysAndMaxRetry.from(3, "1 * 1 S, 2 * 2 S , 2 * 5 S");
     	
-    	assertThat(testee.getExpendedDelays()).containsExactly(1000L, 2000L, 2000L, 5000L, 5000L);
+    	assertThat(testee.getExpandedDelays()).containsExactly(1000L, 2000L, 2000L, 5000L, 5000L);
     }
 }
