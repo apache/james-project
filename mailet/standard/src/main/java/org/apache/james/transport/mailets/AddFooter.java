@@ -106,6 +106,7 @@ public class AddFooter extends GenericMailet {
             if (added) {
             	part.setContent(multipart);
             }
+            return added;
         }
         //Give up... we won't attach the footer to this MimePart
         return false;
