@@ -246,7 +246,6 @@ public class BounceIntegrationTest {
     private MailetContainer generateMailetContainerConfiguration(MailetConfiguration.Builder redirectionMailetConfiguration) {
         return MailetContainer.builder()
             .postmaster(POSTMASTER)
-            .threads(5)
             .addProcessor(CommonProcessors.root())
             .addProcessor(CommonProcessors.error())
             .addProcessor(transport())

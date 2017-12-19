@@ -72,7 +72,6 @@ public class SmtpBracketEnforcementTest {
     private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
         MailetContainer mailetContainer = MailetContainer.builder()
             .postmaster("postmaster@" + DEFAULT_DOMAIN)
-            .threads(5)
             .addProcessor(ProcessorConfiguration.root()
                 .addMailet(MailetConfiguration.builder()
                     .matcher(All.class)

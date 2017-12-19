@@ -78,7 +78,6 @@ public class SmtpAuthIntegrationTest {
 
         MailetContainer mailetContainer = MailetContainer.builder()
             .postmaster("postmaster@" + JAMES_APACHE_ORG)
-            .threads(5)
             .addProcessor(rootProcessor)
             .addProcessor(CommonProcessors.error())
             .addProcessor(deliverOnlyTransport())

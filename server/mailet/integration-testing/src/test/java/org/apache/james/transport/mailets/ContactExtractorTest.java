@@ -77,9 +77,7 @@ public class ContactExtractorTest {
     @Before
     public void setup() throws Exception {
         String attribute = "ExtractedContacts";
-        MailetContainer mailets = MailetContainer
-            .builder()
-            .threads(5)
+        MailetContainer mailets = MailetContainer.builder()
             .postmaster(SENDER)
             .addProcessor(CommonProcessors.root())
             .addProcessor(CommonProcessors.error())

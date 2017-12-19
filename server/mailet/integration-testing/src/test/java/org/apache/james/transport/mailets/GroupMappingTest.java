@@ -109,7 +109,6 @@ public class GroupMappingTest {
 
         MailetContainer mailetContainer = MailetContainer.builder()
             .postmaster("postmaster@" + DOMAIN1)
-            .threads(5)
             .addProcessor(ProcessorConfiguration.root()
                 .enableJmx(true)
                 .addMailet(MailetConfiguration.builder()

@@ -66,7 +66,6 @@ public class RecipientRewriteTableIntegrationTest {
     public void setup() throws Exception {
         MailetContainer mailetContainer = MailetContainer.builder()
             .postmaster("postmaster@" + JAMES_APACHE_ORG)
-            .threads(5)
             .addProcessor(CommonProcessors.root())
             .addProcessor(CommonProcessors.error())
             .addProcessor(CommonProcessors.transport())

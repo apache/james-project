@@ -21,6 +21,7 @@
 package org.apache.james.mailets.configuration;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -34,12 +35,14 @@ public class MailetContainer implements SerializableAsXml {
 
     public static class Builder {
 
+        public static final int DEFAULT_THREAD_COUNT = 5;
         private String postmaster;
-        private int threads;
+        private Optional<Integer> threads;
         private ImmutableList.Builder<ProcessorConfiguration> processors;
 
         private Builder() {
             processors = ImmutableList.builder();
+            threads = Optional.empty();
         }
 
         public Builder postmaster(String postmaster) {
@@ -48,7 +51,7 @@ public class MailetContainer implements SerializableAsXml {
         }
 
         public Builder threads(int threads) {
-            this.threads = threads;
+            this.threads = Optional.of(threads);
             return this;
         }
 
@@ -63,6 +66,7 @@ public class MailetContainer implements SerializableAsXml {
         }
 
         public MailetContainer build() {
+            int threads = this.threads.orElse(DEFAULT_THREAD_COUNT);
             Preconditions.checkState(!Strings.isNullOrEmpty(postmaster), "'postmaster' is mandatory");
             Preconditions.checkState(threads > 0, "'threads' should be greater than 0");
             return new MailetContainer(postmaster, threads, processors.build());
