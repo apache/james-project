@@ -19,6 +19,7 @@
 
 package org.apache.james.mailets.crypto;
 
+import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.ZonedDateTime;
@@ -48,9 +49,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
 
 public class SMIMESignIntegrationTest {
 
@@ -66,7 +65,6 @@ public class SMIMESignIntegrationTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private TemporaryJamesServer jamesServer;
-    private ConditionFactory calmlyAwait;
     public static final String FROM = "user@" + DEFAULT_DOMAIN;
     public static final String RECIPIENT = "user2@" + DEFAULT_DOMAIN;
 
@@ -106,8 +104,6 @@ public class SMIMESignIntegrationTest {
             .withOverrides(binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(() -> DATE_2015))
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder);
-        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

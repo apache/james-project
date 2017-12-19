@@ -19,6 +19,8 @@
 
 package org.apache.james.smtp;
 
+import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
+
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
@@ -34,15 +36,12 @@ import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Strings;
-import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
 
 public class SmtpSizeLimitationTest {
     private static final String LOCALHOST_IP = "127.0.0.1";
@@ -56,18 +55,6 @@ public class SmtpSizeLimitationTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private TemporaryJamesServer jamesServer;
-    private ConditionFactory calmlyAwait;
-
-    @Before
-    public void setup() throws Exception {
-        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        calmlyAwait = Awaitility.with()
-            .pollInterval(slowPacedPollInterval)
-            .and()
-            .with()
-            .pollDelay(slowPacedPollInterval)
-            .await();
-    }
 
     private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
         MailetContainer mailetContainer = MailetContainer.builder()

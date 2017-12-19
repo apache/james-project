@@ -19,6 +19,8 @@
 
 package org.apache.james.mailets;
 
+import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
+
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
@@ -32,9 +34,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
 
 public class AddDeliveredToHeaderTest {
 
@@ -48,18 +48,10 @@ public class AddDeliveredToHeaderTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private TemporaryJamesServer jamesServer;
-    private ConditionFactory calmlyAwait;
 
     @Before
     public void setup() throws Exception {
         jamesServer = TemporaryJamesServer.builder().build(temporaryFolder);
-        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        calmlyAwait = Awaitility.with()
-            .pollInterval(slowPacedPollInterval)
-            .and()
-            .with()
-            .pollDelay(slowPacedPollInterval)
-            .await();
     }
 
     @After

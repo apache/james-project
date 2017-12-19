@@ -24,6 +24,7 @@ import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.MemoryJamesServerMain.SMTP_AND_IMAP_MODULE;
 import static org.apache.james.MemoryJamesServerMain.SMTP_ONLY_MODULE;
+import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
@@ -58,9 +59,7 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 import org.testcontainers.containers.wait.HostPortWaitStrategy;
 
-import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
@@ -90,19 +89,10 @@ public class GatewayRemoteDeliveryIntegrationTest {
     public final RuleChain chain = RuleChain.outerRule(smtpFolder).around(fakeSmtp);
 
     private TemporaryJamesServer jamesServer;
-    private ConditionFactory calmlyAwait;
     private DataProbe dataProbe;
 
     @Before
     public void setup() throws Exception {
-        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        calmlyAwait = Awaitility.with()
-            .pollInterval(slowPacedPollInterval)
-            .and()
-            .with()
-            .pollDelay(slowPacedPollInterval)
-            .await();
-
         calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> fakeSmtp.tryConnect(25));
 
         RestAssured.requestSpecification = new RequestSpecBuilder()

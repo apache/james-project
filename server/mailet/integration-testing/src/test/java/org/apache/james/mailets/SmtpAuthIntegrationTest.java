@@ -19,6 +19,7 @@
 
 package org.apache.james.mailets;
 
+import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.MemoryJamesServerMain;
@@ -42,9 +43,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
 
 public class SmtpAuthIntegrationTest {
     private static final String LOCALHOST_IP = "127.0.0.1";
@@ -61,7 +60,6 @@ public class SmtpAuthIntegrationTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private TemporaryJamesServer jamesServer;
-    private ConditionFactory calmlyAwait;
 
     @Before
     public void setup() throws Exception {
@@ -91,14 +89,6 @@ public class SmtpAuthIntegrationTest {
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(JAMES_APACHE_ORG);
         dataProbe.addUser(FROM, PASSWORD);
-
-        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        calmlyAwait = Awaitility.with()
-            .pollInterval(slowPacedPollInterval)
-            .and()
-            .with()
-            .pollDelay(slowPacedPollInterval)
-            .await();
     }
 
     private ProcessorConfiguration deliverOnlyTransport() {

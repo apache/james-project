@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets;
 
+import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
@@ -51,9 +52,7 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
-import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
 
 public class AmqpForwardAttachmentTest {
 
@@ -83,7 +82,6 @@ public class AmqpForwardAttachmentTest {
     public final RuleChain chain = RuleChain.outerRule(temporaryFolder).around(rabbitMqContainer).around(amqpRule);
     
     private TemporaryJamesServer jamesServer;
-    private ConditionFactory calmlyAwait;
 
     @Before
     public void setup() throws Exception {
@@ -117,13 +115,6 @@ public class AmqpForwardAttachmentTest {
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder);
-        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        calmlyAwait = Awaitility.with()
-            .pollInterval(slowPacedPollInterval)
-            .and()
-            .with()
-            .pollDelay(slowPacedPollInterval)
-            .await();
 
         DataProbe dataprobe = jamesServer.getProbe(DataProbeImpl.class);
         dataprobe.addDomain(JAMES_APACHE_ORG);

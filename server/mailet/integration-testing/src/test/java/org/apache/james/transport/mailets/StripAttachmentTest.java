@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets;
 
+import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.internet.MimeMessage;
@@ -47,9 +48,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
 
 public class StripAttachmentTest {
 
@@ -67,7 +66,6 @@ public class StripAttachmentTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private TemporaryJamesServer jamesServer;
-    private ConditionFactory calmlyAwait;
 
     @Before
     public void setup() throws Exception {
@@ -98,8 +96,6 @@ public class StripAttachmentTest {
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder);
-        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(JAMES_APACHE_ORG);

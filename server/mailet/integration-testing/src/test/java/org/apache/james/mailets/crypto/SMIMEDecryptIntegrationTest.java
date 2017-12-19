@@ -19,6 +19,7 @@
 
 package org.apache.james.mailets.crypto;
 
+import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
@@ -47,9 +48,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
 
 public class SMIMEDecryptIntegrationTest {
     private static final ZonedDateTime DATE_2015 = ZonedDateTime.parse("2015-10-15T14:10:00Z");
@@ -65,7 +64,6 @@ public class SMIMEDecryptIntegrationTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private TemporaryJamesServer jamesServer;
-    private ConditionFactory calmlyAwait;
 
     @Before
     public void setup() throws Exception {
@@ -92,8 +90,6 @@ public class SMIMEDecryptIntegrationTest {
             .withOverrides(binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(() -> DATE_2015))
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder);
-        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
 
         DataProbeImpl serverProbe = jamesServer.getProbe(DataProbeImpl.class);
         serverProbe.addDomain(DEFAULT_DOMAIN);

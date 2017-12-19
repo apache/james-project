@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import static com.jayway.restassured.RestAssured.with;
+import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
@@ -60,9 +61,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.testcontainers.containers.wait.HostPortWaitStrategy;
 
-import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.specification.RequestSpecification;
 
@@ -84,7 +83,6 @@ public class GroupMappingTest {
     private static final String MESSAGE_CONTENT = "any text";
 
     private TemporaryJamesServer jamesServer;
-    private ConditionFactory calmlyAwait;
     private MimeMessage message;
     private DataProbe dataProbe;
     private RequestSpecification restApiRequest;
@@ -144,9 +142,6 @@ public class GroupMappingTest {
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder);
-
-        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
 
         calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> fakeSmtp.tryConnect(25));
 

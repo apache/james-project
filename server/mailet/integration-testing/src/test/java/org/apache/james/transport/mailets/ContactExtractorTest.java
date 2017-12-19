@@ -19,6 +19,7 @@
 package org.apache.james.transport.mailets;
 
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
@@ -48,7 +49,6 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
-import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 
 public class ContactExtractorTest {
@@ -136,8 +136,7 @@ public class ContactExtractorTest {
                 IMAPMessageReader imap = new IMAPMessageReader("localhost", 1143)) {
 
             messageSender.sendMessage(mail);
-            Awaitility.await().pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
-                .atMost(Duration.ONE_MINUTE)
+            calmlyAwait.atMost(Duration.ONE_MINUTE)
                 .until(() -> imap.userReceivedMessage(TO, PASSWORD));
 
             Optional<String> actual = amqpRule.readContent();
