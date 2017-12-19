@@ -20,7 +20,12 @@
 package org.apache.james.mailets;
 
 import static com.jayway.awaitility.Duration.ONE_MINUTE;
-import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
+import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
+import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
+import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
+import static org.apache.james.mailets.configuration.Constants.PASSWORD;
+import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
+import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
 
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.modules.MailboxProbeImpl;
@@ -35,19 +40,13 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class RecipientRewriteTableIntegrationTest {
-    private static final String LOCALHOST_IP = "127.0.0.1";
-    private static final int IMAP_PORT = 1143;
-    private static final int SMTP_PORT = 1025;
-    private static final String PASSWORD = "secret";
-
-    private static final String JAMES_APACHE_ORG = "james.org";
     private static final String JAMES_ANOTHER_DOMAIN = "james.com";
 
-    private static final String FROM = "fromUser@" + JAMES_APACHE_ORG;
-    private static final String RECIPIENT = "touser@" + JAMES_APACHE_ORG;
+    private static final String FROM = "fromUser@" + DEFAULT_DOMAIN;
+    private static final String RECIPIENT = "touser@" + DEFAULT_DOMAIN;
 
-    private static final String ANY_AT_JAMES = "any@" + JAMES_APACHE_ORG;
-    private static final String OTHER_AT_JAMES = "other@" + JAMES_APACHE_ORG;
+    private static final String ANY_AT_JAMES = "any@" + DEFAULT_DOMAIN;
+    private static final String OTHER_AT_JAMES = "other@" + DEFAULT_DOMAIN;
 
     private static final String ANY_AT_ANOTHER_DOMAIN = "any@" + JAMES_ANOTHER_DOMAIN;
 
@@ -65,7 +64,7 @@ public class RecipientRewriteTableIntegrationTest {
         jamesServer = TemporaryJamesServer.builder().build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addDomain(JAMES_ANOTHER_DOMAIN);
     }
 
@@ -81,10 +80,10 @@ public class RecipientRewriteTableIntegrationTest {
         createUserInbox(ANY_AT_JAMES);
         createUserInbox(OTHER_AT_JAMES);
 
-        dataProbe.addAddressMapping("touser", JAMES_APACHE_ORG, ANY_AT_JAMES);
-        dataProbe.addAddressMapping("touser", JAMES_APACHE_ORG, OTHER_AT_JAMES);
+        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, ANY_AT_JAMES);
+        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, OTHER_AT_JAMES);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
             messageSender.sendMessage(FROM, RECIPIENT)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
@@ -107,10 +106,10 @@ public class RecipientRewriteTableIntegrationTest {
         createUserInbox(ANY_AT_JAMES);
         createUserInbox(OTHER_AT_JAMES);
 
-        dataProbe.addAddressMapping("touser", JAMES_APACHE_ORG, ANY_AT_JAMES);
-        dataProbe.addAddressMapping("touser", JAMES_APACHE_ORG, OTHER_AT_JAMES);
+        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, ANY_AT_JAMES);
+        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, OTHER_AT_JAMES);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
             messageSender.sendMessage(FROM, RECIPIENT)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
@@ -131,10 +130,10 @@ public class RecipientRewriteTableIntegrationTest {
         createUserInbox(localUser);
         createUserInbox(OTHER_AT_JAMES);
 
-        dataProbe.addAddressMapping("touser", JAMES_APACHE_ORG, nonDomainUser);
-        dataProbe.addAddressMapping("touser", JAMES_APACHE_ORG, OTHER_AT_JAMES);
+        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, nonDomainUser);
+        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, OTHER_AT_JAMES);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
             messageSender.sendMessage(FROM, RECIPIENT)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
@@ -151,12 +150,12 @@ public class RecipientRewriteTableIntegrationTest {
 
     @Test
     public void messageShouldRedirectToTheSameUserWhenDomainMapping() throws Exception {
-        dataProbe.addDomainAliasMapping(JAMES_APACHE_ORG, JAMES_ANOTHER_DOMAIN);
+        dataProbe.addDomainAliasMapping(DEFAULT_DOMAIN, JAMES_ANOTHER_DOMAIN);
 
         createUserInbox(ANY_AT_JAMES);
         createUserInbox(ANY_AT_ANOTHER_DOMAIN);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
             messageSender.sendMessage(FROM, ANY_AT_JAMES)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
@@ -169,12 +168,12 @@ public class RecipientRewriteTableIntegrationTest {
 
     @Test
     public void messageShouldNotSendToRecipientWhenDomainMapping() throws Exception {
-        dataProbe.addDomainAliasMapping(JAMES_APACHE_ORG, JAMES_ANOTHER_DOMAIN);
+        dataProbe.addDomainAliasMapping(DEFAULT_DOMAIN, JAMES_ANOTHER_DOMAIN);
 
         createUserInbox(ANY_AT_JAMES);
         createUserInbox(ANY_AT_ANOTHER_DOMAIN);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
             messageSender.sendMessage(FROM, ANY_AT_JAMES)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 

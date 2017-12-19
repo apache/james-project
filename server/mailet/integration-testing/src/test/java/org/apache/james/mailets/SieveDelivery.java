@@ -20,7 +20,12 @@
 package org.apache.james.mailets;
 
 import static com.jayway.awaitility.Duration.ONE_MINUTE;
-import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
+import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
+import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
+import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
+import static org.apache.james.mailets.configuration.Constants.PASSWORD;
+import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
+import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
 
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
@@ -37,23 +42,33 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class SieveDelivery {
-
-    private static final String DEFAULT_DOMAIN = "james.org";
-    private static final String LOCALHOST_IP = "127.0.0.1";
-    private static final int IMAP_PORT = 1143;
-    private static final int SMTP_PORT = 1025;
-    private static final String PASSWORD = "secret";
-
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule
     public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
 
     private TemporaryJamesServer jamesServer;
+    private String targetedMailbox;
+    private String recipient;
+    private String from;
 
     @Before
     public void setup() throws Exception {
         jamesServer = TemporaryJamesServer.builder().build(temporaryFolder);
+
+
+        from = "user@" + DEFAULT_DOMAIN;
+        recipient = "user2@" + DEFAULT_DOMAIN;
+        targetedMailbox = "INBOX.any";
+
+        DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
+        dataProbe.addUser(from, PASSWORD);
+        dataProbe.addUser(recipient, PASSWORD);
+
+        MailboxProbe mailboxProbe = jamesServer.getProbe(MailboxProbeImpl.class);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipient, "INBOX");
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipient, targetedMailbox);
     }
 
     @After
@@ -63,17 +78,6 @@ public class SieveDelivery {
 
     @Test
     public void simpleMailShouldBeSent() throws Exception {
-        String from = "user@" + DEFAULT_DOMAIN;
-        String recipient = "user2@" + DEFAULT_DOMAIN;
-        String targetedMailbox = "INBOX.any";
-
-        DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(DEFAULT_DOMAIN);
-        dataProbe.addUser(from, PASSWORD);
-        dataProbe.addUser(recipient, PASSWORD);
-        MailboxProbe mailboxProbe = jamesServer.getProbe(MailboxProbeImpl.class);
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipient, "INBOX");
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipient, targetedMailbox);
         jamesServer.getProbe(SieveProbeImpl.class).addActiveSieveScript(recipient, "myscript.sieve", "require \"fileinto\";\n" +
             "\n" +
             "fileinto \"" + targetedMailbox + "\";");

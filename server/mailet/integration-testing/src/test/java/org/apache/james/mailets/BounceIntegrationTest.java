@@ -20,7 +20,12 @@
 package org.apache.james.mailets;
 
 import static com.jayway.awaitility.Duration.ONE_MINUTE;
-import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
+import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
+import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
+import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
+import static org.apache.james.mailets.configuration.Constants.PASSWORD;
+import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
+import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
 
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.configuration.CommonProcessors;
@@ -48,15 +53,9 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class BounceIntegrationTest {
-    private static final String LOCALHOST_IP = "127.0.0.1";
-    private static final int SMTP_PORT = 1025;
-    private static final int IMAP_PORT = 1143;
-    private static final String PASSWORD = "secret";
-
-    private static final String JAMES_APACHE_ORG = "james.org";
-    public static final String POSTMASTER = "postmaster@" + JAMES_APACHE_ORG;
-    public static final String BOUNCE_RECEIVER = "bounce.receiver@" + JAMES_APACHE_ORG;
-    private static final String RECIPIENT = "to@" + JAMES_APACHE_ORG;
+    public static final String POSTMASTER = "postmaster@" + DEFAULT_DOMAIN;
+    public static final String BOUNCE_RECEIVER = "bounce.receiver@" + DEFAULT_DOMAIN;
+    private static final String RECIPIENT = "to@" + DEFAULT_DOMAIN;
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -83,11 +82,11 @@ public class BounceIntegrationTest {
             .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(BOUNCE_RECEIVER, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
             messageSender.sendMessage(BOUNCE_RECEIVER, RECIPIENT);
 
             imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
@@ -109,11 +108,11 @@ public class BounceIntegrationTest {
             .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(BOUNCE_RECEIVER, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
             messageSender.sendMessage(BOUNCE_RECEIVER, RECIPIENT);
 
             imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
@@ -135,12 +134,12 @@ public class BounceIntegrationTest {
             .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(BOUNCE_RECEIVER, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage("any@" + JAMES_APACHE_ORG, RECIPIENT);
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
+            messageSender.sendMessage("any@" + DEFAULT_DOMAIN, RECIPIENT);
 
             imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
                 .login(BOUNCE_RECEIVER, PASSWORD)
@@ -162,12 +161,12 @@ public class BounceIntegrationTest {
             .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(BOUNCE_RECEIVER, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage("any@" + JAMES_APACHE_ORG, RECIPIENT);
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
+            messageSender.sendMessage("any@" + DEFAULT_DOMAIN, RECIPIENT);
 
             imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
                 .login(BOUNCE_RECEIVER, PASSWORD)
@@ -189,12 +188,12 @@ public class BounceIntegrationTest {
             .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(BOUNCE_RECEIVER, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage("any@" + JAMES_APACHE_ORG, RECIPIENT);
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
+            messageSender.sendMessage("any@" + DEFAULT_DOMAIN, RECIPIENT);
 
             imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
                 .login(BOUNCE_RECEIVER, PASSWORD)
@@ -215,11 +214,11 @@ public class BounceIntegrationTest {
             .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(BOUNCE_RECEIVER, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
             messageSender.sendMessage(BOUNCE_RECEIVER, RECIPIENT);
 
             imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
@@ -241,12 +240,12 @@ public class BounceIntegrationTest {
             .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(POSTMASTER, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage("any@" + JAMES_APACHE_ORG, RECIPIENT);
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
+            messageSender.sendMessage("any@" + DEFAULT_DOMAIN, RECIPIENT);
 
             imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
                 .login(POSTMASTER, PASSWORD)

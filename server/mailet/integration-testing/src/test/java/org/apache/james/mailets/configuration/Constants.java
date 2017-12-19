@@ -23,7 +23,7 @@ import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
 
-public class AwaitUtils {
+public class Constants {
     public static Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
     public static ConditionFactory calmlyAwait = Awaitility.with()
         .pollInterval(slowPacedPollInterval)
@@ -31,4 +31,10 @@ public class AwaitUtils {
         .with()
         .pollDelay(slowPacedPollInterval)
         .await();
+
+    public static final String DEFAULT_DOMAIN = "james.org";
+    public static final String LOCALHOST_IP = "127.0.0.1";
+    public static final int IMAP_PORT = 1143;
+    public static final int SMTP_PORT = 1025;
+    public static final String PASSWORD = "secret";
 }

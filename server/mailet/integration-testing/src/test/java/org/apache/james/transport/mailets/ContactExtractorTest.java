@@ -20,7 +20,13 @@ package org.apache.james.transport.mailets;
 
 import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
-import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
+import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
+import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
+import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
+import static org.apache.james.mailets.configuration.Constants.PASSWORD;
+import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
+import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
+import static org.apache.mailet.base.MailAddressFixture.JAMES_APACHE_ORG;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
@@ -51,20 +57,13 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
 public class ContactExtractorTest {
-    private static final String LOCALHOST_IP = "127.0.0.1";
-    private static final int IMAP_PORT = 1143;
-    private static final int SMTP_PORT = 1025;
-    private static final String JAMES_APACHE_ORG = "james.org";
-
-    public static final String JAMES_ORG = "james.org";
-    public static final String SENDER = "sender@" + JAMES_ORG;
-    public static final String TO = "to@" + JAMES_ORG;
-    public static final String TO2 = "to2@" + JAMES_ORG;
-    public static final String CC = "cc@" + JAMES_ORG;
-    public static final String CC2 = "cc2@" + JAMES_ORG;
-    public static final String BCC = "bcc@" + JAMES_ORG;
-    public static final String BCC2 = "bcc2@" + JAMES_ORG;
-    public static final String PASSWORD = "secret";
+    public static final String SENDER = "sender@" + DEFAULT_DOMAIN;
+    public static final String TO = "to@" + DEFAULT_DOMAIN;
+    public static final String TO2 = "to2@" + DEFAULT_DOMAIN;
+    public static final String CC = "cc@" + DEFAULT_DOMAIN;
+    public static final String CC2 = "cc2@" + DEFAULT_DOMAIN;
+    public static final String BCC = "bcc@" + DEFAULT_DOMAIN;
+    public static final String BCC2 = "bcc2@" + DEFAULT_DOMAIN;
     public static final String EXCHANGE = "collector:email";
     public static final String ROUTING_KEY = "";
 
@@ -108,7 +107,7 @@ public class ContactExtractorTest {
             .withMailetContainer(mailets)
             .build(folder);
         DataProbeImpl probe = jamesServer.getProbe(DataProbeImpl.class);
-        probe.addDomain(JAMES_ORG);
+        probe.addDomain(DEFAULT_DOMAIN);
         probe.addUser(SENDER, PASSWORD);
         probe.addUser(TO, PASSWORD);
         probe.addUser(TO2, PASSWORD);

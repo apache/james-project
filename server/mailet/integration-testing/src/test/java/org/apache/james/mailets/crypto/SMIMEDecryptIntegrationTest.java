@@ -20,7 +20,10 @@
 package org.apache.james.mailets.crypto;
 
 import static com.jayway.awaitility.Duration.ONE_MINUTE;
-import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
+import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
+import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
+import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
+import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
@@ -51,11 +54,7 @@ import org.junit.rules.TemporaryFolder;
 
 public class SMIMEDecryptIntegrationTest {
     private static final ZonedDateTime DATE_2015 = ZonedDateTime.parse("2015-10-15T14:10:00Z");
-    private static final String LOCALHOST_IP = "127.0.0.1";
-    private static final int IMAP_PORT = 1143;
     private static final int SMTP_SECURE_PORT = 10465;
-
-    private static final String DEFAULT_DOMAIN = "localdomain";
     private static final String FROM = "sender@" + DEFAULT_DOMAIN;
     private static final String PASSWORD = "secret";
 

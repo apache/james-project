@@ -20,7 +20,12 @@
 package org.apache.james.mailets;
 
 import static com.jayway.awaitility.Duration.ONE_MINUTE;
-import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
+import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
+import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
+import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
+import static org.apache.james.mailets.configuration.Constants.PASSWORD;
+import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
+import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
 
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.modules.MailboxProbeImpl;
@@ -35,13 +40,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class CommonMailetConfigurationTest {
-
-    private static final String DEFAULT_DOMAIN = "james.org";
-    private static final String LOCALHOST_IP = "127.0.0.1";
-    private static final int IMAP_PORT = 1143;
-    private static final int SMTP_PORT = 1025;
-    private static final String PASSWORD = "secret";
-
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule

@@ -20,7 +20,12 @@
 package org.apache.james.transport.mailets;
 
 import static com.jayway.awaitility.Duration.ONE_MINUTE;
-import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
+import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
+import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
+import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
+import static org.apache.james.mailets.configuration.Constants.PASSWORD;
+import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
+import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
@@ -64,16 +69,8 @@ import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
 
 public class ICSAttachmentWorkflowTest {
-
-    private static final String LOCALHOST_IP = "127.0.0.1";
-    private static final int IMAP_PORT = 1143;
-    private static final int SMTP_PORT = 1025;
-    private static final String PASSWORD = "secret";
-
-    private static final String JAMES_APACHE_ORG = "james.org";
-
-    private static final String FROM = "fromUser@" + JAMES_APACHE_ORG;
-    private static final String RECIPIENT = "touser@" + JAMES_APACHE_ORG;
+    private static final String FROM = "fromUser@" + DEFAULT_DOMAIN;
+    private static final String RECIPIENT = "touser@" + DEFAULT_DOMAIN;
 
     private static final String MAIL_ATTRIBUTE = "ical.attachments";
     private static final String PARSED_ICAL_MAIL_ATTRIBUTE = "ical.parsed";
@@ -503,7 +500,7 @@ public class ICSAttachmentWorkflowTest {
             .build(temporaryFolder);
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(JAMES_APACHE_ORG);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
         dataProbe.addUser(RECIPIENT, PASSWORD);
         jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, RECIPIENT, "INBOX");
@@ -574,7 +571,7 @@ public class ICSAttachmentWorkflowTest {
               .recipient(new MailAddress(RECIPIENT))
               .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
@@ -595,7 +592,7 @@ public class ICSAttachmentWorkflowTest {
               .recipient(new MailAddress(RECIPIENT))
               .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
@@ -632,7 +629,7 @@ public class ICSAttachmentWorkflowTest {
               .recipient(new MailAddress(RECIPIENT))
               .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
@@ -658,7 +655,7 @@ public class ICSAttachmentWorkflowTest {
               .recipient(new MailAddress(RECIPIENT))
               .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
@@ -683,7 +680,7 @@ public class ICSAttachmentWorkflowTest {
             .recipient(new MailAddress(RECIPIENT))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
@@ -708,7 +705,7 @@ public class ICSAttachmentWorkflowTest {
             .recipient(new MailAddress(RECIPIENT))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
@@ -738,7 +735,7 @@ public class ICSAttachmentWorkflowTest {
             .recipient(new MailAddress(RECIPIENT))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
@@ -769,7 +766,7 @@ public class ICSAttachmentWorkflowTest {
               .recipient(new MailAddress(RECIPIENT))
               .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
@@ -794,7 +791,7 @@ public class ICSAttachmentWorkflowTest {
             .recipient(new MailAddress(RECIPIENT))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
@@ -836,7 +833,7 @@ public class ICSAttachmentWorkflowTest {
             .recipient(new MailAddress(RECIPIENT))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 

@@ -20,7 +20,11 @@
 package org.apache.james.smtp;
 
 import static com.jayway.awaitility.Duration.ONE_MINUTE;
-import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
+import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
+import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
+import static org.apache.james.mailets.configuration.Constants.PASSWORD;
+import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
+import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
 
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.TemporaryJamesServer;
@@ -44,12 +48,7 @@ import org.junit.rules.TemporaryFolder;
 import com.google.common.base.Strings;
 
 public class SmtpSizeLimitationTest {
-    private static final String LOCALHOST_IP = "127.0.0.1";
-    private static final int SMTP_PORT = 1025;
-    private static final String PASSWORD = "secret";
-
-    private static final String JAMES_APACHE_ORG = "james.org";
-    private static final String USER = "user@" + JAMES_APACHE_ORG;
+    private static final String USER = "user@" + DEFAULT_DOMAIN;
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -84,7 +83,7 @@ public class SmtpSizeLimitationTest {
             .build(temporaryFolder);
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(JAMES_APACHE_ORG);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(USER, PASSWORD);
     }
 
@@ -102,7 +101,7 @@ public class SmtpSizeLimitationTest {
             .withMaxMessageSizeInKb(10));
 
         try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, USER, PASSWORD)) {
+                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN, USER, PASSWORD)) {
 
             messageSender.sendMessageWithHeaders(USER, USER, Strings.repeat("Long message", 1024));
             calmlyAwait.atMost(ONE_MINUTE).until(messageSender::messageSendingFailed);
@@ -116,7 +115,7 @@ public class SmtpSizeLimitationTest {
             .withMaxMessageSizeInKb(10));
 
         try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, USER, PASSWORD)) {
+                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN, USER, PASSWORD)) {
 
             messageSender.sendMessageWithHeaders(USER, USER,"Short message")
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
