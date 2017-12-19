@@ -19,6 +19,7 @@
 
 package org.apache.james.mailets;
 
+import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static com.jayway.restassured.RestAssured.when;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
@@ -59,7 +60,6 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 import org.testcontainers.containers.wait.HostPortWaitStrategy;
 
-import com.jayway.awaitility.Duration;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
@@ -93,7 +93,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
     @Before
     public void setup() throws Exception {
-        calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> fakeSmtp.tryConnect(25));
+        calmlyAwait.atMost(ONE_MINUTE).until(() -> fakeSmtp.tryConnect(25));
 
         RestAssured.requestSpecification = new RequestSpecBuilder()
             .setContentType(ContentType.JSON)
@@ -127,7 +127,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
         try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage(FROM, RECIPIENT);
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
+            calmlyAwait.atMost(ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
         }
     }
 
@@ -147,7 +147,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
         try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage(FROM, RECIPIENT);
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
+            calmlyAwait.atMost(ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
         }
     }
 
@@ -167,7 +167,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
         try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage(FROM, RECIPIENT);
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
+            calmlyAwait.atMost(ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
         }
     }
 
@@ -187,7 +187,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
         try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage(FROM, RECIPIENT);
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
+            calmlyAwait.atMost(ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
         }
     }
 
@@ -245,7 +245,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
             messageSender.sendMessage(FROM, RECIPIENT);
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() ->
+            calmlyAwait.atMost(ONE_MINUTE).until(() ->
                 imapMessageReader.userReceivedMessageInMailbox(FROM, PASSWORD, MailboxConstants.INBOX));
         }
     }
@@ -293,7 +293,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
             messageSender.sendMessage(FROM, RECIPIENT);
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() ->
+            calmlyAwait.atMost(ONE_MINUTE).until(() ->
                 imapMessageReader.userReceivedMessageInMailbox(FROM, PASSWORD, MailboxConstants.INBOX));
         }
     }
@@ -322,7 +322,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
         try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage(FROM, RECIPIENT);
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
+            calmlyAwait.atMost(ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
         }
     }
 

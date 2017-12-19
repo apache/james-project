@@ -19,6 +19,7 @@
 
 package org.apache.james.smtp;
 
+import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static com.jayway.restassured.RestAssured.when;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
@@ -54,7 +55,6 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 import org.testcontainers.containers.wait.HostPortWaitStrategy;
 
-import com.jayway.awaitility.Duration;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
@@ -85,7 +85,7 @@ public class SmtpAuthorizedAddressesTest {
 
     @Before
     public void setup() throws Exception {
-        calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> fakeSmtp.tryConnect(25));
+        calmlyAwait.atMost(ONE_MINUTE).until(() -> fakeSmtp.tryConnect(25));
 
         RestAssured.requestSpecification = new RequestSpecBuilder()
             .setContentType(ContentType.JSON)
@@ -155,10 +155,10 @@ public class SmtpAuthorizedAddressesTest {
         try (SMTPMessageSender messageSender =
                  SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
 
-            messageSender.sendMessage(FROM, TO);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
+            messageSender.sendMessage(FROM, TO)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE)
+            calmlyAwait.atMost(ONE_MINUTE)
                 .until(this::messageIsReceivedByTheSmtpServer);
         }
     }
@@ -173,7 +173,7 @@ public class SmtpAuthorizedAddressesTest {
                  SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
 
             messageSender.sendMessage(FROM, TO);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageSendingFailed);
+            calmlyAwait.atMost(ONE_MINUTE).until(messageSender::messageSendingFailed);
         }
     }
 
@@ -186,11 +186,10 @@ public class SmtpAuthorizedAddressesTest {
         try (SMTPMessageSender messageSender =
                  SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, FROM, PASSWORD)) {
 
-            messageSender.sendMessage(FROM, TO);
+            messageSender.sendMessage(FROM, TO)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-
-            calmlyAwait.atMost(Duration.ONE_MINUTE)
+            calmlyAwait.atMost(ONE_MINUTE)
                 .until(this::messageIsReceivedByTheSmtpServer);
         }
     }
@@ -205,11 +204,10 @@ public class SmtpAuthorizedAddressesTest {
                  SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
 
-            messageSender.sendMessage(TO, FROM);
+            messageSender.sendMessage(TO, FROM)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-
-            calmlyAwait.atMost(Duration.ONE_MINUTE)
+            calmlyAwait.atMost(ONE_MINUTE)
                 .until(() -> imapMessageReader.userReceivedMessage(FROM, PASSWORD));
         }
     }

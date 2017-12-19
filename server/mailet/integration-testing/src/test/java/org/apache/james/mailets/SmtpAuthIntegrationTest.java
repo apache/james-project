@@ -19,6 +19,7 @@
 
 package org.apache.james.mailets;
 
+import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -42,8 +43,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import com.jayway.awaitility.Duration;
 
 public class SmtpAuthIntegrationTest {
     private static final String LOCALHOST_IP = "127.0.0.1";
@@ -122,10 +121,10 @@ public class SmtpAuthIntegrationTest {
                  SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, FROM, PASSWORD);
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
 
-            messageSender.sendMessage(FROM, FROM);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
+            messageSender.sendMessage(FROM, FROM)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE)
+            calmlyAwait.atMost(ONE_MINUTE)
                 .until(() -> imapMessageReader.userReceivedMessage(FROM, PASSWORD));
         }
     }
@@ -136,12 +135,11 @@ public class SmtpAuthIntegrationTest {
                  SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
 
-            messageSender.sendMessage(FROM, FROM);
-
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
+            messageSender.sendMessage(FROM, FROM)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
             MailRepositoryProbeImpl repositoryProbe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> repositoryProbe.getRepositoryMailCount(DROPPED_MAILS) == 1);
+            calmlyAwait.atMost(ONE_MINUTE).until(() -> repositoryProbe.getRepositoryMailCount(DROPPED_MAILS) == 1);
             assertThat(imapMessageReader.userReceivedMessage(FROM, PASSWORD)).isFalse();
         }
     }

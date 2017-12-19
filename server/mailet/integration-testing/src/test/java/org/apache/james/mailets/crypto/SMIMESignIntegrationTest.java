@@ -19,6 +19,7 @@
 
 package org.apache.james.mailets.crypto;
 
+import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -48,8 +49,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import com.jayway.awaitility.Duration;
 
 public class SMIMESignIntegrationTest {
 
@@ -122,9 +121,9 @@ public class SMIMESignIntegrationTest {
 
         try (SMTPMessageSender messageSender = SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_SECURE_PORT, DEFAULT_DOMAIN, FROM, PASSWORD);
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
+            messageSender.sendMessage(FROM, RECIPIENT)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
 
             assertThat(imapMessageReader.readFirstMessageInInbox(RECIPIENT, PASSWORD))
                 .containsSequence("Content-Description: S/MIME Cryptographic Signature");
@@ -135,9 +134,9 @@ public class SMIMESignIntegrationTest {
     public void NonAuthenticatedMessagesShouldNotBeSigned() throws Exception {
         try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN);
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
+            messageSender.sendMessage(FROM, RECIPIENT)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
 
             assertThat(imapMessageReader.readFirstMessageInInbox(RECIPIENT, PASSWORD))
                 .doesNotContain("Content-Description: S/MIME Cryptographic Signature");

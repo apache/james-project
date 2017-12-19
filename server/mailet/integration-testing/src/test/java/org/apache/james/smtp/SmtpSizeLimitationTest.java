@@ -19,6 +19,7 @@
 
 package org.apache.james.smtp;
 
+import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
 
 import org.apache.james.MemoryJamesServerMain;
@@ -41,7 +42,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Strings;
-import com.jayway.awaitility.Duration;
 
 public class SmtpSizeLimitationTest {
     private static final String LOCALHOST_IP = "127.0.0.1";
@@ -105,7 +105,7 @@ public class SmtpSizeLimitationTest {
                  SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, USER, PASSWORD)) {
 
             messageSender.sendMessageWithHeaders(USER, USER, Strings.repeat("Long message", 1024));
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageSendingFailed);
+            calmlyAwait.atMost(ONE_MINUTE).until(messageSender::messageSendingFailed);
         }
     }
 
@@ -118,8 +118,8 @@ public class SmtpSizeLimitationTest {
         try (SMTPMessageSender messageSender =
                  SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, USER, PASSWORD)) {
 
-            messageSender.sendMessageWithHeaders(USER, USER,"Short message");
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
+            messageSender.sendMessageWithHeaders(USER, USER,"Short message")
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 }

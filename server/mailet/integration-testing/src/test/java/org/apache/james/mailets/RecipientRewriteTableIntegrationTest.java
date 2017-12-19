@@ -19,6 +19,7 @@
 
 package org.apache.james.mailets;
 
+import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
 
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -32,8 +33,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import com.jayway.awaitility.Duration;
 
 public class RecipientRewriteTableIntegrationTest {
     private static final String LOCALHOST_IP = "127.0.0.1";
@@ -85,10 +84,10 @@ public class RecipientRewriteTableIntegrationTest {
 
         try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(ANY_AT_JAMES, PASSWORD));
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(OTHER_AT_JAMES, PASSWORD));
+            messageSender.sendMessage(FROM, RECIPIENT)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(ANY_AT_JAMES, PASSWORD));
+            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(OTHER_AT_JAMES, PASSWORD));
         }
     }
 
@@ -105,10 +104,10 @@ public class RecipientRewriteTableIntegrationTest {
 
         try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
+            messageSender.sendMessage(FROM, RECIPIENT)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userDoesNotReceiveMessage(RECIPIENT, PASSWORD));
+            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userDoesNotReceiveMessage(RECIPIENT, PASSWORD));
         }
     }
 
@@ -127,11 +126,11 @@ public class RecipientRewriteTableIntegrationTest {
 
         try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
+            messageSender.sendMessage(FROM, RECIPIENT)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(OTHER_AT_JAMES, PASSWORD));
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(localUser, PASSWORD));
+            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(OTHER_AT_JAMES, PASSWORD));
+            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(localUser, PASSWORD));
         }
     }
 
@@ -144,9 +143,9 @@ public class RecipientRewriteTableIntegrationTest {
 
         try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(FROM, ANY_AT_JAMES);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(ANY_AT_ANOTHER_DOMAIN, PASSWORD));
+            messageSender.sendMessage(FROM, ANY_AT_JAMES)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(ANY_AT_ANOTHER_DOMAIN, PASSWORD));
         }
     }
 
@@ -159,9 +158,9 @@ public class RecipientRewriteTableIntegrationTest {
 
         try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(FROM, ANY_AT_JAMES);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userDoesNotReceiveMessage(ANY_AT_JAMES, PASSWORD));
+            messageSender.sendMessage(FROM, ANY_AT_JAMES)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userDoesNotReceiveMessage(ANY_AT_JAMES, PASSWORD));
         }
     }
 

@@ -19,6 +19,7 @@
 
 package org.apache.james.mailets;
 
+import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
 
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -33,8 +34,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import com.jayway.awaitility.Duration;
 
 public class AddDeliveredToHeaderTest {
 
@@ -74,9 +73,9 @@ public class AddDeliveredToHeaderTest {
 
         try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN);
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(from, recipient);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.readFirstMessageHeadersInInbox(recipient, PASSWORD)
+            messageSender.sendMessage(from, recipient)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.readFirstMessageHeadersInInbox(recipient, PASSWORD)
                 .contains(AddDeliveredToHeader.DELIVERED_TO + ": " + recipient));
         }
     }

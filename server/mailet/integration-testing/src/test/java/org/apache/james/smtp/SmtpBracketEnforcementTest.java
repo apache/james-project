@@ -19,6 +19,7 @@
 
 package org.apache.james.smtp;
 
+import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
 
 import org.apache.james.MemoryJamesServerMain;
@@ -39,8 +40,6 @@ import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import com.jayway.awaitility.Duration;
 
 public class SmtpBracketEnforcementTest {
     private static final String LOCALHOST_IP = "127.0.0.1";
@@ -102,8 +101,8 @@ public class SmtpBracketEnforcementTest {
         try (SMTPMessageSender messageSender =
                  SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, USER, PASSWORD)) {
 
-            messageSender.sendMessage(USER, USER);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
+            messageSender.sendMessage(USER, USER)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -115,8 +114,8 @@ public class SmtpBracketEnforcementTest {
         try (SMTPMessageSender messageSender =
                  SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, USER, PASSWORD)) {
 
-            messageSender.sendMessageNoBracket(USER, USER);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
+            messageSender.sendMessageNoBracket(USER, USER)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -128,8 +127,8 @@ public class SmtpBracketEnforcementTest {
         try (SMTPMessageSender messageSender =
                  SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, USER, PASSWORD)) {
 
-            messageSender.sendMessage(USER, USER);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
+            messageSender.sendMessage(USER, USER)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -142,7 +141,7 @@ public class SmtpBracketEnforcementTest {
                  SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, USER, PASSWORD)) {
 
             messageSender.sendMessageNoBracket(USER, USER);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageSendingFailed);
+            calmlyAwait.atMost(ONE_MINUTE).until(messageSender::messageSendingFailed);
         }
     }
 }

@@ -37,6 +37,7 @@ import org.apache.mailet.Mail;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Throwables;
+import com.jayway.awaitility.core.ConditionFactory;
 
 public class SMTPMessageSender implements Closeable {
 
@@ -64,7 +65,7 @@ public class SMTPMessageSender implements Closeable {
         this.senderDomain = senderDomain;
     }
 
-    public void sendMessage(String from, String recipient) {
+    public SMTPMessageSender sendMessage(String from, String recipient) {
         try {
             smtpClient.helo(senderDomain);
             smtpClient.setSender(from);
@@ -77,9 +78,10 @@ public class SMTPMessageSender implements Closeable {
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
+        return this;
     }
 
-    public void sendMessageNoBracket(String from, String recipient) {
+    public SMTPMessageSender sendMessageNoBracket(String from, String recipient) {
         try {
             smtpClient.helo(senderDomain);
             smtpClient.setSender(from);
@@ -92,9 +94,10 @@ public class SMTPMessageSender implements Closeable {
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
+        return this;
     }
 
-    public void sendMessageWithHeaders(String from, String recipient, String message) {
+    public SMTPMessageSender sendMessageWithHeaders(String from, String recipient, String message) {
         try {
             smtpClient.helo(senderDomain);
             smtpClient.setSender(from);
@@ -103,9 +106,10 @@ public class SMTPMessageSender implements Closeable {
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
+        return this;
     }
 
-    public void sendMessage(Mail mail) throws MessagingException {
+    public SMTPMessageSender sendMessage(Mail mail) throws MessagingException {
         try {
             String from = mail.getSender().asString();
             smtpClient.helo(senderDomain);
@@ -117,6 +121,7 @@ public class SMTPMessageSender implements Closeable {
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
+        return this;
     }
 
     private String asString(Message message) throws IOException, MessagingException {
@@ -128,6 +133,10 @@ public class SMTPMessageSender implements Closeable {
     public boolean messageHasBeenSent() throws IOException {
         return smtpClient.getReplyString()
             .contains("250 2.6.0 Message received");
+    }
+
+    public void awaitSent(ConditionFactory conditionFactory) {
+        conditionFactory.until(this::messageHasBeenSent);
     }
 
     public boolean messageSendingFailed() throws IOException {

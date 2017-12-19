@@ -19,6 +19,7 @@
 
 package org.apache.james.mailets;
 
+import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
 
 import org.apache.james.MemoryJamesServerMain;
@@ -46,8 +47,6 @@ import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import com.jayway.awaitility.Duration;
 
 public class BounceIntegrationTest {
     private static final String LOCALHOST_IP = "127.0.0.1";
@@ -91,7 +90,7 @@ public class BounceIntegrationTest {
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
             messageSender.sendMessage(BOUNCE_RECEIVER, RECIPIENT);
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() ->
+            calmlyAwait.atMost(ONE_MINUTE).until(() ->
                 imapMessageReader.userReceivedMessageInMailbox(BOUNCE_RECEIVER, PASSWORD, MailboxConstants.INBOX));
         }
     }
@@ -116,7 +115,7 @@ public class BounceIntegrationTest {
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
             messageSender.sendMessage(BOUNCE_RECEIVER, RECIPIENT);
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() ->
+            calmlyAwait.atMost(ONE_MINUTE).until(() ->
                 imapMessageReader.userReceivedMessageInMailbox(BOUNCE_RECEIVER, PASSWORD, MailboxConstants.INBOX));
         }
     }
@@ -141,7 +140,7 @@ public class BounceIntegrationTest {
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
             messageSender.sendMessage("any@" + JAMES_APACHE_ORG, RECIPIENT);
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() ->
+            calmlyAwait.atMost(ONE_MINUTE).until(() ->
                 imapMessageReader.userReceivedMessageInMailbox(BOUNCE_RECEIVER, PASSWORD, MailboxConstants.INBOX));
         }
     }
@@ -167,7 +166,7 @@ public class BounceIntegrationTest {
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
             messageSender.sendMessage("any@" + JAMES_APACHE_ORG, RECIPIENT);
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() ->
+            calmlyAwait.atMost(ONE_MINUTE).until(() ->
                 imapMessageReader.userReceivedMessageInMailbox(BOUNCE_RECEIVER, PASSWORD, MailboxConstants.INBOX));
         }
     }
@@ -193,7 +192,7 @@ public class BounceIntegrationTest {
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
             messageSender.sendMessage("any@" + JAMES_APACHE_ORG, RECIPIENT);
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() ->
+            calmlyAwait.atMost(ONE_MINUTE).until(() ->
                 imapMessageReader.userReceivedMessageInMailbox(BOUNCE_RECEIVER, PASSWORD, MailboxConstants.INBOX));
         }
     }
@@ -218,7 +217,7 @@ public class BounceIntegrationTest {
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
             messageSender.sendMessage(BOUNCE_RECEIVER, RECIPIENT);
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() ->
+            calmlyAwait.atMost(ONE_MINUTE).until(() ->
                 imapMessageReader.userReceivedMessageInMailbox(BOUNCE_RECEIVER, PASSWORD, MailboxConstants.INBOX));
         }
     }
@@ -243,7 +242,7 @@ public class BounceIntegrationTest {
              IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
             messageSender.sendMessage("any@" + JAMES_APACHE_ORG, RECIPIENT);
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() ->
+            calmlyAwait.atMost(ONE_MINUTE).until(() ->
                 imapMessageReader.userReceivedMessageInMailbox(POSTMASTER, PASSWORD, MailboxConstants.INBOX));
         }
     }
