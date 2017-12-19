@@ -108,7 +108,6 @@ public class GroupMappingTest {
 
         MailetContainer mailetContainer = MailetContainer.builder()
             .addProcessor(ProcessorConfiguration.root()
-                .enableJmx(true)
                 .addMailet(MailetConfiguration.builder()
                     .matcher(RelayLimit.class)
                     .matcherCondition("30")
@@ -119,7 +118,6 @@ public class GroupMappingTest {
                     .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT)))
             .addProcessor(CommonProcessors.error())
             .addProcessor(ProcessorConfiguration.transport()
-                .enableJmx(true)
                 .addMailet(MailetConfiguration.BCC_STRIPPER)
                 .addMailet(MailetConfiguration.builder()
                     .matcher(All.class)

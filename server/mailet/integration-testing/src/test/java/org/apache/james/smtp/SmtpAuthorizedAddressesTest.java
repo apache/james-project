@@ -114,7 +114,6 @@ public class SmtpAuthorizedAddressesTest {
                     .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT)))
             .addProcessor(CommonProcessors.error())
             .addProcessor(ProcessorConfiguration.transport()
-                .enableJmx(true)
                 .addMailet(MailetConfiguration.BCC_STRIPPER)
                 .addMailet(MailetConfiguration.builder()
                     .matcher(RecipientIsLocal.class)

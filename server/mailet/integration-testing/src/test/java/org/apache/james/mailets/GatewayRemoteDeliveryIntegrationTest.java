@@ -275,7 +275,6 @@ public class GatewayRemoteDeliveryIntegrationTest {
                 .addProcessor(root())
                 .addProcessor(CommonProcessors.error())
                 .addProcessor(ProcessorConfiguration.transport()
-                    .enableJmx(true)
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(RemoveMimeHeader.class)
@@ -365,7 +364,6 @@ public class GatewayRemoteDeliveryIntegrationTest {
     public ProcessorConfiguration root() {
         // Custom in memory DNS resolution is not possible combined with InSpamerBackList
         return ProcessorConfiguration.root()
-            .enableJmx(true)
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(ToProcessor.class)
@@ -375,7 +373,6 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
     private ProcessorConfiguration relayOnlyTransport(String gatewayProperty) {
         return ProcessorConfiguration.transport()
-            .enableJmx(true)
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(RemoveMimeHeader.class)
@@ -396,7 +393,6 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
     private ProcessorConfiguration relayAndLocalDeliveryTransport(String gatewayProperty) {
         return ProcessorConfiguration.transport()
-            .enableJmx(true)
             .addMailet(MailetConfiguration.BCC_STRIPPER)
             .addMailet(MailetConfiguration.builder()
                 .matcher(RecipientIsLocal.class)
@@ -417,7 +413,6 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
     private ProcessorConfiguration directResolutionTransport() {
         return ProcessorConfiguration.transport()
-            .enableJmx(true)
             .addMailet(MailetConfiguration.BCC_STRIPPER)
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)

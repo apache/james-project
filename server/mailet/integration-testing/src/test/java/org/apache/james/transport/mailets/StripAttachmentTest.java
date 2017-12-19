@@ -75,7 +75,6 @@ public class StripAttachmentTest {
             .addProcessor(CommonProcessors.root())
             .addProcessor(CommonProcessors.error())
             .addProcessor(ProcessorConfiguration.transport()
-                    .enableJmx(true)
                     .addMailet(MailetConfiguration.BCC_STRIPPER)
                     .addMailet(MailetConfiguration.builder()
                             .matcher(All.class)
