@@ -78,7 +78,6 @@ public class SMIMESignIntegrationTest {
     @Before
     public void setup() throws Exception {
         MailetContainer mailetContainer = MailetContainer.builder()
-            .postmaster("postmaster@" + DEFAULT_DOMAIN)
             .addProcessor(CommonProcessors.root())
             .addProcessor(CommonProcessors.error())
             .addProcessor(ProcessorConfiguration.transport()

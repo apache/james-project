@@ -108,7 +108,6 @@ public class GroupMappingTest {
         inMemoryDNSService.registerRecord("yopmail.com", containerIp, "yopmail.com");
 
         MailetContainer mailetContainer = MailetContainer.builder()
-            .postmaster("postmaster@" + DOMAIN1)
             .addProcessor(ProcessorConfiguration.root()
                 .enableJmx(true)
                 .addMailet(MailetConfiguration.builder()

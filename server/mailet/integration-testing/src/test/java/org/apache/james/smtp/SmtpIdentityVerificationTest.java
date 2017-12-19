@@ -44,7 +44,6 @@ import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
 
 public class SmtpIdentityVerificationTest {
-    private static final String DEFAULT_DOMAIN = "james.org";
     private static final String LOCALHOST_IP = "127.0.0.1";
     private static final int SMTP_PORT = 1025;
     private static final String PASSWORD = "secret";
@@ -73,7 +72,6 @@ public class SmtpIdentityVerificationTest {
 
     private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
         MailetContainer mailetContainer = MailetContainer.builder()
-            .postmaster("postmaster@" + DEFAULT_DOMAIN)
             .addProcessor(ProcessorConfiguration.root()
                 .addMailet(MailetConfiguration.builder()
                     .matcher(All.class)

@@ -454,7 +454,6 @@ public class ICSAttachmentWorkflowTest {
     @Before
     public void setup() throws Exception {
         MailetContainer mailetContainer = MailetContainer.builder()
-            .postmaster("postmaster@" + JAMES_APACHE_ORG)
             .addProcessor(CommonProcessors.root())
             .addProcessor(CommonProcessors.error())
             .addProcessor(ProcessorConfiguration.transport()

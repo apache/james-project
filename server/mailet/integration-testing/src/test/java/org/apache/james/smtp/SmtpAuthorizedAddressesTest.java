@@ -61,7 +61,6 @@ import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
 public class SmtpAuthorizedAddressesTest {
-    private static final String DEFAULT_DOMAIN = "james.org";
     private static final String LOCALHOST_IP = "127.0.0.1";
     private static final int SMTP_PORT = 1025;
     public static final int IMAP_PORT = 1143;
@@ -108,7 +107,6 @@ public class SmtpAuthorizedAddressesTest {
 
     private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
         MailetContainer mailetContainer = MailetContainer.builder()
-            .postmaster("postmaster@" + DEFAULT_DOMAIN)
             .addProcessor(ProcessorConfiguration.root()
                 .addMailet(MailetConfiguration.builder()
                     .matcher(All.class)

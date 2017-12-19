@@ -36,17 +36,19 @@ public class MailetContainer implements SerializableAsXml {
     public static class Builder {
 
         public static final int DEFAULT_THREAD_COUNT = 5;
-        private String postmaster;
+        public static final String DEFAULT_POSTMASTER = "postmaster@localhost";
+        private Optional<String> postmaster;
         private Optional<Integer> threads;
         private ImmutableList.Builder<ProcessorConfiguration> processors;
 
         private Builder() {
             processors = ImmutableList.builder();
             threads = Optional.empty();
+            postmaster = Optional.empty();
         }
 
         public Builder postmaster(String postmaster) {
-            this.postmaster = postmaster;
+            this.postmaster = Optional.of(postmaster);
             return this;
         }
 
@@ -66,6 +68,7 @@ public class MailetContainer implements SerializableAsXml {
         }
 
         public MailetContainer build() {
+            String postmaster = this.postmaster.orElse(DEFAULT_POSTMASTER);
             int threads = this.threads.orElse(DEFAULT_THREAD_COUNT);
             Preconditions.checkState(!Strings.isNullOrEmpty(postmaster), "'postmaster' is mandatory");
             Preconditions.checkState(threads > 0, "'threads' should be greater than 0");
