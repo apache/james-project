@@ -34,7 +34,6 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.transport.mailets.LocalDelivery;
-import org.apache.james.transport.mailets.RemoveMimeHeader;
 import org.apache.james.transport.mailets.SMIMEDecrypt;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIsLocal;
@@ -80,10 +79,7 @@ public class SMIMEDecryptIntegrationTest {
             .addProcessor(ProcessorConfiguration.builder()
                 .state("transport")
                 .enableJmx(true)
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(All.class)
-                    .mailet(RemoveMimeHeader.class)
-                    .addProperty("name", "bcc"))
+                .addMailet(MailetConfiguration.BCC_STRIPPER)
                 .addMailet(MailetConfiguration.builder()
                     .mailet(SMIMEDecrypt.class)
                     .matcher(All.class)

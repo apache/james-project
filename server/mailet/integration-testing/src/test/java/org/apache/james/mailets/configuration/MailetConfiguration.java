@@ -23,6 +23,8 @@ package org.apache.james.mailets.configuration;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.james.transport.mailets.RemoveMimeHeader;
+import org.apache.james.transport.matchers.All;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.Matcher;
 
@@ -74,6 +76,12 @@ public class MailetConfiguration implements SerializableAsXml {
             return new MailetConfiguration(matcher, matcherCondition, mailet, properties.build());
         }
     }
+
+    public static final MailetConfiguration BCC_STRIPPER = MailetConfiguration.builder()
+        .matcher(All.class)
+        .mailet(RemoveMimeHeader.class)
+        .addProperty("name", "bcc")
+        .build();
 
     private final Class<? extends Matcher> matcher;
     private final Optional<String> matcherCondition;

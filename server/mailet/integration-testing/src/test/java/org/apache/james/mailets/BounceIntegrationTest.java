@@ -33,7 +33,6 @@ import org.apache.james.transport.mailets.LocalDelivery;
 import org.apache.james.transport.mailets.NotifyPostmaster;
 import org.apache.james.transport.mailets.NotifySender;
 import org.apache.james.transport.mailets.Redirect;
-import org.apache.james.transport.mailets.RemoveMimeHeader;
 import org.apache.james.transport.mailets.Resend;
 import org.apache.james.transport.mailets.ToProcessor;
 import org.apache.james.transport.matchers.All;
@@ -260,10 +259,7 @@ public class BounceIntegrationTest {
         // Other recipients will be bouncing
         return ProcessorConfiguration.builder()
             .state("transport")
-            .addMailet(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(RemoveMimeHeader.class)
-                .addProperty("name", "bcc"))
+            .addMailet(MailetConfiguration.BCC_STRIPPER)
             .addMailet(MailetConfiguration.builder()
                 .matcher(RecipientIsLocal.class)
                 .mailet(VacationMailet.class))
