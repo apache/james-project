@@ -86,7 +86,8 @@ public class SmtpAuthIntegrationTest {
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
-            .build(temporaryFolder, mailetContainer);
+            .withMailetContainer(mailetContainer)
+            .build(temporaryFolder);
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(JAMES_APACHE_ORG);
         dataProbe.addUser(FROM, PASSWORD);

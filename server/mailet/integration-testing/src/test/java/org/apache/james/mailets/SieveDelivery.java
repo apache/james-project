@@ -21,8 +21,6 @@ package org.apache.james.mailets;
 
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
-import org.apache.james.mailets.configuration.CommonProcessors;
-import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.protocols.SieveProbeImpl;
 import org.apache.james.probe.DataProbe;
@@ -55,18 +53,7 @@ public class SieveDelivery {
 
     @Before
     public void setup() throws Exception {
-        MailetContainer mailetContainer = MailetContainer.builder()
-            .addProcessor(CommonProcessors.root())
-            .addProcessor(CommonProcessors.error())
-            .addProcessor(CommonProcessors.transport())
-            .addProcessor(CommonProcessors.spam())
-            .addProcessor(CommonProcessors.localAddressError())
-            .addProcessor(CommonProcessors.relayDenied())
-            .addProcessor(CommonProcessors.bounces())
-            .addProcessor(CommonProcessors.sieveManagerCheck())
-            .build();
-
-        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder, mailetContainer);
+        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder);
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
     }

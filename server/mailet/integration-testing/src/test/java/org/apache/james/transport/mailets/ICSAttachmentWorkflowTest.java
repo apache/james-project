@@ -500,7 +500,8 @@ public class ICSAttachmentWorkflowTest {
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
-            .build(temporaryFolder, mailetContainer);
+            .withMailetContainer(mailetContainer)
+            .build(temporaryFolder);
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
 

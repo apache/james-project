@@ -93,7 +93,8 @@ public class SmtpBracketEnforcementTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_ONLY_MODULE)
             .withSmtpConfiguration(smtpConfiguration.build())
-            .build(temporaryFolder, mailetContainer);
+            .withMailetContainer(mailetContainer)
+            .build(temporaryFolder);
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(JAMES_APACHE_ORG);

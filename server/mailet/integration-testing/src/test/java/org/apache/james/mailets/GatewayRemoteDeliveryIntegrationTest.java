@@ -130,7 +130,8 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .build(temporaryFolder, generateMailetContainerConfiguration(gatewayProperty));
+            .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
+            .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
         dataProbe.addDomain(JAMES_APACHE_ORG);
@@ -149,7 +150,8 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .build(temporaryFolder, generateMailetContainerConfiguration(gatewayProperty));
+            .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
+            .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
         dataProbe.addDomain(JAMES_APACHE_ORG);
@@ -168,7 +170,8 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .build(temporaryFolder, generateMailetContainerConfiguration(gatewayProperty));
+            .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
+            .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
         dataProbe.addDomain(JAMES_APACHE_ORG);
@@ -187,7 +190,8 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .build(temporaryFolder, generateMailetContainerConfiguration(gatewayProperty));
+            .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
+            .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
         dataProbe.addDomain(JAMES_APACHE_ORG);
@@ -210,7 +214,8 @@ public class GatewayRemoteDeliveryIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .build(temporaryFolder, generateMailetContainerConfiguration(gatewayProperty));
+            .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
+            .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
         dataProbe.addDomain(JAMES_APACHE_ORG);
@@ -237,13 +242,13 @@ public class GatewayRemoteDeliveryIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .build(temporaryFolder, MailetContainer.builder()
+            .withMailetContainer(MailetContainer.builder()
                 .postmaster("postmaster@" + JAMES_APACHE_ORG)
                 .addProcessor(root())
                 .addProcessor(CommonProcessors.error())
                 .addProcessor(relayAndLocalDeliveryTransport(gatewayProperty))
-                .addProcessor(CommonProcessors.bounces())
-                .build());
+                .addProcessor(CommonProcessors.bounces()))
+            .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
         dataProbe.addDomain(JAMES_APACHE_ORG);
@@ -268,7 +273,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .build(temporaryFolder, MailetContainer.builder()
+            .withMailetContainer(MailetContainer.builder()
                 .postmaster("postmaster@" + JAMES_APACHE_ORG)
                 .addProcessor(root())
                 .addProcessor(CommonProcessors.error())
@@ -291,8 +296,8 @@ public class GatewayRemoteDeliveryIntegrationTest {
                         .addProperty("deliveryThreads", "2")
                         .addProperty("sendpartial", "true")
                         .addProperty("gateway", gatewayProperty)))
-                .addProcessor(CommonProcessors.bounces())
-                .build());
+                .addProcessor(CommonProcessors.bounces()))
+            .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
         dataProbe.addDomain(JAMES_APACHE_ORG);
@@ -316,13 +321,13 @@ public class GatewayRemoteDeliveryIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .build(temporaryFolder, MailetContainer.builder()
+            .withMailetContainer(MailetContainer.builder()
                 .postmaster("postmaster@" + JAMES_APACHE_ORG)
                 .addProcessor(root())
                 .addProcessor(CommonProcessors.error())
                 .addProcessor(directResolutionTransport())
-                .addProcessor(CommonProcessors.bounces())
-                .build());
+                .addProcessor(CommonProcessors.bounces()))
+            .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
         dataProbe.addDomain(JAMES_APACHE_ORG);

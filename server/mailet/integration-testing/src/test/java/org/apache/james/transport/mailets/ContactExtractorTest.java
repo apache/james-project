@@ -100,7 +100,8 @@ public class ContactExtractorTest {
             .build();
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
-            .build(folder, mailets);
+            .withMailetContainer(mailets)
+            .build(folder);
         DataProbeImpl probe = jamesServer.getProbe(DataProbeImpl.class);
         probe.addDomain(JAMES_ORG);
         probe.addUser(SENDER, PASSWORD);

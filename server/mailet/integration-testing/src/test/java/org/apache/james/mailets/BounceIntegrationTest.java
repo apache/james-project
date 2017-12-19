@@ -89,11 +89,12 @@ public class BounceIntegrationTest {
     public void dsnBounceMailetShouldDeliverBounce() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
-            .build(temporaryFolder,
-            generateMailetContainerConfiguration(MailetConfiguration.builder()
+            .withMailetContainer(
+                generateMailetContainerConfiguration(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(DSNBounce.class)
-                .addProperty("passThrough", "false")));
+                .addProperty("passThrough", "false")))
+            .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
         dataProbe.addDomain(JAMES_APACHE_ORG);
@@ -113,11 +114,12 @@ public class BounceIntegrationTest {
     public void bounceMailetShouldDeliverBounce() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
-            .build(temporaryFolder,
-            generateMailetContainerConfiguration(MailetConfiguration.builder()
+            .withMailetContainer(
+                generateMailetContainerConfiguration(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(Bounce.class)
-                .addProperty("passThrough", "false")));
+                .addProperty("passThrough", "false")))
+            .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
         dataProbe.addDomain(JAMES_APACHE_ORG);
@@ -137,12 +139,12 @@ public class BounceIntegrationTest {
     public void forwardMailetShouldDeliverBounce() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
-            .build(temporaryFolder,
-            generateMailetContainerConfiguration(MailetConfiguration.builder()
+            .withMailetContainer(generateMailetContainerConfiguration(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(Forward.class)
                 .addProperty("forwardTo", BOUNCE_RECEIVER)
-                .addProperty("passThrough", "false")));
+                .addProperty("passThrough", "false")))
+            .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
         dataProbe.addDomain(JAMES_APACHE_ORG);
@@ -162,12 +164,13 @@ public class BounceIntegrationTest {
     public void redirectMailetShouldDeliverBounce() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
-            .build(temporaryFolder,
-            generateMailetContainerConfiguration(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(Redirect.class)
-                .addProperty("recipients", BOUNCE_RECEIVER)
-                .addProperty("passThrough", "false")));
+            .withMailetContainer(
+                generateMailetContainerConfiguration(MailetConfiguration.builder()
+                    .matcher(All.class)
+                    .mailet(Redirect.class)
+                    .addProperty("recipients", BOUNCE_RECEIVER)
+                    .addProperty("passThrough", "false")))
+            .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
         dataProbe.addDomain(JAMES_APACHE_ORG);
@@ -187,12 +190,13 @@ public class BounceIntegrationTest {
     public void resendMailetShouldDeliverBounce() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
-            .build(temporaryFolder,
-            generateMailetContainerConfiguration(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(Resend.class)
-                .addProperty("recipients", BOUNCE_RECEIVER)
-                .addProperty("passThrough", "false")));
+            .withMailetContainer(
+                generateMailetContainerConfiguration(MailetConfiguration.builder()
+                    .matcher(All.class)
+                    .mailet(Resend.class)
+                    .addProperty("recipients", BOUNCE_RECEIVER)
+                    .addProperty("passThrough", "false")))
+            .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
         dataProbe.addDomain(JAMES_APACHE_ORG);
@@ -212,11 +216,12 @@ public class BounceIntegrationTest {
     public void notifySenderMailetShouldDeliverBounce() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
-            .build(temporaryFolder,
-            generateMailetContainerConfiguration(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(NotifySender.class)
-                .addProperty("passThrough", "false")));
+            .withMailetContainer(
+                generateMailetContainerConfiguration(MailetConfiguration.builder()
+                    .matcher(All.class)
+                    .mailet(NotifySender.class)
+                    .addProperty("passThrough", "false")))
+            .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
         dataProbe.addDomain(JAMES_APACHE_ORG);
@@ -236,11 +241,12 @@ public class BounceIntegrationTest {
     public void notifyPostmasterMailetShouldDeliverBounce() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
-            .build(temporaryFolder,
-            generateMailetContainerConfiguration(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(NotifyPostmaster.class)
-                .addProperty("passThrough", "false")));
+            .withMailetContainer(
+                generateMailetContainerConfiguration(MailetConfiguration.builder()
+                    .matcher(All.class)
+                    .mailet(NotifyPostmaster.class)
+                    .addProperty("passThrough", "false")))
+            .build(temporaryFolder);
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
         dataProbe.addDomain(JAMES_APACHE_ORG);
