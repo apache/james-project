@@ -52,8 +52,6 @@ import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
 
 public class SMIMEDecryptIntegrationTest {
-
-
     private static final ZonedDateTime DATE_2015 = ZonedDateTime.parse("2015-10-15T14:10:00Z");
     private static final String LOCALHOST_IP = "127.0.0.1";
     private static final int IMAP_PORT = 1143;

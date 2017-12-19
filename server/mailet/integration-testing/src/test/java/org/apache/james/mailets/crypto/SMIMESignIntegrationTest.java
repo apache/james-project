@@ -33,15 +33,10 @@ import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.LocalDelivery;
-import org.apache.james.transport.mailets.RecipientRewriteTable;
-import org.apache.james.transport.mailets.RemoteDelivery;
 import org.apache.james.transport.mailets.SMIMESign;
 import org.apache.james.transport.mailets.SetMimeHeader;
-import org.apache.james.transport.mailets.ToProcessor;
-import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.HasMailAttribute;
 import org.apache.james.transport.matchers.RecipientIsLocal;
-import org.apache.james.transport.matchers.SMTPAuthSuccessful;
 import org.apache.james.transport.matchers.SenderIsLocal;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.utils.DataProbeImpl;
@@ -83,20 +78,12 @@ public class SMIMESignIntegrationTest {
             .addProcessor(ProcessorConfiguration.transport()
                 .enableJmx(true)
                 .addMailet(MailetConfiguration.builder()
-                    .matcher(SMTPAuthSuccessful.class)
-                    .mailet(SetMimeHeader.class)
-                    .addProperty("name", "X-UserIsAuth")
-                    .addProperty("value", "true"))
-                .addMailet(MailetConfiguration.builder()
                     .matcher(HasMailAttribute.class)
                     .matcherCondition("org.apache.james.SMIMECheckSignature")
                     .mailet(SetMimeHeader.class)
                     .addProperty("name", "X-WasSigned")
                     .addProperty("value", "true"))
                 .addMailet(MailetConfiguration.BCC_STRIPPER)
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(All.class)
-                    .mailet(RecipientRewriteTable.class))
                 .addMailet(MailetConfiguration.builder()
                     .mailet(SMIMESign.class)
                     .matcher(SenderIsLocal.class)
@@ -106,21 +93,7 @@ public class SMIMESignIntegrationTest {
                     .addProperty("debug", "true"))
                 .addMailet(MailetConfiguration.builder()
                     .matcher(RecipientIsLocal.class)
-                    .mailet(LocalDelivery.class))
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(SMTPAuthSuccessful.class)
-                    .mailet(RemoteDelivery.class)
-                    .addProperty("outgoingQueue", "outgoing")
-                    .addProperty("delayTime", "5000, 100000, 500000")
-                    .addProperty("maxRetries", "25")
-                    .addProperty("maxDnsProblemRetries", "0")
-                    .addProperty("deliveryThreads", "10")
-                    .addProperty("sendpartial", "true")
-                    .addProperty("bounceProcessor", "bounces"))
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(All.class)
-                    .mailet(ToProcessor.class)
-                    .addProperty("processor", "relay-denied")))
+                    .mailet(LocalDelivery.class)))
             .addProcessor(CommonProcessors.spam())
             .addProcessor(CommonProcessors.localAddressError())
             .addProcessor(CommonProcessors.relayDenied())

@@ -43,7 +43,6 @@ import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.transport.matchers.RelayLimit;
-import org.apache.james.transport.matchers.SMTPAuthSuccessful;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
@@ -111,16 +110,9 @@ public class GroupMappingTest {
             .addProcessor(ProcessorConfiguration.root()
                 .enableJmx(true)
                 .addMailet(MailetConfiguration.builder()
-                    .matcher(All.class)
-                    .mailet(PostmasterAlias.class))
-                .addMailet(MailetConfiguration.builder()
                     .matcher(RelayLimit.class)
                     .matcherCondition("30")
                     .mailet(Null.class))
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(SMTPAuthSuccessful.class)
-                    .mailet(ToProcessor.class)
-                    .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
                 .addMailet(MailetConfiguration.builder()
                     .matcher(All.class)
                     .mailet(ToProcessor.class)
