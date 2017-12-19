@@ -19,7 +19,7 @@
 
 package org.apache.james.mailets;
 
-import org.apache.james.jmap.mailet.VacationMailet;
+import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
@@ -37,7 +37,6 @@ import org.apache.james.transport.mailets.Resend;
 import org.apache.james.transport.mailets.ToProcessor;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIs;
-import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
@@ -88,7 +87,9 @@ public class BounceIntegrationTest {
 
     @Test
     public void dsnBounceMailetShouldDeliverBounce() throws Exception {
-        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder,
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
+            .build(temporaryFolder,
             generateMailetContainerConfiguration(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(DSNBounce.class)
@@ -110,7 +111,9 @@ public class BounceIntegrationTest {
 
     @Test
     public void bounceMailetShouldDeliverBounce() throws Exception {
-        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder,
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
+            .build(temporaryFolder,
             generateMailetContainerConfiguration(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(Bounce.class)
@@ -132,7 +135,9 @@ public class BounceIntegrationTest {
 
     @Test
     public void forwardMailetShouldDeliverBounce() throws Exception {
-        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder,
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
+            .build(temporaryFolder,
             generateMailetContainerConfiguration(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(Forward.class)
@@ -155,7 +160,9 @@ public class BounceIntegrationTest {
 
     @Test
     public void redirectMailetShouldDeliverBounce() throws Exception {
-        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder,
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
+            .build(temporaryFolder,
             generateMailetContainerConfiguration(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(Redirect.class)
@@ -178,7 +185,9 @@ public class BounceIntegrationTest {
 
     @Test
     public void resendMailetShouldDeliverBounce() throws Exception {
-        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder,
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
+            .build(temporaryFolder,
             generateMailetContainerConfiguration(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(Resend.class)
@@ -201,7 +210,9 @@ public class BounceIntegrationTest {
 
     @Test
     public void notifySenderMailetShouldDeliverBounce() throws Exception {
-        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder,
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
+            .build(temporaryFolder,
             generateMailetContainerConfiguration(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(NotifySender.class)
@@ -223,7 +234,9 @@ public class BounceIntegrationTest {
 
     @Test
     public void notifyPostmasterMailetShouldDeliverBounce() throws Exception {
-        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder,
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
+            .build(temporaryFolder,
             generateMailetContainerConfiguration(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(NotifyPostmaster.class)
@@ -258,9 +271,6 @@ public class BounceIntegrationTest {
         // Other recipients will be bouncing
         return ProcessorConfiguration.transport()
             .addMailet(MailetConfiguration.BCC_STRIPPER)
-            .addMailet(MailetConfiguration.builder()
-                .matcher(RecipientIsLocal.class)
-                .mailet(VacationMailet.class))
             .addMailet(MailetConfiguration.builder()
                 .matcher(RecipientIs.class)
                 .matcherCondition(BOUNCE_RECEIVER)

@@ -23,8 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.core.MailAddress;
-import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
@@ -111,13 +111,12 @@ public class AmqpForwardAttachmentTest {
                             .addProperty(AmqpForwardAttribute.ROUTING_KEY_PARAMETER_NAME, ROUTING_KEY))
                     .addMailet(MailetConfiguration.builder()
                             .matcher(RecipientIsLocal.class)
-                            .mailet(VacationMailet.class))
-                    .addMailet(MailetConfiguration.builder()
-                            .matcher(RecipientIsLocal.class)
                             .mailet(LocalDelivery.class)))
             .build();
 
-        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder, mailetContainer);
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
+            .build(temporaryFolder, mailetContainer);
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         calmlyAwait = Awaitility.with()
             .pollInterval(slowPacedPollInterval)

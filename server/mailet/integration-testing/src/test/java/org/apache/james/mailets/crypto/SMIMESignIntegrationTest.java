@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.ZonedDateTime;
 
-import org.apache.james.jmap.mailet.VacationMailet;
+import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
@@ -98,9 +98,6 @@ public class SMIMESignIntegrationTest {
                     .matcher(All.class)
                     .mailet(RecipientRewriteTable.class))
                 .addMailet(MailetConfiguration.builder()
-                    .matcher(RecipientIsLocal.class)
-                    .mailet(VacationMailet.class))
-                .addMailet(MailetConfiguration.builder()
                     .mailet(SMIMESign.class)
                     .matcher(SenderIsLocal.class)
                     .addProperty("keyStoreFileName", temporaryFolder.getRoot().getAbsoluteFile().getAbsolutePath() + "/conf/smime.p12")
@@ -132,6 +129,7 @@ public class SMIMESignIntegrationTest {
             .build();
 
         jamesServer = TemporaryJamesServer.builder()
+            .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
             .withOverrides(binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(() -> DATE_2015))
             .build(temporaryFolder, mailetContainer);
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;

@@ -26,9 +26,9 @@ import java.util.Optional;
 
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.mailet.TextCalendarBodyToAttachment;
-import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
@@ -495,13 +495,12 @@ public class ICSAttachmentWorkflowTest {
                             .addProperty("routing_key", ROUTING_KEY))
                     .addMailet(MailetConfiguration.builder()
                             .matcher(RecipientIsLocal.class)
-                            .mailet(VacationMailet.class))
-                    .addMailet(MailetConfiguration.builder()
-                            .matcher(RecipientIsLocal.class)
                             .mailet(LocalDelivery.class)))
             .build();
 
-        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder, mailetContainer);
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
+            .build(temporaryFolder, mailetContainer);
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
 

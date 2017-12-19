@@ -23,8 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
+import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.core.MailAddress;
-import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
@@ -96,12 +96,11 @@ public class ContactExtractorTest {
                     .addMailet(MailetConfiguration.BCC_STRIPPER)
                     .addMailet(MailetConfiguration.builder()
                         .matcher(RecipientIsLocal.class)
-                        .mailet(VacationMailet.class))
-                    .addMailet(MailetConfiguration.builder()
-                        .matcher(RecipientIsLocal.class)
                         .mailet(LocalDelivery.class)))
             .build();
-        jamesServer = TemporaryJamesServer.builder().build(folder, mailets);
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
+            .build(folder, mailets);
         DataProbeImpl probe = jamesServer.getProbe(DataProbeImpl.class);
         probe.addDomain(JAMES_ORG);
         probe.addUser(SENDER, PASSWORD);
