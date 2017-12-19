@@ -94,8 +94,7 @@ public class NetworkMatcherIntegrationTest {
     }
 
     private ProcessorConfiguration deliverOnlyTransport() {
-        return ProcessorConfiguration.builder()
-            .state("transport")
+        return ProcessorConfiguration.transport()
             .addMailet(MailetConfiguration.BCC_STRIPPER)
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
@@ -117,13 +116,12 @@ public class NetworkMatcherIntegrationTest {
 
     @Test
     public void mailsFromAuthorizedNetworksShouldBeDeliveredWithRemoteAddrInNetwork() throws Exception {
-        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.builder()
-            .state("root")
+        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("127.0.0.0/8")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "transport"))
+                .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
@@ -140,13 +138,12 @@ public class NetworkMatcherIntegrationTest {
 
     @Test
     public void mailsFromAuthorizedNetworksShouldBeDeliveredWithRemoteAddrNotInNetwork() throws Exception {
-        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.builder()
-            .state("root")
+        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrNotInNetwork.class)
                 .matcherCondition("172.0.0.0/8")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "transport"))
+                .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
@@ -163,13 +160,12 @@ public class NetworkMatcherIntegrationTest {
 
     @Test
     public void remoteAddrInNetworkShouldSupportLargerMask() throws Exception {
-        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.builder()
-            .state("root")
+        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("127.0.0.0/2")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "transport"))
+                .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
@@ -186,13 +182,12 @@ public class NetworkMatcherIntegrationTest {
 
     @Test
     public void remoteAddrInNetworkShouldSupportRangesDefinedByAMiddleIp() throws Exception {
-        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.builder()
-            .state("root")
+        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("127.0.4.108/8")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "transport"))
+                .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
@@ -209,13 +204,12 @@ public class NetworkMatcherIntegrationTest {
 
     @Test
     public void remoteAddrInNetworkShouldSupportRangesDefinedByEndingIp() throws Exception {
-        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.builder()
-            .state("root")
+        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("127.255.255.255/8")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "transport"))
+                .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
@@ -232,13 +226,12 @@ public class NetworkMatcherIntegrationTest {
 
     @Test
     public void remoteAddrInNetworkShouldSupportRangesWithNonEightMultipleSubMasks() throws Exception {
-        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.builder()
-            .state("root")
+        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("126.0.0.0/4")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "transport"))
+                .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
@@ -255,13 +248,12 @@ public class NetworkMatcherIntegrationTest {
 
     @Test
     public void mailsFromNonAuthorizedNetworksShouldNotBeDeliveredWithRemoteAddrInNetwork() throws Exception {
-        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.builder()
-            .state("root")
+        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("172.0.0.0/8")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "transport"))
+                .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
@@ -280,13 +272,12 @@ public class NetworkMatcherIntegrationTest {
 
     @Test
     public void mailsFromNonAuthorizedNetworksShouldNotBeDeliveredWithRemoteAddrNotInNetwork() throws Exception {
-        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.builder()
-            .state("root")
+        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrNotInNetwork.class)
                 .matcherCondition("127.0.0.0/8")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "transport"))
+                .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =

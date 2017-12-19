@@ -28,12 +28,34 @@ import com.google.common.collect.ImmutableList;
 
 public class ProcessorConfiguration implements SerializableAsXml {
 
+    public static final String STATE_TRANSPORT = "transport";
+    public static final String STATE_ROOT = "root";
+    public static final String STATE_BOUNCES = "bounces";
+    public static final String STATE_ERROR = "error";
+    public static final String STATE_SPAM = "spam";
+
     public static Builder builder() {
         return new Builder();
     }
 
     public static Builder transport() {
-        return builder().state("transport");
+        return builder().state(STATE_TRANSPORT);
+    }
+
+    public static Builder root() {
+        return builder().state(STATE_ROOT);
+    }
+
+    public static Builder bounces() {
+        return builder().state(STATE_BOUNCES);
+    }
+
+    public static Builder error() {
+        return builder().state(STATE_ERROR);
+    }
+
+    public static Builder spam() {
+        return builder().state(STATE_SPAM);
     }
 
     public static class Builder {

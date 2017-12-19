@@ -274,8 +274,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
                 .threads(5)
                 .addProcessor(root())
                 .addProcessor(CommonProcessors.error())
-                .addProcessor(ProcessorConfiguration.builder()
-                    .state("transport")
+                .addProcessor(ProcessorConfiguration.transport()
                     .enableJmx(true)
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
@@ -367,8 +366,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
     public ProcessorConfiguration root() {
         // Custom in memory DNS resolution is not possible combined with InSpamerBackList
-        return ProcessorConfiguration.builder()
-            .state("root")
+        return ProcessorConfiguration.root()
             .enableJmx(true)
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
@@ -385,8 +383,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     private ProcessorConfiguration relayOnlyTransport(String gatewayProperty) {
-        return ProcessorConfiguration.builder()
-            .state("transport")
+        return ProcessorConfiguration.transport()
             .enableJmx(true)
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
@@ -407,8 +404,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     private ProcessorConfiguration relayAndLocalDeliveryTransport(String gatewayProperty) {
-        return ProcessorConfiguration.builder()
-            .state("transport")
+        return ProcessorConfiguration.transport()
             .enableJmx(true)
             .addMailet(MailetConfiguration.BCC_STRIPPER)
             .addMailet(MailetConfiguration.builder()
@@ -429,8 +425,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     private ProcessorConfiguration directResolutionTransport() {
-        return ProcessorConfiguration.builder()
-            .state("transport")
+        return ProcessorConfiguration.transport()
             .enableJmx(true)
             .addMailet(MailetConfiguration.BCC_STRIPPER)
             .addMailet(MailetConfiguration.builder()

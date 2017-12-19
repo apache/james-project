@@ -257,8 +257,7 @@ public class BounceIntegrationTest {
     private ProcessorConfiguration transport() {
         // This processor delivers emails to BOUNCE_RECEIVER and POSTMASTER
         // Other recipients will be bouncing
-        return ProcessorConfiguration.builder()
-            .state("transport")
+        return ProcessorConfiguration.transport()
             .addMailet(MailetConfiguration.BCC_STRIPPER)
             .addMailet(MailetConfiguration.builder()
                 .matcher(RecipientIsLocal.class)
@@ -274,13 +273,12 @@ public class BounceIntegrationTest {
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "bounces"))
+                .addProperty("processor", ProcessorConfiguration.STATE_BOUNCES))
             .build();
     }
 
     public static ProcessorConfiguration bounces(MailetConfiguration.Builder redirectionMailetConfiguration) {
-        return ProcessorConfiguration.builder()
-            .state("bounces")
+        return ProcessorConfiguration.bounces()
             .addMailet(redirectionMailetConfiguration)
             .build();
     }

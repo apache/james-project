@@ -84,8 +84,7 @@ public class ContactExtractorTest {
             .addProcessor(CommonProcessors.root())
             .addProcessor(CommonProcessors.error())
             .addProcessor(
-                ProcessorConfiguration.builder()
-                    .state("transport")
+                ProcessorConfiguration.transport()
                     .addMailet(MailetConfiguration.builder()
                         .matcher(SMTPAuthSuccessful.class)
                         .mailet(ContactExtractor.class)

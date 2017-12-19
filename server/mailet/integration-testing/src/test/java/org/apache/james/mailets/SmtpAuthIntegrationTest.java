@@ -65,16 +65,15 @@ public class SmtpAuthIntegrationTest {
 
     @Before
     public void setup() throws Exception {
-        ProcessorConfiguration rootProcessor = ProcessorConfiguration.builder()
-            .state("root")
+        ProcessorConfiguration rootProcessor = ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(SMTPAuthSuccessful.class)
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "transport"))
+                .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "bounces"))
+                .addProperty("processor", ProcessorConfiguration.STATE_BOUNCES))
             .build();
 
         MailetContainer mailetContainer = MailetContainer.builder()
@@ -104,8 +103,7 @@ public class SmtpAuthIntegrationTest {
     }
 
     private ProcessorConfiguration deliverOnlyTransport() {
-        return ProcessorConfiguration.builder()
-            .state("transport")
+        return ProcessorConfiguration.transport()
             .enableJmx(true)
             .addMailet(MailetConfiguration.BCC_STRIPPER)
             .addMailet(MailetConfiguration.builder()
@@ -115,8 +113,7 @@ public class SmtpAuthIntegrationTest {
     }
 
     private ProcessorConfiguration bounces() {
-        return ProcessorConfiguration.builder()
-            .state("bounces")
+        return ProcessorConfiguration.bounces()
             .enableJmx(true)
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
