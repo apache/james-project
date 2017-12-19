@@ -283,22 +283,21 @@ public class MimeMessageBuilder {
     }
 
     public MimeMessageBuilder addToRecipient(String... tos) throws AddressException {
-        this.to.addAll(Arrays.asList(tos).stream()
+        this.to.addAll(Arrays.stream(tos)
             .map(TO_INTERNET_ADDRESS)
             .collect(Guavate.toImmutableList()));
         return this;
     }
 
     public MimeMessageBuilder addCcRecipient(String... ccs) throws AddressException {
-        this.cc.addAll(Arrays.asList(ccs).stream()
+        this.cc.addAll(Arrays.stream(ccs)
             .map(TO_INTERNET_ADDRESS)
             .collect(Guavate.toImmutableList()));
         return this;
     }
 
     public MimeMessageBuilder addBccRecipient(String... bccs) throws AddressException {
-        this.bcc.addAll(Arrays.asList(bccs)
-            .stream()
+        this.bcc.addAll(Arrays.stream(bccs)
             .map(TO_INTERNET_ADDRESS)
             .collect(Guavate.toImmutableList()));
         return this;
