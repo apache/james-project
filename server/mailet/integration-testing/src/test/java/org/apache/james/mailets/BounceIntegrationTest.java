@@ -23,7 +23,6 @@ import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
 
 import org.apache.james.MemoryJamesServerMain;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
@@ -61,6 +60,8 @@ public class BounceIntegrationTest {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @Rule
+    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
 
     private TemporaryJamesServer jamesServer;
     private DataProbe dataProbe;
@@ -86,12 +87,13 @@ public class BounceIntegrationTest {
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(BOUNCE_RECEIVER, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage(BOUNCE_RECEIVER, RECIPIENT);
 
-            calmlyAwait.atMost(ONE_MINUTE).until(() ->
-                imapMessageReader.userReceivedMessageInMailbox(BOUNCE_RECEIVER, PASSWORD, MailboxConstants.INBOX));
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(BOUNCE_RECEIVER, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -111,12 +113,13 @@ public class BounceIntegrationTest {
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(BOUNCE_RECEIVER, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage(BOUNCE_RECEIVER, RECIPIENT);
 
-            calmlyAwait.atMost(ONE_MINUTE).until(() ->
-                imapMessageReader.userReceivedMessageInMailbox(BOUNCE_RECEIVER, PASSWORD, MailboxConstants.INBOX));
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(BOUNCE_RECEIVER, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -136,12 +139,13 @@ public class BounceIntegrationTest {
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(BOUNCE_RECEIVER, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage("any@" + JAMES_APACHE_ORG, RECIPIENT);
 
-            calmlyAwait.atMost(ONE_MINUTE).until(() ->
-                imapMessageReader.userReceivedMessageInMailbox(BOUNCE_RECEIVER, PASSWORD, MailboxConstants.INBOX));
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(BOUNCE_RECEIVER, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -162,12 +166,13 @@ public class BounceIntegrationTest {
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(BOUNCE_RECEIVER, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage("any@" + JAMES_APACHE_ORG, RECIPIENT);
 
-            calmlyAwait.atMost(ONE_MINUTE).until(() ->
-                imapMessageReader.userReceivedMessageInMailbox(BOUNCE_RECEIVER, PASSWORD, MailboxConstants.INBOX));
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(BOUNCE_RECEIVER, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -188,12 +193,13 @@ public class BounceIntegrationTest {
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(BOUNCE_RECEIVER, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage("any@" + JAMES_APACHE_ORG, RECIPIENT);
 
-            calmlyAwait.atMost(ONE_MINUTE).until(() ->
-                imapMessageReader.userReceivedMessageInMailbox(BOUNCE_RECEIVER, PASSWORD, MailboxConstants.INBOX));
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(BOUNCE_RECEIVER, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -213,12 +219,13 @@ public class BounceIntegrationTest {
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(BOUNCE_RECEIVER, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage(BOUNCE_RECEIVER, RECIPIENT);
 
-            calmlyAwait.atMost(ONE_MINUTE).until(() ->
-                imapMessageReader.userReceivedMessageInMailbox(BOUNCE_RECEIVER, PASSWORD, MailboxConstants.INBOX));
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(BOUNCE_RECEIVER, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -238,12 +245,13 @@ public class BounceIntegrationTest {
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(POSTMASTER, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage("any@" + JAMES_APACHE_ORG, RECIPIENT);
 
-            calmlyAwait.atMost(ONE_MINUTE).until(() ->
-                imapMessageReader.userReceivedMessageInMailbox(POSTMASTER, PASSWORD, MailboxConstants.INBOX));
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(POSTMASTER, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 

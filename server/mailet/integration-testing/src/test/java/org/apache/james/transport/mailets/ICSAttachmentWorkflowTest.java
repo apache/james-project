@@ -440,7 +440,9 @@ public class ICSAttachmentWorkflowTest {
     public AmqpRule amqpRule = new AmqpRule(rabbitMqContainer, EXCHANGE_NAME, ROUTING_KEY);
 
     @Rule
-    public final RuleChain chain = RuleChain.outerRule(temporaryFolder).around(rabbitMqContainer).around(amqpRule);
+    public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(rabbitMqContainer).around(amqpRule);
+    @Rule
+    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
 
     private TemporaryJamesServer jamesServer;
     private MimeMessage messageWithoutICSAttached;
@@ -572,11 +574,14 @@ public class ICSAttachmentWorkflowTest {
               .recipient(new MailAddress(RECIPIENT))
               .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-                IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(mail);
-            calmlyAwait.atMost(ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+            messageSender.sendMessage(mail)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(RECIPIENT, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
 
         assertThat(amqpRule.readContent()).isEmpty();
@@ -590,11 +595,14 @@ public class ICSAttachmentWorkflowTest {
               .recipient(new MailAddress(RECIPIENT))
               .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-                IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(mail);
-            calmlyAwait.atMost(ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+            messageSender.sendMessage(mail)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(RECIPIENT, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
 
         Optional<String> content = amqpRule.readContent();
@@ -624,13 +632,15 @@ public class ICSAttachmentWorkflowTest {
               .recipient(new MailAddress(RECIPIENT))
               .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-                IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
 
-            String receivedHeaders = imapMessageReader.readFirstMessageHeadersInInbox(RECIPIENT, PASSWORD);
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(RECIPIENT, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            String receivedHeaders = imapMessageReader.readFirstMessageHeaders();
 
             assertThat(receivedHeaders).doesNotContain("X-MEETING-UID");
             assertThat(receivedHeaders).doesNotContain("X-MEETING-METHOD");
@@ -648,13 +658,15 @@ public class ICSAttachmentWorkflowTest {
               .recipient(new MailAddress(RECIPIENT))
               .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-                IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
 
-            String receivedHeaders = imapMessageReader.readFirstMessageHeadersInInbox(RECIPIENT, PASSWORD);
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(RECIPIENT, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            String receivedHeaders = imapMessageReader.readFirstMessageHeaders();
 
             assertThat(receivedHeaders).contains("X-MEETING-UID: " + ICS_UID);
             assertThat(receivedHeaders).contains("X-MEETING-METHOD: " + ICS_METHOD);
@@ -671,13 +683,15 @@ public class ICSAttachmentWorkflowTest {
             .recipient(new MailAddress(RECIPIENT))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
 
-            String receivedHeaders = imapMessageReader.readFirstMessageHeadersInInbox(RECIPIENT, PASSWORD);
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(RECIPIENT, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            String receivedHeaders = imapMessageReader.readFirstMessageHeaders();
 
             assertThat(receivedHeaders).contains("X-MEETING-UID: " + ICS_BASE64_UID);
             assertThat(receivedHeaders).contains("X-MEETING-METHOD: " + ICS_METHOD);
@@ -694,11 +708,14 @@ public class ICSAttachmentWorkflowTest {
             .recipient(new MailAddress(RECIPIENT))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
+
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(RECIPIENT, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
 
         Optional<String> content = amqpRule.readContent();
@@ -721,11 +738,14 @@ public class ICSAttachmentWorkflowTest {
             .recipient(new MailAddress(RECIPIENT))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
+
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(RECIPIENT, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
 
         Optional<String> content = amqpRule.readContent();
@@ -749,13 +769,15 @@ public class ICSAttachmentWorkflowTest {
               .recipient(new MailAddress(RECIPIENT))
               .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-                IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
 
-            String receivedHeaders = imapMessageReader.readFirstMessageHeadersInInbox(RECIPIENT, PASSWORD);
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(RECIPIENT, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            String receivedHeaders = imapMessageReader.readFirstMessageHeaders();
 
             assertThat(receivedHeaders).contains("X-MEETING-UID: " + ICS_UID);
             assertThat(receivedHeaders).contains("X-MEETING-METHOD: " + ICS_METHOD);
@@ -772,11 +794,14 @@ public class ICSAttachmentWorkflowTest {
             .recipient(new MailAddress(RECIPIENT))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
+
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(RECIPIENT, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
 
         Optional<String> content1 = amqpRule.readContent();
@@ -811,15 +836,16 @@ public class ICSAttachmentWorkflowTest {
             .recipient(new MailAddress(RECIPIENT))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
 
-            String receivedMessage = imapMessageReader.readFirstMessageInInbox(RECIPIENT, PASSWORD);
-
-            assertThat(receivedMessage).containsSequence("Content-Type: multipart/mixed", "Content-Disposition: attachment");
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(RECIPIENT, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            assertThat(imapMessageReader.readFirstMessage())
+                .containsSequence("Content-Type: multipart/mixed", "Content-Disposition: attachment");
         }
     }
 }

@@ -4527,8 +4527,10 @@ public abstract class SetMessagesMethodTest {
 
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
-        try (IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT);) {
-            assertThat(imapMessageReader.readFirstMessageHeadersInInbox(USERNAME, PASSWORD))
+        try (IMAPMessageReader imapMessageReader = new IMAPMessageReader()
+                .connect(LOCALHOST_IP, IMAP_PORT)
+                .select(MailboxConstants.INBOX)) {
+            assertThat(imapMessageReader.readFirstMessage())
                 .contains("X-MY-MULTIVALUATED-HEADER: first value")
                 .contains("X-MY-MULTIVALUATED-HEADER: second value");
         }

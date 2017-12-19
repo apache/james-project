@@ -35,7 +35,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
@@ -78,6 +77,8 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @Rule
+    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
 
     private final TemporaryFolder smtpFolder = new TemporaryFolder();
     private final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer(Images.FAKE_SMTP)
@@ -241,12 +242,13 @@ public class GatewayRemoteDeliveryIntegrationTest {
         dataProbe.addDomain(JAMES_APACHE_ORG);
         dataProbe.addUser(FROM, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage(FROM, RECIPIENT);
 
-            calmlyAwait.atMost(ONE_MINUTE).until(() ->
-                imapMessageReader.userReceivedMessageInMailbox(FROM, PASSWORD, MailboxConstants.INBOX));
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(FROM, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -289,12 +291,13 @@ public class GatewayRemoteDeliveryIntegrationTest {
         dataProbe.addDomain(JAMES_APACHE_ORG);
         dataProbe.addUser(FROM, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
             messageSender.sendMessage(FROM, RECIPIENT);
 
-            calmlyAwait.atMost(ONE_MINUTE).until(() ->
-                imapMessageReader.userReceivedMessageInMailbox(FROM, PASSWORD, MailboxConstants.INBOX));
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(FROM, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 

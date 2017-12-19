@@ -76,7 +76,9 @@ public class SmtpAuthorizedAddressesTest {
         .waitingFor(new HostPortWaitStrategy());
 
     @Rule
-    public final RuleChain chain = RuleChain.outerRule(smtpFolder).around(fakeSmtp);
+    public RuleChain chain = RuleChain.outerRule(smtpFolder).around(fakeSmtp);
+    @Rule
+    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -201,14 +203,15 @@ public class SmtpAuthorizedAddressesTest {
             .withAutorizedAddresses("172.0.0.0/8"));
 
         try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+                 SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
 
             messageSender.sendMessage(TO, FROM)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            calmlyAwait.atMost(ONE_MINUTE)
-                .until(() -> imapMessageReader.userReceivedMessage(FROM, PASSWORD));
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(FROM, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 

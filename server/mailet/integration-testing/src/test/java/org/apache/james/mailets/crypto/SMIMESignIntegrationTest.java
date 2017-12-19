@@ -62,6 +62,8 @@ public class SMIMESignIntegrationTest {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @Rule
+    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
 
     private TemporaryJamesServer jamesServer;
     public static final String FROM = "user@" + DEFAULT_DOMAIN;
@@ -119,26 +121,30 @@ public class SMIMESignIntegrationTest {
     @Test
     public void authenticatedMessagesShouldBeSigned() throws Exception {
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_SECURE_PORT, DEFAULT_DOMAIN, FROM, PASSWORD);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_SECURE_PORT, DEFAULT_DOMAIN, FROM, PASSWORD);) {
             messageSender.sendMessage(FROM, RECIPIENT)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
 
-            assertThat(imapMessageReader.readFirstMessageInInbox(RECIPIENT, PASSWORD))
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(RECIPIENT, PASSWORD)
+                .select(IMAPMessageReader.INBOX);
+            calmlyAwait.atMost(ONE_MINUTE).until(imapMessageReader::hasAMessage);
+            assertThat(imapMessageReader.readFirstMessage())
                 .containsSequence("Content-Description: S/MIME Cryptographic Signature");
         }
     }
 
     @Test
     public void NonAuthenticatedMessagesShouldNotBeSigned() throws Exception {
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
             messageSender.sendMessage(FROM, RECIPIENT)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
 
-            assertThat(imapMessageReader.readFirstMessageInInbox(RECIPIENT, PASSWORD))
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(RECIPIENT, PASSWORD)
+                .select(IMAPMessageReader.INBOX);
+            calmlyAwait.atMost(ONE_MINUTE).until(imapMessageReader::hasAMessage);
+            assertThat(imapMessageReader.readFirstMessage())
                 .doesNotContain("Content-Description: S/MIME Cryptographic Signature");
         }
     }

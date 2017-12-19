@@ -46,6 +46,8 @@ public class SieveDelivery {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @Rule
+    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
 
     private TemporaryJamesServer jamesServer;
 
@@ -76,11 +78,14 @@ public class SieveDelivery {
             "\n" +
             "fileinto \"" + targetedMailbox + "\";");
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN);) {
             messageSender.sendMessage(from, recipient)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessageInMailbox(recipient, PASSWORD, targetedMailbox));
+
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(recipient, PASSWORD)
+                .select(targetedMailbox)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 }

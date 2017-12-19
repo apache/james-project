@@ -44,6 +44,8 @@ public class CommonMailetConfigurationTest {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @Rule
+    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
 
     private TemporaryJamesServer jamesServer;
 
@@ -71,11 +73,14 @@ public class CommonMailetConfigurationTest {
         dataProbe.addUser(recipient, PASSWORD);
         jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, recipient, "INBOX");
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
             messageSender.sendMessage(from, recipient)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(recipient, PASSWORD));
+
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(recipient, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 }

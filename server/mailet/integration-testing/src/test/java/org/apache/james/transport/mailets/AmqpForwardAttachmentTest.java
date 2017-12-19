@@ -79,6 +79,8 @@ public class AmqpForwardAttachmentTest {
 
     @Rule
     public final RuleChain chain = RuleChain.outerRule(temporaryFolder).around(rabbitMqContainer).around(amqpRule);
+    @Rule
+    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
     
     private TemporaryJamesServer jamesServer;
 
@@ -145,11 +147,14 @@ public class AmqpForwardAttachmentTest {
               .recipient(new MailAddress(RECIPIENT))
               .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-                IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(mail);
-            calmlyAwait.atMost(ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+            messageSender.sendMessage(mail)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(RECIPIENT, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
 
         assertThat(amqpRule.readContentAsBytes()).contains(TEST_ATTACHMENT_CONTENT);

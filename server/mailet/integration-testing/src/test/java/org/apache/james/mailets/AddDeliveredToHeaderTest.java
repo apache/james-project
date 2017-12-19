@@ -21,6 +21,7 @@ package org.apache.james.mailets;
 
 import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static org.apache.james.mailets.configuration.AwaitUtils.calmlyAwait;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.modules.MailboxProbeImpl;
@@ -45,6 +46,8 @@ public class AddDeliveredToHeaderTest {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @Rule
+    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
 
     private TemporaryJamesServer jamesServer;
 
@@ -71,12 +74,16 @@ public class AddDeliveredToHeaderTest {
         jamesServer.getProbe(MailboxProbeImpl.class)
             .createMailbox(MailboxConstants.USER_NAMESPACE, recipient, "INBOX");
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
             messageSender.sendMessage(from, recipient)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.readFirstMessageHeadersInInbox(recipient, PASSWORD)
-                .contains(AddDeliveredToHeader.DELIVERED_TO + ": " + recipient));
+
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(recipient, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            assertThat(imapMessageReader.readFirstMessageHeaders())
+                .contains(AddDeliveredToHeader.DELIVERED_TO + ": " + recipient);
         }
     }
 }

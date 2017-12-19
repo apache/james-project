@@ -51,6 +51,10 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
 public class ContactExtractorTest {
+    private static final String LOCALHOST_IP = "127.0.0.1";
+    private static final int IMAP_PORT = 1143;
+    private static final int SMTP_PORT = 1025;
+    private static final String JAMES_APACHE_ORG = "james.org";
 
     public static final String JAMES_ORG = "james.org";
     public static final String SENDER = "sender@" + JAMES_ORG;
@@ -70,6 +74,8 @@ public class ContactExtractorTest {
 
     @Rule
     public RuleChain chain = RuleChain.outerRule(rabbit).around(amqpRule).around(folder);
+    @Rule
+    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
 
     private TemporaryJamesServer jamesServer;
 
@@ -131,12 +137,14 @@ public class ContactExtractorTest {
             .sender(new MailAddress(SENDER))
             .recipients(new MailAddress(TO), new MailAddress(TO2), new MailAddress(CC), new MailAddress(CC2), new MailAddress(BCC), new MailAddress(BCC2))
             .build();
-        try (SMTPMessageSender messageSender = SMTPMessageSender.authentication("localhost", 1025, JAMES_ORG, SENDER, PASSWORD);
-                IMAPMessageReader imap = new IMAPMessageReader("localhost", 1143)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
+            messageSender.sendMessage(mail)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            messageSender.sendMessage(mail);
-            calmlyAwait.atMost(ONE_MINUTE)
-                .until(() -> imap.userReceivedMessage(TO, PASSWORD));
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(TO, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
 
             Optional<String> actual = amqpRule.readContent();
             assertThat(actual).isNotEmpty();

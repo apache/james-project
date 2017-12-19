@@ -96,6 +96,8 @@ public class GroupMappingTest {
     private final InMemoryDNSService inMemoryDNSService = new InMemoryDNSService();
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @Rule
+    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
 
     private InetAddress containerIp;
     @Before
@@ -181,15 +183,15 @@ public class GroupMappingTest {
             .recipient(new MailAddress(GROUP_ON_DOMAIN1))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(USER_DOMAIN1, PASSWORD));
 
-            String processedMessage = imapMessageReader.readFirstMessageInInbox(USER_DOMAIN1, PASSWORD);
-
-            assertThat(processedMessage).contains(MESSAGE_CONTENT);
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(USER_DOMAIN1, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            assertThat(imapMessageReader.readFirstMessage()).contains(MESSAGE_CONTENT);
         }
 
     }
@@ -204,15 +206,15 @@ public class GroupMappingTest {
             .recipient(new MailAddress(GROUP_ON_DOMAIN1))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(USER_DOMAIN2, PASSWORD));
 
-            String processedMessage = imapMessageReader.readFirstMessageInInbox(USER_DOMAIN2, PASSWORD);
-
-            assertThat(processedMessage).contains(MESSAGE_CONTENT);
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(USER_DOMAIN2, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            assertThat(imapMessageReader.readFirstMessage()).contains(MESSAGE_CONTENT);
         }
     }
 
@@ -228,12 +230,19 @@ public class GroupMappingTest {
             .recipient(new MailAddress(GROUP_ON_DOMAIN1))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.countReceivedMessage(USER_DOMAIN1, PASSWORD, 1));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.countReceivedMessage(USER_DOMAIN2, PASSWORD, 1));
+
+
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(USER_DOMAIN1, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(USER_DOMAIN2, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -249,15 +258,15 @@ public class GroupMappingTest {
             .recipient(new MailAddress(GROUP_ON_DOMAIN1))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(USER_DOMAIN2, PASSWORD));
 
-            String processedMessage = imapMessageReader.readFirstMessageInInbox(USER_DOMAIN2, PASSWORD);
-
-            assertThat(processedMessage).contains(MESSAGE_CONTENT);
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(USER_DOMAIN2, PASSWORD)
+                .select(IMAPMessageReader.INBOX);
+            calmlyAwait.atMost(ONE_MINUTE).until(imapMessageReader::hasAMessage);
+            assertThat(imapMessageReader.readFirstMessage()).contains(MESSAGE_CONTENT);
         }
     }
 
@@ -275,11 +284,14 @@ public class GroupMappingTest {
             .recipient(new MailAddress(GROUP_ON_DOMAIN1))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.countReceivedMessage(USER_DOMAIN1, PASSWORD, 1));
+
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(USER_DOMAIN1, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -293,11 +305,14 @@ public class GroupMappingTest {
             .recipients(new MailAddress(GROUP_ON_DOMAIN1), new MailAddress(USER_DOMAIN1))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.countReceivedMessage(USER_DOMAIN1, PASSWORD, 1));
+
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(USER_DOMAIN1, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -315,12 +330,19 @@ public class GroupMappingTest {
             .recipient(new MailAddress(GROUP_ON_DOMAIN2))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(mail);
-            calmlyAwait.atMost(ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(USER_DOMAIN2, PASSWORD));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(USER_DOMAIN1, PASSWORD));
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1)) {
+            messageSender.sendMessage(mail)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(USER_DOMAIN1, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(USER_DOMAIN1, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -340,13 +362,19 @@ public class GroupMappingTest {
             .recipient(new MailAddress(GROUP_ON_DOMAIN1))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1);
-            IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(mail);
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1)) {
+            messageSender.sendMessage(mail)
+                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            calmlyAwait.atMost(ONE_MINUTE).until(messageSender::messageHaveNotBeenSent);
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userDoesNotReceiveMessage(USER_DOMAIN1, PASSWORD));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userDoesNotReceiveMessage(USER_DOMAIN2, PASSWORD));
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(USER_DOMAIN1, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(USER_DOMAIN1, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -362,11 +390,14 @@ public class GroupMappingTest {
             .recipient(new MailAddress(GROUP_ON_DOMAIN1))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(USER_DOMAIN2, PASSWORD));
+
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(USER_DOMAIN2, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -382,11 +413,14 @@ public class GroupMappingTest {
             .recipient(new MailAddress(GROUP_ON_DOMAIN1))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userDoesNotReceiveMessage(USER_DOMAIN1, PASSWORD));
+
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(USER_DOMAIN1, PASSWORD)
+                .select(IMAPMessageReader.INBOX);
+            calmlyAwait.atMost(ONE_MINUTE).until(imapMessageReader::userDoesNotReceiveMessage);
         }
     }
 
@@ -402,11 +436,14 @@ public class GroupMappingTest {
             .recipient(new MailAddress(GROUP_ON_DOMAIN1))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(USER_DOMAIN2, PASSWORD));
+
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(USER_DOMAIN2, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -422,11 +459,14 @@ public class GroupMappingTest {
             .recipient(new MailAddress(groupWithSlash))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(USER_DOMAIN1, PASSWORD));
+
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(USER_DOMAIN1, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -443,11 +483,14 @@ public class GroupMappingTest {
             .recipient(new MailAddress(GROUP_ON_DOMAIN1))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(userWithSlash, PASSWORD));
+
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(userWithSlash, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -463,11 +506,14 @@ public class GroupMappingTest {
             .recipient(new MailAddress(GROUP_ON_DOMAIN1))
             .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN1)) {
             messageSender.sendMessage(mail)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-            calmlyAwait.atMost(ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(USER_DOMAIN1, PASSWORD));
+
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(USER_DOMAIN2, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 

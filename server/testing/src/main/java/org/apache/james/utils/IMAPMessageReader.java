@@ -23,14 +23,17 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.net.imap.IMAPClient;
+import org.junit.rules.ExternalResource;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
+import com.jayway.awaitility.core.ConditionFactory;
 
-public class IMAPMessageReader implements Closeable {
+public class IMAPMessageReader extends ExternalResource implements Closeable {
 
-    private static final String INBOX = "INBOX";
+    public static final String INBOX = "INBOX";
 
     private final IMAPClient imapClient;
 
@@ -39,40 +42,41 @@ public class IMAPMessageReader implements Closeable {
         this.imapClient = imapClient;
     }
 
-    public IMAPMessageReader(String host, int port) throws IOException {
-        imapClient = new IMAPClient();
+    public IMAPMessageReader() {
+        this(new IMAPClient());
+    }
+
+    public IMAPMessageReader connect(String host, int port) throws IOException {
         imapClient.connect(host, port);
+        return this;
     }
 
-    public void connectAndSelect(String user, String password, String mailbox) throws IOException{
+    public IMAPMessageReader login(String user, String password) throws IOException{
         imapClient.login(user, password);
+        return this;
+    }
+
+    public IMAPMessageReader select(String mailbox) throws IOException {
         imapClient.select(mailbox);
+        return this;
     }
 
-    public boolean countReceivedMessage(String user, String password, int numberOfMessages) throws IOException {
-        return countReceivedMessageInMailbox(user, password, INBOX, numberOfMessages);
-    }
-
-    public boolean countReceivedMessageInMailbox(String user, String password, String mailbox, int numberOfMessages) throws IOException {
-        connectAndSelect(user, password, mailbox);
-
+    public boolean hasMessageCount(int numberOfMessages) throws IOException {
         return imapClient.getReplyString()
             .contains(numberOfMessages + " EXISTS");
     }
 
-    public boolean userReceivedMessage(String user, String password) throws IOException {
-        return userReceivedMessageInMailbox(user, password, INBOX);
-    }
-
-    public boolean userReceivedMessageInMailbox(String user, String password, String mailbox) throws IOException {
-        connectAndSelect(user, password, mailbox);
+    public boolean hasAMessage() throws IOException {
         imapClient.fetch("1:1", "ALL");
         return imapClient.getReplyString()
             .contains("OK FETCH completed");
     }
 
-    public boolean userReceivedMessageWithFlagsInMailbox(String user, String password, String mailbox, String flags) throws IOException {
-        connectAndSelect(user, password, mailbox);
+    public void awaitMessage(ConditionFactory conditionFactory) throws IOException {
+        conditionFactory.until(this::hasAMessage);
+    }
+
+    public boolean hasAMessageWithFlags(String flags) throws IOException {
         imapClient.fetch("1:1", "ALL");
         String replyString = imapClient.getReplyString();
         return isCompletedWithFlags(flags, replyString);
@@ -87,34 +91,22 @@ public class IMAPMessageReader implements Closeable {
             .allMatch(s -> replyString.contains(s));
     }
 
-    public boolean userGetNotifiedForNewMessagesWhenSelectingMailbox(String user, String password, int numOfNewMessage, String mailboxName) throws IOException {
-        connectAndSelect(user, password, mailboxName);
-
+    public boolean userGetNotifiedForNewMessagesWhenSelectingMailbox(int numOfNewMessage) throws IOException {
         return imapClient.getReplyString().contains("OK [UNSEEN " + numOfNewMessage +"]");
     }
 
-    public boolean userDoesNotReceiveMessage(String user, String password) throws IOException {
-        return userDoesNotReceiveMessageInMailbox(user, password, INBOX);
-    }
-
-    public boolean userDoesNotReceiveMessageInMailbox(String user, String password, String mailboxName) throws IOException {
-        connectAndSelect(user, password, mailboxName);
+    public boolean userDoesNotReceiveMessage() throws IOException {
         imapClient.fetch("1:1", "ALL");
         return imapClient.getReplyString()
              .contains("BAD FETCH failed. Invalid messageset");
     }
 
-    public String readFirstMessageInInbox(String user, String password) throws IOException {
-
-        return readFirstMessageInMailbox(user, password, "(BODY[])", INBOX);
+    public String readFirstMessage() throws IOException {
+        return readFirstMessageInMailbox("(BODY[])");
     }
 
-    public String readFirstMessageHeadersInMailbox(String user, String password, String mailboxName) throws IOException {
-        return readFirstMessageInMailbox(user, password, "(RFC822.HEADER)", mailboxName);
-    }
-
-    public String readFirstMessageHeadersInInbox(String user, String password) throws IOException {
-        return readFirstMessageInMailbox(user, password, "(RFC822.HEADER)", INBOX);
+    public String readFirstMessageHeaders() throws IOException {
+        return readFirstMessageInMailbox("(RFC822.HEADER)");
     }
 
     public String setFlagsForAllMessagesInMailbox(String flag) throws IOException {
@@ -122,9 +114,7 @@ public class IMAPMessageReader implements Closeable {
         return imapClient.getReplyString();
     }
 
-    private String readFirstMessageInMailbox(String user, String password, String parameters, String mailboxName) throws IOException {
-        imapClient.login(user, password);
-        imapClient.select(mailboxName);
+    private String readFirstMessageInMailbox(String parameters) throws IOException {
         imapClient.fetch("1:1", parameters);
         return imapClient.getReplyString();
     }
@@ -159,7 +149,14 @@ public class IMAPMessageReader implements Closeable {
 
     @Override
     public void close() throws IOException {
-        imapClient.close();
+        if (imapClient.isConnected()) {
+            imapClient.close();
+        }
+    }
+
+    @Override
+    protected void after() {
+        IOUtils.closeQuietly(this);
     }
 
     public void copyFirstMessage(String destMailbox) throws IOException {

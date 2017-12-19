@@ -56,6 +56,8 @@ public class NetworkMatcherIntegrationTest {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @Rule
+    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
 
     private TemporaryJamesServer jamesServer;
 
@@ -106,14 +108,15 @@ public class NetworkMatcherIntegrationTest {
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, FROM, PASSWORD);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, FROM, PASSWORD)) {
 
             messageSender.sendMessage(FROM, FROM)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            calmlyAwait.atMost(ONE_MINUTE)
-                .until(() -> imapMessageReader.userReceivedMessage(FROM, PASSWORD));
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(FROM, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -128,14 +131,15 @@ public class NetworkMatcherIntegrationTest {
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, FROM, PASSWORD);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, FROM, PASSWORD)) {
 
             messageSender.sendMessage(FROM, FROM)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            calmlyAwait.atMost(ONE_MINUTE)
-                .until(() -> imapMessageReader.userReceivedMessage(FROM, PASSWORD));
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(FROM, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -150,14 +154,15 @@ public class NetworkMatcherIntegrationTest {
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, FROM, PASSWORD);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, FROM, PASSWORD)) {
 
             messageSender.sendMessage(FROM, FROM)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            calmlyAwait.atMost(ONE_MINUTE)
-                .until(() -> imapMessageReader.userReceivedMessage(FROM, PASSWORD));
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(FROM, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -172,14 +177,15 @@ public class NetworkMatcherIntegrationTest {
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, FROM, PASSWORD);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, FROM, PASSWORD)) {
 
             messageSender.sendMessage(FROM, FROM)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            calmlyAwait.atMost(ONE_MINUTE)
-                .until(() -> imapMessageReader.userReceivedMessage(FROM, PASSWORD));
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(FROM, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -194,14 +200,15 @@ public class NetworkMatcherIntegrationTest {
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, FROM, PASSWORD);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, FROM, PASSWORD)) {
 
             messageSender.sendMessage(FROM, FROM)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            calmlyAwait.atMost(ONE_MINUTE)
-                .until(() -> imapMessageReader.userReceivedMessage(FROM, PASSWORD));
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(FROM, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -216,14 +223,15 @@ public class NetworkMatcherIntegrationTest {
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, FROM, PASSWORD);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, FROM, PASSWORD)) {
 
             messageSender.sendMessage(FROM, FROM)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            calmlyAwait.atMost(ONE_MINUTE)
-                .until(() -> imapMessageReader.userReceivedMessage(FROM, PASSWORD));
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(FROM, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
         }
     }
 
@@ -238,15 +246,19 @@ public class NetworkMatcherIntegrationTest {
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+                 SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
 
             messageSender.sendMessage(FROM, FROM)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
             MailRepositoryProbeImpl repositoryProbe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
             calmlyAwait.atMost(ONE_MINUTE).until(() -> repositoryProbe.getRepositoryMailCount(DROPPED_MAILS) == 1);
-            assertThat(imapMessageReader.userReceivedMessage(FROM, PASSWORD)).isFalse();
+            assertThat(
+                imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                    .login(FROM, PASSWORD)
+                    .select(IMAPMessageReader.INBOX)
+                    .hasAMessage())
+                .isFalse();
         }
     }
 
@@ -261,15 +273,19 @@ public class NetworkMatcherIntegrationTest {
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+                 SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
 
             messageSender.sendMessage(FROM, FROM)
                 .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
             MailRepositoryProbeImpl repositoryProbe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
             calmlyAwait.atMost(ONE_MINUTE).until(() -> repositoryProbe.getRepositoryMailCount(DROPPED_MAILS) == 1);
-            assertThat(imapMessageReader.userReceivedMessage(FROM, PASSWORD)).isFalse();
+            assertThat(
+                imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                    .login(FROM, PASSWORD)
+                    .select(IMAPMessageReader.INBOX)
+                    .hasAMessage())
+                .isFalse();
         }
     }
 
