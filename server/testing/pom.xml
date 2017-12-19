@@ -36,6 +36,11 @@
             <artifactId>apache-mailet-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-mailet-base</artifactId>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
             <groupId>com.jayway.awaitility</groupId>
             <artifactId>awaitility</artifactId>
         </dependency>

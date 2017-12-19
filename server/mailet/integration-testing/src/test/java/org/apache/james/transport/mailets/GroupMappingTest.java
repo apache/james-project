@@ -35,7 +35,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.jmap.mailet.VacationMailet;
@@ -57,7 +56,6 @@ import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.routes.GroupsRoutes;
-import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.After;
@@ -179,14 +177,11 @@ public class GroupMappingTest {
     public void messageShouldRedirectToUserWhenBelongingToGroup() throws Exception {
         restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
 
-        Mail mail = FakeMail.builder()
-            .mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress(GROUP_ON_DOMAIN1))
-            .build();
-
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mail)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipient(GROUP_ON_DOMAIN1))
             .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
@@ -200,14 +195,11 @@ public class GroupMappingTest {
     public void messageShouldRedirectToUserDoesNotHaveSameDomainWhenBelongingToGroup() throws Exception {
         restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN2);
 
-        Mail mail = FakeMail.builder()
-            .mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress(GROUP_ON_DOMAIN1))
-            .build();
-
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mail)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipient(GROUP_ON_DOMAIN1))
             .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
@@ -223,16 +215,12 @@ public class GroupMappingTest {
 
         restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN2);
 
-        Mail mail = FakeMail.builder()
-            .mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress(GROUP_ON_DOMAIN1))
-            .build();
-
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mail)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipient(GROUP_ON_DOMAIN1))
             .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
@@ -250,14 +238,11 @@ public class GroupMappingTest {
 
         restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + GROUP_ON_DOMAIN2);
 
-        Mail mail = FakeMail.builder()
-            .mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress(GROUP_ON_DOMAIN1))
-            .build();
-
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mail)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipient(GROUP_ON_DOMAIN1))
             .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
@@ -275,14 +260,11 @@ public class GroupMappingTest {
 
         restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + GROUP_ON_DOMAIN2);
 
-        Mail mail = FakeMail.builder()
-            .mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress(GROUP_ON_DOMAIN1))
-            .build();
-
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mail)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipient(GROUP_ON_DOMAIN1))
             .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
@@ -295,14 +277,11 @@ public class GroupMappingTest {
     public void messageShouldNotBeDuplicatedWhenRecipientIsAlsoPartOfGroup() throws Exception {
         restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
 
-        Mail mail = FakeMail.builder()
-            .mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipients(new MailAddress(GROUP_ON_DOMAIN1), new MailAddress(USER_DOMAIN1))
-            .build();
-
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mail)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipients(GROUP_ON_DOMAIN1, USER_DOMAIN1))
             .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
@@ -319,14 +298,11 @@ public class GroupMappingTest {
 
         restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + GROUP_ON_DOMAIN2);
 
-        Mail mail = FakeMail.builder()
-            .mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress(GROUP_ON_DOMAIN2))
-            .build();
-
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mail)
+            .sendMessage( FakeMail.builder()
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipient(GROUP_ON_DOMAIN2))
             .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
@@ -350,14 +326,11 @@ public class GroupMappingTest {
 
         restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + GROUP_ON_DOMAIN1);
 
-        Mail mail = FakeMail.builder()
-            .mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress(GROUP_ON_DOMAIN1))
-            .build();
-
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mail)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipient(GROUP_ON_DOMAIN1))
             .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
@@ -377,14 +350,11 @@ public class GroupMappingTest {
 
         restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
 
-        Mail mail = FakeMail.builder()
-            .mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress(GROUP_ON_DOMAIN1))
-            .build();
-
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mail)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipient(GROUP_ON_DOMAIN1))
             .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
@@ -399,14 +369,11 @@ public class GroupMappingTest {
 
         restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
 
-        Mail mail = FakeMail.builder()
-            .mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress(GROUP_ON_DOMAIN1))
-            .build();
-
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mail)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipient(GROUP_ON_DOMAIN1))
             .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
@@ -421,14 +388,11 @@ public class GroupMappingTest {
 
         restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + USER_DOMAIN2);
 
-        Mail mail = FakeMail.builder()
-            .mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress(GROUP_ON_DOMAIN1))
-            .build();
-
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mail)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipient((GROUP_ON_DOMAIN1)))
             .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
@@ -443,14 +407,11 @@ public class GroupMappingTest {
         String groupWithEncodedSlash = "a%2Fa@" + DOMAIN1;
         restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + groupWithEncodedSlash + "/" + USER_DOMAIN1);
 
-        Mail mail = FakeMail.builder()
-            .mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress(groupWithSlash))
-            .build();
-
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mail)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipient(groupWithSlash))
             .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
@@ -466,14 +427,11 @@ public class GroupMappingTest {
         String userWithEncodedSlash = "a%2Fa@" + DOMAIN1;
         restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + userWithEncodedSlash);
 
-        Mail mail = FakeMail.builder()
-            .mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress(GROUP_ON_DOMAIN1))
-            .build();
-
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mail)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipient(GROUP_ON_DOMAIN1))
             .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
@@ -488,14 +446,11 @@ public class GroupMappingTest {
         String groupWithEncodedAt = "group%40" + DOMAIN1;
         restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + groupWithEncodedAt + "/" + userWithEncodedAt);
 
-        Mail mail = FakeMail.builder()
-            .mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress(GROUP_ON_DOMAIN1))
-            .build();
-
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mail)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipient(GROUP_ON_DOMAIN1))
             .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
@@ -509,14 +464,11 @@ public class GroupMappingTest {
         String externalMail = "ray@yopmail.com";
         restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + externalMail);
 
-        Mail mail = FakeMail.builder()
-            .mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress(GROUP_ON_DOMAIN1))
-            .build();
-
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mail)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipient(GROUP_ON_DOMAIN1))
             .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
         calmlyAwait.atMost(1, TimeUnit.MINUTES)

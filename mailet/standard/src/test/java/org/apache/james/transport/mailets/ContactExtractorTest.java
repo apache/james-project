@@ -28,7 +28,6 @@ import static org.mockito.Mockito.when;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.test.FakeMail;
@@ -87,8 +86,8 @@ public class ContactExtractorTest {
     @Test
     public void serviceShouldNotThrowWhenJsonProcessingFails() throws Exception {
         FakeMail mail = FakeMail.builder().mimeMessage(MimeMessageBuilder.defaultMimeMessage())
-                .sender(new MailAddress(SENDER))
-                .recipient(new MailAddress(TO))
+                .sender(SENDER)
+                .recipient(TO)
                 .build();
 
         ObjectMapper objectMapper = mock(ObjectMapper.class);
@@ -109,8 +108,8 @@ public class ContactExtractorTest {
                 .setSubject("Contact collection Rocks")
                 .setText("This is my email");
         FakeMail mail = FakeMail.builder().mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress(TO))
+            .sender(SENDER)
+            .recipient(TO)
             .build();
         mailet.init(mailetConfig);
 
@@ -128,8 +127,8 @@ public class ContactExtractorTest {
             .setSubject("Contact collection Rocks")
             .setText("This is my email");
         FakeMail mail = FakeMail.builder().mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress(TO))
+            .sender(SENDER)
+            .recipient(TO)
             .build();
         mailet.init(mailetConfig);
 
@@ -147,8 +146,8 @@ public class ContactExtractorTest {
             .setSubject("Contact collection Rocks")
             .setText("This is my email");
         FakeMail mail = FakeMail.builder().mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress(TO))
+            .sender(SENDER)
+            .recipient(TO)
             .build();
         mailet.init(mailetConfig);
 
@@ -167,8 +166,8 @@ public class ContactExtractorTest {
             + "Please!";
         MimeMessage message = MimeMessageBuilder.mimeMessageFromBytes(rawMessage.getBytes());
         FakeMail mail = FakeMail.builder().mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress("frecipient@example.com"))
+            .sender(SENDER)
+            .recipient("recipient@example.com")
             .build();
         mailet.init(mailetConfig);
 
@@ -187,8 +186,8 @@ public class ContactExtractorTest {
             + "Please!";
         MimeMessage message = MimeMessageBuilder.mimeMessageFromBytes(rawMessage.getBytes());
         FakeMail mail = FakeMail.builder().mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress("frecipient@example.com"))
+            .sender(SENDER)
+            .recipient("recipient@example.com")
             .build();
         mailet.init(mailetConfig);
 
@@ -207,8 +206,8 @@ public class ContactExtractorTest {
             + "Please!";
         MimeMessage message = MimeMessageBuilder.mimeMessageFromBytes(rawMessage.getBytes());
         FakeMail mail = FakeMail.builder().mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress("frecipient@example.com"))
+            .sender(SENDER)
+            .recipient("recipient@example.com")
             .build();
         mailet.init(mailetConfig);
 
@@ -226,8 +225,8 @@ public class ContactExtractorTest {
             .setSubject("Contact collection Rocks")
             .setText("This is my email");
         FakeMail mail = FakeMail.builder().mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress(TO))
+            .sender(SENDER)
+            .recipient(TO)
             .build();
         mailet.init(mailetConfig);
 
@@ -245,8 +244,8 @@ public class ContactExtractorTest {
             .setSubject("Contact collection Rocks")
             .setText("This is my email");
         FakeMail mail = FakeMail.builder().mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipient(new MailAddress(TO))
+            .sender(SENDER)
+            .recipient(TO)
             .build();
         mailet.init(mailetConfig);
 
@@ -263,7 +262,7 @@ public class ContactExtractorTest {
             .setSubject("Contact collection Rocks")
             .setText("This is my email");
         FakeMail mail = FakeMail.builder().mimeMessage(message)
-            .recipient(new MailAddress(TO))
+            .recipient(TO)
             .build();
         mailet.init(mailetConfig);
 
@@ -279,7 +278,7 @@ public class ContactExtractorTest {
                 .setSubject("Contact collection Rocks")
                 .setText("This is my email");
         FakeMail mail = FakeMail.builder().mimeMessage(message)
-            .sender(new MailAddress(SENDER))
+            .sender(SENDER)
             .build();
         mailet.init(mailetConfig);
 
@@ -295,7 +294,7 @@ public class ContactExtractorTest {
                 .setSubject("Contact collection Rocks")
                 .setText("This is my email");
         FakeMail mail = FakeMail.builder().mimeMessage(message)
-            .sender(new MailAddress(SENDER))
+            .sender(SENDER)
             .build();
 
         mailet.extractContacts(mail);

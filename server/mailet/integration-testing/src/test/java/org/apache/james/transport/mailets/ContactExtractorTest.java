@@ -31,7 +31,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Optional;
 
 import org.apache.james.MemoryJamesServerMain;
-import org.apache.james.core.MailAddress;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
@@ -132,14 +131,12 @@ public class ContactExtractorTest {
             .addBccRecipient(BCC, "John Bcc2 <" + BCC2 + ">")
             .setSubject("Contact collection Rocks")
             .setText("This is my email");
-        FakeMail mail = FakeMail.builder()
-            .mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipients(new MailAddress(TO), new MailAddress(TO2), new MailAddress(CC), new MailAddress(CC2), new MailAddress(BCC), new MailAddress(BCC2))
-            .build();
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(SENDER, PASSWORD)
-            .sendMessage(mail)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipients(TO, TO2, CC, CC2, BCC, BCC2))
             .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)

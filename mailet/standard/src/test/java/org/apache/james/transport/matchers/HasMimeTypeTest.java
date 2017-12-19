@@ -21,7 +21,6 @@ package org.apache.james.transport.matchers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
@@ -66,8 +65,8 @@ public class HasMimeTypeTest {
 
         Mail mail = FakeMail.builder()
             .mimeMessage(message)
-            .sender(new MailAddress(FROM))
-            .recipient(new MailAddress(RECIPIENT))
+            .sender(FROM)
+            .recipient(RECIPIENT)
             .build();
 
         assertThat(matcher.match(mail)).containsAll(mail.getRecipients());
@@ -96,8 +95,8 @@ public class HasMimeTypeTest {
 
         Mail mail = FakeMail.builder()
             .mimeMessage(message)
-            .sender(new MailAddress(FROM))
-            .recipient(new MailAddress(RECIPIENT))
+            .sender(FROM)
+            .recipient(RECIPIENT)
             .build();
 
         assertThat(matcher.match(mail)).isEmpty();
@@ -116,8 +115,8 @@ public class HasMimeTypeTest {
 
         Mail mail = FakeMail.builder()
             .mimeMessage(message)
-            .sender(new MailAddress(FROM))
-            .recipient(new MailAddress(RECIPIENT))
+            .sender(FROM)
+            .recipient(RECIPIENT)
             .build();
 
         assertThat(matcher.match(mail)).containsExactlyElementsOf(mail.getRecipients());

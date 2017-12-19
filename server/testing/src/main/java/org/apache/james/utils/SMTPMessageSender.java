@@ -33,6 +33,7 @@ import javax.mail.MessagingException;
 import org.apache.commons.net.smtp.AuthenticatingSMTPClient;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
+import org.apache.mailet.base.test.FakeMail;
 import org.junit.rules.ExternalResource;
 
 import com.github.fge.lambdas.Throwing;
@@ -146,6 +147,10 @@ public class SMTPMessageSender extends ExternalResource implements Closeable {
             throw Throwables.propagate(e);
         }
         return this;
+    }
+
+    public SMTPMessageSender sendMessage(FakeMail.Builder mail) throws MessagingException {
+        return sendMessage(mail.build());
     }
 
     private String asString(Message message) throws IOException, MessagingException {

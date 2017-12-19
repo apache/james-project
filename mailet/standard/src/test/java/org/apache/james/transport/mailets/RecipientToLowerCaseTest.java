@@ -40,7 +40,7 @@ public class RecipientToLowerCaseTest {
     @Test
     public void serviceShouldPutRecipientToLowerCase() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
-            .recipient(new MailAddress("THienan1234@gmail.com"))
+            .recipient("THienan1234@gmail.com")
             .build();
 
         testee.service(fakeMail);

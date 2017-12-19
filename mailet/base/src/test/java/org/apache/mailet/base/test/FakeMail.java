@@ -23,6 +23,7 @@ package org.apache.mailet.base.test;
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -33,6 +34,7 @@ import java.util.Properties;
 
 import javax.mail.MessagingException;
 import javax.mail.Session;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
@@ -41,6 +43,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.PerRecipientHeaders.Header;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -148,9 +151,18 @@ public class FakeMail implements Mail {
             return this;
         }
 
+        public Builder recipients(String... recipients) {
+            Arrays.stream(recipients).forEach(Throwing.consumer(this::recipient));
+            return this;
+        }
+
         public Builder recipient(MailAddress recipient) {
             this.recipients.add(recipient);
             return this;
+        }
+
+        public Builder recipient(String recipient) throws AddressException {
+            return recipient(new MailAddress(recipient));
         }
 
         public Builder name(String name) {
@@ -161,6 +173,10 @@ public class FakeMail implements Mail {
         public Builder sender(MailAddress sender) {
             this.sender = Optional.of(sender);
             return this;
+        }
+
+        public Builder sender(String sender) throws AddressException {
+            return sender(new MailAddress(sender));
         }
 
         public Builder state(String state) {

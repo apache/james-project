@@ -476,8 +476,8 @@ public class ManageSieveMailetTestCase {
     private Mail createUnauthenticatedMail(MimeMessage message) throws Exception {
         return FakeMail.builder()
                 .mimeMessage(message)
-                .sender(new MailAddress(USER))
-                .recipient(new MailAddress(SIEVE_LOCALHOST))
+                .sender(USER)
+                .recipient(SIEVE_LOCALHOST)
                 .build();
     }
 

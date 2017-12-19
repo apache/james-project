@@ -137,7 +137,7 @@ public class LocalDeliveryTest {
                             .filename("file.txt")
                             .addHeader("Content-Type", "application/sieve; charset=UTF-8")))
                 .state(Mail.DEFAULT)
-                .recipient(new MailAddress("receiver@domain.com"))
+                .recipient("receiver@domain.com")
                 .build();
     }
 

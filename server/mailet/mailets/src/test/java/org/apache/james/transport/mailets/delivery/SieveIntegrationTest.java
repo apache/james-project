@@ -271,8 +271,8 @@ public class SieveIntegrationTest {
             .mimeMessage(MimeMessageBuilder.mimeMessageFromStream(
                 ClassLoader.getSystemResourceAsStream("eml/gmail.eml")))
             .state(Mail.DEFAULT)
-            .recipient(new MailAddress(RECEIVER_DOMAIN_COM))
-            .sender(new MailAddress("sender@any.com"))
+            .recipient(RECEIVER_DOMAIN_COM)
+            .sender("sender@any.com")
             .build();
         testee.service(mail);
 
@@ -426,7 +426,7 @@ public class SieveIntegrationTest {
 
         assertThat(mail.getRecipients()).isEmpty();
         FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
-            .sender(new MailAddress("sender@any.com"))
+            .sender("sender@any.com")
             .recipient(new MailAddress("redirect@apache.org"))
             .fromMailet()
             .build();
@@ -793,7 +793,7 @@ public class SieveIntegrationTest {
 
         // Notification of script interpretation failure
         assertThat(fakeMailContext.getSentMails()).containsExactly(FakeMailContext.sentMailBuilder()
-            .recipient(new MailAddress(RECEIVER_DOMAIN_COM))
+            .recipient(RECEIVER_DOMAIN_COM)
             .sender(new MailAddress(RECEIVER_DOMAIN_COM))
             .fromMailet()
             .build());
@@ -963,8 +963,8 @@ public class SieveIntegrationTest {
                             .filename("file.txt")
                             .disposition(MimeBodyPart.ATTACHMENT)))
             .state(Mail.DEFAULT)
-            .recipient(new MailAddress(RECEIVER_DOMAIN_COM))
-            .sender(new MailAddress("sender@any.com"))
+            .recipient(RECEIVER_DOMAIN_COM)
+            .sender("sender@any.com")
             .build();
     }
 
