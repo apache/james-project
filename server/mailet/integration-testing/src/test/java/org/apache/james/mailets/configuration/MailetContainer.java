@@ -57,6 +57,11 @@ public class MailetContainer implements SerializableAsXml {
             return this;
         }
 
+        public Builder addProcessor(ProcessorConfiguration.Builder processorConfiguration) {
+            this.processors.add(processorConfiguration.build());
+            return this;
+        }
+
         public MailetContainer build() {
             Preconditions.checkState(!Strings.isNullOrEmpty(postmaster), "'postmaster' is mandatory");
             Preconditions.checkState(threads > 0, "'threads' should be greater than 0");

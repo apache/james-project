@@ -138,18 +138,15 @@ public class StripAttachmentTest {
         MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
             .setMultipartWithBodyParts(
                 MimeMessageBuilder.bodyPartBuilder()
-                    .data("simple text")
-                    .build(),
+                    .data("simple text"),
                 MimeMessageBuilder.bodyPartBuilder()
                     .data("Not matching attachment")
                     .filename("not_matching.tmp")
-                    .disposition("attachment")
-                    .build(),
+                    .disposition("attachment"),
                 MimeMessageBuilder.bodyPartBuilder()
                     .data("Matching attachment")
                     .filename("temp.zip")
-                    .disposition("attachment")
-                    .build())
+                    .disposition("attachment"))
             .setSubject("test")
             .build();
 

@@ -79,7 +79,7 @@ public class NetworkMatcherIntegrationTest {
         MailetContainer mailetContainer = MailetContainer.builder()
             .postmaster("postmaster@" + JAMES_APACHE_ORG)
             .threads(5)
-            .addProcessor(rootProcessor.build())
+            .addProcessor(rootProcessor)
             .addProcessor(CommonProcessors.error())
             .addProcessor(deliverOnlyTransport())
             .build();
@@ -100,21 +100,18 @@ public class NetworkMatcherIntegrationTest {
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(RemoveMimeHeader.class)
-                .addProperty("name", "bcc")
-                .build())
+                .addProperty("name", "bcc"))
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
-                .mailet(LocalDelivery.class)
-                .build())
+                .mailet(LocalDelivery.class))
             .build();
     }
 
-    private MailetConfiguration toRepository() {
+    private MailetConfiguration.Builder toRepository() {
         return MailetConfiguration.builder()
             .matcher(All.class)
             .mailet(ToRepository.class)
-            .addProperty("repositoryPath", DROPPED_MAILS)
-            .build();
+            .addProperty("repositoryPath", DROPPED_MAILS);
     }
 
     @After
@@ -130,8 +127,7 @@ public class NetworkMatcherIntegrationTest {
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("127.0.0.0/8")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "transport")
-                .build())
+                .addProperty("processor", "transport"))
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
@@ -154,8 +150,7 @@ public class NetworkMatcherIntegrationTest {
                 .matcher(RemoteAddrNotInNetwork.class)
                 .matcherCondition("172.0.0.0/8")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "transport")
-                .build())
+                .addProperty("processor", "transport"))
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
@@ -178,8 +173,7 @@ public class NetworkMatcherIntegrationTest {
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("127.0.0.0/2")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "transport")
-                .build())
+                .addProperty("processor", "transport"))
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
@@ -202,8 +196,7 @@ public class NetworkMatcherIntegrationTest {
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("127.0.4.108/8")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "transport")
-                .build())
+                .addProperty("processor", "transport"))
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
@@ -226,8 +219,7 @@ public class NetworkMatcherIntegrationTest {
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("127.255.255.255/8")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "transport")
-                .build())
+                .addProperty("processor", "transport"))
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
@@ -250,8 +242,7 @@ public class NetworkMatcherIntegrationTest {
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("126.0.0.0/4")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "transport")
-                .build())
+                .addProperty("processor", "transport"))
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
@@ -274,8 +265,7 @@ public class NetworkMatcherIntegrationTest {
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("172.0.0.0/8")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "transport")
-                .build())
+                .addProperty("processor", "transport"))
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =
@@ -300,8 +290,7 @@ public class NetworkMatcherIntegrationTest {
                 .matcher(RemoteAddrNotInNetwork.class)
                 .matcherCondition("127.0.0.0/8")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "transport")
-                .build())
+                .addProperty("processor", "transport"))
             .addMailet(toRepository()));
 
         try (SMTPMessageSender messageSender =

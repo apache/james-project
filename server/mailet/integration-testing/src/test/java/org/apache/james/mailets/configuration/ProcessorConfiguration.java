@@ -61,6 +61,11 @@ public class ProcessorConfiguration implements SerializableAsXml {
             return this;
         }
 
+        public Builder addMailet(MailetConfiguration.Builder mailetConfiguration) {
+            this.mailets.add(mailetConfiguration.build());
+            return this;
+        }
+
         public ProcessorConfiguration build() {
             Preconditions.checkState(!Strings.isNullOrEmpty(state), "'state' is mandatory");
             return new ProcessorConfiguration(state, enableJmx.orElse(false), mailets.build());

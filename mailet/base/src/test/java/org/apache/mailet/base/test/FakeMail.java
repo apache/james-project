@@ -30,13 +30,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.PerRecipientHeaders.Header;
 
@@ -49,6 +50,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class FakeMail implements Mail {
+
+    public static FakeMail fromMessage(MimeMessageBuilder message) throws MessagingException {
+        return FakeMail.builder()
+            .mimeMessage(message)
+            .build();
+    }
 
     public static FakeMail fromMime(String text, String javaEncodingCharset, String javamailDefaultEncodingCharset) throws MessagingException, UnsupportedEncodingException {
         Properties javamailProperties = new Properties();
@@ -123,6 +130,11 @@ public class FakeMail implements Mail {
 
         public Builder mimeMessage(MimeMessage mimeMessage) {
             this.mimeMessage = Optional.of(mimeMessage);
+            return this;
+        }
+
+        public Builder mimeMessage(MimeMessageBuilder mimeMessage) throws MessagingException {
+            this.mimeMessage = Optional.of(mimeMessage.build());
             return this;
         }
 

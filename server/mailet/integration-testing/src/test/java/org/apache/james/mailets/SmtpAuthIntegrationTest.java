@@ -71,13 +71,11 @@ public class SmtpAuthIntegrationTest {
             .addMailet(MailetConfiguration.builder()
                 .matcher(SMTPAuthSuccessful.class)
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "transport")
-                .build())
+                .addProperty("processor", "transport"))
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "bounces")
-                .build())
+                .addProperty("processor", "bounces"))
             .build();
 
         MailetContainer mailetContainer = MailetContainer.builder()
@@ -113,12 +111,10 @@ public class SmtpAuthIntegrationTest {
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(RemoveMimeHeader.class)
-                .addProperty("name", "bcc")
-                .build())
+                .addProperty("name", "bcc"))
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
-                .mailet(LocalDelivery.class)
-                .build())
+                .mailet(LocalDelivery.class))
             .build();
     }
 
@@ -129,8 +125,7 @@ public class SmtpAuthIntegrationTest {
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(ToRepository.class)
-                .addProperty("repositoryPath", DROPPED_MAILS)
-                .build())
+                .addProperty("repositoryPath", DROPPED_MAILS))
             .build();
     }
 

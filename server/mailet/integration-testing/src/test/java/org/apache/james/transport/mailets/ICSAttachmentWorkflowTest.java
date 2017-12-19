@@ -531,26 +531,22 @@ public class ICSAttachmentWorkflowTest {
         messageWithoutICSAttached = MimeMessageBuilder.mimeMessageBuilder()
             .setMultipartWithBodyParts(
                 MimeMessageBuilder.bodyPartBuilder()
-                    .data("simple text")
-                    .build(),
+                    .data("simple text"),
                 MimeMessageBuilder.bodyPartBuilder()
                     .data("My attachment")
                     .filename("test.txt")
-                    .disposition("attachment")
-                    .build())
+                    .disposition("attachment"))
             .setSubject("test")
             .build();
 
         messageWithICSAttached = MimeMessageBuilder.mimeMessageBuilder()
             .setMultipartWithBodyParts(
                 MimeMessageBuilder.bodyPartBuilder()
-                    .data("simple text")
-                    .build(),
+                    .data("simple text"),
                 MimeMessageBuilder.bodyPartBuilder()
                     .data(ICS_1.getBytes(StandardCharsets.UTF_8))
                     .filename("meeting.ics")
-                    .disposition("attachment")
-                    .build())
+                    .disposition("attachment"))
             .setSubject("test")
             .build();
 
@@ -568,23 +564,19 @@ public class ICSAttachmentWorkflowTest {
         messageWithThreeICSAttached = MimeMessageBuilder.mimeMessageBuilder()
             .setMultipartWithBodyParts(
                 MimeMessageBuilder.bodyPartBuilder()
-                    .data("simple text")
-                    .build(),
+                    .data("simple text"),
                 MimeMessageBuilder.bodyPartBuilder()
                     .data(ICS_1.getBytes(StandardCharsets.UTF_8))
                     .filename("test1.txt")
-                    .disposition("attachment")
-                    .build(),
+                    .disposition("attachment"),
                 MimeMessageBuilder.bodyPartBuilder()
                     .data(ICS_2.getBytes(StandardCharsets.UTF_8))
                     .filename("test2.txt")
-                    .disposition("attachment")
-                    .build(),
+                    .disposition("attachment"),
                 MimeMessageBuilder.bodyPartBuilder()
                     .data(ICS_3.getBytes(StandardCharsets.UTF_8))
                     .filename("test3.txt")
-                    .disposition("attachment")
-                    .build())
+                    .disposition("attachment"))
             .setSubject("test")
             .build();
     }

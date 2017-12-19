@@ -292,13 +292,11 @@ public class AutomaticallySentMailDetectorImplTest {
     public void isMdnSentAutomaticallyShouldNotThrowOnBodyPartsWithManyLines() throws Exception {
         int mime4jDefaultMaxHeaderCount = 1000;
         int headerCount = mime4jDefaultMaxHeaderCount + 10;
-        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+        MimeMessageBuilder message = MimeMessageBuilder.mimeMessageBuilder()
             .addHeaders()
             .setMultipartWithBodyParts(MimeMessageBuilder.bodyPartBuilder()
                 .addHeaders(Collections.nCopies(headerCount, new MimeMessageBuilder.Header("name", "value")))
-                .data("The body part have 1010 headers, which overpass MIME4J default limits")
-                .build())
-            .build();
+                .data("The body part have 1010 headers, which overpass MIME4J default limits"));
 
         FakeMail fakeMail = FakeMail.builder()
             .sender(MailAddressFixture.ANY_AT_JAMES)

@@ -31,8 +31,8 @@ import java.util.stream.Collectors;
 
 import javax.mail.MessagingException;
 
-import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -444,8 +444,7 @@ public class ICALToJsonAttributeTest {
             .sender(SENDER)
             .recipient(recipient)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
-                .addFrom(from)
-                .build())
+                .addFrom(from))
             .attribute(ICALToJsonAttribute.DEFAULT_SOURCE_ATTRIBUTE_NAME, icals)
             .attribute(ICALToJsonAttribute.DEFAULT_RAW_SOURCE_ATTRIBUTE_NAME, rawIcals)
             .build();
@@ -479,8 +478,7 @@ public class ICALToJsonAttributeTest {
         Mail mail = FakeMail.builder()
             .sender(SENDER)
             .recipient(recipient)
-            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
-                .build())
+            .mimeMessage(MimeMessageBuilder.defaultMimeMessage())
             .attribute(ICALToJsonAttribute.DEFAULT_SOURCE_ATTRIBUTE_NAME, icals)
             .attribute(ICALToJsonAttribute.DEFAULT_RAW_SOURCE_ATTRIBUTE_NAME, rawIcals)
             .build();
@@ -515,8 +513,7 @@ public class ICALToJsonAttributeTest {
         Mail mail = FakeMail.builder()
             .recipient(recipient)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
-                .addFrom(from)
-                .build())
+                .addFrom(from))
             .attribute(ICALToJsonAttribute.DEFAULT_SOURCE_ATTRIBUTE_NAME, icals)
             .attribute(ICALToJsonAttribute.DEFAULT_RAW_SOURCE_ATTRIBUTE_NAME, rawIcals)
             .build();

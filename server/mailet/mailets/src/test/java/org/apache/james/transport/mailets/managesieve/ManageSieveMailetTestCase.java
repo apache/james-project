@@ -37,6 +37,7 @@ import javax.mail.internet.MimeMessage.RecipientType;
 import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.core.MailAddress;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.api.SyntaxException;
 import org.apache.james.sieverepository.api.ScriptSummary;
@@ -44,7 +45,6 @@ import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -505,8 +505,7 @@ public class ManageSieveMailetTestCase {
                     .data(scriptContent)
                     .disposition(MimeBodyPart.ATTACHMENT)
                     .filename(SCRIPT_NAME)
-                    .addHeader("Content-Type", "application/sieve; charset=UTF-8")
-                    .build())
+                    .addHeader("Content-Type", "application/sieve; charset=UTF-8"))
             .build();
     }
 

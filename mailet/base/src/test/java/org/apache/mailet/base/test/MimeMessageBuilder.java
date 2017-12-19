@@ -45,6 +45,7 @@ import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.commons.io.IOUtils;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -70,8 +71,20 @@ public class MimeMessageBuilder {
             return this;
         }
 
+        public MultipartBuilder addBody(BodyPartBuilder bodyPart) throws IOException, MessagingException {
+            this.bodyParts.add(bodyPart.build());
+            return this;
+        }
+
         public MultipartBuilder addBodies(BodyPart... bodyParts) {
             this.bodyParts.addAll(Arrays.asList(bodyParts));
+            return this;
+        }
+
+        public MultipartBuilder addBodies(BodyPartBuilder... bodyParts) {
+            this.bodyParts.addAll(Arrays.stream(bodyParts)
+                .map(Throwing.function(BodyPartBuilder::build).sneakyThrow())
+                .collect(Guavate.toImmutableList()));
             return this;
         }
 
@@ -311,7 +324,19 @@ public class MimeMessageBuilder {
         return this;
     }
 
+    public MimeMessageBuilder setContent(MultipartBuilder mimeMultipart) throws MessagingException {
+        this.content = Optional.of(mimeMultipart.build());
+        return this;
+    }
+
     public MimeMessageBuilder setMultipartWithBodyParts(BodyPart... bobyParts) throws MessagingException {
+        this.content = Optional.of(MimeMessageBuilder.multipartBuilder()
+            .addBodies(bobyParts)
+            .build());
+        return this;
+    }
+
+    public MimeMessageBuilder setMultipartWithBodyParts(BodyPartBuilder... bobyParts) throws MessagingException {
         this.content = Optional.of(MimeMessageBuilder.multipartBuilder()
             .addBodies(bobyParts)
             .build());
@@ -323,6 +348,10 @@ public class MimeMessageBuilder {
             new MimeBodyPart(
                 new InternetHeaders(new ByteArrayInputStream("Content-Type: multipart/mixed".getBytes(StandardCharsets.US_ASCII))),
                 IOUtils.toByteArray(mimeMessage.getInputStream())));
+    }
+
+    public MimeMessageBuilder setMultipartWithSubMessage(MimeMessageBuilder mimeMessage) throws MessagingException, IOException {
+        return setMultipartWithSubMessage(mimeMessage.build());
     }
 
     public MimeMessageBuilder addHeader(String name, String value) {

@@ -263,34 +263,29 @@ public class BounceIntegrationTest {
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(RemoveMimeHeader.class)
-                .addProperty("name", "bcc")
-                .build())
+                .addProperty("name", "bcc"))
             .addMailet(MailetConfiguration.builder()
                 .matcher(RecipientIsLocal.class)
-                .mailet(VacationMailet.class)
-                .build())
+                .mailet(VacationMailet.class))
             .addMailet(MailetConfiguration.builder()
                 .matcher(RecipientIs.class)
                 .matcherCondition(BOUNCE_RECEIVER)
-                .mailet(LocalDelivery.class)
-                .build())
+                .mailet(LocalDelivery.class))
             .addMailet(MailetConfiguration.builder()
                 .matcher(RecipientIs.class)
                 .matcherCondition(POSTMASTER)
-                .mailet(LocalDelivery.class)
-                .build())
+                .mailet(LocalDelivery.class))
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "bounces")
-                .build())
+                .addProperty("processor", "bounces"))
             .build();
     }
 
     public static ProcessorConfiguration bounces(MailetConfiguration.Builder redirectionMailetConfiguration) {
         return ProcessorConfiguration.builder()
             .state("bounces")
-            .addMailet(redirectionMailetConfiguration.build())
+            .addMailet(redirectionMailetConfiguration)
             .build();
     }
 }

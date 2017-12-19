@@ -23,8 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 
-import javax.mail.internet.MimeMessage;
-
 import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -155,18 +153,15 @@ public class AmqpForwardAttachmentTest {
 
     @Test
     public void stripAttachmentShouldPutAttachmentsInMailAttributeWhenConfiguredForIt() throws Exception {
-        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+        MimeMessageBuilder message = MimeMessageBuilder.mimeMessageBuilder()
             .setMultipartWithBodyParts(
                 MimeMessageBuilder.bodyPartBuilder()
-                    .data("simple text")
-                    .build(),
+                    .data("simple text"),
                 MimeMessageBuilder.bodyPartBuilder()
                     .data(TEST_ATTACHMENT_CONTENT)
                     .disposition("attachment")
-                    .filename("test.txt")
-                    .build())
-            .setSubject("test")
-            .build();
+                    .filename("test.txt"))
+            .setSubject("test");
 
         Mail mail = FakeMail.builder()
               .mimeMessage(message)

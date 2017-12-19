@@ -135,9 +135,7 @@ public class LocalDeliveryTest {
                             .data("toto")
                             .disposition(MimeBodyPart.ATTACHMENT)
                             .filename("file.txt")
-                            .addHeader("Content-Type", "application/sieve; charset=UTF-8")
-                            .build())
-                    .build())
+                            .addHeader("Content-Type", "application/sieve; charset=UTF-8")))
                 .state(Mail.DEFAULT)
                 .recipient(new MailAddress("receiver@domain.com"))
                 .build();

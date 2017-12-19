@@ -280,12 +280,10 @@ public class GatewayRemoteDeliveryIntegrationTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(RemoveMimeHeader.class)
-                        .addProperty("name", "bcc")
-                        .build())
+                        .addProperty("name", "bcc"))
                     .addMailet(MailetConfiguration.builder()
                         .matcher(RecipientIsLocal.class)
-                        .mailet(LocalDelivery.class)
-                        .build())
+                        .mailet(LocalDelivery.class))
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(RemoteDelivery.class)
@@ -295,9 +293,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
                         .addProperty("maxDnsProblemRetries", "0")
                         .addProperty("deliveryThreads", "2")
                         .addProperty("sendpartial", "true")
-                        .addProperty("gateway", gatewayProperty)
-                        .build())
-                    .build())
+                        .addProperty("gateway", gatewayProperty)))
                 .addProcessor(CommonProcessors.bounces())
                 .build());
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
@@ -376,18 +372,15 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .enableJmx(true)
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
-                .mailet(PostmasterAlias.class)
-                .build())
+                .mailet(PostmasterAlias.class))
             .addMailet(MailetConfiguration.builder()
                 .matcher(RelayLimit.class)
                 .matcherCondition("30")
-                .mailet(Null.class)
-                .build())
+                .mailet(Null.class))
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "transport")
-                .build())
+                .addProperty("processor", "transport"))
             .build();
     }
 
@@ -398,8 +391,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(RemoveMimeHeader.class)
-                .addProperty("name", "bcc")
-                .build())
+                .addProperty("name", "bcc"))
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(RemoteDelivery.class)
@@ -410,8 +402,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
                 .addProperty("deliveryThreads", "2")
                 .addProperty("sendpartial", "true")
                 .addProperty("bounceProcessor", "bounces")
-                .addProperty("gateway", gatewayProperty)
-                .build())
+                .addProperty("gateway", gatewayProperty))
             .build();
     }
 
@@ -422,12 +413,10 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(RemoveMimeHeader.class)
-                .addProperty("name", "bcc")
-                .build())
+                .addProperty("name", "bcc"))
             .addMailet(MailetConfiguration.builder()
                 .matcher(RecipientIsLocal.class)
-                .mailet(LocalDelivery.class)
-                .build())
+                .mailet(LocalDelivery.class))
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(RemoteDelivery.class)
@@ -438,8 +427,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
                 .addProperty("deliveryThreads", "2")
                 .addProperty("sendpartial", "true")
                 .addProperty("bounceProcessor", "bounces")
-                .addProperty("gateway", gatewayProperty)
-                .build())
+                .addProperty("gateway", gatewayProperty))
             .build();
     }
 
@@ -450,8 +438,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(RemoveMimeHeader.class)
-                .addProperty("name", "bcc")
-                .build())
+                .addProperty("name", "bcc"))
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(RemoteDelivery.class)
@@ -461,8 +448,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
                 .addProperty("maxDnsProblemRetries", "0")
                 .addProperty("deliveryThreads", "2")
                 .addProperty("sendpartial", "true")
-                .addProperty("bounceProcessor", "bounces")
-                .build())
+                .addProperty("bounceProcessor", "bounces"))
             .build();
     }
 

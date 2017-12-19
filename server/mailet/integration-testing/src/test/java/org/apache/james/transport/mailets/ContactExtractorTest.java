@@ -23,8 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
-import javax.mail.internet.MimeMessage;
-
 import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.mailets.TemporaryJamesServer;
@@ -134,14 +132,13 @@ public class ContactExtractorTest {
 
     @Test
     public void recipientsShouldBePublishedToAmqpWhenSendingEmail() throws Exception {
-        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+        MimeMessageBuilder message = MimeMessageBuilder.mimeMessageBuilder()
             .setSender(SENDER)
             .addToRecipient(TO, "John To2 <" + TO2 + ">")
             .addCcRecipient(CC, "John Cc2 <" + CC2 + ">")
             .addBccRecipient(BCC, "John Bcc2 <" + BCC2 + ">")
             .setSubject("Contact collection Rocks")
-            .setText("This is my email")
-            .build();
+            .setText("This is my email");
         FakeMail mail = FakeMail.builder()
             .mimeMessage(message)
             .sender(new MailAddress(SENDER))
