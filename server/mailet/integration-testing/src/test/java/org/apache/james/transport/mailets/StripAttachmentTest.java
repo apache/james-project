@@ -62,6 +62,8 @@ public class StripAttachmentTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule
     public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
+    @Rule
+    public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
 
@@ -136,15 +138,14 @@ public class StripAttachmentTest {
               .recipient(new MailAddress(RECIPIENT))
               .build();
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
-            messageSender.sendMessage(mail)
-                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(mail)
+            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
-                .login(RECIPIENT, PASSWORD)
-                .select(IMAPMessageReader.INBOX)
-                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
-            assertThat(imapMessageReader.readFirstMessage()).contains("Matching attachment");
-        }
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(RECIPIENT, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+        assertThat(imapMessageReader.readFirstMessage()).contains("Matching attachment");
     }
 }

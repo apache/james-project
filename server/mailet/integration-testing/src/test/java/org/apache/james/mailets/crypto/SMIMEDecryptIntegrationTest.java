@@ -62,6 +62,8 @@ public class SMIMEDecryptIntegrationTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule
     public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
+    @Rule
+    public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
 
@@ -105,53 +107,49 @@ public class SMIMEDecryptIntegrationTest {
 
     @Test
     public void cryptedMessageShouldBeDecryptedWhenCertificateMatches() throws Exception {
-
-        try (SMTPMessageSender messageSender = SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_SECURE_PORT, DEFAULT_DOMAIN, FROM, PASSWORD)) {
-
-            messageSender.sendMessageWithHeaders(FROM, FROM,
+        messageSender.connect(LOCALHOST_IP, SMTP_SECURE_PORT)
+            .authenticate(FROM, PASSWORD)
+            .sendMessageWithHeaders(FROM, FROM,
                 IOUtils.toString(ClassLoader.getSystemResourceAsStream("eml/crypted.eml"), StandardCharsets.US_ASCII))
-                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
-                .login(FROM, PASSWORD)
-                .select(IMAPMessageReader.INBOX)
-                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
-            assertThat(imapMessageReader.readFirstMessage()).containsSequence("Crypted content");
-        }
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(FROM, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+        assertThat(imapMessageReader.readFirstMessage()).containsSequence("Crypted content");
     }
 
     @Test
     public void cryptedMessageWithAttachmentShouldBeDecryptedWhenCertificateMatches() throws Exception {
-
-        try (SMTPMessageSender messageSender = SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_SECURE_PORT, DEFAULT_DOMAIN, FROM, PASSWORD)) {
-            messageSender.sendMessageWithHeaders(FROM, FROM,
+        messageSender.connect(LOCALHOST_IP, SMTP_SECURE_PORT)
+            .authenticate(FROM, PASSWORD)
+            .sendMessageWithHeaders(FROM, FROM,
                 IOUtils.toString(ClassLoader.getSystemResourceAsStream("eml/crypted_with_attachment.eml"), StandardCharsets.US_ASCII))
-                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
-                .login(FROM, PASSWORD)
-                .select(IMAPMessageReader.INBOX)
-                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
-            assertThat(imapMessageReader.readFirstMessage())
-                .containsSequence("Crypted Content with attachment");
-        }
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(FROM, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+        assertThat(imapMessageReader.readFirstMessage())
+            .containsSequence("Crypted Content with attachment");
     }
 
     @Test
     public void cryptedMessageShouldNotBeDecryptedWhenCertificateDoesntMatch() throws Exception {
-
-        try (SMTPMessageSender messageSender = SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_SECURE_PORT, DEFAULT_DOMAIN, FROM, PASSWORD)) {
-            messageSender.sendMessageWithHeaders(FROM, FROM,
+        messageSender.connect(LOCALHOST_IP, SMTP_SECURE_PORT)
+            .authenticate(FROM, PASSWORD)
+            .sendMessageWithHeaders(FROM, FROM,
                 IOUtils.toString(ClassLoader.getSystemResourceAsStream("eml/bad_crypted.eml"), StandardCharsets.US_ASCII))
-                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
-                .login(FROM, PASSWORD)
-                .select(IMAPMessageReader.INBOX)
-                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
-            assertThat(imapMessageReader.readFirstMessage())
-                .containsSequence("MIAGCSqGSIb3DQEHA6CAMIACAQAxggKpMIICpQIBADCBjDCBhjELMAkGA1UE");
-        }
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(FROM, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+        assertThat(imapMessageReader.readFirstMessage())
+            .containsSequence("MIAGCSqGSIb3DQEHA6CAMIACAQAxggKpMIICpQIBADCBjDCBhjELMAkGA1UE");
     }
 
 }

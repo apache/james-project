@@ -26,7 +26,6 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
-import static org.apache.mailet.base.MailAddressFixture.JAMES_APACHE_ORG;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
@@ -75,6 +74,8 @@ public class ContactExtractorTest {
     public RuleChain chain = RuleChain.outerRule(rabbit).around(amqpRule).around(folder);
     @Rule
     public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
+    @Rule
+    public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
 
@@ -136,22 +137,22 @@ public class ContactExtractorTest {
             .sender(new MailAddress(SENDER))
             .recipients(new MailAddress(TO), new MailAddress(TO2), new MailAddress(CC), new MailAddress(CC2), new MailAddress(BCC), new MailAddress(BCC2))
             .build();
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage(mail)
-                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .authenticate(SENDER, PASSWORD)
+            .sendMessage(mail)
+            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
-                .login(TO, PASSWORD)
-                .select(IMAPMessageReader.INBOX)
-                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(TO, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
 
-            Optional<String> actual = amqpRule.readContent();
-            assertThat(actual).isNotEmpty();
-            assertThatJson(actual.get()).isEqualTo("{"
-                    + "\"userEmail\" : \"sender@james.org\", "
-                    + "\"emails\" : [ \"to@james.org\", \"John To2 <to2@james.org>\", \"cc@james.org\", \"John Cc2 <cc2@james.org>\", \"bcc@james.org\", \"John Bcc2 <bcc2@james.org>\" ]"
-                    + "}");
-        }
+        Optional<String> actual = amqpRule.readContent();
+        assertThat(actual).isNotEmpty();
+        assertThatJson(actual.get()).isEqualTo("{"
+            + "\"userEmail\" : \"sender@james.org\", "
+            + "\"emails\" : [ \"to@james.org\", \"John To2 <to2@james.org>\", \"cc@james.org\", \"John Cc2 <cc2@james.org>\", \"bcc@james.org\", \"John Bcc2 <bcc2@james.org>\" ]"
+            + "}");
     }
 
 }

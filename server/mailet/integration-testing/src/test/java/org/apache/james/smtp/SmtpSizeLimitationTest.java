@@ -52,6 +52,8 @@ public class SmtpSizeLimitationTest {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @Rule
+    public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
 
@@ -100,12 +102,10 @@ public class SmtpSizeLimitationTest {
             .doNotVerifyIdentity()
             .withMaxMessageSizeInKb(10));
 
-        try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN, USER, PASSWORD)) {
-
-            messageSender.sendMessageWithHeaders(USER, USER, Strings.repeat("Long message", 1024));
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .authenticate(USER, PASSWORD)
+            .sendMessageWithHeaders(USER, USER, Strings.repeat("Long message", 1024));
             calmlyAwait.atMost(ONE_MINUTE).until(messageSender::messageSendingFailed);
-        }
     }
 
     @Test
@@ -114,11 +114,9 @@ public class SmtpSizeLimitationTest {
             .doNotVerifyIdentity()
             .withMaxMessageSizeInKb(10));
 
-        try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN, USER, PASSWORD)) {
-
-            messageSender.sendMessageWithHeaders(USER, USER,"Short message")
-                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-        }
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .authenticate(USER, PASSWORD)
+            .sendMessageWithHeaders(USER, USER,"Short message")
+            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
     }
 }

@@ -37,4 +37,6 @@ public class Constants {
     public static final int IMAP_PORT = 1143;
     public static final int SMTP_PORT = 1025;
     public static final String PASSWORD = "secret";
+    public static final String FROM = "user@" + DEFAULT_DOMAIN;
+    public static final String RECIPIENT = "user2@" + DEFAULT_DOMAIN;
 }

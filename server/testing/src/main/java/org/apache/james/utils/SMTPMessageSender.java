@@ -31,18 +31,26 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 
 import org.apache.commons.net.smtp.AuthenticatingSMTPClient;
-import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
+import org.junit.rules.ExternalResource;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Throwables;
 import com.jayway.awaitility.core.ConditionFactory;
 
-public class SMTPMessageSender implements Closeable {
+public class SMTPMessageSender extends ExternalResource implements Closeable {
+
+    private static AuthenticatingSMTPClient createClient() {
+        try {
+            return new AuthenticatingSMTPClient();
+        } catch (NoSuchAlgorithmException e) {
+            throw Throwables.propagate(e);
+        }
+    }
 
     public static SMTPMessageSender noAuthentication(String ip, int port, String senderDomain) throws IOException {
-        SMTPClient smtpClient = new SMTPClient();
+        AuthenticatingSMTPClient smtpClient = createClient();
         smtpClient.connect(ip, port);
         return new SMTPMessageSender(smtpClient, senderDomain);
     }
@@ -57,12 +65,28 @@ public class SMTPMessageSender implements Closeable {
         return new SMTPMessageSender(smtpClient, senderDomain);
     }
 
-    private final SMTPClient smtpClient;
+    private final AuthenticatingSMTPClient smtpClient;
     private final String senderDomain;
 
-    private SMTPMessageSender(SMTPClient smtpClient, String senderDomain) {
+    private SMTPMessageSender(AuthenticatingSMTPClient smtpClient, String senderDomain) {
         this.smtpClient = smtpClient;
         this.senderDomain = senderDomain;
+    }
+
+    public SMTPMessageSender(String senderDomain) {
+        this(createClient(), senderDomain);
+    }
+
+    public SMTPMessageSender connect(String ip, int port) throws IOException {
+        smtpClient.connect(ip, port);
+        return this;
+    }
+
+    public SMTPMessageSender authenticate(String username, String password) throws IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidKeySpecException {
+        if (smtpClient.auth(AuthenticatingSMTPClient.AUTH_METHOD.PLAIN, username, password) == false) {
+            throw new RuntimeException("auth failed");
+        }
+        return this;
     }
 
     public SMTPMessageSender sendMessage(String from, String recipient) {

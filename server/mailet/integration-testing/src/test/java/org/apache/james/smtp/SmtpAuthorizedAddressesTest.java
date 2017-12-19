@@ -78,6 +78,8 @@ public class SmtpAuthorizedAddressesTest {
     public RuleChain chain = RuleChain.outerRule(smtpFolder).around(fakeSmtp);
     @Rule
     public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
+    @Rule
+    public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -153,15 +155,12 @@ public class SmtpAuthorizedAddressesTest {
             .requireAuthentication()
             .withAutorizedAddresses("127.0.0.0/8"));
 
-        try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, TO)
+            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            messageSender.sendMessage(FROM, TO)
-                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-
-            calmlyAwait.atMost(ONE_MINUTE)
-                .until(this::messageIsReceivedByTheSmtpServer);
-        }
+        calmlyAwait.atMost(ONE_MINUTE)
+            .until(this::messageIsReceivedByTheSmtpServer);
     }
 
     @Test
@@ -170,12 +169,10 @@ public class SmtpAuthorizedAddressesTest {
             .requireAuthentication()
             .withAutorizedAddresses("172.0.0.0/8"));
 
-        try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, TO);
 
-            messageSender.sendMessage(FROM, TO);
-            calmlyAwait.atMost(ONE_MINUTE).until(messageSender::messageSendingFailed);
-        }
+        calmlyAwait.atMost(ONE_MINUTE).until(messageSender::messageSendingFailed);
     }
 
     @Test
@@ -184,15 +181,12 @@ public class SmtpAuthorizedAddressesTest {
             .requireAuthentication()
             .withAutorizedAddresses("172.0.0.0/8"));
 
-        try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN, FROM, PASSWORD)) {
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .authenticate(FROM, PASSWORD)
+            .sendMessage(FROM, TO)
+            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            messageSender.sendMessage(FROM, TO)
-                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-
-            calmlyAwait.atMost(ONE_MINUTE)
-                .until(this::messageIsReceivedByTheSmtpServer);
-        }
+        calmlyAwait.atMost(ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
     }
 
     @Test
@@ -201,17 +195,14 @@ public class SmtpAuthorizedAddressesTest {
             .requireAuthentication()
             .withAutorizedAddresses("172.0.0.0/8"));
 
-        try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(TO, FROM)
+            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-            messageSender.sendMessage(TO, FROM)
-                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-
-            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
-                .login(FROM, PASSWORD)
-                .select(IMAPMessageReader.INBOX)
-                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
-        }
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(FROM, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
     }
 
     private boolean messageIsReceivedByTheSmtpServer() {

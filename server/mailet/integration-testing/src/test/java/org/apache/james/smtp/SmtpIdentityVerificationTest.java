@@ -53,6 +53,8 @@ public class SmtpIdentityVerificationTest {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @Rule
+    public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
 
@@ -98,12 +100,9 @@ public class SmtpIdentityVerificationTest {
             .requireAuthentication()
             .verifyIdentity());
 
-        try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN, USER, PASSWORD)) {
-
-            messageSender.sendMessage(USER, USER)
-                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-        }
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .authenticate(USER, PASSWORD).sendMessage(USER, USER)
+            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
     }
 
     @Test
@@ -112,12 +111,10 @@ public class SmtpIdentityVerificationTest {
             .requireAuthentication()
             .doNotVerifyIdentity());
 
-        try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN, ATTACKER, ATTACKER_PASSWORD)) {
-
-            messageSender.sendMessage(USER, USER)
-                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-        }
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .authenticate(ATTACKER, ATTACKER_PASSWORD)
+            .sendMessage(USER, USER)
+            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
     }
 
     @Test
@@ -126,12 +123,10 @@ public class SmtpIdentityVerificationTest {
             .requireAuthentication()
             .verifyIdentity());
 
-        try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN, ATTACKER, ATTACKER_PASSWORD)) {
-
-            messageSender.sendMessage(USER, USER);
-            calmlyAwait.atMost(ONE_MINUTE).until(messageSender::messageSendingFailed);
-        }
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .authenticate(ATTACKER, ATTACKER_PASSWORD)
+            .sendMessage(USER, USER);
+        calmlyAwait.atMost(ONE_MINUTE).until(messageSender::messageSendingFailed);
     }
 
 }

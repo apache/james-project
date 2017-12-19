@@ -21,14 +21,14 @@ package org.apache.james.mailets;
 
 import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
+import static org.apache.james.mailets.configuration.Constants.FROM;
 import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
+import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
 
-import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
@@ -44,12 +44,17 @@ public class CommonMailetConfigurationTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule
     public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
+    @Rule
+    public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
 
     @Before
     public void setup() throws Exception {
         jamesServer = TemporaryJamesServer.builder().build(temporaryFolder);
+        DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
+        dataProbe.addUser(RECIPIENT, PASSWORD);
     }
 
     @After
@@ -63,22 +68,13 @@ public class CommonMailetConfigurationTest {
 
     @Test
     public void simpleMailShouldBeSent() throws Exception {
-        DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(DEFAULT_DOMAIN);
-        String from = "user@" + DEFAULT_DOMAIN;
-        dataProbe.addUser(from, PASSWORD);
-        String recipient = "user2@" + DEFAULT_DOMAIN;
-        dataProbe.addUser(recipient, PASSWORD);
-        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, recipient, "INBOX");
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT)
+            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
-            messageSender.sendMessage(from, recipient)
-                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-
-            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
-                .login(recipient, PASSWORD)
-                .select(IMAPMessageReader.INBOX)
-                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
-        }
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(RECIPIENT, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
     }
 }

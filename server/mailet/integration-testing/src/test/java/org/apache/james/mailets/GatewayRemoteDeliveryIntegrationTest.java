@@ -78,6 +78,8 @@ public class GatewayRemoteDeliveryIntegrationTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule
     public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
+    @Rule
+    public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private final TemporaryFolder smtpFolder = new TemporaryFolder();
     private final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer(Images.FAKE_SMTP)
@@ -119,16 +121,15 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
             .build(temporaryFolder);
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT);
 
-            calmlyAwait.atMost(ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
-        }
+        calmlyAwait.atMost(ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
     }
 
     @Test
@@ -139,16 +140,15 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
             .build(temporaryFolder);
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT);
 
-            calmlyAwait.atMost(ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
-        }
+        calmlyAwait.atMost(ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
     }
 
     @Test
@@ -159,16 +159,15 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
             .build(temporaryFolder);
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT);
 
-            calmlyAwait.atMost(ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
-        }
+        calmlyAwait.atMost(ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
     }
 
     @Test
@@ -184,11 +183,10 @@ public class GatewayRemoteDeliveryIntegrationTest {
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT);
 
-            calmlyAwait.atMost(ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
-        }
+        calmlyAwait.atMost(ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
     }
 
     @Test
@@ -208,16 +206,15 @@ public class GatewayRemoteDeliveryIntegrationTest {
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT);
 
-            Thread.sleep(TimeUnit.SECONDS.toMillis(5));
-            when()
-                .get("/api/email")
-            .then()
-                .statusCode(200)
-                .body("", hasSize(0));
-        }
+        Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+        when()
+            .get("/api/email")
+        .then()
+            .statusCode(200)
+            .body("", hasSize(0));
     }
     @Test
     public void remoteDeliveryShouldBounceUponFailure() throws Exception {
@@ -236,19 +233,18 @@ public class GatewayRemoteDeliveryIntegrationTest {
                 .addProcessor(relayAndLocalDeliveryTransport(gatewayProperty))
                 .addProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder);
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT);
 
-            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
-                .login(FROM, PASSWORD)
-                .select(IMAPMessageReader.INBOX)
-                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
-        }
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(FROM, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
     }
 
     @Test
@@ -285,19 +281,18 @@ public class GatewayRemoteDeliveryIntegrationTest {
                         .addProperty("gateway", gatewayProperty)))
                 .addProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder);
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT);
 
-            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
-                .login(FROM, PASSWORD)
-                .select(IMAPMessageReader.INBOX)
-                .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
-        }
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(FROM, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
     }
 
     @Test
@@ -316,16 +311,15 @@ public class GatewayRemoteDeliveryIntegrationTest {
                 .addProcessor(directResolutionTransport())
                 .addProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder);
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT);
 
-            calmlyAwait.atMost(ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
-        }
+        calmlyAwait.atMost(ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
     }
 
     private boolean messageIsReceivedByTheSmtpServer() {

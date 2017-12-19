@@ -50,6 +50,8 @@ public class SmtpBracketEnforcementTest {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @Rule
+    public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
 
@@ -97,12 +99,10 @@ public class SmtpBracketEnforcementTest {
         createJamesServer(SmtpConfiguration.builder()
             .doNotRequireBracketEnforcement());
 
-        try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN, USER, PASSWORD)) {
-
-            messageSender.sendMessage(USER, USER)
-                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-        }
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .authenticate(USER, PASSWORD)
+            .sendMessage(USER, USER)
+            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
     }
 
     @Test
@@ -110,12 +110,10 @@ public class SmtpBracketEnforcementTest {
         createJamesServer(SmtpConfiguration.builder()
             .doNotRequireBracketEnforcement());
 
-        try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN, USER, PASSWORD)) {
-
-            messageSender.sendMessageNoBracket(USER, USER)
-                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-        }
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .authenticate(USER, PASSWORD)
+            .sendMessageNoBracket(USER, USER)
+            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
     }
 
     @Test
@@ -123,12 +121,10 @@ public class SmtpBracketEnforcementTest {
         createJamesServer(SmtpConfiguration.builder()
             .requireBracketEnforcement());
 
-        try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN, USER, PASSWORD)) {
-
-            messageSender.sendMessage(USER, USER)
-                .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
-        }
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .authenticate(USER, PASSWORD)
+            .sendMessage(USER, USER)
+            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
     }
 
     @Test
@@ -136,11 +132,9 @@ public class SmtpBracketEnforcementTest {
         createJamesServer(SmtpConfiguration.builder()
             .requireBracketEnforcement());
 
-        try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN, USER, PASSWORD)) {
-
-            messageSender.sendMessageNoBracket(USER, USER);
-            calmlyAwait.atMost(ONE_MINUTE).until(messageSender::messageSendingFailed);
-        }
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .authenticate(USER, PASSWORD)
+            .sendMessageNoBracket(USER, USER);
+        calmlyAwait.atMost(ONE_MINUTE).until(messageSender::messageSendingFailed);
     }
 }
