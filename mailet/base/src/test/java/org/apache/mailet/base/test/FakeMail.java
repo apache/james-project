@@ -141,6 +141,10 @@ public class FakeMail implements Mail {
             return this;
         }
 
+        public Builder recipients() {
+            return this;
+        }
+
         public Builder recipients(List<MailAddress> recipients) {
             this.recipients.addAll(recipients);
             return this;

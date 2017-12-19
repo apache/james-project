@@ -30,7 +30,6 @@ import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
 
 import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.protocols.SieveProbeImpl;
 import org.apache.james.probe.DataProbe;
@@ -44,6 +43,8 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class SieveDelivery {
+    private static final String TARGETED_MAILBOX = "INBOX.any";
+
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule
@@ -52,21 +53,18 @@ public class SieveDelivery {
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
-    private String targetedMailbox;
 
     @Before
     public void setup() throws Exception {
         jamesServer = TemporaryJamesServer.builder().build(temporaryFolder);
-
-        targetedMailbox = "INBOX.any";
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
         dataProbe.addUser(RECIPIENT, PASSWORD);
 
-        MailboxProbe mailboxProbe = jamesServer.getProbe(MailboxProbeImpl.class);
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, RECIPIENT, targetedMailbox);
+        jamesServer.getProbe(MailboxProbeImpl.class)
+            .createMailbox(MailboxConstants.USER_NAMESPACE, RECIPIENT, TARGETED_MAILBOX);
     }
 
     @After
@@ -76,9 +74,10 @@ public class SieveDelivery {
 
     @Test
     public void simpleMailShouldBeSent() throws Exception {
-        jamesServer.getProbe(SieveProbeImpl.class).addActiveSieveScript(RECIPIENT, "myscript.sieve", "require \"fileinto\";\n" +
+        jamesServer.getProbe(SieveProbeImpl.class).addActiveSieveScript(RECIPIENT, "myscript.sieve",
+            "require \"fileinto\";\n" +
             "\n" +
-            "fileinto \"" + targetedMailbox + "\";");
+            "fileinto \"" + TARGETED_MAILBOX + "\";");
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT)
@@ -86,7 +85,7 @@ public class SieveDelivery {
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
-            .select(targetedMailbox)
+            .select(TARGETED_MAILBOX)
             .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
     }
 }
