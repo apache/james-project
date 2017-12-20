@@ -8,12 +8,15 @@ The web administration supports for now the CRUD operations on the domains,the u
 Please also note **webadmin** is only enabled with **Guice**. You can not use it when using James with **Spring**, as the required injections are not implemented.
 
 In case of any error, the system will return an error message which is json format like this:
+
+```
 {
     statusCode: <error_code>,
     type: <error_type>,
     message: <the_error_message>
     cause: <the_detail_message_from_throwable>
 }
+```
 
 ## Administrating domains
 
