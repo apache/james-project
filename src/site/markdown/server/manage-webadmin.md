@@ -466,6 +466,50 @@ The scheduled task will have the following type `CassandraMigration` and the fol
 {"toVersion":2}
 ```
 
+## Correcting ghost mailbox
+
+This is a temporary workaround for the **Ghost mailbox** bug encountered using the Cassandra backend, as described in MAILBOX-322.
+
+You can use the mailbox merging feature in order to merge the old "ghosted" mailbox with the new one.
+
+```
+curl -XPOST http://ip:port/cassandra/mailbox/merging -d '{"mergeOrigin":"id1", "mergeDestination":"id2"}'
+```
+
+Will scedule a task for :
+
+ - Delete references to `id1` mailbox
+ - Move it's messages into `id2` mailbox
+ - Union the rights of both mailboxes
+
+The response to that request will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positionned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Unable to parse the body.
+
+The scheduled task will have the following type `mailboxMerging` and the following `additionalInformation`:
+
+```
+{
+  "oldMailboxId":"5641376-02ed-47bd-bcc7-76ff6262d92a",
+  "newMailboxId":"4555159-52ae-895f-ccb7-586a4412fb50"
+}
+```
+
 ## Creating address group
 
 You can use **webadmin** to define address groups.
