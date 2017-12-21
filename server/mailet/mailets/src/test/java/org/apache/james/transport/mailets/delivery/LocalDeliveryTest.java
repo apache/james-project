@@ -38,7 +38,6 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
@@ -53,8 +52,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
-import com.google.common.base.Throwables;
-
 public class LocalDeliveryTest {
 
     public static final String RECEIVER_DOMAIN_COM = "receiver@domain.com";
@@ -65,7 +62,7 @@ public class LocalDeliveryTest {
     private LocalDelivery testee;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         usersRepository = mock(UsersRepository.class);
         mailboxManager = mock(MailboxManager.class);
 
@@ -76,16 +73,12 @@ public class LocalDeliveryTest {
         user = mock(MailboxSession.User.class);
         MailboxSession session = mock(MailboxSession.class);
         when(session.getPathDelimiter()).thenReturn('.');
-        try {
-            when(mailboxManager.createSystemSession(any(String.class))).thenReturn(session);
-        } catch (MailboxException e) {
-            throw Throwables.propagate(e);
-        }
+        when(mailboxManager.createSystemSession(any(String.class))).thenReturn(session);
         when(session.getUser()).thenReturn(user);
 
         config = FakeMailetConfig.builder()
             .mailetName("Local delivery")
-            .mailetContext(FakeMailContext.builder().logger(mock(Logger.class)).build())
+            .mailetContext(FakeMailContext.builder().logger(mock(Logger.class)))
             .build();
     }
 
