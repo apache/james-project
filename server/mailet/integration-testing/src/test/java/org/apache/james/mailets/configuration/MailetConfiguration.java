@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.james.transport.mailets.LocalDelivery;
+import org.apache.james.transport.mailets.RemoteDelivery;
 import org.apache.james.transport.mailets.RemoveMimeHeader;
 import org.apache.james.transport.mailets.ToProcessor;
 import org.apache.james.transport.matchers.All;
@@ -102,6 +103,22 @@ public class MailetConfiguration implements SerializableAsXml {
         .mailet(ToProcessor.class)
         .addProperty("processor", ProcessorConfiguration.STATE_BOUNCES)
         .build();
+
+    public static MailetConfiguration.Builder remoteDeliveryBuilder() {
+        return remoteDeliveryBuilderNoBounces()
+            .addProperty("bounceProcessor", ProcessorConfiguration.STATE_BOUNCES);
+    }
+
+    public static MailetConfiguration.Builder remoteDeliveryBuilderNoBounces() {
+        return MailetConfiguration.builder()
+            .mailet(RemoteDelivery.class)
+            .addProperty("outgoingQueue", "outgoing")
+            .addProperty("delayTime", "5000, 100000, 500000")
+            .addProperty("maxRetries", "2")
+            .addProperty("maxDnsProblemRetries", "0")
+            .addProperty("deliveryThreads", "2")
+            .addProperty("sendpartial", "true");
+    }
 
     private final Class<? extends Matcher> matcher;
     private final Optional<String> matcherCondition;

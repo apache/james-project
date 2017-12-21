@@ -247,17 +247,16 @@ public class BounceIntegrationTest {
             .awaitMessage(awaitOneMinute);
     }
 
-    private MailetContainer generateMailetContainerConfiguration(MailetConfiguration.Builder redirectionMailetConfiguration) {
+    private MailetContainer.Builder generateMailetContainerConfiguration(MailetConfiguration.Builder redirectionMailetConfiguration) {
         return MailetContainer.builder()
             .postmaster(POSTMASTER)
             .addProcessor(CommonProcessors.root())
             .addProcessor(CommonProcessors.error())
             .addProcessor(transport())
-            .addProcessor(bounces(redirectionMailetConfiguration))
-            .build();
+            .addProcessor(bounces(redirectionMailetConfiguration));
     }
 
-    private ProcessorConfiguration transport() {
+    private ProcessorConfiguration.Builder transport() {
         // This processor delivers emails to BOUNCE_RECEIVER and POSTMASTER
         // Other recipients will be bouncing
         return ProcessorConfiguration.transport()
@@ -270,13 +269,11 @@ public class BounceIntegrationTest {
                 .matcher(RecipientIs.class)
                 .matcherCondition(POSTMASTER)
                 .mailet(LocalDelivery.class))
-            .addMailet(MailetConfiguration.TO_BOUNCE)
-            .build();
+            .addMailet(MailetConfiguration.TO_BOUNCE);
     }
 
-    public static ProcessorConfiguration bounces(MailetConfiguration.Builder redirectionMailetConfiguration) {
+    public static ProcessorConfiguration.Builder bounces(MailetConfiguration.Builder redirectionMailetConfiguration) {
         return ProcessorConfiguration.bounces()
-            .addMailet(redirectionMailetConfiguration)
-            .build();
+            .addMailet(redirectionMailetConfiguration);
     }
 }

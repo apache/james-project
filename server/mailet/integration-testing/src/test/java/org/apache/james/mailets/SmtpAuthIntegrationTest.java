@@ -89,13 +89,12 @@ public class SmtpAuthIntegrationTest {
         repositoryProbe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
     }
 
-    private ProcessorConfiguration bounces() {
+    private ProcessorConfiguration.Builder bounces() {
         return ProcessorConfiguration.bounces()
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(ToRepository.class)
-                .addProperty("repositoryPath", DROPPED_MAILS))
-            .build();
+                .addProperty("repositoryPath", DROPPED_MAILS));
     }
 
     @After

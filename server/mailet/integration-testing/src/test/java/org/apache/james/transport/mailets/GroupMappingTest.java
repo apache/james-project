@@ -108,16 +108,8 @@ public class GroupMappingTest {
                     .matcher(RecipientIsLocal.class)
                     .mailet(VacationMailet.class))
                 .addMailet(MailetConfiguration.LOCAL_DELIVERY)
-                .addMailet(MailetConfiguration.builder()
+                .addMailet(MailetConfiguration.remoteDeliveryBuilder()
                     .matcher(All.class)
-                    .mailet(RemoteDelivery.class)
-                    .addProperty("outgoingQueue", "outgoing")
-                    .addProperty("delayTime", "5000, 100000, 500000")
-                    .addProperty("maxRetries", "25")
-                    .addProperty("maxDnsProblemRetries", "0")
-                    .addProperty("deliveryThreads", "10")
-                    .addProperty("sendpartial", "true")
-                    .addProperty("bounceProcessor", "bounces")
                     .addProperty("gateway", fakeSmtp.getContainerIp())))
             .build();
 

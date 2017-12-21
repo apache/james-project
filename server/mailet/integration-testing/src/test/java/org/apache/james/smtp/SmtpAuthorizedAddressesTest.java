@@ -36,7 +36,6 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.probe.DataProbe;
-import org.apache.james.transport.mailets.RemoteDelivery;
 import org.apache.james.transport.matchers.SMTPIsAuthNetwork;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.SwarmGenericContainer;
@@ -90,16 +89,8 @@ public class SmtpAuthorizedAddressesTest {
             .addProcessor(ProcessorConfiguration.transport()
                 .addMailet(MailetConfiguration.BCC_STRIPPER)
                 .addMailet(MailetConfiguration.LOCAL_DELIVERY)
-                .addMailet(MailetConfiguration.builder()
+                .addMailet(MailetConfiguration.remoteDeliveryBuilder()
                     .matcher(SMTPIsAuthNetwork.class)
-                    .mailet(RemoteDelivery.class)
-                    .addProperty("outgoingQueue", "outgoing")
-                    .addProperty("delayTime", "5000, 100000, 500000")
-                    .addProperty("maxRetries", "25")
-                    .addProperty("maxDnsProblemRetries", "0")
-                    .addProperty("deliveryThreads", "10")
-                    .addProperty("sendpartial", "true")
-                    .addProperty("bounceProcessor", ProcessorConfiguration.STATE_BOUNCES)
                     .addProperty("gateway", fakeSmtp.getContainerIp()))
                 .addMailet(MailetConfiguration.TO_BOUNCE))
             .addProcessor(CommonProcessors.localAddressError())
