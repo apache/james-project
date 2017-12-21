@@ -19,13 +19,12 @@
 
 package org.apache.james.mailets;
 
-import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
-import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
+import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
 
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.modules.MailboxProbeImpl;
@@ -60,7 +59,6 @@ public class RecipientRewriteTableIntegrationTest {
     private TemporaryJamesServer jamesServer;
     private DataProbe dataProbe;
 
-
     @Before
     public void setup() throws Exception {
         jamesServer = TemporaryJamesServer.builder().build(temporaryFolder);
@@ -86,16 +84,16 @@ public class RecipientRewriteTableIntegrationTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT)
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(ANY_AT_JAMES, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(OTHER_AT_JAMES, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
     }
 
     @Test
@@ -110,12 +108,12 @@ public class RecipientRewriteTableIntegrationTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT)
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX);
-        calmlyAwait.atMost(ONE_MINUTE).until(imapMessageReader::userDoesNotReceiveMessage);
+        awaitOneMinute.until(imapMessageReader::userDoesNotReceiveMessage);
     }
 
     @Test
@@ -131,16 +129,16 @@ public class RecipientRewriteTableIntegrationTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT)
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(localUser, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(OTHER_AT_JAMES, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
     }
 
     @Test
@@ -151,12 +149,12 @@ public class RecipientRewriteTableIntegrationTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, ANY_AT_JAMES)
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(ANY_AT_ANOTHER_DOMAIN, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
     }
 
     @Test
@@ -167,12 +165,12 @@ public class RecipientRewriteTableIntegrationTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, ANY_AT_JAMES)
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(ANY_AT_JAMES, PASSWORD)
             .select(IMAPMessageReader.INBOX);
-        calmlyAwait.atMost(ONE_MINUTE).until(imapMessageReader::userDoesNotReceiveMessage);
+        awaitOneMinute.until(imapMessageReader::userDoesNotReceiveMessage);
     }
 
     private void createUserInbox(String username) throws Exception {

@@ -19,7 +19,6 @@
 
 package org.apache.james.smtp;
 
-import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static com.jayway.restassured.RestAssured.when;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
@@ -28,7 +27,7 @@ import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
-import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
+import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
@@ -88,7 +87,7 @@ public class SmtpAuthorizedAddressesTest {
 
     @Before
     public void setup() throws Exception {
-        calmlyAwait.atMost(ONE_MINUTE).until(() -> fakeSmtp.tryConnect(25));
+        awaitOneMinute.until(() -> fakeSmtp.tryConnect(25));
 
         RestAssured.requestSpecification = new RequestSpecBuilder()
             .setContentType(ContentType.JSON)
@@ -157,10 +156,9 @@ public class SmtpAuthorizedAddressesTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, TO)
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
-        calmlyAwait.atMost(ONE_MINUTE)
-            .until(this::messageIsReceivedByTheSmtpServer);
+        awaitOneMinute.until(this::messageIsReceivedByTheSmtpServer);
     }
 
     @Test
@@ -172,7 +170,7 @@ public class SmtpAuthorizedAddressesTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, TO);
 
-        calmlyAwait.atMost(ONE_MINUTE).until(messageSender::messageSendingFailed);
+        awaitOneMinute.until(messageSender::messageSendingFailed);
     }
 
     @Test
@@ -184,9 +182,9 @@ public class SmtpAuthorizedAddressesTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, TO)
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
-        calmlyAwait.atMost(ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
+        awaitOneMinute.until(this::messageIsReceivedByTheSmtpServer);
     }
 
     @Test
@@ -197,12 +195,12 @@ public class SmtpAuthorizedAddressesTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(TO, FROM)
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
     }
 
     private boolean messageIsReceivedByTheSmtpServer() {

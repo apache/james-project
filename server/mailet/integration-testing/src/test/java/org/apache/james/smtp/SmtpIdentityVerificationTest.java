@@ -19,12 +19,11 @@
 
 package org.apache.james.smtp;
 
-import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
-import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
+import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
 
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.TemporaryJamesServer;
@@ -102,7 +101,7 @@ public class SmtpIdentityVerificationTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(USER, PASSWORD).sendMessage(USER, USER)
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
     }
 
     @Test
@@ -114,7 +113,7 @@ public class SmtpIdentityVerificationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(ATTACKER, ATTACKER_PASSWORD)
             .sendMessage(USER, USER)
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
     }
 
     @Test
@@ -126,7 +125,7 @@ public class SmtpIdentityVerificationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(ATTACKER, ATTACKER_PASSWORD)
             .sendMessage(USER, USER);
-        calmlyAwait.atMost(ONE_MINUTE).until(messageSender::messageSendingFailed);
+        awaitOneMinute.until(messageSender::messageSendingFailed);
     }
 
 }

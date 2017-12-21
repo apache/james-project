@@ -19,18 +19,22 @@
 
 package org.apache.james.mailets.configuration;
 
+import static com.jayway.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
+import static com.jayway.awaitility.Duration.ONE_MINUTE;
+
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
 
 public class Constants {
-    public static Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
+    public static Duration slowPacedPollInterval = FIVE_HUNDRED_MILLISECONDS;
     public static ConditionFactory calmlyAwait = Awaitility.with()
         .pollInterval(slowPacedPollInterval)
         .and()
         .with()
         .pollDelay(slowPacedPollInterval)
         .await();
+    public static ConditionFactory awaitOneMinute = calmlyAwait.atMost(ONE_MINUTE);
 
     public static final String DEFAULT_DOMAIN = "james.org";
     public static final String LOCALHOST_IP = "127.0.0.1";

@@ -18,14 +18,13 @@
  ****************************************************************/
 package org.apache.james.transport.mailets;
 
-import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
-import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
+import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
@@ -132,12 +131,12 @@ public class ContactExtractorTest {
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipients(TO, TO2, CC, CC2, BCC, BCC2))
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(TO, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
 
         Optional<String> actual = amqpRule.readContent();
         assertThat(actual).isNotEmpty();

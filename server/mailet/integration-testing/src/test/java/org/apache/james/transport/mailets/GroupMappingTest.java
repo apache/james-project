@@ -19,13 +19,13 @@
 
 package org.apache.james.transport.mailets;
 
-import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static com.jayway.restassured.RestAssured.with;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
+import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
 import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -145,7 +145,7 @@ public class GroupMappingTest {
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder);
 
-        calmlyAwait.atMost(ONE_MINUTE).until(() -> fakeSmtp.tryConnect(25));
+        awaitOneMinute.until(() -> fakeSmtp.tryConnect(25));
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DOMAIN1);
@@ -182,12 +182,12 @@ public class GroupMappingTest {
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
         assertThat(imapMessageReader.readFirstMessage()).contains(MESSAGE_CONTENT);
     }
 
@@ -200,12 +200,12 @@ public class GroupMappingTest {
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN2, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
         assertThat(imapMessageReader.readFirstMessage()).contains(MESSAGE_CONTENT);
     }
 
@@ -220,16 +220,16 @@ public class GroupMappingTest {
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN2, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
     }
 
     @Test
@@ -243,12 +243,12 @@ public class GroupMappingTest {
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN2, PASSWORD)
             .select(IMAPMessageReader.INBOX);
-        calmlyAwait.atMost(ONE_MINUTE).until(imapMessageReader::hasAMessage);
+        awaitOneMinute.until(imapMessageReader::hasAMessage);
         assertThat(imapMessageReader.readFirstMessage()).contains(MESSAGE_CONTENT);
     }
 
@@ -265,12 +265,12 @@ public class GroupMappingTest {
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
     }
 
     @Test
@@ -282,12 +282,12 @@ public class GroupMappingTest {
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipients(GROUP_ON_DOMAIN1, USER_DOMAIN1))
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
     }
 
     @Test
@@ -303,17 +303,17 @@ public class GroupMappingTest {
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN2))
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
     }
 
     @Test
@@ -331,17 +331,17 @@ public class GroupMappingTest {
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
     }
 
     @Test
@@ -355,12 +355,12 @@ public class GroupMappingTest {
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN2, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
     }
 
     @Test
@@ -374,12 +374,12 @@ public class GroupMappingTest {
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
             .select(IMAPMessageReader.INBOX);
-        calmlyAwait.atMost(ONE_MINUTE).until(imapMessageReader::userDoesNotReceiveMessage);
+        awaitOneMinute.until(imapMessageReader::userDoesNotReceiveMessage);
     }
 
     @Test
@@ -393,12 +393,12 @@ public class GroupMappingTest {
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient((GROUP_ON_DOMAIN1)))
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN2, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
     }
 
     @Test
@@ -412,12 +412,12 @@ public class GroupMappingTest {
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(groupWithSlash))
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
     }
 
     @Test
@@ -432,12 +432,12 @@ public class GroupMappingTest {
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(userWithSlash, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
     }
 
     @Test
@@ -451,12 +451,12 @@ public class GroupMappingTest {
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN2, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitMessage(awaitOneMinute);
     }
 
     @Test
@@ -469,7 +469,7 @@ public class GroupMappingTest {
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(calmlyAwait.atMost(ONE_MINUTE));
+            .awaitSent(awaitOneMinute);
 
         calmlyAwait.atMost(1, TimeUnit.MINUTES)
             .until(() -> {
