@@ -26,8 +26,6 @@ import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
 
-import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
@@ -76,8 +74,8 @@ public class RecipientRewriteTableIntegrationTest {
     @Test
     public void rrtServiceShouldDeliverEmailToMappingRecipients() throws Exception {
         dataProbe.addUser(FROM, PASSWORD);
-        createUserInbox(ANY_AT_JAMES);
-        createUserInbox(OTHER_AT_JAMES);
+        dataProbe.addUser(ANY_AT_JAMES, PASSWORD);
+        dataProbe.addUser(OTHER_AT_JAMES, PASSWORD);
 
         dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, ANY_AT_JAMES);
         dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, OTHER_AT_JAMES);
@@ -99,9 +97,9 @@ public class RecipientRewriteTableIntegrationTest {
     @Test
     public void rrtServiceShouldNotDeliverEmailToRecipientWhenHaveMappingRecipients() throws Exception {
         dataProbe.addUser(FROM, PASSWORD);
-        createUserInbox(RECIPIENT);
-        createUserInbox(ANY_AT_JAMES);
-        createUserInbox(OTHER_AT_JAMES);
+        dataProbe.addUser(RECIPIENT, PASSWORD);
+        dataProbe.addUser(ANY_AT_JAMES, PASSWORD);
+        dataProbe.addUser(OTHER_AT_JAMES, PASSWORD);
 
         dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, ANY_AT_JAMES);
         dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, OTHER_AT_JAMES);
@@ -121,8 +119,8 @@ public class RecipientRewriteTableIntegrationTest {
         String nonDomainUser = "nondomain";
         String localUser = nonDomainUser + "@" + dataProbe.getDefaultDomain();
         dataProbe.addUser(FROM, PASSWORD);
-        createUserInbox(localUser);
-        createUserInbox(OTHER_AT_JAMES);
+        dataProbe.addUser(localUser, PASSWORD);
+        dataProbe.addUser(OTHER_AT_JAMES, PASSWORD);
 
         dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, nonDomainUser);
         dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, OTHER_AT_JAMES);
@@ -144,8 +142,8 @@ public class RecipientRewriteTableIntegrationTest {
     @Test
     public void messageShouldRedirectToTheSameUserWhenDomainMapping() throws Exception {
         dataProbe.addDomainAliasMapping(DEFAULT_DOMAIN, JAMES_ANOTHER_DOMAIN);
-        createUserInbox(ANY_AT_JAMES);
-        createUserInbox(ANY_AT_ANOTHER_DOMAIN);
+        dataProbe.addUser(ANY_AT_JAMES, PASSWORD);
+        dataProbe.addUser(ANY_AT_ANOTHER_DOMAIN, PASSWORD);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, ANY_AT_JAMES)
@@ -160,8 +158,8 @@ public class RecipientRewriteTableIntegrationTest {
     @Test
     public void messageShouldNotSendToRecipientWhenDomainMapping() throws Exception {
         dataProbe.addDomainAliasMapping(DEFAULT_DOMAIN, JAMES_ANOTHER_DOMAIN);
-        createUserInbox(ANY_AT_JAMES);
-        createUserInbox(ANY_AT_ANOTHER_DOMAIN);
+        dataProbe.addUser(ANY_AT_JAMES, PASSWORD);
+        dataProbe.addUser(ANY_AT_ANOTHER_DOMAIN, PASSWORD);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, ANY_AT_JAMES)
@@ -171,11 +169,6 @@ public class RecipientRewriteTableIntegrationTest {
             .login(ANY_AT_JAMES, PASSWORD)
             .select(IMAPMessageReader.INBOX);
         awaitOneMinute.until(imapMessageReader::userDoesNotReceiveMessage);
-    }
-
-    private void createUserInbox(String username) throws Exception {
-        dataProbe.addUser(username, PASSWORD);
-        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "INBOX");
     }
 
 }

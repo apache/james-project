@@ -46,7 +46,6 @@ import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.LocalDelivery;
 import org.apache.james.transport.mailets.RemoteDelivery;
-import org.apache.james.transport.mailets.RemoveMimeHeader;
 import org.apache.james.transport.mailets.ToProcessor;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIsLocal;
@@ -261,10 +260,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
                 .addProcessor(root())
                 .addProcessor(CommonProcessors.error())
                 .addProcessor(ProcessorConfiguration.transport()
-                    .addMailet(MailetConfiguration.builder()
-                        .matcher(All.class)
-                        .mailet(RemoveMimeHeader.class)
-                        .addProperty("name", "bcc"))
+                    .addMailet(MailetConfiguration.BCC_STRIPPER)
                     .addMailet(MailetConfiguration.builder()
                         .matcher(RecipientIsLocal.class)
                         .mailet(LocalDelivery.class))
@@ -358,10 +354,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
     private ProcessorConfiguration relayOnlyTransport(String gatewayProperty) {
         return ProcessorConfiguration.transport()
-            .addMailet(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(RemoveMimeHeader.class)
-                .addProperty("name", "bcc"))
+            .addMailet(MailetConfiguration.BCC_STRIPPER)
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(RemoteDelivery.class)

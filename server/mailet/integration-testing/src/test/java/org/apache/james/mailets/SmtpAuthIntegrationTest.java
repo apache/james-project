@@ -95,7 +95,6 @@ public class SmtpAuthIntegrationTest {
 
     private ProcessorConfiguration deliverOnlyTransport() {
         return ProcessorConfiguration.transport()
-            .enableJmx(true)
             .addMailet(MailetConfiguration.BCC_STRIPPER)
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
@@ -105,7 +104,6 @@ public class SmtpAuthIntegrationTest {
 
     private ProcessorConfiguration bounces() {
         return ProcessorConfiguration.bounces()
-            .enableJmx(true)
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(ToRepository.class)

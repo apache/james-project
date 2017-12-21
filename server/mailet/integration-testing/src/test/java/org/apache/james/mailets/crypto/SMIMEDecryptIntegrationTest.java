@@ -30,13 +30,11 @@ import java.time.ZonedDateTime;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.MemoryJamesServerMain;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
-import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.transport.mailets.LocalDelivery;
 import org.apache.james.transport.mailets.SMIMEDecrypt;
 import org.apache.james.transport.matchers.All;
@@ -72,7 +70,6 @@ public class SMIMEDecryptIntegrationTest {
             .addProcessor(CommonProcessors.root())
             .addProcessor(CommonProcessors.error())
             .addProcessor(ProcessorConfiguration.transport()
-                .enableJmx(true)
                 .addMailet(MailetConfiguration.BCC_STRIPPER)
                 .addMailet(MailetConfiguration.builder()
                     .mailet(SMIMEDecrypt.class)
@@ -95,8 +92,6 @@ public class SMIMEDecryptIntegrationTest {
         DataProbeImpl serverProbe = jamesServer.getProbe(DataProbeImpl.class);
         serverProbe.addDomain(DEFAULT_DOMAIN);
         serverProbe.addUser(FROM, PASSWORD);
-        MailboxProbeImpl mailboxProbe = jamesServer.getProbe(MailboxProbeImpl.class);
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, FROM, "INBOX");
     }
 
     @After
