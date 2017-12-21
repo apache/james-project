@@ -44,6 +44,7 @@ import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.PerRecipientHeaders.Header;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -151,22 +152,21 @@ public class FakeMail implements Mail {
         }
 
         public Builder recipients(MailAddress... recipients) {
-            this.recipients.addAll(ImmutableList.copyOf(recipients));
-            return this;
+            return recipients(ImmutableList.copyOf(recipients));
         }
 
         public Builder recipients(String... recipients) {
-            Arrays.stream(recipients).forEach(Throwing.consumer(this::recipient));
-            return this;
+            return recipients(Arrays.stream(recipients)
+                .map(Throwing.function(MailAddress::new))
+                .collect(Guavate.toImmutableList()));
         }
 
         public Builder recipient(MailAddress recipient) {
-            this.recipients.add(recipient);
-            return this;
+            return recipients(recipient);
         }
 
         public Builder recipient(String recipient) throws AddressException {
-            return recipient(new MailAddress(recipient));
+            return recipients(recipient);
         }
 
         public Builder name(String name) {

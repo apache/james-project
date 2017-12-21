@@ -41,10 +41,8 @@ public class RecipientRewriteTableIntegrationTest {
 
     private static final String FROM = "fromUser@" + DEFAULT_DOMAIN;
     private static final String RECIPIENT = "touser@" + DEFAULT_DOMAIN;
-
     private static final String ANY_AT_JAMES = "any@" + DEFAULT_DOMAIN;
     private static final String OTHER_AT_JAMES = "other@" + DEFAULT_DOMAIN;
-
     private static final String ANY_AT_ANOTHER_DOMAIN = "any@" + JAMES_ANOTHER_DOMAIN;
 
     @Rule
@@ -64,6 +62,10 @@ public class RecipientRewriteTableIntegrationTest {
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addDomain(JAMES_ANOTHER_DOMAIN);
+
+        dataProbe.addUser(RECIPIENT, PASSWORD);
+        dataProbe.addUser(ANY_AT_JAMES, PASSWORD);
+        dataProbe.addUser(OTHER_AT_JAMES, PASSWORD);
     }
 
     @After
@@ -73,10 +75,6 @@ public class RecipientRewriteTableIntegrationTest {
 
     @Test
     public void rrtServiceShouldDeliverEmailToMappingRecipients() throws Exception {
-        dataProbe.addUser(FROM, PASSWORD);
-        dataProbe.addUser(ANY_AT_JAMES, PASSWORD);
-        dataProbe.addUser(OTHER_AT_JAMES, PASSWORD);
-
         dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, ANY_AT_JAMES);
         dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, OTHER_AT_JAMES);
 
@@ -96,11 +94,6 @@ public class RecipientRewriteTableIntegrationTest {
 
     @Test
     public void rrtServiceShouldNotDeliverEmailToRecipientWhenHaveMappingRecipients() throws Exception {
-        dataProbe.addUser(FROM, PASSWORD);
-        dataProbe.addUser(RECIPIENT, PASSWORD);
-        dataProbe.addUser(ANY_AT_JAMES, PASSWORD);
-        dataProbe.addUser(OTHER_AT_JAMES, PASSWORD);
-
         dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, ANY_AT_JAMES);
         dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, OTHER_AT_JAMES);
 
@@ -118,9 +111,7 @@ public class RecipientRewriteTableIntegrationTest {
     public void rrtServiceShouldDeliverEmailToRecipientOnLocalWhenMappingContainsNonDomain() throws Exception {
         String nonDomainUser = "nondomain";
         String localUser = nonDomainUser + "@" + dataProbe.getDefaultDomain();
-        dataProbe.addUser(FROM, PASSWORD);
         dataProbe.addUser(localUser, PASSWORD);
-        dataProbe.addUser(OTHER_AT_JAMES, PASSWORD);
 
         dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, nonDomainUser);
         dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, OTHER_AT_JAMES);
@@ -142,7 +133,6 @@ public class RecipientRewriteTableIntegrationTest {
     @Test
     public void messageShouldRedirectToTheSameUserWhenDomainMapping() throws Exception {
         dataProbe.addDomainAliasMapping(DEFAULT_DOMAIN, JAMES_ANOTHER_DOMAIN);
-        dataProbe.addUser(ANY_AT_JAMES, PASSWORD);
         dataProbe.addUser(ANY_AT_ANOTHER_DOMAIN, PASSWORD);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
@@ -158,7 +148,6 @@ public class RecipientRewriteTableIntegrationTest {
     @Test
     public void messageShouldNotSendToRecipientWhenDomainMapping() throws Exception {
         dataProbe.addDomainAliasMapping(DEFAULT_DOMAIN, JAMES_ANOTHER_DOMAIN);
-        dataProbe.addUser(ANY_AT_JAMES, PASSWORD);
         dataProbe.addUser(ANY_AT_ANOTHER_DOMAIN, PASSWORD);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
