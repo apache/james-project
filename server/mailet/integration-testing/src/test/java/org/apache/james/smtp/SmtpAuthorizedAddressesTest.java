@@ -132,7 +132,7 @@ public class SmtpAuthorizedAddressesTest {
             .build();
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
-            .withSmtpConfiguration(smtpConfiguration.build())
+            .withSmtpConfiguration(smtpConfiguration)
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder);
 

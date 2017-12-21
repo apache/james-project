@@ -76,7 +76,7 @@ public class SmtpIdentityVerificationTest {
             .build();
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_ONLY_MODULE)
-            .withSmtpConfiguration(smtpConfiguration.build())
+            .withSmtpConfiguration(smtpConfiguration)
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder);
 

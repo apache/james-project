@@ -83,6 +83,10 @@ public class TemporaryJamesServer {
             return this;
         }
 
+        public Builder withSmtpConfiguration(SmtpConfiguration.Builder smtpConfiguration) {
+            return withSmtpConfiguration(smtpConfiguration.build());
+        }
+
         public Builder withMailetContainer(MailetContainer mailetConfiguration) {
             this.mailetConfiguration = Optional.of(mailetConfiguration);
             return this;
