@@ -37,8 +37,6 @@ import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.RemoteDelivery;
-import org.apache.james.transport.mailets.ToProcessor;
-import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.SMTPIsAuthNetwork;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.SwarmGenericContainer;
@@ -87,11 +85,7 @@ public class SmtpAuthorizedAddressesTest {
 
     private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
         MailetContainer mailetContainer = MailetContainer.builder()
-            .addProcessor(ProcessorConfiguration.root()
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(All.class)
-                    .mailet(ToProcessor.class)
-                    .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT)))
+            .addProcessor(CommonProcessors.simpleRoot())
             .addProcessor(CommonProcessors.error())
             .addProcessor(ProcessorConfiguration.transport()
                 .addMailet(MailetConfiguration.BCC_STRIPPER)
@@ -107,10 +101,7 @@ public class SmtpAuthorizedAddressesTest {
                     .addProperty("sendpartial", "true")
                     .addProperty("bounceProcessor", ProcessorConfiguration.STATE_BOUNCES)
                     .addProperty("gateway", fakeSmtp.getContainerIp()))
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(All.class)
-                    .mailet(ToProcessor.class)
-                    .addProperty("processor", ProcessorConfiguration.STATE_BOUNCES)))
+                .addMailet(MailetConfiguration.TO_BOUNCE))
             .addProcessor(CommonProcessors.localAddressError())
             .addProcessor(CommonProcessors.relayDenied())
             .addProcessor(CommonProcessors.bounces())

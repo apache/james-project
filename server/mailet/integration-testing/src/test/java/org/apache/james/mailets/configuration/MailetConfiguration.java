@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import org.apache.james.transport.mailets.LocalDelivery;
 import org.apache.james.transport.mailets.RemoveMimeHeader;
+import org.apache.james.transport.mailets.ToProcessor;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.mailet.Mailet;
@@ -88,6 +89,18 @@ public class MailetConfiguration implements SerializableAsXml {
     public static final MailetConfiguration LOCAL_DELIVERY = MailetConfiguration.builder()
         .matcher(RecipientIsLocal.class)
         .mailet(LocalDelivery.class)
+        .build();
+
+    public static final MailetConfiguration TO_TRANSPORT = MailetConfiguration.builder()
+        .matcher(All.class)
+        .mailet(ToProcessor.class)
+        .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT)
+        .build();
+
+    public static final MailetConfiguration TO_BOUNCE = MailetConfiguration.builder()
+        .matcher(All.class)
+        .mailet(ToProcessor.class)
+        .addProperty("processor", ProcessorConfiguration.STATE_BOUNCES)
         .build();
 
     private final Class<? extends Matcher> matcher;

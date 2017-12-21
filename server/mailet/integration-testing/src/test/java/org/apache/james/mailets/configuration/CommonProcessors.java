@@ -87,11 +87,14 @@ public class CommonProcessors {
                         .mailet(ToProcessor.class)
                         .addProperty("processor", ProcessorConfiguration.STATE_SPAM)
                         .addProperty("notice", "550 Requested action not taken: rejected - see http://njabl.org/"))
-                .addMailet(MailetConfiguration.builder()
-                        .matcher(All.class)
-                        .mailet(ToProcessor.class)
-                        .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
+                .addMailet(MailetConfiguration.TO_TRANSPORT)
                 .build();
+    }
+
+    public static ProcessorConfiguration simpleRoot() {
+        return ProcessorConfiguration.root()
+            .addMailet(MailetConfiguration.TO_TRANSPORT)
+            .build();
     }
 
     public static ProcessorConfiguration error() {
@@ -152,6 +155,13 @@ public class CommonProcessors {
                         .mailet(ToProcessor.class)
                         .addProperty("processor", "relay-denied"))
                 .build();
+    }
+
+    public static ProcessorConfiguration deliverOnlyTransport() {
+        return ProcessorConfiguration.transport()
+            .addMailet(MailetConfiguration.BCC_STRIPPER)
+            .addMailet(MailetConfiguration.LOCAL_DELIVERY)
+            .build();
     }
 
     public static ProcessorConfiguration spam() {

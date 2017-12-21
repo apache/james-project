@@ -43,7 +43,6 @@ import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.LocalDelivery;
 import org.apache.james.transport.mailets.RemoteDelivery;
-import org.apache.james.transport.mailets.ToProcessor;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.util.docker.Images;
@@ -216,7 +215,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
             .withMailetContainer(MailetContainer.builder()
                 .postmaster("postmaster@" + DEFAULT_DOMAIN)
-                .addProcessor(root())
+                .addProcessor(CommonProcessors.simpleRoot())
                 .addProcessor(CommonProcessors.error())
                 .addProcessor(relayAndLocalDeliveryTransport(gatewayProperty))
                 .addProcessor(CommonProcessors.bounces()))
@@ -247,7 +246,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
             .withMailetContainer(MailetContainer.builder()
                 .postmaster("postmaster@" + DEFAULT_DOMAIN)
-                .addProcessor(root())
+                .addProcessor(CommonProcessors.simpleRoot())
                 .addProcessor(CommonProcessors.error())
                 .addProcessor(ProcessorConfiguration.transport()
                     .addMailet(MailetConfiguration.BCC_STRIPPER)
@@ -289,7 +288,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
             .withMailetContainer(MailetContainer.builder()
                 .postmaster("postmaster@" + DEFAULT_DOMAIN)
-                .addProcessor(root())
+                .addProcessor(CommonProcessors.simpleRoot())
                 .addProcessor(CommonProcessors.error())
                 .addProcessor(directResolutionTransport())
                 .addProcessor(CommonProcessors.bounces()))
@@ -315,20 +314,10 @@ public class GatewayRemoteDeliveryIntegrationTest {
     private MailetContainer generateMailetContainerConfiguration(String gatewayProperty) {
         return MailetContainer.builder()
             .postmaster("postmaster@" + DEFAULT_DOMAIN)
-            .addProcessor(root())
+            .addProcessor(CommonProcessors.simpleRoot())
             .addProcessor(CommonProcessors.error())
             .addProcessor(relayOnlyTransport(gatewayProperty))
             .addProcessor(CommonProcessors.bounces())
-            .build();
-    }
-
-    public ProcessorConfiguration root() {
-        // Custom in memory DNS resolution is not possible combined with InSpamerBackList
-        return ProcessorConfiguration.root()
-            .addMailet(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(ToProcessor.class)
-                .addProperty("processor", "transport"))
             .build();
     }
 

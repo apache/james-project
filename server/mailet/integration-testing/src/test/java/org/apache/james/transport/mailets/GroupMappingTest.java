@@ -48,7 +48,6 @@ import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIsLocal;
-import org.apache.james.transport.matchers.RelayLimit;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
@@ -107,15 +106,7 @@ public class GroupMappingTest {
         inMemoryDNSService.registerRecord("yopmail.com", containerIp, "yopmail.com");
 
         MailetContainer mailetContainer = MailetContainer.builder()
-            .addProcessor(ProcessorConfiguration.root()
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(RelayLimit.class)
-                    .matcherCondition("30")
-                    .mailet(Null.class))
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(All.class)
-                    .mailet(ToProcessor.class)
-                    .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT)))
+            .addProcessor(CommonProcessors.simpleRoot())
             .addProcessor(CommonProcessors.error())
             .addProcessor(ProcessorConfiguration.transport()
                 .addMailet(MailetConfiguration.BCC_STRIPPER)

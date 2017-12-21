@@ -68,18 +68,14 @@ public class SmtpAuthIntegrationTest {
                 .matcher(SMTPAuthSuccessful.class)
                 .mailet(ToProcessor.class)
                 .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
-            .addMailet(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(ToProcessor.class)
-                .addProperty("processor", ProcessorConfiguration.STATE_BOUNCES))
+            .addMailet(MailetConfiguration.TO_BOUNCE)
             .build();
 
         MailetContainer mailetContainer = MailetContainer.builder()
             .addProcessor(rootProcessor)
             .addProcessor(CommonProcessors.error())
-            .addProcessor(deliverOnlyTransport())
+            .addProcessor(CommonProcessors.deliverOnlyTransport())
             .addProcessor(bounces())
-            .addProcessor(CommonProcessors.sieveManagerCheck())
             .build();
 
         jamesServer = TemporaryJamesServer.builder()
@@ -91,13 +87,6 @@ public class SmtpAuthIntegrationTest {
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
         repositoryProbe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
-    }
-
-    private ProcessorConfiguration deliverOnlyTransport() {
-        return ProcessorConfiguration.transport()
-            .addMailet(MailetConfiguration.BCC_STRIPPER)
-            .addMailet(MailetConfiguration.LOCAL_DELIVERY)
-            .build();
     }
 
     private ProcessorConfiguration bounces() {

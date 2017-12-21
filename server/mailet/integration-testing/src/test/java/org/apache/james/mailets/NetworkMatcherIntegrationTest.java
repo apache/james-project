@@ -66,20 +66,13 @@ public class NetworkMatcherIntegrationTest {
             .withMailetContainer(MailetContainer.builder()
                 .addProcessor(rootProcessor)
                 .addProcessor(CommonProcessors.error())
-                .addProcessor(deliverOnlyTransport()))
+                .addProcessor(CommonProcessors.deliverOnlyTransport()))
             .build(temporaryFolder);
 
         DataProbe dataProbe = temporaryJamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
         return temporaryJamesServer;
-    }
-
-    private ProcessorConfiguration deliverOnlyTransport() {
-        return ProcessorConfiguration.transport()
-            .addMailet(MailetConfiguration.BCC_STRIPPER)
-            .addMailet(MailetConfiguration.LOCAL_DELIVERY)
-            .build();
     }
 
     private MailetConfiguration.Builder toRepository() {

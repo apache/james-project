@@ -41,7 +41,6 @@ import org.apache.james.transport.mailets.NotifyPostmaster;
 import org.apache.james.transport.mailets.NotifySender;
 import org.apache.james.transport.mailets.Redirect;
 import org.apache.james.transport.mailets.Resend;
-import org.apache.james.transport.mailets.ToProcessor;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIs;
 import org.apache.james.utils.DataProbeImpl;
@@ -271,10 +270,7 @@ public class BounceIntegrationTest {
                 .matcher(RecipientIs.class)
                 .matcherCondition(POSTMASTER)
                 .mailet(LocalDelivery.class))
-            .addMailet(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(ToProcessor.class)
-                .addProperty("processor", ProcessorConfiguration.STATE_BOUNCES))
+            .addMailet(MailetConfiguration.TO_BOUNCE)
             .build();
     }
 
