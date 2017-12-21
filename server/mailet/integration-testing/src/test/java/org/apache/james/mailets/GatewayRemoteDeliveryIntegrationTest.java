@@ -20,8 +20,6 @@
 package org.apache.james.mailets;
 
 import static com.jayway.restassured.RestAssured.when;
-import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
-import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.MemoryJamesServerMain.SMTP_AND_IMAP_MODULE;
 import static org.apache.james.MemoryJamesServerMain.SMTP_ONLY_MODULE;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
@@ -34,7 +32,6 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
 import java.net.InetAddress;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.dnsservice.api.DNSService;
@@ -52,6 +49,7 @@ import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.FakeSmtpHelper;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.junit.After;
@@ -63,8 +61,6 @@ import org.junit.rules.TemporaryFolder;
 import org.testcontainers.containers.wait.HostPortWaitStrategy;
 
 import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.builder.RequestSpecBuilder;
-import com.jayway.restassured.http.ContentType;
 
 public class GatewayRemoteDeliveryIntegrationTest {
     private static final String JAMES_ANOTHER_DOMAIN = "james.com";
@@ -95,13 +91,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
     public void setup() throws Exception {
         awaitOneMinute.until(() -> fakeSmtp.tryConnect(25));
 
-        RestAssured.requestSpecification = new RequestSpecBuilder()
-            .setContentType(ContentType.JSON)
-            .setAccept(ContentType.JSON)
-            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
-            .setPort(80)
-            .setBaseUri("http://" + fakeSmtp.getContainerIp())
-            .build();
+        RestAssured.requestSpecification = FakeSmtpHelper.requestSpecification(fakeSmtp.getContainerIp());
     }
 
     @After
@@ -318,18 +308,10 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     private boolean messageIsReceivedByTheSmtpServer() {
-        try {
-            when()
-                .get("/api/email")
-            .then()
-                .statusCode(200)
-                .body("", hasSize(1))
-                .body("[0].from", equalTo(FROM))
-                .body("[0].subject", equalTo("test"));
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+        return FakeSmtpHelper.isReceived(response -> response
+            .body("", hasSize(1))
+            .body("[0].from", equalTo(FROM))
+            .body("[0].subject", equalTo("test")));
     }
 
     private MailetContainer generateMailetContainerConfiguration(String gatewayProperty) {

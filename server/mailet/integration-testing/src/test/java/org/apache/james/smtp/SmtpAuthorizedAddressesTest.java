@@ -19,9 +19,6 @@
 
 package org.apache.james.smtp;
 
-import static com.jayway.restassured.RestAssured.when;
-import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
-import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
@@ -30,8 +27,6 @@ import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
-
-import java.nio.charset.StandardCharsets;
 
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.TemporaryJamesServer;
@@ -47,8 +42,10 @@ import org.apache.james.transport.mailets.ToProcessor;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.transport.matchers.SMTPIsAuthNetwork;
+import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.FakeSmtpHelper;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.junit.After;
@@ -60,15 +57,13 @@ import org.junit.rules.TemporaryFolder;
 import org.testcontainers.containers.wait.HostPortWaitStrategy;
 
 import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.builder.RequestSpecBuilder;
-import com.jayway.restassured.http.ContentType;
 
 public class SmtpAuthorizedAddressesTest {
     private static final String FROM = "fromuser@" + DEFAULT_DOMAIN;
     private static final String TO = "to@any.com";
 
     private final TemporaryFolder smtpFolder = new TemporaryFolder();
-    private final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer("weave/rest-smtp-sink:latest")
+    private final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer(Images.FAKE_SMTP)
         .withExposedPorts(25)
         .withAffinityToContainer()
         .waitingFor(new HostPortWaitStrategy());
@@ -89,13 +84,7 @@ public class SmtpAuthorizedAddressesTest {
     public void setup() throws Exception {
         awaitOneMinute.until(() -> fakeSmtp.tryConnect(25));
 
-        RestAssured.requestSpecification = new RequestSpecBuilder()
-            .setContentType(ContentType.JSON)
-            .setAccept(ContentType.JSON)
-            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
-            .setPort(80)
-            .setBaseUri("http://" + fakeSmtp.getContainerIp())
-            .build();
+        RestAssured.requestSpecification = FakeSmtpHelper.requestSpecification(fakeSmtp.getContainerIp());
     }
 
     private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
@@ -158,7 +147,10 @@ public class SmtpAuthorizedAddressesTest {
             .sendMessage(FROM, TO)
             .awaitSent(awaitOneMinute);
 
-        awaitOneMinute.until(this::messageIsReceivedByTheSmtpServer);
+        awaitOneMinute.until(() -> FakeSmtpHelper.isReceived(response -> response
+            .body("", hasSize(1))
+            .body("[0].from", equalTo(FROM))
+            .body("[0].subject", equalTo("test"))));
     }
 
     @Test
@@ -184,7 +176,10 @@ public class SmtpAuthorizedAddressesTest {
             .sendMessage(FROM, TO)
             .awaitSent(awaitOneMinute);
 
-        awaitOneMinute.until(this::messageIsReceivedByTheSmtpServer);
+        awaitOneMinute.until(() -> FakeSmtpHelper.isReceived(response -> response
+            .body("", hasSize(1))
+            .body("[0].from", equalTo(FROM))
+            .body("[0].subject", equalTo("test"))));
     }
 
     @Test
@@ -201,21 +196,6 @@ public class SmtpAuthorizedAddressesTest {
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitOneMinute);
-    }
-
-    private boolean messageIsReceivedByTheSmtpServer() {
-        try {
-            when()
-                .get("/api/email")
-            .then()
-                .statusCode(200)
-                .body("", hasSize(1))
-                .body("[0].from", equalTo(FROM))
-                .body("[0].subject", equalTo("test"));
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
     }
 
 }

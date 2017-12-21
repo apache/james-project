@@ -19,13 +19,9 @@
 
 package org.apache.james.jmap;
 
-import static com.jayway.restassured.RestAssured.when;
-import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
-import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.hamcrest.Matchers.equalTo;
 
 import java.net.InetAddress;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.net.smtp.SMTPClient;
@@ -40,6 +36,7 @@ import org.apache.james.probe.DataProbe;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.FakeSmtpHelper;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
@@ -51,8 +48,6 @@ import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
 import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.builder.RequestSpecBuilder;
-import com.jayway.restassured.http.ContentType;
 
 public abstract class VacationRelayIntegrationTest {
 
@@ -102,13 +97,7 @@ public abstract class VacationRelayIntegrationTest {
 
         jmapGuiceProbe = guiceJamesServer.getProbe(JmapGuiceProbe.class);
 
-        RestAssured.requestSpecification = new RequestSpecBuilder()
-            .setContentType(ContentType.JSON)
-            .setAccept(ContentType.JSON)
-            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
-            .setPort(80)
-            .setBaseUri("http://" + containerIp.getHostAddress())
-            .build();
+        RestAssured.requestSpecification = FakeSmtpHelper.requestSpecification(fakeSmtp.getContainerIp());
 
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         calmlyAwait = Awaitility
@@ -143,20 +132,10 @@ public abstract class VacationRelayIntegrationTest {
         smtpClient.sendShortMessageData("content");
 
         calmlyAwait.atMost(1, TimeUnit.MINUTES)
-            .until(() -> {
-                try {
-                    when()
-                        .get("/api/email")
-                    .then()
-                        .statusCode(200)
-                        .body("[0].from", equalTo(USER_WITH_DOMAIN))
-                        .body("[0].to[0]", equalTo(externalMail))
-                        .body("[0].text", equalTo(REASON));
-
-                    return true;
-                } catch(AssertionError e) {
-                    return false;
-                }
-            });
+            .until(() ->
+                FakeSmtpHelper.isReceived(response -> response
+                    .body("[0].from", equalTo(USER_WITH_DOMAIN))
+                    .body("[0].to[0]", equalTo(externalMail))
+                    .body("[0].text", equalTo(REASON))));
     }
 }
