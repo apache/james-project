@@ -30,13 +30,10 @@ import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
-import java.net.InetAddress;
 import java.util.concurrent.TimeUnit;
 
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.TemporaryJamesServer;
@@ -90,7 +87,6 @@ public class GroupMappingTest {
         .withAffinityToContainer()
         .waitingFor(new HostPortWaitStrategy());
 
-    private final InMemoryDNSService inMemoryDNSService = new InMemoryDNSService();
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule
@@ -98,13 +94,8 @@ public class GroupMappingTest {
     @Rule
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
-    private InetAddress containerIp;
     @Before
     public void setup() throws Exception {
-
-        containerIp = InetAddress.getByName(fakeSmtp.getContainerIp());
-        inMemoryDNSService.registerRecord("yopmail.com", containerIp, "yopmail.com");
-
         MailetContainer mailetContainer = MailetContainer.builder()
             .addProcessor(CommonProcessors.simpleRoot())
             .addProcessor(CommonProcessors.error())
@@ -126,11 +117,11 @@ public class GroupMappingTest {
                     .addProperty("maxDnsProblemRetries", "0")
                     .addProperty("deliveryThreads", "10")
                     .addProperty("sendpartial", "true")
-                    .addProperty("bounceProcessor", "bounces")))
+                    .addProperty("bounceProcessor", "bounces")
+                    .addProperty("gateway", fakeSmtp.getContainerIp())))
             .build();
 
         jamesServer = TemporaryJamesServer.builder()
-            .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder);
 
@@ -464,7 +455,7 @@ public class GroupMappingTest {
             .until(() -> {
                 try {
                     with()
-                        .baseUri("http://" + containerIp.getHostAddress())
+                        .baseUri("http://" + fakeSmtp.getContainerIp())
                         .port(80)
                         .get("/api/email")
                     .then()

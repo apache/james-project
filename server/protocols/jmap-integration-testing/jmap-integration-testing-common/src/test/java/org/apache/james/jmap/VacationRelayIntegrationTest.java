@@ -21,7 +21,6 @@ package org.apache.james.jmap;
 
 import static org.hamcrest.Matchers.equalTo;
 
-import java.net.InetAddress;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.net.smtp.SMTPClient;
@@ -79,10 +78,8 @@ public abstract class VacationRelayIntegrationTest {
 
     @Before
     public void setUp() throws Exception {
-
-        InetAddress containerIp = InetAddress.getByName(fakeSmtp.getContainerIp());
         getInMemoryDns()
-            .registerRecord("yopmail.com", containerIp, "yopmail.com");
+            .registerMxRecord("yopmail.com", fakeSmtp.getContainerIp());
 
         guiceJamesServer = getJmapServer();
         guiceJamesServer.start();

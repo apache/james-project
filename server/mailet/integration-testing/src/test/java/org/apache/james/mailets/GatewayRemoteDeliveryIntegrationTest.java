@@ -31,7 +31,6 @@ import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
-import java.net.InetAddress;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.dnsservice.api.DNSService;
@@ -85,12 +84,16 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
     private TemporaryJamesServer jamesServer;
     private DataProbe dataProbe;
+    private InMemoryDNSService inMemoryDNSService;
 
     @Before
     public void setup() throws Exception {
         awaitOneMinute.until(() -> fakeSmtp.tryConnect(25));
 
         RestAssured.requestSpecification = FakeSmtpHelper.requestSpecification(fakeSmtp.getContainerIp());
+
+        inMemoryDNSService = new InMemoryDNSService()
+            .registerMxRecord(JAMES_ANOTHER_DOMAIN, fakeSmtp.getContainerIp());
     }
 
     @After
@@ -179,9 +182,6 @@ public class GatewayRemoteDeliveryIntegrationTest {
     @Test
     public void outgoingMailShouldNotBeSentDirectlyToTheHostWhenGatewayFails() throws Exception {
         String gatewayProperty = "invalid.domain";
-        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService();
-        InetAddress containerIp = InetAddress.getByName(fakeSmtp.getContainerIp());
-        inMemoryDNSService.registerRecord(JAMES_ANOTHER_DOMAIN, containerIp, JAMES_ANOTHER_DOMAIN);
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
@@ -203,12 +203,10 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .statusCode(200)
             .body("", hasSize(0));
     }
+
     @Test
     public void remoteDeliveryShouldBounceUponFailure() throws Exception {
         String gatewayProperty = "invalid.domain";
-        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService();
-        InetAddress containerIp = InetAddress.getByName(fakeSmtp.getContainerIp());
-        inMemoryDNSService.registerRecord(JAMES_ANOTHER_DOMAIN, containerIp, JAMES_ANOTHER_DOMAIN);
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
@@ -237,9 +235,6 @@ public class GatewayRemoteDeliveryIntegrationTest {
     @Test
     public void remoteDeliveryShouldBounceUponFailureWhenNoBounceProcessor() throws Exception {
         String gatewayProperty = "invalid.domain";
-        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService();
-        InetAddress containerIp = InetAddress.getByName(fakeSmtp.getContainerIp());
-        inMemoryDNSService.registerRecord(JAMES_ANOTHER_DOMAIN, containerIp, JAMES_ANOTHER_DOMAIN);
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
@@ -279,10 +274,6 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
     @Test
     public void directResolutionShouldBeWellPerformed() throws Exception {
-        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService();
-        InetAddress containerIp = InetAddress.getByName(fakeSmtp.getContainerIp());
-        inMemoryDNSService.registerRecord(JAMES_ANOTHER_DOMAIN, containerIp, JAMES_ANOTHER_DOMAIN);
-
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))

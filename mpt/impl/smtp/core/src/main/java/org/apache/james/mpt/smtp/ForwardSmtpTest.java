@@ -22,7 +22,6 @@ import static com.jayway.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
 import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static org.hamcrest.Matchers.equalTo;
 
-import java.net.InetAddress;
 import java.util.Locale;
 
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
@@ -70,11 +69,9 @@ public abstract class ForwardSmtpTest {
         scriptedTest = new SimpleScriptedTestProtocol("/org/apache/james/smtp/scripts/", hostSystem)
                 .withLocale(Locale.US)
                 .withUser(USER_AT_DOMAIN, PASSWORD);
-
-        InetAddress containerIp = InetAddress.getByName(fakeSmtp.getContainerIp());
         
         hostSystem.getInMemoryDnsService()
-            .registerRecord("yopmail.com", containerIp, "yopmail.com");
+            .registerMxRecord("yopmail.com", fakeSmtp.getContainerIp());
         hostSystem.addAddressMapping(USER, DOMAIN, "ray@yopmail.com");
 
         RestAssured.requestSpecification = FakeSmtpHelper.requestSpecification(fakeSmtp.getContainerIp());
