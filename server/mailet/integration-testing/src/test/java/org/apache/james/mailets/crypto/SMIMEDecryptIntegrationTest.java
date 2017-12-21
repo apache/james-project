@@ -33,10 +33,8 @@ import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
-import org.apache.james.transport.mailets.LocalDelivery;
 import org.apache.james.transport.mailets.SMIMEDecrypt;
 import org.apache.james.transport.matchers.All;
-import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.utils.DataProbeImpl;
@@ -77,9 +75,7 @@ public class SMIMEDecryptIntegrationTest {
                     .addProperty("keyStorePassword", "secret")
                     .addProperty("keyStoreType", "PKCS12")
                     .addProperty("debug", "true"))
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(RecipientIsLocal.class)
-                    .mailet(LocalDelivery.class)))
+                .addMailet(MailetConfiguration.LOCAL_DELIVERY))
             .build();
 
         jamesServer = TemporaryJamesServer.builder()

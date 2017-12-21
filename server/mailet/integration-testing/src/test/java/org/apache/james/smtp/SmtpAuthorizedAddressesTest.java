@@ -36,11 +36,9 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.probe.DataProbe;
-import org.apache.james.transport.mailets.LocalDelivery;
 import org.apache.james.transport.mailets.RemoteDelivery;
 import org.apache.james.transport.mailets.ToProcessor;
 import org.apache.james.transport.matchers.All;
-import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.transport.matchers.SMTPIsAuthNetwork;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.SwarmGenericContainer;
@@ -97,9 +95,7 @@ public class SmtpAuthorizedAddressesTest {
             .addProcessor(CommonProcessors.error())
             .addProcessor(ProcessorConfiguration.transport()
                 .addMailet(MailetConfiguration.BCC_STRIPPER)
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(RecipientIsLocal.class)
-                    .mailet(LocalDelivery.class))
+                .addMailet(MailetConfiguration.LOCAL_DELIVERY)
                 .addMailet(MailetConfiguration.builder()
                     .matcher(SMTPIsAuthNetwork.class)
                     .mailet(RemoteDelivery.class)

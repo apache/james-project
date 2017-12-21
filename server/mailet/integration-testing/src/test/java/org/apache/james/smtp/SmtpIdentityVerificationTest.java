@@ -33,10 +33,8 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.probe.DataProbe;
-import org.apache.james.transport.mailets.LocalDelivery;
 import org.apache.james.transport.mailets.ToProcessor;
 import org.apache.james.transport.matchers.All;
-import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.junit.After;
@@ -67,9 +65,7 @@ public class SmtpIdentityVerificationTest {
             .addProcessor(CommonProcessors.error())
             .addProcessor(ProcessorConfiguration.transport()
                 .addMailet(MailetConfiguration.BCC_STRIPPER)
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(RecipientIsLocal.class)
-                    .mailet(LocalDelivery.class)))
+                .addMailet(MailetConfiguration.LOCAL_DELIVERY))
             .addProcessor(CommonProcessors.localAddressError())
             .addProcessor(CommonProcessors.relayDenied())
             .addProcessor(CommonProcessors.bounces())

@@ -33,7 +33,6 @@ import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.probe.DataProbe;
-import org.apache.james.transport.mailets.LocalDelivery;
 import org.apache.james.transport.mailets.ToProcessor;
 import org.apache.james.transport.mailets.ToRepository;
 import org.apache.james.transport.matchers.All;
@@ -97,9 +96,7 @@ public class SmtpAuthIntegrationTest {
     private ProcessorConfiguration deliverOnlyTransport() {
         return ProcessorConfiguration.transport()
             .addMailet(MailetConfiguration.BCC_STRIPPER)
-            .addMailet(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(LocalDelivery.class))
+            .addMailet(MailetConfiguration.LOCAL_DELIVERY)
             .build();
     }
 

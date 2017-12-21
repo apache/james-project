@@ -42,7 +42,6 @@ import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.amqp.AmqpRule;
 import org.apache.james.transport.matchers.All;
-import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
@@ -486,9 +485,7 @@ public class ICSAttachmentWorkflowTest {
                             .addProperty("exchange", EXCHANGE_NAME)
                             .addProperty("attribute", JSON_MAIL_ATTRIBUTE)
                             .addProperty("routing_key", ROUTING_KEY))
-                    .addMailet(MailetConfiguration.builder()
-                            .matcher(RecipientIsLocal.class)
-                            .mailet(LocalDelivery.class)))
+                    .addMailet(MailetConfiguration.LOCAL_DELIVERY))
             .build();
 
         jamesServer = TemporaryJamesServer.builder()

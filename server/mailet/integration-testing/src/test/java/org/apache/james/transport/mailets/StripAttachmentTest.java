@@ -37,7 +37,6 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.matchers.All;
-import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
@@ -82,9 +81,7 @@ public class StripAttachmentTest {
                             .matcher(All.class)
                             .mailet(RecoverAttachment.class)
                             .addProperty("attribute", "my.attribute"))
-                    .addMailet(MailetConfiguration.builder()
-                            .matcher(RecipientIsLocal.class)
-                            .mailet(LocalDelivery.class)))
+                    .addMailet(MailetConfiguration.LOCAL_DELIVERY))
             .build();
 
         jamesServer = TemporaryJamesServer.builder()

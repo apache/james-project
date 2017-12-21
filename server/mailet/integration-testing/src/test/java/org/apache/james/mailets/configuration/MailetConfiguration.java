@@ -23,8 +23,10 @@ package org.apache.james.mailets.configuration;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.james.transport.mailets.LocalDelivery;
 import org.apache.james.transport.mailets.RemoveMimeHeader;
 import org.apache.james.transport.matchers.All;
+import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.Matcher;
 
@@ -81,6 +83,11 @@ public class MailetConfiguration implements SerializableAsXml {
         .matcher(All.class)
         .mailet(RemoveMimeHeader.class)
         .addProperty("name", "bcc")
+        .build();
+
+    public static final MailetConfiguration LOCAL_DELIVERY = MailetConfiguration.builder()
+        .matcher(RecipientIsLocal.class)
+        .mailet(LocalDelivery.class)
         .build();
 
     private final Class<? extends Matcher> matcher;

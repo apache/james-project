@@ -35,11 +35,9 @@ import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.probe.DataProbe;
-import org.apache.james.transport.mailets.LocalDelivery;
 import org.apache.james.transport.mailets.SMIMESign;
 import org.apache.james.transport.mailets.SetMimeHeader;
 import org.apache.james.transport.matchers.HasMailAttribute;
-import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.transport.matchers.SenderIsLocal;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.utils.DataProbeImpl;
@@ -87,9 +85,7 @@ public class SMIMESignIntegrationTest {
                     .addProperty("keyStorePassword", "secret")
                     .addProperty("keyStoreType", "PKCS12")
                     .addProperty("debug", "true"))
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(RecipientIsLocal.class)
-                    .mailet(LocalDelivery.class)))
+                .addMailet(MailetConfiguration.LOCAL_DELIVERY))
             .addProcessor(CommonProcessors.spam())
             .addProcessor(CommonProcessors.localAddressError())
             .addProcessor(CommonProcessors.relayDenied())

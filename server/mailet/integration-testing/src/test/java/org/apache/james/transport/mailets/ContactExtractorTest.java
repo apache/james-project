@@ -37,7 +37,6 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.transport.mailets.amqp.AmqpRule;
 import org.apache.james.transport.matchers.All;
-import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.transport.matchers.SMTPAuthSuccessful;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.SwarmGenericContainer;
@@ -97,9 +96,7 @@ public class ContactExtractorTest {
                         .addProperty(AmqpForwardAttribute.EXCHANGE_PARAMETER_NAME, EXCHANGE)
                         .addProperty(AmqpForwardAttribute.ATTRIBUTE_PARAMETER_NAME, attribute))
                     .addMailet(MailetConfiguration.BCC_STRIPPER)
-                    .addMailet(MailetConfiguration.builder()
-                        .matcher(RecipientIsLocal.class)
-                        .mailet(LocalDelivery.class)))
+                    .addMailet(MailetConfiguration.LOCAL_DELIVERY))
             .build();
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
