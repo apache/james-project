@@ -28,7 +28,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Optional;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
@@ -360,7 +359,7 @@ public class MessageFactoryTest {
             .keywords(Keywords.factory().from(Keyword.SEEN))
                 .size(0)
                 .internalDate(INTERNAL_DATE)
-                .content(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("spamMail.eml"))))
+                .content(ClassLoader.getSystemResourceAsStream("spamMail.eml"))
                 .attachments(ImmutableList.of())
                 .mailboxId(MAILBOX_ID)
                 .messageId(TestMessageId.of(2))
@@ -386,7 +385,7 @@ public class MessageFactoryTest {
             .keywords(Keywords.factory().from(Keyword.SEEN))
                 .size(0)
                 .internalDate(INTERNAL_DATE)
-                .content(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("spamMail.eml"))))
+                .content(ClassLoader.getSystemResourceAsStream("spamMail.eml"))
                 .attachments(ImmutableList.of(MessageAttachment.builder()
                         .attachment(org.apache.james.mailbox.model.Attachment.builder()
                                 .attachmentId(AttachmentId.from(blodId.getRawValue()))

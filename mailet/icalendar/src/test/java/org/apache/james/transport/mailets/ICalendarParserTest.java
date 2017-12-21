@@ -25,7 +25,7 @@ import java.util.Map;
 
 import javax.mail.MessagingException;
 
-import org.apache.commons.io.IOUtils;
+import org.apache.james.util.ClassLoaderUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -235,7 +235,7 @@ public class ICalendarParserTest {
         mailet.init(mailetConfiguration);
 
         Map<String, byte[]> attachments = ImmutableMap.<String, byte[]>builder()
-            .put("key", IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("ics/ics_with_error.ics")))
+            .put("key", ClassLoaderUtils.getSystemResourceAsByteArray("ics/ics_with_error.ics"))
             .build();
 
         Mail mail = FakeMail.builder()

@@ -25,10 +25,8 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
@@ -39,6 +37,7 @@ import org.apache.james.transport.mailets.LocalDelivery;
 import org.apache.james.transport.mailets.SMIMEDecrypt;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIsLocal;
+import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
@@ -104,7 +103,7 @@ public class SMIMEDecryptIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_SECURE_PORT)
             .authenticate(FROM, PASSWORD)
             .sendMessageWithHeaders(FROM, FROM,
-                IOUtils.toString(ClassLoader.getSystemResourceAsStream("eml/crypted.eml"), StandardCharsets.US_ASCII))
+                ClassLoaderUtils.getSystemResourceAsString("eml/crypted.eml"))
             .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
@@ -119,7 +118,7 @@ public class SMIMEDecryptIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_SECURE_PORT)
             .authenticate(FROM, PASSWORD)
             .sendMessageWithHeaders(FROM, FROM,
-                IOUtils.toString(ClassLoader.getSystemResourceAsStream("eml/crypted_with_attachment.eml"), StandardCharsets.US_ASCII))
+                ClassLoaderUtils.getSystemResourceAsString("eml/crypted_with_attachment.eml"))
             .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
@@ -135,7 +134,7 @@ public class SMIMEDecryptIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_SECURE_PORT)
             .authenticate(FROM, PASSWORD)
             .sendMessageWithHeaders(FROM, FROM,
-                IOUtils.toString(ClassLoader.getSystemResourceAsStream("eml/bad_crypted.eml"), StandardCharsets.US_ASCII))
+                ClassLoaderUtils.getSystemResourceAsString("eml/bad_crypted.eml"))
             .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)

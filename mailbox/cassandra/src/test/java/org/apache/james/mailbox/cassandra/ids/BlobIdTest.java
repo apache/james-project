@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 
-import org.apache.commons.io.IOUtils;
+import org.apache.james.util.ClassLoaderUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -84,8 +84,8 @@ public class BlobIdTest {
 
     @Test
     public void forPayloadShouldCalculateDifferentHashesWhenCraftedSha1Collision() throws Exception {
-        byte[] payload1 = IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("shattered-1.pdf"));
-        byte[] payload2 = IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("shattered-2.pdf"));
+        byte[] payload1 = ClassLoaderUtils.getSystemResourceAsByteArray("shattered-1.pdf");
+        byte[] payload2 = ClassLoaderUtils.getSystemResourceAsByteArray("shattered-2.pdf");
         BlobId blobId1 = BlobId.forPayload(payload1);
         BlobId blobId2 = BlobId.forPayload(payload2);
         assertThat(blobId1).isNotEqualTo(blobId2);
