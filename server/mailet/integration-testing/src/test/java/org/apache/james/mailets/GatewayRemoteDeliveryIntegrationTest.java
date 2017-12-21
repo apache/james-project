@@ -176,8 +176,8 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
             .build(temporaryFolder);
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
@@ -199,8 +199,8 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
             .build(temporaryFolder);
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 

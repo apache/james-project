@@ -87,10 +87,11 @@ public class SmtpAuthIntegrationTest {
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder);
-        repositoryProbe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
+
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
+        repositoryProbe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
     }
 
     private ProcessorConfiguration deliverOnlyTransport() {

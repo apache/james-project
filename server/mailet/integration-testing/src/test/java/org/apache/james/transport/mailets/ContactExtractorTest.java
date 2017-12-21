@@ -105,6 +105,7 @@ public class ContactExtractorTest {
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
             .withMailetContainer(mailets)
             .build(folder);
+
         DataProbeImpl probe = jamesServer.getProbe(DataProbeImpl.class);
         probe.addDomain(DEFAULT_DOMAIN);
         probe.addUser(SENDER, PASSWORD);

@@ -60,8 +60,8 @@ public class RecipientRewriteTableIntegrationTest {
     @Before
     public void setup() throws Exception {
         jamesServer = TemporaryJamesServer.builder().build(temporaryFolder);
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addDomain(JAMES_ANOTHER_DOMAIN);
     }

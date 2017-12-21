@@ -233,8 +233,8 @@ public class BounceIntegrationTest {
                     .mailet(NotifyPostmaster.class)
                     .addProperty("passThrough", "false")))
             .build(temporaryFolder);
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
 
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(POSTMASTER, PASSWORD);
