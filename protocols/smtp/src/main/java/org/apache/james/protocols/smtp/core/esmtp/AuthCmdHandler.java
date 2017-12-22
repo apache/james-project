@@ -241,7 +241,8 @@ public class AuthCmdHandler
      * @param initialResponse the initial response line passed in with the AUTH command
      */
     private Response doPlainAuthPass(SMTPSession session, String userpass) {
-        String user = null, pass = null;
+        String user = null;
+        String pass = null;
         try {
             if (userpass != null) {
                 userpass = new String(Base64.decodeBase64(userpass));

@@ -259,7 +259,8 @@ public class HBaseUtils {
         Flags flags = new Flags();
         List<Property> propList = new ArrayList<>();
         KeyValue[] keys = result.raw();
-        String mediaType = null, subType = null;
+        String mediaType = null;
+        String subType = null;
         MessageUid uid;
         Long modSeq = null; 
         Long bodyOctets = null;

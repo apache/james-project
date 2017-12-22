@@ -99,7 +99,8 @@ public class HBaseSubscriptionMapperTest {
     private static void fillSubscriptionList() throws SubscriptionException {
         LOG.info("Creating subscription list");
         SimpleSubscription subscription;
-        String user, mailbox;
+        String user;
+        String mailbox;
         subscriptionList = new HashMap<>();
         for (int i = 0; i < USERS; i++) {
             user = "user" + i;

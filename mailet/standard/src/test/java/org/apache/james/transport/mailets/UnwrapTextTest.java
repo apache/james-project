@@ -29,7 +29,8 @@ public class UnwrapTextTest {
      */
     @Test
     public void testUnwrap() {
-        String input, output;
+        String input;
+        String output;
 
         Assert.assertEquals("", UnwrapText.unwrap(""));
         Assert.assertEquals("a", UnwrapText.unwrap("a"));

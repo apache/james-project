@@ -29,11 +29,10 @@ import org.junit.Test;
 
 public class MailAddressTest {
 
-    private static final String
-            GOOD_LOCAL_PART = "\"quoted@local part\"",
-            GOOD_QUOTED_LOCAL_PART = "\"quoted@local part\"@james.apache.org",
-            GOOD_ADDRESS = "server-dev@james.apache.org",
-            GOOD_DOMAIN = "james.apache.org";
+    private static final String GOOD_LOCAL_PART = "\"quoted@local part\"";
+    private static final String GOOD_QUOTED_LOCAL_PART = "\"quoted@local part\"@james.apache.org";
+    private static final String GOOD_ADDRESS = "server-dev@james.apache.org";
+    private static final String GOOD_DOMAIN = "james.apache.org";
 
     private static final String[] GOOD_ADDRESSES = {
             GOOD_ADDRESS,
