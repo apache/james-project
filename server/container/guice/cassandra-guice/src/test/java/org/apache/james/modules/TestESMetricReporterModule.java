@@ -45,7 +45,7 @@ public class TestESMetricReporterModule extends AbstractModule{
             .enabled()
             .onHost(LOCALHOST, DEFAULT_ES_HTTP_PORT)
             .onIndex(METRICS_INDEX)
-            .periodInSecond(1l)
+            .periodInSecond(1L)
             .build();
     }
 }

@@ -215,7 +215,7 @@ public class FakeMail implements Mail {
 
         public FakeMail build() throws MessagingException {
             return new FakeMail(getMimeMessage(), recipients, name.orElse(null), sender.orElse(null), state.orElse(null), errorMessage.orElse(null), lastUpdated.orElse(null),
-                    attributes, size.orElse(0l), remoteAddr.orElse("127.0.0.1"));
+                    attributes, size.orElse(0L), remoteAddr.orElse("127.0.0.1"));
         }
 
         private MimeMessage getMimeMessage() throws MessagingException {
