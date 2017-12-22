@@ -24,7 +24,6 @@ import java.util.Optional;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.transport.mailets.managesieve.ManageSieveMailet;
 import org.apache.james.util.Port;
 import org.apache.james.util.scanner.SpamAssassinInvoker;
 import org.apache.mailet.Mail;
@@ -61,7 +60,7 @@ import com.google.common.base.Strings;
  * </pre>
  */
 public class SpamAssassin extends GenericMailet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ManageSieveMailet.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SpamAssassin.class);
     public static final String SPAMD_HOST = "spamdHost";
     public static final String SPAMD_PORT = "spamdPort";
     public static final String DEFAULT_HOST = "127.0.0.1";
