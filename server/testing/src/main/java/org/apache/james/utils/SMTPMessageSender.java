@@ -168,6 +168,10 @@ public class SMTPMessageSender extends ExternalResource implements Closeable {
         conditionFactory.until(this::messageHasBeenSent);
     }
 
+    public void awaitSentFail(ConditionFactory conditionFactory) {
+        conditionFactory.until(this::messageSendingFailed);
+    }
+
     public boolean messageSendingFailed() throws IOException {
         String replyString = smtpClient.getReplyString().trim();
         return replyString.startsWith("4") || replyString.startsWith("5");

@@ -102,7 +102,7 @@ public class SmtpBracketEnforcementTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(USER, PASSWORD)
-            .sendMessageNoBracket(USER, USER);
-        awaitOneMinute.until(messageSender::messageSendingFailed);
+            .sendMessageNoBracket(USER, USER)
+            .awaitSentFail(awaitOneMinute);
     }
 }

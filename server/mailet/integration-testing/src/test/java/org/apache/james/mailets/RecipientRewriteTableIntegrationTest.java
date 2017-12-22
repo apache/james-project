@@ -103,8 +103,8 @@ public class RecipientRewriteTableIntegrationTest {
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
-            .select(IMAPMessageReader.INBOX);
-        awaitOneMinute.until(imapMessageReader::userDoesNotReceiveMessage);
+            .select(IMAPMessageReader.INBOX)
+            .awaitNoMessage(awaitOneMinute);
     }
 
     @Test
@@ -156,8 +156,8 @@ public class RecipientRewriteTableIntegrationTest {
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(ANY_AT_JAMES, PASSWORD)
-            .select(IMAPMessageReader.INBOX);
-        awaitOneMinute.until(imapMessageReader::userDoesNotReceiveMessage);
+            .select(IMAPMessageReader.INBOX)
+            .awaitNoMessage(awaitOneMinute);
     }
 
 }

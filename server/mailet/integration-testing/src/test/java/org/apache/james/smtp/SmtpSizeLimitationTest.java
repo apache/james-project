@@ -72,8 +72,8 @@ public class SmtpSizeLimitationTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(USER, PASSWORD)
-            .sendMessageWithHeaders(USER, USER, Strings.repeat("Long message", 1024));
-            awaitOneMinute.until(messageSender::messageSendingFailed);
+            .sendMessageWithHeaders(USER, USER, Strings.repeat("Long message", 1024))
+            .awaitSentFail(awaitOneMinute);
     }
 
     @Test

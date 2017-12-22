@@ -76,6 +76,10 @@ public class IMAPMessageReader extends ExternalResource implements Closeable {
         conditionFactory.until(this::hasAMessage);
     }
 
+    public void awaitNoMessage(ConditionFactory conditionFactory) throws IOException {
+        conditionFactory.until(this::userDoesNotReceiveMessage);
+    }
+
     public boolean hasAMessageWithFlags(String flags) throws IOException {
         imapClient.fetch("1:1", "ALL");
         String replyString = imapClient.getReplyString();

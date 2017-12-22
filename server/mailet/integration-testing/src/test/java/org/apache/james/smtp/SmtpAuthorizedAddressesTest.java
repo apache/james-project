@@ -138,9 +138,8 @@ public class SmtpAuthorizedAddressesTest {
             .withAutorizedAddresses("172.0.0.0/8"));
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, TO);
-
-        awaitOneMinute.until(messageSender::messageSendingFailed);
+            .sendMessage(FROM, TO)
+            .awaitSentFail(awaitOneMinute);
     }
 
     @Test

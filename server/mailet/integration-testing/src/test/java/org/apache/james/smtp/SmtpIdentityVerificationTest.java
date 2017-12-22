@@ -97,8 +97,8 @@ public class SmtpIdentityVerificationTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(ATTACKER, ATTACKER_PASSWORD)
-            .sendMessage(USER, USER);
-        awaitOneMinute.until(messageSender::messageSendingFailed);
+            .sendMessage(USER, USER)
+            .awaitSentFail(awaitOneMinute);
     }
 
 }

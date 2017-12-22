@@ -131,8 +131,10 @@ public class GroupMappingTest {
         jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, USER_DOMAIN1, "INBOX");
         jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, USER_DOMAIN2, "INBOX");
 
+        WebAdminGuiceProbe webAdminGuiceProbe = jamesServer.getProbe(WebAdminGuiceProbe.class);
+        webAdminGuiceProbe.await();
         restApiRequest = RestAssured.given()
-            .port(jamesServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());
+            .port(webAdminGuiceProbe.getWebAdminPort());
 
         message = MimeMessageBuilder.mimeMessageBuilder()
             .setSubject("test")
@@ -274,11 +276,11 @@ public class GroupMappingTest {
             .sendMessage( FakeMail.builder()
                 .mimeMessage(message)
                 .sender(SENDER)
-                .recipient(GROUP_ON_DOMAIN2))
+                .recipient(GROUP_ON_DOMAIN1))
             .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
-            .login(USER_DOMAIN1, PASSWORD)
+            .login(USER_DOMAIN2, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitOneMinute);
 
@@ -303,17 +305,17 @@ public class GroupMappingTest {
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(awaitOneMinute);
+            .awaitSentFail(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitNoMessage(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitNoMessage(awaitOneMinute);
     }
 
     @Test
@@ -350,8 +352,8 @@ public class GroupMappingTest {
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
-            .select(IMAPMessageReader.INBOX);
-        awaitOneMinute.until(imapMessageReader::userDoesNotReceiveMessage);
+            .select(IMAPMessageReader.INBOX)
+            .awaitNoMessage(awaitOneMinute);
     }
 
     @Test
@@ -426,7 +428,7 @@ public class GroupMappingTest {
             .awaitSent(awaitOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
-            .login(USER_DOMAIN2, PASSWORD)
+            .login(USER_DOMAIN1, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitOneMinute);
     }

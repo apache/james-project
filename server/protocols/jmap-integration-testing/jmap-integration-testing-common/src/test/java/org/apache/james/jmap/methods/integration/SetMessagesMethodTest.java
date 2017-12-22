@@ -4529,6 +4529,7 @@ public abstract class SetMessagesMethodTest {
 
         try (IMAPMessageReader imapMessageReader = new IMAPMessageReader()
                 .connect(LOCALHOST_IP, IMAP_PORT)
+                .login(USERNAME, PASSWORD)
                 .select(MailboxConstants.INBOX)) {
             assertThat(imapMessageReader.readFirstMessage())
                 .contains("X-MY-MULTIVALUATED-HEADER: first value")
