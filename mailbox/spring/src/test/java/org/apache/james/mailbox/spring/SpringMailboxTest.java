@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.spring;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 

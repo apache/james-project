@@ -18,10 +18,15 @@
  ****************************************************************/
 package org.apache.james.filesystem.api.mock;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+
 import org.apache.james.filesystem.api.FileSystem;
 
 public class MockFileSystem implements FileSystem {

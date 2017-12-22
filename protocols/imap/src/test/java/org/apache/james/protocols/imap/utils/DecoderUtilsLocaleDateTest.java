@@ -19,10 +19,10 @@
 
 package org.apache.james.protocols.imap.utils;
 
-import java.util.Locale;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-import org.apache.james.protocols.imap.utils.DecoderUtils;
+import java.util.Locale;
+
 import org.junit.After;
 import org.junit.Test;
 
