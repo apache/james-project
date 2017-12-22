@@ -11,7 +11,7 @@ Environment=XMX=1024m
 User=root
 Group=root
 
-ExecStart=/usr/lib/jvm/java-8-openjdk-amd64/bin/java -Dworking.directory=${WORKING_DIRECTORY} -Xmx${XMX} -Dlogback.configurationFile=/etc/james/logback.xml -jar /usr/share/james/james-server.jar 
+ExecStart=/usr/lib/jvm/jre-1.8.0-openjdk/bin/java -Dworking.directory=${WORKING_DIRECTORY} -Xmx${XMX} -Dlogback.configurationFile=/etc/james/logback.xml -jar /usr/share/james/james-server.jar 
 
 StandardOutput=journal
 StandardError=inherit

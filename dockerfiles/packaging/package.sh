@@ -35,7 +35,7 @@ fpm -s dir -t deb \
  .
 
 #Workaround waiting for https://github.com/jordansissel/fpm/issues/1163 to be released
-cp james.service package/usr/share/james
+cp james.service.rhel package/usr/share/james/james.service
 
 fpm -s dir -t rpm \
  -n james \
