@@ -157,7 +157,9 @@ public class CassandraMailboxModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), MailboxManagerDefinition.class).addBinding().to(CassandraMailboxManagerDefinition.class);
     }
 
-    @Provides @Named(Names.MAILBOXMANAGER_NAME) @Singleton
+    @Provides
+    @Named(Names.MAILBOXMANAGER_NAME)
+    @Singleton
     public MailboxManager provideMailboxManager(CassandraMailboxManager cassandraMailboxManager, ListeningCurrentQuotaUpdater quotaUpdater,
                                                 QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, BatchSizes batchSizes) throws MailboxException {
         cassandraMailboxManager.setQuotaUpdater(quotaUpdater);

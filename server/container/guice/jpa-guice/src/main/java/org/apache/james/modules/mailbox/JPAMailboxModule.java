@@ -104,7 +104,9 @@ public class JPAMailboxModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), MailboxManagerDefinition.class).addBinding().to(JPAMailboxManagerDefinition.class);
     }
 
-    @Provides @Named(Names.MAILBOXMANAGER_NAME) @Singleton
+    @Provides
+    @Named(Names.MAILBOXMANAGER_NAME)
+    @Singleton
     public MailboxManager provideMailboxManager(OpenJPAMailboxManager jpaMailboxManager) throws MailboxException {
         jpaMailboxManager.init();
         return jpaMailboxManager;

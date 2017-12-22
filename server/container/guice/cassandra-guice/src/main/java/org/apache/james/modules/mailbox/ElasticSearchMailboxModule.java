@@ -83,12 +83,14 @@ public class ElasticSearchMailboxModule extends AbstractModule {
         return configuration.getIndexName();
     }
 
-    @Provides @Named(ElasticSearchConstants.READ_ALIAS)
+    @Provides
+    @Named(ElasticSearchConstants.READ_ALIAS)
     protected AliasName provideReadAliasName(ElasticSearchConfiguration configuration) {
         return configuration.getReadAliasName();
     }
 
-    @Provides @Named(ElasticSearchConstants.WRITE_ALIAS)
+    @Provides
+    @Named(ElasticSearchConstants.WRITE_ALIAS)
     protected AliasName provideWriteAliasName(ElasticSearchConfiguration configuration) {
         return configuration.getWriteAliasName();
     }

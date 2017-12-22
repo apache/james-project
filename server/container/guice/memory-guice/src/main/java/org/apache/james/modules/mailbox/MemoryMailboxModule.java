@@ -123,7 +123,9 @@ public class MemoryMailboxModule extends AbstractModule {
             .to(MemoryMailboxManagerDefinition.class);
     }
 
-    @Provides @Named(Names.MAILBOXMANAGER_NAME) @Singleton
+    @Provides
+    @Named(Names.MAILBOXMANAGER_NAME)
+    @Singleton
     public MailboxManager provideMailboxManager(InMemoryMailboxManager mailboxManager, ListeningCurrentQuotaUpdater quotaUpdater,
                                                 QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) throws MailboxException {
         mailboxManager.setQuotaRootResolver(quotaRootResolver);

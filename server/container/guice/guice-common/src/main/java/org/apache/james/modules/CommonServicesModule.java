@@ -65,12 +65,15 @@ public class CommonServicesModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(DataProbeImpl.class);
     }
 
-    @Provides @Singleton @Named(CONFIGURATION_PATH)
+    @Provides
+    @Singleton
+    @Named(CONFIGURATION_PATH)
     public String configurationPath() {
         return FileSystem.FILE_PROTOCOL_AND_CONF;
     }
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     public JamesDirectoriesProvider directories() throws MissingArgumentException {
         String rootDirectory = Optional
                 .ofNullable(System.getProperty("working.directory"))

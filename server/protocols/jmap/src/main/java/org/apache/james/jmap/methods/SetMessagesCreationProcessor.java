@@ -82,7 +82,8 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     private final MessageAppender messageAppender;
     private final MessageSender messageSender;
     
-    @VisibleForTesting @Inject
+    @VisibleForTesting
+    @Inject
     SetMessagesCreationProcessor(MessageFactory messageFactory,
                                  SystemMailboxesProvider systemMailboxesProvider,
                                  AttachmentChecker attachmentChecker,
