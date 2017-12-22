@@ -23,6 +23,7 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
 import org.apache.james.core.MailAddress;
+import org.assertj.core.api.Assertions;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -109,11 +110,8 @@ public class MailAddressTest {
         }
 
         for (String badAddress : BAD_ADDRESSES) {
-            try {
-                a = new MailAddress(badAddress);
-                Assert.fail(badAddress);
-            } catch (AddressException ignore) {
-            }
+            Assertions.assertThatThrownBy(() -> new MailAddress(badAddress))
+                .isInstanceOf(AddressException.class);
         }
     }
 

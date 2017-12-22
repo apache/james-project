@@ -26,6 +26,9 @@ import java.util.function.Function;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Preconditions;
 import com.sun.mail.smtp.SMTPAddressFailedException;
 import com.sun.mail.smtp.SMTPSendFailedException;
@@ -33,6 +36,8 @@ import com.sun.mail.smtp.SMTPSenderFailedException;
 
 public class EnhancedMessagingException {
 
+    private final static Logger logger = LoggerFactory.getLogger(EnhancedMessagingException.class);
+    
     private final MessagingException messagingException;
     private final Optional<Integer> returnCode;
     private final Optional<Integer> nestedReturnCode;
@@ -89,9 +94,8 @@ public class EnhancedMessagingException {
             || messagingException.getClass().getName().endsWith(".SMTPAddressSucceededException")) {
             try {
                 return Optional.of ((Integer) invokeGetter(messagingException, "getReturnCode"));
-            } catch (ClassCastException cce) {
-            } catch (IllegalArgumentException iae) {
-            } catch (IllegalStateException ise) {
+            } catch (ClassCastException | IllegalArgumentException | IllegalStateException e) {
+                logger.error("unexpected exception", e);
             }
         }
         return Optional.empty();
@@ -101,9 +105,8 @@ public class EnhancedMessagingException {
         if (hasReturnCode()) {
             try {
                 return Optional.of((String) invokeGetter(messagingException, "getCommand"));
-            } catch (ClassCastException cce) {
-            } catch (IllegalArgumentException iae) {
-            } catch (IllegalStateException ise) {
+            } catch (ClassCastException | IllegalArgumentException | IllegalStateException e) {
+                logger.error("unexpected exception", e);
             }
         }
         return Optional.empty();
@@ -113,7 +116,9 @@ public class EnhancedMessagingException {
         if (hasReturnCode()) {
             try {
                 return Optional.of((InternetAddress) invokeGetter(messagingException, "getAddress"));
-            } catch (ClassCastException | IllegalArgumentException | IllegalStateException cce) { }
+            } catch (ClassCastException | IllegalArgumentException | IllegalStateException e) {
+                logger.error("unexpected exception", e);
+            }
         }
         return Optional.empty();
     }
@@ -155,13 +160,8 @@ public class EnhancedMessagingException {
         try {
             Method getAddress = target.getClass().getMethod(getter);
             return getAddress.invoke(target);
-        } catch (NoSuchMethodException nsme) {
-            // An SMTPAddressFailedException with no getAddress method.
-        } catch (IllegalAccessException iae) {
-        } catch (IllegalArgumentException iae) {
-        } catch (InvocationTargetException ite) {
-            // Other issues with getAddress invokation.
+        } catch (NoSuchMethodException|IllegalAccessException|IllegalArgumentException|InvocationTargetException e) {
+            return new IllegalStateException("Exception invoking " + getter + " on a " + target.getClass() + " object");            
         }
-        return new IllegalStateException("Exception invoking " + getter + " on a " + target.getClass() + " object");
     }
 }

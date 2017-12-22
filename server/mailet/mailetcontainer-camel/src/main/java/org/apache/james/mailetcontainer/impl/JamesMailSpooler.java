@@ -220,7 +220,8 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
         while (numActive.get() != 0 && stop > System.currentTimeMillis()) {
             try {
                 Thread.sleep(1000);
-            } catch (Exception ignored) {
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
 
