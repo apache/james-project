@@ -48,15 +48,15 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ManageSieveServer.class);
 
-    final static String SSL_HANDLER = "sslHandler";
-    final static String FRAMER = "framer";
-    final static String CORE_HANDLER = "coreHandler";
-    final static String GROUP_HANDLER = "groupHandler";
-    final static String CONNECTION_LIMIT_HANDLER = "connectionLimitHandler";
-    final static String CONNECTION_LIMIT_PER_IP_HANDLER = "connectionPerIpLimitHandler";
-    final static String CONNECTION_COUNT_HANDLER = "connectionCountHandler";
-    final static String CHUNK_WRITE_HANDLER = "chunkWriteHandler";
-    final static String EXECUTION_HANDLER = "executionHandler";
+    static final String SSL_HANDLER = "sslHandler";
+    static final String FRAMER = "framer";
+    static final String CORE_HANDLER = "coreHandler";
+    static final String GROUP_HANDLER = "groupHandler";
+    static final String CONNECTION_LIMIT_HANDLER = "connectionLimitHandler";
+    static final String CONNECTION_LIMIT_PER_IP_HANDLER = "connectionPerIpLimitHandler";
+    static final String CONNECTION_COUNT_HANDLER = "connectionCountHandler";
+    static final String CHUNK_WRITE_HANDLER = "chunkWriteHandler";
+    static final String EXECUTION_HANDLER = "executionHandler";
 
     private final int maxLineLength;
     private final ManageSieveProcessor manageSieveProcessor;

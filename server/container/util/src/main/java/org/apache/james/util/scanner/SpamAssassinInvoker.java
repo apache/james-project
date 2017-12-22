@@ -41,10 +41,10 @@ import com.google.common.io.Closeables;
 public class SpamAssassinInvoker {
 
     /** The mail attribute under which the status get stored */
-    public final static String STATUS_MAIL_ATTRIBUTE_NAME = "org.apache.james.spamassassin.status";
+    public static final String STATUS_MAIL_ATTRIBUTE_NAME = "org.apache.james.spamassassin.status";
 
     /** The mail attribute under which the flag get stored */
-    public final static String FLAG_MAIL_ATTRIBUTE_NAME = "org.apache.james.spamassassin.flag";
+    public static final String FLAG_MAIL_ATTRIBUTE_NAME = "org.apache.james.spamassassin.flag";
 
     private final String spamdHost;
 

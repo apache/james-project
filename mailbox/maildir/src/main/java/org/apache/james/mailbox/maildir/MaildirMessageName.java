@@ -405,7 +405,7 @@ public class MaildirMessageName {
      * This is used for the creation of message names.
      * @return The number of (attempted) deliveries until now
      */
-    static private long getNextDeliveryNumber() {
+    private static long getNextDeliveryNumber() {
         return deliveries.getAndIncrement();
     }
     

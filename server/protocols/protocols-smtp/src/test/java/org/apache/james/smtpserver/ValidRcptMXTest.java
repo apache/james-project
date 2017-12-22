@@ -37,9 +37,9 @@ import org.junit.Test;
 
 public class ValidRcptMXTest {
 
-    private final static String INVALID_HOST = "invalid.host.de";
-    private final static String INVALID_MX = "mx." + INVALID_HOST;
-    private final static String LOOPBACK = "127.0.0.1";
+    private static final String INVALID_HOST = "invalid.host.de";
+    private static final String INVALID_MX = "mx." + INVALID_HOST;
+    private static final String LOOPBACK = "127.0.0.1";
 
     private SMTPSession setupMockedSMTPSession(MailAddress rcpt) {
         return new BaseFakeSMTPSession() {

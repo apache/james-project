@@ -44,9 +44,9 @@ public class StartTlsCmdHandler implements CommandHandler<SMTPSession>, EhloExte
     /**
      * The name of the command handled by the command handler
      */
-    private final static String COMMAND_NAME = "STARTTLS";
-    private final static Collection<String> COMMANDS = ImmutableSet.of(COMMAND_NAME);
-    private final static List<String> FEATURES = ImmutableList.of(COMMAND_NAME);
+    private static final String COMMAND_NAME = "STARTTLS";
+    private static final Collection<String> COMMANDS = ImmutableSet.of(COMMAND_NAME);
+    private static final List<String> FEATURES = ImmutableList.of(COMMAND_NAME);
 
     private static final Response TLS_ALREADY_ACTIVE = new SMTPResponse("500", DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_CMD) + " TLS already active RFC2487 5.2").immutable();
     private static final Response READY_FOR_STARTTLS = new SMTPStartTlsResponse("220", DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.UNDEFINED_STATUS) + " Ready to start TLS").immutable();

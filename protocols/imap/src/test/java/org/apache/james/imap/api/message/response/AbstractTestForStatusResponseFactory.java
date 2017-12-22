@@ -30,7 +30,7 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.junit.Before;
 import org.junit.Test;
 
-abstract public class AbstractTestForStatusResponseFactory  {
+public abstract class AbstractTestForStatusResponseFactory  {
 
     private static final String TAG = "ATAG";
 
@@ -44,7 +44,7 @@ abstract public class AbstractTestForStatusResponseFactory  {
 
     StatusResponseFactory factory;
 
-    abstract protected StatusResponseFactory createInstance();
+    protected abstract StatusResponseFactory createInstance();
 
     @Before
     public void setUp() throws Exception {

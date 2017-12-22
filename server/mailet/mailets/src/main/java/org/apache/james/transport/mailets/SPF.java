@@ -58,8 +58,8 @@ public class SPF extends GenericMailet {
 
     private boolean addHeader = false;
     private org.apache.james.jspf.impl.SPF spf;
-    public final static String EXPLANATION_ATTRIBUTE = "org.apache.james.transport.mailets.spf.explanation";
-    public final static String RESULT_ATTRIBUTE = "org.apache.james.transport.mailets.spf.result";
+    public static final String EXPLANATION_ATTRIBUTE = "org.apache.james.transport.mailets.spf.explanation";
+    public static final String RESULT_ATTRIBUTE = "org.apache.james.transport.mailets.spf.result";
 
     /**
      * @see org.apache.mailet.base.GenericMailet#init()

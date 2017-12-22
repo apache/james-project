@@ -55,7 +55,7 @@ import org.apache.mailet.base.GenericMailet;
  */
 @Experimental
 public class UnwrapText extends GenericMailet {
-    public final static String PARAMETER_NAME_QUOTEWIDTH = "quotewidth";
+    public static final String PARAMETER_NAME_QUOTEWIDTH = "quotewidth";
     
     private int quotewidth;
     

@@ -49,7 +49,7 @@ import com.google.common.collect.ImmutableList;
  */
 public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateRequest> implements CapabilityImplementingProcessor{
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticateProcessor.class);
-    private final static String PLAIN = "PLAIN";
+    private static final String PLAIN = "PLAIN";
     
     public AuthenticateProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {

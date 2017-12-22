@@ -56,8 +56,8 @@ import com.google.common.collect.ImmutableList;
 
 public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSearchIndex {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(ElasticSearchListeningMessageSearchIndex.class);
-    private final static String ID_SEPARATOR = ":";
+    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchListeningMessageSearchIndex.class);
+    private static final String ID_SEPARATOR = ":";
 
     private final ElasticSearchIndexer indexer;
     private final ElasticSearchSearcher searcher;

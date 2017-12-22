@@ -121,7 +121,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
      * <strong>Be sure this static instance will never get modifed
      * later!</strong>
      */
-    protected final static Flags MINIMAL_PERMANET_FLAGS;
+    protected static final Flags MINIMAL_PERMANET_FLAGS;
     static {
         MINIMAL_PERMANET_FLAGS = new Flags();
         MINIMAL_PERMANET_FLAGS.add(Flags.Flag.ANSWERED);

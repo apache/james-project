@@ -62,7 +62,7 @@ public class CharsetUtil {
      * 
      * @return supportedCharsetNames
      */
-    public final static Set<String> getAvailableCharsetNames() {
+    public static final Set<String> getAvailableCharsetNames() {
         return charsetNames;
     }
     
@@ -71,7 +71,7 @@ public class CharsetUtil {
      * 
      * @return supportedCharsets
      */
-    public final static Set<Charset> getAvailableCharsets() {
+    public static final Set<Charset> getAvailableCharsets() {
         return charsets;
     }
     

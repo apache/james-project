@@ -52,7 +52,7 @@ public class SqlResources {
     private final Map<String, String> m_dbOptions = new HashMap<>();
 
     /** A set of all used String values */
-    static private final Map<String, String> stringTable = java.util.Collections.synchronizedMap(new HashMap<String, String>());
+    private static final Map<String, String> stringTable = java.util.Collections.synchronizedMap(new HashMap<String, String>());
 
     /**
      * <p>

@@ -31,15 +31,15 @@ import org.apache.james.protocols.api.Response;
 public class POP3Response extends AbstractResponse {
 
     /** OK response. Requested content will follow */
-    public final static String OK_RESPONSE = "+OK";
+    public static final String OK_RESPONSE = "+OK";
 
     /**
      * Error response. Requested content will not be provided. This prefix is
      * followed by a more detailed error message.
      */
-    public final static String ERR_RESPONSE = "-ERR";
+    public static final String ERR_RESPONSE = "-ERR";
 
-    public final static String WS = " ";
+    public static final String WS = " ";
     
     
     /**

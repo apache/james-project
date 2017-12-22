@@ -232,7 +232,7 @@ public class MessageProcessor extends ProcessorAbstract {
     /**
      * Field names for an RFC2822 compliant RECEIVED Header
      */
-    static final private String fieldRFC2822RECEIVEDHeaderFields = "from by via with id for ;";
+    private static final String fieldRFC2822RECEIVEDHeaderFields = "from by via with id for ;";
 
     /**
      * Recipient is blacklisted

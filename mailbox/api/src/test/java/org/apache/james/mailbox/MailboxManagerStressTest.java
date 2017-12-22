@@ -43,7 +43,7 @@ import com.google.common.collect.ImmutableSet;
 
 public abstract class MailboxManagerStressTest {
 
-    private final static int APPEND_OPERATIONS = 200;
+    private static final int APPEND_OPERATIONS = 200;
 
     private MailboxManager mailboxManager;
 

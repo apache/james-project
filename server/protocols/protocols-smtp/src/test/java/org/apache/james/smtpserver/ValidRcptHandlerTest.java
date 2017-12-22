@@ -44,11 +44,11 @@ import org.junit.Test;
 
 public class ValidRcptHandlerTest {
 
-    private final static String VALID_DOMAIN = "localhost";
-    private final static String VALID_USER = "postmaster";
-    private final static String INVALID_USER = "invalid";
-    private final static String USER1 = "user1";
-    private final static String USER2 = "user2";
+    private static final String VALID_DOMAIN = "localhost";
+    private static final String VALID_USER = "postmaster";
+    private static final String INVALID_USER = "invalid";
+    private static final String USER1 = "user1";
+    private static final String USER2 = "user2";
     UsersRepository users;
     ValidRcptHandler handler;
 

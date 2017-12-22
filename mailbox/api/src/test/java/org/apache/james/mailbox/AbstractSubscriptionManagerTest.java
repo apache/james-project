@@ -31,9 +31,9 @@ import org.junit.Test;
  */
 public abstract class AbstractSubscriptionManagerTest {
 
-    private final static String USER1 = "test";
-    private final static String MAILBOX1 = "test1";
-    private final static String MAILBOX2 = "test2";
+    private static final String USER1 = "test";
+    private static final String MAILBOX1 = "test1";
+    private static final String MAILBOX2 = "test2";
     private SubscriptionManager manager;
     private MailboxSession session;
 

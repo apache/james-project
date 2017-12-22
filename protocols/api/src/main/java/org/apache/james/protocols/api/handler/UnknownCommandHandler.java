@@ -36,7 +36,7 @@ public abstract class UnknownCommandHandler<S extends ProtocolSession> implement
     /**
      * Identifier which is used in {@link #getImplCommands()} 
      */
-    public final static String COMMAND_IDENTIFIER ="UNKNOWN_CMD";
+    public static final String COMMAND_IDENTIFIER ="UNKNOWN_CMD";
     
     
     private static final Collection<String> COMMANDS = ImmutableSet.of(COMMAND_IDENTIFIER);

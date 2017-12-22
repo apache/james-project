@@ -87,7 +87,7 @@ public class RecipientRewriteTableUtil {
      *            replaced where found in the input strings
      * @return the requested resource
      */
-    static public String replaceParameters(String str, Map<String, String> parameters) {
+    public static String replaceParameters(String str, Map<String, String> parameters) {
         if (str != null && parameters != null) {
             // Do parameter replacements for this string resource.
             StringBuilder replaceBuffer = new StringBuilder(64);
@@ -113,7 +113,7 @@ public class RecipientRewriteTableUtil {
      *            the string to replace with
      * @return the substituted string
      */
-    static private String substituteSubString(String input, String find, String replace) {
+    private static String substituteSubString(String input, String find, String replace) {
         int find_length = find.length();
         int replace_length = replace.length();
 

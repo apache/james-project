@@ -37,7 +37,7 @@ import org.apache.james.protocols.api.future.FutureResponse;
  */
 public abstract class AbstractProtocolTransport implements ProtocolTransport{
     
-    private final static String CRLF = "\r\n";
+    private static final String CRLF = "\r\n";
 
     
     // TODO: Should we limit the size ?

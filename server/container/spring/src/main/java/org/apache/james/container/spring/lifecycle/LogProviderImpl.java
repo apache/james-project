@@ -39,7 +39,7 @@ public class LogProviderImpl implements LogProvider, InitializingBean, LogProvid
 
     private final ConcurrentHashMap<String, Logger> logMap = new ConcurrentHashMap<>();
     private Map<String, String> logs;
-    private final static String PREFIX = "james.";
+    private static final String PREFIX = "james.";
 
     /**
      * Use {@link Logger} to create the Log

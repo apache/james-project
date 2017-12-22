@@ -64,8 +64,8 @@ import com.google.common.collect.ImmutableSet;
  */
 public abstract class MailboxManagerTest {
 
-    public final static String USER_1 = "USER_1";
-    public final static String USER_2 = "USER_2";
+    public static final String USER_1 = "USER_1";
+    public static final String USER_2 = "USER_2";
     private static final int DEFAULT_MAXIMUM_LIMIT = 256;
 
     private static final MailboxAnnotationKey PRIVATE_KEY = new MailboxAnnotationKey("/private/comment");

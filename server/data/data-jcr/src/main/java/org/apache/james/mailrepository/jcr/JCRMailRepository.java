@@ -72,7 +72,7 @@ import org.slf4j.LoggerFactory;
 public class JCRMailRepository extends AbstractMailRepository implements MailRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(JCRMailRepository.class);
 
-    private final static String MAIL_PATH = "mailrepository";
+    private static final String MAIL_PATH = "mailrepository";
 
     private Repository repository;
     private SimpleCredentials creds;

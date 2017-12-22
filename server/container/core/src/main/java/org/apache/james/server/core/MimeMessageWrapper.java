@@ -52,7 +52,7 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
      * System property which tells JAMES if it should copy a message in memory
      * or via a temporary file. Default is the file
      */
-    public final static String USE_MEMORY_COPY = "james.message.usememorycopy";
+    public static final String USE_MEMORY_COPY = "james.message.usememorycopy";
 
     /**
      * Can provide an input stream to the data

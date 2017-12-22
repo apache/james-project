@@ -32,7 +32,7 @@ import org.apache.james.mailbox.MailboxSession.User;
  *
  */
 public class MailboxSessionJCRRepository {
-    private final static String JCR_SESSION = "JCR_SESSION";
+    private static final String JCR_SESSION = "JCR_SESSION";
     private final Repository repository;
     private final String workspace;
     

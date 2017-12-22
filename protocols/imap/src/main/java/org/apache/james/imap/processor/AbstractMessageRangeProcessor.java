@@ -52,13 +52,13 @@ public abstract class AbstractMessageRangeProcessor<M extends AbstractMessageRan
         super(acceptableClass, next, mailboxManager, factory, metricFactory);
     }
 
-    abstract protected List<MessageRange> process(final MailboxPath targetMailbox,
-                                         final SelectedMailbox currentMailbox,
-                                         final MailboxSession mailboxSession,
-                                         final MailboxManager mailboxManager,
-                                         MessageRange messageSet) throws MailboxException;
+    protected abstract List<MessageRange> process(final MailboxPath targetMailbox,
+                                                  final SelectedMailbox currentMailbox,
+                                                  final MailboxSession mailboxSession,
+                                                  final MailboxManager mailboxManager,
+                                                  MessageRange messageSet) throws MailboxException;
 
-    abstract protected String getOperationName();
+    protected abstract String getOperationName();
 
     @Override
     protected void doProcess(M request, ImapSession session, String tag, ImapCommand command, Responder responder) {

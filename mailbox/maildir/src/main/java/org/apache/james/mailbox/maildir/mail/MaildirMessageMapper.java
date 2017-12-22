@@ -58,7 +58,7 @@ import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
 public class MaildirMessageMapper extends AbstractMessageMapper {
 
     private final MaildirStore maildirStore;
-    private final static int BUF_SIZE = 2048;
+    private static final int BUF_SIZE = 2048;
 
     public MaildirMessageMapper(MailboxSession session, MaildirStore maildirStore) {
         super(session, maildirStore, maildirStore);

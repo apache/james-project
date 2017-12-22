@@ -379,10 +379,10 @@ public class ClassifyBounce extends GenericMailet {
         private final String subject;
         private final String text;
 
-        public final static int TYPE_NORMAL = 1;
-        public final static int TYPE_OUT_OF_OFFICE = 3;
-        public final static int TYPE_DELIVERY_FAILURE = 4;
-        public final static int TYPE_MAILBOX_FULL = 5;
+        public static final int TYPE_NORMAL = 1;
+        public static final int TYPE_OUT_OF_OFFICE = 3;
+        public static final int TYPE_DELIVERY_FAILURE = 4;
+        public static final int TYPE_MAILBOX_FULL = 5;
 
     }
 

@@ -38,7 +38,7 @@ import org.apache.james.util.retry.api.RetrySchedule;
  *
  * @see org.apache.james.util.retry.naming.RetryingContext
  */
-abstract public class ExceptionRetryHandler implements RetryHandler {
+public abstract class ExceptionRetryHandler implements RetryHandler {
     private Class<?>[] _exceptionClasses = null;
     
         private ExceptionRetryingProxy _proxy = null;
@@ -126,7 +126,7 @@ abstract public class ExceptionRetryHandler implements RetryHandler {
 
         /**
          */
-        abstract public Object operation() throws Exception;
+        public abstract Object operation() throws Exception;
         
         /**
          * @return the retryInterval

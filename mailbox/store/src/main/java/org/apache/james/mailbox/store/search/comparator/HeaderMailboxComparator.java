@@ -24,9 +24,9 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.SearchUtil;
 
 public class HeaderMailboxComparator extends AbstractHeaderComparator{
-    public final static Comparator<MailboxMessage> FROM_COMPARATOR = new HeaderMailboxComparator(FROM);
-    public final static Comparator<MailboxMessage> TO_COMPARATOR = new HeaderMailboxComparator(TO);
-    public final static Comparator<MailboxMessage> CC_COMPARATOR = new HeaderMailboxComparator(CC);
+    public static final Comparator<MailboxMessage> FROM_COMPARATOR = new HeaderMailboxComparator(FROM);
+    public static final Comparator<MailboxMessage> TO_COMPARATOR = new HeaderMailboxComparator(TO);
+    public static final Comparator<MailboxMessage> CC_COMPARATOR = new HeaderMailboxComparator(CC);
 
     private final String headerName;
 

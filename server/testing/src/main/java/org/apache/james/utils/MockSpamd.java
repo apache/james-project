@@ -43,9 +43,9 @@ public class MockSpamd implements Runnable {
     /**
      * Mailcontent which is 100% spam
      */
-    public final static String GTUBE = "-SPAM-";
-    public final static String NOT_SPAM = "Spam: False ; 3 / 5";
-    public final static String SPAM = "Spam: True ; 1000 / 5";
+    public static final String GTUBE = "-SPAM-";
+    public static final String NOT_SPAM = "Spam: False ; 3 / 5";
+    public static final String SPAM = "Spam: True ; 1000 / 5";
 
     private ServerSocket socket;
     private boolean isBinded;

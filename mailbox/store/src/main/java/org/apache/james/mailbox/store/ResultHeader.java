@@ -35,7 +35,7 @@ public final class ResultHeader implements MessageResult.Header {
     private final String value;
 
     private final long size;
-    private final static Charset US_ASCII = Charset.forName("US-ASCII");
+    private static final Charset US_ASCII = Charset.forName("US-ASCII");
 
     public ResultHeader(String name, String value) {
         this.name = name;

@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 public class ActionUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(ActionUtils.class);
 
-    private final static String ATTRIBUTE_PREFIX = ActionUtils.class.getPackage().getName() + ".";
+    private static final String ATTRIBUTE_PREFIX = ActionUtils.class.getPackage().getName() + ".";
 
     /**
      * Answers the sole intended recipient for aMail.

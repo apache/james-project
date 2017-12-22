@@ -31,7 +31,7 @@ import com.google.common.base.Throwables;
 
 public class ActiveMQMailQueueBlobTest extends ActiveMQMailQueueTest {
 
-    public final static String BASE_DIR = "file://target/james-test";
+    public static final String BASE_DIR = "file://target/james-test";
     private MyFileSystem fs;
 
     @Override

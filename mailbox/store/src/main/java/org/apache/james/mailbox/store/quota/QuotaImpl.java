@@ -25,7 +25,7 @@ import org.apache.james.mailbox.model.Quota;
 
 public final class QuotaImpl implements Quota{
 
-    private final static Quota UNLIMITED_QUOTA = new QuotaImpl(UNKNOWN, UNLIMITED);
+    private static final Quota UNLIMITED_QUOTA = new QuotaImpl(UNKNOWN, UNLIMITED);
 
     public static Quota unlimited() {
         return UNLIMITED_QUOTA;

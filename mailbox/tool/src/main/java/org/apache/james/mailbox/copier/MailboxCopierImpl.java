@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
 public class MailboxCopierImpl implements MailboxCopier {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailboxCopierImpl.class.getName());
 
-    private final static FetchGroup GROUP = new FetchGroup() {
+    private static final FetchGroup GROUP = new FetchGroup() {
 
         @Override
         public int content() {

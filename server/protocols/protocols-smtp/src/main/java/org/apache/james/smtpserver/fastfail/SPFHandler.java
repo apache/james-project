@@ -61,9 +61,9 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
 
     public static final String SPF_TEMPBLOCKLISTED = "SPF_TEMPBLOCKLISTED";
 
-    public final static String SPF_HEADER = "SPF_HEADER";
+    public static final String SPF_HEADER = "SPF_HEADER";
 
-    public final static String SPF_HEADER_MAIL_ATTRIBUTE_NAME = "org.apache.james.spf.header";
+    public static final String SPF_HEADER_MAIL_ATTRIBUTE_NAME = "org.apache.james.spf.header";
 
     /** If set to true the mail will also be rejected on a softfail */
     private boolean blockSoftFail = false;

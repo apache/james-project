@@ -36,141 +36,141 @@ public class URIScanner {
     private static final Logger LOGGER = LoggerFactory.getLogger(URIScanner.class);
 
     // These regular expressions "inspired" by Spamassassin
-    static private final String reserved = ";/?:@&=+$,[]\\#|";
+    private static final String reserved = ";/?:@&=+$,[]\\#|";
 
-    static private final String reservedNoColon = ";/?@&=+$,[]\\#|";
+    private static final String reservedNoColon = ";/?@&=+$,[]\\#|";
 
-    static private final String mark = "-_.!~*'()";
+    private static final String mark = "-_.!~*'()";
 
-    static private final String unreserved = "A-Za-z0-9" + escape(mark) + "\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f";
+    private static final String unreserved = "A-Za-z0-9" + escape(mark) + "\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f";
 
-    static private final String uricSet = escape(reserved) + unreserved + "%";
+    private static final String uricSet = escape(reserved) + unreserved + "%";
 
-    static private final String uricNoColon = escape(reservedNoColon) + unreserved + "%";
+    private static final String uricNoColon = escape(reservedNoColon) + unreserved + "%";
 
-    static private final String schemeRE = "(?-xism:(?:https?|ftp|mailto|javascript|file))";
+    private static final String schemeRE = "(?-xism:(?:https?|ftp|mailto|javascript|file))";
 
-    static private final String schemelessRE = "(?-xism:(?<![.=])(?:(?i)www\\d*\\.|(?i)ftp\\.))";
+    private static final String schemelessRE = "(?-xism:(?<![.=])(?:(?i)www\\d*\\.|(?i)ftp\\.))";
 
-    static private final String uriRE = "(?-xism:\\b(?:" + schemeRE + ":[" + uricNoColon + "]|" + schemelessRE + ")[" + uricSet + "#]*)";
+    private static final String uriRE = "(?-xism:\\b(?:" + schemeRE + ":[" + uricNoColon + "]|" + schemelessRE + ")[" + uricSet + "#]*)";
 
     /** Pre-compiled pattern that matches URIs */
-    static private final Pattern uriPattern = Pattern.compile(uriRE);
+    private static final Pattern uriPattern = Pattern.compile(uriRE);
 
     /** Pre-compiled pattern that matches URI scheme strings */
-    static private final Pattern schemePattern = Pattern.compile("^" + schemeRE + ":");
+    private static final Pattern schemePattern = Pattern.compile("^" + schemeRE + ":");
 
     /** Pre-compiled pattern used to cleanup a found URI string */
-    static private final Pattern uriCleanup = Pattern.compile("^<(.*)>$");
+    private static final Pattern uriCleanup = Pattern.compile("^<(.*)>$");
 
     /** Pre-compiled pattern used to cleanup a found URI string */
-    static private final Pattern uriCleanup2 = Pattern.compile("[\\]\\)>#]$");
+    private static final Pattern uriCleanup2 = Pattern.compile("[\\]\\)>#]$");
 
     /** Pre-compile pattern for identifying "mailto" patterns */
-    static private final Pattern uriCleanup3 = Pattern.compile("^(?i)mailto:([^\\/]{2})(.*)$");
+    private static final Pattern uriCleanup3 = Pattern.compile("^(?i)mailto:([^\\/]{2})(.*)$");
 
     // These regular expressions also "inspired" by Spamassassin
-    static private final String esc = "\\\\";
+    private static final String esc = "\\\\";
 
-    static private final String period = "\\.";
+    private static final String period = "\\.";
 
-    static private final String space = "\\040";
+    private static final String space = "\\040";
 
-    static private final String open_br = "\\[";
+    private static final String open_br = "\\[";
 
-    static private final String close_br = "\\]";
+    private static final String close_br = "\\]";
 
-    static private final String nonASCII = "\\x80-\\xff";
+    private static final String nonASCII = "\\x80-\\xff";
 
-    static private final String ctrl = "\\000-\\037";
+    private static final String ctrl = "\\000-\\037";
 
-    static private final String cr_list = "\\n\\015";
+    private static final String cr_list = "\\n\\015";
 
-    static private final String qtext = "[^" + esc + nonASCII + cr_list + "\"]";
+    private static final String qtext = "[^" + esc + nonASCII + cr_list + "\"]";
 
-    static private final String dtext = "[^" + esc + nonASCII + cr_list + open_br + close_br + "]";
+    private static final String dtext = "[^" + esc + nonASCII + cr_list + open_br + close_br + "]";
 
-    static private final String quoted_pair = esc + "[^" + nonASCII + "]";
+    private static final String quoted_pair = esc + "[^" + nonASCII + "]";
 
-    static private final String atom_char = "[^(" + space + ")<>@,;:\"." + esc + open_br + close_br + ctrl + nonASCII + "]";
+    private static final String atom_char = "[^(" + space + ")<>@,;:\"." + esc + open_br + close_br + ctrl + nonASCII + "]";
 
-    static private final String atom = "(?>" + atom_char + "+)";
+    private static final String atom = "(?>" + atom_char + "+)";
 
-    static private final String quoted_str = "\"" + qtext + "*(?:" + quoted_pair + qtext + "*)*\"";
+    private static final String quoted_str = "\"" + qtext + "*(?:" + quoted_pair + qtext + "*)*\"";
 
-    static private final String word = "(?:" + atom + "|" + quoted_str + ")";
+    private static final String word = "(?:" + atom + "|" + quoted_str + ")";
 
-    static private final String local_part = word + "(?:" + period + word + ")*";
+    private static final String local_part = word + "(?:" + period + word + ")*";
 
-    static private final String label = "[A-Za-z\\d](?:[A-Za-z\\d-]*[A-Za-z\\d])?";
+    private static final String label = "[A-Za-z\\d](?:[A-Za-z\\d-]*[A-Za-z\\d])?";
 
-    static private final String domain_ref = label + "(?:" + period + label + ")*";
+    private static final String domain_ref = label + "(?:" + period + label + ")*";
 
-    static private final String domain_lit = open_br + "(?:" + dtext + "|" + quoted_pair + ")*" + close_br;
+    private static final String domain_lit = open_br + "(?:" + dtext + "|" + quoted_pair + ")*" + close_br;
 
-    static private final String domain = "(?:" + domain_ref + "|" + domain_lit + ")";
+    private static final String domain = "(?:" + domain_ref + "|" + domain_lit + ")";
 
-    static private final String Addr_spec_re = "(?-xism:" + local_part + "\\s*\\@\\s*" + domain + ")";
+    private static final String Addr_spec_re = "(?-xism:" + local_part + "\\s*\\@\\s*" + domain + ")";
 
     /** Pre-compiled pattern for matching "schemeless" mailto strings */
-    static private final Pattern emailAddrPattern = Pattern.compile(Addr_spec_re);
+    private static final Pattern emailAddrPattern = Pattern.compile(Addr_spec_re);
 
     /** Simple reqular expression to match an octet part of an IP address */
-    static private final String octet = "(?:[1-2][0-9][0-9])|(?:[1-9][0-9])|(?:[0-9])";
+    private static final String octet = "(?:[1-2][0-9][0-9])|(?:[1-9][0-9])|(?:[0-9])";
 
     /**
      * Simple regular expression to match a part of a domain string in the
      * TLDLookup cache.
      */
-    static private final String tld = "[A-Za-z0-9\\-]*";
+    private static final String tld = "[A-Za-z0-9\\-]*";
 
     /** Simple regular expression that matches a two-part TLD */
-    static private final String tld2 = tld + "\\." + tld;
+    private static final String tld2 = tld + "\\." + tld;
 
     /** Simple regular expression that matches a three-part TLD */
-    static private final String tld3 = tld + "\\." + tld + "\\." + tld;
+    private static final String tld3 = tld + "\\." + tld + "\\." + tld;
 
     /**
      * Regular expression that matches and captures parts of a possible one-part
      * TLD domain string
      */
-    static private final String tldCap = "(" + tld + "\\.(" + tld + "))$";
+    private static final String tldCap = "(" + tld + "\\.(" + tld + "))$";
 
     /**
      * Regular expression that matches and captures parts of a possible two-part
      * TLD domain string
      */
-    static private final String tld2Cap = "(" + tld + "\\.(" + tld2 + "))$";
+    private static final String tld2Cap = "(" + tld + "\\.(" + tld2 + "))$";
 
     /**
      * Regular expression that matches and captures parts of a possible
      * three-part TLD domain string
      */
-    static private final String tld3Cap = "(" + tld + "\\.(" + tld3 + "))$";
+    private static final String tld3Cap = "(" + tld + "\\.(" + tld3 + "))$";
 
     /** Regular expression that matches and captures parts of an IP address */
-    static private final String ipCap = "((" + octet + ")\\.(" + octet + ")\\.(" + octet + ")\\.(" + octet + "))$";
+    private static final String ipCap = "((" + octet + ")\\.(" + octet + ")\\.(" + octet + ")\\.(" + octet + "))$";
 
     /** Pre-compiled pattern that matches IP addresses */
-    static private final Pattern ipCapPattern = Pattern.compile(ipCap);
+    private static final Pattern ipCapPattern = Pattern.compile(ipCap);
 
     /**
      * Pre-compiled pattern that matches domain string that is possibly
      * contained in a one-part TLD
      */
-    static private final Pattern tldCapPattern = Pattern.compile(tldCap);
+    private static final Pattern tldCapPattern = Pattern.compile(tldCap);
 
     /**
      * Pre-compiled pattern that matches domain string that is possibly
      * contained in a two-part TLD
      */
-    static private final Pattern tld2CapPattern = Pattern.compile(tld2Cap);
+    private static final Pattern tld2CapPattern = Pattern.compile(tld2Cap);
 
     /**
      * Pre-compiled pattern that matches domain string that is possibly
      * contained in a three-part TLD
      */
-    static private final Pattern tld3CapPattern = Pattern.compile(tld3Cap);
+    private static final Pattern tld3CapPattern = Pattern.compile(tld3Cap);
 
     /**
      * <p>
@@ -190,7 +190,7 @@ public class URIScanner {
      *            a character sequence to be scanned for URIs
      * @return newDomains the domains which were extracted
      */
-    static public HashSet<String> scanContentForDomains(HashSet<String> domains, CharSequence content) {
+    public static HashSet<String> scanContentForDomains(HashSet<String> domains, CharSequence content) {
         HashSet<String> hosts = scanContentForHosts(content);
         return hosts.stream()
             .map(URIScanner::domainFromHost)
@@ -207,7 +207,7 @@ public class URIScanner {
      *            a character sequence to be scanned for URIs
      * @return a HashSet containing host strings
      */
-    static protected HashSet<String> scanContentForHosts(CharSequence content) {
+    protected static HashSet<String> scanContentForHosts(CharSequence content) {
         HashSet<String> set = new HashSet<>();
 
         // look for URIs
@@ -277,7 +277,7 @@ public class URIScanner {
      * @return the host portion of the supplied URI, null if no host string
      *         could be found
      */
-    static protected String hostFromUriStr(String uriStr) {
+    protected static String hostFromUriStr(String uriStr) {
         LOGGER.debug("hostFromUriStr(\"{}\")", uriStr);
         String host = null;
         URI uri;
@@ -303,7 +303,7 @@ public class URIScanner {
      *            a string containing a host name
      * @return the registrar domain portion of the supplied host string
      */
-    static protected String domainFromHost(String host) {
+    protected static String domainFromHost(String host) {
         LOGGER.debug("domainFromHost(\"{}\")", host);
         String domain = null;
         Matcher mat;

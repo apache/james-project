@@ -37,22 +37,22 @@ public class TLDLookup {
      * collection of known mult-part TLDs change to contain characters other
      * than these, this string must be modified.
      */
-    static private final String tld = "[A-Za-z0-9\\-]*";
+    private static final String tld = "[A-Za-z0-9\\-]*";
 
     /** Simple regular expression that matches a two-part TLD */
-    static private final String tld2 = tld + "\\." + tld;
+    private static final String tld2 = tld + "\\." + tld;
 
     /** Simple regular expression that matches a three-part TLD */
-    static private final String tld3 = tld + "\\." + tld + "\\." + tld;
+    private static final String tld3 = tld + "\\." + tld + "\\." + tld;
 
     /** Array of all known multi-level TLDs */
-    static private final String[] multiPartTLDs = initMultiPartTLDs();
+    private static final String[] multiPartTLDs = initMultiPartTLDs();
 
     /** A set of all known two-part TLDs */
-    static private final HashSet<String> twoPartTLDs = initTwoPartTLDs();
+    private static final HashSet<String> twoPartTLDs = initTwoPartTLDs();
 
     /** A set of all known three-part TLDs */
-    static private final HashSet<String> threePartTLDs = initThreePartTLDs();
+    private static final HashSet<String> threePartTLDs = initThreePartTLDs();
 
     /**
      * Determines if a two-part domain string (xxx.xxx) is contained in the
@@ -62,7 +62,7 @@ public class TLDLookup {
      *            a String representing a two-part domain
      * @return true if the domain string is found in the cache, false otherwise
      */
-    static public boolean isTwoPartTLD(String domain) {
+    public static boolean isTwoPartTLD(String domain) {
         return twoPartTLDs.contains(domain);
     }
 
@@ -74,7 +74,7 @@ public class TLDLookup {
      *            a String representing a three-part domain
      * @return true if the domain string is found in the cache, false otherwise
      */
-    static public boolean isThreePartTLD(String domain) {
+    public static boolean isThreePartTLD(String domain) {
         return threePartTLDs.contains(domain);
     }
 
@@ -83,7 +83,7 @@ public class TLDLookup {
      * 
      * @return a HashSet containing all known two-part TLDs
      */
-    static private HashSet<String> initTwoPartTLDs() {
+    private static HashSet<String> initTwoPartTLDs() {
         HashSet<String> set = new HashSet<>(900);
         for (String multiPartTLD : multiPartTLDs) {
             try {
@@ -103,7 +103,7 @@ public class TLDLookup {
      * 
      * @return a HashSet containing all known three-part TLDs
      */
-    static private HashSet<String> initThreePartTLDs() {
+    private static HashSet<String> initThreePartTLDs() {
         HashSet<String> set = new HashSet<>();
         for (String multiPartTLD : multiPartTLDs) {
             try {
@@ -124,7 +124,7 @@ public class TLDLookup {
      * 
      * @return an array of all known multi-part TLDs
      */
-    static private String[] initMultiPartTLDs() {
+    private static String[] initMultiPartTLDs() {
         String[] tmp = new String[] { "com.ac", "edu.ac", "gov.ac", "edu.ai", "gov.ai", "com.ar", "net.ar", "org.ar", "gov.ar", "mil.ar", "edu.ar", "int.ar", "co.at", "ac.at", "or.at", "gv.at", "priv.at", "com.au", "gov.au", "org.au", "edu.au", "id.au", "oz.au", "info.au", "net.au", "asn.au",
                 "csiro.au", "telememo.au", "conf.au", "otc.au", "com.az", "net.az", "org.az", "com.bb", "net.bb", "org.bb", "ac.be", "belgie.be", "dns.be", "fgov.be", "com.bh", "gov.bh", "net.bh", "edu.bh", "org.bh", "com.bm", "edu.bm", "gov.bm", "org.bm", "net.bm", "adm.br", "adv.br", "agr.br",
                 "am.br", "arq.br", "art.br", "ato.br", "bio.br", "bmd.br", "cim.br", "cng.br", "cnt.br", "com.br", "coop.br", "ecn.br", "edu.br", "eng.br", "esp.br", "etc.br", "eti.br", "far.br", "fm.br", "fnd.br", "fot.br", "fst.br", "g12.br", "ggf.br", "gov.br", "imb.br", "ind.br", "inf.br",

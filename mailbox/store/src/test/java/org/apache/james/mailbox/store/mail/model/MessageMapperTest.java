@@ -62,7 +62,7 @@ import com.google.common.collect.Lists;
 
 public abstract class MessageMapperTest {
 
-    private final static char DELIMITER = '.';
+    private static final char DELIMITER = '.';
     private static final int LIMIT = 10;
     private static final int BODY_START = 16;
     public static final int UID_VALIDITY = 42;

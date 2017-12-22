@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 
-abstract public class AbstractChainedProcessor<M extends ImapMessage> implements ImapProcessor {
+public abstract class AbstractChainedProcessor<M extends ImapMessage> implements ImapProcessor {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(AbstractChainedProcessor.class);
     private final ImapProcessor next;
@@ -102,10 +102,10 @@ abstract public class AbstractChainedProcessor<M extends ImapMessage> implements
      * @param session
      *            <code>ImapSession</code>, not null
      */
-    abstract protected void doProcess(M acceptableMessage, Responder responder, ImapSession session);
+    protected abstract void doProcess(M acceptableMessage, Responder responder, ImapSession session);
 
     /**
      * Add request specific information to the MDC, for contextual logging
      */
-    abstract protected Closeable addContextToMDC(M message);
+    protected abstract Closeable addContextToMDC(M message);
 }

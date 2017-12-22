@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
 @Experimental
 public abstract class AbstractRecipientRewriteTable extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRecipientRewriteTable.class);
-    static private final String MARKER = "org.apache.james.transport.mailets.AbstractRecipientRewriteTable.mapped";
+    private static final String MARKER = "org.apache.james.transport.mailets.AbstractRecipientRewriteTable.mapped";
     private DNSService dns;
     private DomainList domainList;
 

@@ -33,7 +33,7 @@ import javax.mail.internet.InternetHeaders;
  */
 public class InternetHeadersInputStream extends InputStream {
 
-    private final static String LINE_SEPERATOR = "\r\n";
+    private static final String LINE_SEPERATOR = "\r\n";
 
     private final Enumeration<String> headerLines;
     private byte[] currLine;

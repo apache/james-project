@@ -48,9 +48,9 @@ import com.google.common.collect.ImmutableList;
 public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(EnableProcessor.class);
 
-    private final static List<PermitEnableCapabilityProcessor> capabilities = new ArrayList<>();
-    public final static String ENABLED_CAPABILITIES = "ENABLED_CAPABILITIES";
-    private final static List<String> CAPS = ImmutableList.of(SUPPORTS_ENABLE);
+    private static final List<PermitEnableCapabilityProcessor> capabilities = new ArrayList<>();
+    public static final String ENABLED_CAPABILITIES = "ENABLED_CAPABILITIES";
+    private static final List<String> CAPS = ImmutableList.of(SUPPORTS_ENABLE);
     private final CapabilityProcessor capabilityProcessor;
 
     public EnableProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, List<PermitEnableCapabilityProcessor> capabilities,

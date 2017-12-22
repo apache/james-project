@@ -64,7 +64,7 @@ import org.apache.mailet.MailetContext;
  * @since 2.2.0
  */
 @Experimental
-abstract public class AbstractStorageQuota extends AbstractQuotaMatcher {
+public abstract class AbstractStorageQuota extends AbstractQuotaMatcher {
 
     private MailboxManager manager;
 

@@ -35,9 +35,9 @@ import org.apache.james.protocols.smtp.hook.UnknownHook;
  */
 public class MaxUnknownCmdHandler implements UnknownHook{
 
-    public final static int DEFAULT_MAX_UNKOWN = 5;
+    public static final int DEFAULT_MAX_UNKOWN = 5;
     
-    private final static String UNKOWN_COMMAND_COUNT = "UNKNOWN_COMMAND_COUNT";
+    private static final String UNKOWN_COMMAND_COUNT = "UNKNOWN_COMMAND_COUNT";
     private int maxUnknown = DEFAULT_MAX_UNKOWN;
 
     @Override

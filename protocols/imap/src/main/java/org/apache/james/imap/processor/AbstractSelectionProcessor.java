@@ -65,7 +65,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
     final StatusResponseFactory statusResponseFactory;
 
     private final boolean openReadOnly;
-    private final static List<String> CAPS = ImmutableList.of(ImapConstants.SUPPORTS_QRESYNC, ImapConstants.SUPPORTS_CONDSTORE);
+    private static final List<String> CAPS = ImmutableList.of(ImapConstants.SUPPORTS_QRESYNC, ImapConstants.SUPPORTS_CONDSTORE);
 
     
     public AbstractSelectionProcessor(Class<M> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory, boolean openReadOnly,

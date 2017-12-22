@@ -70,7 +70,7 @@ public class MailAddress implements java.io.Serializable {
      */
     public static final long serialVersionUID = 2779163542539434916L;
 
-    private final static char[] SPECIAL =
+    private static final char[] SPECIAL =
             {'<', '>', '(', ')', '[', ']', '\\', '.', ',', ';', ':', '@', '\"'};
 
     private static final MailAddress NULL_SENDER = new MailAddress() {

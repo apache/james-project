@@ -44,7 +44,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
 
     public static final String FAILED = "failed.";
     private static final int LOWER_CASE_OFFSET = 'a' - 'A';
-    public final static int DEFAULT_BUFFER_SIZE = 2048;
+    public static final int DEFAULT_BUFFER_SIZE = 2048;
     
     
     private final ImapResponseWriter writer;

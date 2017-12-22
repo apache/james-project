@@ -64,17 +64,17 @@ public class FileMailQueue implements ManageableMailQueue {
     private final ConcurrentHashMap<String, FileItem> keyMappings = new ConcurrentHashMap<>();
     private final BlockingQueue<String> inmemoryQueue = new LinkedBlockingQueue<>();
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private final static AtomicLong COUNTER = new AtomicLong();
+    private static final AtomicLong COUNTER = new AtomicLong();
     private final String queueDirName;
     private final File queueDir;
 
     private final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
     private final boolean sync;
-    private final static String MSG_EXTENSION = ".msg";
-    private final static String OBJECT_EXTENSION = ".obj";
-    private final static String NEXT_DELIVERY = "FileQueueNextDelivery";
-    private final static int SPLITCOUNT = 10;
-    private final static SecureRandom RANDOM = new SecureRandom();
+    private static final String MSG_EXTENSION = ".msg";
+    private static final String OBJECT_EXTENSION = ".obj";
+    private static final String NEXT_DELIVERY = "FileQueueNextDelivery";
+    private static final int SPLITCOUNT = 10;
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     public FileMailQueue(MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, File parentDir, String queuename, boolean sync) throws IOException {
         this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;

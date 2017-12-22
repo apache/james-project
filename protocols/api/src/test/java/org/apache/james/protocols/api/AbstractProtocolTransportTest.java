@@ -44,7 +44,7 @@ import com.github.steveash.guavate.Guavate;
  */
 public class AbstractProtocolTransportTest {
 
-    private final static String US_ASCII = "US-ASCII";
+    private static final String US_ASCII = "US-ASCII";
     
     @Test
     public void testWriteOrder() throws InterruptedException, UnsupportedEncodingException {
@@ -207,7 +207,7 @@ public class AbstractProtocolTransportTest {
         }
     }
     
-    private final static class TestResponse implements Response {
+    private static final class TestResponse implements Response {
 
         private final String msg;
 

@@ -991,7 +991,7 @@ public class SearchQuery implements Serializable {
     /**
      * Marker superclass for criteria.
      */
-    public static abstract class Criterion implements Serializable {
+    public abstract static class Criterion implements Serializable {
         private static final long serialVersionUID = 1L;
 
     }

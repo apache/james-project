@@ -36,7 +36,7 @@ import org.apache.james.protocols.imap.DecodingException;
  */
 public class StoreCommandParser extends AbstractUidCommandParser {
 
-    private final static byte[] UNCHANGEDSINCE = "UNCHANGEDSINCE".getBytes();
+    private static final byte[] UNCHANGEDSINCE = "UNCHANGEDSINCE".getBytes();
     
     public StoreCommandParser() {
         super(ImapCommand.selectedStateCommand(ImapConstants.STORE_COMMAND_NAME));

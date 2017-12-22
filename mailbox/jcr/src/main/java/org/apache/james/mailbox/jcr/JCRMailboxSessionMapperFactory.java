@@ -42,7 +42,7 @@ import org.apache.james.mailbox.store.user.SubscriptionMapper;
 public class JCRMailboxSessionMapperFactory extends MailboxSessionMapperFactory {
 
     private final MailboxSessionJCRRepository repository;
-    private final static int DEFAULT_SCALING = 2;
+    private static final int DEFAULT_SCALING = 2;
     private final int scaling;
     private final int messageScaling;
     private final UidProvider uidProvider;

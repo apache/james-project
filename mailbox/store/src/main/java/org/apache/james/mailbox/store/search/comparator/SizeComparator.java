@@ -26,7 +26,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
  * {@link Comparator} which compares {@link MailboxMessage}'s with their {@link MailboxMessage#getFullContentOctets()} value
  */
 public class SizeComparator implements Comparator<MailboxMessage>{
-    public final static Comparator<MailboxMessage> SIZE = new SizeComparator();
+    public static final Comparator<MailboxMessage> SIZE = new SizeComparator();
 
     @Override
     public int compare(MailboxMessage o1, MailboxMessage o2) {

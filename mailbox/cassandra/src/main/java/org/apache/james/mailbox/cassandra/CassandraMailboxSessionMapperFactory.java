@@ -67,7 +67,7 @@ import com.datastax.driver.core.Session;
  * Cassandra implementation of {@link MailboxSessionMapperFactory}
  */
 public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFactory implements AttachmentMapperFactory {
-    protected final static String ATTACHMENTMAPPER = "ATTACHMENTMAPPER";
+    protected static final String ATTACHMENTMAPPER = "ATTACHMENTMAPPER";
 
     private final Session session;
     private final CassandraUidProvider uidProvider;

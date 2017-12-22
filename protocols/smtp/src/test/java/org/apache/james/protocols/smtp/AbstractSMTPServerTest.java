@@ -60,10 +60,10 @@ import com.google.common.io.CharStreams;
 
 public abstract class AbstractSMTPServerTest {
 
-    protected final static String MSG1 = "Subject: Testmessage\r\n\r\nThis is a message\r\n";
-    protected final static String SENDER = "me@sender";
-    protected final static String RCPT1 ="rpct1@domain";
-    protected final static String RCPT2 ="rpct2@domain";
+    protected static final String MSG1 = "Subject: Testmessage\r\n\r\nThis is a message\r\n";
+    protected static final String SENDER = "me@sender";
+    protected static final String RCPT1 ="rpct1@domain";
+    protected static final String RCPT2 ="rpct2@domain";
 
     @Test
     public void testSimpleDelivery() throws Exception {

@@ -59,7 +59,7 @@ public class PortUtil {
      * 
      * @return port number
      */
-    protected synchronized static int getNextNonPrivilegedPort() {
+    protected static synchronized int getNextNonPrivilegedPort() {
         // Hack to increase probability that the port is bindable
         int nextPortCandidate = PORT_LAST_USED;
         while (true) {

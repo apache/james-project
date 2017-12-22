@@ -74,37 +74,37 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
     /**
      * Store the messages directly in the mailbox: .../mailbox/
      */
-    public final static int MESSAGE_SCALE_NONE = 0;
+    public static final int MESSAGE_SCALE_NONE = 0;
 
     /**
      * Store the messages under a year directory in the mailbox:
      * .../mailbox/2010/
      */
-    public final static int MESSAGE_SCALE_YEAR = 1;
+    public static final int MESSAGE_SCALE_YEAR = 1;
 
     /**
      * Store the messages under a year/month directory in the mailbox:
      * .../mailbox/2010/05/
      */
-    public final static int MESSAGE_SCALE_MONTH = 2;
+    public static final int MESSAGE_SCALE_MONTH = 2;
 
     /**
      * Store the messages under a year/month/day directory in the mailbox:
      * .../mailbox/2010/05/01/
      */
-    public final static int MESSAGE_SCALE_DAY = 3;
+    public static final int MESSAGE_SCALE_DAY = 3;
 
     /**
      * Store the messages under a year/month/day/hour directory in the mailbox:
      * .../mailbox/2010/05/02/11
      */
-    public final static int MESSAGE_SCALE_HOUR = 4;
+    public static final int MESSAGE_SCALE_HOUR = 4;
 
     /**
      * Store the messages under a year/month/day/hour/min directory in the
      * mailbox: .../mailbox/2010/05/02/11/59
      */
-    public final static int MESSAGE_SCALE_MINUTE = 5;
+    public static final int MESSAGE_SCALE_MINUTE = 5;
 
     private final int scaleType;
 

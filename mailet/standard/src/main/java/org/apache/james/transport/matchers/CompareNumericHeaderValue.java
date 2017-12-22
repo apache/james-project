@@ -58,11 +58,11 @@ public class CompareNumericHeaderValue extends GenericMatcher {
     private String headerName = null;
     
     private int comparisonOperator;
-    private final static int LT = -2;
-    private final static int LE = -1;
-    private final static int EQ =  0;
-    private final static int GE = +1;
-    private final static int GT = +2;
+    private static final int LT = -2;
+    private static final int LE = -1;
+    private static final int EQ =  0;
+    private static final int GE = +1;
+    private static final int GT = +2;
     
     private Double headerValue;
 

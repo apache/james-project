@@ -56,9 +56,9 @@ import com.google.common.collect.ImmutableList;
 public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(IdleProcessor.class);
 
-    private final static List<String> CAPS = ImmutableList.of(SUPPORTS_IDLE);
-    public final static int DEFAULT_SCHEDULED_POOL_CORE_SIZE = 5;
-    private final static String DONE = "DONE";
+    private static final List<String> CAPS = ImmutableList.of(SUPPORTS_IDLE);
+    public static final int DEFAULT_SCHEDULED_POOL_CORE_SIZE = 5;
+    private static final String DONE = "DONE";
     private TimeUnit heartbeatIntervalUnit;
     private long heartbeatInterval;
     private boolean enableIdle;

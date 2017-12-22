@@ -53,7 +53,7 @@ import com.google.common.collect.ImmutableList;
 public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExpungeProcessor.class);
 
-    private final static List<String> UIDPLUS = ImmutableList.of("UIDPLUS");
+    private static final List<String> UIDPLUS = ImmutableList.of("UIDPLUS");
 
     public ExpungeProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {

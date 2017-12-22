@@ -36,7 +36,7 @@ import com.sun.mail.smtp.SMTPSenderFailedException;
 
 public class EnhancedMessagingException {
 
-    private final static Logger logger = LoggerFactory.getLogger(EnhancedMessagingException.class);
+    private static final Logger logger = LoggerFactory.getLogger(EnhancedMessagingException.class);
     
     private final MessagingException messagingException;
     private final Optional<Integer> returnCode;

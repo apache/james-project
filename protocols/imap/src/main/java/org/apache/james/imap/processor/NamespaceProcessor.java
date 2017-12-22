@@ -43,7 +43,7 @@ import org.apache.james.util.MDCBuilder;
  * Processes a NAMESPACE command into a suitable set of responses.
  */
 public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceRequest> implements CapabilityImplementingProcessor {
-    private final static List<String> CAPS = Collections.unmodifiableList(Arrays.asList(SUPPORTS_NAMESPACES));
+    private static final List<String> CAPS = Collections.unmodifiableList(Arrays.asList(SUPPORTS_NAMESPACES));
     
     
     public NamespaceProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,

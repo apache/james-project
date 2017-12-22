@@ -88,26 +88,26 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
     
     private static final String TOSTRING_SEPARATOR = " ";
 
-    public final static String MAILBOX_UUID_PROPERTY = "jamesMailbox:mailboxUUID";
-    public final static String UID_PROPERTY = "jamesMailbox:uid";
-    public final static String SIZE_PROPERTY = "jamesMailbox:size";
-    public final static String ANSWERED_PROPERTY = "jamesMailbox:answered";
-    public final static String DELETED_PROPERTY = "jamesMailbox:deleted";
-    public final static String DRAFT_PROPERTY =  "jamesMailbox:draft";
-    public final static String FLAGGED_PROPERTY = "jamesMailbox:flagged";
-    public final static String USERFLAGS_PROPERTY = "jamesMailbox:userFlags";
+    public static final String MAILBOX_UUID_PROPERTY = "jamesMailbox:mailboxUUID";
+    public static final String UID_PROPERTY = "jamesMailbox:uid";
+    public static final String SIZE_PROPERTY = "jamesMailbox:size";
+    public static final String ANSWERED_PROPERTY = "jamesMailbox:answered";
+    public static final String DELETED_PROPERTY = "jamesMailbox:deleted";
+    public static final String DRAFT_PROPERTY =  "jamesMailbox:draft";
+    public static final String FLAGGED_PROPERTY = "jamesMailbox:flagged";
+    public static final String USERFLAGS_PROPERTY = "jamesMailbox:userFlags";
 
-    public final static String RECENT_PROPERTY = "jamesMailbox:recent";
-    public final static String SEEN_PROPERTY = "jamesMailbox:seen";
-    public final static String INTERNAL_DATE_PROPERTY = "jamesMailbox:internalDate"; 
+    public static final String RECENT_PROPERTY = "jamesMailbox:recent";
+    public static final String SEEN_PROPERTY = "jamesMailbox:seen";
+    public static final String INTERNAL_DATE_PROPERTY = "jamesMailbox:internalDate";
     
-    public final static String BODY_START_OCTET_PROPERTY = "jamesMailbox:messageBodyStartOctet";
-    public final static String HEADER_NODE_TYPE =  "jamesMailbox:messageHeader";
+    public static final String BODY_START_OCTET_PROPERTY = "jamesMailbox:messageBodyStartOctet";
+    public static final String HEADER_NODE_TYPE =  "jamesMailbox:messageHeader";
 
-    public final static String PROPERTY_NODE_TYPE =  "jamesMailbox:messageProperty";
-    public final static String TEXTUAL_LINE_COUNT_PROPERTY  = "jamesMailbox:messageTextualLineCount";
-    public final static String SUBTYPE_PROPERTY  = "jamesMailbox:messageSubType";
-    public final static String MODSEQ_PROPERTY = "jamesMailbox:modSeq";
+    public static final String PROPERTY_NODE_TYPE =  "jamesMailbox:messageProperty";
+    public static final String TEXTUAL_LINE_COUNT_PROPERTY  = "jamesMailbox:messageTextualLineCount";
+    public static final String SUBTYPE_PROPERTY  = "jamesMailbox:messageSubType";
+    public static final String MODSEQ_PROPERTY = "jamesMailbox:modSeq";
 
     public JCRMailboxMessage(Node node, Logger logger) {
         this.node = node;

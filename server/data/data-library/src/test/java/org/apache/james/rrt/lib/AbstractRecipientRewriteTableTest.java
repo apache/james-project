@@ -41,10 +41,10 @@ public abstract class AbstractRecipientRewriteTableTest {
     @Rule public ExpectedException expectedException = ExpectedException.none();
 
     protected AbstractRecipientRewriteTable virtualUserTable;
-    protected final static int REGEX_TYPE = 0;
-    protected final static int ERROR_TYPE = 1;
-    protected final static int ADDRESS_TYPE = 2;
-    protected final static int ALIASDOMAIN_TYPE = 3;
+    protected static final int REGEX_TYPE = 0;
+    protected static final int ERROR_TYPE = 1;
+    protected static final int ADDRESS_TYPE = 2;
+    protected static final int ALIASDOMAIN_TYPE = 3;
 
     public void setUp() throws Exception {
         virtualUserTable = getRecipientRewriteTable();

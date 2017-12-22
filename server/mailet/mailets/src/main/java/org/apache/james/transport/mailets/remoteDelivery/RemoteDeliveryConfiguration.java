@@ -38,7 +38,7 @@ import com.google.common.collect.ImmutableList;
 
 public class RemoteDeliveryConfiguration {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(RemoteDeliveryConfiguration.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RemoteDeliveryConfiguration.class);
 
     public static final String DELIVERY_THREADS = "deliveryThreads";
     public static final String USE_PRIORITY = "usePriority";

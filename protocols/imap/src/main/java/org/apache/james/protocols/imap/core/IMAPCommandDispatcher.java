@@ -35,7 +35,7 @@ import org.apache.james.protocols.imap.IMAPSession;
 
 public class IMAPCommandDispatcher extends CommandDispatcher<IMAPSession>{
 
-    private final static Pattern LITERAL_PATTERN = Pattern.compile(".*\\{(\\d+)\\}.*");
+    private static final Pattern LITERAL_PATTERN = Pattern.compile(".*\\{(\\d+)\\}.*");
     
     @Override
     protected Request parseRequest(IMAPSession session, ByteBuffer buffer) throws Exception {

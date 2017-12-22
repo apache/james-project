@@ -50,7 +50,7 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
     private static final Logger LOGGER = LoggerFactory.getLogger(JDBCBayesianAnalyzer.class);
 
     /** Public object representing a lock on database activity. */
-    public final static String DATABASE_LOCK = "database lock";
+    public static final String DATABASE_LOCK = "database lock";
 
     /**
      * The JDBCUtil helper class

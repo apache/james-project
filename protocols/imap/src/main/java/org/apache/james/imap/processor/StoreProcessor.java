@@ -67,7 +67,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
     /**
      * The {@link ImapCommand} which should be used for the response if some CONDSTORE option is used
      */
-    private final static ImapCommand CONDSTORE_COMMAND = ImapCommand.selectedStateCommand("Conditional STORE");
+    private static final ImapCommand CONDSTORE_COMMAND = ImapCommand.selectedStateCommand("Conditional STORE");
     
     public StoreProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {

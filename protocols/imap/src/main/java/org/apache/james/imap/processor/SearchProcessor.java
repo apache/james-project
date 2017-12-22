@@ -72,8 +72,8 @@ import com.google.common.collect.ImmutableList;
 public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchProcessor.class);
 
-    protected final static String SEARCH_MODSEQ = "SEARCH_MODSEQ";
-    private final static List<String> CAPS = ImmutableList.of("WITHIN", "ESEARCH", "SEARCHRES");
+    protected static final String SEARCH_MODSEQ = "SEARCH_MODSEQ";
+    private static final List<String> CAPS = ImmutableList.of("WITHIN", "ESEARCH", "SEARCHRES");
     
     public SearchProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {

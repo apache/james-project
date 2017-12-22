@@ -45,14 +45,14 @@ import com.google.common.collect.ImmutableList;
 
 public class MailboxAdapter implements Mailbox {
 
-    private static abstract class POP3FetchGroup implements FetchGroup {
+    private abstract static class POP3FetchGroup implements FetchGroup {
         @Override
         public Set<PartContentDescriptor> getPartContentDescriptors() {
             return new HashSet<>();
         }
     }
 
-    private final static FetchGroup FULL_GROUP = new POP3FetchGroup() {
+    private static final FetchGroup FULL_GROUP = new POP3FetchGroup() {
 
         @Override
         public int content() {
@@ -61,7 +61,7 @@ public class MailboxAdapter implements Mailbox {
 
     };
 
-    private final static FetchGroup BODY_GROUP = new POP3FetchGroup() {
+    private static final FetchGroup BODY_GROUP = new POP3FetchGroup() {
 
         @Override
         public int content() {
@@ -70,7 +70,7 @@ public class MailboxAdapter implements Mailbox {
 
     };
 
-    private final static FetchGroup HEADERS_GROUP = new POP3FetchGroup() {
+    private static final FetchGroup HEADERS_GROUP = new POP3FetchGroup() {
 
         @Override
         public int content() {
@@ -78,7 +78,7 @@ public class MailboxAdapter implements Mailbox {
         }
     };
 
-    private final static FetchGroup METADATA_GROUP = new POP3FetchGroup() {
+    private static final FetchGroup METADATA_GROUP = new POP3FetchGroup() {
 
         @Override
         public int content() {

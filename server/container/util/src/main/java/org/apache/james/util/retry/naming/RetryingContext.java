@@ -44,9 +44,9 @@ import org.apache.james.util.retry.api.RetrySchedule;
  * @see org.apache.james.util.retry.api.ExceptionRetryingProxy
  * @see javax.naming.Context
  */
-abstract public class RetryingContext implements Context, ExceptionRetryingProxy {
+public abstract class RetryingContext implements Context, ExceptionRetryingProxy {
 
-    static public final Class<?>[] DEFAULT_EXCEPTION_CLASSES = new Class<?>[] {
+    public static final Class<?>[] DEFAULT_EXCEPTION_CLASSES = new Class<?>[] {
             CommunicationException.class,
             ServiceUnavailableException.class,
             NoInitialContextException.class };

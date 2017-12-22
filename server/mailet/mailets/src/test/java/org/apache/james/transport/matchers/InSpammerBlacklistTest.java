@@ -39,8 +39,8 @@ import org.junit.Test;
 public class InSpammerBlacklistTest {
 
     private InSpammerBlacklist matcher;
-    private final static String BLACKLIST = "my.black.list.";
-    private final static StringBuffer LISTED_HOST = new StringBuffer("111.222.111.222");
+    private static final String BLACKLIST = "my.black.list.";
+    private static final StringBuffer LISTED_HOST = new StringBuffer("111.222.111.222");
 
     private DNSService setUpDNSServer() {
         return new MockDNSService() {

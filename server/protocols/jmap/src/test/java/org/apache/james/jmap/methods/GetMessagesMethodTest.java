@@ -81,7 +81,7 @@ import com.google.common.collect.Sets;
 import com.jayway.jsonpath.JsonPath;
 
 public class GetMessagesMethodTest {
-    private final static String FORWARDED = "forwarded";
+    private static final String FORWARDED = "forwarded";
     public static final Flags FLAGS = null;
     public static final boolean NOT_RECENT = false;
     private MessageIdManager messageIdManager;

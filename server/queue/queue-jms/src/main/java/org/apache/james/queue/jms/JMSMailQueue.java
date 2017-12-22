@@ -135,7 +135,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
     protected final Metric enqueuedMailsMetric;
     protected final Metric mailQueueSize;
     protected final MetricFactory metricFactory;
-    public final static String FORCE_DELIVERY = "FORCE_DELIVERY";
+    public static final String FORCE_DELIVERY = "FORCE_DELIVERY";
 
     public JMSMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queueName, MetricFactory metricFactory) {
         try {

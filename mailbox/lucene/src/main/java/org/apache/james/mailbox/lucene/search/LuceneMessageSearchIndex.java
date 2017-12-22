@@ -131,8 +131,8 @@ import com.google.common.collect.ImmutableList;
  */
 public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private static final Logger LOGGER = LoggerFactory.getLogger(LuceneMessageSearchIndex.class);
-    private final static Date MAX_DATE;
-    private final static Date MIN_DATE;
+    private static final Date MAX_DATE;
+    private static final Date MIN_DATE;
     
     static {
         Calendar cal = Calendar.getInstance();
@@ -146,211 +146,211 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     /**
      * Default max query results
      */
-    private final static int DEFAULT_MAX_QUERY_RESULTS = 100000;
+    private static final int DEFAULT_MAX_QUERY_RESULTS = 100000;
     
     /**
      * {@link Field} which will contain the unique index of the {@link Document}
      */
-    private final static String ID_FIELD ="id";
+    private static final String ID_FIELD ="id";
     
     
     /**
      * {@link Field} which will contain uid of the {@link MailboxMessage}
      */
-    private final static String UID_FIELD = "uid";
+    private static final String UID_FIELD = "uid";
     
     /**
      * {@link Field} boolean field that say if the message as an attachment or not
      */
-    private final static String HAS_ATTACHMENT_FIELD = "hasAttachment";
+    private static final String HAS_ATTACHMENT_FIELD = "hasAttachment";
 
     /**
      * {@link Field} which will contain the {@link Flags} of the {@link MailboxMessage}
      */
-    private final static String FLAGS_FIELD = "flags";
+    private static final String FLAGS_FIELD = "flags";
   
     /**
      * {@link Field} which will contain the size of the {@link MailboxMessage}
      */
-    private final static String SIZE_FIELD = "size";
+    private static final String SIZE_FIELD = "size";
 
     /**
      * {@link Field} which will contain the body of the {@link MailboxMessage}
      */
-    private final static String BODY_FIELD = "body";
+    private static final String BODY_FIELD = "body";
     
     
     /**
      * Prefix which will be used for each message header to store it also in a seperate {@link Field}
      */
-    private final static String PREFIX_HEADER_FIELD ="header_";
+    private static final String PREFIX_HEADER_FIELD ="header_";
     
     /**
      * {@link Field} which will contain the whole message header of the {@link MailboxMessage}
      */
-    private final static String HEADERS_FIELD ="headers";
+    private static final String HEADERS_FIELD ="headers";
 
     /**
      * {@link Field} which will contain the mod-sequence of the message
      */
-    private final static String MODSEQ_FIELD = "modSeq";
+    private static final String MODSEQ_FIELD = "modSeq";
 
     /**
      * {@link Field} which will contain the TO-Address of the message
      */
-    private final static String TO_FIELD ="to";
+    private static final String TO_FIELD ="to";
     
-    private final static String FIRST_TO_MAILBOX_NAME_FIELD ="firstToMailboxName";
-    private final static String FIRST_TO_MAILBOX_DISPLAY_FIELD ="firstToMailboxDisplay";
+    private static final String FIRST_TO_MAILBOX_NAME_FIELD ="firstToMailboxName";
+    private static final String FIRST_TO_MAILBOX_DISPLAY_FIELD ="firstToMailboxDisplay";
 
     /**
      * {@link Field} which will contain the CC-Address of the message
      */
-    private final static String CC_FIELD ="cc";
+    private static final String CC_FIELD ="cc";
 
-    private final static String FIRST_CC_MAILBOX_NAME_FIELD ="firstCcMailboxName";
+    private static final String FIRST_CC_MAILBOX_NAME_FIELD ="firstCcMailboxName";
     
 
     /**
      * {@link Field} which will contain the FROM-Address of the message
      */
-    private final static String FROM_FIELD ="from";
+    private static final String FROM_FIELD ="from";
     
-    private final static String FIRST_FROM_MAILBOX_NAME_FIELD ="firstFromMailboxName";
-    private final static String FIRST_FROM_MAILBOX_DISPLAY_FIELD ="firstFromMailboxDisplay";
+    private static final String FIRST_FROM_MAILBOX_NAME_FIELD ="firstFromMailboxName";
+    private static final String FIRST_FROM_MAILBOX_DISPLAY_FIELD ="firstFromMailboxDisplay";
 
     /**
      * {@link Field} which will contain the BCC-Address of the message
      */
-    private final static String BCC_FIELD ="bcc";
+    private static final String BCC_FIELD ="bcc";
     
     
-    private final static String BASE_SUBJECT_FIELD = "baseSubject";
+    private static final String BASE_SUBJECT_FIELD = "baseSubject";
     
     /**
      * {@link Field} which contain the internalDate of the message with YEAR-Resolution
      */
-    private final static String INTERNAL_DATE_FIELD_YEAR_RESOLUTION ="internaldateYearResolution";
+    private static final String INTERNAL_DATE_FIELD_YEAR_RESOLUTION ="internaldateYearResolution";
     
     
     /**
      * {@link Field} which contain the internalDate of the message with MONTH-Resolution
      */
-    private final static String INTERNAL_DATE_FIELD_MONTH_RESOLUTION ="internaldateMonthResolution";
+    private static final String INTERNAL_DATE_FIELD_MONTH_RESOLUTION ="internaldateMonthResolution";
     
     /**
      * {@link Field} which contain the internalDate of the message with DAY-Resolution
      */
-    private final static String INTERNAL_DATE_FIELD_DAY_RESOLUTION ="internaldateDayResolution";
+    private static final String INTERNAL_DATE_FIELD_DAY_RESOLUTION ="internaldateDayResolution";
     
     /**
      * {@link Field} which contain the internalDate of the message with HOUR-Resolution
      */
-    private final static String INTERNAL_DATE_FIELD_HOUR_RESOLUTION ="internaldateHourResolution";
+    private static final String INTERNAL_DATE_FIELD_HOUR_RESOLUTION ="internaldateHourResolution";
     
     /**
      * {@link Field} which contain the internalDate of the message with MINUTE-Resolution
      */
-    private final static String INTERNAL_DATE_FIELD_MINUTE_RESOLUTION ="internaldateMinuteResolution";
+    private static final String INTERNAL_DATE_FIELD_MINUTE_RESOLUTION ="internaldateMinuteResolution";
     
     /**
      * {@link Field} which contain the internalDate of the message with SECOND-Resolution
      */
-    private final static String INTERNAL_DATE_FIELD_SECOND_RESOLUTION ="internaldateSecondResolution";
+    private static final String INTERNAL_DATE_FIELD_SECOND_RESOLUTION ="internaldateSecondResolution";
     
     
     /**
      * {@link Field} which contain the internalDate of the message with MILLISECOND-Resolution
      */
-    private final static String INTERNAL_DATE_FIELD_MILLISECOND_RESOLUTION ="internaldateMillisecondResolution";
+    private static final String INTERNAL_DATE_FIELD_MILLISECOND_RESOLUTION ="internaldateMillisecondResolution";
 
     /**
      * {@link Field} which will contain the id of the {@link Mailbox}
      */
-    private final static String MAILBOX_ID_FIELD ="mailboxid";
+    private static final String MAILBOX_ID_FIELD ="mailboxid";
 
     /**
      * {@link Field} which will contain the user of the {@link MailboxSession}
      */
-    private final static String USERS = "userSession";
+    private static final String USERS = "userSession";
     /**
      * {@link Field} which will contain the id of the {@link MessageId}
      */
-    private final static String MESSAGE_ID_FIELD ="messageid";
+    private static final String MESSAGE_ID_FIELD ="messageid";
 
     /**
      * {@link Field} which contain the Date header of the message with YEAR-Resolution
      */
-    private final static String SENT_DATE_FIELD_YEAR_RESOLUTION ="sentdateYearResolution";
+    private static final String SENT_DATE_FIELD_YEAR_RESOLUTION ="sentdateYearResolution";
     
     
     /**
      * {@link Field} which contain the Date header of the message with MONTH-Resolution
      */
-    private final static String SENT_DATE_FIELD_MONTH_RESOLUTION ="sentdateMonthResolution";
+    private static final String SENT_DATE_FIELD_MONTH_RESOLUTION ="sentdateMonthResolution";
     
     /**
      * {@link Field} which contain the Date header of the message with DAY-Resolution
      */
-    private final static String SENT_DATE_FIELD_DAY_RESOLUTION ="sentdateDayResolution";
+    private static final String SENT_DATE_FIELD_DAY_RESOLUTION ="sentdateDayResolution";
     
     /**
      * {@link Field} which contain the Date header of the message with HOUR-Resolution
      */
-    private final static String SENT_DATE_FIELD_HOUR_RESOLUTION ="sentdateHourResolution";
+    private static final String SENT_DATE_FIELD_HOUR_RESOLUTION ="sentdateHourResolution";
     
     /**
      * {@link Field} which contain the Date header of the message with MINUTE-Resolution
      */
-    private final static String SENT_DATE_FIELD_MINUTE_RESOLUTION ="sentdateMinuteResolution";
+    private static final String SENT_DATE_FIELD_MINUTE_RESOLUTION ="sentdateMinuteResolution";
     
     /**
      * {@link Field} which contain the Date header of the message with SECOND-Resolution
      */
-    private final static String SENT_DATE_FIELD_SECOND_RESOLUTION ="sentdateSecondResolution";
+    private static final String SENT_DATE_FIELD_SECOND_RESOLUTION ="sentdateSecondResolution";
     
     
     /**
      * {@link Field} which contain the Date header of the message with MILLISECOND-Resolution
      */
-    private final static String SENT_DATE_FIELD_MILLISECOND_RESOLUTION ="sentdateMillisecondResolution";
+    private static final String SENT_DATE_FIELD_MILLISECOND_RESOLUTION ="sentdateMillisecondResolution";
 
-    private final static String SENT_DATE_SORT_FIELD_MILLISECOND_RESOLUTION ="sentdateSort";
+    private static final String SENT_DATE_SORT_FIELD_MILLISECOND_RESOLUTION ="sentdateSort";
 
-    private final static String MEDIA_TYPE_TEXT = "text";
-    private final static String MEDIA_TYPE_MESSAGE = "message"; 
-    private final static String DEFAULT_ENCODING = "US-ASCII";
+    private static final String MEDIA_TYPE_TEXT = "text";
+    private static final String MEDIA_TYPE_MESSAGE = "message";
+    private static final String DEFAULT_ENCODING = "US-ASCII";
     
-    private final static SortField UID_SORT = new SortField(UID_FIELD, SortField.LONG);
-    private final static SortField UID_SORT_REVERSE = new SortField(UID_FIELD, SortField.LONG, true);
+    private static final SortField UID_SORT = new SortField(UID_FIELD, SortField.LONG);
+    private static final SortField UID_SORT_REVERSE = new SortField(UID_FIELD, SortField.LONG, true);
 
-    private final static SortField SIZE_SORT = new SortField(SIZE_FIELD, SortField.LONG);
-    private final static SortField SIZE_SORT_REVERSE = new SortField(SIZE_FIELD, SortField.LONG, true);
+    private static final SortField SIZE_SORT = new SortField(SIZE_FIELD, SortField.LONG);
+    private static final SortField SIZE_SORT_REVERSE = new SortField(SIZE_FIELD, SortField.LONG, true);
 
-    private final static SortField FIRST_CC_MAILBOX_SORT = new SortField(FIRST_CC_MAILBOX_NAME_FIELD, SortField.STRING);
-    private final static SortField FIRST_CC_MAILBOX_SORT_REVERSE = new SortField(FIRST_CC_MAILBOX_NAME_FIELD, SortField.STRING, true);
+    private static final SortField FIRST_CC_MAILBOX_SORT = new SortField(FIRST_CC_MAILBOX_NAME_FIELD, SortField.STRING);
+    private static final SortField FIRST_CC_MAILBOX_SORT_REVERSE = new SortField(FIRST_CC_MAILBOX_NAME_FIELD, SortField.STRING, true);
 
-    private final static SortField FIRST_TO_MAILBOX_SORT = new SortField(FIRST_TO_MAILBOX_NAME_FIELD, SortField.STRING);
-    private final static SortField FIRST_TO_MAILBOX_SORT_REVERSE = new SortField(FIRST_TO_MAILBOX_NAME_FIELD, SortField.STRING, true);
+    private static final SortField FIRST_TO_MAILBOX_SORT = new SortField(FIRST_TO_MAILBOX_NAME_FIELD, SortField.STRING);
+    private static final SortField FIRST_TO_MAILBOX_SORT_REVERSE = new SortField(FIRST_TO_MAILBOX_NAME_FIELD, SortField.STRING, true);
 
-    private final static SortField FIRST_FROM_MAILBOX_SORT = new SortField(FIRST_FROM_MAILBOX_NAME_FIELD, SortField.STRING);
-    private final static SortField FIRST_FROM_MAILBOX_SORT_REVERSE = new SortField(FIRST_FROM_MAILBOX_NAME_FIELD, SortField.STRING, true);
+    private static final SortField FIRST_FROM_MAILBOX_SORT = new SortField(FIRST_FROM_MAILBOX_NAME_FIELD, SortField.STRING);
+    private static final SortField FIRST_FROM_MAILBOX_SORT_REVERSE = new SortField(FIRST_FROM_MAILBOX_NAME_FIELD, SortField.STRING, true);
 
     
-    private final static SortField ARRIVAL_MAILBOX_SORT = new SortField(INTERNAL_DATE_FIELD_MILLISECOND_RESOLUTION, SortField.LONG);
-    private final static SortField ARRIVAL_MAILBOX_SORT_REVERSE = new SortField(INTERNAL_DATE_FIELD_MILLISECOND_RESOLUTION, SortField.LONG, true);
+    private static final SortField ARRIVAL_MAILBOX_SORT = new SortField(INTERNAL_DATE_FIELD_MILLISECOND_RESOLUTION, SortField.LONG);
+    private static final SortField ARRIVAL_MAILBOX_SORT_REVERSE = new SortField(INTERNAL_DATE_FIELD_MILLISECOND_RESOLUTION, SortField.LONG, true);
 
-    private final static SortField BASE_SUBJECT_SORT = new SortField(BASE_SUBJECT_FIELD, SortField.STRING);
-    private final static SortField BASE_SUBJECT_SORT_REVERSE = new SortField(BASE_SUBJECT_FIELD, SortField.STRING, true);
+    private static final SortField BASE_SUBJECT_SORT = new SortField(BASE_SUBJECT_FIELD, SortField.STRING);
+    private static final SortField BASE_SUBJECT_SORT_REVERSE = new SortField(BASE_SUBJECT_FIELD, SortField.STRING, true);
     
-    private final static SortField SENT_DATE_SORT = new SortField(SENT_DATE_SORT_FIELD_MILLISECOND_RESOLUTION, SortField.LONG);
-    private final static SortField SENT_DATE_SORT_REVERSE = new SortField(SENT_DATE_SORT_FIELD_MILLISECOND_RESOLUTION, SortField.LONG, true);
+    private static final SortField SENT_DATE_SORT = new SortField(SENT_DATE_SORT_FIELD_MILLISECOND_RESOLUTION, SortField.LONG);
+    private static final SortField SENT_DATE_SORT_REVERSE = new SortField(SENT_DATE_SORT_FIELD_MILLISECOND_RESOLUTION, SortField.LONG, true);
     
-    private final static SortField FIRST_TO_MAILBOX_DISPLAY_SORT = new SortField(FIRST_TO_MAILBOX_DISPLAY_FIELD, SortField.STRING);
-    private final static SortField FIRST_TO_MAILBOX_DISPLAY_SORT_REVERSE = new SortField(FIRST_TO_MAILBOX_DISPLAY_FIELD, SortField.STRING, true);
+    private static final SortField FIRST_TO_MAILBOX_DISPLAY_SORT = new SortField(FIRST_TO_MAILBOX_DISPLAY_FIELD, SortField.STRING);
+    private static final SortField FIRST_TO_MAILBOX_DISPLAY_SORT_REVERSE = new SortField(FIRST_TO_MAILBOX_DISPLAY_FIELD, SortField.STRING, true);
 
-    private final static SortField FIRST_FROM_MAILBOX_DISPLAY_SORT = new SortField(FIRST_FROM_MAILBOX_DISPLAY_FIELD, SortField.STRING);
-    private final static SortField FIRST_FROM_MAILBOX_DISPLAY_SORT_REVERSE = new SortField(FIRST_FROM_MAILBOX_DISPLAY_FIELD, SortField.STRING, true);
+    private static final SortField FIRST_FROM_MAILBOX_DISPLAY_SORT = new SortField(FIRST_FROM_MAILBOX_DISPLAY_FIELD, SortField.STRING);
+    private static final SortField FIRST_FROM_MAILBOX_DISPLAY_SORT_REVERSE = new SortField(FIRST_FROM_MAILBOX_DISPLAY_FIELD, SortField.STRING, true);
     
     private final MailboxId.Factory mailboxIdFactory;
     private final MessageId.Factory messageIdFactory;

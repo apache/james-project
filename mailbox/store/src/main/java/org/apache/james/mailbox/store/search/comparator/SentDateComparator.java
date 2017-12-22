@@ -37,7 +37,7 @@ import com.google.common.annotations.VisibleForTesting;
  */
 public class SentDateComparator extends AbstractHeaderComparator {
 
-    public final static Comparator<MailboxMessage> SENTDATE = new SentDateComparator();
+    public static final Comparator<MailboxMessage> SENTDATE = new SentDateComparator();
     private static final Logger LOGGER = LoggerFactory.getLogger(SentDateComparator.class);
     // Some sent e-mail have this form : Wed,  3 Jun 2015 09:05:46 +0000 (UTC)
     // Java 8 Time library RFC_1123_DATE_TIME corresponds to Wed,  3 Jun 2015 09:05:46 +0000 only

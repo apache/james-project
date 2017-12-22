@@ -26,8 +26,8 @@ import org.junit.Test;
 
 public class MailboxAssertTests {
 
-    private final static long UID_VALIDITY = 42;
-    private final static TestId MAILBOX_ID = TestId.of(24);
+    private static final long UID_VALIDITY = 42;
+    private static final TestId MAILBOX_ID = TestId.of(24);
 
     @Test
     public void isEqualToShouldNotFailWithEqualMailbox() {

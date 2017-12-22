@@ -77,7 +77,7 @@ public class SieveFileRepository implements SieveRepository {
      * @return
      * @throws FileNotFoundException
      */
-    static protected String toString(File file, String encoding) throws FileNotFoundException {
+    protected static String toString(File file, String encoding) throws FileNotFoundException {
         String script = null;
         Scanner scanner = null;
         try {
@@ -92,7 +92,7 @@ public class SieveFileRepository implements SieveRepository {
         return script;
     }
 
-    static protected void toFile(File file, String content) throws StorageException {
+    protected static void toFile(File file, String content) throws StorageException {
         // Create a temporary file
         int bufferSize = content.length() > MAX_BUFF_SIZE ? MAX_BUFF_SIZE : content.length();
         File tmpFile = null;

@@ -35,7 +35,7 @@ import com.google.common.collect.ImmutableList;
 
 public class ClusterBuilder {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClusterBuilder.class);
-    private final static String DEFAULT_CLUSTER_IP = "localhost";
+    private static final String DEFAULT_CLUSTER_IP = "localhost";
     public static final int DEFAULT_CASSANDRA_PORT = 9042;
 
     public static ClusterBuilder builder() {

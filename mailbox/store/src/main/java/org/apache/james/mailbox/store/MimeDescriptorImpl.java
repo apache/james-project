@@ -44,7 +44,7 @@ import org.apache.james.mime4j.stream.RecursionMode;
 
 public class MimeDescriptorImpl implements MimeDescriptor {
 
-    private final static Charset US_ASCII = Charset.forName("US-ASCII");
+    private static final Charset US_ASCII = Charset.forName("US-ASCII");
     private static final MimeConfig MIME_ENTITY_CONFIG = MimeConfig.custom()
         .setMaxContentLen(-1)
         .setMaxHeaderCount(-1)

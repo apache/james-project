@@ -179,7 +179,7 @@ public class DiscardProtocol {
     /**
      * Basic server.
      */
-    private final static class Server implements Runnable, Record {
+    private static final class Server implements Runnable, Record {
 
         private static final int COMPLETION_TIMEOUT = 60000;
 

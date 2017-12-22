@@ -24,7 +24,7 @@ import org.apache.james.imap.api.message.request.ImapRequest;
 /**
  * Abstract base class for {@link ImapRequest} implementations
  */
-abstract public class AbstractImapRequest implements ImapRequest {
+public abstract class AbstractImapRequest implements ImapRequest {
 
     private final String tag;
 

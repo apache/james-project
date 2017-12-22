@@ -40,7 +40,7 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
  */
 public class ResolvableEhloHeloHandler implements RcptHook, HeloHook {
 
-    public final static String BAD_EHLO_HELO = "BAD_EHLO_HELO";
+    public static final String BAD_EHLO_HELO = "BAD_EHLO_HELO";
 
     @Override
     public void init(Configuration config) throws ConfigurationException {

@@ -44,7 +44,7 @@ import org.apache.mailet.base.GenericMatcher;
  * 
  */
 
-abstract public class GenericRegexMatcher extends GenericMatcher {
+public abstract class GenericRegexMatcher extends GenericMatcher {
     protected Object[][] patterns;
 
     public void compile(Object[][] patterns) throws PatternSyntaxException {
@@ -59,7 +59,7 @@ abstract public class GenericRegexMatcher extends GenericMatcher {
     /**
      * @see org.apache.mailet.GenericMatcher#GenericMatcher()
      */
-    abstract public void init() throws MessagingException;
+    public abstract void init() throws MessagingException;
 
     /**
      * @see org.apache.mailet.GenericMatcher#match(Mail)

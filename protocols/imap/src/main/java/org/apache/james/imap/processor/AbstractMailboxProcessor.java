@@ -68,7 +68,7 @@ import org.apache.james.metrics.api.TimeMetric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends AbstractChainedProcessor<M> {
+public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends AbstractChainedProcessor<M> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMailboxProcessor.class);
 
     public static final String IMAP_PREFIX = "IMAP-";

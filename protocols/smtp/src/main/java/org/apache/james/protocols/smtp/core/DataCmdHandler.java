@@ -115,7 +115,7 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
         }
     }
    
-    public final static String MAILENV = "MAILENV";
+    public static final String MAILENV = "MAILENV";
 
     private final MetricFactory metricFactory;
 

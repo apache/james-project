@@ -29,7 +29,7 @@ import org.apache.james.imap.api.message.IdRange;
  */
 public class SearchResUtil {
     
-    private final static String SEARCHRES_SAVED_SET = "SEARCHRES_SAVED_SET";
+    private static final String SEARCHRES_SAVED_SET = "SEARCHRES_SAVED_SET";
     
     /**
      * Return the saved sequence-set which you can refer to with $. This method will

@@ -49,7 +49,7 @@ import org.apache.james.core.MailAddress;
  * information about the environment for the processor.
  * </p>
  */
-abstract public class ProcessorAbstract {
+public abstract class ProcessorAbstract {
     /**
      * The prefix to place in front of any mail attributes used by this
      * Processor.
@@ -463,7 +463,7 @@ abstract public class ProcessorAbstract {
     /**
      * Process the mail elements of the receiver
      */
-    abstract public void process() throws MessagingException;
+    public abstract void process() throws MessagingException;
 
     /**
      * Returns the blacklist.

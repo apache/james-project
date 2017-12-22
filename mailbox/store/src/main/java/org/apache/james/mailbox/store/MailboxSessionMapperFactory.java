@@ -40,11 +40,11 @@ import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
  */
 public abstract class MailboxSessionMapperFactory implements RequestAware, MailboxMapperFactory, MessageMapperFactory, SubscriptionMapperFactory {
 
-    protected final static String MESSAGEMAPPER ="MESSAGEMAPPER";
-    protected final static String MESSAGEIDMAPPER ="MESSAGEIDMAPPER";
-    protected final static String MAILBOXMAPPER ="MAILBOXMAPPER";
-    protected final static String SUBSCRIPTIONMAPPER ="SUBSCRIPTIONMAPPER";
-    protected final static String ANNOTATIONMAPPER = "ANNOTATIONMAPPER";
+    protected static final String MESSAGEMAPPER ="MESSAGEMAPPER";
+    protected static final String MESSAGEIDMAPPER ="MESSAGEIDMAPPER";
+    protected static final String MAILBOXMAPPER ="MAILBOXMAPPER";
+    protected static final String SUBSCRIPTIONMAPPER ="SUBSCRIPTIONMAPPER";
+    protected static final String ANNOTATIONMAPPER = "ANNOTATIONMAPPER";
     
     
     /**

@@ -46,12 +46,12 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
     private static final String TAB = " ";
 
     
-    public final static String USER_PROPERTY = "jamesMailbox:mailboxUser";
-    public final static String NAMESPACE_PROPERTY = "jamesMailbox:mailboxNamespace";
-    public final static String NAME_PROPERTY = "jamesMailbox:mailboxName";
-    public final static String UIDVALIDITY_PROPERTY = "jamesMailbox:mailboxUidValidity";
-    public final static String LASTUID_PROPERTY = "jamesMailbox:mailboxLastUid";
-    public final static String HIGHESTMODSEQ_PROPERTY = "jamesMailbox:mailboxHighestModSeq";
+    public static final String USER_PROPERTY = "jamesMailbox:mailboxUser";
+    public static final String NAMESPACE_PROPERTY = "jamesMailbox:mailboxNamespace";
+    public static final String NAME_PROPERTY = "jamesMailbox:mailboxName";
+    public static final String UIDVALIDITY_PROPERTY = "jamesMailbox:mailboxUidValidity";
+    public static final String LASTUID_PROPERTY = "jamesMailbox:mailboxLastUid";
+    public static final String HIGHESTMODSEQ_PROPERTY = "jamesMailbox:mailboxHighestModSeq";
 
     private String name;
     private long uidValidity;

@@ -44,7 +44,7 @@ import org.junit.Test;
 public class SpamAssassinHandlerTest {
 
     private Mail mockedMail;
-    public final static String SPAMD_HOST = "localhost";
+    public static final String SPAMD_HOST = "localhost";
 
     private SMTPSession setupMockedSMTPSession(Mail mail) {
         mockedMail = mail;

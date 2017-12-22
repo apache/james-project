@@ -43,7 +43,7 @@ import org.slf4j.Logger;
 
 public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
 
-    final static String SSL_HANDLER = "sslHandler";
+    static final String SSL_HANDLER = "sslHandler";
 
     private final Logger logger;
     private final ChannelLocal<Session> attributes;

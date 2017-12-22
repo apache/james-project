@@ -57,7 +57,7 @@ import org.junit.Test;
  */
 public abstract class AbstractJMSMailQueueTest {
 
-    protected final static String QUEUE_NAME = "test";
+    protected static final String QUEUE_NAME = "test";
 
     private JMSMailQueue queue;
 

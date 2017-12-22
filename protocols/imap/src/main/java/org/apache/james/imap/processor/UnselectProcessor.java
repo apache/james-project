@@ -40,7 +40,7 @@ import org.apache.james.util.MDCBuilder;
  */
 public class UnselectProcessor extends AbstractMailboxProcessor<UnselectRequest> implements CapabilityImplementingProcessor {
 
-    private final static List<String> UNSELECT = Collections.unmodifiableList(Arrays.asList("UNSELECT"));
+    private static final List<String> UNSELECT = Collections.unmodifiableList(Arrays.asList("UNSELECT"));
 
     public UnselectProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {

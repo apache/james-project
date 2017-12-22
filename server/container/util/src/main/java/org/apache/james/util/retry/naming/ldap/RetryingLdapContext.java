@@ -39,7 +39,7 @@ import org.apache.james.util.retry.naming.directory.RetryingDirContext;
  * @see org.apache.james.util.retry.api.ExceptionRetryingProxy
  * @see javax.naming.ldap.LdapContext
  */
-abstract public class RetryingLdapContext extends RetryingDirContext implements LdapContext {
+public abstract class RetryingLdapContext extends RetryingDirContext implements LdapContext {
    
     /**
      * Creates a new instance of RetryingLdapContext.

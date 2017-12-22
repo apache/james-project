@@ -233,7 +233,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
      * @return true if any flag changes from current session will be ignored,
      *         false otherwise
      */
-    public synchronized final boolean isSilentFlagChanges() {
+    public final synchronized boolean isSilentFlagChanges() {
         return silentFlagChanges;
     }
 
@@ -244,7 +244,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
      *            true if any flag changes from current session should be
      *            ignored, false otherwise
      */
-    public synchronized final void setSilentFlagChanges(boolean silentFlagChanges) {
+    public final synchronized void setSilentFlagChanges(boolean silentFlagChanges) {
         this.silentFlagChanges = silentFlagChanges;
     }
 
@@ -253,8 +253,8 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
      * 
      * @return true if new messages have been added, false otherwise
      */
-    
-    public synchronized final boolean isSizeChanged() {
+
+    public final synchronized boolean isSizeChanged() {
         return sizeChanged;
     }
 
@@ -264,8 +264,8 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
      * @return true when the mailbox has been deleted by another session, false
      *         otherwise
      */
-    
-    public synchronized final boolean isDeletedByOtherSession() {
+
+    public final synchronized boolean isDeletedByOtherSession() {
         return isDeletedByOtherSession;
     }
 

@@ -29,7 +29,7 @@ import org.apache.james.mailbox.MailboxSessionIdGenerator;
  * generate the next Id to use
  */
 public class RandomMailboxSessionIdGenerator extends AbstractMailboxSessionIdGenerator {
-    private final static SecureRandom RANDOM = new SecureRandom();
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     @Override
     protected long generateNextId() {

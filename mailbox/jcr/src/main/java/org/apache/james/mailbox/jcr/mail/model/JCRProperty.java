@@ -41,10 +41,10 @@ public class JCRProperty implements JCRImapConstants, Persistent, Property {
     private String value;
     private int order;
 
-    public final static String NAMESPACE_PROPERTY = "jamesMailbox:propertyNamespace";
-    public final static String LOCALNAME_PROPERTY =  "jamesMailbox:propertyLocalName";
-    public final static String VALUE_PROPERTY =  "jamesMailbox:propertyValue";
-    public final static String ORDER_PROPERTY =  "jamesMailbox:propertyOrder";
+    public static final String NAMESPACE_PROPERTY = "jamesMailbox:propertyNamespace";
+    public static final String LOCALNAME_PROPERTY =  "jamesMailbox:propertyLocalName";
+    public static final String VALUE_PROPERTY =  "jamesMailbox:propertyValue";
+    public static final String ORDER_PROPERTY =  "jamesMailbox:propertyOrder";
 
     public JCRProperty(Node node) {
         this.node = node;

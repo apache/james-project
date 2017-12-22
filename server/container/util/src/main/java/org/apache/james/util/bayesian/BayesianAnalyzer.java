@@ -94,19 +94,19 @@ public class BayesianAnalyzer {
      * Number of "interesting" tokens to use to compute overall spamminess
      * probability.
      */
-    private final static int MAX_INTERESTING_TOKENS = 15;
+    private static final int MAX_INTERESTING_TOKENS = 15;
 
     /**
      * Minimum probability distance from 0.5 to consider a token "interesting"
      * to use to compute overall spamminess probability.
      */
-    private final static double INTERESTINGNESS_THRESHOLD = 0.46;
+    private static final double INTERESTINGNESS_THRESHOLD = 0.46;
 
     /**
      * Default token probability to use when a token has not been encountered
      * before.
      */
-    private final static double DEFAULT_TOKEN_PROBABILITY = 0.4;
+    private static final double DEFAULT_TOKEN_PROBABILITY = 0.4;
 
     /**
      * Map of ham tokens and their occurrences.

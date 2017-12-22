@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * @since 2.2.0
  */
 @Experimental
-abstract public class AbstractQuotaMatcher extends GenericMatcher {
+public abstract class AbstractQuotaMatcher extends GenericMatcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractQuotaMatcher.class);
 
     /**
@@ -116,8 +116,8 @@ abstract public class AbstractQuotaMatcher extends GenericMatcher {
      *
      * @param address the address holding the quota if applicable
      * @param mail the mail involved if needed
-     */    
-    abstract protected long getQuota(MailAddress address, Mail mail) throws MessagingException;
+     */
+    protected abstract long getQuota(MailAddress address, Mail mail) throws MessagingException;
     
     /**
      * Gets the used amount to check against the quota.
@@ -125,7 +125,7 @@ abstract public class AbstractQuotaMatcher extends GenericMatcher {
      * @param address the address involved
      * @param mail the mail involved if needed
      */
-    abstract protected long getUsed(MailAddress address, Mail mail) throws MessagingException;
+    protected abstract long getUsed(MailAddress address, Mail mail) throws MessagingException;
 
     /**
      * Utility method that parses an amount string.

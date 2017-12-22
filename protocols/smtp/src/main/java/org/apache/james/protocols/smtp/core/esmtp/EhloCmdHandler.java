@@ -48,10 +48,10 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
     /**
      * The name of the command handled by the command handler
      */
-    private final static String COMMAND_NAME = "EHLO";
-    private final static Collection<String> COMMANDS = ImmutableSet.of(COMMAND_NAME);
+    private static final String COMMAND_NAME = "EHLO";
+    private static final Collection<String> COMMANDS = ImmutableSet.of(COMMAND_NAME);
     // see http://issues.apache.org/jira/browse/JAMES-419
-    private final static List<String> ESMTP_FEATURES = ImmutableList.of("PIPELINING", "ENHANCEDSTATUSCODES", "8BITMIME");
+    private static final List<String> ESMTP_FEATURES = ImmutableList.of("PIPELINING", "ENHANCEDSTATUSCODES", "8BITMIME");
     private static final Response DOMAIN_ADDRESS_REQUIRED = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG) + " Domain address required: " + COMMAND_NAME).immutable();
     
     private List<EhloExtension> ehloExtensions;

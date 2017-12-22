@@ -85,7 +85,7 @@ public class FetchMail implements Runnable, Configurable {
     /**
      * Key fields for DynamicAccounts.
      */
-    private final static class DynamicAccountKey {
+    private static final class DynamicAccountKey {
         /**
          * The base user name without prfix or suffix
          */
@@ -164,7 +164,7 @@ public class FetchMail implements Runnable, Configurable {
 
     }
 
-    private final static class ParsedDynamicAccountParameters {
+    private static final class ParsedDynamicAccountParameters {
         private String fieldUserPrefix;
         private String fieldUserSuffix;
 

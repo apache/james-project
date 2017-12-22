@@ -36,10 +36,10 @@ import org.apache.james.util.MDCBuilder;
 import com.google.common.collect.ImmutableList;
 
 public class CompressProcessor extends AbstractChainedProcessor<CompressRequest> implements CapabilityImplementingProcessor {
-    private final static String ALGO = "DEFLATE";
-    private final static List<String> CAPA = ImmutableList.of(ImapConstants.COMPRESS_COMMAND_NAME + "=" + ALGO);
+    private static final String ALGO = "DEFLATE";
+    private static final List<String> CAPA = ImmutableList.of(ImapConstants.COMPRESS_COMMAND_NAME + "=" + ALGO);
     private final StatusResponseFactory factory;
-    private final static String COMPRESSED = "COMPRESSED";
+    private static final String COMPRESSED = "COMPRESSED";
 
     public CompressProcessor(ImapProcessor next, StatusResponseFactory factory) {
         super(CompressRequest.class, next);

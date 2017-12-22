@@ -51,10 +51,10 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
     private final ImapDecoder decoder;
     private final int inMemorySizeLimit;
     private final int literalSizeLimit;
-    private final static String NEEDED_DATA = "NEEDED_DATA";
-    private final static String STORED_DATA = "STORED_DATA";
-    private final static String WRITTEN_DATA = "WRITTEN_DATA";
-    private final static String OUTPUT_STREAM = "OUTPUT_STREAM";
+    private static final String NEEDED_DATA = "NEEDED_DATA";
+    private static final String STORED_DATA = "STORED_DATA";
+    private static final String WRITTEN_DATA = "WRITTEN_DATA";
+    private static final String OUTPUT_STREAM = "OUTPUT_STREAM";
 
     public ImapRequestFrameDecoder(ImapDecoder decoder, int inMemorySizeLimit, int literalSizeLimit) {
         this.decoder = decoder;

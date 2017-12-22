@@ -33,7 +33,7 @@ import com.datastax.driver.core.Session;
 @Singleton
 public class SessionWithInitializedTablesFactory implements Provider<Session> {
     
-    private final static String DEFAULT_KEYSPACE_NAME = "apache_james";
+    private static final String DEFAULT_KEYSPACE_NAME = "apache_james";
 
     private final CassandraModule module;
     private final Session session;

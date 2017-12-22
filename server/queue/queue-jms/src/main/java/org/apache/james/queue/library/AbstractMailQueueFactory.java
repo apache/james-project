@@ -84,7 +84,7 @@ public abstract class AbstractMailQueueFactory implements MailQueueFactory {
     }
 
     @Override
-    public synchronized final MailQueue getQueue(String name) {
+    public final synchronized MailQueue getQueue(String name) {
         
         MailQueue queue = queues.get(name);
 

@@ -30,7 +30,7 @@ import java.io.InputStream;
  * 
  *
  */
-final public class CountingInputStream extends InputStream {
+public final class CountingInputStream extends InputStream {
 
     private final InputStream in;
 

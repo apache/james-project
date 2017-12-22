@@ -99,7 +99,7 @@ public abstract class AbstractAddHeadersFilter extends SeparatingDataLineFilter{
      */
     protected abstract Collection<Header> headers(SMTPSession session);
     
-    public final static class Header {
+    public static final class Header {
         public static final String MULTI_LINE_PREFIX = "          ";
         
         public final String name;

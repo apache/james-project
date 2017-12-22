@@ -60,7 +60,7 @@ public abstract class AbstractDataContentHandler implements DataContentHandler
      * 
      * @return A new ActivationDataFlavor
      */
-    abstract protected ActivationDataFlavor computeDataFlavor();
+    protected abstract ActivationDataFlavor computeDataFlavor();
 
     protected void setDataFlavor(ActivationDataFlavor aDataFlavor)
     {
@@ -91,7 +91,7 @@ public abstract class AbstractDataContentHandler implements DataContentHandler
      * @return new Content built from the DataSource
      * @throws MessagingException
      */
-    abstract protected Object computeContent(DataSource aDataSource)
+    protected abstract Object computeContent(DataSource aDataSource)
             throws MessagingException;
 
     /**

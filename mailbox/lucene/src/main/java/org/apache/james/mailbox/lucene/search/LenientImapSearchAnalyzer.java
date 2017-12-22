@@ -34,7 +34,7 @@ import org.apache.lucene.util.Version;
  */
 public final class LenientImapSearchAnalyzer extends Analyzer{
 
-    public final static int DEFAULT_MAX_TOKEN_LENGTH = 4;
+    public static final int DEFAULT_MAX_TOKEN_LENGTH = 4;
     
     private final int maxTokenLength;
     

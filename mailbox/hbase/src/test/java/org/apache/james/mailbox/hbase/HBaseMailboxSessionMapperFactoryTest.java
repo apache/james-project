@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory;
  */
 public class HBaseMailboxSessionMapperFactoryTest {
 
-    private final static Logger LOG = LoggerFactory.getLogger(HBaseMailboxSessionMapperFactoryTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HBaseMailboxSessionMapperFactoryTest.class);
     private static final HBaseClusterSingleton CLUSTER = HBaseClusterSingleton.build();
     private static Configuration conf;
 

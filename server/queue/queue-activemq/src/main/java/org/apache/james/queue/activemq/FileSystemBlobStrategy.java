@@ -48,7 +48,7 @@ public class FileSystemBlobStrategy implements BlobUploadStrategy, BlobDownloadS
     private final BlobTransferPolicy policy;
     private final int splitCount;
     private final Object lock = new Object();
-    private final static SecureRandom RANDOM = new SecureRandom();
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     public FileSystemBlobStrategy(BlobTransferPolicy policy, FileSystem fileSystem, int splitCount) {
         this.fileSystem = fileSystem;

@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Abstract class <code>LoggingRetryHandler</code> implements logging of failures 
  */
-abstract public class LoggingRetryHandler extends NamingExceptionRetryHandler {
+public abstract class LoggingRetryHandler extends NamingExceptionRetryHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggingRetryHandler.class);
 
     /**

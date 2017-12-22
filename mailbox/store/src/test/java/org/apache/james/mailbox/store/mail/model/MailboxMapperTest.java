@@ -42,9 +42,9 @@ import org.junit.Test;
  */
 public abstract class MailboxMapperTest {
     
-    private final static char DELIMITER = '.';
-    private final static char WILDCARD = '%';
-    private final static long UID_VALIDITY = 42;
+    private static final char DELIMITER = '.';
+    private static final char WILDCARD = '%';
+    private static final long UID_VALIDITY = 42;
 
     private MailboxPath benwaInboxPath;
     private Mailbox benwaInboxMailbox;

@@ -33,24 +33,24 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 
 public class Keyword {
-    private final static int FLAG_NAME_MIN_LENGTH = 1;
-    private final static int FLAG_NAME_MAX_LENGTH = 255;
-    private final static CharMatcher FLAG_NAME_PATTERN = 
+    private static final int FLAG_NAME_MIN_LENGTH = 1;
+    private static final int FLAG_NAME_MAX_LENGTH = 255;
+    private static final CharMatcher FLAG_NAME_PATTERN =
             CharMatcher.JAVA_LETTER_OR_DIGIT
                 .or(CharMatcher.is('$'))
                 .or(CharMatcher.is('_'));
 
-    public final static Keyword DRAFT = new Keyword("$Draft");
-    public final static Keyword SEEN = new Keyword("$Seen");
-    public final static Keyword FLAGGED = new Keyword("$Flagged");
-    public final static Keyword ANSWERED = new Keyword("$Answered");
-    public final static Keyword DELETED = new Keyword("$Deleted");
-    public final static Keyword RECENT = new Keyword("$Recent");
-    public final static Keyword FORWARDED = new Keyword("$Forwarded");
-    public final static Boolean FLAG_VALUE = true;
+    public static final Keyword DRAFT = new Keyword("$Draft");
+    public static final Keyword SEEN = new Keyword("$Seen");
+    public static final Keyword FLAGGED = new Keyword("$Flagged");
+    public static final Keyword ANSWERED = new Keyword("$Answered");
+    public static final Keyword DELETED = new Keyword("$Deleted");
+    public static final Keyword RECENT = new Keyword("$Recent");
+    public static final Keyword FORWARDED = new Keyword("$Forwarded");
+    public static final Boolean FLAG_VALUE = true;
 
-    private final static ImmutableList<Keyword> NON_EXPOSED_IMAP_KEYWORDS = ImmutableList.of(Keyword.RECENT, Keyword.DELETED);
-    private final static ImmutableBiMap<Flags.Flag, Keyword> IMAP_SYSTEM_FLAGS = ImmutableBiMap.<Flags.Flag, Keyword>builder()
+    private static final ImmutableList<Keyword> NON_EXPOSED_IMAP_KEYWORDS = ImmutableList.of(Keyword.RECENT, Keyword.DELETED);
+    private static final ImmutableBiMap<Flags.Flag, Keyword> IMAP_SYSTEM_FLAGS = ImmutableBiMap.<Flags.Flag, Keyword>builder()
         .put(Flags.Flag.DRAFT, DRAFT)
         .put(Flags.Flag.SEEN, SEEN)
         .put(Flags.Flag.FLAGGED, FLAGGED)

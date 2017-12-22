@@ -41,8 +41,8 @@ public class JCRSubscription implements Subscription, Persistent, JCRImapConstan
 
     private static final String TOSTRING_SEPARATOR = " ";
 
-    public final static String USERNAME_PROPERTY = "jamesMailbox:user";
-    public final static String MAILBOXES_PROPERTY =  "jamesMailbox:subscriptionMailboxes";
+    public static final String USERNAME_PROPERTY = "jamesMailbox:user";
+    public static final String MAILBOXES_PROPERTY =  "jamesMailbox:subscriptionMailboxes";
     
     private Node node;
     private final String mailbox;

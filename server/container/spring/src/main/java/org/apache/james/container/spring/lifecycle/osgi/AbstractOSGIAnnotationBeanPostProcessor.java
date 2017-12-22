@@ -55,7 +55,7 @@ import org.springframework.util.ReflectionUtils;
  */
 public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotation> extends InstantiationAwareBeanPostProcessorAdapter implements BundleContextAware, BeanClassLoaderAware, BeanFactoryAware{
 
-    public final static long DEFAULT_TIMEOUT = 60 * 1000* 5;
+    public static final long DEFAULT_TIMEOUT = 60 * 1000* 5;
     private BundleContext bundleContext;
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractOSGIAnnotationBeanPostProcessor.class);

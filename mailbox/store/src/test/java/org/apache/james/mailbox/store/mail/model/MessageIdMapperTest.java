@@ -59,9 +59,9 @@ public abstract class MessageIdMapperTest {
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
-    private final static char DELIMITER = '.';
+    private static final char DELIMITER = '.';
     private static final int BODY_START = 16;
-    private final static long UID_VALIDITY = 42;
+    private static final long UID_VALIDITY = 42;
 
     private MessageMapper messageMapper;
     private MailboxMapper mailboxMapper;

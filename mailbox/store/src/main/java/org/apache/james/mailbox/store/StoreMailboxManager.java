@@ -112,7 +112,7 @@ public class StoreMailboxManager implements MailboxManager {
 
     private final StoreRightManager storeRightManager;
 
-    private final static SecureRandom RANDOM = new SecureRandom();
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     private MessageBatcher copyBatcher;
 

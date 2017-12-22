@@ -55,9 +55,9 @@ public class URIRBLHandler implements JamesMessageHook, ProtocolHandler {
     /** This log is the fall back shared by all instances */
     private static final Logger LOGGER = LoggerFactory.getLogger(URIRBLHandler.class);
 
-    private final static String LISTED_DOMAIN = "LISTED_DOMAIN";
+    private static final String LISTED_DOMAIN = "LISTED_DOMAIN";
 
-    private final static String URBLSERVER = "URBL_SERVER";
+    private static final String URBLSERVER = "URBL_SERVER";
 
     private DNSService dnsService;
 

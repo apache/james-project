@@ -345,7 +345,7 @@ public interface StatusResponse extends ImapResponseMessage {
             return new ResponseCode(buffer.toString());
         }
 
-        public final static int NO_NUMBER = -1;
+        public static final int NO_NUMBER = -1;
         
         private final String code;
 

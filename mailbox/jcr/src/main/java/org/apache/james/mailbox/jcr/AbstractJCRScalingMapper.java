@@ -34,13 +34,13 @@ import org.apache.james.mailbox.store.transaction.TransactionalMapper;
  *
  */
 public abstract class AbstractJCRScalingMapper extends TransactionalMapper implements JCRImapConstants {
-    public final static String MAILBOXES_PATH =  "mailboxes";
+    public static final String MAILBOXES_PATH =  "mailboxes";
 
     private final MailboxSessionJCRRepository repository;
     private final int scaling;
 
     private final MailboxSession mSession;
-    private final static char PAD ='_';
+    private static final char PAD ='_';
     
     public AbstractJCRScalingMapper(MailboxSessionJCRRepository repository, MailboxSession mSession, int scaling) {
         this.scaling = scaling;

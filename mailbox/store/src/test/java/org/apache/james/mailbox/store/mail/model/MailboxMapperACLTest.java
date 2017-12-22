@@ -38,7 +38,7 @@ import org.junit.rules.ExpectedException;
 import com.google.common.collect.ImmutableMap;
 
 public abstract class MailboxMapperACLTest {
-    private final static long UID_VALIDITY = 42;
+    private static final long UID_VALIDITY = 42;
     public static final boolean POSITIVE = true;
     public static final boolean NEGATIVE = !POSITIVE;
 
