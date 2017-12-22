@@ -18,14 +18,19 @@
  ****************************************************************/
 package org.apache.james.utils;
 
+import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
@@ -33,6 +38,7 @@ import com.google.common.base.Preconditions;
  * This class can be used to run a mocked SPAMD daemon
  */
 public class MockSpamd implements Runnable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MockSpamd.class);
 
     /**
      * Mailcontent which is 100% spam
@@ -40,18 +46,10 @@ public class MockSpamd implements Runnable {
     public final static String GTUBE = "-SPAM-";
     public final static String NOT_SPAM = "Spam: False ; 3 / 5";
     public final static String SPAM = "Spam: True ; 1000 / 5";
-    private BufferedReader in;
-    private OutputStream out;
-    private Socket spamd;
+
     private ServerSocket socket;
     private boolean isBinded;
 
-
-    /**
-     * Init the mocked SPAMD daemon
-     *
-     * @throws IOException
-     */
     public MockSpamd() {
         isBinded = false;
     }
@@ -66,44 +64,39 @@ public class MockSpamd implements Runnable {
         isBinded = true;
     }
 
-    /**
-     * @see java.lang.Runnable#run()
-     */
     @Override
     public void run() {
+        try (Socket spamd = socket.accept();
+             BufferedReader in = new BufferedReader(new InputStreamReader(spamd.getInputStream()));
+             OutputStream out = spamd.getOutputStream()) {
 
-        try {
-            boolean spam = false;
-
-            // Accept connections
-            spamd = socket.accept();
-
-            in = new BufferedReader(new InputStreamReader(spamd.getInputStream()));
-            out = spamd.getOutputStream();
-
-            String line;
-
-            // Parse the message
-            while ((line = in.readLine()) != null) {
-                if (line.contains(GTUBE)) {
-                    spam = true;
-                }
-            }
-            if (spam) {
-                out.write(SPAM.getBytes());
-                out.flush();
-            } else {
-                out.write(NOT_SPAM.getBytes());
-                out.flush();
-            }
+            handleRequest(in, out);
         } catch (IOException e) {
-            // Should not happen
-            e.printStackTrace();
+            LOGGER.error("Exception while handling answer", e);
         } finally {
-            IOUtils.closeQuietly(in);
-            IOUtils.closeQuietly(out);
-            IOUtils.closeQuietly(spamd);
             IOUtils.closeQuietly(socket);
         }
+    }
+
+    private void handleRequest(BufferedReader in, OutputStream out) throws IOException {
+        if (isSpam(in)) {
+            out.write(SPAM.getBytes());
+        } else {
+            out.write(NOT_SPAM.getBytes());
+        }
+        out.flush();
+    }
+
+    private boolean isSpam(BufferedReader in) throws IOException {
+        try {
+            return in.lines()
+                .anyMatch(line -> line.contains(GTUBE));
+        } finally {
+            consume(in);
+        }
+    }
+
+    private void consume(BufferedReader in) throws IOException {
+        IOUtils.copy(in, NULL_OUTPUT_STREAM, StandardCharsets.UTF_8);
     }
 }
