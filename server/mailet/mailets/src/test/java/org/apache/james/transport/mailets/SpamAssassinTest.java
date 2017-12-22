@@ -24,10 +24,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import javax.mail.MessagingException;
 
-import org.apache.james.smtpserver.mock.util.MockSpamd;
-import org.apache.james.smtpserver.mock.util.MockSpamdTestRule;
 import org.apache.james.util.Port;
 import org.apache.james.util.scanner.SpamAssassinInvoker;
+import org.apache.james.utils.MockSpamd;
+import org.apache.james.utils.MockSpamdTestRule;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;

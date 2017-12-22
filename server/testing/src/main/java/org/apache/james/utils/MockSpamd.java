@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.smtpserver.mock.util;
+package org.apache.james.utils;
 
 import java.io.BufferedReader;
 import java.io.IOException;

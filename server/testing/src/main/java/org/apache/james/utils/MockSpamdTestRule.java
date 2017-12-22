@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.smtpserver.mock.util;
+package org.apache.james.utils;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
