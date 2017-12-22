@@ -160,7 +160,7 @@ public abstract class AbstractUsersRepositoryTest {
     }
     
     @Test
-    public void getUserByNameShouldReturnAUserWhenContainedInRepository () throws UsersRepositoryException {
+    public void getUserByNameShouldReturnAUserWhenContainedInRepository() throws UsersRepositoryException {
         //Given
         usersRepository.addUser(user1, "password");
         //When

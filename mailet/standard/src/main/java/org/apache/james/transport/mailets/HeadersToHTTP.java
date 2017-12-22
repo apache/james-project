@@ -168,21 +168,21 @@ public class HeadersToHTTP extends GenericMailet {
 
         if (message!=null) {
             if (message.getSender()!=null) {
-                pairs.add( new BasicNameValuePair( "from", message.getSender().toString() ) );
+                pairs.add(new BasicNameValuePair("from", message.getSender().toString()));
             }
             if (message.getReplyTo()!=null) {
-                pairs.add( new BasicNameValuePair( "reply_to", Arrays.toString(message.getReplyTo())) );
+                pairs.add(new BasicNameValuePair("reply_to", Arrays.toString(message.getReplyTo())));
             }
             if (message.getMessageID()!=null) {
-                pairs.add( new BasicNameValuePair( "message_id", message.getMessageID() ) );
+                pairs.add(new BasicNameValuePair("message_id", message.getMessageID()));
             }
             if (message.getSubject()!=null) {
-                pairs.add( new BasicNameValuePair( "subject", message.getSubject() ) );
+                pairs.add(new BasicNameValuePair("subject", message.getSubject()));
             }
-            pairs.add( new BasicNameValuePair( "size", Integer.toString(message.getSize()) ) );
+            pairs.add(new BasicNameValuePair("size", Integer.toString(message.getSize())));
         }
 
-        pairs.add( new BasicNameValuePair( parameterKey, parameterValue) );
+        pairs.add(new BasicNameValuePair(parameterKey, parameterValue));
 
         return pairs;
     }

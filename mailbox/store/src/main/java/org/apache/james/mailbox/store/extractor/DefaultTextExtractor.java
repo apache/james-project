@@ -36,7 +36,7 @@ public class DefaultTextExtractor implements TextExtractor {
 
     @Override
     public ParsedContent extractContent(InputStream inputStream, String contentType) throws Exception {
-        if(contentType != null && contentType.startsWith("text/") ) {
+        if (contentType != null && contentType.startsWith("text/")) {
             return new ParsedContent(IOUtils.toString(inputStream, StandardCharsets.UTF_8), new HashMap<>());
         } else {
             return new ParsedContent(null, new HashMap<>());

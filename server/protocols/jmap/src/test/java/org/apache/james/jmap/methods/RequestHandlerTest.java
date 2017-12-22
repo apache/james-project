@@ -137,7 +137,7 @@ public class RequestHandlerTest {
     public void processShouldThrowWhenUnknownMethod() throws Exception {
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("unknwonMethod"),
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{\"id\": \"id\"}"),
-                new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
+                new ObjectNode(new JsonNodeFactory(false)).textNode("#1")};
 
         RequestHandler requestHandler = new RequestHandler(ImmutableSet.of(), jmapRequestParser, jmapResponseWriter);
         requestHandler.handle(AuthenticatedProtocolRequest.decorate(ProtocolRequest.deserialize(nodes), mockHttpServletRequest));
@@ -206,7 +206,7 @@ public class RequestHandlerTest {
         
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("getTestMethod"),
                 parameters,
-                new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
+                new ObjectNode(new JsonNodeFactory(false)).textNode("#1")};
 
         List<ProtocolResponse> responses = testee.handle(AuthenticatedProtocolRequest.decorate(ProtocolRequest.deserialize(nodes), mockHttpServletRequest))
                 .collect(Collectors.toList());

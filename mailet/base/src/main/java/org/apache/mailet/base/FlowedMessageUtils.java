@@ -86,7 +86,7 @@ public final class FlowedMessageUtils {
                 else if (line.charAt(0) == RFC2646_QUOTE) {
                     // Quote
                     actualQuoteDepth = 1;
-                    while (actualQuoteDepth < line.length() && line.charAt(actualQuoteDepth) == RFC2646_QUOTE) actualQuoteDepth ++;
+                    while (actualQuoteDepth < line.length() && line.charAt(actualQuoteDepth) == RFC2646_QUOTE) actualQuoteDepth++;
                     // if quote-depth changes wrt the previous line then this is not flowed
                     if (resultLineQuoteDepth != actualQuoteDepth) resultLineFlowed = false;
                     line = line.substring(actualQuoteDepth);
@@ -185,12 +185,12 @@ public final class FlowedMessageUtils {
     public static String flow(String text, boolean delSp, int width) {
         StringBuilder result = new StringBuilder();
         String[] lines = text.split("\r\n|\n", -1);
-        for (int i = 0; i < lines.length; i ++) {
+        for (int i = 0; i < lines.length; i++) {
             String line = lines[i];
             boolean notempty = line.length() > 0;
             
             int quoteDepth = 0;
-            while (quoteDepth < line.length() && line.charAt(quoteDepth) == RFC2646_QUOTE) quoteDepth ++;
+            while (quoteDepth < line.length() && line.charAt(quoteDepth) == RFC2646_QUOTE) quoteDepth++;
             if (quoteDepth > 0) {
                 if (quoteDepth + 1 < line.length() && line.charAt(quoteDepth) == RFC2646_SPACE) line = line.substring(quoteDepth + 1);
                 else line = line.substring(quoteDepth);
@@ -212,11 +212,11 @@ public final class FlowedMessageUtils {
                 int j = width - 1;
                 if (j >= line.length()) j = line.length() - 1;
                 else {
-                    while (j >= extra && ((delSp && isAlphaChar(text, j)) || (!delSp && line.charAt(j) != RFC2646_SPACE))) j --;
+                    while (j >= extra && ((delSp && isAlphaChar(text, j)) || (!delSp && line.charAt(j) != RFC2646_SPACE))) j--;
                     if (j < extra) {
                         // Not able to cut a word: skip to word end even if greater than the max width
                         j = width - 1;
-                        while (j < line.length() - 1 && ((delSp && isAlphaChar(text, j)) || (!delSp && line.charAt(j) != RFC2646_SPACE))) j ++;
+                        while (j < line.length() - 1 && ((delSp && isAlphaChar(text, j)) || (!delSp && line.charAt(j) != RFC2646_SPACE))) j++;
                     }
                 }
                 

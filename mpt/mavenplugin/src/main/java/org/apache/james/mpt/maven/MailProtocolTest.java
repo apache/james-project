@@ -144,7 +144,7 @@ public class MailProtocolTest implements Monitor{
            throw new MojoFailureException("'port' configuration must be set.");
 		}
 		
-		if (scriptFile.exists() == false ) {
+		if (scriptFile.exists() == false) {
            throw new MojoFailureException("'scriptFile' not exists");
 		}
 

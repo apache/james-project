@@ -72,7 +72,7 @@ public abstract class AbstractCombinationManagerTest {
 
     private CombinationManagerTestSystem testingData;
 
-    public abstract CombinationManagerTestSystem createTestingData() throws Exception ;
+    public abstract CombinationManagerTestSystem createTestingData() throws Exception;
 
     public void setUp() throws Exception {
         session = new MockMailboxSession(MailboxFixture.ALICE);

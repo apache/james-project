@@ -186,7 +186,7 @@ public class LimitingFileInputStream extends FileInputStream{
             if (newPosition <= limit) {
                 channel.position(newPosition);
             }
-            return LimitingFileChannel.this ;
+            return LimitingFileChannel.this;
         }
 
         @Override

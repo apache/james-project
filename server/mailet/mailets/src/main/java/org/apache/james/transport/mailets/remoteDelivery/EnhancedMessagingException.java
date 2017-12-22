@@ -93,7 +93,7 @@ public class EnhancedMessagingException {
         if (messagingException.getClass().getName().endsWith(".SMTPSendFailedException")
             || messagingException.getClass().getName().endsWith(".SMTPAddressSucceededException")) {
             try {
-                return Optional.of ((Integer) invokeGetter(messagingException, "getReturnCode"));
+                return Optional.of((Integer)invokeGetter(messagingException, "getReturnCode"));
             } catch (ClassCastException | IllegalArgumentException | IllegalStateException e) {
                 logger.error("unexpected exception", e);
             }

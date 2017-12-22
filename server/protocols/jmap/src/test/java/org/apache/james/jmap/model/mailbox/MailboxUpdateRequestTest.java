@@ -32,7 +32,7 @@ public class MailboxUpdateRequestTest {
     @Test
     public void getParentIdShouldReturnEmptyWhenNotGiven() throws Exception {
         //Given
-        MailboxUpdateRequest testee = MailboxUpdateRequest.builder().name("my box").build() ;
+        MailboxUpdateRequest testee = MailboxUpdateRequest.builder().name("my box").build();
         //When
         Optional<MailboxId> actual = testee.getParentId();
         //Then
@@ -42,7 +42,7 @@ public class MailboxUpdateRequestTest {
     @Test
     public void getParentIdShouldReturnNullWhenNullParentIdGiven() throws Exception {
         //Given
-        MailboxUpdateRequest testee = MailboxUpdateRequest.builder().name("my box").parentId(null).build() ;
+        MailboxUpdateRequest testee = MailboxUpdateRequest.builder().name("my box").parentId(null).build();
         //When
         Optional<MailboxId> actual = testee.getParentId();
         //Then
@@ -53,7 +53,7 @@ public class MailboxUpdateRequestTest {
     public void getParentIdShouldReturnParentIdWhenParentIdGiven() throws Exception {
         //Given
         InMemoryId expected = InMemoryId.of(123);
-        MailboxUpdateRequest testee = MailboxUpdateRequest.builder().parentId(expected).name("my box").build() ;
+        MailboxUpdateRequest testee = MailboxUpdateRequest.builder().parentId(expected).name("my box").build();
         //When
         Optional<MailboxId> actual = testee.getParentId();
         //Then

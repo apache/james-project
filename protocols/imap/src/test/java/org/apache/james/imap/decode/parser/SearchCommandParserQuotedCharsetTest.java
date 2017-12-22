@@ -178,7 +178,7 @@ public class SearchCommandParserQuotedCharsetTest {
     @Test
     public void testBadCharset() throws Exception {      
         mockery.checking(new Expectations() {{
-                oneOf (mockStatusResponseFactory).taggedNo(
+                oneOf(mockStatusResponseFactory).taggedNo(
                         with(equal(TAG)), 
                         with(same(command)), 
                         with(equal(HumanReadableText.BAD_CHARSET)),

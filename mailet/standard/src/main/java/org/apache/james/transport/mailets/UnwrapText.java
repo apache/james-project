@@ -119,7 +119,7 @@ public class UnwrapText extends GenericMailet {
         int prevWrapped = 0;
         for (int i = 0; i < lines.length; i++) {
             if (prevWrapped != 0) {
-                if (prevWrapped > 0 ) {
+                if (prevWrapped > 0) {
                     if (result.charAt(result.length() - 1) != ' ') result.append(" ");
                 }
                 else result.append("\r\n");

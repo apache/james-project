@@ -265,7 +265,7 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
     private void setMessageCount(Connection conn, String sqlStatement, int count) throws java.sql.SQLException {
         // set the ham/spam message counts.
         try (PreparedStatement init = conn.prepareStatement(sqlQueries.getSqlString("initializeMessageCounts", true));
-                PreparedStatement update = conn.prepareStatement(sqlStatement)) {
+            PreparedStatement update = conn.prepareStatement(sqlStatement)) {
             
             update.setInt(1, count);
             if (update.executeUpdate() == 0) {

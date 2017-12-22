@@ -156,7 +156,7 @@ public class CreationMessage {
             return this;
         }
 
-        public Builder subject (String subject) {
+        public Builder subject(String subject) {
             this.subject = Strings.nullToEmpty(subject);
             return this;
         }
@@ -443,7 +443,7 @@ public class CreationMessage {
             if (o instanceof DraftEmailer) {
                 DraftEmailer otherEMailer = (DraftEmailer) o;
                 return Objects.equals(name, otherEMailer.name)
-                        && Objects.equals(email.orElse("<unset>"), otherEMailer.email.orElse("<unset>") );
+                        && Objects.equals(email.orElse("<unset>"), otherEMailer.email.orElse("<unset>"));
             }
             return false;
         }

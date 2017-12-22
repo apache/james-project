@@ -91,7 +91,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
         try {
             String name = Text.escapeIllegalXpathSearchChars(path.getName());
             String user = path.getUser();
-            if (user == null ) {
+            if (user == null) {
                 user = "";
             }
             user = Text.escapeIllegalXpathSearchChars(user);
@@ -135,7 +135,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
         try {
             String name = Text.escapeIllegalXpathSearchChars(path.getName());
             String user = path.getUser();
-            if (user == null ) {
+            if (user == null) {
                 user = "";
             }
             user = Text.escapeIllegalXpathSearchChars(user);
@@ -213,7 +213,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
         try {
             String name = Text.escapeIllegalXpathSearchChars(mailbox.getName());
             String user = mailbox.getUser();
-            if (user == null ) {
+            if (user == null) {
                 user = "";
             }
             user = Text.escapeIllegalXpathSearchChars(user);

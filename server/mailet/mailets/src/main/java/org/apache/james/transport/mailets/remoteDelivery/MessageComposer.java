@@ -102,7 +102,7 @@ public class MessageComposer {
         StringWriter sout = new StringWriter();
         PrintWriter out = new PrintWriter(sout, true);
         out.print(permanentAsString(executionResult.isPermanent()) + " exception delivering mail (" + mail.getName()
-            + ")" + retrieveExceptionLog(executionResult.getException().orElse(null)) + ": " );
+            + ")" + retrieveExceptionLog(executionResult.getException().orElse(null)) + ": ");
         if (configuration.isDebug()) {
             if (executionResult.getException().isPresent())
                 executionResult.getException().get().printStackTrace(out);

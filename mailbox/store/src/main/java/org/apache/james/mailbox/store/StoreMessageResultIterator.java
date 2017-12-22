@@ -96,7 +96,7 @@ public class StoreMessageResultIterator implements MessageResultIterator {
         if (group.getPartContentDescriptors().size() > 0) {
             full = true;
         }
-        if ((content & FetchGroup.BODY_CONTENT ) > 0 ) {
+        if ((content & FetchGroup.BODY_CONTENT) > 0) {
             body = true;
             content -= FetchGroup.BODY_CONTENT;
         }

@@ -124,10 +124,10 @@ public class FetchResponseEncoderEnvelopeTest {
             final String mailbox, final String host) {
         final Address address = context.mock(Address.class, name + host);
         context.checking(new Expectations() {{
-                    oneOf (address).getPersonalName();will(returnValue(name));
-                    oneOf (address).getAtDomainList();will(returnValue(domainList));
-                    oneOf (address).getMailboxName();will(returnValue(mailbox));
-                    oneOf (address).getHostName();will(returnValue(host));
+                    oneOf(address).getPersonalName();will(returnValue(name));
+                    oneOf(address).getAtDomainList();will(returnValue(domainList));
+                    oneOf(address).getMailboxName();will(returnValue(mailbox));
+                    oneOf(address).getHostName();will(returnValue(host));
                 }
             }
         );

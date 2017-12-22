@@ -163,7 +163,7 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
                         method.invoke(bean, getServiceImporter(s, method, beanName).getObject());
                     }
                     catch (Exception e) {
-                        throw new IllegalArgumentException("Error processing annotation " +s , e);
+                        throw new IllegalArgumentException("Error processing annotation " + s, e);
                     }
                 }
             });
@@ -255,7 +255,7 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
         
         // check if the we have a name for the requested bean. If so we set the filter for it
         if (filter != null) {
-            ImporterCallAdapter.setFilter(pfb, filter );
+            ImporterCallAdapter.setFilter(pfb, filter);
         }
         ImporterCallAdapter.setInterfaces(pfb, writeMethod.getParameterTypes());
         

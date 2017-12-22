@@ -159,7 +159,7 @@ public class SerialiseToHTTP extends GenericMailet {
 
         RequestBuilder requestBuilder = RequestBuilder.post(url);
 
-        if( data.length>1 && data[1]!=null ) {
+        if (data.length>1 && data[1]!=null) {
             requestBuilder.addParameter(data[1].getName(),data[1].getValue());
             LOGGER.debug("{}::{}", data[1].getName(), data[1].getValue());
         }

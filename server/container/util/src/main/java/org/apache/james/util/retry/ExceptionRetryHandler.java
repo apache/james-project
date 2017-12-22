@@ -110,7 +110,7 @@ abstract public class ExceptionRetryHandler implements RetryHandler {
         private boolean isRetryable(Throwable ex)
         {
             boolean isRetryable = false;
-            for (int i = 0; !isRetryable && i < _exceptionClasses.length; i++ )
+            for (int i = 0; !isRetryable && i < _exceptionClasses.length; i++)
             {
                 isRetryable = _exceptionClasses[i].isInstance(ex);
             }

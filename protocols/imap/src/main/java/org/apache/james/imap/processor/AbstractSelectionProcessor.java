@@ -313,7 +313,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
                     //          expunges have not happened, or happen only toward the end of the
                     //          mailbox.
                     //
-                    respondVanished(mailboxSession, mailbox, ranges, modSeq, metaData , responder);
+                    respondVanished(mailboxSession, mailbox, ranges, modSeq, metaData, responder);
                 }
                 taggedOk(responder, tag, command, metaData, HumanReadableText.SELECT);
             } else {

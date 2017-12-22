@@ -91,7 +91,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             final IdleMailboxListener idleListener;
             if (sm != null) {
                 idleListener = new IdleMailboxListener(session, responder);
-                mailboxManager.addListener(sm.getPath(), idleListener , mailboxSession);
+                mailboxManager.addListener(sm.getPath(), idleListener, mailboxSession);
             } else {
                 idleListener = null;
             }

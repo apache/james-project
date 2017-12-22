@@ -65,7 +65,7 @@ public class SentDateComparator extends AbstractHeaderComparator {
         // This method is here to convert the first date into something parsable by RFC_1123_DATE_TIME DateTimeFormatter
         Matcher sanitizerMatcher = DATE_SANITIZING_PATTERN.matcher(value);
         if (sanitizerMatcher.find()) {
-            return value.substring(0 , sanitizerMatcher.start());
+            return value.substring(0, sanitizerMatcher.start());
         }
         return value;
     }

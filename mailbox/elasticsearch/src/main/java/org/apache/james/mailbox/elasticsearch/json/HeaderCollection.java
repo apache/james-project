@@ -113,7 +113,7 @@ public class HeaderCollection {
                 .parseAddressList(headerValue)
                 .stream()
                 .flatMap(this::convertAddressToMailboxStream)
-                .map((mailbox) -> new EMailer(SearchUtil.getDisplayAddress(mailbox) , mailbox.getAddress()))
+                .map((mailbox) -> new EMailer(SearchUtil.getDisplayAddress(mailbox), mailbox.getAddress()))
                 .collect(Collectors.toCollection(() -> getAddressSet(headerName)));
         }
 

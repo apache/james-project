@@ -62,20 +62,20 @@ public class HasMailAttributeWithValueRegex extends GenericMatcher
         return "Has Mail Attribute Value Matcher";
     }
 
-    public void init (MatcherConfig conf) throws MessagingException
+    public void init(MatcherConfig conf) throws MessagingException
     {
         String condition = conf.getCondition();
         int idx = condition.indexOf(',');
         if (idx != -1) {
             attributeName = condition.substring(0,idx).trim();
-            String pattern_string = condition.substring (idx+1, condition.length()).trim();
+            String pattern_string = condition.substring(idx+1, condition.length()).trim();
             try {
                 pattern = Pattern.compile(pattern_string);
             } catch(PatternSyntaxException mpe) {
                 throw new MessagingException("Malformed pattern: " + pattern_string, mpe);
             }
         } else {
-            throw new MessagingException ("malformed condition for HasMailAttributeWithValueRegex. must be of the form: attr,regex");
+            throw new MessagingException("malformed condition for HasMailAttributeWithValueRegex. must be of the form: attr,regex");
         }
     }
 
@@ -86,9 +86,9 @@ public class HasMailAttributeWithValueRegex extends GenericMatcher
      * interpreted as a regular expression matches the toString value of the
      * corresponding attributes value.
      **/
-    public Collection<MailAddress> match (Mail mail) throws MessagingException
+    public Collection<MailAddress> match(Mail mail) throws MessagingException
     {
-        Serializable obj = mail.getAttribute (attributeName);
+        Serializable obj = mail.getAttribute(attributeName);
         //to be a little more generic the toString of the value is what is matched against
         if ( obj != null && pattern.matcher(obj.toString()).matches()) {
             return mail.getRecipients();

@@ -28,7 +28,7 @@ public class ParserUtils {
         if (args != null && args.length() > 3
             && args.charAt(0) == '{'
             && args.charAt(args.length() - 1) == '}'
-            && args.charAt(args.length() - 2) == '+' ) {
+            && args.charAt(args.length() - 2) == '+') {
             try {
                 return Long.parseLong(args.substring(1, args.length() - 2));
             } catch (NumberFormatException e) {

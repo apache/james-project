@@ -37,7 +37,7 @@ public class ProtocolRequestTest {
     @Test(expected=IllegalStateException.class)
     public void deserializedRequestsShouldThrowWhenNotEnoughElements() throws Exception {
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("getAccounts"),
-                new ObjectNode(new JsonNodeFactory(false)).putObject("{}")} ;
+                new ObjectNode(new JsonNodeFactory(false)).putObject("{}")};
 
         ProtocolRequest.deserialize(nodes);
     }
@@ -47,7 +47,7 @@ public class ProtocolRequestTest {
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("getAccounts"),
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{}"),
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#0"),
-                new ObjectNode(new JsonNodeFactory(false)).textNode("tooMuch")} ;
+                new ObjectNode(new JsonNodeFactory(false)).textNode("tooMuch")};
 
         ProtocolRequest.deserialize(nodes);
     }
@@ -56,7 +56,7 @@ public class ProtocolRequestTest {
     public void deserializedRequestsShouldThrowWhenFirstParameterIsNotString() throws JsonParseException, JsonMappingException, IOException {
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).booleanNode(true),
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{}"),
-                new ObjectNode(new JsonNodeFactory(false)).textNode("#0")} ;
+                new ObjectNode(new JsonNodeFactory(false)).textNode("#0")};
 
         ProtocolRequest.deserialize(nodes);
     }
@@ -65,7 +65,7 @@ public class ProtocolRequestTest {
     public void deserializedRequestsShouldThrowWhenSecondParameterIsNotJson() throws JsonParseException, JsonMappingException, IOException {
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("getAccounts"),
                 new ObjectNode(new JsonNodeFactory(false)).textNode("true"),
-                new ObjectNode(new JsonNodeFactory(false)).textNode("#0")} ;
+                new ObjectNode(new JsonNodeFactory(false)).textNode("#0")};
 
         ProtocolRequest.deserialize(nodes);
     }
@@ -74,7 +74,7 @@ public class ProtocolRequestTest {
     public void deserializedRequestsShouldThrowWhenThirdParameterIsNotString() throws JsonParseException, JsonMappingException, IOException {
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("getAccounts"),
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{}"),
-                new ObjectNode(new JsonNodeFactory(false)).booleanNode(true)} ;
+                new ObjectNode(new JsonNodeFactory(false)).booleanNode(true)};
 
         ProtocolRequest.deserialize(nodes);
     }
@@ -83,7 +83,7 @@ public class ProtocolRequestTest {
     public void deserializedRequestsShouldWorkWhenSingleRequest() throws JsonParseException, JsonMappingException, IOException {
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("getAccounts"),
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{\"id\": \"id\"}"),
-                new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
+                new ObjectNode(new JsonNodeFactory(false)).textNode("#1")};
 
         ProtocolRequest request = ProtocolRequest.deserialize(nodes);
 

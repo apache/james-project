@@ -886,7 +886,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         String value = DateTools.dateToString(date, dRes);
         switch(dop.getType()) {
         case ON:
-            return new TermQuery(new Term(field ,value));
+            return new TermQuery(new Term(field, value));
         case BEFORE: 
             return new TermRangeQuery(field, DateTools.dateToString(MIN_DATE, dRes), value, true, false);
         case AFTER: 

@@ -93,7 +93,7 @@ public class SearchUtil {
         if (display == null || display.length() < 1) {
             String localPart = mailbox.getLocalPart();
             String domainPart = mailbox.getDomain();
-            if (domainPart != null && domainPart.length() > 0 ) {
+            if (domainPart != null && domainPart.length() > 0) {
                 return localPart + "@" + domainPart;
             } else {
                 return localPart;

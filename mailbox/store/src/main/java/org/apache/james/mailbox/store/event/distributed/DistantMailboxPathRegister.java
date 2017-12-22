@@ -94,7 +94,7 @@ public class DistantMailboxPathRegister implements MailboxPathRegister {
         int count = 0;
         boolean success = false;
         while (count < maxRetry && !success) {
-            count ++;
+            count++;
             success = tryRegister(path);
         }
         if (!success) {
@@ -107,7 +107,7 @@ public class DistantMailboxPathRegister implements MailboxPathRegister {
         int count = 0;
         boolean success = false;
         while (count < maxRetry && !success) {
-            count ++;
+            count++;
             success = tryUnregister(path);
         }
         if (!success) {

@@ -155,7 +155,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void getDomainsShouldNotDetectDomainsWhenDisabled () throws Exception {
+    public void getDomainsShouldNotDetectDomainsWhenDisabled() throws Exception {
         HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
 
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(false);
@@ -166,7 +166,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void getDomainsShouldNotInteractWithDNSWhenDisabled () throws Exception {
+    public void getDomainsShouldNotInteractWithDNSWhenDisabled() throws Exception {
         HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
 
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(false);
@@ -284,7 +284,7 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
-    public void containsDomainShouldNotInteractWithDNSWhenDisabled () throws Exception {
+    public void containsDomainShouldNotInteractWithDNSWhenDisabled() throws Exception {
         HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
 
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(false);

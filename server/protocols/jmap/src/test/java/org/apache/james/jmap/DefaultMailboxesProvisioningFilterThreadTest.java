@@ -60,7 +60,7 @@ public class DefaultMailboxesProvisioningFilterThreadTest {
     @ThreadedBefore
     public void before() {
         session = new MockMailboxSession("username");
-        mailboxManager = new FakeMailboxManager(session) ;
+        mailboxManager = new FakeMailboxManager(session);
         sut = new DefaultMailboxesProvisioningFilter(mailboxManager, new NoopMetricFactory());
     }
     

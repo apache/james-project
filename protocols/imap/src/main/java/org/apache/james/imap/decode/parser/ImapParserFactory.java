@@ -74,11 +74,11 @@ public class ImapParserFactory implements ImapCommandParserFactory {
         _imapCommands.put(ImapConstants.NAMESPACE_COMMAND_NAME, NamespaceCommandParser.class);
 
         // RFC4314 GETACL, SETACL, DELETEACL, LISTRIGHTS, MYRIGHTS
-        _imapCommands.put(ImapConstants.GETACL_COMMAND_NAME, GetACLCommandParser.class );
-        _imapCommands.put(ImapConstants.SETACL_COMMAND_NAME, SetACLCommandParser.class );
-        _imapCommands.put(ImapConstants.DELETEACL_COMMAND_NAME, DeleteACLCommandParser.class );
-        _imapCommands.put(ImapConstants.LISTRIGHTS_COMMAND_NAME, ListRightsCommandParser.class );
-        _imapCommands.put(ImapConstants.MYRIGHTS_COMMAND_NAME, MyRightsCommandParser.class );
+        _imapCommands.put(ImapConstants.GETACL_COMMAND_NAME, GetACLCommandParser.class);
+        _imapCommands.put(ImapConstants.SETACL_COMMAND_NAME, SetACLCommandParser.class);
+        _imapCommands.put(ImapConstants.DELETEACL_COMMAND_NAME, DeleteACLCommandParser.class);
+        _imapCommands.put(ImapConstants.LISTRIGHTS_COMMAND_NAME, ListRightsCommandParser.class);
+        _imapCommands.put(ImapConstants.MYRIGHTS_COMMAND_NAME, MyRightsCommandParser.class);
 
         // Commands only valid in SELECTED state.
         // CHECK, CLOSE, EXPUNGE, SEARCH, FETCH, STORE, COPY, UID and IDLE

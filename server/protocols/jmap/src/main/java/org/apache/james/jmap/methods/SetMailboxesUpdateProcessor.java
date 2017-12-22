@@ -216,7 +216,7 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
     private boolean nameContainsPathDelimiter(MailboxUpdateRequest updateRequest, char pathDelimiter) {
         return updateRequest.getName()
                 .filter(name -> name.contains(String.valueOf(pathDelimiter)))
-                .isPresent() ;
+                .isPresent();
     }
 
     private void validateParent(Mailbox mailbox, MailboxUpdateRequest updateRequest, MailboxSession mailboxSession) throws MailboxException, MailboxHasChildException {

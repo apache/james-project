@@ -188,7 +188,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                 if (useUids) {
                     List<MessageRange> ranges = MessageRange.toRanges(failed);
                     UidRange[] idRanges = new UidRange[ranges.size()];
-                    for (int i = 0 ; i < ranges.size(); i++) {
+                    for (int i = 0; i < ranges.size(); i++) {
                         MessageRange r = ranges.get(i);
                         if (r.getType() == Type.ONE) {
                             idRanges[i] = new UidRange(r.getUidFrom());

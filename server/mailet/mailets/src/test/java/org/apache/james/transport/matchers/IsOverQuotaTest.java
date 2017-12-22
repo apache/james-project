@@ -127,7 +127,7 @@ public class IsOverQuotaTest {
         FakeMail fakeMail=FakeMail.builder()
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .build();
-        Collection <MailAddress> result = testee.match(fakeMail);
+        Collection<MailAddress> result = testee.match(fakeMail);
 
         assertThat(result).isEmpty();
     }

@@ -75,7 +75,7 @@ public class ChannelImapResponseWriter implements ImapResponseWriter {
                 //
                 // See JAMES-1305 and JAMES-1306
                 ChannelPipeline cp = channel.getPipeline();
-                if (zeroCopy && cp.get(SslHandler.class) == null && cp.get(ZlibEncoder.class) == null ) {
+                if (zeroCopy && cp.get(SslHandler.class) == null && cp.get(ZlibEncoder.class) == null) {
                     channel.write(new DefaultFileRegion(fc, fc.position(), literal.size()));
                 } else {
                     channel.write(new ChunkedNioFile(fc, 8192));

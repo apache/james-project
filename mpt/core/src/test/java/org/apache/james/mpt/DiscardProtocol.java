@@ -150,7 +150,7 @@ public class DiscardProtocol {
                     final SocketChannel socketChannel = socket.accept();
                     if (socketChannel == null) {
                         if (System.currentTimeMillis() - lastConnection > IDLE_TIMEOUT) {
-                            throw new Exception ("Idle timeout");
+                            throw new Exception("Idle timeout");
                         }
                         Thread.sleep(SOCKET_CONNECTION_WAIT_MILLIS);
                     } else {

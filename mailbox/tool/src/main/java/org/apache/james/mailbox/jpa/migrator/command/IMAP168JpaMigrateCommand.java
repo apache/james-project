@@ -86,7 +86,7 @@ public class IMAP168JpaMigrateCommand implements JpaMigrateCommand {
         /**
          * @param name
          */
-        public MailboxPath (String name) {
+        public MailboxPath(String name) {
             
             if (! name.startsWith("#mail")) {
                 throw new IllegalArgumentException("The name must begin with #private");

@@ -101,7 +101,7 @@ public class AddHabeasWarrantMark extends GenericMailet {
     public void service(Mail mail) throws MessagingException {
         MimeMessage message = mail.getMessage();
 
-        for(int i = 0 ; i < HasHabeasWarrantMark.warrantMark.length ; i++) {
+        for (int i = 0; i < HasHabeasWarrantMark.warrantMark.length; i++) {
             message.setHeader(HasHabeasWarrantMark.warrantMark[i][0], HasHabeasWarrantMark.warrantMark[i][1]);
         }
 

@@ -380,7 +380,7 @@ public abstract class ImapRequestLineReader {
             	byte[] buf = new byte[ 0xFFFF ]; 
                 
             	for (int len; (len = in.read(buf)) != -1; ) 
-                    out.write( buf, 0, len ); 
+                    out.write( buf, 0, len); 
                 
                 final byte[] bytes = out.toByteArray();
                 final ByteBuffer buffer = ByteBuffer.wrap(bytes);

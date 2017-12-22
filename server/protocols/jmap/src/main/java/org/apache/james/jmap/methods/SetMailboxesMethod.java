@@ -85,7 +85,7 @@ public class SetMailboxesMethod implements Method {
         return processors.stream()
                 .map(processor -> processor.process(request, mailboxSession))
                 .reduce(SetMailboxesResponse.builder(),
-                        (builder, resp) -> resp.mergeInto(builder) ,
+                        (builder, resp) -> resp.mergeInto(builder),
                         (builder1, builder2) -> builder2.build().mergeInto(builder1)
                 )
                 .build();

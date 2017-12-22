@@ -36,7 +36,7 @@ public class MailboxSessionJCRRepository {
     private final Repository repository;
     private final String workspace;
     
-    public MailboxSessionJCRRepository(Repository repository ,String workspace) {
+    public MailboxSessionJCRRepository(Repository repository, String workspace) {
         this.repository = repository;
         this.workspace = workspace;
     }

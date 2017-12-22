@@ -150,7 +150,7 @@ public abstract class AbstractPOP3ServerTest {
             assertThat(info[1].number).isEqualTo(2);
 
             mInfo = client.listUniqueIdentifier(1);
-            assertThat(mInfo.identifier) .isEqualTo(identifier + "-" + MESSAGE1.meta.getUid());
+            assertThat(mInfo.identifier).isEqualTo(identifier + "-" + MESSAGE1.meta.getUid());
             assertThat(mInfo.number).isEqualTo(1);
 
             // try to retrieve message that not exist

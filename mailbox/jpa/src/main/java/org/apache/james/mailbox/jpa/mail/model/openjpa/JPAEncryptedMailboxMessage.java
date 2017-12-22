@@ -63,7 +63,7 @@ public class JPAEncryptedMailboxMessage extends AbstractJPAMailboxMessage {
         @Lob private byte[] header;
         
         public JPAEncryptedMailboxMessage(JPAMailbox mailbox, Date internalDate, int size, Flags flags, SharedInputStream content, int bodyStartOctet, PropertyBuilder propertyBuilder) throws MailboxException {
-            super(mailbox, internalDate, flags, size ,bodyStartOctet, propertyBuilder);
+            super(mailbox, internalDate, flags, size, bodyStartOctet, propertyBuilder);
             try {
                 int headerEnd = bodyStartOctet;
                 if (headerEnd < 0) {

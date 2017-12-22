@@ -71,12 +71,12 @@ public class KeyStoreHolder {
 
     protected KeyStore keyStore;
     
-    public KeyStoreHolder () throws IOException, GeneralSecurityException {
+    public KeyStoreHolder() throws IOException, GeneralSecurityException {
         // this is the default password of the sun trusted certificate store.
         this("changeit");
     }
     
-    public KeyStoreHolder (String password) throws IOException, GeneralSecurityException {
+    public KeyStoreHolder(String password) throws IOException, GeneralSecurityException {
         this(System.getProperty("java.home")+"/lib/security/cacerts".replace('/', File.separatorChar), password, KeyStore.getDefaultType());
     }
     

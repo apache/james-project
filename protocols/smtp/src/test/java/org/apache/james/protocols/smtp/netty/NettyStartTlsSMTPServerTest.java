@@ -197,7 +197,7 @@ public class NettyStartTlsSMTPServerTest {
     @Test
     public void startTlsShouldWorkWhenUsingJavamail() throws Exception {
         TestMessageHook hook = new TestMessageHook();
-        server = createServer(createProtocol(Optional.<ProtocolHandler> of(hook)) , Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
+        server = createServer(createProtocol(Optional.<ProtocolHandler> of(hook)), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         server.bind();
         SMTPTransport transport = null;
 

@@ -81,7 +81,7 @@ public class SetMessagesMethod implements Method {
         return messagesProcessors.stream()
                 .map(processor -> processor.process(request, mailboxSession))
                 .reduce(SetMessagesResponse.builder(),
-                        (builder, resp) -> resp.mergeInto(builder) ,
+                        (builder, resp) -> resp.mergeInto(builder),
                         (builder1, builder2) -> builder2.build().mergeInto(builder1)
                 )
                 .build();

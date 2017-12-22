@@ -466,7 +466,7 @@ public class GetMessagesMethodStepdefs {
         String serializedIds = requestedMessageIds.stream()
             .map(MessageId::serialize)
             .map(toJsonString())
-            .collect(Collectors.joining(",", "[", "]" ));
+            .collect(Collectors.joining(",", "[", "]"));
         httpClient.post("[[\"getMessages\", {\"ids\": " + serializedIds + "}, \"#0\"]]");
     }
 
@@ -488,11 +488,11 @@ public class GetMessagesMethodStepdefs {
         String serializedIds = requestedMessageIds.stream()
             .map(MessageId::serialize)
             .map(toJsonString())
-            .collect(Collectors.joining(",", "[", "]" ));
+            .collect(Collectors.joining(",", "[", "]"));
 
         String serializedProperties = properties.stream()
             .map(toJsonString())
-            .collect(Collectors.joining(",", "[", "]" ));
+            .collect(Collectors.joining(",", "[", "]"));
 
         httpClient.post("[[\"getMessages\", {\"ids\": " + serializedIds + ", \"properties\": " + serializedProperties + "}, \"#0\"]]");
     }

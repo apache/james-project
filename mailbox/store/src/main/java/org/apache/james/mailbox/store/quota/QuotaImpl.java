@@ -31,7 +31,7 @@ public final class QuotaImpl implements Quota{
         return UNLIMITED_QUOTA;
     }
 
-    public static Quota quota(long used , long max) {
+    public static Quota quota(long used, long max) {
         return new QuotaImpl(used, max);
     }
 

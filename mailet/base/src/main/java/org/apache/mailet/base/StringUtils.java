@@ -53,7 +53,7 @@ public final class StringUtils {
                 // When the number of trailing "\" is odd then there was no separator and this pattern is part of
                 // the previous match.
                 int depth = 1;
-                while (depth < array[i-1].length() && array[i-1].charAt(array[i-1].length() - 1 - depth) == '\\') depth ++;
+                while (depth < array[i-1].length() && array[i-1].charAt(array[i-1].length() - 1 - depth) == '\\') depth++;
                 escaped = depth % 2 == 1;
             }
             if (!escaped) list.add(array[i]);
@@ -101,12 +101,12 @@ public final class StringUtils {
         StringBuilder res = new StringBuilder();
         char ch;
         char prevCh = '.';
-        for ( int i = 0;  i < data.length();  i++ ) {
+        for (int i = 0;  i < data.length();  i++) {
             ch = data.charAt(i);
-            if ( Character.isLetter(ch)) {
-                if (!Character.isLetter(prevCh) ) res.append( Character.toUpperCase(ch) );
-                else res.append( Character.toLowerCase(ch) );
-            } else res.append( ch );
+            if (Character.isLetter(ch)) {
+                if (!Character.isLetter(prevCh)) res.append(Character.toUpperCase(ch));
+                else res.append(Character.toLowerCase(ch));
+            } else res.append(ch);
             prevCh = ch;
         }
         return res.toString();

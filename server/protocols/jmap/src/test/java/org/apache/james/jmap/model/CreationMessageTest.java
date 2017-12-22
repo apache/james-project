@@ -85,7 +85,7 @@ public class CreationMessageTest {
     }
 
     @Test
-    public void validateShouldReturnErrorWhenNoRecipientSet () {
+    public void validateShouldReturnErrorWhenNoRecipientSet(){
         testedBuilder = testedBuilder
                 .subject("anything");
 
@@ -96,7 +96,7 @@ public class CreationMessageTest {
     }
 
     @Test
-    public void validateShouldReturnErrorWhenNoValidRecipientSet () {
+    public void validateShouldReturnErrorWhenNoValidRecipientSet() {
         testedBuilder = testedBuilder
                 .subject("anything");
 
@@ -111,7 +111,7 @@ public class CreationMessageTest {
     }
 
     @Test
-    public void validateShouldReturnEmptyListWhenNoErrors () {
+    public void validateShouldReturnEmptyListWhenNoErrors() {
         testedBuilder = testedBuilder
                 .subject("anything");
 
@@ -124,7 +124,7 @@ public class CreationMessageTest {
     }
 
     @Test
-    public void validateShouldReturnEmptyListWhenSubjectIsNull () {
+    public void validateShouldReturnEmptyListWhenSubjectIsNull() {
         testedBuilder = testedBuilder
                 .subject(null);
 
@@ -137,7 +137,7 @@ public class CreationMessageTest {
     }
 
     @Test
-    public void validateShouldReturnEmptyListWhenSubjectIsEmpty () {
+    public void validateShouldReturnEmptyListWhenSubjectIsEmpty() {
         testedBuilder = testedBuilder
                 .subject("");
 

@@ -87,7 +87,7 @@ public class ContactExtractor extends GenericMailet implements Mailet {
 
     @Override
     public String getMailetInfo() {
-        return "ContactExtractor Mailet" ;
+        return "ContactExtractor Mailet";
     }
 
     @Override

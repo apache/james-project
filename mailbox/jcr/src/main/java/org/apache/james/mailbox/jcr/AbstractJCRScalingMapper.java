@@ -122,7 +122,7 @@ public abstract class AbstractJCRScalingMapper extends TransactionalMapper imple
      */
     protected String constructUserPathPart(String username) {
         StringBuffer sb = new StringBuffer();
-        for (int i = 0 ; i < scaling; i++) {
+        for (int i = 0; i < scaling; i++) {
             if (username.length() > i) {
                 sb.append(username.substring(0,i+1));
             } else {

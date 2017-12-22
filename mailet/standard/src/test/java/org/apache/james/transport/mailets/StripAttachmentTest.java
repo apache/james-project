@@ -651,7 +651,7 @@ public class StripAttachmentTest {
                 .setProperty("remove", "all")
                 .setProperty("pattern", ".*\\.tmp")
                 .build();
-        mailet .init(mci);
+        mailet.init(mci);
 
         MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
             .setMultipartWithSubMessage(

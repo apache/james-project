@@ -211,7 +211,7 @@ public class JmapResponseWriterImplTest {
         parameters.put("id", "myId");
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("unknwonMethod"),
                 parameters,
-                new ObjectNode(new JsonNodeFactory(false)).textNode(expectedClientId)} ;
+                new ObjectNode(new JsonNodeFactory(false)).textNode(expectedClientId)};
 
         List<ProtocolResponse> response = testee.formatMethodResponse(
                 Stream.of(JmapResponse
@@ -234,7 +234,7 @@ public class JmapResponseWriterImplTest {
         parameters.put("id", "myId");
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("unknwonMethod"),
                 parameters,
-                new ObjectNode(new JsonNodeFactory(false)).textNode(expectedClientId)} ;
+                new ObjectNode(new JsonNodeFactory(false)).textNode(expectedClientId)};
 
         List<ProtocolResponse> response = testee.formatMethodResponse(
                 Stream.of(JmapResponse

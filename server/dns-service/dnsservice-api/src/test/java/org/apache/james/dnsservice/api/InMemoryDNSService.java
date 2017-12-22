@@ -62,7 +62,7 @@ public class InMemoryDNSService implements DNSService {
         return this;
     }
 
-    public void registerRecord(String hostname, List<InetAddress> addresses, Collection<String> mxRecords, Collection<String> txtRecords ){
+    public void registerRecord(String hostname, List<InetAddress> addresses, Collection<String> mxRecords, Collection<String> txtRecords) {
         records.put(hostname, dnsRecordFor(mxRecords, txtRecords, addresses));
     }
 

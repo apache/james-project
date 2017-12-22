@@ -52,7 +52,7 @@ public class QuotaChecker {
     }
 
     private boolean check() throws OverQuotaException {
-        if (messageQuota.isOverQuota() ) {
+        if (messageQuota.isOverQuota()) {
             throw new OverQuotaException("You have too many messages in " + quotaRoot.getValue(), messageQuota.getMax(), messageQuota.getUsed());
         }
         if (sizeQuota.isOverQuota()) {

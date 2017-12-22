@@ -54,9 +54,9 @@ public class MailboxAssert extends AbstractAssert<MailboxAssert, Mailbox> {
     }
 
     private boolean equals(Object object1, Object object2) {
-        if ( object1 == null && object2 == null ) {
+        if (object1 == null && object2 == null) {
             return true;
         }
-        return ( object1 != null ) && object1.equals(object2);
+        return (object1 != null) && object1.equals(object2);
     }
 }

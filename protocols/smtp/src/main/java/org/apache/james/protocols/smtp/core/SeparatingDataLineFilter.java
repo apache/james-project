@@ -54,7 +54,7 @@ public abstract class SeparatingDataLineFilter implements DataLineFilter{
      */
     public final Response onLine(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
         if (session.getAttachment(HEADERS_COMPLETE, State.Transaction) == null) {
-            if (line.remaining() == 2 ) {
+            if (line.remaining() == 2) {
                 if (line.get() == '\r' && line.get() == '\n') {
                     line.rewind();
                     Response response = onSeparatorLine(session, line, next);
