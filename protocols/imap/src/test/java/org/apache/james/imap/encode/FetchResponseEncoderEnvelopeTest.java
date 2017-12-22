@@ -124,27 +124,31 @@ public class FetchResponseEncoderEnvelopeTest {
             final String mailbox, final String host) {
         final Address address = context.mock(Address.class, name + host);
         context.checking(new Expectations() {{
-            oneOf (address).getPersonalName();will(returnValue(name));
-            oneOf (address).getAtDomainList();will(returnValue(domainList));
-            oneOf (address).getMailboxName();will(returnValue(mailbox));
-            oneOf (address).getHostName();will(returnValue(host));
-        }});
+                    oneOf (address).getPersonalName();will(returnValue(name));
+                    oneOf (address).getAtDomainList();will(returnValue(domainList));
+                    oneOf (address).getMailboxName();will(returnValue(mailbox));
+                    oneOf (address).getHostName();will(returnValue(host));
+                }
+            }
+        );
         return address;
     }
 
     private void envelopExpects() {
         context.checking(new Expectations() {{
-            oneOf(envelope).getBcc();will(returnValue(bcc));
-            oneOf(envelope).getCc();will(returnValue(cc));
-            oneOf(envelope).getDate();will(returnValue(date));
-            oneOf(envelope).getFrom();will(returnValue(from));
-            oneOf(envelope).getInReplyTo();will(returnValue(inReplyTo));
-            oneOf(envelope).getMessageId();will(returnValue(messageId));
-            oneOf(envelope).getReplyTo();will(returnValue(replyTo));
-            oneOf(envelope).getSender();will(returnValue(sender));
-            oneOf(envelope).getSubject();will(returnValue(subject));
-            oneOf(envelope).getTo();will(returnValue(to));
-        }});
+                oneOf(envelope).getBcc();will(returnValue(bcc));
+                oneOf(envelope).getCc();will(returnValue(cc));
+                oneOf(envelope).getDate();will(returnValue(date));
+                oneOf(envelope).getFrom();will(returnValue(from));
+                oneOf(envelope).getInReplyTo();will(returnValue(inReplyTo));
+                oneOf(envelope).getMessageId();will(returnValue(messageId));
+                oneOf(envelope).getReplyTo();will(returnValue(replyTo));
+                oneOf(envelope).getSender();will(returnValue(sender));
+                oneOf(envelope).getSubject();will(returnValue(subject));
+                oneOf(envelope).getTo();will(returnValue(to));
+                }
+            }
+        );
     }
 
     @Test

@@ -111,17 +111,18 @@ public class FetchResponseEncoderNoExtensionsTest  {
         parameterList.add("US-ASCII");
         
         context.checking(new Expectations() {{
-            final long octets = 2279L;
-            final long lines = 48L;
-            allowing(stubStructure).getMediaType(); will(returnValue("TEXT"));
-            allowing(stubStructure).getSubType(); will(returnValue("HTML"));
-            allowing(stubStructure).getOctets();will(returnValue(octets));
-            allowing(stubStructure).getLines();will(returnValue(lines));
-            allowing(stubStructure).getParameters(); will(returnValue(parameterList));
-            allowing(stubStructure).getEncoding(); will(returnValue("7BIT"));
-            ignoring(stubStructure);
-
-        }});
+                    final long octets = 2279L;
+                    final long lines = 48L;
+                    allowing(stubStructure).getMediaType(); will(returnValue("TEXT"));
+                    allowing(stubStructure).getSubType(); will(returnValue("HTML"));
+                    allowing(stubStructure).getOctets();will(returnValue(octets));
+                    allowing(stubStructure).getLines();will(returnValue(lines));
+                    allowing(stubStructure).getParameters(); will(returnValue(parameterList));
+                    allowing(stubStructure).getEncoding(); will(returnValue("7BIT"));
+                    ignoring(stubStructure);
+                }
+            }
+        );
         final FakeImapSession fakeImapSession = new FakeImapSession();
         encoder.doEncode(message, composer, fakeImapSession);
         assertEquals("* 100 FETCH (FLAGS (\\Deleted) BODYSTRUCTURE (\"TEXT\" \"HTML\" (\"CHARSET\" \"US-ASCII\") \"\" \"\" \"7BIT\" 2279 48) UID 72)\r\n", writer.getString());

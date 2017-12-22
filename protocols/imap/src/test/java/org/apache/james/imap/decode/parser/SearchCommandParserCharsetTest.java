@@ -91,12 +91,14 @@ public class SearchCommandParserCharsetTest {
     @Test
     public void testBadCharset() throws Exception {
         context.checking(new Expectations() {{
-            oneOf (mockStatusResponseFactory).taggedNo(
-                    with(equal(TAG)), 
-                    with(same(command)), 
-                    with(equal(HumanReadableText.BAD_CHARSET)),
-                    with(equal(StatusResponse.ResponseCode.badCharset(CharsetUtil.getAvailableCharsetNames()))));
-        }});
+                oneOf (mockStatusResponseFactory).taggedNo(
+                        with(equal(TAG)), 
+                        with(same(command)), 
+                        with(equal(HumanReadableText.BAD_CHARSET)),
+                        with(equal(StatusResponse.ResponseCode.badCharset(CharsetUtil.getAvailableCharsetNames()))));
+                }
+            }
+        );
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream("CHARSET BOGUS ".getBytes("US-ASCII")),
                 new ByteArrayOutputStream());

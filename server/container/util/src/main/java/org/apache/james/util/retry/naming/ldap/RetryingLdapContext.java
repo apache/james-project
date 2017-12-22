@@ -57,11 +57,11 @@ abstract public class RetryingLdapContext extends RetryingDirContext implements 
     @Override
     public ExtendedResponse extendedOperation(final ExtendedRequest request) throws NamingException {
         return (ExtendedResponse) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()){
-
-            @Override
-            public Object operation() throws NamingException {
-                return ((LdapContext) getDelegate()).extendedOperation(request);
-            }}.perform();
+                @Override
+                public Object operation() throws NamingException {
+                    return ((LdapContext) getDelegate()).extendedOperation(request);
+                }
+            }.perform();
     }
 
     /**
@@ -70,11 +70,11 @@ abstract public class RetryingLdapContext extends RetryingDirContext implements 
     @Override
     public Control[] getConnectControls() throws NamingException {
         return (Control[]) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()){
-
-            @Override
-            public Object operation() throws NamingException {
-                return ((LdapContext) getDelegate()).getConnectControls();
-            }}.perform();
+                @Override
+                public Object operation() throws NamingException {
+                    return ((LdapContext) getDelegate()).getConnectControls();
+                }
+            }.perform();
     }
 
     /**
@@ -83,11 +83,11 @@ abstract public class RetryingLdapContext extends RetryingDirContext implements 
     @Override
     public Control[] getRequestControls() throws NamingException {
         return (Control[]) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()){
-
-            @Override
-            public Object operation() throws NamingException {
-                return ((LdapContext) getDelegate()).getRequestControls();
-            }}.perform();
+                @Override
+                public Object operation() throws NamingException {
+                    return ((LdapContext) getDelegate()).getRequestControls();
+                }
+            }.perform();
     }
 
     /**
@@ -96,11 +96,11 @@ abstract public class RetryingLdapContext extends RetryingDirContext implements 
     @Override
     public Control[] getResponseControls() throws NamingException {
         return (Control[]) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()){
-
-            @Override
-            public Object operation() throws NamingException {
-                return ((LdapContext) getDelegate()).getResponseControls();
-            }}.perform();
+                @Override
+                public Object operation() throws NamingException {
+                    return ((LdapContext) getDelegate()).getResponseControls();
+                }
+            }.perform();
     }
 
     /**
@@ -124,12 +124,12 @@ abstract public class RetryingLdapContext extends RetryingDirContext implements 
     @Override
     public void reconnect(final Control[] connCtls) throws NamingException {
         new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()){
-
-            @Override
-            public Object operation() throws NamingException {
-                ((LdapContext) getDelegate()).reconnect(connCtls);
-                return null;
-            }}.perform();
+                @Override
+                public Object operation() throws NamingException {
+                    ((LdapContext) getDelegate()).reconnect(connCtls);
+                    return null;
+                }
+            }.perform();
     }
 
     /**
@@ -138,12 +138,12 @@ abstract public class RetryingLdapContext extends RetryingDirContext implements 
     @Override
     public void setRequestControls(final Control[] requestControls) throws NamingException {
         new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()){
-
-            @Override
-            public Object operation() throws NamingException {
-                ((LdapContext) getDelegate()).setRequestControls(requestControls);
-                return null;
-            }}.perform();
+                @Override
+                public Object operation() throws NamingException {
+                    ((LdapContext) getDelegate()).setRequestControls(requestControls);
+                    return null;
+                }
+            }.perform();
     }
 
 }

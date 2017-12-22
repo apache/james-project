@@ -103,11 +103,13 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
 
         SetMessagesResponse.Builder responseBuilder = SetMessagesResponse.builder();
         request.buildUpdatePatches(updatePatchConverter).forEach( (id, patch) -> {
-            if (patch.isValid()) {
-                update(id, patch, mailboxSession, responseBuilder);
-            } else {
-                handleInvalidRequest(responseBuilder, id, patch.getValidationErrors());
-            }});
+                if (patch.isValid()) {
+                    update(id, patch, mailboxSession, responseBuilder);
+                } else {
+                    handleInvalidRequest(responseBuilder, id, patch.getValidationErrors());
+                }
+            }
+        );
 
         timeMetric.stopAndPublish();
         return responseBuilder.build();
