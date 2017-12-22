@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -404,14 +405,26 @@ public class FakeMailContext implements MailetContext {
             .build());
     }
 
+    @Override
     public void sendMail(Mail mail) throws MessagingException {
         sendMail(mail, Mail.DEFAULT);
+    }
+
+    @Override
+    public void sendMail(Mail mail, long delay, TimeUnit unit) throws MessagingException {
+        sendMail(mail, Mail.DEFAULT, delay, unit);
     }
 
     @Override
     public void sendMail(Mail mail, String state) throws MessagingException {
         mail.setState(state);
         sentMails.add(fromMail(mail));
+    }
+
+    @Override
+    public void sendMail(Mail mail, String state, long delay, TimeUnit unit) throws MessagingException {
+        mail.setState(state);
+        sentMails.add(fromMail(mail)); // FIXME delay ignored here for now
     }
 
     public void setAttribute(String name, Serializable object) {

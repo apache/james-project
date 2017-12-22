@@ -27,6 +27,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -40,7 +42,9 @@ import org.apache.james.server.core.MailImpl;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.MimeMessageBuilder;
+import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -53,6 +57,9 @@ public class JamesMailetContextTest {
     public static final String PASSWORD = "password";
     public static final DNSService DNS_SERVICE = null;
 
+    @Rule
+    public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
+    
     private MemoryDomainList domainList;
     private MemoryUsersRepository usersRepository;
     private JamesMailetContext testee;
@@ -212,6 +219,45 @@ public class JamesMailetContextTest {
         verifyNoMoreInteractions(spoolMailQueue);
 
         assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(other);
+    }
+
+    @Test
+    public void sendMailShouldEnqueueEmailWithRootStateAndDelayWhenSpecified() throws Exception {
+        MailImpl mail = new MailImpl();
+        mail.setSender(mailAddress);
+        mail.setRecipients(ImmutableList.of(mailAddress));
+        mail.setMessage(MimeMessageBuilder.defaultMimeMessage());
+        testee.sendMail(mail, 5, TimeUnit.MINUTES);
+
+        ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
+        ArgumentCaptor<Long> delayArgumentCaptor = ArgumentCaptor.forClass(Long.class);
+        ArgumentCaptor<TimeUnit> timeUnitArgumentCaptor = ArgumentCaptor.forClass(TimeUnit.class);
+        verify(spoolMailQueue).enQueue(mailArgumentCaptor.capture(), delayArgumentCaptor.capture(), timeUnitArgumentCaptor.capture());
+        verifyNoMoreInteractions(spoolMailQueue);
+
+        softly.assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(Mail.DEFAULT);
+        softly.assertThat(delayArgumentCaptor.getValue()).isEqualTo(5L);
+        softly.assertThat(timeUnitArgumentCaptor.getValue()).isEqualTo(TimeUnit.MINUTES);
+    }
+
+    @Test
+    public void sendMailShouldEnqueueEmailWithOtherStateAndDelayWhenSpecified() throws Exception {
+        MailImpl mail = new MailImpl();
+        mail.setSender(mailAddress);
+        mail.setRecipients(ImmutableList.of(mailAddress));
+        mail.setMessage(MimeMessageBuilder.defaultMimeMessage());
+        String other = "other";
+        testee.sendMail(mail, other, 5, TimeUnit.MINUTES);
+
+        ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
+        ArgumentCaptor<Long> delayArgumentCaptor = ArgumentCaptor.forClass(Long.class);
+        ArgumentCaptor<TimeUnit> timeUnitArgumentCaptor = ArgumentCaptor.forClass(TimeUnit.class);
+        verify(spoolMailQueue).enQueue(mailArgumentCaptor.capture(), delayArgumentCaptor.capture(), timeUnitArgumentCaptor.capture());
+        verifyNoMoreInteractions(spoolMailQueue);
+
+        softly.assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(other);
+        softly.assertThat(delayArgumentCaptor.getValue()).isEqualTo(5L);
+        softly.assertThat(timeUnitArgumentCaptor.getValue()).isEqualTo(TimeUnit.MINUTES);
     }
 
     @Test
