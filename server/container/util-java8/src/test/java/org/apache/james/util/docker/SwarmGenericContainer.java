@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util.streams;
+package org.apache.james.util.docker;
 
 import java.net.Socket;
 import java.time.Duration;
@@ -25,7 +25,6 @@ import java.util.List;
 
 import javax.net.SocketFactory;
 
-import com.github.dockerjava.api.model.Bind;
 import org.junit.Assume;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -36,10 +35,10 @@ import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.WaitStrategy;
 import org.testcontainers.images.builder.ImageFromDockerfile;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.google.common.base.Strings;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 public class SwarmGenericContainer implements TestRule {
     private static final Logger LOGGER = LoggerFactory.getLogger(SwarmGenericContainer.class);

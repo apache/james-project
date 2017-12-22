@@ -36,8 +36,8 @@ import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.amqp.AmqpRule;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIsLocal;
-import org.apache.james.util.streams.ContainerNames;
-import org.apache.james.util.streams.SwarmGenericContainer;
+import org.apache.james.util.docker.Images;
+import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
@@ -74,7 +74,7 @@ public class AmqpForwardAttachmentTest {
     
     private static final byte[] TEST_ATTACHMENT_CONTENT = "Test attachment content".getBytes(Charsets.UTF_8);
 
-    public SwarmGenericContainer rabbitMqContainer = new SwarmGenericContainer(ContainerNames.RABBITMQ)
+    public SwarmGenericContainer rabbitMqContainer = new SwarmGenericContainer(Images.RABBITMQ)
             .withAffinityToContainer();
 
     public TemporaryFolder temporaryFolder = new TemporaryFolder();

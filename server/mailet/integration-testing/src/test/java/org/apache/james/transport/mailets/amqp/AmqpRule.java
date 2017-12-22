@@ -24,7 +24,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.james.util.streams.SwarmGenericContainer;
+import org.apache.james.util.docker.SwarmGenericContainer;
 import org.junit.rules.ExternalResource;
 
 import com.google.common.base.Charsets;

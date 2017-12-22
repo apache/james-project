@@ -17,9 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util.streams;
+package org.apache.james.util.docker;
 
-public interface ContainerNames {
+public interface Images {
     String FAKE_SMTP = "weave/rest-smtp-sink:latest";
     String RABBITMQ = "rabbitmq:3";
     String ELASTICSEARCH = "elasticsearch:2.2.2";

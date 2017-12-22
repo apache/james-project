@@ -27,8 +27,8 @@ import java.net.InetAddress;
 import java.util.Locale;
 
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
-import org.apache.james.util.streams.ContainerNames;
-import org.apache.james.util.streams.SwarmGenericContainer;
+import org.apache.james.util.docker.Images;
+import org.apache.james.util.docker.SwarmGenericContainer;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -52,7 +52,7 @@ public abstract class ForwardSmtpTest {
     public static final String PASSWORD = "secret";
 
     private final TemporaryFolder folder = new TemporaryFolder();
-    private final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer(ContainerNames.FAKE_SMTP)
+    private final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer(Images.FAKE_SMTP)
             .withExposedPorts(25)
             .withAffinityToContainer()
             .waitingFor(new HostPortWaitStrategy());

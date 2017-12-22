@@ -21,7 +21,7 @@ package org.apache.james.backends.es;
 
 import java.util.concurrent.TimeUnit;
 
-import org.apache.james.util.streams.SwarmGenericContainer;
+import org.apache.james.util.docker.SwarmGenericContainer;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.Ignore;

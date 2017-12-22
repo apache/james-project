@@ -22,8 +22,8 @@ package org.apache.james;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.modules.mailbox.ElasticSearchConfiguration;
-import org.apache.james.util.streams.ContainerNames;
-import org.apache.james.util.streams.SwarmGenericContainer;
+import org.apache.james.util.docker.Images;
+import org.apache.james.util.docker.SwarmGenericContainer;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
@@ -60,7 +60,7 @@ public class DockerElasticSearchRule implements GuiceModuleTestRule {
         }
     }
 
-    private SwarmGenericContainer elasticSearchContainer = new SwarmGenericContainer(ContainerNames.ELASTICSEARCH)
+    private SwarmGenericContainer elasticSearchContainer = new SwarmGenericContainer(Images.ELASTICSEARCH)
         .withExposedPorts(ELASTIC_SEARCH_HTTP_PORT, ELASTIC_SEARCH_PORT);
 
     @Override

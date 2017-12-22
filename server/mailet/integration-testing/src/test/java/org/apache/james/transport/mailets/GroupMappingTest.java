@@ -44,8 +44,8 @@ import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.transport.matchers.RelayLimit;
 import org.apache.james.transport.matchers.SMTPAuthSuccessful;
-import org.apache.james.util.streams.ContainerNames;
-import org.apache.james.util.streams.SwarmGenericContainer;
+import org.apache.james.util.docker.Images;
+import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
@@ -91,7 +91,7 @@ public class GroupMappingTest {
     private RequestSpecification restApiRequest;
 
     @Rule
-    public final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer(ContainerNames.FAKE_SMTP)
+    public final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer(Images.FAKE_SMTP)
         .withExposedPorts(25)
         .withAffinityToContainer()
         .waitingFor(new HostPortWaitStrategy());

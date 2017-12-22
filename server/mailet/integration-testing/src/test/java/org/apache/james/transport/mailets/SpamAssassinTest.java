@@ -19,7 +19,6 @@
 package org.apache.james.transport.mailets;
 
 import static org.apache.james.MemoryJamesServerMain.SMTP_AND_IMAP_MODULE;
-import static org.apache.james.MemoryJamesServerMain.SMTP_ONLY_MODULE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.internet.MimeMessage;
@@ -32,9 +31,9 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIsLocal;
+import org.apache.james.util.docker.Images;
+import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.util.scanner.SpamAssassinInvoker;
-import org.apache.james.util.streams.ContainerNames;
-import org.apache.james.util.streams.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
@@ -62,7 +61,7 @@ public class SpamAssassinTest {
     public static final String TO = "to@" + JAMES_ORG;
     public static final String PASSWORD = "secret";
 
-    public SwarmGenericContainer spamAssassinContainer = new SwarmGenericContainer(ContainerNames.SPAMASSASSIN)
+    public SwarmGenericContainer spamAssassinContainer = new SwarmGenericContainer(Images.SPAMASSASSIN)
         .withExposedPorts(783)
         .withAffinityToContainer()
         .waitingFor(new HostPortWaitStrategy());
