@@ -118,10 +118,6 @@ public class DiscardProtocol {
         }
     }
     
-    /**
-     * Stops serving.
-     * @return ASCII bytes sent to socket by first
-     */
     public void stop() {
         synchronized (queue)
         {
