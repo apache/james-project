@@ -160,10 +160,10 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             return;
         }
 
-        String listen[] = config.getString("bind", "0.0.0.0:" + getDefaultPort()).split(",");
+        String[] listen = config.getString("bind", "0.0.0.0:" + getDefaultPort()).split(",");
         List<InetSocketAddress> bindAddresses = new ArrayList<>();
         for (String aListen : listen) {
-            String bind[] = aListen.split(":");
+            String[] bind = aListen.split(":");
 
             InetSocketAddress address;
             String ip = bind[0].trim();

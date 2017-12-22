@@ -78,7 +78,7 @@ public final class StringUtils {
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
             StringBuilder sb = new StringBuilder();
-            byte buf[] = message.getBytes();
+            byte[] buf = message.getBytes();
             byte[] md5 = md.digest(buf);
 
             for (byte aMd5 : md5) {

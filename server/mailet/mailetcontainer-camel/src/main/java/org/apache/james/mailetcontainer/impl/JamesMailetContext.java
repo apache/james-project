@@ -222,7 +222,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
         reply.setSentDate(new Date());
         Collection<MailAddress> recipients = new HashSet<>();
         recipients.add(mail.getSender());
-        InternetAddress addr[] = {new InternetAddress(mail.getSender().toString())};
+        InternetAddress[] addr = {new InternetAddress(mail.getSender().toString())};
         reply.setRecipients(Message.RecipientType.TO, addr);
         reply.setFrom(new InternetAddress(mail.getRecipients().iterator().next().toString()));
         reply.setText(bounceText);
@@ -378,7 +378,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
     public void sendMail(MimeMessage message) throws MessagingException {
         MailAddress sender = new MailAddress((InternetAddress) message.getFrom()[0]);
         Collection<MailAddress> recipients = new HashSet<>();
-        Address addresses[] = message.getAllRecipients();
+        Address[] addresses = message.getAllRecipients();
         if (addresses != null) {
             for (Address address : addresses) {
                 // Javamail treats the "newsgroups:" header field as a

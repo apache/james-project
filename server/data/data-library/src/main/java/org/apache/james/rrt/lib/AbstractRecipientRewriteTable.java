@@ -147,7 +147,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
                         String userName;
                         String domainName;
-                        String args[] = target.split("@");
+                        String[] args = target.split("@");
 
                         if (args != null && args.length > 1) {
 

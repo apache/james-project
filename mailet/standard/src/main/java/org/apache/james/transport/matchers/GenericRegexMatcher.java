@@ -75,7 +75,7 @@ public abstract class GenericRegexMatcher extends GenericMatcher {
                 //Get the patterns for that header
                 Pattern pattern = (Pattern) pattern1[1];
                 //Get the array of header values that match that
-                String headers[] = message.getHeader(headerName);
+                String[] headers = message.getHeader(headerName);
                 //Loop through the header values
                 if (headers != null) {
                     for (String header : headers) {

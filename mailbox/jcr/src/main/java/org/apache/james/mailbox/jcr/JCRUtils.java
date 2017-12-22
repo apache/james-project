@@ -47,7 +47,7 @@ public class JCRUtils implements JCRImapConstants{
             if (username == null) {
                 session = repository.login(workspace);
             } else {
-                char pass[];
+                char[] pass;
                 if (password == null) {
                     pass = new char[0];
                 } else {

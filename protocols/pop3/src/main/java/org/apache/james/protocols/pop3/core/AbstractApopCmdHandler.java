@@ -48,7 +48,7 @@ public abstract class AbstractApopCmdHandler extends AbstractPassCmdHandler{
         }
         
         String parameters = request.getArgument();
-        String parts[] = null;
+        String[] parts = null;
         boolean syntaxError = false;
         if (parameters != null) {
             parts = parameters.split(" ");

@@ -48,12 +48,12 @@ public class FixedLengthInputStream extends FilterInputStream {
         return super.read();
     }
 
-    public int read(byte b[]) throws IOException {
+    public int read(byte[] b) throws IOException {
 
         return read(b, 0, b.length);
     }
 
-    public int read(byte b[], int off, int len) throws IOException {
+    public int read(byte[] b, int off, int len) throws IOException {
 
         if (pos >= length) {
             return -1;

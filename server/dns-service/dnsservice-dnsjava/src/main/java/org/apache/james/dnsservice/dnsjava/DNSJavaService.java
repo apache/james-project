@@ -258,7 +258,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
      * @throws TemporaryResolutionException get thrown on temporary problems
      */
     private List<String> findMXRecordsRaw(String hostname) throws TemporaryResolutionException {
-        Record answers[] = lookup(hostname, Type.MX, "MX");
+        Record[] answers = lookup(hostname, Type.MX, "MX");
         List<String> servers = new ArrayList<>();
         if (answers == null) {
             return servers;

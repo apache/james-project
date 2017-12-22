@@ -27,7 +27,7 @@ import org.apache.james.imap.api.message.response.ImapResponseMessage;
  * A <code>SEARCH</code> response.
  */
 public class SearchResponse implements ImapResponseMessage {
-    private final long ids[];
+    private final long[] ids;
     private final Long highestModSeq;
 
     /**

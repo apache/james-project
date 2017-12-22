@@ -138,7 +138,7 @@ public class FolderProcessor extends ProcessorAbstract {
     protected void recurse() throws MessagingException {
         if ((getFolder().getType() & Folder.HOLDS_FOLDERS) == Folder.HOLDS_FOLDERS) {
             // folder contains subfolders...
-            Folder folders[] = getFolder().list();
+            Folder[] folders = getFolder().list();
 
             for (Folder folder : folders) {
                 new FolderProcessor(folder, getAccount()).process();

@@ -81,7 +81,7 @@ public abstract class ImapMailbox implements Mailbox {
     public abstract void remove(long... uids) throws IOException;
 
 	public void remove(String... uids) throws NumberFormatException, IOException {
-        long imapUids[] = Arrays.stream(uids)
+        long[] imapUids = Arrays.stream(uids)
             .mapToLong(Long::parseLong)
             .toArray();
         this.remove(imapUids);

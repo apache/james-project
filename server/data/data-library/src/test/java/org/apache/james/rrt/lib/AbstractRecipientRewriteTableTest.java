@@ -57,7 +57,7 @@ public abstract class AbstractRecipientRewriteTableTest {
         if (mappings != null) {
 
             for (String key : virtualUserTable.getAllMappings().keySet()) {
-                String args[] = key.split("@");
+                String[] args = key.split("@");
 
                 Mappings map = mappings.get(key);
 

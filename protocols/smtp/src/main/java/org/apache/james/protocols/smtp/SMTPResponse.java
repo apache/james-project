@@ -61,7 +61,7 @@ public class SMTPResponse extends AbstractResponse {
     
 
     private  static String extractCode(String raw) {
-        String args[] = raw.split(" ");
+        String[] args = raw.split(" ");
         if (args != null && args.length > 1) {
             return args[0];
             
@@ -71,7 +71,7 @@ public class SMTPResponse extends AbstractResponse {
     }
     
     private  static String extractResponse(String raw) {
-        String args[] = raw.split(" ");
+        String[] args = raw.split(" ");
         if (args != null && args.length > 1) {
             return args[2];
             

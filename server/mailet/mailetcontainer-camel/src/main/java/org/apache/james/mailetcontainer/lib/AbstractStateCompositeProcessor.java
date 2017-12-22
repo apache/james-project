@@ -178,7 +178,7 @@ public abstract class AbstractStateCompositeProcessor implements MailProcessor, 
 
     @PreDestroy
     public void dispose() {
-        String names[] = getProcessorStates();
+        String[] names = getProcessorStates();
         for (String name : names) {
             MailProcessor processor = getProcessor(name);
             if (processor instanceof AbstractStateMailetProcessor) {

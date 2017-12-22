@@ -497,7 +497,7 @@ public abstract class AbstractPOP3ServerTest {
         BufferedReader bufReader = new BufferedReader(reader);
         String line = null;
         int linesRead = 0;
-        String parts[] = message.body.split("\r\n");
+        String[] parts = message.body.split("\r\n");
         while ((line = bufReader.readLine()) != null) {
             assertThat(line).isEqualTo(parts[linesRead++]);
             
