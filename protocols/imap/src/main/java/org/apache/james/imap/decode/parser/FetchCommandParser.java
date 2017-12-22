@@ -103,6 +103,7 @@ public class FetchCommandParser extends AbstractUidCommandParser {
                         }
                     });
                     fetch.setVanished(true);
+                    break;
                 default:
                     break;
                 }

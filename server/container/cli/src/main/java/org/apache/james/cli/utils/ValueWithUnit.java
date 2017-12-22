@@ -21,6 +21,8 @@ package org.apache.james.cli.utils;
 
 import org.apache.james.mailbox.model.Quota;
 
+import com.google.common.math.LongMath;
+
 /**
  * This class is an helper for parsing integer input that may contain units.
  */
@@ -75,11 +77,11 @@ public class ValueWithUnit {
     public long getConvertedValue() {
         switch (unit) {
             case G:
-                value *= base;
+                return value * LongMath.pow(base, 3);
             case M:
-                value *= base;
+                return value * LongMath.pow(base, 2);
             case K:
-                value *= base;
+                return value * LongMath.pow(base, 1);
             default:
                 return value;
         }

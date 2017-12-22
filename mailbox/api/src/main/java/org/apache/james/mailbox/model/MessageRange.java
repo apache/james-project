@@ -131,19 +131,21 @@ public class MessageRange implements Iterable<MessageUid>{
             if (getUidFrom().compareTo(uid) <= 0) {
                 return true;
             }
+            return false;
         case RANGE:
             if (getUidFrom().compareTo(uid) <= 0 &&
                     getUidTo().compareTo(uid) >= 0) {
                 return true;
             }
+            return false;
         case ONE:
             if (getUidFrom().equals(uid)) {
                 return true;
             }
+            return false;
         default:
-            break;
+            return false;
         }
-        return false;
     }
 
     public String toString() {

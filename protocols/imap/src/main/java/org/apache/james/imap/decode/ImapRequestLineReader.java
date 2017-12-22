@@ -598,6 +598,8 @@ public abstract class ImapRequestLineReader {
         case ')':
             if (stopOnParen) {
                 return currentTotal;
+            } else {
+                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Expected a digit but was " + next);
             }
         default:
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Expected a digit but was " + next);

@@ -376,8 +376,13 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
         switch (urlParams.size()) {
         case 3:
             m_sqlParameters.put("key", urlParams.get(2));
+            m_sqlParameters.put("table", urlParams.get(1));
+            urlParams.get(0);
+            break;
         case 2:
             m_sqlParameters.put("table", urlParams.get(1));
+            urlParams.get(0);
+            break;
         case 1:
             urlParams.get(0);
             break;
@@ -574,12 +579,12 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      * Gets a user by name, ignoring case if specified. If the specified SQL
      * statement has been defined, this method overrides the basic
      * implementation in AbstractJamesUsersRepository to increase performance.
-     * 
+     *
      * @param name
      *            the name of the user being retrieved
      * @param ignoreCase
      *            whether the name is regarded as case-insensitive
-     * 
+     *
      * @return the user being retrieved, null if the user doesn't exist
      * @throws UsersRepositoryException
      */
