@@ -140,8 +140,9 @@ public class NettyImapSession implements ImapSession, NettyConstants {
      * @see org.apache.james.imap.api.process.ImapSession#startTLS()
      */
     public boolean startTLS() {
-        if (!supportStartTLS())
+        if (!supportStartTLS()) {
             return false;
+        }
         channel.setReadable(false);
 
         SslHandler filter = new SslHandler(sslContext.createSSLEngine(), false);
@@ -175,8 +176,9 @@ public class NettyImapSession implements ImapSession, NettyConstants {
      * @see org.apache.james.imap.api.process.ImapSession#startCompression()
      */
     public boolean startCompression() {
-        if (!isCompressionSupported())
+        if (!isCompressionSupported()) {
             return false;
+        }
 
         channel.setReadable(false);
         ZlibDecoder decoder = new ZlibDecoder(ZlibWrapper.NONE);

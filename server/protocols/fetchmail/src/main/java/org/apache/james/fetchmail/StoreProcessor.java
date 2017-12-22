@@ -60,15 +60,17 @@ public class StoreProcessor extends ProcessorAbstract {
             store = getSession().getStore(getJavaMailProviderName());
 
             // Connect
-            if (getHost() != null || getUser() != null || getPassword() != null)
+            if (getHost() != null || getUser() != null || getPassword() != null) {
                 store.connect(getHost(), getUser(), getPassword());
-            else
+            } else {
                 store.connect();
+            }
 
             // Get the Folder
             folder = store.getFolder(getJavaMailFolderName());
-            if (folder == null)
+            if (folder == null) {
                 LOGGER.error("{} No default folder", getFetchTaskName());
+            }
 
             // Process the Folder
             new FolderProcessor(folder, getAccount()).process();
@@ -77,8 +79,9 @@ public class StoreProcessor extends ProcessorAbstract {
             LOGGER.error("A MessagingException has terminated processing of this Folder", ex);
         } finally {
             try {
-                if (null != store && store.isConnected())
+                if (null != store && store.isConnected()) {
                     store.close();
+                }
             } catch (MessagingException ex) {
                 LOGGER.error("A MessagingException occured while closing the Store", ex);
             }

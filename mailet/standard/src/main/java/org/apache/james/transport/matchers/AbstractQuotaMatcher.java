@@ -79,7 +79,9 @@ public abstract class AbstractQuotaMatcher extends GenericMatcher {
     protected boolean isOverQuota(MailAddress address, Mail mail) {
         try {
             boolean over = getQuota(address, mail) < getUsed(address, mail);
-            if (over) LOGGER.info("{} is over quota.", address);
+            if (over) {
+                LOGGER.info("{} is over quota.", address);
+            }
             return over;
         } catch (Throwable e) {
             LOGGER.error("Exception checking quota for: {}", address, e);

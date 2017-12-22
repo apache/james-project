@@ -183,19 +183,24 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
     
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         final JCRMailbox other = (JCRMailbox) obj;
         if (getMailboxId() != null) {
-            if (!getMailboxId().equals(other.getMailboxId()))
-        	return false;
+            if (!getMailboxId().equals(other.getMailboxId())) {
+                return false;
+            }
         } else {
-            if (other.getMailboxId() != null)
-        	return false;
+            if (other.getMailboxId() != null) {
+                return false;
+            }
         }
         return true;
     }

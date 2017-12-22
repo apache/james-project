@@ -51,7 +51,9 @@ public class MessageDeletedEvent implements ImpactingMessageEvent {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         MessageDeletedEvent that = (MessageDeletedEvent) o;
         return Objects.equal(uid, that.uid) && Objects.equal(mailboxPath, that.mailboxPath);
     }

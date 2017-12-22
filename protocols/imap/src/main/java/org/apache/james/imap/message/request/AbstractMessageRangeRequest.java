@@ -54,7 +54,9 @@ public abstract class AbstractMessageRangeRequest extends AbstractImapRequest {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         AbstractMessageRangeRequest that = (AbstractMessageRangeRequest) o;
 

@@ -153,7 +153,9 @@ public class JCRHostSystem extends JamesImapHostSystem {
     private void delete(File home) throws Exception{
         if (home.exists()) {
             File[] files = home.listFiles();
-            if (files == null) return;
+            if (files == null) {
+                return;
+            }
             for (File f : files) {
                 if (f.isDirectory()) {
                     delete(f);

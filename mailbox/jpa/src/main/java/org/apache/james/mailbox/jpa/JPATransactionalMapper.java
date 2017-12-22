@@ -45,8 +45,9 @@ public abstract class JPATransactionalMapper extends TransactionalMapper {
      * @return entitymanger
      */
     public EntityManager getEntityManager() {
-        if (entityManager != null)
+        if (entityManager != null) {
             return entityManager;
+        }
         entityManager = entityManagerFactory.createEntityManager();
         return entityManager;
     }
@@ -89,8 +90,9 @@ public abstract class JPATransactionalMapper extends TransactionalMapper {
      */
     public void endRequest() {
         if (entityManager != null) {
-            if (entityManager.isOpen())
+            if (entityManager.isOpen()) {
                 entityManager.close();
+            }
             entityManager = null;
         }
     }

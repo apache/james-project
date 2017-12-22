@@ -60,9 +60,10 @@ public class multipart_report extends AbstractDataContentHandler
     public void writeTo(Object aPart, String aMimeType, OutputStream aStream)
             throws IOException
     {
-        if (!(aPart instanceof MimeMultipartReport))
+        if (!(aPart instanceof MimeMultipartReport)) {
             throw new IOException("Type \"" + aPart.getClass().getName()
-                    + "\" is not supported.");
+                + "\" is not supported.");
+        }
         try
         {
             ((MimeMultipartReport) aPart).writeTo(aStream);

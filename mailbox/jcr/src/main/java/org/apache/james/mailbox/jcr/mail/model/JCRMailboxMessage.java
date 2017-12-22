@@ -353,35 +353,44 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         
         final JCRMailboxMessage other = (JCRMailboxMessage) obj;
 
         if (getUUID() != null) {
-            if (!getUUID().equals(other.getUUID()))
-        	return false;
+            if (!getUUID().equals(other.getUUID())) {
+                return false;
+            }
         } else {
-            if (other.getUUID() != null)
-        	return false;
+            if (other.getUUID() != null) {
+                return false;
+            }
         }
         if (getMailboxId() != null) {
-            if (!getMailboxId().equals(other.getMailboxId()))
-        	return false;
+            if (!getMailboxId().equals(other.getMailboxId())) {
+                return false;
+            }
         } else {
-            if (other.getMailboxId() != null)
-        	return false;
+            if (other.getMailboxId() != null) {
+                return false;
+            }
         }
         if (getId() != null) {
-            if (!getId().equals(other.getId()))
-        	return false;
+            if (!getId().equals(other.getId())) {
+                return false;
+            }
         } else {
-            if (other.getId() != null)
-        	return false;
+            if (other.getId() != null) {
+                return false;
+            }
         }
         return true;
     }

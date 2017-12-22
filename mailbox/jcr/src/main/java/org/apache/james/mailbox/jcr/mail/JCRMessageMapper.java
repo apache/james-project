@@ -563,8 +563,9 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
         QueryManager manager = getSession().getWorkspace().getQueryManager();
         Query query = manager.createQuery(queryString, XPATH_LANGUAGE);
-        if (batchSize > 0)
+        if (batchSize > 0) {
             query.setLimit(batchSize);
+        }
         QueryResult result = query.execute();
 
         NodeIterator iterator = result.getNodes();
@@ -600,8 +601,9 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
         QueryManager manager = getSession().getWorkspace().getQueryManager();
         Query query = manager.createQuery(queryString, XPATH_LANGUAGE);
-        if (batchSize > 0)
+        if (batchSize > 0) {
             query.setLimit(batchSize);
+        }
         QueryResult result = query.execute();
 
         NodeIterator iterator = result.getNodes();
@@ -619,8 +621,9 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
                 + JCRMailboxMessage.UID_PROPERTY;
         QueryManager manager = getSession().getWorkspace().getQueryManager();
         Query query = manager.createQuery(queryString, XPATH_LANGUAGE);
-        if (batchSize > 0)
+        if (batchSize > 0) {
             query.setLimit(batchSize);
+        }
         QueryResult result = query.execute();
 
         NodeIterator iterator = result.getNodes();

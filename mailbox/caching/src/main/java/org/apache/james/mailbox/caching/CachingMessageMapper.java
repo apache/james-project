@@ -114,8 +114,9 @@ public class CachingMessageMapper implements MessageMapper {
     public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator calculator, MessageRange set)
             throws MailboxException {
         //check if there are in fact any updates
-        if (set.iterator().hasNext())
+        if (set.iterator().hasNext()) {
             invalidateMetadata(mailbox);
+        }
         return underlying.updateFlags(mailbox, calculator, set);
     }
 

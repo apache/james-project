@@ -168,12 +168,16 @@ public class FileMailQueue implements ManageableMailQueue {
             oout = new ObjectOutputStream(foout);
             oout.writeObject(mail);
             oout.flush();
-            if (sync) foout.getFD().sync();
+            if (sync) {
+                foout.getFD().sync();
+            }
             out = new FileOutputStream(item.getMessageFile());
 
             mail.getMessage().writeTo(out);
             out.flush();
-            if (sync) out.getFD().sync();
+            if (sync) {
+                out.getFD().sync();
+            }
 
             keyMappings.put(key, item);
 

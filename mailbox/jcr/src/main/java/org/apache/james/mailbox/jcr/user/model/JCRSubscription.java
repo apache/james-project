@@ -140,26 +140,33 @@ public class JCRSubscription implements Subscription, Persistent, JCRImapConstan
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         final JCRSubscription other = (JCRSubscription) obj;
         if (getUser() != null) {
-            if (!getUser().equals(other.getUser()))
-        	return false;
+            if (!getUser().equals(other.getUser())) {
+                return false;
+            }
         } else {
-            if (other.getUser() != null)
-        	return false;
+            if (other.getUser() != null) {
+                return false;
+            }
         }
         if (getMailbox() != null) {
-            if (!getMailbox().equals(other.getMailbox()))
-        	return false;
+            if (!getMailbox().equals(other.getMailbox())) {
+                return false;
+            }
         } else {
-            if (other.getMailbox() != null)
-        	return false;
+            if (other.getMailbox() != null) {
+                return false;
+            }
         }
         return true;
     }

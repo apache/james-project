@@ -66,15 +66,17 @@ public class MailPriorityHandler implements JamesMessageHook, ProtocolHandler {
                     }
 
                     // already the highest priority
-                    if (p == MailPrioritySupport.HIGH_PRIORITY)
+                    if (p == MailPrioritySupport.HIGH_PRIORITY) {
                         break;
+                    }
                 }
             }
         }
 
         // set the priority if one was found
-        if (p != null)
+        if (p != null) {
             mail.setAttribute(MailPrioritySupport.MAIL_PRIORITY, p);
+        }
         return new HookResult(HookReturnCode.DECLINED);
     }
 

@@ -126,17 +126,22 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
 
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
+            if (this == obj) {
                 return true;
-            if (obj == null)
+            }
+            if (obj == null) {
                 return false;
-            if (getClass() != obj.getClass())
+            }
+            if (getClass() != obj.getClass()) {
                 return false;
+            }
             final MailboxIdUidKey other = (MailboxIdUidKey) obj;
-            if (mailbox != other.mailbox)
+            if (mailbox != other.mailbox) {
                 return false;
-            if (uid != other.uid)
+            }
+            if (uid != other.uid) {
                 return false;
+            }
             return true;
         }
 

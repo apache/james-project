@@ -130,12 +130,13 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         super.doConfigure(configuration);
         if (isEnabled()) {
             String authRequiredString = configuration.getString("authRequired", "false").trim().toLowerCase(Locale.US);
-            if (authRequiredString.equals("true"))
+            if (authRequiredString.equals("true")) {
                 authRequired = AUTH_REQUIRED;
-            else if (authRequiredString.equals("announce"))
+            } else if (authRequiredString.equals("announce")) {
                 authRequired = AUTH_ANNOUNCE;
-            else
+            } else {
                 authRequired = AUTH_DISABLED;
+            }
             if (authRequired != AUTH_DISABLED) {
                 LOGGER.info("This SMTP server requires authentication.");
             } else {
@@ -176,8 +177,9 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
             heloEhloEnforcement = configuration.getBoolean("heloEhloEnforcement", true);
 
-            if (authRequiredString.equals("true"))
+            if (authRequiredString.equals("true")) {
                 authRequired = AUTH_REQUIRED;
+            }
 
             // get the smtpGreeting
             smtpGreeting = configuration.getString("smtpGreeting", null);
@@ -260,8 +262,9 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
          * @see org.apache.james.protocols.smtp.SMTPConfiguration#isAuthRequired(java.lang.String)
          */
         public boolean isAuthRequired(String remoteIP) {
-            if (SMTPServer.this.authRequired == AUTH_ANNOUNCE)
+            if (SMTPServer.this.authRequired == AUTH_ANNOUNCE) {
                 return true;
+            }
             boolean authRequired = SMTPServer.this.authRequired != AUTH_DISABLED;
             if (authorizedNetworks != null) {
                 authRequired = authRequired && !SMTPServer.this.authorizedNetworks.matchInetNetwork(remoteIP);

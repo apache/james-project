@@ -85,8 +85,9 @@ public final class ExternalSession implements Session {
     private void readlineInto(StringBuffer buffer) throws Exception {
         monitor.debug("[Reading line]");
         readBuffer.flip();
-        while (oneFromLine(buffer))
+        while (oneFromLine(buffer)) {
             ;
+        }
         // May have partial read
         readBuffer.compact();
         monitor.debug("[Done]");

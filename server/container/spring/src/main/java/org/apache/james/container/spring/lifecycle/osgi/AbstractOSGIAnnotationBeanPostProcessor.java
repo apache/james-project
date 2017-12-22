@@ -85,10 +85,11 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
 
         @SuppressWarnings("rawtypes")
         static void setInterfaces(Object importer, Class[] classes) {
-            if (importer instanceof OsgiServiceProxyFactoryBean)
+            if (importer instanceof OsgiServiceProxyFactoryBean) {
                 ((OsgiServiceProxyFactoryBean) importer).setInterfaces(classes);
-            else
+            } else {
                 ((OsgiServiceCollectionProxyFactoryBean) importer).setInterfaces(classes);
+            }
         }
 
         static void setBundleContext(Object importer, BundleContext context) {
@@ -100,10 +101,11 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
         }
 
         static void setCardinality(Object importer, Cardinality cardinality) {
-            if (importer instanceof OsgiServiceProxyFactoryBean)
+            if (importer instanceof OsgiServiceProxyFactoryBean) {
                 ((OsgiServiceProxyFactoryBean) importer).setCardinality(cardinality);
-            else
+            } else {
                 ((OsgiServiceCollectionProxyFactoryBean) importer).setCardinality(cardinality);
+            }
         }
 
 
@@ -112,19 +114,21 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
         }
 
         static void setFilter(Object importer, String filter) {
-            if (importer instanceof OsgiServiceProxyFactoryBean)
+            if (importer instanceof OsgiServiceProxyFactoryBean) {
                 ((OsgiServiceProxyFactoryBean) importer).setFilter(filter);
-            else
+            } else {
                 ((OsgiServiceCollectionProxyFactoryBean) importer).setFilter(filter);
+            }
         }
 
 
         @SuppressWarnings("unused")
         static void setServiceBean(Object importer, String name) {
-            if (importer instanceof OsgiServiceProxyFactoryBean)
+            if (importer instanceof OsgiServiceProxyFactoryBean) {
                 ((OsgiServiceProxyFactoryBean) importer).setServiceBeanName(name);
-            else
+            } else {
                 ((OsgiServiceCollectionProxyFactoryBean) importer).setServiceBeanName(name);
+            }
         }
     }
 

@@ -68,17 +68,21 @@ public abstract class GenericRegexMatcher extends GenericMatcher {
         MimeMessage message = mail.getMessage();
 
         //Loop through all the patterns
-        if (patterns != null) for (Object[] pattern1 : patterns) {
-            //Get the header name
-            String headerName = (String) pattern1[0];
-            //Get the patterns for that header
-            Pattern pattern = (Pattern) pattern1[1];
-            //Get the array of header values that match that
-            String headers[] = message.getHeader(headerName);
-            //Loop through the header values
-            if (headers != null) for (String header : headers) {
-                if (pattern.matcher(header).matches()) {
-                    return mail.getRecipients();
+        if (patterns != null) {
+            for (Object[] pattern1 : patterns) {
+                //Get the header name
+                String headerName = (String) pattern1[0];
+                //Get the patterns for that header
+                Pattern pattern = (Pattern) pattern1[1];
+                //Get the array of header values that match that
+                String headers[] = message.getHeader(headerName);
+                //Loop through the header values
+                if (headers != null) {
+                    for (String header : headers) {
+                        if (pattern.matcher(header).matches()) {
+                            return mail.getRecipients();
+                        }
+                    }
                 }
             }
         }

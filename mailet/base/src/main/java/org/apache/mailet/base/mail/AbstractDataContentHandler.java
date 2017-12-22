@@ -102,8 +102,9 @@ public abstract class AbstractDataContentHandler implements DataContentHandler
             throws UnsupportedFlavorException, IOException
     {
         Object content = null;
-        if (getDataFlavor().equals(aDataFlavor))
+        if (getDataFlavor().equals(aDataFlavor)) {
             content = getContent(aDataSource);
+        }
         return content;
     }
 

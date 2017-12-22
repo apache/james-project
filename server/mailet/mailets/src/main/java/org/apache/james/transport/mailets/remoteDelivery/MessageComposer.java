@@ -52,15 +52,16 @@ public class MessageComposer {
             SendFailedException exception = (SendFailedException) e;
 
             // No error
-            if (exception.getInvalidAddresses().length == 0 && exception.getValidUnsentAddresses().length == 0)
+            if (exception.getInvalidAddresses().length == 0 && exception.getValidUnsentAddresses().length == 0) {
                 return null;
+            }
 
             Exception ex;
             StringBuilder sb = new StringBuilder();
             boolean smtpExFound = false;
             sb.append("RemoteHost said:");
 
-            if (e instanceof MessagingException)
+            if (e instanceof MessagingException) {
                 while ((ex = ((MessagingException) e).getNextException()) != null && ex instanceof MessagingException) {
                     e = ex;
                     if (ex.getClass().getName().endsWith(".SMTPAddressFailedException")) {
@@ -76,6 +77,7 @@ public class MessageComposer {
                         }
                     }
                 }
+            }
             if (!smtpExFound) {
                 boolean invalidAddr = false;
                 sb.append(" ( ");
@@ -85,8 +87,9 @@ public class MessageComposer {
                     invalidAddr = true;
                 }
                 if (exception.getValidUnsentAddresses().length > 0) {
-                    if (invalidAddr)
+                    if (invalidAddr) {
                         sb.append(" ");
+                    }
                     sb.append(Arrays.toString(exception.getValidUnsentAddresses()));
                 }
                 sb.append(" - [");
@@ -104,8 +107,9 @@ public class MessageComposer {
         out.print(permanentAsString(executionResult.isPermanent()) + " exception delivering mail (" + mail.getName()
             + ")" + retrieveExceptionLog(executionResult.getException().orElse(null)) + ": ");
         if (configuration.isDebug()) {
-            if (executionResult.getException().isPresent())
+            if (executionResult.getException().isPresent()) {
                 executionResult.getException().get().printStackTrace(out);
+            }
         }
         return sout.toString();
     }

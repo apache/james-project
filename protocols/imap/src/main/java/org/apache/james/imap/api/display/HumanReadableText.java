@@ -236,25 +236,33 @@ public class HumanReadableText {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         final HumanReadableText other = (HumanReadableText) obj;
         if (defaultValue == null) {
-            if (other.defaultValue != null)
+            if (other.defaultValue != null) {
                 return false;
-        } else if (!defaultValue.equals(other.defaultValue))
+            }
+        } else if (!defaultValue.equals(other.defaultValue)) {
             return false;
+        }
         if (key == null) {
-            if (other.key != null)
+            if (other.key != null) {
                 return false;
-        } else if (!key.equals(other.key))
+            }
+        } else if (!key.equals(other.key)) {
             return false;
-        if (!Arrays.equals(parameters, other.parameters))
+        }
+        if (!Arrays.equals(parameters, other.parameters)) {
             return false;
+        }
         return true;
     }
 

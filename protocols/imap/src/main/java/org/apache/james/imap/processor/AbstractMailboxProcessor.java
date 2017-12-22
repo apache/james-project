@@ -223,8 +223,9 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             if (!flagUpdateUids.isEmpty()) {
                 Iterator<MessageRange> ranges = MessageRange.toRanges(flagUpdateUids).iterator();
                 while(ranges.hasNext()) {
-                 if (messageManager == null)
-                 messageManager = getMailbox(session, selected);
+                 if (messageManager == null) {
+                     messageManager = getMailbox(session, selected);
+                 }
                     addFlagsResponses(session, selected, responder, useUid, ranges.next(), messageManager, mailboxSession);
                 }
 
@@ -373,13 +374,15 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             sb.append(mailboxPath.getNamespace());
         }
         if (mailboxPath.getUser() != null && !mailboxPath.getUser().equals("")) {
-            if (sb.length() > 0)
+            if (sb.length() > 0) {
                 sb.append(delimiter);
+            }
             sb.append(mailboxPath.getUser());
         }
         if (mailboxPath.getName() != null && !mailboxPath.getName().equals("")) {
-            if (sb.length() > 0)
+            if (sb.length() > 0) {
                 sb.append(delimiter);
+            }
             sb.append(mailboxPath.getName());
         }
         return sb.toString();

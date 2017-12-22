@@ -268,8 +268,9 @@ public abstract class AbstractFileRepository implements Repository, Configurable
     public synchronized boolean containsKey(String key) {
         try {
             final File file = getFile(key);
-            if (DEBUG)
+            if (DEBUG) {
                 LOGGER.debug("checking key {}", key);
+            }
             return file.exists();
         } catch (Exception e) {
             throw new RuntimeException("Exception caught while searching " + "an object: " + e);

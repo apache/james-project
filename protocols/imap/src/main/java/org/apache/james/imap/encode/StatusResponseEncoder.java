@@ -80,13 +80,15 @@ public class StatusResponseEncoder extends AbstractChainedImapEncoder {
             	composer.message(number);
             }
             if (parameters != null && !parameters.isEmpty()) {
-                if (useParens)
-                	composer.openParen();
+                if (useParens) {
+                    composer.openParen();
+                }
                 for (String parameter : parameters) {
                     composer.message(parameter);
                 }
-                if (useParens)
-                	composer.closeParen();
+                if (useParens) {
+                    composer.closeParen();
+                }
             }
             composer.closeSquareBracket();
         }

@@ -379,8 +379,9 @@ public abstract class ImapRequestLineReader {
             	in = consumeLiteral(false);
             	byte[] buf = new byte[ 0xFFFF ]; 
                 
-            	for (int len; (len = in.read(buf)) != -1; ) 
-                    out.write( buf, 0, len); 
+            	for (int len; (len = in.read(buf)) != -1; ) {
+                    out.write(buf, 0, len);
+                }
                 
                 final byte[] bytes = out.toByteArray();
                 final ByteBuffer buffer = ByteBuffer.wrap(bytes);
@@ -819,8 +820,9 @@ public abstract class ImapRequestLineReader {
             return Long.MAX_VALUE;
         } else {
             long number = Long.parseLong(value);
-            if (number < ImapConstants.MIN_NZ_NUMBER || number > ImapConstants.MAX_NZ_NUMBER)
+            if (number < ImapConstants.MIN_NZ_NUMBER || number > ImapConstants.MAX_NZ_NUMBER) {
                 throw new DecodingException(HumanReadableText.INVALID_MESSAGESET, "Invalid message set. Numbers must be unsigned 32-bit Integers");
+            }
             return number;
 
         }
@@ -858,8 +860,9 @@ public abstract class ImapRequestLineReader {
 
     public static class TagCharValidator extends ATOM_CHARValidator {
         public boolean isValid(char chr) {
-            if (chr == '+')
+            if (chr == '+') {
                 return false;
+            }
             return super.isValid(chr);
         }
     }

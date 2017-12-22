@@ -224,13 +224,15 @@ public class MaildirFolder {
             FileReader fileReader = null;
             BufferedReader reader = null;
             try {
-                if (!uidList.exists())
+                if (!uidList.exists()) {
                     createUidFile();
+                }
                 fileReader = new FileReader(uidList);
                 reader = new BufferedReader(fileReader);
                 String line = reader.readLine();
-                if (line != null)
+                if (line != null) {
                     readUidListHeader(line);
+                }
                 return null;
             } catch (IOException e) {
                 throw new MailboxException("Unable to read last uid", e);
@@ -249,8 +251,9 @@ public class MaildirFolder {
      * @throws IOException
      */
     public long getUidValidity() throws IOException {
-        if (uidValidity == -1)
+        if (uidValidity == -1) {
             uidValidity = readUidValidity();
+        }
         return uidValidity;
     }
     
@@ -297,8 +300,9 @@ public class MaildirFolder {
      */
     private void saveUidValidity(long uidValidity) throws IOException {
         File validityFile = new File(rootFolder, VALIDITY_FILE);
-        if (!validityFile.createNewFile())
+        if (!validityFile.createNewFile()) {
             throw new IOException("Could not create file " + validityFile);
+        }
         FileOutputStream fos = new FileOutputStream(validityFile);
         try {
             fos.write(String.valueOf(uidValidity).getBytes());
@@ -410,8 +414,9 @@ public class MaildirFolder {
         SortedMap<MessageUid, MaildirMessageName> allUids = getUidMap(session, from, to);
         SortedMap<MessageUid, MaildirMessageName> filteredUids = new TreeMap<>();
         for (Entry<MessageUid, MaildirMessageName> entry : allUids.entrySet()) {
-            if (filter.accept(null, entry.getValue().getFullName()))
+            if (filter.accept(null, entry.getValue().getFullName())) {
                 filteredUids.put(entry.getKey(), entry.getValue());
+            }
         }
         return filteredUids;
     }
@@ -433,12 +438,14 @@ public class MaildirFolder {
         SortedMap<MessageUid, MaildirMessageName> allUids = getUidMap(session, MessageUid.MIN_VALUE, to);
         SortedMap<MessageUid, MaildirMessageName> filteredUids = new TreeMap<>();
         int theLimit = limit;
-        if (limit < 1)
+        if (limit < 1) {
             theLimit = allUids.size();
+        }
         int counter = 0;
         for (Entry<MessageUid, MaildirMessageName> entry : allUids.entrySet()) {
-            if (counter >= theLimit)
+            if (counter >= theLimit) {
                 break;
+            }
             if (filter.accept(null, entry.getValue().getFullName())) {
                 filteredUids.put(entry.getKey(), entry.getValue());
                 counter++;
@@ -465,19 +472,22 @@ public class MaildirFolder {
 
             try {
                 if (!uidList.isFile()) {
-                    if (!uidList.createNewFile())
+                    if (!uidList.createNewFile()) {
                         throw new IOException("Could not create file " + uidList);
+                    }
                     String[] curFiles = curFolder.list();
                     String[] newFiles = newFolder.list();
                     messageCount = curFiles.length + newFiles.length;
                     String[] allFiles = ArrayUtils.addAll(curFiles, newFiles);
-                    for (String file : allFiles)
+                    for (String file : allFiles) {
                         lines.add(String.valueOf(getNextUid().asLong()) + " " + file);
+                    }
                     PrintWriter pw = new PrintWriter(uidList);
                     try {
                         pw.println(createUidListHeader());
-                        for (String line : lines)
-                        pw.println(line);
+                        for (String line : lines) {
+                            pw.println(line);
+                        }
                     } finally {
                         IOUtils.closeQuietly(pw);
                     }
@@ -490,8 +500,9 @@ public class MaildirFolder {
                         reader = new BufferedReader(fileReader);
                         String line = reader.readLine();
                         // the first line in the file contains the next uid and message count
-                        while ((line = reader.readLine()) != null)
+                        while ((line = reader.readLine()) != null) {
                             lines.add(line);
+                        }
                     } finally {
                         IOUtils.closeQuietly(reader);
                         IOUtils.closeQuietly(fileReader);
@@ -543,19 +554,22 @@ public class MaildirFolder {
         File uidList = uidFile;
         PrintWriter pw = null;
         try {
-            if (!uidList.createNewFile())
+            if (!uidList.createNewFile()) {
                 throw new IOException("Could not create file " + uidList);
+            }
             lastUid = Optional.empty();
             String[] curFiles = curFolder.list();
             String[] newFiles = newFolder.list();
             messageCount = curFiles.length + newFiles.length;
             String[] allFiles = (String[]) ArrayUtils.addAll(curFiles, newFiles);
-            for (String file : allFiles)
+            for (String file : allFiles) {
                 uidMap.put(getNextUid(), newMaildirMessageName(MaildirFolder.this, file));
+            }
             pw = new PrintWriter(uidList);
             pw.println(createUidListHeader());
-            for (Entry<MessageUid, MaildirMessageName> entry : uidMap.entrySet())
+            for (Entry<MessageUid, MaildirMessageName> entry : uidMap.entrySet()) {
                 pw.println(String.valueOf(entry.getKey().asLong()) + " " + entry.getValue().getFullName());
+            }
         } catch (IOException e) {
             throw new MailboxException("Unable to create uid file", e);
         } finally {
@@ -580,8 +594,9 @@ public class MaildirFolder {
             reader = new BufferedReader(fileReader);
             String line = reader.readLine();
             // the first line in the file contains the next uid and message count
-            if (line != null)
+            if (line != null) {
                 readUidListHeader(line);
+            }
             int lineNumber = 1; // already read the first line
             while ((line = reader.readLine()) != null) {
                 lineNumber++;
@@ -600,14 +615,16 @@ public class MaildirFolder {
             for (String file : allFiles) {
                 MaildirMessageName messageName = newMaildirMessageName(MaildirFolder.this, file);
                 MessageUid uid = reverseUidMap.get(messageName.getBaseName());
-                if (uid == null)
+                if (uid == null) {
                     uid = getNextUid();
+                }
                 uidMap.put(uid, messageName);
             }
             pw = new PrintWriter(uidList);
             pw.println(createUidListHeader());
-            for (Entry<MessageUid, MaildirMessageName> entry : uidMap.entrySet())
+            for (Entry<MessageUid, MaildirMessageName> entry : uidMap.entrySet()) {
                 pw.println(String.valueOf(entry.getKey().asLong()) + " " + entry.getValue().getFullName());
+            }
         } catch (IOException e) {
             throw new MailboxException("Unable to update uid file", e);
         } finally {
@@ -630,8 +647,9 @@ public class MaildirFolder {
             String line = reader.readLine();
             // the first line in the file contains the next uid and message
             // count
-            if (line != null)
+            if (line != null) {
                 readUidListHeader(line);
+            }
             int lineNumber = 1; // already read the first line
             while ((line = reader.readLine()) != null) {
                 lineNumber++;
@@ -674,10 +692,14 @@ public class MaildirFolder {
      */
     private SortedMap<MessageUid, MaildirMessageName> truncateMap(Map<MessageUid, MaildirMessageName> map, MessageUid from, MessageUid to) {
         TreeMap<MessageUid, MaildirMessageName> sortedMap;
-        if (map instanceof TreeMap<?, ?>) sortedMap = (TreeMap<MessageUid, MaildirMessageName>) map;
-        else sortedMap = new TreeMap<>(map);
-        if (to != null)
+        if (map instanceof TreeMap<?, ?>) {
+            sortedMap = (TreeMap<MessageUid, MaildirMessageName>) map;
+        } else {
+            sortedMap = new TreeMap<>(map);
+        }
+        if (to != null) {
             return sortedMap.subMap(from, to.next());
+        }
         return sortedMap.tailMap(from);
     }
     
@@ -688,8 +710,9 @@ public class MaildirFolder {
      * @throws IOException
      */
     private void readUidListHeader(String line) throws IOException {
-        if (line == null)
+        if (line == null) {
             throw new IOException("Header entry in uid-file is null");
+        }
         int gap1 = line.indexOf(" ");
         if (gap1 == -1) {
             // there must be some issues in the file if no gap can be found
@@ -697,8 +720,9 @@ public class MaildirFolder {
             
         }
         int version = Integer.valueOf(line.substring(0, gap1));
-        if (version != 1)
+        if (version != 1) {
             throw new IOException("Cannot read uidlists with versions other than 1.");
+        }
         int gap2 = line.indexOf(" ", gap1 + 1);
         lastUid = Optional.of(MessageUid.of(Long.valueOf(line.substring(gap1 + 1, gap2))));
         messageCount = Integer.valueOf(line.substring(gap2 + 1, line.length()));
@@ -720,10 +744,12 @@ public class MaildirFolder {
      */
     public static String stripMetaFromName(String fileName) {
         int end = fileName.indexOf(",S="); // the size
-        if (end == -1)
+        if (end == -1) {
             end = fileName.indexOf(":2,"); // the flags
-        if (end == -1)
+        }
+        if (end == -1) {
             return fileName; // there is no meta data to strip
+        }
         return fileName.substring(0, end);
     }
 
@@ -746,23 +772,27 @@ public class MaildirFolder {
                     reader = new BufferedReader(fileReader);
                     String line = reader.readLine();
                     // the first line in the file contains the next uid and message count
-                    if (line != null)
+                    if (line != null) {
                         readUidListHeader(line);
+                    }
                     ArrayList<String> lines = new ArrayList<>();
-                    while ((line = reader.readLine()) != null)
+                    while ((line = reader.readLine()) != null) {
                         lines.add(line);
+                    }
                     uid = getNextUid();
                     lines.add(String.valueOf(uid.asLong()) + " " + name);
                     messageCount++;
                     pw = new PrintWriter(uidList);
                     pw.println(createUidListHeader());
-                    for (String entry : lines)
+                    for (String entry : lines) {
                         pw.println(entry);
+                    }
                 }
                 else {
                     // create the file
-                    if (!uidList.createNewFile())
+                    if (!uidList.createNewFile()) {
                         throw new IOException("Could not create file " + uidList);
+                    }
                     String[] curFiles = curFolder.list();
                     String[] newFiles = newFolder.list();
                     messageCount = curFiles.length + newFiles.length;
@@ -772,13 +802,15 @@ public class MaildirFolder {
                         MessageUid theUid = getNextUid();
                         lines.add(String.valueOf(theUid.asLong()) + " " + file);
                         // the listed names already include the message to append
-                        if (file.equals(name))
+                        if (file.equals(name)) {
                             uid = theUid;
+                        }
                     }
                     pw = new PrintWriter(uidList);
                     pw.println(createUidListHeader());
-                    for (String line : lines)
+                    for (String line : lines) {
                         pw.println(line);
+                    }
                 }
             } catch (IOException e) {
                 throw new MailboxException("Unable to append msg", e);
@@ -823,8 +855,9 @@ public class MaildirFolder {
                 }
                 writer = new PrintWriter(uidList);
                 writer.println(createUidListHeader());
-                for (String entry : lines)
+                for (String entry : lines) {
                     writer.println(entry);
+                }
             } catch (IOException e) {
                 throw new MailboxException("Unable to update msg with uid " + uid, e);
             } finally {
@@ -881,8 +914,9 @@ public class MaildirFolder {
                     FileUtils.forceDelete(deletedMessage.getFile());
                     writer = new PrintWriter(uidList);
                     writer.println(createUidListHeader());
-                    for (String entry : lines)
+                    for (String entry : lines) {
                         writer.println(entry);
+                    }
                 }
                 return deletedMessage;
 

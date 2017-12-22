@@ -65,10 +65,12 @@ public class PortUtil {
         while (true) {
             try {
                 nextPortCandidate++;
-                if (PORT_LAST_USED == nextPortCandidate)
+                if (PORT_LAST_USED == nextPortCandidate) {
                     throw new RuntimeException("no free port found");
-                if (nextPortCandidate > PORT_RANGE_END)
+                }
+                if (nextPortCandidate > PORT_RANGE_END) {
                     nextPortCandidate = PORT_RANGE_START; // start over
+                }
 
                 // test, port is available
                 ServerSocket ss;

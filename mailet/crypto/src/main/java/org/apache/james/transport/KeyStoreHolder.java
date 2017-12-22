@@ -83,7 +83,9 @@ public class KeyStoreHolder {
     public KeyStoreHolder(String keyStoreFileName, String keyStorePassword, String keyStoreType) 
         throws KeyStoreException, NoSuchAlgorithmException, CertificateException, NoSuchProviderException, IOException {
         
-        if (keyStorePassword == null) keyStorePassword = "";
+        if (keyStorePassword == null) {
+            keyStorePassword = "";
+        }
 
         try {
             InitJCE.init();
@@ -99,7 +101,9 @@ public class KeyStoreHolder {
         
         keyStore = KeyStore.getInstance(keyStoreType);        
         keyStore.load(new BufferedInputStream(new FileInputStream(keyStoreFileName)), keyStorePassword.toCharArray());
-        if (keyStore.size() == 0) throw new KeyStoreException("The keystore must be not empty");
+        if (keyStore.size() == 0) {
+            throw new KeyStoreException("The keystore must be not empty");
+        }
     }
     
     /**

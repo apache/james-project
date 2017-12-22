@@ -76,10 +76,9 @@ public class UnwrapText extends GenericMailet {
         try {
             // TODO replace non standard quotes (at least "> " with ">", otherwise the widely used  "> > >" will not work.
             
-            if (FlowedMessageUtils.isFlowedTextMessage(mail.getMessage()))
+            if (FlowedMessageUtils.isFlowedTextMessage(mail.getMessage())) {
                 FlowedMessageUtils.deflowMessage(mail.getMessage());
-            
-            else {
+            } else {
                 Object o = mail.getMessage().getContent();
                 if (o instanceof String) {
                     String unwrapped = unwrap((String) o, quotewidth);
@@ -109,20 +108,30 @@ public class UnwrapText extends GenericMailet {
         int width = 0;
         for (int i = 0; i < lines.length - 1; i++) {
             String l = lines[i].trim();
-            if (l.length() > width) width = l.length();
+            if (l.length() > width) {
+                width = l.length();
+            }
         }
         
-        if (width < 40) return text;
-        if (qwidth < 0) qwidth = width - qwidth;
+        if (width < 40) {
+            return text;
+        }
+        if (qwidth < 0) {
+            qwidth = width - qwidth;
+        }
         
         StringBuilder result = new StringBuilder();
         int prevWrapped = 0;
         for (int i = 0; i < lines.length; i++) {
             if (prevWrapped != 0) {
                 if (prevWrapped > 0) {
-                    if (result.charAt(result.length() - 1) != ' ') result.append(" ");
+                    if (result.charAt(result.length() - 1) != ' ') {
+                        result.append(" ");
+                    }
                 }
-                else result.append("\r\n");
+                else {
+                    result.append("\r\n");
+                }
             }
             String l = lines[i];
             Matcher m1 = p1.matcher(l);
@@ -139,23 +148,32 @@ public class UnwrapText extends GenericMailet {
                 )) {
                 
                 if (b) {
-                    if (prevWrapped > 0 && m1.groupCount() >= 2) result.append(m1.group(2));
-                    else result.append(l);
+                    if (prevWrapped > 0 && m1.groupCount() >= 2) {
+                        result.append(m1.group(2));
+                    } else {
+                        result.append(l);
+                    }
                     prevWrapped = 1;
                     
                 } else {
                     lines[i + 1] = l + (l.charAt(l.length() - 1) != ' ' ? " " : "") + m2.group(2).trim();
                     // Revert the previous append
                     if (prevWrapped != 0) {
-                        if (prevWrapped > 0) result.deleteCharAt(result.length() - 1);
-                        else result.delete(result.length() - 2, result.length());
+                        if (prevWrapped > 0) {
+                            result.deleteCharAt(result.length() - 1);
+                        } else {
+                            result.delete(result.length() - 2, result.length());
+                        }
                     }
                 }
                 
             } else {
                 Matcher m3 = p2.matcher(l);
-                if (prevWrapped > 0 && m3.matches()) result.append(m3.group(2));
-                else result.append(lines[i]);
+                if (prevWrapped > 0 && m3.matches()) {
+                    result.append(m3.group(2));
+                } else {
+                    result.append(lines[i]);
+                }
                 prevWrapped = -1;
             }
         }

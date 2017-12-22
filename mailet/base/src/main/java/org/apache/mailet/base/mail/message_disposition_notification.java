@@ -80,8 +80,9 @@ public class message_disposition_notification
         {
             reader = new BufferedReader(new InputStreamReader(aDataSource
                     .getInputStream(), encoding), 2048);
-            while (reader.ready())
+            while (reader.ready()) {
                 writer.write(reader.read());
+            }
             writer.flush();
             content = writer.toString();
         }
@@ -125,9 +126,10 @@ public class message_disposition_notification
     public void writeTo(Object aPart, String aMimeType, OutputStream aStream)
             throws IOException
     {
-        if (!(aPart instanceof String))
+        if (!(aPart instanceof String)) {
             throw new IOException("Type \"" + aPart.getClass().getName()
-                    + "\" is not supported.");
+                + "\" is not supported.");
+        }
 
         String encoding = getCharacterSet(getDataFlavor().getMimeType());
         Writer writer;
@@ -157,8 +159,9 @@ public class message_disposition_notification
         }
         finally
         {
-            if (null == characterSet)
+            if (null == characterSet) {
                 characterSet = "us-ascii";
+            }
         }
         return MimeUtility.javaCharset(characterSet);
     }

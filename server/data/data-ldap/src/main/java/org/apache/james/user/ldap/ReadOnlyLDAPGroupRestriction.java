@@ -139,8 +139,9 @@ public class ReadOnlyLDAPGroupRestriction {
         Attribute members = groupAttributes.get(memberAttribute);
         NamingEnumeration<?> memberDNs = members.getAll();
 
-        while (memberDNs.hasMore())
+        while (memberDNs.hasMore()) {
             result.add(memberDNs.next().toString());
+        }
 
         return result;
     }

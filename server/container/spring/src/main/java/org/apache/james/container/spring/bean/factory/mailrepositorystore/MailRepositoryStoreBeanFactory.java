@@ -150,8 +150,9 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
     @SuppressWarnings("deprecation")
     public synchronized MailRepository select(String destination) throws MailRepositoryStoreException {
         int idx = destination.indexOf(':');
-        if (idx == -1)
+        if (idx == -1) {
             throw new MailRepositoryStoreException("Destination is malformed. Must be a valid URL: " + destination);
+        }
         String protocol = destination.substring(0, idx);
 
         String repID = destination;

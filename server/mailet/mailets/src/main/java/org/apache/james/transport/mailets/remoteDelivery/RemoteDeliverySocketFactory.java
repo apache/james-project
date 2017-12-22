@@ -69,10 +69,11 @@ public class RemoteDeliverySocketFactory extends SocketFactory {
      *            the ip address or host name the delivery socket will bind to
      */
     public static void setBindAdress(String addr) throws UnknownHostException {
-        if (addr == null)
+        if (addr == null) {
             bindAddress = null;
-        else
+        } else {
             bindAddress = InetAddress.getByName(addr);
+        }
     }
 
     /**

@@ -106,8 +106,9 @@ public class FileMailRepository extends AbstractMailRepository {
             streamRepository.configure(reposConfiguration);
             streamRepository.init();
 
-            if (cacheKeys)
+            if (cacheKeys) {
                 keys = Collections.synchronizedSet(new HashSet<String>());
+            }
 
             // Finds non-matching pairs and deletes the extra files
             HashSet<String> streamKeys = new HashSet<>();
@@ -207,8 +208,9 @@ public class FileMailRepository extends AbstractMailRepository {
                 }
 
             } finally {
-                if (out != null)
+                if (out != null) {
                     out.close();
+                }
             }
         }
         // Always save the header information
@@ -254,18 +256,19 @@ public class FileMailRepository extends AbstractMailRepository {
         // Fix ConcurrentModificationException by cloning
         // the keyset before getting an iterator
         final ArrayList<String> clone;
-        if (keys != null)
+        if (keys != null) {
             synchronized (lock) {
                 clone = new ArrayList<>(keys);
             }
-        else {
+        } else {
             clone = new ArrayList<>();
             for (Iterator<String> i = objectRepository.list(); i.hasNext(); ) {
                 clone.add(i.next());
             }
         }
-        if (fifo)
+        if (fifo) {
             Collections.sort(clone); // Keys is a HashSet; impose FIFO for apps
+        }
         // that need it
         return clone.iterator();
     }

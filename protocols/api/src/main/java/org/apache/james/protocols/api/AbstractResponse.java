@@ -46,7 +46,9 @@ public abstract class AbstractResponse implements Response{
      * @param description the description 
      */
     public AbstractResponse(String code, CharSequence description) {
-        if (code == null) throw new IllegalArgumentException("code can not be null");    
+        if (code == null) {
+            throw new IllegalArgumentException("code can not be null");
+        }
         this.setRetCode(code);
         this.appendLine(description);
     }

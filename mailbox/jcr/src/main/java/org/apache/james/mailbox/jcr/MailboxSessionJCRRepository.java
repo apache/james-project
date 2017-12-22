@@ -79,13 +79,16 @@ public class MailboxSessionJCRRepository {
      * @param mSession
      */
     public void logout(MailboxSession mSession) {
-        if (mSession == null) return;
+        if (mSession == null) {
+            return;
+        }
         
         Session session = (Session) mSession.getAttributes().remove(JCR_SESSION);
 
         if (session != null) {
-            if (session.isLive())
+            if (session.isLive()) {
                 session.logout();
+            }
             session = null;
         }
     }

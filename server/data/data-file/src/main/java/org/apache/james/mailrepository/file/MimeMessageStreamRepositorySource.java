@@ -93,8 +93,9 @@ public class MimeMessageStreamRepositorySource extends MimeMessageSource {
         if (size == -1) {
             if (sr instanceof org.apache.james.repository.file.FilePersistentStreamRepository) {
                 size = ((org.apache.james.repository.file.FilePersistentStreamRepository) sr).getSize(key);
-            } else
+            } else {
                 size = super.getMessageSize();
+            }
         }
         return size;
     }

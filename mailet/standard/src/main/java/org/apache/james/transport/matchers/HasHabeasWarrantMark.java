@@ -93,7 +93,7 @@ public class HasHabeasWarrantMark extends GenericMatcher
         MimeMessage message = mail.getMessage();
 
         //Loop through all the patterns
-        for (String[] aWarrantMark : warrantMark)
+        for (String[] aWarrantMark : warrantMark) {
             try {
                 String headerName = aWarrantMark[0];                      //Get the header name
                 String requiredValue = aWarrantMark[1];                   //Get the required value
@@ -105,11 +105,14 @@ public class HasHabeasWarrantMark extends GenericMatcher
                 // others if they want to detect and report potentially
                 // forged headers.
 
-                if (!(requiredValue.equals(headerValue))) return null;
+                if (!(requiredValue.equals(headerValue))) {
+                    return null;
+                }
             } catch (Exception e) {
                 LOGGER.info("Caught an exception while reading message", e);
                 return null;            //if we get an exception, don't validate the mark
             }
+        }
 
         // If we get here, all headers are present and match.
         return mail.getRecipients();

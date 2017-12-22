@@ -70,7 +70,9 @@ public class ResultUtils {
                     ByteSequence raw = field.getRaw();
                     int len = raw.length();
                     int off = ((RawField) field).getDelimiterIdx() + 1;
-                    if (len > off + 1 && (raw.byteAt(off) & 0xff) == 0x20) off++;
+                    if (len > off + 1 && (raw.byteAt(off) & 0xff) == 0x20) {
+                        off++;
+                    }
                 
                     fieldValue = ContentUtil.decode(raw, off, len - off);
                 } else {

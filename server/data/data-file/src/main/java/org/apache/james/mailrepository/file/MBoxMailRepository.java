@@ -398,12 +398,13 @@ public class MBoxMailRepository implements MailRepository, Configurable {
             if (foundMessage == null) {
                 LOGGER.debug("select - message not found {}", mboxFile);
             }
-            if (ins != null)
+            if (ins != null) {
                 try {
                     ins.close();
                 } catch (IOException e) {
                     LOGGER.error("Unable to close file (General I/O problem) {}", mboxFile, e);
                 }
+            }
         }
         return foundMessage;
     }
@@ -446,12 +447,13 @@ public class MBoxMailRepository implements MailRepository, Configurable {
         } catch (IOException e) {
             LOGGER.error("Unable to write file (General I/O problem) {}", mboxFile, e);
         } finally {
-            if (ins != null)
+            if (ins != null) {
                 try {
                     ins.close();
                 } catch (IOException e) {
                     LOGGER.error("Unable to close file (General I/O problem) {}", mboxFile, e);
                 }
+            }
         }
     }
 
@@ -508,8 +510,9 @@ public class MBoxMailRepository implements MailRepository, Configurable {
         }
 
         LOGGER.debug("{} keys to be iterated over.", keys.size());
-        if (fifo)
+        if (fifo) {
             Collections.sort(keys); // Keys is a HashSet; impose FIFO for apps
+        }
                                     // that need it
         return keys.iterator();
     }

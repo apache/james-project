@@ -158,8 +158,9 @@ public class RemoteDelivery extends GenericMailet {
         configuration = new RemoteDeliveryConfiguration(getMailetConfig(), domainList);
         queue = queueFactory.getQueue(configuration.getOutGoingQueueName());
         try {
-            if (configuration.isBindUsed())
+            if (configuration.isBindUsed()) {
                 RemoteDeliverySocketFactory.setBindAdress(configuration.getBindAddress());
+            }
         } catch (UnknownHostException e) {
             LOGGER.error("Invalid bind setting ({}): ", configuration.getBindAddress(), e);
         }

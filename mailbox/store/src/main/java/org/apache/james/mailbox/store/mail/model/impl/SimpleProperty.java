@@ -102,11 +102,19 @@ public final class SimpleProperty implements Property {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof SimpleProperty)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof SimpleProperty)) {
+            return false;
+        }
         SimpleProperty that = (SimpleProperty) o;
-        if (namespace != null ? !namespace.equals(that.namespace) : that.namespace != null) return false;
-        if (localName != null ? !localName.equals(that.localName) : that.localName != null) return false;
+        if (namespace != null ? !namespace.equals(that.namespace) : that.namespace != null) {
+            return false;
+        }
+        if (localName != null ? !localName.equals(that.localName) : that.localName != null) {
+            return false;
+        }
         return !(value != null ? !value.equals(that.value) : that.value != null);
 
     }

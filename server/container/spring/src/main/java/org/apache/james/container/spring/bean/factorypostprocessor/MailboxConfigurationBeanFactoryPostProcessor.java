@@ -101,8 +101,9 @@ public class MailboxConfigurationBeanFactoryPostProcessor implements BeanFactory
                 mailboxIdFactory = "cassandra-mailboxIdFactory";
             }
 
-            if (mailbox == null)
+            if (mailbox == null) {
                 throw new ConfigurationException("Mailboxmanager provider " + provider + " not supported!");
+            }
             registry.registerAlias(mailbox, "mailboxmanager");
             registry.registerAlias(subscription, "subscriptionManager");
             registry.registerAlias(messageMapperFactory, "messageMapperFactory");

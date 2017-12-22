@@ -403,11 +403,13 @@ public class MessageProcessor extends ProcessorAbstract {
      */
     protected void rejectRemoteRecipient(MailAddress recipient) throws MessagingException {
         // Update the flags of the received message
-        if (!isLeaveRemoteRecipient())
+        if (!isLeaveRemoteRecipient()) {
             setMessageDeleted();
+        }
 
-        if (isMarkRemoteRecipientSeen())
+        if (isMarkRemoteRecipientSeen()) {
             setMessageSeen();
+        }
 
         StringBuilder messageBuffer = new StringBuilder("Rejected mail intended for remote recipient: ");
         messageBuffer.append(recipient);
@@ -423,10 +425,12 @@ public class MessageProcessor extends ProcessorAbstract {
      */
     protected void rejectBlacklistedRecipient(MailAddress recipient) throws MessagingException {
         // Update the flags of the received message
-        if (!isLeaveBlacklisted())
+        if (!isLeaveBlacklisted()) {
             setMessageDeleted();
-        if (isMarkBlacklistedSeen())
+        }
+        if (isMarkBlacklistedSeen()) {
             setMessageSeen();
+        }
 
         StringBuilder messageBuffer = new StringBuilder("Rejected mail intended for blacklisted recipient: ");
         messageBuffer.append(recipient);
@@ -441,11 +445,13 @@ public class MessageProcessor extends ProcessorAbstract {
      */
     protected void rejectRecipientNotFound() throws MessagingException {
         // Update the flags of the received message
-        if (!isLeaveRecipientNotFound())
+        if (!isLeaveRecipientNotFound()) {
             setMessageDeleted();
+        }
 
-        if (isMarkRecipientNotFoundSeen())
+        if (isMarkRecipientNotFoundSeen()) {
             setMessageSeen();
+        }
 
         StringBuilder messageBuffer = new StringBuilder("Rejected mail for which a sole intended recipient could not be found.");
         messageBuffer.append(" Recipients: ");
@@ -466,11 +472,13 @@ public class MessageProcessor extends ProcessorAbstract {
      */
     protected void rejectUserUndefined(MailAddress recipient) throws MessagingException {
         // Update the flags of the received message
-        if (!isLeaveUserUndefined())
+        if (!isLeaveUserUndefined()) {
             setMessageDeleted();
+        }
 
-        if (isMarkUserUndefinedSeen())
+        if (isMarkUserUndefinedSeen()) {
             setMessageSeen();
+        }
 
         StringBuilder messageBuffer = new StringBuilder("Rejected mail intended for undefined user: ");
         messageBuffer.append(recipient);
@@ -486,11 +494,13 @@ public class MessageProcessor extends ProcessorAbstract {
      */
     protected void rejectMaxMessageSizeExceeded(int messageSize) throws MessagingException {
         // Update the flags of the received message
-        if (!isLeaveMaxMessageSizeExceeded())
+        if (!isLeaveMaxMessageSizeExceeded()) {
             setMessageDeleted();
+        }
 
-        if (isMarkMaxMessageSizeExceededSeen())
+        if (isMarkMaxMessageSizeExceededSeen()) {
             setMessageSeen();
+        }
 
         StringBuilder messageBuffer = new StringBuilder("Rejected mail exceeding message size limit. Message size: ");
         messageBuffer.append(messageSize / 1024);
@@ -505,11 +515,13 @@ public class MessageProcessor extends ProcessorAbstract {
      */
     protected void rejectRemoteReceivedHeaderInvalid() throws MessagingException {
         // Update the flags of the received message
-        if (!isLeaveRemoteReceivedHeaderInvalid())
+        if (!isLeaveRemoteReceivedHeaderInvalid()) {
             setMessageDeleted();
+        }
 
-        if (isMarkRemoteReceivedHeaderInvalidSeen())
+        if (isMarkRemoteReceivedHeaderInvalidSeen()) {
             setMessageSeen();
+        }
 
         StringBuilder messageBuffer = new StringBuilder("Rejected mail with an invalid Received: header at index ");
         messageBuffer.append(getRemoteReceivedHeaderIndex());
@@ -534,10 +546,11 @@ public class MessageProcessor extends ProcessorAbstract {
     protected MimeMessage createMessage() throws MessagingException {
         // Create a new messsage from the received message
         MimeMessage messageOut;
-        if (isMaxMessageSizeExceeded())
+        if (isMaxMessageSizeExceeded()) {
             messageOut = createEmptyMessage();
-        else
+        } else {
             messageOut = new MimeMessage(getMessageIn());
+        }
 
         // set the X-fetched headers
         // Note this is still required to detect bouncing mail and
@@ -561,8 +574,9 @@ public class MessageProcessor extends ProcessorAbstract {
         // Propogate the headers and subject
         @SuppressWarnings("unchecked")
         Enumeration<String> headersInEnum = getMessageIn().getAllHeaderLines();
-        while (headersInEnum.hasMoreElements())
+        while (headersInEnum.hasMoreElements()) {
             messageOut.addHeaderLine(headersInEnum.nextElement());
+        }
         messageOut.setSubject(getMessageIn().getSubject());
 
         // Add empty text
@@ -715,8 +729,9 @@ public class MessageProcessor extends ProcessorAbstract {
         StringBuilder domainBuffer = new StringBuilder();
         String[] headers = null;
 
-        if (getRemoteReceivedHeaderIndex() > -1)
+        if (getRemoteReceivedHeaderIndex() > -1) {
             headers = getMessageIn().getHeader(RFC2822Headers.RECEIVED);
+        }
 
         // There are RECEIVED headers if the array is not null
         // and its length at is greater than 0
@@ -731,8 +746,9 @@ public class MessageProcessor extends ProcessorAbstract {
                 // Find the "from" token
                 StringTokenizer tokenizer = new StringTokenizer(headers[headerIndex], headerTokens);
                 boolean inFrom = false;
-                while (!inFrom && tokenizer.hasMoreTokens())
+                while (!inFrom && tokenizer.hasMoreTokens()) {
                     inFrom = tokenizer.nextToken().equals("from");
+                }
                 // Add subsequent tokens to the domain buffer until another
                 // field is encountered or there are no more tokens
                 while (inFrom && tokenizer.hasMoreTokens()) {
@@ -782,10 +798,12 @@ public class MessageProcessor extends ProcessorAbstract {
      */
     protected void handleParseException(ParseException ex) throws MessagingException {
         // Update the flags of the received message
-        if (!isLeaveUndeliverable())
+        if (!isLeaveUndeliverable()) {
             setMessageDeleted();
-        if (isMarkUndeliverableSeen())
+        }
+        if (isMarkUndeliverableSeen()) {
             setMessageSeen();
+        }
         logStatusWarn("Message could not be delivered due to an error parsing a mail address.");
         LOGGER.debug("UNDELIVERABLE Message ID: {}", getMessageIn().getMessageID(), ex);
     }
@@ -798,11 +816,13 @@ public class MessageProcessor extends ProcessorAbstract {
      */
     protected void handleUnknownHostException(UnknownHostException ex) throws MessagingException {
         // Update the flags of the received message
-        if (!isLeaveUndeliverable())
+        if (!isLeaveUndeliverable()) {
             setMessageDeleted();
+        }
 
-        if (isMarkUndeliverableSeen())
+        if (isMarkUndeliverableSeen()) {
             setMessageSeen();
+        }
 
         logStatusWarn("Message could not be delivered due to an error determining the remote domain.");
         LOGGER.debug("UNDELIVERABLE Message ID: {}", getMessageIn().getMessageID(), ex);
@@ -860,8 +880,9 @@ public class MessageProcessor extends ProcessorAbstract {
         int count = 0;
         while (enumeration.hasMoreElements()) {
             String header = enumeration.nextElement();
-            if (header.equals(getFetchTaskName()))
+            if (header.equals(getFetchTaskName())) {
                 count++;
+            }
         }
         return count >= 3;
     }
@@ -877,11 +898,13 @@ public class MessageProcessor extends ProcessorAbstract {
         getMailQueue().enQueue(mail);
 
         // Update the flags of the received message
-        if (!isLeave())
+        if (!isLeave()) {
             setMessageDeleted();
+        }
 
-        if (isMarkSeen())
+        if (isMarkSeen()) {
             setMessageSeen();
+        }
 
         // Log the status
         StringBuilder messageBuffer = new StringBuilder("Spooled message to recipients: ");
@@ -910,8 +933,9 @@ public class MessageProcessor extends ProcessorAbstract {
             String[] headers = msg.getHeader(getCustomRecipientHeader());
             if (headers != null) {
                 String mailFor = headers[0];
-                if (mailFor.startsWith("<") && mailFor.endsWith(">"))
+                if (mailFor.startsWith("<") && mailFor.endsWith(">")) {
                     mailFor = mailFor.substring(1, (mailFor.length() - 1));
+                }
                 return mailFor;
             }
         } else {
@@ -947,8 +971,9 @@ public class MessageProcessor extends ProcessorAbstract {
                                         end = c;
                                         break;
                                 }
-                                if (end > 0)
+                                if (end > 0) {
                                     break;
+                                }
                             }
                         }
                     }
@@ -957,8 +982,9 @@ public class MessageProcessor extends ProcessorAbstract {
                         String mailFor = received.substring(start, end);
 
                         // strip the <> around the address if there are any
-                        if (mailFor.startsWith("<") && mailFor.endsWith(">"))
+                        if (mailFor.startsWith("<") && mailFor.endsWith(">")) {
                             mailFor = mailFor.substring(1, (mailFor.length() - 1));
+                        }
 
                         return mailFor;
                     }
@@ -1093,8 +1119,9 @@ public class MessageProcessor extends ProcessorAbstract {
      */
     protected StringBuilder getStatusReport(String detailMsg) throws MessagingException {
         StringBuilder messageBuffer = new StringBuilder(detailMsg);
-        if (detailMsg.length() > 0)
+        if (detailMsg.length() > 0) {
             messageBuffer.append(' ');
+        }
         messageBuffer.append("Message ID: ");
         messageBuffer.append(getMessageIn().getMessageID());
         messageBuffer.append(". Flags: Seen = ");
@@ -1149,10 +1176,11 @@ public class MessageProcessor extends ProcessorAbstract {
     protected void setMessageSeen() throws MessagingException {
         // If the Seen flag is not handled by the folder
         // allow a handler to do whatever it deems necessary
-        if (!getMessageIn().getFolder().getPermanentFlags().contains(Flags.Flag.SEEN))
+        if (!getMessageIn().getFolder().getPermanentFlags().contains(Flags.Flag.SEEN)) {
             handleMarkSeenNotPermanent();
-        else
+        } else {
             getMessageIn().setFlag(Flags.Flag.SEEN, true);
+        }
     }
 
     /**
@@ -1209,32 +1237,41 @@ public class MessageProcessor extends ProcessorAbstract {
 
         aMail.setAttribute(getAttributePrefix() + "folderName", getMessageIn().getFolder().getFullName());
 
-        if (isRemoteRecipient())
+        if (isRemoteRecipient()) {
             aMail.setAttribute(getAttributePrefix() + "isRemoteRecipient", null);
+        }
 
-        if (isUserUndefined())
+        if (isUserUndefined()) {
             aMail.setAttribute(getAttributePrefix() + "isUserUndefined", true);
+        }
 
-        if (isBlacklistedRecipient())
+        if (isBlacklistedRecipient()) {
             aMail.setAttribute(getAttributePrefix() + "isBlacklistedRecipient", true);
+        }
 
-        if (isRecipientNotFound())
+        if (isRecipientNotFound()) {
             aMail.setAttribute(getAttributePrefix() + "isRecipientNotFound", true);
+        }
 
-        if (isMaxMessageSizeExceeded())
+        if (isMaxMessageSizeExceeded()) {
             aMail.setAttribute(getAttributePrefix() + "isMaxMessageSizeExceeded", Integer.toString(getMessageIn().getSize()));
+        }
 
-        if (isRemoteReceivedHeaderInvalid())
+        if (isRemoteReceivedHeaderInvalid()) {
             aMail.setAttribute(getAttributePrefix() + "isRemoteReceivedHeaderInvalid", true);
+        }
 
-        if (isDefaultSenderLocalPart())
+        if (isDefaultSenderLocalPart()) {
             aMail.setAttribute(getAttributePrefix() + "isDefaultSenderLocalPart", true);
+        }
 
-        if (isDefaultSenderDomainPart())
+        if (isDefaultSenderDomainPart()) {
             aMail.setAttribute(getAttributePrefix() + "isDefaultSenderDomainPart", true);
+        }
 
-        if (isDefaultRemoteAddress())
+        if (isDefaultRemoteAddress()) {
             aMail.setAttribute(getAttributePrefix() + "isDefaultRemoteAddress", true);
+        }
     }
 
     /**
@@ -1348,8 +1385,9 @@ public class MessageProcessor extends ProcessorAbstract {
             address = domain.substring(ipAddressStart + 1, ipAddressEnd);
         } else {
             int hostNameEnd = domain.indexOf(' ');
-            if (hostNameEnd == -1)
+            if (hostNameEnd == -1) {
                 hostNameEnd = domain.length();
+            }
             address = domain.substring(0, hostNameEnd);
         }
         validatedAddress = getDNSServer().getByName(address).getHostAddress();
@@ -1483,8 +1521,9 @@ public class MessageProcessor extends ProcessorAbstract {
      * @return Boolean
      */
     protected Boolean computeMaxMessageSizeExceeded() throws MessagingException {
-        if (0 == getMaxMessageSizeLimit())
+        if (0 == getMaxMessageSizeLimit()) {
             return Boolean.FALSE;
+        }
         return getMessageIn().getSize() > getMaxMessageSizeLimit();
     }
 

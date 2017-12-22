@@ -90,8 +90,9 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
         } catch (IOException e) {
             throw new SubscriptionException(e);
         }
-        if (subscriptionNames.contains(mailbox))
+        if (subscriptionNames.contains(mailbox)) {
             return new SimpleSubscription(user, mailbox);
+        }
         return null;
     }
 
@@ -170,19 +171,24 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
     private void writeSubscriptions(File mailboxFolder, Set<String> subscriptions) throws IOException {
         List<String> sortedSubscriptions = new ArrayList<>(subscriptions);
         Collections.sort(sortedSubscriptions);
-        if (!mailboxFolder.exists())
-            if (!mailboxFolder.mkdirs())
+        if (!mailboxFolder.exists()) {
+            if (!mailboxFolder.mkdirs()) {
                 throw new IOException("Could not create folder " + mailboxFolder);
+            }
+        }
         
         File subscriptionFile = new File(mailboxFolder, FILE_SUBSCRIPTION);
-        if (!subscriptionFile.exists())
-            if (!subscriptionFile.createNewFile())
+        if (!subscriptionFile.exists()) {
+            if (!subscriptionFile.createNewFile()) {
                 throw new IOException("Could not create file " + subscriptionFile);
+            }
+        }
                 
         FileWriter fileWriter = new FileWriter(subscriptionFile);
         PrintWriter writer = new PrintWriter(fileWriter);
-        for (String subscription : sortedSubscriptions)
+        for (String subscription : sortedSubscriptions) {
             writer.println(subscription);
+        }
         writer.close();
         fileWriter.close();
     }

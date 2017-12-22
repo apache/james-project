@@ -431,10 +431,12 @@ public class AuthCmdHandler
             String smtpDesc = result.getSmtpDescription();
     
             if ((rCode & HookReturnCode.DENY) == HookReturnCode.DENY) {
-                if (smtpRetCode == null)
+                if (smtpRetCode == null) {
                     smtpRetCode = SMTPRetCode.AUTH_FAILED;
-                if (smtpDesc == null)
+                }
+                if (smtpDesc == null) {
                     smtpDesc = "Authentication Failed";
+                }
     
                 SMTPResponse response =  new SMTPResponse(smtpRetCode, smtpDesc);
 
@@ -443,10 +445,12 @@ public class AuthCmdHandler
                 }
                 return response;
             } else if ((rCode & HookReturnCode.DENYSOFT) == HookReturnCode.DENYSOFT) {
-                if (smtpRetCode == null)
+                if (smtpRetCode == null) {
                     smtpRetCode = SMTPRetCode.LOCAL_ERROR;
-                if (smtpDesc == null)
+                }
+                if (smtpDesc == null) {
                     smtpDesc = "Temporary problem. Please try again later";
+                }
     
                 SMTPResponse response =  new SMTPResponse(smtpRetCode, smtpDesc);
 
@@ -455,10 +459,12 @@ public class AuthCmdHandler
                 }
                 return response;
             } else if ((rCode & HookReturnCode.OK) == HookReturnCode.OK) {
-                if (smtpRetCode == null)
+                if (smtpRetCode == null) {
                     smtpRetCode = SMTPRetCode.AUTH_OK;
-                if (smtpDesc == null)
+                }
+                if (smtpDesc == null) {
                     smtpDesc = "Authentication Succesfull";
+                }
                 
                 SMTPResponse response =  new SMTPResponse(smtpRetCode, smtpDesc);
 

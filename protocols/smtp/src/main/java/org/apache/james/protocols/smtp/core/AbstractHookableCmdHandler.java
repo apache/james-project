@@ -195,10 +195,12 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
             String smtpDesc = result.getSmtpDescription();
     
             if ((rCode &HookReturnCode.DENY) == HookReturnCode.DENY) {
-                if (smtpRetCode == null)
+                if (smtpRetCode == null) {
                     smtpRetCode = SMTPRetCode.TRANSACTION_FAILED;
-                if (smtpDesc == null)
+                }
+                if (smtpDesc == null) {
                     smtpDesc = "Email rejected";
+                }
     
                 SMTPResponse response =  new SMTPResponse(smtpRetCode, smtpDesc);
                 if ((rCode & HookReturnCode.DISCONNECT) == HookReturnCode.DISCONNECT) {
@@ -206,10 +208,12 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
                 }
                 return response;
             } else if ((rCode & HookReturnCode.DENYSOFT) == HookReturnCode.DENYSOFT) {
-                if (smtpRetCode == null)
+                if (smtpRetCode == null) {
                     smtpRetCode = SMTPRetCode.LOCAL_ERROR;
-                if (smtpDesc == null)
+                }
+                if (smtpDesc == null) {
                     smtpDesc = "Temporary problem. Please try again later";
+                }
     
                 SMTPResponse response = new SMTPResponse(smtpRetCode, smtpDesc);
                 if ((rCode & HookReturnCode.DISCONNECT) == HookReturnCode.DISCONNECT) {
@@ -217,10 +221,12 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
                 }
                 return response;
             } else if ((rCode & HookReturnCode.OK) == HookReturnCode.OK) {
-                if (smtpRetCode == null)
+                if (smtpRetCode == null) {
                     smtpRetCode = SMTPRetCode.MAIL_OK;
-                if (smtpDesc == null)
+                }
+                if (smtpDesc == null) {
                     smtpDesc = "Command accepted";
+                }
     
                 SMTPResponse response = new SMTPResponse(smtpRetCode, smtpDesc);
                 if ((rCode & HookReturnCode.DISCONNECT) == HookReturnCode.DISCONNECT) {
@@ -228,10 +234,12 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
                 }
                 return response;
             } else if ((rCode & HookReturnCode.DISCONNECT) == HookReturnCode.DISCONNECT) {
-                if (smtpRetCode == null)
+                if (smtpRetCode == null) {
                     smtpRetCode = SMTPRetCode.TRANSACTION_FAILED;
-                if (smtpDesc == null)
+                }
+                if (smtpDesc == null) {
                     smtpDesc = "Server disconnected";
+                }
 
                 SMTPResponse response =  new SMTPResponse(smtpRetCode, smtpDesc);
                 response.setEndSession(true);

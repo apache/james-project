@@ -46,10 +46,11 @@ public class ActionUtils {
         if (aMail.getRecipients() == null) {
             throw new MessagingException("Invalid number of recipients - 0"
                     + ". Exactly 1 recipient is expected.");
-        } else if (1 != aMail.getRecipients().size())
+        } else if (1 != aMail.getRecipients().size()) {
             throw new MessagingException("Invalid number of recipients - "
-                    + Integer.toString(aMail.getRecipients().size())
-                    + ". Exactly 1 recipient is expected.");
+                + Integer.toString(aMail.getRecipients().size())
+                + ". Exactly 1 recipient is expected.");
+        }
         return aMail.getRecipients().iterator().next();
     }
 

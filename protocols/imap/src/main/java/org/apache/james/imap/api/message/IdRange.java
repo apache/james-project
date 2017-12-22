@@ -49,8 +49,9 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange>{
     }
 
     public IdRange(long lowVal, long highVal) {
-        if (lowVal > highVal)
+        if (lowVal > highVal) {
             throw new IllegalArgumentException("LowVal must be <= HighVal");
+        }
         _lowVal = lowVal;
         _highVal = highVal;
     }
@@ -64,14 +65,16 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange>{
     }
 
     public void setLowVal(long lowVal) {
-        if (lowVal > _highVal)
+        if (lowVal > _highVal) {
             throw new IllegalArgumentException("LowVal must be <= HighVal");
+        }
         _lowVal = lowVal;
     }
 
     public void setHighVal(long highVal) {
-        if (_lowVal > highVal)
+        if (_lowVal > highVal) {
             throw new IllegalArgumentException("HighVal must be >= LowVal");
+        }
         _highVal = highVal;
     }
 
@@ -100,17 +103,22 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange>{
      * @see java.lang.Object#equals(java.lang.Object)
      */
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         final IdRange other = (IdRange) obj;
-        if (_highVal != other._highVal)
+        if (_highVal != other._highVal) {
             return false;
-        if (_lowVal != other._lowVal)
+        }
+        if (_lowVal != other._lowVal) {
             return false;
+        }
         return true;
     }
 
@@ -124,10 +132,11 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange>{
     }
 
     public String getFormattedString() {
-        if (this._lowVal == this._highVal)
+        if (this._lowVal == this._highVal) {
             return Long.toString(this._lowVal);
-        else
+        } else {
             return this._lowVal + ":" + this._highVal;
+        }
     }
 
     /**

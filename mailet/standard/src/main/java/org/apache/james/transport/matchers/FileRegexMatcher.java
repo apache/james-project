@@ -43,7 +43,9 @@ public class FileRegexMatcher extends GenericRegexMatcher {
         try {
             patternSource = new java.io.RandomAccessFile(getCondition(), "r");
             int lines = 0;
-            while(patternSource.readLine() != null) lines++;
+            while(patternSource.readLine() != null) {
+                lines++;
+            }
             patterns = new Object[lines][2];
             patternSource.seek(0);
             for (int i = 0; i < lines; i++) {

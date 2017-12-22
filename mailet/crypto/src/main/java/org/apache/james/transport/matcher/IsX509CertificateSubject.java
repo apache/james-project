@@ -54,8 +54,9 @@ public class IsX509CertificateSubject extends GenericMatcher {
     
     public void init() throws MessagingException {
         String condition = getCondition();
-        if(condition == null || !condition.contains(";"))
-            throw new MessagingException("Invalid matcher configuration: "+condition);
+        if(condition == null || !condition.contains(";")) {
+            throw new MessagingException("Invalid matcher configuration: " + condition);
+        }
         
         int pos = condition.indexOf(";");
         sourceAttribute = condition.substring(0,pos).trim();

@@ -39,15 +39,21 @@ public class IsSMIMEEncrypted extends GenericMatcher {
      * @see org.apache.mailet.Matcher#match(org.apache.mailet.Mail)
      */
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
-        if (mail == null) return null;
+        if (mail == null) {
+            return null;
+        }
         
         MimeMessage message = mail.getMessage();
-        if (message == null) return null;
+        if (message == null) {
+            return null;
+        }
         
         if ((message.isMimeType("application/x-pkcs7-mime") 
                 || message.isMimeType("application/pkcs7-mime")) && (message.getContentType().contains("smime-type=enveloped-data"))) {
             return mail.getRecipients();
-        } else return null;
+        } else {
+            return null;
+        }
     }
 
 }

@@ -111,8 +111,9 @@ public class FromRepository extends GenericMailet {
                     mail.setAttribute("FromRepository", Boolean.TRUE);
                     mail.setState(processor);
                     getMailetContext().sendMail(mail);
-                    if (delete)
+                    if (delete) {
                         processed.add(key);
+                    }
                     LifecycleUtil.dispose(mail);
                 }
             } catch (MessagingException e) {

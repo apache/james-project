@@ -354,8 +354,9 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
         // the table to use, and the (optional) repository Key.
         String destUrl = configuration.getString("[@destinationURL]", null);
         // throw an exception if the attribute is missing
-        if (destUrl == null)
+        if (destUrl == null) {
             throw new ConfigurationException("destinationURL attribute is missing from Configuration");
+        }
 
         // normalise the destination, to simplify processing.
         if (!destUrl.endsWith("/")) {

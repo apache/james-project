@@ -142,9 +142,9 @@ public class ProcessRedirectNotify {
         }
 
         protected void updateHeaders() throws MessagingException {
-            if (getMessageID() == null)
+            if (getMessageID() == null) {
                 super.updateHeaders();
-            else {
+            } else {
                 modified = false;
             }
         }

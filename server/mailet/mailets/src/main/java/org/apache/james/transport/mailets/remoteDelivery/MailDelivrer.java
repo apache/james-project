@@ -224,8 +224,9 @@ public class MailDelivrer {
 
         final Address[] validUnsentAddresses = sfe.getValidUnsentAddresses();
         if (validUnsentAddresses != null && validUnsentAddresses.length > 0) {
-            if (configuration.isDebug())
+            if (configuration.isDebug()) {
                 LOGGER.debug("Send failed, {} valid addresses remain, continuing with any other servers", (Object) validUnsentAddresses);
+            }
             return sfe;
         } else {
             // There are no valid addresses left to send, so rethrow

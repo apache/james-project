@@ -58,7 +58,9 @@ public abstract class AbstractAsyncServer implements ProtocolServer{
     private List<InetSocketAddress> addresses = new ArrayList<>();
     
     public synchronized void setListenAddresses(InetSocketAddress... addresses) {
-        if (started) throw new IllegalStateException("Can only be set when the server is not running");
+        if (started) {
+            throw new IllegalStateException("Can only be set when the server is not running");
+        }
         this.addresses = ImmutableList.copyOf(addresses);
     }
     
@@ -68,7 +70,9 @@ public abstract class AbstractAsyncServer implements ProtocolServer{
      * @param ioWorker
      */
     public void setIoWorkerCount(int ioWorker) {
-        if (started) throw new IllegalStateException("Can only be set when the server is not running");
+        if (started) {
+            throw new IllegalStateException("Can only be set when the server is not running");
+        }
         this.ioWorker = ioWorker;
     }
     
@@ -87,9 +91,13 @@ public abstract class AbstractAsyncServer implements ProtocolServer{
      * @see org.apache.james.protocols.api.ProtocolServer#bind()
      */
     public synchronized void bind() throws Exception {
-        if (started) throw new IllegalStateException("Server running already");
+        if (started) {
+            throw new IllegalStateException("Server running already");
+        }
 
-        if (addresses.isEmpty()) throw new RuntimeException("Please specify at least on socketaddress to which the server should get bound!");
+        if (addresses.isEmpty()) {
+            throw new RuntimeException("Please specify at least on socketaddress to which the server should get bound!");
+        }
 
         bootstrap = new ServerBootstrap(createSocketChannelFactory());
         ChannelPipelineFactory factory = createPipelineFactory(channels);
@@ -127,7 +135,9 @@ public abstract class AbstractAsyncServer implements ProtocolServer{
      * @see org.apache.james.protocols.api.ProtocolServer#unbind()
      */
     public synchronized void unbind() {
-        if (started == false) return;
+        if (started == false) {
+            return;
+        }
         ChannelPipelineFactory factory = bootstrap.getPipelineFactory();
         if (factory instanceof ExternalResourceReleasable) {
             ((ExternalResourceReleasable) factory).releaseExternalResources();
@@ -164,7 +174,9 @@ public abstract class AbstractAsyncServer implements ProtocolServer{
      * @param timeout
      */
     public void setTimeout(int timeout) {
-        if (started) throw new IllegalStateException("Can only be set when the server is not running");
+        if (started) {
+            throw new IllegalStateException("Can only be set when the server is not running");
+        }
         this.timeout = timeout;
     }
     
@@ -175,7 +187,9 @@ public abstract class AbstractAsyncServer implements ProtocolServer{
      * @param backlog
      */
     public void setBacklog(int backlog) {
-        if (started) throw new IllegalStateException("Can only be set when the server is not running");
+        if (started) {
+            throw new IllegalStateException("Can only be set when the server is not running");
+        }
         this.backlog = backlog;
     }
     

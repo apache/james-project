@@ -180,34 +180,43 @@ public class JCRProperty implements JCRImapConstants, Persistent, Property {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         final JCRProperty other = (JCRProperty) obj;
         
         if (getLocalName() != null) {
-            if (!getLocalName().equals(other.getLocalName()))
-        	return false;
+            if (!getLocalName().equals(other.getLocalName())) {
+                return false;
+            }
         } else {
-            if (other.getLocalName() != null)
-        	return false;
+            if (other.getLocalName() != null) {
+                return false;
+            }
         }
         if (getNamespace() != null) {
-            if (!getNamespace().equals(other.getNamespace()))
-        	return false;
+            if (!getNamespace().equals(other.getNamespace())) {
+                return false;
+            }
         } else {
-            if (other.getNamespace() != null)
-        	return false;
+            if (other.getNamespace() != null) {
+                return false;
+            }
         }
         if (getValue() != null) {
-            if (!getValue().equals(other.getValue()))
-        	return false;
+            if (!getValue().equals(other.getValue())) {
+                return false;
+            }
         } else {
-            if (other.getValue() != null)
-        	return false;
+            if (other.getValue() != null) {
+                return false;
+            }
         }
         return true;
     }

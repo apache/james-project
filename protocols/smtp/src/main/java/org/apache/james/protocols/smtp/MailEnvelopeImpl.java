@@ -45,8 +45,9 @@ public class MailEnvelopeImpl implements MailEnvelope{
      * @see org.apache.james.protocols.smtp.MailEnvelope#getSize()
      */
     public long getSize() {
-        if (outputStream == null)
+        if (outputStream == null) {
             return -1;
+        }
         return outputStream.size();
     }
 

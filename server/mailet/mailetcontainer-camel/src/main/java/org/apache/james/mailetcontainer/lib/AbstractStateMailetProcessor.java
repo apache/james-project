@@ -99,10 +99,12 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
      */
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
         this.state = config.getString("[@state]", null);
-        if (state == null)
+        if (state == null) {
             throw new ConfigurationException("Processor state attribute must be configured");
-        if (state.equals(Mail.GHOST))
+        }
+        if (state.equals(Mail.GHOST)) {
             throw new ConfigurationException("Processor state of " + Mail.GHOST + " is reserved for internal use, choose a different one");
+        }
 
         this.enableJmx = config.getBoolean("[@enableJmx]", true);
         this.config = config;
@@ -279,14 +281,16 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
                 }
                 matcher = new MatcherInverter(m);
             }
-            if (matcher == null)
+            if (matcher == null) {
                 throw new ConfigurationException("Unable to load matcher instance");
+            }
             matchers.add(matcher);
             if (compName != null) {
                 // check if there is already a composite Matcher with the name
                 // registered in the processor
-                if (compMap.containsKey(compName))
+                if (compMap.containsKey(compName)) {
                     throw new ConfigurationException("CompositeMatcher with name " + compName + " is already defined in processor " + state);
+                }
                 compMap.put(compName, matcher);
             }
         }

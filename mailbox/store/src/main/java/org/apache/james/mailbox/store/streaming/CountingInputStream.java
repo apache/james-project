@@ -80,6 +80,8 @@ public final class CountingInputStream extends InputStream {
      * @throws IOException
      */
     public void readAll() throws IOException {
-        while (read()>0);
+        while (read()>0) {
+            ;
+        }
     }
 }

@@ -94,8 +94,9 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      *             get thrown if mappingLimit smaller then 1 is used
      */
     public void setMappingLimit(int mappingLimit) throws IllegalArgumentException {
-        if (mappingLimit < 1)
+        if (mappingLimit < 1) {
             throw new IllegalArgumentException("The minimum mappingLimit is 1");
+        }
         this.mappingLimit = mappingLimit;
     }
 
@@ -111,8 +112,9 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
         // We have to much mappings throw ErrorMappingException to avoid
         // infinity loop
-        if (mappingLimit == 0)
+        if (mappingLimit == 0) {
             throw new ErrorMappingException("554 Too many mappings to process");
+        }
 
         Mappings targetMappings = mapAddress(user, domain);
 
@@ -134,8 +136,9 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
                         target = user + "@" + target.substring(RecipientRewriteTable.ALIASDOMAIN_PREFIX.length());
                     }
 
-                    if (target == null)
+                    if (target == null) {
                         continue;
+                    }
 
                     String buf = "Valid virtual user mapping " + user + "@" + domain + " to " + target;
                     LOGGER.debug(buf);
@@ -280,8 +283,9 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         } else if (map.startsWith(RecipientRewriteTable.REGEX_PREFIX)) {
             addRegexMapping(user, domain, map.substring(RecipientRewriteTable.REGEX_PREFIX.length()));
         } else if (map.startsWith(RecipientRewriteTable.ALIASDOMAIN_PREFIX)) {
-            if (user != null)
+            if (user != null) {
                 throw new RecipientRewriteTableException("User must be null for aliasDomain mappings");
+            }
             addAliasDomainMapping(domain, map.substring(RecipientRewriteTable.ALIASDOMAIN_PREFIX.length()));
         } else {
             addAddressMapping(user, domain, map);
@@ -302,8 +306,9 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         } else if (map.startsWith(RecipientRewriteTable.REGEX_PREFIX)) {
             removeRegexMapping(user, domain, map.substring(RecipientRewriteTable.REGEX_PREFIX.length()));
         } else if (map.startsWith(RecipientRewriteTable.ALIASDOMAIN_PREFIX)) {
-            if (user != null)
+            if (user != null) {
                 throw new RecipientRewriteTableException("User must be null for aliasDomain mappings");
+            }
             removeAliasDomainMapping(domain, map.substring(RecipientRewriteTable.ALIASDOMAIN_PREFIX.length()));
         } else {
             removeAddressMapping(user, domain, map);

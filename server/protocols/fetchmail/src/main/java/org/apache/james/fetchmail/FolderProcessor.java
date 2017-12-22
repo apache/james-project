@@ -111,8 +111,9 @@ public class FolderProcessor extends ProcessorAbstract {
 
         // Recurse through sub-folders if required
         try {
-            if (isRecurse())
+            if (isRecurse()) {
                 recurse();
+            }
         } catch (MessagingException mex) {
             LOGGER.error("A MessagingException has terminated recursing through sub-folders", mex);
         }
@@ -124,8 +125,9 @@ public class FolderProcessor extends ProcessorAbstract {
      * @throws MessagingException
      */
     protected void close() throws MessagingException {
-        if (null != getFolder() && getFolder().isOpen())
+        if (null != getFolder() && getFolder().isOpen()) {
             getFolder().close(true);
+        }
     }
 
     /**
@@ -153,8 +155,9 @@ public class FolderProcessor extends ProcessorAbstract {
     protected void open() throws MessagingException {
         int openFlag = Folder.READ_WRITE;
 
-        if (isOpenReadOnly())
+        if (isOpenReadOnly()) {
             openFlag = Folder.READ_ONLY;
+        }
 
         getFolder().open(openFlag);
     }
@@ -177,10 +180,11 @@ public class FolderProcessor extends ProcessorAbstract {
      */
     protected boolean isSeen(MimeMessage aMessage) throws MessagingException {
         boolean isSeen;
-        if (isMarkSeenPermanent())
+        if (isMarkSeenPermanent()) {
             isSeen = aMessage.isSet(Flags.Flag.SEEN);
-        else
+        } else {
             isSeen = handleMarkSeenNotPermanent(aMessage);
+        }
         return isSeen;
     }
 

@@ -17,12 +17,13 @@ public abstract class GuavaCacheWrapper<Key, Value, Underlying, KeyRepresentatio
 	
 	public Value get(Key key, Underlying underlying) throws Except {
 		Value value = cache.getIfPresent(getKeyRepresentation(key));
-		if (value != null)
-			return value;
-		else {
+		if (value != null) {
+            return value;
+        } else {
 			value = load(key, underlying);
-			if (value != null)
-				cache.put(getKeyRepresentation(key), value);
+			if (value != null) {
+                cache.put(getKeyRepresentation(key), value);
+            }
 			return value;
 		}
 
@@ -30,7 +31,9 @@ public abstract class GuavaCacheWrapper<Key, Value, Underlying, KeyRepresentatio
 	
 	public void invalidate(Key key) {
 		if (key != null) //needed?
-			cache.invalidate(getKeyRepresentation(key));
+        {
+            cache.invalidate(getKeyRepresentation(key));
+        }
 	}
 
 	public abstract KeyRepresentation getKeyRepresentation(Key key);

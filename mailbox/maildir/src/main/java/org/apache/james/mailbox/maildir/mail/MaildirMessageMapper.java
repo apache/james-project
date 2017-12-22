@@ -72,9 +72,10 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         File curFolder = folder.getCurFolder();
         File[] newFiles = newFolder.listFiles();
         File[] curFiles = curFolder.listFiles();
-        if (newFiles == null || curFiles == null)
+        if (newFiles == null || curFiles == null) {
             throw new MailboxException("Unable to count messages in Mailbox " + mailbox, new IOException(
-                    "Not a valid Maildir folder: " + maildirStore.getFolderName(mailbox)));
+                "Not a valid Maildir folder: " + maildirStore.getFolderName(mailbox)));
+        }
         return newFiles.length + curFiles.length;
     }
 
@@ -85,9 +86,10 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         File curFolder = folder.getCurFolder();
         String[] unseenMessages = curFolder.list(MaildirMessageName.FILTER_UNSEEN_MESSAGES);
         String[] newUnseenMessages = newFolder.list(MaildirMessageName.FILTER_UNSEEN_MESSAGES);
-        if (newUnseenMessages == null || unseenMessages == null)
+        if (newUnseenMessages == null || unseenMessages == null) {
             throw new MailboxException("Unable to count unseen messages in Mailbox " + mailbox, new IOException(
-                    "Not a valid Maildir folder: " + maildirStore.getFolderName(mailbox)));
+                "Not a valid Maildir folder: " + maildirStore.getFolderName(mailbox)));
+        }
         return newUnseenMessages.length + unseenMessages.length;
     }
 
@@ -293,14 +295,16 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         FileOutputStream fos = null;
         InputStream input = null;
         try {
-            if (!messageFile.createNewFile())
+            if (!messageFile.createNewFile()) {
                 throw new IOException("Could not create file " + messageFile);
+            }
             fos = new FileOutputStream(messageFile);
             input = message.getFullContent();
             byte[] b = new byte[BUF_SIZE];
             int len = 0;
-            while ((len = input.read(b)) != -1)
+            while ((len = input.read(b)) != -1) {
                 fos.write(b, 0, len);
+            }
         } catch (IOException ioe) {
             throw new MailboxException("Failure while save MailboxMessage " + message + " in Mailbox " + mailbox, ioe);
         } finally {
@@ -375,18 +379,20 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         int cur = 0;
         SortedMap<MessageUid, MaildirMessageName> uidMap = null;
         try {
-            if (filter != null)
+            if (filter != null) {
                 uidMap = folder.getUidMap(mailboxSession, filter, from, to);
-            else
+            } else {
                 uidMap = folder.getUidMap(mailboxSession, from, to);
+            }
 
             ArrayList<MailboxMessage> messages = new ArrayList<>();
             for (Entry<MessageUid, MaildirMessageName> entry : uidMap.entrySet()) {
                 messages.add(new MaildirMailboxMessage(mailbox, entry.getKey(), entry.getValue()));
                 if (max != -1) {
                     cur++;
-                    if (cur >= max)
+                    if (cur >= max) {
                         break;
+                    }
                 }
             }
             return messages;
@@ -403,8 +409,9 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
             SortedMap<MessageUid, MaildirMessageName> uidMap = folder.getUidMap(mailboxSession, filter, limit);
 
             ArrayList<MailboxMessage> filtered = new ArrayList<>(uidMap.size());
-            for (Entry<MessageUid, MaildirMessageName> entry : uidMap.entrySet())
+            for (Entry<MessageUid, MaildirMessageName> entry : uidMap.entrySet()) {
                 filtered.add(new MaildirMailboxMessage(mailbox, entry.getKey(), entry.getValue()));
+            }
             return filtered;
         } catch (IOException e) {
             throw new MailboxException("Failure while search for Messages in Mailbox " + mailbox, e);

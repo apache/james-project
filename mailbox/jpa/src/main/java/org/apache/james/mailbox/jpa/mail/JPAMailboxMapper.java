@@ -65,12 +65,14 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
         try {
             getEntityManager().getTransaction().commit();
         } catch (PersistenceException e) {
-            if (e instanceof EntityExistsException)
+            if (e instanceof EntityExistsException) {
                 throw new MailboxExistsException(lastMailboxName);
+            }
             if (e instanceof RollbackException) {
                 Throwable t = e.getCause();
-                if (t != null && t instanceof EntityExistsException)
+                if (t != null && t instanceof EntityExistsException) {
                     throw new MailboxExistsException(lastMailboxName);
+                }
             }
             throw new MailboxException("Commit of transaction failed", e);
         }

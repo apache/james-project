@@ -279,8 +279,9 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
                     String map = mappingRS.getString(3);
                     mapping.put(user + "@" + domain, MappingsImpl.fromRawString(map));
                 }
-                if (mapping.size() > 0)
+                if (mapping.size() > 0) {
                     return mapping;
+                }
             } finally {
                 theJDBCUtil.closeJDBCResultSet(mappingRS);
             }

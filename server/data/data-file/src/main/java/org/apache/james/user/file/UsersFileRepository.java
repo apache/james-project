@@ -236,8 +236,9 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
         User user;
         try {
             user = getUserByName(name);
-            if (user == null)
+            if (user == null) {
                 return false;
+            }
         } catch (Exception e) {
             throw new RuntimeException("Exception retrieving User" + e);
         }

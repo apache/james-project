@@ -99,8 +99,9 @@ public class LogProviderImpl implements LogProvider, InitializingBean, LogProvid
         TreeMap<String, String> levels = new TreeMap<>();
         for (String name : logMap.keySet()) {
             String level = getLogLevel(name);
-            if (level != null)
+            if (level != null) {
                 levels.put(name, level);
+            }
         }
         return levels;
 

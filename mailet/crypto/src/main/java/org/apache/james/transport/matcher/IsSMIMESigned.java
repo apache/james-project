@@ -39,10 +39,14 @@ public class IsSMIMESigned extends GenericMatcher {
      * @see org.apache.mailet.Matcher#match(org.apache.mailet.Mail)
      */
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
-        if (mail == null) return null;
+        if (mail == null) {
+            return null;
+        }
         
         MimeMessage message = mail.getMessage();
-        if (message == null) return null;
+        if (message == null) {
+            return null;
+        }
         
         
         if (message.isMimeType("multipart/signed") 
@@ -51,6 +55,8 @@ public class IsSMIMESigned extends GenericMatcher {
                 || ((message.isMimeType("application/pkcs7-mime") || message.isMimeType("application/x-pkcs7-mime")) 
                         && message.getContentType().contains("signed-data"))) {
             return mail.getRecipients();
-        } else return null;
+        } else {
+            return null;
+        }
     }
 }

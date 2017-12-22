@@ -77,8 +77,9 @@ public class MailboxCopierManagement implements MailboxCopierManagementMBean {
      * #copy(java.lang.String, java.lang.String)
      */
     public void copy(String srcBean, String dstBean) throws Exception {
-        if (srcBean.equals(dstBean))
+        if (srcBean.equals(dstBean)) {
             throw new IllegalArgumentException("srcBean and dstBean can not have the same name!");
+        }
         try {
             copier.copyMailboxes(resolver.resolveMailboxManager(srcBean), resolver.resolveMailboxManager(dstBean));
         } catch (MailboxManagerResolverException | MailboxException | IOException e) {

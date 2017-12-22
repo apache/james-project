@@ -1192,10 +1192,12 @@ public class ScriptBuilder {
             } else {
                 inBuffer.compact();
                 int i = 0;
-                while ((i = source.read(inBuffer)) == 0)
+                while ((i = source.read(inBuffer)) == 0) {
                     ;
-                if (i == -1)
+                }
+                if (i == -1) {
                     throw new RuntimeException("Unexpected EOF");
+                }
                 inBuffer.flip();
                 result = next();
             }

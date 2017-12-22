@@ -126,8 +126,9 @@ public class StoreMessageResultIterator implements MessageResultIterator {
 
     @Override
     public boolean hasNext() {
-        if (cursor.compareTo(to) > 0) 
-          return false;
+        if (cursor.compareTo(to) > 0) {
+            return false;
+        }
 
         if (next == null || !next.hasNext()) {
             try {

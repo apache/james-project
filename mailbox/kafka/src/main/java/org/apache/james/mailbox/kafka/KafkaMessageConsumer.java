@@ -86,8 +86,12 @@ public class KafkaMessageConsumer implements MessageConsumer {
 
     @PreDestroy
     public void destroy() {
-        if (consumer != null) consumer.shutdown();
-        if (executor != null) executor.shutdown();
+        if (consumer != null) {
+            consumer.shutdown();
+        }
+        if (executor != null) {
+            executor.shutdown();
+        }
         this.isInitialized = false;
     }
 

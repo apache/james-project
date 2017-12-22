@@ -89,7 +89,9 @@ public class SMIMEDecrypt extends GenericMailet {
         String privateStoreType = config.getInitParameter("keyStoreType");
         
         String privateStoreFile = config.getInitParameter("keyStoreFileName");
-        if (privateStoreFile == null) throw new MessagingException("No keyStoreFileName specified");
+        if (privateStoreFile == null) {
+            throw new MessagingException("No keyStoreFileName specified");
+        }
         
         String privateStorePass = config.getInitParameter("keyStorePassword");
         
@@ -97,7 +99,9 @@ public class SMIMEDecrypt extends GenericMailet {
         String keyPass = config.getInitParameter("keyAliasPassword");
         
         String mailAttributeConf = config.getInitParameter("mailAttribute");
-        if (mailAttributeConf != null) mailAttribute = mailAttributeConf;
+        if (mailAttributeConf != null) {
+            mailAttribute = mailAttributeConf;
+        }
         
         try {
             keyHolder = new SMIMEKeyHolder(privateStoreFile, privateStorePass, keyAlias, keyPass, privateStoreType);

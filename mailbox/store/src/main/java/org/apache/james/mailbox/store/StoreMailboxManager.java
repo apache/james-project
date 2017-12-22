@@ -491,14 +491,16 @@ public class StoreMailboxManager implements MailboxManager {
             LOGGER.warn("Ignoring mailbox with empty name");
         } else {
             MailboxPath sanitizedMailboxPath = mailboxPath.sanitize(mailboxSession.getPathDelimiter());
-            if (mailboxExists(sanitizedMailboxPath, mailboxSession))
+            if (mailboxExists(sanitizedMailboxPath, mailboxSession)) {
                 throw new MailboxExistsException(sanitizedMailboxPath.asString());
+            }
             // Create parents first
             // If any creation fails then the mailbox will not be created
             // TODO: transaction
             List<MailboxId> mailboxIds = new ArrayList<>();
             for (MailboxPath mailbox : sanitizedMailboxPath.getHierarchyLevels(getDelimiter()))
 
+            {
                 locker.executeWithLock(mailboxSession, mailbox, (LockAwareExecution<Void>) () -> {
                     if (!mailboxExists(mailbox, mailboxSession)) {
                         Mailbox m = doCreateMailbox(mailbox, mailboxSession);
@@ -511,6 +513,7 @@ public class StoreMailboxManager implements MailboxManager {
                     return null;
 
                 }, true);
+            }
 
             if (!mailboxIds.isEmpty()) {
                 return Optional.ofNullable(Iterables.getLast(mailboxIds));

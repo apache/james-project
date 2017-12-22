@@ -593,15 +593,17 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
 
         NamingEnumeration<SearchResult> sr = ldapContext.search(userBase, sanitizedFilter, sc);
 
-        if (!sr.hasMore())
+        if (!sr.hasMore()) {
             return null;
+        }
 
         SearchResult r = sr.next();
         Attribute userName = r.getAttributes().get(userIdAttribute);
 
         if (!restriction.isActivated()
-            || userInGroupsMembershipList(r.getNameInNamespace(), restriction.getGroupMembershipLists(ldapContext)))
+            || userInGroupsMembershipList(r.getNameInNamespace(), restriction.getGroupMembershipLists(ldapContext))) {
             return new ReadOnlyLDAPUser(userName.get().toString(), r.getNameInNamespace(), ldapContext);
+        }
 
         return null;
     }
@@ -738,8 +740,9 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
             String userDN;
             while (userDNIterator.hasNext()) {
                 userDN = userDNIterator.next();
-                if (userInGroupsMembershipList(userDN, groupMembershipList))
+                if (userInGroupsMembershipList(userDN, groupMembershipList)) {
                     validUserDNs.add(userDN);
+                }
             }
         } else {
             validUserDNs = userDNs;

@@ -134,10 +134,12 @@ public class SMTPTestConfiguration extends DefaultConfigurationBuilder {
         addProperty("[@enabled]", true);
 
         addProperty("bind", "127.0.0.1:0");
-        if (m_connectionLimit != null)
+        if (m_connectionLimit != null) {
             addProperty("connectionLimit", "" + m_connectionLimit);
-        if (m_connectionBacklog != null)
+        }
+        if (m_connectionBacklog != null) {
             addProperty("connectionBacklog", "" + m_connectionBacklog);
+        }
 
         addProperty("helloName", "myMailServer");
         addProperty("connectiontimeout", 360000);
@@ -150,8 +152,9 @@ public class SMTPTestConfiguration extends DefaultConfigurationBuilder {
         addProperty("tls.[@startTLS]", m_startTLS);
         addProperty("tls.keystore", "file://conf/test_keystore");
         addProperty("tls.secret", "jamestest");
-        if (m_verifyIdentity)
+        if (m_verifyIdentity) {
             addProperty("verifyIdentity", m_verifyIdentity);
+        }
 
         // add the rbl handler
         if (m_useRBL) {

@@ -270,10 +270,12 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
     protected Map<String, String> getEnvelopes()
     {
         Map<String, String> envelopes = new HashMap<>(2);
-        if (null != getEnvelopeFrom())
+        if (null != getEnvelopeFrom()) {
             envelopes.put("From", getEnvelopeFrom());
-        if (null != getEnvelopeTo())
+        }
+        if (null != getEnvelopeTo()) {
             envelopes.put("To", getEnvelopeTo());
+        }
         return envelopes;
     }
     /**
@@ -283,8 +285,9 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
     {
         List<String> values = new ArrayList<>(1);
         String value = getEnvelopes().get(name);
-        if (null != value)
+        if (null != value) {
             values.add(value);
+        }
         return values;
     }
     
@@ -303,8 +306,9 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
     {
         final List<String> matchedEnvelopeValues = new ArrayList<>(32);
         for (String envelopeName: getEnvelopeNames()) {
-            if (envelopeName.trim().equalsIgnoreCase(name))
+            if (envelopeName.trim().equalsIgnoreCase(name)) {
                 matchedEnvelopeValues.addAll(getEnvelope(envelopeName));
+            }
         }
         return matchedEnvelopeValues;
     }

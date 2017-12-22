@@ -110,8 +110,9 @@ public class ResolvableEhloHeloHandlerTest {
 
             @Override
             protected String resolve(String host) throws UnknownHostException {
-                if (host.equals(INVALID_HOST)) 
+                if (host.equals(INVALID_HOST)) {
                     throw new UnknownHostException();
+                }
                 return InetAddress.getLocalHost().getHostName();
             }
             

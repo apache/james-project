@@ -145,16 +145,21 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
      * @param session
      */
     public void endProcessingRequest(MailboxSession session) {
-        if (session == null) return;
+        if (session == null) {
+            return;
+        }
         MessageMapper messageMapper = (MessageMapper) session.getAttributes().get(MESSAGEMAPPER);
         MailboxMapper mailboxMapper = (MailboxMapper) session.getAttributes().get(MAILBOXMAPPER);
         SubscriptionMapper subscriptionMapper = (SubscriptionMapper) session.getAttributes().get(SUBSCRIPTIONMAPPER);
-        if (messageMapper != null)
+        if (messageMapper != null) {
             messageMapper.endRequest();
-        if (mailboxMapper != null)
+        }
+        if (mailboxMapper != null) {
             mailboxMapper.endRequest();
-        if (subscriptionMapper != null)
-            subscriptionMapper.endRequest();        
+        }
+        if (subscriptionMapper != null) {
+            subscriptionMapper.endRequest();
+        }
     }
 
     /**

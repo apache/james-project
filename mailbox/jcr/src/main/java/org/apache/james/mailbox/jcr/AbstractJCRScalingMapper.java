@@ -160,8 +160,9 @@ public abstract class AbstractJCRScalingMapper extends TransactionalMapper imple
                     "nt:unstructured");
 
             // thats the last user node so add the right mixin type
-            if (a + 1 == userPathParts.length)
+            if (a + 1 == userPathParts.length) {
                 parent.addMixin("jamesMailbox:user");
+            }
         }
 
         return parent;

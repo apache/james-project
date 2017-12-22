@@ -92,8 +92,9 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
                 delete(folder);
             }
         }
-        else
+        else {
             throw new MailboxNotFoundException(mailbox.generateAssociatedPath());
+        }
     }
 
     private void delete(File...files) {
@@ -138,11 +139,12 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
         File root = maildirStore.getMailboxRootForUser(mailboxPath.getUser());
         File[] folders = root.listFiles(filter);
         ArrayList<Mailbox> mailboxList = new ArrayList<>();
-        for (File folder : folders)
+        for (File folder : folders) {
             if (folder.isDirectory()) {
                 Mailbox mailbox = maildirStore.loadMailbox(session, root, mailboxPath.getNamespace(), mailboxPath.getUser(), folder.getName());
                 mailboxList.add(cacheMailbox(mailbox));
             }
+        }
         // INBOX is in the root of the folder
         if (Pattern.matches(mailboxPath.getName().replace(MaildirStore.WILDCARD, ".*"), MailboxConstants.INBOX)) {
             Mailbox mailbox = maildirStore.loadMailbox(session, root, mailboxPath.getNamespace(), mailboxPath.getUser(), "");
@@ -172,8 +174,9 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
             MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
             // equals with null check
             if (originalMailbox.getName() == null ? mailbox.getName() != null : !originalMailbox.getName().equals(mailbox.getName())) {
-                if (folder.exists())
+                if (folder.exists()) {
                     throw new MailboxExistsException(mailbox.getName());
+                }
                 
                 MaildirFolder originalFolder = maildirStore.createMaildirFolder(originalMailbox);
                 // renaming the INBOX means to move its contents to the new folder 
@@ -182,20 +185,25 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
                         File inboxFolder = originalFolder.getRootFile();
                         File newFolder = folder.getRootFile();
                         FileUtils.forceMkdir(newFolder);
-                        if (!originalFolder.getCurFolder().renameTo(folder.getCurFolder()))
+                        if (!originalFolder.getCurFolder().renameTo(folder.getCurFolder())) {
                             throw new IOException("Could not rename folder " + originalFolder.getCurFolder() + " to " + folder.getCurFolder());
-                        if (!originalFolder.getNewFolder().renameTo(folder.getNewFolder()))
+                        }
+                        if (!originalFolder.getNewFolder().renameTo(folder.getNewFolder())) {
                             throw new IOException("Could not rename folder " + originalFolder.getNewFolder() + " to " + folder.getNewFolder());
-                        if (!originalFolder.getTmpFolder().renameTo(folder.getTmpFolder()))
+                        }
+                        if (!originalFolder.getTmpFolder().renameTo(folder.getTmpFolder())) {
                             throw new IOException("Could not rename folder " + originalFolder.getTmpFolder() + " to " + folder.getTmpFolder());
+                        }
                         File oldUidListFile = new File(inboxFolder, MaildirFolder.UIDLIST_FILE);
                         File newUidListFile = new File(newFolder, MaildirFolder.UIDLIST_FILE);
-                        if (!oldUidListFile.renameTo(newUidListFile))
+                        if (!oldUidListFile.renameTo(newUidListFile)) {
                             throw new IOException("Could not rename file " + oldUidListFile + " to " + newUidListFile);
+                        }
                         File oldValidityFile = new File(inboxFolder, MaildirFolder.VALIDITY_FILE);
                         File newValidityFile = new File(newFolder, MaildirFolder.VALIDITY_FILE);
-                        if (!oldValidityFile.renameTo(newValidityFile))
+                        if (!oldValidityFile.renameTo(newValidityFile)) {
                             throw new IOException("Could not rename file " + oldValidityFile + " to " + newValidityFile);
+                        }
                         // recreate the INBOX folders, uidvalidity and uidlist will
                         // automatically be recreated later
                         FileUtils.forceMkdir(originalFolder.getCurFolder());
@@ -206,9 +214,10 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
                     }
                 }
                 else {
-                    if (!originalFolder.getRootFile().renameTo(folder.getRootFile()))
-                        throw new MailboxException("Failed to save Mailbox " + mailbox, 
-                                new IOException("Could not rename folder " + originalFolder));
+                    if (!originalFolder.getRootFile().renameTo(folder.getRootFile())) {
+                        throw new MailboxException("Failed to save Mailbox " + mailbox,
+                            new IOException("Could not rename folder " + originalFolder));
+                    }
                 }
             }
             folder.setACL(session, mailbox.getACL());
@@ -217,14 +226,18 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
             MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
             if (!folder.exists()) {
                 boolean success = folder.getRootFile().exists();
-                if (!success) success = folder.getRootFile().mkdirs();
-                if (!success)
+                if (!success) {
+                    success = folder.getRootFile().mkdirs();
+                }
+                if (!success) {
                     throw new MailboxException("Failed to save Mailbox " + mailbox);
+                }
                 success = folder.getCurFolder().mkdir();
                 success = success && folder.getNewFolder().mkdir();
                 success = success && folder.getTmpFolder().mkdir();
-                if (!success)
+                if (!success) {
                     throw new MailboxException("Failed to save Mailbox " + mailbox, new IOException("Needed folder structure can not be created"));
+                }
 
             }
             try {
@@ -291,8 +304,9 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
      * @throws MailboxNotFoundException If the mailboxId is not in the cache
      */
     private Mailbox getCachedMailbox(MaildirId mailboxId) throws MailboxNotFoundException {
-        if (mailboxId == null)
+        if (mailboxId == null) {
             throw new MailboxNotFoundException("null");
+        }
         try {
             return mailboxCache.get(mailboxId.getRawId());
         } catch (IndexOutOfBoundsException e) {

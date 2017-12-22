@@ -168,8 +168,9 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
      */
     @Override
     protected void updateMessageID() throws MessagingException {
-        if (getMessageID() == null)
+        if (getMessageID() == null) {
             super.updateMessageID();
+        }
     }
 
     /**
@@ -310,8 +311,9 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
                 } else {
                     // The headers was modified so we need to call saveChanges() just to be sure
                     // See JAMES-1320
-                    if (!saved)
+                    if (!saved) {
                         saveChanges();
+                    }
                     myHeaders = headers;
                 }
                 @SuppressWarnings("unchecked")
@@ -324,8 +326,9 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
         } else {
             // save the changes as the message was modified
             // See JAMES-1320
-            if (!saved)
+            if (!saved) {
                 saveChanges();
+            }
 
             // MimeMessageUtil.writeToInternal(this, headerOs, bodyOs,
             // ignoreList);

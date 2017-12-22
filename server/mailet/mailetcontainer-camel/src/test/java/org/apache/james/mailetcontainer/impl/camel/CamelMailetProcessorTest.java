@@ -47,8 +47,9 @@ public class CamelMailetProcessorTest extends AbstractStateMailetProcessorTest {
             processor.init();
             return processor;
         } finally {
-            if (processor != null)
+            if (processor != null) {
                 processor.destroy();
+            }
         }
     }
 

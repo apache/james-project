@@ -448,8 +448,9 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             if (records != null && records.length >= 1) {
                 ARecord a = (ARecord) records[0];
                 return InetAddress.getByAddress(name, a.getAddress().getAddress());
-            } else
+            } else {
                 throw e;
+            }
         } finally {
             timeMetric.stopAndPublish();
         }
@@ -477,8 +478,9 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                     addrs[i] = InetAddress.getByAddress(name, a.getAddress().getAddress());
                 }
                 return ImmutableList.copyOf(addrs);
-            } else
+            } else {
                 throw e;
+            }
         } finally {
             timeMetric.stopAndPublish();
         }

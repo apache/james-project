@@ -67,8 +67,9 @@ public class InSpammerBlacklist extends GenericMatcher {
         network = getCondition();
 
         // check if the needed condition was given
-        if (network == null)
+        if (network == null) {
             throw new MessagingException("Please configure a blacklist");
+        }
 
     }
 

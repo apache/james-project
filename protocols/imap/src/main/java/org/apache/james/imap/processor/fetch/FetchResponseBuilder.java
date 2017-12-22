@@ -109,8 +109,9 @@ public final class FetchResponseBuilder {
         final MessageUid resultUid = result.getUid();
         final int resultMsn = selected.msn(resultUid);
 
-        if (resultMsn == SelectedMailbox.NO_SUCH_MESSAGE)
+        if (resultMsn == SelectedMailbox.NO_SUCH_MESSAGE) {
             throw new MessageRangeException("No such message found with uid " + resultUid);
+        }
 
         reset(resultMsn);
         // setMsn(resultMsn);
@@ -320,15 +321,16 @@ public final class FetchResponseBuilder {
                     result.noBody();
                 }
               
-            } else
+            } else {
                 try {
                     if (content(messageResult, name, path, isBase).size() <= 0) {
-                        // Seems like this mail has no body 
+                        // Seems like this mail has no body
                         result.noBody();
                     }
                 } catch (IOException e) {
                     throw new MailboxException("Unable to get size of header body element", e);
                 }
+            }
         }
         return result;
     }

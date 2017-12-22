@@ -39,7 +39,9 @@ public class ValidSenderDomainHandler extends org.apache.james.protocols.smtp.co
     @Override
     protected boolean hasMXRecord(SMTPSession session, String domain) {
         // null sender so return
-        if (domain == null) return false;
+        if (domain == null) {
+            return false;
+        }
 
         Collection<String> records = null;
             

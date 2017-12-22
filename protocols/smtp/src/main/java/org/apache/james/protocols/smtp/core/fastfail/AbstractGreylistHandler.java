@@ -71,8 +71,12 @@ public abstract class AbstractGreylistHandler implements RcptHook {
         String recip = "";
         String sender = "";
 
-        if (recipAddress != null) recip = recipAddress.toString();
-        if (senderAddress != null) sender = senderAddress.toString();
+        if (recipAddress != null) {
+            recip = recipAddress.toString();
+        }
+        if (senderAddress != null) {
+            sender = senderAddress.toString();
+        }
     
         long time = System.currentTimeMillis();
         String ipAddress = session.getRemoteAddress().getAddress().getHostAddress();

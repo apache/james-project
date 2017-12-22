@@ -79,13 +79,11 @@ public class OnlyText extends GenericMailet {
                 if (mp.getBodyPart(i).isMimeType("text/plain")) {
                     setContentFromPart(mail.getMessage(), mp.getBodyPart(i), null, false);
                     found = 1;
-                } else if (htmlPart == -1 && mp.getBodyPart(i).isMimeType("text/html"))
+                } else if (htmlPart == -1 && mp.getBodyPart(i).isMimeType("text/html")) {
                     htmlPart = i;
-
-                else if (stringPart == -1 && content instanceof String)
+                } else if (stringPart == -1 && content instanceof String) {
                     stringPart = i;
-
-                else if (content instanceof Multipart) {
+                } else if (content instanceof Multipart) {
                     int[] res = process(mail, (Multipart) content, found, htmlPart, stringPart);
                     found = res[0];
                     htmlPart = res[1];
@@ -123,12 +121,13 @@ public class OnlyText extends GenericMailet {
                 }
 
 
-                if (found < 0 && optionsNotextProcessor != null) mail.setState(optionsNotextProcessor);
+                if (found < 0 && optionsNotextProcessor != null) {
+                    mail.setState(optionsNotextProcessor);
+                }
 
-            } else if (!(content instanceof String) && optionsNotextProcessor != null)
+            } else if (!(content instanceof String) && optionsNotextProcessor != null) {
                 mail.setState(optionsNotextProcessor);
-
-            else if (mail.getMessage().isMimeType("text/html")) {
+            } else if (mail.getMessage().isMimeType("text/html")) {
                 setContentFromPart(mail.getMessage(), mail.getMessage(), html2Text((String) mail.getMessage().getContent()), true);
             }
 
@@ -147,7 +146,9 @@ public class OnlyText extends GenericMailet {
         }
         m.setContent(newText != null ? newText : p.getContent(), contentType);
         String[] h = p.getHeader("Content-Transfer-Encoding");
-        if (h != null && h.length > 0) m.setHeader("Content-Transfer-Encoding", h[0]);
+        if (h != null && h.length > 0) {
+            m.setHeader("Content-Transfer-Encoding", h[0]);
+        }
         m.saveChanges();
     }
 
@@ -167,22 +168,35 @@ public class OnlyText extends GenericMailet {
         for (int i = 0; i < data.length(); i++) {
             char c = data.charAt(i);
 
-            if (c == '&' && lastAmp == -1) lastAmp = buffer.length();
-            else if (c == ';' && (lastAmp > -1)) { // && (lastAmp > (buffer.length() - 7))) { // max: &#xxxx;
-                if (charMap.containsKey(buffer.toString())) res.append(charMap.get(buffer.toString()));
-                else res.append("&").append(buffer.toString()).append(";");
+            if (c == '&' && lastAmp == -1) {
+                lastAmp = buffer.length();
+            } else if (c == ';' && (lastAmp > -1)) { // && (lastAmp > (buffer.length() - 7))) { // max: &#xxxx;
+                if (charMap.containsKey(buffer.toString())) {
+                    res.append(charMap.get(buffer.toString()));
+                } else {
+                    res.append("&").append(buffer.toString()).append(";");
+                }
                 lastAmp = -1;
                 buffer = new StringBuffer();
-            } else if (lastAmp == -1) res.append(c);
-            else buffer.append(c);
+            } else if (lastAmp == -1) {
+                res.append(c);
+            } else {
+                buffer.append(c);
+            }
         }
         return res.toString();
     }
 
     private void initEntityTable() {
-        for (int index = 11; index < 32; index++) charMap.put("#0" + index, String.valueOf((char) index));
-        for (int index = 32; index < 128; index++) charMap.put("#" + index, String.valueOf((char) index));
-        for (int index = 128; index < 256; index++) charMap.put("#" + index, String.valueOf((char) index));
+        for (int index = 11; index < 32; index++) {
+            charMap.put("#0" + index, String.valueOf((char) index));
+        }
+        for (int index = 32; index < 128; index++) {
+            charMap.put("#" + index, String.valueOf((char) index));
+        }
+        for (int index = 128; index < 256; index++) {
+            charMap.put("#" + index, String.valueOf((char) index));
+        }
 
         // A complete reference is here:
         // http://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references

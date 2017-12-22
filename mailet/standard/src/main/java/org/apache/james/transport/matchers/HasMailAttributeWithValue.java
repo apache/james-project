@@ -90,8 +90,9 @@ public class HasMailAttributeWithValue extends GenericMatcher
         Object attributeValue = mail.getAttribute(getAttributeName());
 
         if (attributeValue != null
-            && attributeValue.toString().trim().equals(getAttributeValue()))
+            && attributeValue.toString().trim().equals(getAttributeValue())) {
             return mail.getRecipients();
+        }
         return null;
     }
 
@@ -140,11 +141,13 @@ public class HasMailAttributeWithValue extends GenericMatcher
         String condition = getCondition().trim();
         int commaPosition = condition.indexOf(',');
 
-        if (-1 == commaPosition)
+        if (-1 == commaPosition) {
             throw new MessagingException("Syntax Error. Missing ','.");
+        }
 
-        if (0 == commaPosition)
+        if (0 == commaPosition) {
             throw new MessagingException("Syntax Error. Missing attribute name.");
+        }
 
         setAttributeName(condition.substring(0, commaPosition).trim());
         setAttributeValue(condition.substring(commaPosition + 1).trim());

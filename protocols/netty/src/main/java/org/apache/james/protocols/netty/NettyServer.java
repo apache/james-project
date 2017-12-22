@@ -107,7 +107,9 @@ public class NettyServer extends AbstractAsyncServer {
      * @param size the thread count to use
      */
     public void setUseExecutionHandler(boolean useHandler, int size) {
-        if (isBound()) throw new IllegalStateException("Server running already");
+        if (isBound()) {
+            throw new IllegalStateException("Server running already");
+        }
         if (useHandler) {
             eHandler = createExecutionHandler(size);
         } else {
@@ -119,12 +121,16 @@ public class NettyServer extends AbstractAsyncServer {
     }
     
     public void setMaxConcurrentConnections(int maxCurConnections) {
-        if (isBound()) throw new IllegalStateException("Server running already");
+        if (isBound()) {
+            throw new IllegalStateException("Server running already");
+        }
         this.maxCurConnections = maxCurConnections;
     }
   
     public void setMaxConcurrentConnectionsPerIP(int maxCurConnectionsPerIP) {
-        if (isBound()) throw new IllegalStateException("Server running already");
+        if (isBound()) {
+            throw new IllegalStateException("Server running already");
+        }
         this.maxCurConnectionsPerIP = maxCurConnectionsPerIP;
     }
     

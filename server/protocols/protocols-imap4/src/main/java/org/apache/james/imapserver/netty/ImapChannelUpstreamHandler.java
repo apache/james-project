@@ -109,8 +109,9 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
             // remove the stored attribute for the channel to free up resources
             // See JAMES-1195
             ImapSession imapSession = (ImapSession) attributes.remove(ctx.getChannel());
-            if (imapSession != null)
+            if (imapSession != null) {
                 imapSession.logout();
+            }
             imapConnectionsMetric.decrement();
 
             super.channelClosed(ctx, e);
@@ -161,8 +162,9 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
 
                 // logout on error not sure if that is the best way to handle it
                 final ImapSession imapSession = (ImapSession) attributes.get(ctx.getChannel());
-                if (imapSession != null)
+                if (imapSession != null) {
                     imapSession.logout();
+                }
 
                 // Make sure we close the channel after all the buffers were flushed out
                 Channel channel = ctx.getChannel();

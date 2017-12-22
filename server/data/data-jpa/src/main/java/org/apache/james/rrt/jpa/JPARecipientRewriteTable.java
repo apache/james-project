@@ -154,8 +154,9 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
             for (JPARecipientRewrite virtualUser : virtualUsers) {
                 mapping.put(virtualUser.getUser() + "@" + virtualUser.getDomain(), MappingsImpl.fromRawString(virtualUser.getTargetAddress()));
             }
-            if (mapping.size() > 0)
+            if (mapping.size() > 0) {
                 return mapping;
+            }
         } catch (PersistenceException e) {
             LOGGER.debug("Failed to get all mappings", e);
             if (transaction.isActive()) {

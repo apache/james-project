@@ -149,9 +149,10 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
                     List<String> unorderedLines = new ArrayList<>(5);
                     next = reader.readLine();
 
-                    if (next == null)
+                    if (next == null) {
                         throw new Exception("Readline doesn't contain any data, but must not be 'null' (linenumber="
-                                + lineNumber);
+                            + lineNumber);
+                    }
 
                     while (!next.startsWith(CLOSE_UNORDERED_BLOCK_TAG)) {
                         if (!next.startsWith(SERVER_TAG)) {
@@ -162,10 +163,11 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
                         next = reader.readLine();
                         lineNumber++;
 
-                        if (next == null)
+                        if (next == null) {
                             throw new Exception(
-                                    "Readline doesn't contain any data, but must not be 'null' (linenumber="
-                                            + lineNumber);
+                                "Readline doesn't contain any data, but must not be 'null' (linenumber="
+                                    + lineNumber);
+                        }
 
                     }
 

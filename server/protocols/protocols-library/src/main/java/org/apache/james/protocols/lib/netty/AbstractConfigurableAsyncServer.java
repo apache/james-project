@@ -233,8 +233,9 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         useStartTLS = config.getBoolean("tls.[@startTLS]", false);
         useSSL = config.getBoolean("tls.[@socketTLS]", false);
 
-        if (useSSL && useStartTLS)
+        if (useSSL && useStartTLS) {
             throw new ConfigurationException("startTLS is only supported when using plain sockets");
+        }
 
         if (useStartTLS || useSSL) {
             enabledCipherSuites = config.getStringArray("tls.supportedCipherSuites.cipherSuite");
