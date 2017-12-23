@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
@@ -34,7 +35,6 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 
 public class CassandraBlobsDAOTest {
@@ -74,21 +74,21 @@ public class CassandraBlobsDAOTest {
 
         byte[] bytes = testee.read(blobId).join();
 
-        assertThat(new String(bytes, Charsets.UTF_8)).isEmpty();
+        assertThat(new String(bytes, StandardCharsets.UTF_8)).isEmpty();
     }
 
     @Test
     public void saveShouldSaveBlankData() throws Exception {
-        BlobId blobId = testee.save("".getBytes(Charsets.UTF_8)).join();
+        BlobId blobId = testee.save("".getBytes(StandardCharsets.UTF_8)).join();
 
         byte[] bytes = testee.read(blobId).join();
 
-        assertThat(new String(bytes, Charsets.UTF_8)).isEmpty();
+        assertThat(new String(bytes, StandardCharsets.UTF_8)).isEmpty();
     }
 
     @Test
     public void saveShouldReturnBlobId() throws Exception {
-        BlobId blobId = testee.save("toto".getBytes(Charsets.UTF_8)).join();
+        BlobId blobId = testee.save("toto".getBytes(StandardCharsets.UTF_8)).join();
 
         assertThat(blobId).isEqualTo(BlobId.from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
     }
@@ -102,31 +102,31 @@ public class CassandraBlobsDAOTest {
 
     @Test
     public void readShouldReturnSavedData() throws IOException {
-        BlobId blobId = testee.save("toto".getBytes(Charsets.UTF_8)).join();
+        BlobId blobId = testee.save("toto".getBytes(StandardCharsets.UTF_8)).join();
 
         byte[] bytes = testee.read(blobId).join();
 
-        assertThat(new String(bytes, Charsets.UTF_8)).isEqualTo("toto");
+        assertThat(new String(bytes, StandardCharsets.UTF_8)).isEqualTo("toto");
     }
 
     @Test
     public void readShouldReturnLongSavedData() throws IOException {
         String longString = Strings.repeat("0123456789\n", 1000);
-        BlobId blobId = testee.save(longString.getBytes(Charsets.UTF_8)).join();
+        BlobId blobId = testee.save(longString.getBytes(StandardCharsets.UTF_8)).join();
 
         byte[] bytes = testee.read(blobId).join();
 
-        assertThat(new String(bytes, Charsets.UTF_8)).isEqualTo(longString);
+        assertThat(new String(bytes, StandardCharsets.UTF_8)).isEqualTo(longString);
     }
 
     @Test
     public void readShouldReturnSplitSavedDataByChunk() throws IOException {
         String longString = Strings.repeat("0123456789\n", MULTIPLE_CHUNK_SIZE);
-        BlobId blobId = testee.save(longString.getBytes(Charsets.UTF_8)).join();
+        BlobId blobId = testee.save(longString.getBytes(StandardCharsets.UTF_8)).join();
 
         byte[] bytes = testee.read(blobId).join();
 
-        assertThat(new String(bytes, Charsets.UTF_8)).isEqualTo(longString);
+        assertThat(new String(bytes, StandardCharsets.UTF_8)).isEqualTo(longString);
     }
 
 }

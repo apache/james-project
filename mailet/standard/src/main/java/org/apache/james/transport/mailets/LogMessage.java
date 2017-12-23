@@ -23,6 +23,7 @@ package org.apache.james.transport.mailets;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Enumeration;
 
@@ -35,7 +36,6 @@ import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 
 /**
@@ -120,7 +120,7 @@ public class LogMessage extends GenericMailet {
     private void logBody(MimeMessage message) throws MessagingException, IOException {
         if (body && logger.isInfoEnabled()) {
             InputStream inputStream = ByteStreams.limit(message.getRawInputStream(), lengthToLog(message));
-            logger.info(IOUtils.toString(inputStream, Charsets.UTF_8));
+            logger.info(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
         }
     }
 

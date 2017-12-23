@@ -21,8 +21,7 @@ package org.apache.james.cli.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 
 public class OutputCapture {
 
@@ -33,7 +32,7 @@ public class OutputCapture {
     }
 
     public String getContent() {
-        return new String(byteArrayOutputStream.toByteArray(), Charsets.UTF_8);
+        return new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8);
     }
 
 }

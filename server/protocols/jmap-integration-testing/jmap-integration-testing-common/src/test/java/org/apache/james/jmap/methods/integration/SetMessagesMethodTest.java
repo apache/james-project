@@ -41,6 +41,7 @@ import static org.hamcrest.collection.IsMapWithSize.anEmptyMap;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
@@ -93,7 +94,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
@@ -153,7 +153,7 @@ public abstract class SetMessagesMethodTest {
         RestAssured.requestSpecification = new RequestSpecBuilder()
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
-                .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+                .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
                 .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
                 .build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
@@ -182,7 +182,7 @@ public abstract class SetMessagesMethodTest {
             .setHost("localhost")
             .setPort(jmapServer.getProbe(JmapGuiceProbe.class)
                 .getJmapPort())
-            .setCharset(Charsets.UTF_8);
+            .setCharset(StandardCharsets.UTF_8);
     }
 
     @After
@@ -293,7 +293,7 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         given()
@@ -316,7 +316,7 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         // When
@@ -347,13 +347,13 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message1 = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
 
         mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-            new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
 
         ComposedMessageId message3 = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-            new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String missingMessageId = randomMessageId().serialize();
@@ -384,13 +384,13 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message1 = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
 
         ComposedMessageId message2 = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-            new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
 
         ComposedMessageId message3 = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-            new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         // When
@@ -424,7 +424,7 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String serializedMessageId = message.getMessageId().serialize();
@@ -446,7 +446,7 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String messageId = message.getMessageId().serialize();
@@ -469,7 +469,7 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String serializedMessageId = message.getMessageId().serialize();
@@ -501,7 +501,7 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String serializedMessageId = message.getMessageId().serialize();
@@ -537,7 +537,7 @@ public abstract class SetMessagesMethodTest {
                 .add(FORWARDED)
                 .build();
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, flags);
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, flags);
         await();
 
         String serializedMessageId = message.getMessageId().serialize();
@@ -568,7 +568,7 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.ANSWERED));
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.ANSWERED));
         await();
 
         String messageId = message.getMessageId().serialize();
@@ -591,7 +591,7 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.ANSWERED));
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.ANSWERED));
         await();
 
         String messageId = message.getMessageId().serialize();
@@ -614,7 +614,7 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.DELETED));
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.DELETED));
         await();
 
         String messageId = message.getMessageId().serialize();
@@ -647,7 +647,7 @@ public abstract class SetMessagesMethodTest {
             .add(Flag.DELETED, Flag.RECENT)
             .build();
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, flags);
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, flags);
         await();
 
         String messageId = message.getMessageId().serialize();
@@ -682,7 +682,7 @@ public abstract class SetMessagesMethodTest {
                 .add(Flag.DRAFT, Flag.ANSWERED)
                 .build();
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, currentFlags);
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, currentFlags);
         await();
 
         String messageId = message.getMessageId().serialize();
@@ -726,7 +726,7 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String serializedMessageId = message.getMessageId().serialize();
@@ -755,7 +755,7 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.SEEN));
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.SEEN));
         await();
 
         String serializedMessageId = message.getMessageId().serialize();
@@ -777,7 +777,7 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.SEEN));
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.SEEN));
         await();
 
         String serializedMessageId = message.getMessageId().serialize();
@@ -806,7 +806,7 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String serializedMessageId = message.getMessageId().serialize();
@@ -828,7 +828,7 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String serializedMessageId = message.getMessageId().serialize();
@@ -854,7 +854,7 @@ public abstract class SetMessagesMethodTest {
     public void setMessagesShouldRejectUpdateWhenPropertyHasWrongType() throws MailboxException {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
         mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
 
         await();
 
@@ -882,7 +882,7 @@ public abstract class SetMessagesMethodTest {
     public void setMessagesShouldRejectUpdateWhenPropertiesHaveWrongTypes() throws MailboxException {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
         mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
 
         await();
 
@@ -911,7 +911,7 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String serializedMessageId = message.getMessageId().serialize();
@@ -933,7 +933,7 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String serializedMessageId = message.getMessageId().serialize();
@@ -961,7 +961,7 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String serializedMessageId = message.getMessageId().serialize();
@@ -981,7 +981,7 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String serializedMessageId = message.getMessageId().serialize();
@@ -1873,7 +1873,7 @@ public abstract class SetMessagesMethodTest {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         Attachment attachment = Attachment.builder()
-            .bytes("attachment".getBytes(Charsets.UTF_8))
+            .bytes("attachment".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
         uploadAttachment(attachment);
@@ -1916,7 +1916,7 @@ public abstract class SetMessagesMethodTest {
     public void setMessagesShouldNotAllowDraftCreationInSomeoneElseMailbox() throws Exception {
         String messageCreationId = "creationId1337";
         Attachment attachment = Attachment.builder()
-            .bytes("attachment".getBytes(Charsets.UTF_8))
+            .bytes("attachment".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
         uploadAttachment(attachment);
@@ -1954,7 +1954,7 @@ public abstract class SetMessagesMethodTest {
     public void setMessagesShouldNotAllowDraftCreationInADelegatedMailbox() throws Exception {
         String messageCreationId = "creationId1337";
         Attachment attachment = Attachment.builder()
-            .bytes("attachment".getBytes(Charsets.UTF_8))
+            .bytes("attachment".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
         uploadAttachment(attachment);
@@ -2107,7 +2107,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldRejectMovingMessageToOutboxWhenNotInDraft() throws MailboxException {
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, MailboxPath.forUser(USERNAME, MailboxConstants.INBOX),
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String messageId = message.getMessageId().serialize();
@@ -3065,7 +3065,7 @@ public abstract class SetMessagesMethodTest {
     public void mailboxIdsShouldReturnUpdatedWhenNoChange() throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, MailboxPath.forUser(USERNAME, MailboxConstants.INBOX),
-            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
 
         String messageToMoveId = message.getMessageId().serialize();
         String mailboxId = message.getMailboxId().serialize();
@@ -3098,7 +3098,7 @@ public abstract class SetMessagesMethodTest {
 
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, MailboxPath.forUser(USERNAME, MailboxConstants.INBOX),
-            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
 
         String messageToMoveId = message.getMessageId().serialize();
         String requestBody = "[" +
@@ -3142,7 +3142,7 @@ public abstract class SetMessagesMethodTest {
 
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, MailboxPath.forUser(USERNAME, MailboxConstants.INBOX),
-            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
 
         String messageToMoveId = message.getMessageId().serialize();
         String requestBody = "[" +
@@ -3184,7 +3184,7 @@ public abstract class SetMessagesMethodTest {
 
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, MailboxPath.forUser(USERNAME, MailboxConstants.INBOX),
-            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
 
         String messageToMoveId = message.getMessageId().serialize();
         String inboxId = message.getMailboxId().serialize();
@@ -3227,7 +3227,7 @@ public abstract class SetMessagesMethodTest {
 
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, MailboxPath.forUser(USERNAME, MailboxConstants.INBOX),
-            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
 
         String messageToMoveId = message.getMessageId().serialize();
         String inboxId = message.getMailboxId().serialize();
@@ -3267,7 +3267,7 @@ public abstract class SetMessagesMethodTest {
     public void mailboxIdsShouldBeInOriginalMailboxWhenNoChange() throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, MailboxPath.forUser(USERNAME, MailboxConstants.INBOX),
-            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
 
         String messageToMoveId = message.getMessageId().serialize();
         String mailboxId = message.getMailboxId().serialize();
@@ -3307,7 +3307,7 @@ public abstract class SetMessagesMethodTest {
     public void mailboxIdsShouldReturnErrorWhenMovingToADeletedMailbox() throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, MailboxPath.forUser(USERNAME, MailboxConstants.INBOX),
-            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
 
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "any");
         String mailboxId = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "any")
@@ -3346,7 +3346,7 @@ public abstract class SetMessagesMethodTest {
     public void mailboxIdsShouldReturnErrorWhenSetToEmpty() throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, MailboxPath.forUser(USERNAME, MailboxConstants.INBOX),
-            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
 
         String messageToMoveId = message.getMessageId().serialize();
         String requestBody = "[" +
@@ -3384,7 +3384,7 @@ public abstract class SetMessagesMethodTest {
 
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, MailboxPath.forUser(USERNAME, MailboxConstants.INBOX),
-            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
 
         String messageToMoveId = message.getMessageId().serialize();
         String requestBody = "[" +
@@ -3417,7 +3417,7 @@ public abstract class SetMessagesMethodTest {
 
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, MailboxPath.forUser(USERNAME, MailboxConstants.INBOX),
-            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
 
         String messageToMoveId = message.getMessageId().serialize();
         String requestBody = "[" +
@@ -3460,7 +3460,7 @@ public abstract class SetMessagesMethodTest {
 
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, MailboxPath.forUser(USERNAME, MailboxConstants.INBOX),
-            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
 
         String messageToMoveId = message.getMessageId().serialize();
         String requestBody = "[" +
@@ -3496,7 +3496,7 @@ public abstract class SetMessagesMethodTest {
 
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, MailboxPath.forUser(USERNAME, MailboxConstants.INBOX),
-            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
+            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
 
         String messageToMoveId = message.getMessageId().serialize();
         String mailboxId = message.getMailboxId().serialize();
@@ -3577,12 +3577,12 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldReturnAttachmentsWhenMessageHasAttachment() throws Exception {
         Attachment attachment = Attachment.builder()
-            .bytes("attachment".getBytes(Charsets.UTF_8))
+            .bytes("attachment".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
         uploadAttachment(attachment);
         Attachment attachment2 = Attachment.builder()
-            .bytes("attachment2".getBytes(Charsets.UTF_8))
+            .bytes("attachment2".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
         uploadAttachment(attachment2);
@@ -3646,17 +3646,17 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldReturnAttachmentsWithNonASCIINames() throws Exception {
         Attachment attachment = Attachment.builder()
-            .bytes("attachment".getBytes(Charsets.UTF_8))
+            .bytes("attachment".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
         uploadAttachment(attachment);
         Attachment attachment2 = Attachment.builder()
-            .bytes("attachment2".getBytes(Charsets.UTF_8))
+            .bytes("attachment2".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
         uploadAttachment(attachment2);
         Attachment attachment3 = Attachment.builder()
-            .bytes("attachment3".getBytes(Charsets.UTF_8))
+            .bytes("attachment3".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
         uploadAttachment(attachment3);
@@ -3732,19 +3732,19 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void filenamesAttachmentsWithNonASCIICharactersShouldBeRetrievedWhenChainingSetMessagesAndGetMessages() throws Exception {
         Attachment attachment = Attachment.builder()
-            .bytes("attachment".getBytes(Charsets.UTF_8))
+            .bytes("attachment".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
         uploadAttachment(attachment);
 
         Attachment attachment2 = Attachment.builder()
-            .bytes("attachment2".getBytes(Charsets.UTF_8))
+            .bytes("attachment2".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
         uploadAttachment(attachment2);
 
         Attachment attachment3 = Attachment.builder()
-            .bytes("attachment3".getBytes(Charsets.UTF_8))
+            .bytes("attachment3".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
         uploadAttachment(attachment3);
@@ -3847,7 +3847,7 @@ public abstract class SetMessagesMethodTest {
         with()
             .header("Authorization", accessToken.serialize())
             .contentType(attachment.getType())
-            .content(new String(IOUtils.toByteArray(attachment.getStream()), Charsets.UTF_8))
+            .content(new String(IOUtils.toByteArray(attachment.getStream()), StandardCharsets.UTF_8))
             .post("/upload");
     }
 
@@ -4025,7 +4025,7 @@ public abstract class SetMessagesMethodTest {
         Attachment attachment = Attachment.builder()
             .bytes(("<html>\n" +
                     "  <body>attachment</body>\n" + // needed indentation, else restassured is adding some
-                    "</html>").getBytes(Charsets.UTF_8))
+                    "</html>").getBytes(StandardCharsets.UTF_8))
             .type("text/html; charset=UTF-8")
             .build();
         uploadTextAttachment(attachment);
@@ -4099,7 +4099,7 @@ public abstract class SetMessagesMethodTest {
         Attachment attachment = Attachment.builder()
             .bytes(("<html>\n" +
                     "  <body>attachment</body>\n" + // needed indentation, else restassured is adding some
-                    "</html>").getBytes(Charsets.UTF_8))
+                    "</html>").getBytes(StandardCharsets.UTF_8))
             .type("text/html; charset=UTF-8")
             .build();
         uploadTextAttachment(attachment);
@@ -4169,7 +4169,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void attachmentAndEmptyBodyShouldBeRetrievedWhenChainingSetMessagesAndGetMessagesWithTextAttachmentWithoutMailBody() throws Exception {
         Attachment attachment = Attachment.builder()
-            .bytes(("some text").getBytes(Charsets.UTF_8))
+            .bytes(("some text").getBytes(StandardCharsets.UTF_8))
             .type("text/plain; charset=UTF-8")
             .build();
         uploadTextAttachment(attachment);
@@ -4756,12 +4756,12 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldReturnAttachmentsWhenMessageHasInlinedAttachmentButNoCid() throws Exception {
         Attachment attachment = Attachment.builder()
-            .bytes("attachment".getBytes(Charsets.UTF_8))
+            .bytes("attachment".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
         uploadAttachment(attachment);
         Attachment attachment2 = Attachment.builder()
-            .bytes("attachment2".getBytes(Charsets.UTF_8))
+            .bytes("attachment2".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
         uploadAttachment(attachment2);
@@ -4826,7 +4826,7 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, USER_MAILBOX,
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String messageId = message.getMessageId().serialize();

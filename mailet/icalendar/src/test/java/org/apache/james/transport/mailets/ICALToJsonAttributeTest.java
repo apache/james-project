@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -42,7 +43,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import com.fasterxml.jackson.core.io.JsonStringEncoder;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 
@@ -251,7 +251,7 @@ public class ICALToJsonAttributeTest {
 
         Map<String, byte[]> jsons = (Map<String, byte[]>) mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME);
         assertThat(jsons).hasSize(1);
-        assertThatJson(new String(jsons.values().iterator().next(), Charsets.UTF_8))
+        assertThatJson(new String(jsons.values().iterator().next(), StandardCharsets.UTF_8))
             .isEqualTo("{" +
                 "\"ical\": \"" + toJsonValue(ics) +"\"," +
                 "\"sender\": \"" + SENDER.asString() + "\"," +
@@ -265,7 +265,7 @@ public class ICALToJsonAttributeTest {
     }
 
     private String toJsonValue(byte[] ics) throws UnsupportedEncodingException {
-        return new String(JsonStringEncoder.getInstance().quoteAsUTF8(new String(ics, Charsets.UTF_8)), Charsets.UTF_8);
+        return new String(JsonStringEncoder.getInstance().quoteAsUTF8(new String(ics, StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
     }
 
     @SuppressWarnings("unchecked")
@@ -453,7 +453,7 @@ public class ICALToJsonAttributeTest {
 
         Map<String, byte[]> jsons = (Map<String, byte[]>) mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME);
         assertThat(jsons).hasSize(1);
-        assertThatJson(new String(jsons.values().iterator().next(), Charsets.UTF_8))
+        assertThatJson(new String(jsons.values().iterator().next(), StandardCharsets.UTF_8))
             .isEqualTo("{" +
                 "\"ical\": \"" + toJsonValue(ics) +"\"," +
                 "\"sender\": \"" + from + "\"," +
@@ -488,7 +488,7 @@ public class ICALToJsonAttributeTest {
 
         Map<String, byte[]> jsons = (Map<String, byte[]>) mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME);
         assertThat(jsons).hasSize(1);
-        assertThatJson(new String(jsons.values().iterator().next(), Charsets.UTF_8))
+        assertThatJson(new String(jsons.values().iterator().next(), StandardCharsets.UTF_8))
             .isEqualTo("{" +
                 "\"ical\": \"" + toJsonValue(ics) +"\"," +
                 "\"sender\": \"" + SENDER.asString() + "\"," +
@@ -524,7 +524,7 @@ public class ICALToJsonAttributeTest {
 
         Map<String, byte[]> jsons = (Map<String, byte[]>) mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME);
         assertThat(jsons).hasSize(1);
-        assertThatJson(new String(jsons.values().iterator().next(), Charsets.UTF_8))
+        assertThatJson(new String(jsons.values().iterator().next(), StandardCharsets.UTF_8))
             .isEqualTo("{" +
                 "\"ical\": \"" + toJsonValue(ics) +"\"," +
                 "\"sender\": \"" + from + "\"," +
@@ -540,7 +540,7 @@ public class ICALToJsonAttributeTest {
     private List<String> toSortedValueList(Map<String, byte[]> jsons) {
         return jsons.values()
                 .stream()
-                .map(bytes -> new String(bytes, Charsets.UTF_8))
+                .map(bytes -> new String(bytes, StandardCharsets.UTF_8))
                 .sorted()
                 .collect(Collectors.toList());
     }

@@ -21,12 +21,12 @@ package org.apache.james.sieve.cassandra.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.charset.StandardCharsets;
+
 import org.apache.james.sieverepository.api.ScriptSummary;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import com.google.common.base.Charsets;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
@@ -130,7 +130,7 @@ public class ScriptTest {
                 .isActive(true)
                 .build()
                 .getSize())
-            .isEqualTo(content.getBytes(Charsets.UTF_8).length);
+            .isEqualTo(content.getBytes(StandardCharsets.UTF_8).length);
     }
 
     @Test

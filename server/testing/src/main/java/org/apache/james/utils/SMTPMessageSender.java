@@ -22,6 +22,7 @@ package org.apache.james.utils;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -35,7 +36,6 @@ import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 
 public class SMTPMessageSender implements Closeable {
@@ -122,7 +122,7 @@ public class SMTPMessageSender implements Closeable {
     private String asString(Message message) throws IOException, MessagingException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         message.writeTo(outputStream);
-        return new String(outputStream.toByteArray(), Charsets.UTF_8);
+        return new String(outputStream.toByteArray(), StandardCharsets.UTF_8);
     }
 
     public boolean messageHasBeenSent() throws IOException {

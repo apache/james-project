@@ -24,15 +24,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
-
 public class AttachmentTest {
 
-    private static Charset CHARSET = Charsets.UTF_8;
+    private static Charset CHARSET = StandardCharsets.UTF_8;
 
     @Test
     public void streamShouldBeConsumedOneTime() throws Exception {

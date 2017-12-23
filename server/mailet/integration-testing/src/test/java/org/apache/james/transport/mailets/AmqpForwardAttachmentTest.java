@@ -21,6 +21,8 @@ package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.charset.StandardCharsets;
+
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
@@ -51,7 +53,6 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
-import com.google.common.base.Charsets;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
@@ -72,7 +73,7 @@ public class AmqpForwardAttachmentTest {
     private static final String EXCHANGE_NAME = "myExchange";
     private static final String ROUTING_KEY = "myRoutingKey";
     
-    private static final byte[] TEST_ATTACHMENT_CONTENT = "Test attachment content".getBytes(Charsets.UTF_8);
+    private static final byte[] TEST_ATTACHMENT_CONTENT = "Test attachment content".getBytes(StandardCharsets.UTF_8);
 
     public SwarmGenericContainer rabbitMqContainer = new SwarmGenericContainer(Images.RABBITMQ)
             .withAffinityToContainer();

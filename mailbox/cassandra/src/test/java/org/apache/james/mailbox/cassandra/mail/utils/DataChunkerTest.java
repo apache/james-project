@@ -22,6 +22,7 @@ package org.apache.james.mailbox.cassandra.mail.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -30,7 +31,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
 
@@ -81,7 +81,7 @@ public class DataChunkerTest {
 
     @Test
     public void chunkShouldReturnOneArrayWhenInputLessThanChunkSize() {
-        byte[] data = "12345".getBytes(Charsets.UTF_8);
+        byte[] data = "12345".getBytes(StandardCharsets.UTF_8);
 
         Stream<Pair<Integer, ByteBuffer>> chunks = testee.chunk(data, CHUNK_SIZE);
 
@@ -91,7 +91,7 @@ public class DataChunkerTest {
 
     @Test
     public void chunkShouldReturnOneArrayWhenInputEqualsChunkSize() {
-        byte[] data = "1234567890".getBytes(Charsets.UTF_8);
+        byte[] data = "1234567890".getBytes(StandardCharsets.UTF_8);
         assertThat(data.length).isEqualTo(CHUNK_SIZE);
 
         Stream<Pair<Integer, ByteBuffer>> chunks = testee.chunk(data, CHUNK_SIZE);
@@ -102,8 +102,8 @@ public class DataChunkerTest {
 
     @Test
     public void chunkShouldReturnSeveralArrayWhenInputBiggerThanChunkSize() {
-        byte[] part1 = "1234567890".getBytes(Charsets.UTF_8);
-        byte[] part2 = "12345".getBytes(Charsets.UTF_8);
+        byte[] part1 = "1234567890".getBytes(StandardCharsets.UTF_8);
+        byte[] part2 = "12345".getBytes(StandardCharsets.UTF_8);
         byte[] data = Bytes.concat(part1, part2);
 
         Stream<Pair<Integer, ByteBuffer>> chunks = testee.chunk(data, CHUNK_SIZE);

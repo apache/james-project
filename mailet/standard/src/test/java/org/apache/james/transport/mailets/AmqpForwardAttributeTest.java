@@ -44,7 +44,6 @@ import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
 import org.slf4j.Logger;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.AMQP;
@@ -59,7 +58,7 @@ public class AmqpForwardAttributeTest {
     private static final String EXCHANGE_NAME = "exchangeName";
     private static final String ROUTING_KEY = "routingKey";
     private static final String AMQP_URI = "amqp://host";
-    private static final byte[] ATTACHMENT_CONTENT = "Attachment content".getBytes(Charsets.UTF_8);
+    private static final byte[] ATTACHMENT_CONTENT = "Attachment content".getBytes(StandardCharsets.UTF_8);
     private static final ImmutableMap<String, byte[]> ATTRIBUTE_CONTENT = ImmutableMap.of("attachment1.txt", ATTACHMENT_CONTENT);
 
     @Rule

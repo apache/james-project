@@ -2,12 +2,12 @@
 
 package org.apache.james.sieve.cassandra.model;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.sieverepository.api.ScriptSummary;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 
 public class Script {
@@ -58,7 +58,7 @@ public class Script {
             return new Script(name,
                 content,
                 isActive.get(),
-                size.orElse((long) content.getBytes(Charsets.UTF_8).length));
+                size.orElse((long) content.getBytes(StandardCharsets.UTF_8).length));
         }
 
     }

@@ -49,8 +49,6 @@ import org.bouncycastle.mail.smime.SMIMEUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Charsets;
-
 /**
  * This mailet decrypts a s/mime encrypted message. It takes as input an
  * encrypted message and it tries to dechiper it using the key specified in its
@@ -165,7 +163,7 @@ public class SMIMEDecrypt extends GenericMailet {
             // I start the message stripping.
             try {
                 MimeMessage newMessage = new MimeMessage(message);
-                newMessage.setText(text(strippedMessage), Charsets.UTF_8.name());
+                newMessage.setText(text(strippedMessage), StandardCharsets.UTF_8.name());
                 if (!strippedMessage.isMimeType("multipart/*")) {
                     newMessage.setDisposition(null);
                 }

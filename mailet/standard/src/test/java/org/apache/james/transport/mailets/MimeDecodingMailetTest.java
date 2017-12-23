@@ -21,6 +21,7 @@ package org.apache.james.transport.mailets;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import javax.mail.MessagingException;
@@ -37,7 +38,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.slf4j.Logger;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -143,9 +143,9 @@ public class MimeDecodingMailetTest {
                 + "Content-Type: application/octet-stream; charset=utf-8\r\n\r\n"
                 + text;
         String expectedKey = "mimePart1";
-        mail.setAttribute(MAIL_ATTRIBUTE, ImmutableMap.of(expectedKey, content.getBytes(Charsets.UTF_8)));
+        mail.setAttribute(MAIL_ATTRIBUTE, ImmutableMap.of(expectedKey, content.getBytes(StandardCharsets.UTF_8)));
 
-        byte[] expectedValue = text.getBytes(Charsets.UTF_8);
+        byte[] expectedValue = text.getBytes(StandardCharsets.UTF_8);
         testee.service(mail);
 
         Map<String, byte[]> processedAttribute = (Map<String, byte[]>) mail.getAttribute(MAIL_ATTRIBUTE);

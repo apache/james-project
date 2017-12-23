@@ -21,12 +21,12 @@ package org.apache.james.mailbox.cassandra.ids;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.charset.StandardCharsets;
+
 import org.apache.commons.io.IOUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import com.google.common.base.Charsets;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
@@ -77,7 +77,7 @@ public class BlobIdTest {
 
     @Test
     public void forPayloadShouldHashArray() {
-        BlobId blobId = BlobId.forPayload("content".getBytes(Charsets.UTF_8));
+        BlobId blobId = BlobId.forPayload("content".getBytes(StandardCharsets.UTF_8));
 
         assertThat(blobId.getId()).isEqualTo("ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73");
     }

@@ -25,6 +25,7 @@ import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.hamcrest.Matchers.equalTo;
 
 import java.net.InetAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.net.smtp.SMTPClient;
@@ -46,7 +47,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.testcontainers.containers.wait.HostPortWaitStrategy;
 
-import com.google.common.base.Charsets;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
@@ -105,7 +105,7 @@ public abstract class VacationRelayIntegrationTest {
         RestAssured.requestSpecification = new RequestSpecBuilder()
             .setContentType(ContentType.JSON)
             .setAccept(ContentType.JSON)
-            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
             .setPort(80)
             .setBaseUri("http://" + containerIp.getHostAddress())
             .build();

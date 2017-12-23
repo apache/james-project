@@ -58,7 +58,6 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Bytes;
@@ -140,7 +139,7 @@ public class CassandraMessageDAOTest {
         MessageWithoutAttachment attachmentRepresentation =
             toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Full, Limit.unlimited()));
 
-        assertThat(IOUtils.toString(attachmentRepresentation.getContent(), Charsets.UTF_8))
+        assertThat(IOUtils.toString(attachmentRepresentation.getContent(), StandardCharsets.UTF_8))
             .isEqualTo(CONTENT);
     }
 
@@ -155,9 +154,9 @@ public class CassandraMessageDAOTest {
 
         byte[] expected = Bytes.concat(
             new byte[BODY_START],
-            CONTENT.substring(BODY_START).getBytes(Charsets.UTF_8));
-        assertThat(IOUtils.toString(attachmentRepresentation.getContent(), Charsets.UTF_8))
-            .isEqualTo(IOUtils.toString(new ByteArrayInputStream(expected), Charsets.UTF_8));
+            CONTENT.substring(BODY_START).getBytes(StandardCharsets.UTF_8));
+        assertThat(IOUtils.toString(attachmentRepresentation.getContent(), StandardCharsets.UTF_8))
+            .isEqualTo(IOUtils.toString(new ByteArrayInputStream(expected), StandardCharsets.UTF_8));
     }
 
     @Test
@@ -169,7 +168,7 @@ public class CassandraMessageDAOTest {
         MessageWithoutAttachment attachmentRepresentation =
             toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Headers, Limit.unlimited()));
 
-        assertThat(IOUtils.toString(attachmentRepresentation.getContent(), Charsets.UTF_8))
+        assertThat(IOUtils.toString(attachmentRepresentation.getContent(), StandardCharsets.UTF_8))
             .isEqualTo(CONTENT.substring(0, BODY_START));
     }
 
@@ -181,7 +180,7 @@ public class CassandraMessageDAOTest {
             .internalDate(new Date())
             .bodyStartOctet(bodyStart)
             .size(content.length())
-            .content(new SharedByteArrayInputStream(content.getBytes(Charsets.UTF_8)))
+            .content(new SharedByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)))
             .flags(new Flags())
             .propertyBuilder(propertyBuilder)
             .addAttachments(attachments)

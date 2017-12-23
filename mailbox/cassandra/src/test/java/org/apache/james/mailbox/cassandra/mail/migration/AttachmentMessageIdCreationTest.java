@@ -57,7 +57,6 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -179,7 +178,7 @@ public class AttachmentMessageIdCreationTest {
             .internalDate(new Date())
             .bodyStartOctet(BODY_START)
             .size(content.length())
-            .content(new SharedByteArrayInputStream(content.getBytes(Charsets.UTF_8)))
+            .content(new SharedByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)))
             .flags(new Flags())
             .propertyBuilder(new PropertyBuilder())
             .addAttachments(attachments)

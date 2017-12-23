@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.BufferedInputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
@@ -42,7 +43,6 @@ import org.apache.james.util.CountDownConsumeInputStream;
 import org.apache.james.util.ZeroedInputStream;
 
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Charsets;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 
@@ -123,7 +123,7 @@ public class UploadStepdefs {
     public void userUploadContentWithoutContentType(String username) throws Throwable {
         AccessToken accessToken = userStepdefs.authenticate(username);
         Request request = Request.Post(uploadUri)
-                .bodyByteArray("some text".getBytes(Charsets.UTF_8));
+                .bodyByteArray("some text".getBytes(StandardCharsets.UTF_8));
         if (accessToken != null) {
             request.addHeader("Authorization", accessToken.serialize());
         }

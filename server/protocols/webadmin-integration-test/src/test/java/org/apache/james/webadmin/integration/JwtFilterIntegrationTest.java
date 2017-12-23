@@ -25,6 +25,7 @@ import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
@@ -44,7 +45,6 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
@@ -79,7 +79,7 @@ public class JwtFilterIntegrationTest {
     public void setUp() throws Exception {
         JwtConfiguration jwtConfiguration = new JwtConfiguration(
             Optional.of(
-                IOUtils.toString(ClassLoader.getSystemResourceAsStream("jwt_publickey"), Charsets.UTF_8)));
+                IOUtils.toString(ClassLoader.getSystemResourceAsStream("jwt_publickey"), StandardCharsets.UTF_8)));
 
         guiceJamesServer = cassandraJmapTestRule.jmapServer(cassandra.getModule())
             .overrideWith(new WebAdminConfigurationModule(),
@@ -92,7 +92,7 @@ public class JwtFilterIntegrationTest {
         RestAssured.requestSpecification = new RequestSpecBuilder()
             .setContentType(ContentType.JSON)
             .setAccept(ContentType.JSON)
-            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
             .build();
     }
 

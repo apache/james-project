@@ -28,6 +28,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.http.client.utils.URIBuilder;
@@ -39,7 +40,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 
@@ -58,7 +58,7 @@ public abstract class UserProvisionningConcurrencyTest {
         jmapServer = createJmapServer();
         jmapServer.start();
         RestAssured.requestSpecification = new RequestSpecBuilder()
-            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
             .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
             .build();
 
@@ -104,6 +104,6 @@ public abstract class UserProvisionningConcurrencyTest {
             .setScheme("http")
             .setHost("localhost")
             .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
-            .setCharset(Charsets.UTF_8);
+            .setCharset(StandardCharsets.UTF_8);
     }
 }

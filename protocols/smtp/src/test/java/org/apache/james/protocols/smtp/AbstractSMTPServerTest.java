@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -55,7 +56,6 @@ import org.apache.james.protocols.smtp.utils.TestMessageHook;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 
 public abstract class AbstractSMTPServerTest {
@@ -102,7 +102,7 @@ public abstract class AbstractSMTPServerTest {
 
             final ProtocolServer finalServer = server;
             final InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
-            final String mailContent = CharStreams.toString(new InputStreamReader(ClassLoader.getSystemResourceAsStream("a50.eml"), Charsets.US_ASCII));
+            final String mailContent = CharStreams.toString(new InputStreamReader(ClassLoader.getSystemResourceAsStream("a50.eml"), StandardCharsets.US_ASCII));
             int threadCount = 4;
             int updateCount = 1;
             assertThat(new ConcurrentTestRunner(threadCount, updateCount,
