@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.util.Date;
 
@@ -54,7 +55,6 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
@@ -66,7 +66,7 @@ public class MessageToElasticSearchJsonTest {
     public static final MessageId MESSAGE_ID = TestMessageId.of(184L);
     public static final long MOD_SEQ = 42L;
     public static final MessageUid UID = MessageUid.of(25);
-    public static final Charset CHARSET = Charsets.UTF_8;
+    public static final Charset CHARSET = StandardCharsets.UTF_8;
 
     private TextExtractor textExtractor;
 
@@ -101,7 +101,7 @@ public class MessageToElasticSearchJsonTest {
                 date,
                 SIZE,
                 BODY_START_OCTET,
-                new SharedByteArrayInputStream("message".getBytes(Charsets.UTF_8)),
+                new SharedByteArrayInputStream("message".getBytes(StandardCharsets.UTF_8)),
                 new Flags(),
                 propertyBuilder,
                 MAILBOX_ID);

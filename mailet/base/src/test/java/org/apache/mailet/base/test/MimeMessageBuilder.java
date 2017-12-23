@@ -22,6 +22,7 @@ package org.apache.mailet.base.test;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -45,7 +46,6 @@ import javax.mail.util.ByteArrayDataSource;
 import org.apache.commons.io.IOUtils;
 
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -321,7 +321,7 @@ public class MimeMessageBuilder {
     public MimeMessageBuilder setMultipartWithSubMessage(MimeMessage mimeMessage) throws MessagingException, IOException {
         return setMultipartWithBodyParts(
             new MimeBodyPart(
-                new InternetHeaders(new ByteArrayInputStream("Content-Type: multipart/mixed".getBytes(Charsets.US_ASCII))),
+                new InternetHeaders(new ByteArrayInputStream("Content-Type: multipart/mixed".getBytes(StandardCharsets.US_ASCII))),
                 IOUtils.toByteArray(mimeMessage.getInputStream())));
     }
 

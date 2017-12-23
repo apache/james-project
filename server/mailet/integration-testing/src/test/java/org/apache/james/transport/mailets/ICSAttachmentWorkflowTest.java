@@ -21,6 +21,7 @@ package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import javax.mail.internet.MimeMessage;
@@ -54,7 +55,6 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
@@ -547,7 +547,7 @@ public class ICSAttachmentWorkflowTest {
                     .data("simple text")
                     .build(),
                 MimeMessageBuilder.bodyPartBuilder()
-                    .data(ICS_1.getBytes(Charsets.UTF_8))
+                    .data(ICS_1.getBytes(StandardCharsets.UTF_8))
                     .filename("meeting.ics")
                     .disposition("attachment")
                     .build())
@@ -559,7 +559,7 @@ public class ICSAttachmentWorkflowTest {
                 MimeMessageBuilder.bodyPartBuilder()
                     .data("simple text")
                     .build(),
-                MimeMessageBuilder.bodyPartFromBytes(ICS_BASE64.getBytes(Charsets.UTF_8)))
+                MimeMessageBuilder.bodyPartFromBytes(ICS_BASE64.getBytes(StandardCharsets.UTF_8)))
             .setSubject("test")
             .build();
 
@@ -571,17 +571,17 @@ public class ICSAttachmentWorkflowTest {
                     .data("simple text")
                     .build(),
                 MimeMessageBuilder.bodyPartBuilder()
-                    .data(ICS_1.getBytes(Charsets.UTF_8))
+                    .data(ICS_1.getBytes(StandardCharsets.UTF_8))
                     .filename("test1.txt")
                     .disposition("attachment")
                     .build(),
                 MimeMessageBuilder.bodyPartBuilder()
-                    .data(ICS_2.getBytes(Charsets.UTF_8))
+                    .data(ICS_2.getBytes(StandardCharsets.UTF_8))
                     .filename("test2.txt")
                     .disposition("attachment")
                     .build(),
                 MimeMessageBuilder.bodyPartBuilder()
-                    .data(ICS_3.getBytes(Charsets.UTF_8))
+                    .data(ICS_3.getBytes(StandardCharsets.UTF_8))
                     .filename("test3.txt")
                     .disposition("attachment")
                     .build())

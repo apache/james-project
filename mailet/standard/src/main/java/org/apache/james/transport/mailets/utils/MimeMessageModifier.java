@@ -19,11 +19,11 @@
 
 package org.apache.james.transport.mailets.utils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-
-import com.google.common.base.Charsets;
 
 public class MimeMessageModifier {
 
@@ -36,7 +36,7 @@ public class MimeMessageModifier {
     public void replaceSubject(Optional<String> newSubject) throws MessagingException {
         if (newSubject.isPresent()) {
             message.setSubject(null);
-            message.setSubject(newSubject.get(), Charsets.UTF_8.displayName());
+            message.setSubject(newSubject.get(), StandardCharsets.UTF_8.displayName());
         }
     }
 }

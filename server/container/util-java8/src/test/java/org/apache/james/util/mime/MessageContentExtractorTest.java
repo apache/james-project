@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import javax.mail.internet.MimeMessage;
@@ -39,8 +40,6 @@ import org.apache.james.mime4j.util.ByteSequence;
 import org.apache.james.util.mime.MessageContentExtractor.MessageContent;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.base.Charsets;
 
 public class MessageContentExtractorTest {
     private static final String BINARY_CONTENT = "binary";
@@ -78,14 +77,14 @@ public class MessageContentExtractorTest {
     @Before
     public void setup() throws IOException {
         testee = new MessageContentExtractor();
-        textPart = BodyPartBuilder.create().setBody(TEXT_CONTENT, "plain", Charsets.UTF_8).build();
-        htmlPart = BodyPartBuilder.create().setBody(HTML_CONTENT, "html", Charsets.UTF_8).build();
+        textPart = BodyPartBuilder.create().setBody(TEXT_CONTENT, "plain", StandardCharsets.UTF_8).build();
+        htmlPart = BodyPartBuilder.create().setBody(HTML_CONTENT, "html", StandardCharsets.UTF_8).build();
         textAttachment = BodyPartBuilder.create()
-                .setBody(ATTACHMENT_CONTENT, "plain", Charsets.UTF_8)
+                .setBody(ATTACHMENT_CONTENT, "plain", StandardCharsets.UTF_8)
                 .setContentDisposition("attachment")
                 .build();
         inlineText = BodyPartBuilder.create()
-                .setBody(ATTACHMENT_CONTENT, "plain", Charsets.UTF_8)
+                .setBody(ATTACHMENT_CONTENT, "plain", StandardCharsets.UTF_8)
                 .setContentDisposition("inline")
                 .build();
         inlineImage = BodyPartBuilder.create()
@@ -97,7 +96,7 @@ public class MessageContentExtractorTest {
     @Test
     public void extractShouldReturnEmptyWhenBinaryContentOnly() throws IOException {
         Message message = Message.Builder.of()
-                .setBody(BasicBodyFactory.INSTANCE.binaryBody(BINARY_CONTENT, Charsets.UTF_8))
+                .setBody(BasicBodyFactory.INSTANCE.binaryBody(BINARY_CONTENT, StandardCharsets.UTF_8))
                 .build();
         MessageContent actual = testee.extract(message);
         assertThat(actual.getTextBody()).isEmpty();
@@ -107,7 +106,7 @@ public class MessageContentExtractorTest {
     @Test
     public void extractShouldReturnTextOnlyWhenTextOnlyBody() throws IOException {
         Message message = Message.Builder.of()
-                .setBody(TEXT_CONTENT, Charsets.UTF_8)
+                .setBody(TEXT_CONTENT, StandardCharsets.UTF_8)
                 .build();
         MessageContent actual = testee.extract(message);
         assertThat(actual.getTextBody()).contains(TEXT_CONTENT);
@@ -117,7 +116,7 @@ public class MessageContentExtractorTest {
     @Test
     public void extractShouldReturnHtmlOnlyWhenHtmlOnlyBody() throws IOException {
         Message message = Message.Builder.of()
-                .setBody(HTML_CONTENT, "html", Charsets.UTF_8)
+                .setBody(HTML_CONTENT, "html", StandardCharsets.UTF_8)
                 .build();
         MessageContent actual = testee.extract(message);
         assertThat(actual.getTextBody()).isEmpty();
@@ -184,11 +183,11 @@ public class MessageContentExtractorTest {
         String textBody = "body 1";
         Multipart multipart = MultipartBuilder.create("report")
             .addBodyPart(BodyPartBuilder.create()
-                .setBody(textBody, "plain", Charsets.UTF_8)
+                .setBody(textBody, "plain", StandardCharsets.UTF_8)
                 .setContentDisposition("inline")
                 .build())
             .addBodyPart(BodyPartBuilder.create()
-                .setBody("body 2", "rfc822-headers", Charsets.UTF_8)
+                .setBody("body 2", "rfc822-headers", StandardCharsets.UTF_8)
                 .setContentDisposition("inline")
                 .build())
             .build();
@@ -281,7 +280,7 @@ public class MessageContentExtractorTest {
     public void extractShouldRetrieveHtmlBodyWithOneInlinedHTMLAttachmentWithoutCid() throws IOException {
         //Given
         BodyPart inlinedHTMLPart = BodyPartBuilder.create()
-            .setBody(HTML_CONTENT, "html", Charsets.UTF_8)
+            .setBody(HTML_CONTENT, "html", StandardCharsets.UTF_8)
             .build();
         HeaderImpl inlinedHeader = new HeaderImpl();
         inlinedHeader.addField(Fields.contentDisposition(MimeMessage.INLINE));
@@ -305,7 +304,7 @@ public class MessageContentExtractorTest {
     public void extractShouldNotRetrieveHtmlBodyWithOneInlinedHTMLAttachmentWithCid() throws IOException {
         //Given
         BodyPart inlinedHTMLPart = BodyPartBuilder.create()
-            .setBody(HTML_CONTENT, "html", Charsets.UTF_8)
+            .setBody(HTML_CONTENT, "html", StandardCharsets.UTF_8)
             .build();
         HeaderImpl inlinedHeader = new HeaderImpl();
         inlinedHeader.addField(Fields.contentDisposition(MimeMessage.INLINE));
@@ -331,7 +330,7 @@ public class MessageContentExtractorTest {
     public void extractShouldRetrieveTextBodyWithOneInlinedTextAttachmentWithoutCid() throws IOException {
         //Given
         BodyPart inlinedTextPart = BodyPartBuilder.create()
-            .setBody(TEXT_CONTENT, "text", Charsets.UTF_8)
+            .setBody(TEXT_CONTENT, "text", StandardCharsets.UTF_8)
             .build();
         HeaderImpl inlinedHeader = new HeaderImpl();
         inlinedHeader.addField(Fields.contentDisposition(MimeMessage.INLINE));
@@ -355,7 +354,7 @@ public class MessageContentExtractorTest {
     public void extractShouldNotRetrieveTextBodyWithOneInlinedTextAttachmentWithCid() throws IOException {
         //Given
         BodyPart inlinedTextPart = BodyPartBuilder.create()
-            .setBody(TEXT_CONTENT, "text", Charsets.UTF_8)
+            .setBody(TEXT_CONTENT, "text", StandardCharsets.UTF_8)
             .build();
         HeaderImpl inlinedHeader = new HeaderImpl();
         inlinedHeader.addField(Fields.contentDisposition(MimeMessage.INLINE));
@@ -502,7 +501,7 @@ public class MessageContentExtractorTest {
     public void extractShouldRespectCharsetWhenUTF8() throws IOException {
         String text = "éééé\r\nèèèè\r\nàààà";
         Message message = Message.Builder.of()
-                .setBody(text, Charsets.UTF_8)
+                .setBody(text, StandardCharsets.UTF_8)
                 .build();
         MessageContent actual = testee.extract(message);
         assertThat(actual.getTextBody()).contains(text);

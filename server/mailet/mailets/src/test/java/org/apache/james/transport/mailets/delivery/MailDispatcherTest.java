@@ -26,6 +26,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 
@@ -45,7 +46,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ArrayListMultimap;
 
 public class MailDispatcherTest {
@@ -155,7 +155,7 @@ public class MailDispatcherTest {
             .fromMailet()
             .state(Mail.ERROR).build();
         assertThat(actual).containsOnly(expected);
-        assertThat(IOUtils.toString(actual.get(0).getMsg().getInputStream(), Charsets.UTF_8))
+        assertThat(IOUtils.toString(actual.get(0).getMsg().getInputStream(), StandardCharsets.UTF_8))
             .contains("toto");
     }
 

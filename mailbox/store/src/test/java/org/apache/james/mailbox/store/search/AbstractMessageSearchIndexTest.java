@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -59,7 +60,6 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractMessageSearchIndexTest {
@@ -1185,7 +1185,7 @@ public abstract class AbstractMessageSearchIndexTest {
                 .setBody(attachmentContent, "application/pdf")
                 .setContentDisposition("attachment")
                 .build();
-        BodyPart textPart = BodyPartBuilder.create().setBody("The message has a PDF attachment.", "plain", Charsets.UTF_8).build();
+        BodyPart textPart = BodyPartBuilder.create().setBody("The message has a PDF attachment.", "plain", StandardCharsets.UTF_8).build();
         Multipart multipart = MultipartBuilder.create("mixed")
                 .addBodyPart(attachment)
                 .addBodyPart(textPart)

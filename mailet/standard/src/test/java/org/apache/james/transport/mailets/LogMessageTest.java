@@ -29,6 +29,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 import javax.mail.MessagingException;
@@ -46,8 +47,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.slf4j.Logger;
-
-import com.google.common.base.Charsets;
 
 public class LogMessageTest {
 
@@ -258,7 +257,7 @@ public class LogMessageTest {
 
     private FakeMail createMail() throws MessagingException, AddressException {
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()),
-                new ByteArrayInputStream("Subject: subject\r\nContent-Type: text/plain\r\n\r\nThis is a fake mail".getBytes(Charsets.UTF_8)));
+                new ByteArrayInputStream("Subject: subject\r\nContent-Type: text/plain\r\n\r\nThis is a fake mail".getBytes(StandardCharsets.UTF_8)));
         return FakeMail.builder()
                 .mimeMessage(message)
                 .name("name")

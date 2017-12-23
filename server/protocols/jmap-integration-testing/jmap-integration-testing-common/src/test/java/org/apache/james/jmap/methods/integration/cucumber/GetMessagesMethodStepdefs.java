@@ -22,6 +22,7 @@ package org.apache.james.jmap.methods.integration.cucumber;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
@@ -47,7 +48,6 @@ import org.javatuples.Pair;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -172,7 +172,7 @@ public class GetMessagesMethodStepdefs {
         try {
             return mainStepdefs.mailboxProbe.appendMessage(userStepdefs.getConnectedUser(),
                 MailboxPath.forUser(userStepdefs.getConnectedUser(), mailbox),
-                new ByteArrayInputStream(message(contentType, subject, content, headers).getBytes(Charsets.UTF_8)),
+                new ByteArrayInputStream(message(contentType, subject, content, headers).getBytes(StandardCharsets.UTF_8)),
                 Date.from(dateTime.toInstant()), false, new Flags()).getMessageId();
         } finally {
             mainStepdefs.awaitMethod.run();

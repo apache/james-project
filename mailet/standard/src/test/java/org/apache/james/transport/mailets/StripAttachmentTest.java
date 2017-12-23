@@ -22,13 +22,16 @@ package org.apache.james.transport.mailets;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.Part;
@@ -50,8 +53,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
-
-import com.google.common.base.Charsets;
 
 public class StripAttachmentTest {
 
@@ -308,7 +309,7 @@ public class StripAttachmentTest {
         assertThat(saved).hasSize(1);
         assertThat(saved).containsKey(expectedKey);
         MimeBodyPart savedBodyPart = new MimeBodyPart(new ByteArrayInputStream(saved.get(expectedKey)));
-        String content = IOUtils.toString(savedBodyPart.getInputStream(), Charsets.UTF_8);
+        String content = IOUtils.toString(savedBodyPart.getInputStream(), StandardCharsets.UTF_8);
         assertThat(content).isEqualTo(EXPECTED_ATTACHMENT_CONTENT);
     }
 
@@ -344,7 +345,7 @@ public class StripAttachmentTest {
         assertThat(saved).hasSize(1);
         assertThat(saved).containsKey(expectedKey);
         MimeBodyPart savedBodyPart = new MimeBodyPart(new ByteArrayInputStream(saved.get(expectedKey)));
-        String content = IOUtils.toString(savedBodyPart.getInputStream(), Charsets.UTF_8);
+        String content = IOUtils.toString(savedBodyPart.getInputStream(), StandardCharsets.UTF_8);
         assertThat(content).isEqualTo(EXPECTED_ATTACHMENT_CONTENT);
     }
 

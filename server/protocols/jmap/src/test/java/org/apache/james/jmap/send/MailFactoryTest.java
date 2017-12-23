@@ -23,6 +23,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Collection;
 
@@ -49,7 +50,6 @@ import org.apache.mailet.Mail;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -76,7 +76,7 @@ public class MailFactoryTest {
                 .keywords(Keywords.factory().from(Keyword.SEEN))
                 .size(content.length())
                 .internalDate(Instant.now())
-                .sharedContent(new SharedByteArrayInputStream(content.getBytes(Charsets.UTF_8)))
+                .sharedContent(new SharedByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)))
                 .attachments(ImmutableList.of())
                 .mailboxId(InMemoryId.of(3))
                 .messageId(TestMessageId.of(2))

@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
@@ -44,7 +45,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 
 import net.fortuna.ical4j.model.Calendar;
@@ -174,7 +174,7 @@ public class ICALToJsonAttribute extends GenericMailet {
             .stream()
             .flatMap(recipient -> toICAL(entry, rawCalendars, recipient, sender))
             .flatMap(ical -> toJson(ical, mail.getName()))
-            .map(json -> Pair.of(UUID.randomUUID().toString(), json.getBytes(Charsets.UTF_8)));
+            .map(json -> Pair.of(UUID.randomUUID().toString(), json.getBytes(StandardCharsets.UTF_8)));
     }
 
     private Stream<String> toJson(ICAL ical, String mailName) {

@@ -21,9 +21,9 @@ package org.apache.james.cli.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
+import java.nio.charset.StandardCharsets;
 
-import com.google.common.base.Charsets;
+import org.junit.Test;
 
 public class OutputCaptureTest {
 
@@ -37,7 +37,7 @@ public class OutputCaptureTest {
         OutputCapture outputCapture = new OutputCapture();
 
         String message = "Hello world!\n";
-        outputCapture.getPrintStream().write(message.getBytes(Charsets.UTF_8));
+        outputCapture.getPrintStream().write(message.getBytes(StandardCharsets.UTF_8));
 
         assertThat(outputCapture.getContent()).isEqualTo(message);
     }
@@ -47,11 +47,11 @@ public class OutputCaptureTest {
     public void mixingReadsAndWritesShouldWork() throws Exception {
         OutputCapture outputCapture = new OutputCapture();
         String message = "Hello world!\n";
-        outputCapture.getPrintStream().write(message.getBytes(Charsets.UTF_8));
+        outputCapture.getPrintStream().write(message.getBytes(StandardCharsets.UTF_8));
         outputCapture.getContent();
 
         String additionalMessage = "Additional message!\n";
-        outputCapture.getPrintStream().write(additionalMessage.getBytes(Charsets.UTF_8));
+        outputCapture.getPrintStream().write(additionalMessage.getBytes(StandardCharsets.UTF_8));
 
         assertThat(outputCapture.getContent()).isEqualTo(message + additionalMessage);
     }

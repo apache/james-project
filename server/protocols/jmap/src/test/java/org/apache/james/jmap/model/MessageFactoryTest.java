@@ -24,6 +24,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -44,7 +45,6 @@ import org.apache.james.util.mime.MessageContentExtractor;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -74,7 +74,7 @@ public class MessageFactoryTest {
                 .keywords(Keywords.factory().from(Keyword.SEEN))
                 .size(0)
                 .internalDate(INTERNAL_DATE)
-                .content(new ByteArrayInputStream("".getBytes(Charsets.UTF_8)))
+                .content(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)))
                 .attachments(ImmutableList.of())
                 .mailboxId(MAILBOX_ID)
                 .messageId(TestMessageId.of(2))
@@ -93,7 +93,7 @@ public class MessageFactoryTest {
                 .keywords(Keywords.factory().from(Keyword.ANSWERED, Keyword.FLAGGED, Keyword.DRAFT, Keyword.FORWARDED))
                 .size(0)
                 .internalDate(INTERNAL_DATE)
-                .content(new ByteArrayInputStream("".getBytes(Charsets.UTF_8)))
+                .content(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)))
                 .attachments(ImmutableList.of())
                 .mailboxId(MAILBOX_ID)
                 .messageId(TestMessageId.of(2))
@@ -121,7 +121,7 @@ public class MessageFactoryTest {
                 .keywords(keywords)
                 .size(headers.length())
                 .internalDate(INTERNAL_DATE)
-                .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
+                .content(new ByteArrayInputStream(headers.getBytes(StandardCharsets.UTF_8)))
                 .attachments(ImmutableList.of())
                 .mailboxId(MAILBOX_ID)
                 .messageId(TestMessageId.of(2))
@@ -183,7 +183,7 @@ public class MessageFactoryTest {
             .keywords(keywords)
             .size(headers.length())
             .internalDate(INTERNAL_DATE)
-            .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
+            .content(new ByteArrayInputStream(headers.getBytes(StandardCharsets.UTF_8)))
             .attachments(ImmutableList.of())
             .mailboxId(MAILBOX_ID)
             .messageId(TestMessageId.of(2))
@@ -235,7 +235,7 @@ public class MessageFactoryTest {
             .keywords(keywords)
             .size(headers.length())
             .internalDate(INTERNAL_DATE)
-            .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
+            .content(new ByteArrayInputStream(headers.getBytes(StandardCharsets.UTF_8)))
             .attachments(ImmutableList.of())
             .mailboxId(MAILBOX_ID)
             .messageId(TestMessageId.of(2))
@@ -282,7 +282,7 @@ public class MessageFactoryTest {
                 .keywords(keywords)
                 .size(mail.length())
                 .internalDate(INTERNAL_DATE)
-                .content(new ByteArrayInputStream(mail.getBytes(Charsets.UTF_8)))
+                .content(new ByteArrayInputStream(mail.getBytes(StandardCharsets.UTF_8)))
                 .attachments(ImmutableList.of())
                 .mailboxId(MAILBOX_ID)
                 .messageId(TestMessageId.of(2))
@@ -308,7 +308,7 @@ public class MessageFactoryTest {
             + "Content-Transfer-Encoding: 7bit\n"
             + "\n"
             + "<a>The </a> <strong>HTML</strong> message"
-        ).getBytes(Charsets.UTF_8));
+        ).getBytes(StandardCharsets.UTF_8));
 
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
@@ -344,7 +344,7 @@ public class MessageFactoryTest {
             .keywords(Keywords.factory().from(Keyword.SEEN))
                 .size(mail.length())
                 .internalDate(INTERNAL_DATE)
-                .content(new ByteArrayInputStream(mail.getBytes(Charsets.UTF_8)))
+                .content(new ByteArrayInputStream(mail.getBytes(StandardCharsets.UTF_8)))
                 .attachments(ImmutableList.of())
                 .mailboxId(MAILBOX_ID)
                 .messageId(TestMessageId.of(2))
@@ -418,7 +418,7 @@ public class MessageFactoryTest {
             .keywords(Keywords.factory().from(Keyword.SEEN))
             .size(headers.length())
             .internalDate(INTERNAL_DATE)
-            .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
+            .content(new ByteArrayInputStream(headers.getBytes(StandardCharsets.UTF_8)))
             .attachments(ImmutableList.of())
             .mailboxId(MAILBOX_ID)
             .messageId(new TestMessageId.Factory().generate())
@@ -447,7 +447,7 @@ public class MessageFactoryTest {
             .keywords(Keywords.factory().from(Keyword.SEEN))
             .size(headers.length())
             .internalDate(INTERNAL_DATE)
-            .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
+            .content(new ByteArrayInputStream(headers.getBytes(StandardCharsets.UTF_8)))
             .attachments(ImmutableList.of())
             .mailboxId(MAILBOX_ID)
             .messageId(new TestMessageId.Factory().generate())
@@ -472,7 +472,7 @@ public class MessageFactoryTest {
             .keywords(Keywords.factory().from(Keyword.SEEN))
             .size(headers.length())
             .internalDate(INTERNAL_DATE)
-            .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
+            .content(new ByteArrayInputStream(headers.getBytes(StandardCharsets.UTF_8)))
             .attachments(ImmutableList.of())
             .mailboxId(MAILBOX_ID)
             .messageId(new TestMessageId.Factory().generate())
@@ -498,7 +498,7 @@ public class MessageFactoryTest {
             .keywords(Keywords.factory().from(Keyword.SEEN))
             .size(headers.length())
             .internalDate(INTERNAL_DATE)
-            .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
+            .content(new ByteArrayInputStream(headers.getBytes(StandardCharsets.UTF_8)))
             .attachments(ImmutableList.of())
             .mailboxId(MAILBOX_ID)
             .messageId(new TestMessageId.Factory().generate())
@@ -523,7 +523,7 @@ public class MessageFactoryTest {
             .keywords(Keywords.factory().from(Keyword.SEEN))
             .size(headers.length())
             .internalDate(INTERNAL_DATE)
-            .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
+            .content(new ByteArrayInputStream(headers.getBytes(StandardCharsets.UTF_8)))
             .attachments(ImmutableList.of())
             .mailboxId(MAILBOX_ID)
             .messageId(new TestMessageId.Factory().generate())
@@ -541,7 +541,7 @@ public class MessageFactoryTest {
             .keywords(Keywords.factory().from(Keyword.SEEN))
                 .size(1010)
                 .internalDate(INTERNAL_DATE)
-                .content(new ByteArrayInputStream((StringUtils.repeat("0123456789", 101).getBytes(Charsets.UTF_8))))
+                .content(new ByteArrayInputStream((StringUtils.repeat("0123456789", 101).getBytes(StandardCharsets.UTF_8))))
                 .attachments(ImmutableList.of())
                 .mailboxId(MAILBOX_ID)
                 .messageId(TestMessageId.of(2))
@@ -558,7 +558,7 @@ public class MessageFactoryTest {
         ByteArrayInputStream messageContent = new ByteArrayInputStream(("CContent-Type: text/html\r\n"
             + "Subject: message 1 subject\r\n"
             + "\r\n"
-            + "my <b>HTML</b> message").getBytes(Charsets.UTF_8));
+            + "my <b>HTML</b> message").getBytes(StandardCharsets.UTF_8));
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
             .keywords(Keywords.factory().from(Keyword.SEEN))
@@ -579,7 +579,7 @@ public class MessageFactoryTest {
     @Test
     public void textBodyShouldBeEmptyInCaseOfEmptyHtmlBodyAndEmptyTextBody() throws Exception {
         ByteArrayInputStream messageContent = new ByteArrayInputStream(("CContent-Type: text/html\r\n"
-            + "Subject: message 1 subject\r\n").getBytes(Charsets.UTF_8));
+            + "Subject: message 1 subject\r\n").getBytes(StandardCharsets.UTF_8));
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
             .keywords(Keywords.factory().from(Keyword.SEEN))
@@ -610,7 +610,7 @@ public class MessageFactoryTest {
         ByteArrayInputStream messageContent = new ByteArrayInputStream(("CContent-Type: text/html\r\n"
             + "Subject: message 1 subject\r\n"
             + "\r\n"
-            + body).getBytes(Charsets.UTF_8));
+            + body).getBytes(StandardCharsets.UTF_8));
 
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
@@ -632,7 +632,7 @@ public class MessageFactoryTest {
         ByteArrayInputStream messageContent = new ByteArrayInputStream(("CContent-Type: text/plain\r\n"
             + "Subject: message 1 subject\r\n"
             + "\r\n"
-            + "My plain text").getBytes(Charsets.UTF_8));
+            + "My plain text").getBytes(StandardCharsets.UTF_8));
 
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
@@ -651,7 +651,7 @@ public class MessageFactoryTest {
 
     @Test
     public void previewBodyShouldReturnStringEmptyWhenNoHtmlBodyAndNoTextBody() throws Exception {
-        ByteArrayInputStream messageContent = new ByteArrayInputStream(("Subject: message 1 subject\r\n").getBytes(Charsets.UTF_8));
+        ByteArrayInputStream messageContent = new ByteArrayInputStream(("Subject: message 1 subject\r\n").getBytes(StandardCharsets.UTF_8));
 
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
@@ -675,7 +675,7 @@ public class MessageFactoryTest {
         ByteArrayInputStream messageContent = new ByteArrayInputStream(("CContent-Type: text/html\r\n"
             + "Subject: message 1 subject\r\n"
             + "\r\n"
-            + "<html><body></body></html>").getBytes(Charsets.UTF_8));
+            + "<html><body></body></html>").getBytes(StandardCharsets.UTF_8));
 
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
@@ -711,7 +711,7 @@ public class MessageFactoryTest {
             + "Content-Transfer-Encoding: 7bit\n"
             + "\n"
             + "<html></html>"
-        ).getBytes(Charsets.UTF_8));
+        ).getBytes(StandardCharsets.UTF_8));
 
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
@@ -739,7 +739,7 @@ public class MessageFactoryTest {
             .keywords(keywords)
             .size(0)
             .internalDate(INTERNAL_DATE)
-            .content(new ByteArrayInputStream("".getBytes(Charsets.UTF_8)))
+            .content(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)))
             .attachments(ImmutableList.of())
             .mailboxId(MAILBOX_ID)
             .messageId(TestMessageId.of(2))
@@ -757,7 +757,7 @@ public class MessageFactoryTest {
             .keywords(keywords)
             .size(0)
             .internalDate(INTERNAL_DATE)
-            .content(new ByteArrayInputStream("".getBytes(Charsets.UTF_8)))
+            .content(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)))
             .attachments(ImmutableList.of())
             .mailboxId(MAILBOX_ID)
             .messageId(TestMessageId.of(2))

@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
@@ -38,7 +39,6 @@ import org.apache.james.utils.JmapGuiceProbe;
 import org.apache.james.utils.MessageIdProbe;
 
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
@@ -69,7 +69,7 @@ public class MainStepdefs {
                 .setScheme("http")
                 .setHost("localhost")
                 .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
-                .setCharset(Charsets.UTF_8);
+                .setCharset(StandardCharsets.UTF_8);
     }
     
     public void tearDown() {
