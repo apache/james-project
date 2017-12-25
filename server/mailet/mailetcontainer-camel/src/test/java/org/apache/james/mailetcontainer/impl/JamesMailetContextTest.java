@@ -27,6 +27,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -212,6 +214,45 @@ public class JamesMailetContextTest {
         verifyNoMoreInteractions(spoolMailQueue);
 
         assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(other);
+    }
+
+    @Test
+    public void sendMailShouldEnqueueEmailWithRootStateAndDelayWhenSpecified() throws Exception {
+        MailImpl mail = new MailImpl();
+        mail.setSender(mailAddress);
+        mail.setRecipients(ImmutableList.of(mailAddress));
+        mail.setMessage(MimeMessageBuilder.defaultMimeMessage());
+        testee.sendMail(mail, 5, TimeUnit.MINUTES);
+
+        ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
+        ArgumentCaptor<Long> delayArgumentCaptor = ArgumentCaptor.forClass(Long.class);
+        ArgumentCaptor<TimeUnit> timeUnitArgumentCaptor = ArgumentCaptor.forClass(TimeUnit.class);
+        verify(spoolMailQueue).enQueue(mailArgumentCaptor.capture(), delayArgumentCaptor.capture(), timeUnitArgumentCaptor.capture());
+        verifyNoMoreInteractions(spoolMailQueue);
+
+        assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(Mail.DEFAULT);
+        assertThat(delayArgumentCaptor.getValue()).isEqualTo(5L);
+        assertThat(timeUnitArgumentCaptor.getValue()).isEqualTo(TimeUnit.MINUTES);
+    }
+
+    @Test
+    public void sendMailShouldEnqueueEmailWithOtherStateAndDelayWhenSpecified() throws Exception {
+        MailImpl mail = new MailImpl();
+        mail.setSender(mailAddress);
+        mail.setRecipients(ImmutableList.of(mailAddress));
+        mail.setMessage(MimeMessageBuilder.defaultMimeMessage());
+        String other = "other";
+        testee.sendMail(mail, other, 5, TimeUnit.MINUTES);
+
+        ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
+        ArgumentCaptor<Long> delayArgumentCaptor = ArgumentCaptor.forClass(Long.class);
+        ArgumentCaptor<TimeUnit> timeUnitArgumentCaptor = ArgumentCaptor.forClass(TimeUnit.class);
+        verify(spoolMailQueue).enQueue(mailArgumentCaptor.capture(), delayArgumentCaptor.capture(), timeUnitArgumentCaptor.capture());
+        verifyNoMoreInteractions(spoolMailQueue);
+
+        assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(other);
+        assertThat(delayArgumentCaptor.getValue()).isEqualTo(5L);
+        assertThat(timeUnitArgumentCaptor.getValue()).isEqualTo(TimeUnit.MINUTES);
     }
 
     @Test
