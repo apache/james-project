@@ -348,7 +348,7 @@ public class StoreMessageIdManager implements MessageIdManager {
             .findFirst();
 
         if (mailboxForbidden.isPresent()) {
-            LOGGER.info("Mailbox with Id " + mailboxForbidden.get() + " does not belong to " + mailboxSession.getUser().getUserName());
+            LOGGER.info("Mailbox with Id {} does not belong to {}", mailboxForbidden.get(), mailboxSession.getUser().getUserName());
             throw new MailboxNotFoundException(mailboxForbidden.get());
         }
     }

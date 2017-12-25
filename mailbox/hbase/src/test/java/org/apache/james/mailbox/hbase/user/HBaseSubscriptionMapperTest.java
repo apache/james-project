@@ -118,7 +118,7 @@ public class HBaseSubscriptionMapperTest {
                 subscription = new SimpleSubscription(user, mailbox);
                 mailboxes.add(subscription);
                 mapper.save(subscription);
-                LOG.info("Adding subscription " + subscription);
+                LOG.info("Adding subscription {}", subscription);
             }
         }
     }
@@ -175,7 +175,7 @@ public class HBaseSubscriptionMapperTest {
         @SuppressWarnings("unused") final SimpleSubscription fake1 = new SimpleSubscription("user1", "FAKEBOX");
         final SimpleSubscription fake2 = new SimpleSubscription("fakeUser", "INBOX");
         for (String user : subscriptionList.keySet()) {
-            LOG.info("Searching for all subscriptions for user: " + user);
+            LOG.info("Searching for all subscriptions for user: {}", user);
             final List<Subscription> found = mapper.findSubscriptionsForUser(user);
             assertEquals(subscriptionList.get(user).size(), found.size());
             // TODO: patch Subscription to implement equals
@@ -198,9 +198,9 @@ public class HBaseSubscriptionMapperTest {
         final HTable subscriptions = new HTable(mapperFactory.getClusterConfiguration(), SUBSCRIPTIONS_TABLE);
 
         for (String user : subscriptionList.keySet()) {
-            LOG.info("Deleting subscriptions for user: " + user);
+            LOG.info("Deleting subscriptions for user: {}", user);
             for (SimpleSubscription subscription : subscriptionList.get(user)) {
-                LOG.info("Deleting subscription : " + subscription);
+                LOG.info("Deleting subscription : {}", subscription);
                 mapper.delete(subscription);
                 final Get get = new Get(Bytes.toBytes(subscription.getUser()));
                 final Result result = subscriptions.get(get);

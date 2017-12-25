@@ -74,7 +74,7 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
             // by 1024, to put it in bytes
             maxMessageSize = configuration.getLong("maxmessagesize", maxMessageSize) * 1024;
             if (maxMessageSize > 0) {
-                LOGGER.info("The maximum allowed message size is " + maxMessageSize + " bytes.");
+                LOGGER.info("The maximum allowed message size is {} bytes.", maxMessageSize);
             } else {
                 LOGGER.info("No maximum message size is enforced for this server.");
             }

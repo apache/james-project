@@ -46,7 +46,7 @@ public class Counter extends GenericMailet {
      */
     public void service(Mail mail) {
         counter++;
-        LOGGER.info(Integer.toString(counter));
+        LOGGER.info("{}", counter);
         mail.setState(Mail.GHOST);
     }
 

@@ -119,7 +119,7 @@ public class IndexCreationFactory {
                 .execute()
                 .actionGet();
         } catch (IndexAlreadyExistsException exception) {
-            LOGGER.info("Index [" + indexName + "] already exist");
+            LOGGER.info("Index [{}] already exist", indexName);
         }
     }
 

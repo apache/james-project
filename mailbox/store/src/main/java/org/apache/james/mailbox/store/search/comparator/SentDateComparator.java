@@ -53,7 +53,7 @@ public class SentDateComparator extends AbstractHeaderComparator {
                 sanitizeDateStringHeaderValue(value),
                 ImapDateTimeFormatter.rfc5322()));
         } catch (Exception e) {
-            LOGGER.info("Can not parse receive date " + value);
+            LOGGER.info("Can not parse receive date {}", value);
             return Optional.empty();
         }
     }

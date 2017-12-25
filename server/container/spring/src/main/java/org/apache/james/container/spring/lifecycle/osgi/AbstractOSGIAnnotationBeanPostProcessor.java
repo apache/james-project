@@ -144,8 +144,7 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
      */
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-        if (logger.isDebugEnabled())
-            logger.debug("processing [" + bean.getClass().getName() + ", " + beanName + "]");
+        logger.debug("processing [{}, {}]", bean.getClass().getName(), beanName);
         // Catch FactoryBean created instances.
         if (!(bean instanceof FactoryBean) && beanFactory.containsBean(BeanFactory.FACTORY_BEAN_PREFIX + beanName)) {
             injectServices(bean, beanName);
@@ -160,9 +159,7 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
                 A s = AnnotationUtils.getAnnotation(method, getAnnotation());
                 if (s != null && method.getParameterTypes().length == 1) {
                     try {
-                        if (logger.isDebugEnabled())
-                            logger.debug("Processing annotation [" + s + "] for [" + bean.getClass().getName() + "."
-                                + method.getName() + "()] on bean [" + beanName + "]");
+                        logger.debug("Processing annotation [{}] for [{}.{}()] on bean [{}]", s, bean.getClass().getName(), method.getName(), beanName);
                         method.invoke(bean, getServiceImporter(s, method, beanName).getObject());
                     }
                     catch (Exception e) {
@@ -182,8 +179,7 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
             A s = hasAnnotatedProperty(pd);
             if (s != null && !pvs.contains(pd.getName())) {
                 try {
-                    if (logger.isDebugEnabled())
-                        logger.debug("Processing annotation [" + s + "] for [" + beanName + "." + pd.getName() + "]");
+                    logger.debug("Processing annotation [{}] for [{}.{}]", s, beanName, pd.getName());
                     FactoryBean importer = getServiceImporter(s, pd.getWriteMethod(), beanName);
                     // BPPs are created in stageOne(), even though they are run in stageTwo(). This check means that
                     // the call to getObject() will not fail with ServiceUnavailable. This is safe to do because
@@ -213,9 +209,8 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
         }
 
         if (lookupBeanFactory) {
-            if (logger.isDebugEnabled())
-                logger.debug("Lookup the bean via the BeanFactory");
-            
+            logger.debug("Lookup the bean via the BeanFactory");
+
             final Class<?> clazz = writeMethod.getParameterTypes()[0];
             Object bean;
             try {

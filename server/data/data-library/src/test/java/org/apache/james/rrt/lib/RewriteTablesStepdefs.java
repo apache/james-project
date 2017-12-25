@@ -19,7 +19,7 @@
 package org.apache.james.rrt.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 
@@ -125,13 +125,10 @@ public class RewriteTablesStepdefs {
         assertThat(exception.getClass().getSimpleName()).isEqualTo(exceptionClass);
     }
 
-    @Then("retrieving mappings for user \"([^\"]*)\" at domain \"([^\"]*)\" should raise a \"([^\"]*)\" exception with message \"([^\"]*)\"")
-    public void retrievingMappingsForUserAtDomainShouldRaiseAnException(String user, String domain, String exception, String message) throws Exception {
-        try {
-            rewriteTable.getMappings(user, domain);
-            fail(String.format("Expecting an exception '%s' with message '%s' to be thrown", exception, message));
-        } catch (ErrorMappingException e) {
-            assertThat(e).hasMessage(message);
-        }
+    @Then("retrieving mappings for user \"([^\"]*)\" at domain \"([^\"]*)\" should raise an ErrorMappingException with message \"([^\"]*)\"")
+    public void retrievingMappingsForUserAtDomainShouldRaiseAnException(String user, String domain, String message) throws Exception {
+        assertThatThrownBy(() -> rewriteTable.getMappings(user, domain))
+            .isInstanceOf(ErrorMappingException.class)
+            .hasMessage(message);
     }
 }

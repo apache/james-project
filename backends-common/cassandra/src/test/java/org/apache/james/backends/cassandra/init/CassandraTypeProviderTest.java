@@ -21,7 +21,6 @@ package org.apache.james.backends.cassandra.init;
 
 import static com.datastax.driver.core.DataType.text;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 
 import java.util.Arrays;
 import java.util.List;
@@ -80,7 +79,8 @@ public class CassandraTypeProviderTest {
 
     @Test
     public void initializeTypesShouldCreateTheTypes() {
-        deleteMailboxBaseType();
+        cassandra.getConf().execute(SchemaBuilder.dropType(TYPE_NAME));
+
         new CassandraTypesCreator(module, cassandra.getConf()).initializeTypes();
         CassandraTypesProvider cassandraTypesProviderTest = new CassandraTypesProvider(module, cassandra.getConf());
         assertThat(cassandraTypesProviderTest.getDefinedUserType(TYPE_NAME))
@@ -93,16 +93,5 @@ public class CassandraTypeProviderTest {
         assertThat(cassandra.getTypesProvider().getDefinedUserType(TYPE_NAME))
             .isNotNull();
     }
-
-    private void deleteMailboxBaseType() {
-        try {
-            cassandra.getConf().execute(SchemaBuilder.dropType(TYPE_NAME));
-        } catch (Exception exception) {
-            exception.printStackTrace();
-            fail("Exception is thrown on Type deletion");
-        }
-    }
-
-
 
 }

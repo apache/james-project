@@ -237,7 +237,7 @@ public abstract class AbstractRecipientRewriteTable extends GenericMailet {
             @SuppressWarnings("unused")
             Integer code = Integer.valueOf(error.substring("error:".length(), msgPos));
         } catch (NumberFormatException e) {
-            LOGGER.error("Cannot send DSN.  Exception parsing DSN code from: " + error, e);
+            LOGGER.error("Cannot send DSN.  Exception parsing DSN code from: {}", error, e);
             return;
         }
         @SuppressWarnings("unused")

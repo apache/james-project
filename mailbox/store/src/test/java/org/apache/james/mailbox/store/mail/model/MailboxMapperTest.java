@@ -21,7 +21,7 @@ package org.apache.james.mailbox.store.mail.model;
 
 import static org.apache.james.mailbox.store.mail.model.ListMailboxAssert.assertMailboxes;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 
@@ -33,9 +33,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Assume;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 /**
  * Generic purpose tests for your implementation MailboxMapper.
@@ -77,8 +75,6 @@ public abstract class MailboxMapperTest {
     private MailboxPath bobDifferentNamespacePath;
     private Mailbox bobDifferentNamespaceMailbox;
 
-    @Rule
-    public ExpectedException expected = ExpectedException.none();
     private MailboxMapper mailboxMapper;
     private MapperProvider mapperProvider;
 
@@ -95,8 +91,8 @@ public abstract class MailboxMapperTest {
 
     @Test
     public void findMailboxByPathWhenAbsentShouldFail() throws MailboxException {
-        expected.expect(MailboxNotFoundException.class);
-        mailboxMapper.findMailboxByPath(MailboxPath.forUser("benwa", "INBOX"));
+        assertThatThrownBy(() -> mailboxMapper.findMailboxByPath(MailboxPath.forUser("benwa", "INBOX")))
+            .isInstanceOf(MailboxNotFoundException.class);
     }
 
     @Test
@@ -107,14 +103,13 @@ public abstract class MailboxMapperTest {
 
     @Test
     public void saveShouldThrowWhenMailboxAlreadyExist() throws MailboxException{
-        expected.expect(MailboxExistsException.class);
-
         mailboxMapper.save(benwaInboxMailbox);
 
         SimpleMailbox mailbox = new SimpleMailbox(benwaInboxMailbox);
         mailbox.setMailboxId(null);
 
-        mailboxMapper.save(mailbox);
+        assertThatThrownBy(() ->mailboxMapper.save(mailbox))
+            .isInstanceOf(MailboxExistsException.class);
     }
 
     @Test
@@ -176,26 +171,20 @@ public abstract class MailboxMapperTest {
     
     @Test
     public void deleteShouldEraseTheGivenMailbox() throws MailboxException {
-        expected.expect(MailboxNotFoundException.class);
-        try {
-            saveAll();
-            mailboxMapper.delete(benwaInboxMailbox);
-        } catch(MailboxException exception) {
-            fail("Error was not thrown by the appropriate method", exception);
-        }
-        mailboxMapper.findMailboxByPath(benwaInboxPath);
+        saveAll();
+        mailboxMapper.delete(benwaInboxMailbox);
+
+        assertThatThrownBy(() -> mailboxMapper.findMailboxByPath(benwaInboxPath))
+            .isInstanceOf(MailboxNotFoundException.class);
     }
 
     @Test
     public void deleteWithNullUserShouldEraseTheGivenMailbox() throws MailboxException {
-        expected.expect(MailboxNotFoundException.class);
-        try {
-            saveAll();
-            mailboxMapper.delete(esnDevGroupJamesMailbox);
-        } catch(MailboxException exception) {
-            fail("Error was not thrown by the appropriate method", exception);
-        }
-        mailboxMapper.findMailboxByPath(esnDevGroupJamesPath);
+        saveAll();
+        mailboxMapper.delete(esnDevGroupJamesMailbox);
+
+        assertThatThrownBy(() -> mailboxMapper.findMailboxByPath(esnDevGroupJamesPath))
+            .isInstanceOf(MailboxNotFoundException.class);
     }
 
     @Test
@@ -253,11 +242,11 @@ public abstract class MailboxMapperTest {
     
     @Test
     public void findMailboxByIdShouldFailWhenAbsent() throws MailboxException {
-        expected.expect(MailboxNotFoundException.class);
         saveAll();
         MailboxId removed = benwaInboxMailbox.getMailboxId();
         mailboxMapper.delete(benwaInboxMailbox);
-        mailboxMapper.findMailboxById(removed);
+        assertThatThrownBy(() -> mailboxMapper.findMailboxById(removed))
+            .isInstanceOf(MailboxNotFoundException.class);
     }
 
     private void initData() {

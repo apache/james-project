@@ -84,9 +84,9 @@ public class HookResultLogger implements HookResultHook {
         sb.append(")");
 
         if (info) {
-            LOGGER.info(sb.toString());
+            LOGGER.info("{}", sb);
         } else {
-            LOGGER.debug(sb.toString());
+            LOGGER.debug("{}", sb);
         }
         return hResult;
     }

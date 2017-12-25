@@ -71,7 +71,7 @@ public class ExtendedClassLoader {
         if (file.isDirectory()) {
             return recursiveExpand(file);
         }
-        LOGGER.info("Loading custom classpath resource " + file.getAbsolutePath());
+        LOGGER.info("Loading custom classpath resource {}", file.getAbsolutePath());
         return Stream.of(file.toURI().toURL());
     }
 

@@ -87,7 +87,7 @@ public class FileConfigurationProvider implements ConfigurationProvider {
             return Optional.of(
                 fileSystem.getResource(configurationPrefix + configurationFileWithoutExtension + CONFIGURATION_FILE_SUFFIX));
         } catch (IOException e) {
-            LOGGER.warn("Unable to locate configuration file " + configurationFileWithoutExtension + CONFIGURATION_FILE_SUFFIX + ", assuming empty configuration");
+            LOGGER.warn("Unable to locate configuration file {}" + CONFIGURATION_FILE_SUFFIX + ", assuming empty configuration", configurationFileWithoutExtension);
             return Optional.empty();
         }
     }

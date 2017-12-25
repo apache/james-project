@@ -16,38 +16,26 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.protocols.api.handler;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.protocols.api.ProtocolSession;
-import org.apache.james.protocols.api.Response;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+package org.apache.james.imap.api.message.request;
 
-/**
- * 
- * {@link ProtocolHandlerResultHandler} which logs the {@link Response} of {@link CommandHandler}'s.
- *
- */
-public class CommandHandlerResultLogger implements ProtocolHandlerResultHandler<Response, ProtocolSession> {
+import static org.assertj.core.api.Assertions.assertThat;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CommandHandlerResultLogger.class);
+import org.junit.Test;
 
-    public Response onResponse(ProtocolSession session, Response response, long executionTime, ProtocolHandler handler) {
-        if (handler instanceof CommandHandler) {
-            LOGGER.debug("{}: {}", handler.getClass().getName(), response);
-        }
-        return response;
+import nl.jqno.equalsverifier.EqualsVerifier;
+
+public class SearchKeyTest {
+    @Test
+    public void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(SearchKey.class)
+            .verify();
     }
 
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
+    @Test
+    public void modSeqSearchKeyShouldBeOfTypeModSeq() {
+        SearchKey searchKey = SearchKey.buildModSeq(36);
 
-    }
-
-    @Override
-    public void destroy() {
-
+        assertThat(searchKey.getType()).isEqualTo(SearchKey.TYPE_MODSEQ);
     }
 }

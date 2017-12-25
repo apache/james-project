@@ -20,7 +20,7 @@
 package org.apache.james.cli;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.easymock.EasyMock.createControl;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
@@ -1358,43 +1358,31 @@ public class ServerCmdTest {
         assertThat(ServerCmd.getPort(commandLine)).isEqualTo(9999);
     }
 
-    @Test(expected = InvalidPortException.class)
+    @Test
     public void getPortShouldThrowOnNullPortValueOption() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "0", "command", "arg1", "arg2", "arg3" };
-        CommandLine commandLine;
-        try {
-            commandLine = ServerCmd.parseCommandLine(arguments);
-        } catch (Exception e) {
-            fail("Exception received", e);
-            return;
-        }
-        ServerCmd.getPort(commandLine);
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        assertThatThrownBy(() -> ServerCmd.getPort(commandLine))
+            .isInstanceOf(InvalidPortException.class);
     }
 
-    @Test(expected = InvalidPortException.class)
+    @Test
     public void getPortShouldThrowOnNegativePortValueOption() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "-1", "command", "arg1", "arg2", "arg3" };
-        CommandLine commandLine;
-        try {
-            commandLine = ServerCmd.parseCommandLine(arguments);
-        } catch (Exception e) {
-            fail("Exception received", e);
-            return;
-        }
-        ServerCmd.getPort(commandLine);
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        assertThatThrownBy(() -> ServerCmd.getPort(commandLine))
+            .isInstanceOf(InvalidPortException.class);
     }
 
-    @Test(expected = InvalidPortException.class)
+    @Test
     public void getPortShouldThrowOnTooHighPortValueOption() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "99999", "command", "arg1", "arg2", "arg3" };
-        CommandLine commandLine;
-        try {
-            commandLine = ServerCmd.parseCommandLine(arguments);
-        } catch (Exception e) {
-            fail("Exception received", e);
-            return;
-        }
-        ServerCmd.getPort(commandLine);
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        assertThatThrownBy(() -> ServerCmd.getPort(commandLine))
+            .isInstanceOf(InvalidPortException.class);
     }
 
 }

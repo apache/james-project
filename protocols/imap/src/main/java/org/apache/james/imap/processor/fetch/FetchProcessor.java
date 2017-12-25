@@ -55,8 +55,6 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
-
 public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(FetchProcessor.class);
 
@@ -133,12 +131,10 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             unsolicitedResponses(session, responder, omitExpunged, useUids);
             okComplete(command, tag, responder);
         } catch (MessageRangeException e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Fetch failed for mailbox " + session.getSelected().getPath() + " because of invalid sequence-set " + ImmutableList.copyOf(idSet), e);
-            }
+            LOGGER.debug("Fetch failed for mailbox {} because of invalid sequence-set {}", session.getSelected().getPath(), idSet, e);
             taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            LOGGER.error("Fetch failed for mailbox " + session.getSelected().getPath() + " and sequence-set " + ImmutableList.copyOf(idSet), e);
+            LOGGER.error("Fetch failed for mailbox {} and sequence-set {}", session.getSelected().getPath(), idSet, e);
             no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
         }
     }
@@ -178,15 +174,13 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                 } catch (MessageRangeException e) {
                     // we can't for whatever reason find the message so
                     // just skip it and log it to debug
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("Unable to find message with uid " + result.getUid(), e);
-                    }
+                    LOGGER.debug("Unable to find message with uid {}", result.getUid(), e);
                 } catch (MailboxException e) {
                     // we can't for whatever reason find parse all requested parts of the message. This may because it was deleted while try to access the parts.
                     // So we just skip it 
                     //
                     // See IMAP-347
-                    LOGGER.error("Unable to fetch message with uid " + result.getUid() + ", so skip it", e);
+                    LOGGER.error("Unable to fetch message with uid {}, so skip it", result.getUid(), e);
                 }
             }
 

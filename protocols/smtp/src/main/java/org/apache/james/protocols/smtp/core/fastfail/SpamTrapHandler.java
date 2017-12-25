@@ -102,10 +102,10 @@ public class SpamTrapHandler implements RcptHook {
             long blockTime = rawTime.longValue();
            
             if (blockTime > System.currentTimeMillis()) {
-                LOGGER.debug("BlockList contain Ip " + ip);
+                LOGGER.debug("BlockList contain Ip {}", ip);
                 return true;
             } else {
-                LOGGER.debug("Remove ip " + ip + " from blockList");
+                LOGGER.debug("Remove ip {} from blockList", ip);
                
                 synchronized(blockedIps) {
                     blockedIps.remove(ip);
@@ -124,7 +124,7 @@ public class SpamTrapHandler implements RcptHook {
     private void addIp(String ip, SMTPSession session) {
         long bTime = System.currentTimeMillis() + blockTime;
         
-        LOGGER.debug("Add ip " + ip + " for " + bTime + " to blockList");
+        LOGGER.debug("Add ip {} for {} to blockList", ip, bTime);
     
         synchronized(blockedIps) {
             blockedIps.put(ip, Long.valueOf(bTime));

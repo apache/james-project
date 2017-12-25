@@ -355,9 +355,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
                 createStatement = conn.prepareStatement(sqlQueries.getSqlString(createSqlStringName, true));
                 createStatement.execute();
 
-                StringBuilder logBuffer;
-                logBuffer = new StringBuilder(64).append("Created table '").append(tableName).append("' using sqlResources string '").append(createSqlStringName).append("'.");
-                LOGGER.info(logBuffer.toString());
+                LOGGER.info("Created table '{}' using sqlResources string '{}'.", tableName, createSqlStringName);
 
             } finally {
                 theJDBCUtil.closeJDBCStatement(createStatement);
@@ -374,7 +372,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
         if ((wNetworks == null) || (!wNetworks.matchInetNetwork(session.getRemoteAddress().getAddress().getHostAddress()))) {
             return super.doRcpt(session, sender, rcpt);
         } else {
-            LOGGER.info("IpAddress " + session.getRemoteAddress().getAddress().getHostAddress() + " is whitelisted. Skip greylisting.");
+            LOGGER.info("IpAddress {} is whitelisted. Skip greylisting.", session.getRemoteAddress().getAddress().getHostAddress());
         }
         return new HookResult(HookReturnCode.DECLINED);
     }
@@ -406,7 +404,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
                 wList.add(aWhitelistArray.trim());
             }
             wNetworks = new NetMatcher(wList, dnsService);
-            LOGGER.info("Whitelisted addresses: " + getWhiteListedNetworks().toString());
+            LOGGER.info("Whitelisted addresses: {}", getWhiteListedNetworks());
         }
 
         // Get the SQL file location

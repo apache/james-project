@@ -69,11 +69,10 @@ public class AddFooter extends GenericMailet {
             if (attachFooter(message)) {
                 message.saveChanges();
             } else {
-                LOGGER.info("Unable to add footer to mail " + mail.getName());
+                LOGGER.info("Unable to add footer to mail {}", mail.getName());
             }
         } catch (UnsupportedEncodingException e) {
-            LOGGER.warn("UnsupportedEncoding Unable to add footer to mail "
-                    + mail.getName(), e);
+            LOGGER.warn("UnsupportedEncoding Unable to add footer to mail {}", mail.getName(), e);
         } catch (IOException ioe) {
             throw new MessagingException("Could not read message", ioe);
         }

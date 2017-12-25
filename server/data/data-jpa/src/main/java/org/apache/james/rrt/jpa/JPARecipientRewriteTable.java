@@ -99,7 +99,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
                 return virtualUsers.get(0).getTargetAddress();
             }
         } catch (PersistenceException e) {
-            LOGGER.debug("Failed to find mapping for  user=" + user + " and domain=" + domain, e);
+            LOGGER.debug("Failed to find mapping for  user={} and domain={}", user, domain, e);
             if (transaction.isActive()) {
                 transaction.rollback();
             }

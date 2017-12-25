@@ -57,12 +57,12 @@ Feature: Rewrite Tables tests
 
   Scenario: stored error mapping should be retrieved when one mapping matching
     Given store "bounce!" error mapping for user "test" at domain "localhost"
-    Then retrieving mappings for user "test" at domain "localhost" should raise a "ErrorMappingException" exception with message "bounce!"
+    Then retrieving mappings for user "test" at domain "localhost" should raise an ErrorMappingException with message "bounce!"
 
   Scenario: stored error mapping should be retrieved when two mappings matching
     Given store "bounce!" error mapping for user "test" at domain "localhost"
     And store "error" error mapping for user "test" at domain "localhost"
-    Then retrieving mappings for user "test" at domain "localhost" should raise a "ErrorMappingException" exception with message "bounce!"
+    Then retrieving mappings for user "test" at domain "localhost" should raise an ErrorMappingException with message "bounce!"
 
   Scenario: stored error mapping should not be retrieved by another user
     Given store "bounce!" error mapping for user "test" at domain "localhost"
@@ -77,12 +77,12 @@ Feature: Rewrite Tables tests
   Scenario: an exception should be thrown when an error mapping is not the first stored
     Given store "test@localhost2" address mapping for user "test" at domain "localhost"
     And store "bounce!" error mapping for user "test" at domain "localhost"
-    Then retrieving mappings for user "test" at domain "localhost" should raise a "ErrorMappingException" exception with message "bounce!"
+    Then retrieving mappings for user "test" at domain "localhost" should raise an ErrorMappingException with message "bounce!"
 
   Scenario: an exception should be thrown when an error mapping is the first stored
     Given store "bounce!" error mapping for user "test" at domain "localhost"
     And store "test@localhost2" address mapping for user "test" at domain "localhost"
-    Then retrieving mappings for user "test" at domain "localhost" should raise a "ErrorMappingException" exception with message "bounce!"
+    Then retrieving mappings for user "test" at domain "localhost" should raise an ErrorMappingException with message "bounce!"
 
 # Wildcard mapping
 
@@ -204,7 +204,7 @@ Feature: Rewrite Tables tests
     And store "user2@domain2" address mapping for user "user1" at domain "domain1"
     And store "user3@domain3" address mapping for user "user2" at domain "domain2"
     And store "user1@domain1" address mapping for user "user3" at domain "domain3"
-    Then retrieving mappings for user "user1" at domain "domain1" should raise a "ErrorMappingException" exception with message "554 Too many mappings to process"
+    Then retrieving mappings for user "user1" at domain "domain1" should raise an ErrorMappingException with message "554 Too many mappings to process"
 
   Scenario: recursive mapping should work when a level is removed
     Given recursive mapping is enable
