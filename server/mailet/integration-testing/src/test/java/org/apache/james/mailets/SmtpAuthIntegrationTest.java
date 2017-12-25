@@ -71,12 +71,10 @@ public class SmtpAuthIntegrationTest {
             .addMailet(MailetConfiguration.TO_BOUNCE)
             .build();
 
-        MailetContainer mailetContainer = MailetContainer.builder()
+        MailetContainer.Builder mailetContainer = TemporaryJamesServer.DEFAUL_MAILET_CONTAINER_CONFIGURATION
             .addProcessor(rootProcessor)
-            .addProcessor(CommonProcessors.error())
             .addProcessor(CommonProcessors.deliverOnlyTransport())
-            .addProcessor(bounces())
-            .build();
+            .addProcessor(bounces());
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)

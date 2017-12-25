@@ -31,7 +31,6 @@ import java.util.Optional;
 
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.TemporaryJamesServer;
-import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
@@ -79,10 +78,8 @@ public class ContactExtractorTest {
     @Before
     public void setup() throws Exception {
         String attribute = "ExtractedContacts";
-        MailetContainer mailets = MailetContainer.builder()
+        MailetContainer.Builder mailets = TemporaryJamesServer.DEFAUL_MAILET_CONTAINER_CONFIGURATION
             .postmaster(SENDER)
-            .addProcessor(CommonProcessors.root())
-            .addProcessor(CommonProcessors.error())
             .addProcessor(
                 ProcessorConfiguration.transport()
                     .addMailet(MailetConfiguration.builder()
@@ -96,8 +93,8 @@ public class ContactExtractorTest {
                         .addProperty(AmqpForwardAttribute.EXCHANGE_PARAMETER_NAME, EXCHANGE)
                         .addProperty(AmqpForwardAttribute.ATTRIBUTE_PARAMETER_NAME, attribute))
                     .addMailet(MailetConfiguration.BCC_STRIPPER)
-                    .addMailet(MailetConfiguration.LOCAL_DELIVERY))
-            .build();
+                    .addMailet(MailetConfiguration.LOCAL_DELIVERY));
+
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
             .withMailetContainer(mailets)

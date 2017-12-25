@@ -30,7 +30,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
-import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.ToProcessor;
@@ -63,9 +62,8 @@ public class NetworkMatcherIntegrationTest {
     private TemporaryJamesServer createJamesServerWithRootProcessor(ProcessorConfiguration.Builder rootProcessor) throws Exception {
         TemporaryJamesServer temporaryJamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
-            .withMailetContainer(MailetContainer.builder()
+            .withMailetContainer(TemporaryJamesServer.DEFAUL_MAILET_CONTAINER_CONFIGURATION
                 .addProcessor(rootProcessor)
-                .addProcessor(CommonProcessors.error())
                 .addProcessor(CommonProcessors.deliverOnlyTransport()))
             .build(temporaryFolder);
 

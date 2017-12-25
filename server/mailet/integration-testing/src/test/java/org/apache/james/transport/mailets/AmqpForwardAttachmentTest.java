@@ -31,7 +31,6 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.TemporaryJamesServer;
-import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
@@ -79,29 +78,26 @@ public class AmqpForwardAttachmentTest {
 
     @Before
     public void setup() throws Exception {
-        MailetContainer mailetContainer = MailetContainer.builder()
-            .addProcessor(CommonProcessors.root())
-            .addProcessor(CommonProcessors.error())
+        MailetContainer.Builder mailetContainer = TemporaryJamesServer.DEFAUL_MAILET_CONTAINER_CONFIGURATION
             .addProcessor(ProcessorConfiguration.transport()
-                    .addMailet(MailetConfiguration.BCC_STRIPPER)
-                    .addMailet(MailetConfiguration.builder()
-                            .matcher(All.class)
-                            .mailet(StripAttachment.class)
-                            .addProperty(StripAttachment.ATTRIBUTE_PARAMETER_NAME, MAIL_ATTRIBUTE)
-                            .addProperty(StripAttachment.PATTERN_PARAMETER_NAME, ".*\\.txt"))
-                    .addMailet(MailetConfiguration.builder()
-                            .matcher(All.class)
-                            .mailet(MimeDecodingMailet.class)
-                            .addProperty(MimeDecodingMailet.ATTRIBUTE_PARAMETER_NAME, MAIL_ATTRIBUTE))
-                    .addMailet(MailetConfiguration.builder()
-                            .matcher(All.class)
-                            .mailet(AmqpForwardAttribute.class)
-                            .addProperty(AmqpForwardAttribute.URI_PARAMETER_NAME, amqpRule.getAmqpUri())
-                            .addProperty(AmqpForwardAttribute.EXCHANGE_PARAMETER_NAME, EXCHANGE_NAME)
-                            .addProperty(AmqpForwardAttribute.ATTRIBUTE_PARAMETER_NAME, MAIL_ATTRIBUTE)
-                            .addProperty(AmqpForwardAttribute.ROUTING_KEY_PARAMETER_NAME, ROUTING_KEY))
-                    .addMailet(MailetConfiguration.LOCAL_DELIVERY))
-            .build();
+                .addMailet(MailetConfiguration.BCC_STRIPPER)
+                .addMailet(MailetConfiguration.builder()
+                    .matcher(All.class)
+                    .mailet(StripAttachment.class)
+                    .addProperty(StripAttachment.ATTRIBUTE_PARAMETER_NAME, MAIL_ATTRIBUTE)
+                    .addProperty(StripAttachment.PATTERN_PARAMETER_NAME, ".*\\.txt"))
+                .addMailet(MailetConfiguration.builder()
+                    .matcher(All.class)
+                    .mailet(MimeDecodingMailet.class)
+                    .addProperty(MimeDecodingMailet.ATTRIBUTE_PARAMETER_NAME, MAIL_ATTRIBUTE))
+                .addMailet(MailetConfiguration.builder()
+                    .matcher(All.class)
+                    .mailet(AmqpForwardAttribute.class)
+                    .addProperty(AmqpForwardAttribute.URI_PARAMETER_NAME, amqpRule.getAmqpUri())
+                    .addProperty(AmqpForwardAttribute.EXCHANGE_PARAMETER_NAME, EXCHANGE_NAME)
+                    .addProperty(AmqpForwardAttribute.ATTRIBUTE_PARAMETER_NAME, MAIL_ATTRIBUTE)
+                    .addProperty(AmqpForwardAttribute.ROUTING_KEY_PARAMETER_NAME, ROUTING_KEY))
+                .addMailet(MailetConfiguration.LOCAL_DELIVERY));
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)

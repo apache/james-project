@@ -28,7 +28,6 @@ import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
 
 import org.apache.james.MemoryJamesServerMain;
-import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
@@ -248,10 +247,8 @@ public class BounceIntegrationTest {
     }
 
     private MailetContainer.Builder generateMailetContainerConfiguration(MailetConfiguration.Builder redirectionMailetConfiguration) {
-        return MailetContainer.builder()
+        return TemporaryJamesServer.DEFAUL_MAILET_CONTAINER_CONFIGURATION
             .postmaster(POSTMASTER)
-            .addProcessor(CommonProcessors.root())
-            .addProcessor(CommonProcessors.error())
             .addProcessor(transport())
             .addProcessor(bounces(redirectionMailetConfiguration));
     }

@@ -231,16 +231,13 @@ public class GatewayRemoteDeliveryIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(MailetContainer.builder()
-                .addProcessor(CommonProcessors.simpleRoot())
-                .addProcessor(CommonProcessors.error())
+            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
                 .addProcessor(ProcessorConfiguration.transport()
                     .addMailet(MailetConfiguration.BCC_STRIPPER)
                     .addMailet(MailetConfiguration.LOCAL_DELIVERY)
                     .addMailet(MailetConfiguration.remoteDeliveryBuilderNoBounces()
                         .matcher(All.class)
-                        .addProperty("gateway", gatewayProperty)))
-                .addProcessor(CommonProcessors.bounces()))
+                        .addProperty("gateway", gatewayProperty))))
             .build(temporaryFolder);
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
@@ -286,11 +283,8 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     private MailetContainer.Builder generateMailetContainerConfiguration(String gatewayProperty) {
-        return MailetContainer.builder()
-            .addProcessor(CommonProcessors.simpleRoot())
-            .addProcessor(CommonProcessors.error())
-            .addProcessor(relayAndLocalDeliveryTransport(gatewayProperty))
-            .addProcessor(CommonProcessors.bounces());
+        return TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+            .addProcessor(relayAndLocalDeliveryTransport(gatewayProperty));
     }
 
     private ProcessorConfiguration.Builder relayAndLocalDeliveryTransport(String gatewayProperty) {

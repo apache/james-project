@@ -20,7 +20,9 @@
 
 package org.apache.james.mailets.configuration;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.google.common.base.Preconditions;
@@ -39,10 +41,10 @@ public class MailetContainer implements SerializableAsXml {
         public static final String DEFAULT_POSTMASTER = "postmaster@localhost";
         private Optional<String> postmaster;
         private Optional<Integer> threads;
-        private ImmutableList.Builder<ProcessorConfiguration> processors;
+        private Map<String, ProcessorConfiguration> processors;
 
         private Builder() {
-            processors = ImmutableList.builder();
+            processors = new HashMap<>();
             threads = Optional.empty();
             postmaster = Optional.empty();
         }
@@ -58,13 +60,12 @@ public class MailetContainer implements SerializableAsXml {
         }
 
         public Builder addProcessor(ProcessorConfiguration processorConfiguration) {
-            this.processors.add(processorConfiguration);
+            this.processors.put(processorConfiguration.getState(), processorConfiguration);
             return this;
         }
 
         public Builder addProcessor(ProcessorConfiguration.Builder processorConfiguration) {
-            this.processors.add(processorConfiguration.build());
-            return this;
+            return this.addProcessor(processorConfiguration.build());
         }
 
         public MailetContainer build() {
@@ -72,7 +73,8 @@ public class MailetContainer implements SerializableAsXml {
             int threads = this.threads.orElse(DEFAULT_THREAD_COUNT);
             Preconditions.checkState(!Strings.isNullOrEmpty(postmaster), "'postmaster' is mandatory");
             Preconditions.checkState(threads > 0, "'threads' should be greater than 0");
-            return new MailetContainer(postmaster, threads, processors.build());
+            return new MailetContainer(postmaster, threads,
+                ImmutableList.copyOf(processors.values()));
         }
     }
 
