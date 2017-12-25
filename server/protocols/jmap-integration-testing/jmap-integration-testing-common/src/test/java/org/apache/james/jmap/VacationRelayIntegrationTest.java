@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap;
 
+import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static org.hamcrest.Matchers.equalTo;
 
 import java.util.concurrent.TimeUnit;
@@ -32,21 +33,17 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
-import org.apache.james.util.docker.Images;
-import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.FakeSmtpHelper;
+import org.apache.james.utils.FakeSmtp;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.testcontainers.containers.wait.HostPortWaitStrategy;
 
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
-import com.jayway.restassured.RestAssured;
 
 public abstract class VacationRelayIntegrationTest {
 
@@ -58,12 +55,9 @@ public abstract class VacationRelayIntegrationTest {
 
     private static final String LOCALHOST_IP = "127.0.0.1";
     private static final int SMTP_PORT = 1025;
-    private static final int REST_SMTP_SINK_PORT = 25;
 
     @Rule
-    public final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer(Images.FAKE_SMTP)
-        .withExposedPorts(REST_SMTP_SINK_PORT)
-        .waitingFor(new HostPortWaitStrategy());
+    public FakeSmtp fakeSmtp = new FakeSmtp();
 
 
     private ConditionFactory calmlyAwait;
@@ -79,7 +73,7 @@ public abstract class VacationRelayIntegrationTest {
     @Before
     public void setUp() throws Exception {
         getInMemoryDns()
-            .registerMxRecord("yopmail.com", fakeSmtp.getContainerIp());
+            .registerMxRecord("yopmail.com", fakeSmtp.getContainer().getContainerIp());
 
         guiceJamesServer = getJmapServer();
         guiceJamesServer.start();
@@ -94,8 +88,6 @@ public abstract class VacationRelayIntegrationTest {
 
         jmapGuiceProbe = guiceJamesServer.getProbe(JmapGuiceProbe.class);
 
-        RestAssured.requestSpecification = FakeSmtpHelper.requestSpecification(fakeSmtp.getContainerIp());
-
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         calmlyAwait = Awaitility
             .with()
@@ -103,7 +95,7 @@ public abstract class VacationRelayIntegrationTest {
             .and()
             .pollDelay(slowPacedPollInterval).await();
 
-        calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> fakeSmtp.tryConnect(25));
+        fakeSmtp.awaitStarted(calmlyAwait.atMost(ONE_MINUTE));
     }
 
     @After
@@ -130,7 +122,7 @@ public abstract class VacationRelayIntegrationTest {
 
         calmlyAwait.atMost(1, TimeUnit.MINUTES)
             .until(() ->
-                FakeSmtpHelper.isReceived(response -> response
+                fakeSmtp.isReceived(response -> response
                     .body("[0].from", equalTo(USER_WITH_DOMAIN))
                     .body("[0].to[0]", equalTo(externalMail))
                     .body("[0].text", equalTo(REASON))));

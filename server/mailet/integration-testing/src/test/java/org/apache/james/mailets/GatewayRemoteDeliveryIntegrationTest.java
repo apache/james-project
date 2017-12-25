@@ -19,7 +19,6 @@
 
 package org.apache.james.mailets;
 
-import static com.jayway.restassured.RestAssured.when;
 import static org.apache.james.MemoryJamesServerMain.SMTP_AND_IMAP_MODULE;
 import static org.apache.james.MemoryJamesServerMain.SMTP_ONLY_MODULE;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
@@ -28,10 +27,9 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
-
-import java.util.concurrent.TimeUnit;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
@@ -41,21 +39,15 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.matchers.All;
-import org.apache.james.util.docker.Images;
-import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.FakeSmtpHelper;
+import org.apache.james.utils.FakeSmtp;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
-import org.testcontainers.containers.wait.HostPortWaitStrategy;
-
-import com.jayway.restassured.RestAssured;
 
 public class GatewayRemoteDeliveryIntegrationTest {
     private static final String JAMES_ANOTHER_DOMAIN = "james.com";
@@ -69,15 +61,8 @@ public class GatewayRemoteDeliveryIntegrationTest {
     public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
     @Rule
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
-
-    private final TemporaryFolder smtpFolder = new TemporaryFolder();
-    private final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer(Images.FAKE_SMTP)
-        .withExposedPorts(25)
-        .withAffinityToContainer()
-        .waitingFor(new HostPortWaitStrategy());
-
     @Rule
-    public final RuleChain chain = RuleChain.outerRule(smtpFolder).around(fakeSmtp);
+    public FakeSmtp fakeSmtp = new FakeSmtp();
 
     private TemporaryJamesServer jamesServer;
     private DataProbe dataProbe;
@@ -85,12 +70,10 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
     @Before
     public void setup() throws Exception {
-        awaitOneMinute.until(() -> fakeSmtp.tryConnect(25));
-
-        RestAssured.requestSpecification = FakeSmtpHelper.requestSpecification(fakeSmtp.getContainerIp());
+        fakeSmtp.awaitStarted(awaitOneMinute);
 
         inMemoryDNSService = new InMemoryDNSService()
-            .registerMxRecord(JAMES_ANOTHER_DOMAIN, fakeSmtp.getContainerIp());
+            .registerMxRecord(JAMES_ANOTHER_DOMAIN, fakeSmtp.getContainer().getContainerIp());
     }
 
     @After
@@ -102,7 +85,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
     @Test
     public void outgoingMailShouldTransitThroughGatewayWhenNoPort() throws Exception {
-        String gatewayProperty = fakeSmtp.getContainerIp();
+        String gatewayProperty = fakeSmtp.getContainer().getContainerIp();
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
@@ -121,7 +104,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
     @Test
     public void outgoingMailShouldTransitThroughGatewayWhenPort() throws Exception {
-        String gatewayProperty = fakeSmtp.getContainerIp() + ":25";
+        String gatewayProperty = fakeSmtp.getContainer().getContainerIp() + ":25";
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
@@ -140,7 +123,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
     @Test
     public void outgoingMailShouldTransitThroughGatewayWhenSeveralIps() throws Exception {
-        String gatewayProperty = fakeSmtp.getContainerIp() + ",invalid.domain";
+        String gatewayProperty = fakeSmtp.getContainer().getContainerIp() + ",invalid.domain";
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
@@ -159,7 +142,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
     @Test
     public void outgoingMailShouldFallbackToSecondGatewayWhenFirstInvalid() throws Exception {
-        String gatewayProperty = "invalid.domain," + fakeSmtp.getContainerIp();
+        String gatewayProperty = "invalid.domain," + fakeSmtp.getContainer().getContainerIp();
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
@@ -181,7 +164,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
         String gatewayProperty = "invalid.domain";
 
         jamesServer = TemporaryJamesServer.builder()
-            .withBase(SMTP_ONLY_MODULE)
+            .withBase(SMTP_AND_IMAP_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
             .build(temporaryFolder);
@@ -193,12 +176,13 @@ public class GatewayRemoteDeliveryIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT);
 
-        Thread.sleep(TimeUnit.SECONDS.toMillis(5));
-        when()
-            .get("/api/email")
-        .then()
-            .statusCode(200)
-            .body("", hasSize(0));
+        // Wait for bounce being sent before checking no email is sent
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(FROM, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitOneMinute);
+        assertThat(fakeSmtp.isReceived(response -> response.body("", hasSize(0))))
+            .isTrue();
     }
 
     @Test
@@ -276,7 +260,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     private boolean messageIsReceivedByTheSmtpServer() {
-        return FakeSmtpHelper.isReceived(response -> response
+        return fakeSmtp.isReceived(response -> response
             .body("", hasSize(1))
             .body("[0].from", equalTo(FROM))
             .body("[0].subject", equalTo("test")));

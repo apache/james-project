@@ -25,20 +25,14 @@ import static org.hamcrest.Matchers.equalTo;
 import java.util.Locale;
 
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
-import org.apache.james.util.docker.Images;
-import org.apache.james.util.docker.SwarmGenericContainer;
-import org.apache.james.utils.FakeSmtpHelper;
+import org.apache.james.utils.FakeSmtp;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TemporaryFolder;
-import org.testcontainers.containers.wait.HostPortWaitStrategy;
 
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
-import com.jayway.restassured.RestAssured;
 
 public abstract class ForwardSmtpTest {
 
@@ -47,14 +41,9 @@ public abstract class ForwardSmtpTest {
     public static final String USER_AT_DOMAIN = USER + "@" + DOMAIN;
     public static final String PASSWORD = "secret";
 
-    private final TemporaryFolder folder = new TemporaryFolder();
-    private final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer(Images.FAKE_SMTP)
-            .withExposedPorts(25)
-            .withAffinityToContainer()
-            .waitingFor(new HostPortWaitStrategy());
-    
     @Rule
-    public final RuleChain chain = RuleChain.outerRule(folder).around(fakeSmtp);
+    public FakeSmtp fakeSmtp = new FakeSmtp();
+    
     private ConditionFactory calmlyAwait;
 
     protected abstract SmtpHostSystem createSmtpHostSystem();
@@ -71,10 +60,8 @@ public abstract class ForwardSmtpTest {
                 .withUser(USER_AT_DOMAIN, PASSWORD);
         
         hostSystem.getInMemoryDnsService()
-            .registerMxRecord("yopmail.com", fakeSmtp.getContainerIp());
+            .registerMxRecord("yopmail.com", fakeSmtp.getContainer().getContainerIp());
         hostSystem.addAddressMapping(USER, DOMAIN, "ray@yopmail.com");
-
-        RestAssured.requestSpecification = FakeSmtpHelper.requestSpecification(fakeSmtp.getContainerIp());
 
         Duration slowPacedPollInterval = FIVE_HUNDRED_MILLISECONDS;
         calmlyAwait = Awaitility.with()
@@ -84,7 +71,7 @@ public abstract class ForwardSmtpTest {
             .pollDelay(slowPacedPollInterval)
             .await();
 
-        calmlyAwait.atMost(ONE_MINUTE).until(() -> fakeSmtp.tryConnect(25));
+        fakeSmtp.awaitStarted(calmlyAwait.atMost(ONE_MINUTE));
     }
 
     @Test
@@ -92,7 +79,7 @@ public abstract class ForwardSmtpTest {
         scriptedTest.run("helo");
 
         calmlyAwait.atMost(ONE_MINUTE).until(() ->
-            FakeSmtpHelper.isReceived(response -> response
+            fakeSmtp.isReceived(response -> response
                 .body("[0].from", equalTo("matthieu@yopmail.com"))
                 .body("[0].subject", equalTo("test"))
                 .body("[0].text", equalTo("content"))));

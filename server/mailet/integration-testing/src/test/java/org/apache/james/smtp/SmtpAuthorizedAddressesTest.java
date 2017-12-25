@@ -37,39 +37,26 @@ import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.matchers.SMTPIsAuthNetwork;
-import org.apache.james.util.docker.Images;
-import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.FakeSmtpHelper;
+import org.apache.james.utils.FakeSmtp;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
-import org.testcontainers.containers.wait.HostPortWaitStrategy;
-
-import com.jayway.restassured.RestAssured;
 
 public class SmtpAuthorizedAddressesTest {
     private static final String FROM = "fromuser@" + DEFAULT_DOMAIN;
     private static final String TO = "to@any.com";
 
-    private final TemporaryFolder smtpFolder = new TemporaryFolder();
-    private final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer(Images.FAKE_SMTP)
-        .withExposedPorts(25)
-        .withAffinityToContainer()
-        .waitingFor(new HostPortWaitStrategy());
-
     @Rule
-    public RuleChain chain = RuleChain.outerRule(smtpFolder).around(fakeSmtp);
+    public FakeSmtp fakeSmtp = new FakeSmtp();
     @Rule
     public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
     @Rule
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
-
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -77,9 +64,7 @@ public class SmtpAuthorizedAddressesTest {
 
     @Before
     public void setup() throws Exception {
-        awaitOneMinute.until(() -> fakeSmtp.tryConnect(25));
-
-        RestAssured.requestSpecification = FakeSmtpHelper.requestSpecification(fakeSmtp.getContainerIp());
+        fakeSmtp.awaitStarted(awaitOneMinute);
     }
 
     private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
@@ -88,7 +73,7 @@ public class SmtpAuthorizedAddressesTest {
                 .addMailetsFrom(CommonProcessors.deliverOnlyTransport())
                 .addMailet(MailetConfiguration.remoteDeliveryBuilder()
                     .matcher(SMTPIsAuthNetwork.class)
-                    .addProperty("gateway", fakeSmtp.getContainerIp()))
+                    .addProperty("gateway", fakeSmtp.getContainer().getContainerIp()))
                 .addMailet(MailetConfiguration.TO_BOUNCE));
 
         jamesServer = TemporaryJamesServer.builder()
@@ -119,7 +104,7 @@ public class SmtpAuthorizedAddressesTest {
             .sendMessage(FROM, TO)
             .awaitSent(awaitOneMinute);
 
-        awaitOneMinute.until(() -> FakeSmtpHelper.isReceived(response -> response
+        awaitOneMinute.until(() -> fakeSmtp.isReceived(response -> response
             .body("", hasSize(1))
             .body("[0].from", equalTo(FROM))
             .body("[0].subject", equalTo("test"))));
@@ -147,7 +132,7 @@ public class SmtpAuthorizedAddressesTest {
             .sendMessage(FROM, TO)
             .awaitSent(awaitOneMinute);
 
-        awaitOneMinute.until(() -> FakeSmtpHelper.isReceived(response -> response
+        awaitOneMinute.until(() -> fakeSmtp.isReceived(response -> response
             .body("", hasSize(1))
             .body("[0].from", equalTo(FROM))
             .body("[0].subject", equalTo("test"))));

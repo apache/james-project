@@ -19,18 +19,14 @@
 
 package org.apache.james.transport.mailets;
 
-import static com.jayway.restassured.RestAssured.with;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
-import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-
-import java.util.concurrent.TimeUnit;
 
 import javax.mail.internet.MimeMessage;
 
@@ -45,9 +41,8 @@ import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIsLocal;
-import org.apache.james.util.docker.Images;
-import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.FakeSmtp;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.WebAdminGuiceProbe;
@@ -59,7 +54,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.testcontainers.containers.wait.HostPortWaitStrategy;
 
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.specification.RequestSpecification;
@@ -82,11 +76,7 @@ public class GroupMappingTest {
     private RequestSpecification restApiRequest;
 
     @Rule
-    public final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer(Images.FAKE_SMTP)
-        .withExposedPorts(25)
-        .withAffinityToContainer()
-        .waitingFor(new HostPortWaitStrategy());
-
+    public final FakeSmtp fakeSmtp = new FakeSmtp();
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule
@@ -107,13 +97,13 @@ public class GroupMappingTest {
                 .addMailetsFrom(CommonProcessors.deliverOnlyTransport())
                 .addMailet(MailetConfiguration.remoteDeliveryBuilder()
                     .matcher(All.class)
-                    .addProperty("gateway", fakeSmtp.getContainerIp())));
+                    .addProperty("gateway", fakeSmtp.getContainer().getContainerIp())));
 
         jamesServer = TemporaryJamesServer.builder()
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder);
 
-        awaitOneMinute.until(() -> fakeSmtp.tryConnect(25));
+        fakeSmtp.awaitStarted(awaitOneMinute);
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DOMAIN1);
@@ -441,23 +431,9 @@ public class GroupMappingTest {
                 .recipient(GROUP_ON_DOMAIN1))
             .awaitSent(awaitOneMinute);
 
-        calmlyAwait.atMost(1, TimeUnit.MINUTES)
-            .until(() -> {
-                try {
-                    with()
-                        .baseUri("http://" + fakeSmtp.getContainerIp())
-                        .port(80)
-                        .get("/api/email")
-                    .then()
-                        .statusCode(200)
-                        .body("[0].from", equalTo(SENDER))
-                        .body("[0].to[0]", equalTo(externalMail))
-                        .body("[0].text", equalTo(MESSAGE_CONTENT));
-
-                    return true;
-                } catch(AssertionError e) {
-                    return false;
-                }
-            });
+        fakeSmtp.isReceived(response -> response
+            .body("[0].from", equalTo(SENDER))
+            .body("[0].to[0]", equalTo(externalMail))
+            .body("[0].text", equalTo(MESSAGE_CONTENT)));
     }
 }

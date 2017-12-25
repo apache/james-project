@@ -19,38 +19,73 @@
 
 package org.apache.james.utils;
 
-import static com.jayway.restassured.RestAssured.when;
+import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 
 import java.util.function.Function;
 
+import org.apache.james.util.docker.Images;
+import org.apache.james.util.docker.SwarmGenericContainer;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
+import org.testcontainers.containers.wait.HostPortWaitStrategy;
+
 import com.google.common.base.Charsets;
+import com.jayway.awaitility.core.ConditionFactory;
 import com.jayway.restassured.builder.RequestSpecBuilder;
+import com.jayway.restassured.builder.ResponseSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.response.ValidatableResponse;
 import com.jayway.restassured.specification.RequestSpecification;
+import com.jayway.restassured.specification.ResponseSpecification;
 
-public class FakeSmtpHelper {
-    public static RequestSpecification requestSpecification(String ip) {
+public class FakeSmtp implements TestRule {
+    private static final int SMTP_PORT = 25;
+    private static final ResponseSpecification RESPONSE_SPECIFICATION = new ResponseSpecBuilder().build();
+    private final SwarmGenericContainer container;
+
+    public FakeSmtp() {
+        container = new SwarmGenericContainer(Images.FAKE_SMTP)
+            .withExposedPorts(SMTP_PORT)
+            .withAffinityToContainer()
+            .waitingFor(new HostPortWaitStrategy());
+    }
+
+    @Override
+    public Statement apply(Statement statement, Description description) {
+        return container.apply(statement, description);
+    }
+
+    public void awaitStarted(ConditionFactory calmyAwait) {
+        calmyAwait.until(() -> container.tryConnect(SMTP_PORT));
+    }
+
+    public boolean isReceived(Function<ValidatableResponse, ValidatableResponse> expectations) {
+        try {
+            expectations.apply(
+                given(requestSpecification(), RESPONSE_SPECIFICATION)
+                    .get("/api/email")
+                .then()
+                    .statusCode(200));
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private RequestSpecification requestSpecification() {
         return new RequestSpecBuilder()
             .setContentType(ContentType.JSON)
             .setAccept(ContentType.JSON)
             .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
             .setPort(80)
-            .setBaseUri("http://" + ip)
+            .setBaseUri("http://" + container.getContainerIp())
             .build();
     }
 
-    public static boolean isReceived(Function<ValidatableResponse, ValidatableResponse> expectations) {
-        try {
-            expectations.apply(when()
-                .get("/api/email")
-            .then()
-                .statusCode(200));
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+    public SwarmGenericContainer getContainer() {
+        return container;
     }
 }
