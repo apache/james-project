@@ -35,6 +35,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.mailet.TextCalendarBodyToAttachment;
 import org.apache.james.mailets.TemporaryJamesServer;
+import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
@@ -447,7 +448,6 @@ public class ICSAttachmentWorkflowTest {
     public void setup() throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.DEFAUL_MAILET_CONTAINER_CONFIGURATION
             .addProcessor(ProcessorConfiguration.transport()
-                .addMailet(MailetConfiguration.BCC_STRIPPER)
                 .addMailet(MailetConfiguration.builder()
                     .matcher(All.class)
                     .mailet(StripAttachment.class)
@@ -482,7 +482,7 @@ public class ICSAttachmentWorkflowTest {
                     .addProperty("exchange", EXCHANGE_NAME)
                     .addProperty("attribute", JSON_MAIL_ATTRIBUTE)
                     .addProperty("routing_key", ROUTING_KEY))
-                .addMailet(MailetConfiguration.LOCAL_DELIVERY));
+                .addMailetsFrom(CommonProcessors.deliverOnlyTransport()));
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)

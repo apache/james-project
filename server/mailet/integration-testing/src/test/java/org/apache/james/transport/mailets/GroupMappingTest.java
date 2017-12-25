@@ -37,6 +37,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.TemporaryJamesServer;
+import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
@@ -97,14 +98,13 @@ public class GroupMappingTest {
     public void setup() throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
             .addProcessor(ProcessorConfiguration.transport()
-                .addMailet(MailetConfiguration.BCC_STRIPPER)
                 .addMailet(MailetConfiguration.builder()
                     .matcher(All.class)
                     .mailet(RecipientRewriteTable.class))
                 .addMailet(MailetConfiguration.builder()
                     .matcher(RecipientIsLocal.class)
                     .mailet(VacationMailet.class))
-                .addMailet(MailetConfiguration.LOCAL_DELIVERY)
+                .addMailetsFrom(CommonProcessors.deliverOnlyTransport())
                 .addMailet(MailetConfiguration.remoteDeliveryBuilder()
                     .matcher(All.class)
                     .addProperty("gateway", fakeSmtp.getContainerIp())));

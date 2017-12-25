@@ -30,6 +30,7 @@ import static org.hamcrest.Matchers.hasSize;
 
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.TemporaryJamesServer;
+import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
@@ -84,8 +85,7 @@ public class SmtpAuthorizedAddressesTest {
     private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
             .addProcessor(ProcessorConfiguration.transport()
-                .addMailet(MailetConfiguration.BCC_STRIPPER)
-                .addMailet(MailetConfiguration.LOCAL_DELIVERY)
+                .addMailetsFrom(CommonProcessors.deliverOnlyTransport())
                 .addMailet(MailetConfiguration.remoteDeliveryBuilder()
                     .matcher(SMTPIsAuthNetwork.class)
                     .addProperty("gateway", fakeSmtp.getContainerIp()))

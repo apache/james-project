@@ -289,8 +289,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
     private ProcessorConfiguration.Builder relayAndLocalDeliveryTransport(String gatewayProperty) {
         return ProcessorConfiguration.transport()
-            .addMailet(MailetConfiguration.BCC_STRIPPER)
-            .addMailet(MailetConfiguration.LOCAL_DELIVERY)
+            .addMailetsFrom(CommonProcessors.deliverOnlyTransport())
             .addMailet(MailetConfiguration.remoteDeliveryBuilder()
                 .addProperty("gateway", gatewayProperty)
                 .matcher(All.class));

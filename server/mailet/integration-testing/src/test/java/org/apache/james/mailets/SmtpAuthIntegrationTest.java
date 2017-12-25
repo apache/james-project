@@ -63,13 +63,12 @@ public class SmtpAuthIntegrationTest {
 
     @Before
     public void setup() throws Exception {
-        ProcessorConfiguration rootProcessor = ProcessorConfiguration.root()
+        ProcessorConfiguration.Builder rootProcessor = ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(SMTPAuthSuccessful.class)
                 .mailet(ToProcessor.class)
                 .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
-            .addMailet(MailetConfiguration.TO_BOUNCE)
-            .build();
+            .addMailet(MailetConfiguration.TO_BOUNCE);
 
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.DEFAUL_MAILET_CONTAINER_CONFIGURATION
             .addProcessor(rootProcessor)

@@ -83,6 +83,15 @@ public class ProcessorConfiguration implements SerializableAsXml {
             return this;
         }
 
+        public Builder addMailetsFrom(ProcessorConfiguration processorConfiguration) {
+            this.mailets.addAll(processorConfiguration.mailets);
+            return this;
+        }
+
+        public Builder addMailetsFrom(ProcessorConfiguration.Builder processorConfiguration) {
+            return this.addMailetsFrom(processorConfiguration.build());
+        }
+
         public Builder addMailet(MailetConfiguration.Builder mailetConfiguration) {
             this.mailets.add(mailetConfiguration.build());
             return this;

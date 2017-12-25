@@ -31,6 +31,7 @@ import java.util.Optional;
 
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.TemporaryJamesServer;
+import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
@@ -92,8 +93,7 @@ public class ContactExtractorTest {
                         .addProperty(AmqpForwardAttribute.URI_PARAMETER_NAME, amqpRule.getAmqpUri())
                         .addProperty(AmqpForwardAttribute.EXCHANGE_PARAMETER_NAME, EXCHANGE)
                         .addProperty(AmqpForwardAttribute.ATTRIBUTE_PARAMETER_NAME, attribute))
-                    .addMailet(MailetConfiguration.BCC_STRIPPER)
-                    .addMailet(MailetConfiguration.LOCAL_DELIVERY));
+                    .addMailetsFrom(CommonProcessors.deliverOnlyTransport()));
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
