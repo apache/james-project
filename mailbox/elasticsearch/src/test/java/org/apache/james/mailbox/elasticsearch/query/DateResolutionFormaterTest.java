@@ -19,14 +19,14 @@
 
 package org.apache.james.mailbox.elasticsearch.query;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
-
-import org.apache.james.mailbox.model.SearchQuery;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.text.ParseException;
 import java.time.ZonedDateTime;
+
+import org.apache.james.mailbox.model.SearchQuery;
+import org.junit.Test;
 
 
 public class DateResolutionFormaterTest {

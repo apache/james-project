@@ -19,16 +19,17 @@
 package org.apache.james.user.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Optional;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
-import org.apache.james.core.MailAddress;
 import org.junit.Assume;
 import org.junit.Test;
 

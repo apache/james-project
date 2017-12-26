@@ -21,8 +21,8 @@ package org.apache.james.user.api;
 
 import java.util.Iterator;
 
-import org.apache.james.user.api.model.User;
 import org.apache.james.core.MailAddress;
+import org.apache.james.user.api.model.User;
 
 /**
  * Interface for a repository of users. A repository represents a logical

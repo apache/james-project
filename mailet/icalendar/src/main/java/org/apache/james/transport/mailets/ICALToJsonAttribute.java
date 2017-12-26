@@ -33,9 +33,9 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.core.MailAddress;
 import org.apache.james.transport.mailets.model.ICAL;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

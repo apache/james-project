@@ -31,8 +31,8 @@ import java.util.concurrent.TimeUnit;
 import javax.mail.MessagingException;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.james.server.core.MailImpl;
 import org.apache.james.queue.api.MailQueue;
+import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -20,7 +20,6 @@ package org.apache.james.mailbox.lucene.search;
 
 import java.io.Reader;
 
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.WhitespaceTokenizer;

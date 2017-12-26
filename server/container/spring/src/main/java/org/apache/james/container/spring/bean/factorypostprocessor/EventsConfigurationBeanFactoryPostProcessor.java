@@ -19,7 +19,6 @@
 
 package org.apache.james.container.spring.bean.factorypostprocessor;
 
-import com.google.common.base.Strings;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.container.spring.lifecycle.ConfigurationProvider;
@@ -27,6 +26,8 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.FatalBeanException;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+
+import com.google.common.base.Strings;
 
 public class EventsConfigurationBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
 

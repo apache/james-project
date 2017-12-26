@@ -27,13 +27,13 @@ import java.util.Arrays;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.parser.AbstractContentHandler;
 import org.apache.james.mime4j.parser.MimeStreamParser;
 import org.apache.james.mime4j.stream.BodyDescriptor;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 
 public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailDetector {
 

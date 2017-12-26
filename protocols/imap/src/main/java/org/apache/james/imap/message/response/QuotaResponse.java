@@ -19,10 +19,11 @@
 
 package org.apache.james.imap.message.response;
 
-import com.google.common.base.Objects;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.mailbox.model.Quota;
+
+import com.google.common.base.Objects;
 
 /**
  * Quota Response

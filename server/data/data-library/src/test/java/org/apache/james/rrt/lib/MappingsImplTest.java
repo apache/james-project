@@ -21,6 +21,7 @@
 package org.apache.james.rrt.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Optional;
 
 import org.junit.Test;

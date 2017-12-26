@@ -42,12 +42,12 @@ import javax.mail.util.SharedFileInputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
-import org.apache.james.server.core.MimeMessageSource;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
+import org.apache.james.server.core.MimeMessageSource;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

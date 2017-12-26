@@ -58,11 +58,11 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.util.Text;
-import org.apache.james.server.core.MailImpl;
+import org.apache.james.core.MailAddress;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.lib.AbstractMailRepository;
+import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

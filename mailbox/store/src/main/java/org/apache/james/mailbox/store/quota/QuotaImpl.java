@@ -18,10 +18,10 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.quota;
 
+import org.apache.james.mailbox.model.Quota;
+
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-
-import org.apache.james.mailbox.model.Quota;
 
 public final class QuotaImpl implements Quota {
 

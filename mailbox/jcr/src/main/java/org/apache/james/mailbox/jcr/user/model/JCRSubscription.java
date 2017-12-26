@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.jcr.user.model;
 
-
 import java.util.ArrayList;
 import java.util.List;
 

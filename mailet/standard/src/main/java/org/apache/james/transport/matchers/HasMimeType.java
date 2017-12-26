@@ -20,22 +20,24 @@
 
 package org.apache.james.transport.matchers;
 
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import java.util.Collection;
+import java.util.Optional;
+import java.util.Set;
+
+import javax.activation.MimeType;
+import javax.activation.MimeTypeParseException;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.activation.MimeType;
-import javax.activation.MimeTypeParseException;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 
 /**

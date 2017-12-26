@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.model;
 
-
 import org.apache.james.mailbox.MessageUid;
 
 import com.google.common.base.MoreObjects;

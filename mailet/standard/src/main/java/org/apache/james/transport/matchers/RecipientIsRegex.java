@@ -22,10 +22,10 @@ package org.apache.james.transport.matchers;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import org.apache.mailet.base.GenericRecipientMatcher;
-import org.apache.james.core.MailAddress;
-
 import javax.mail.MessagingException;
+
+import org.apache.james.core.MailAddress;
+import org.apache.mailet.base.GenericRecipientMatcher;
 
 import com.google.common.base.Strings;
 

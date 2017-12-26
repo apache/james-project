@@ -19,17 +19,21 @@
 package org.apache.james.protocols.smtp.netty;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Properties;
+
 import javax.mail.Message;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.net.smtp.SMTPReply;
+import org.apache.commons.net.smtp.SMTPSClient;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
@@ -47,13 +51,11 @@ import org.apache.james.protocols.smtp.SMTPConfigurationImpl;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.protocols.smtp.SMTPProtocolHandlerChain;
 import org.apache.james.protocols.smtp.utils.TestMessageHook;
-import org.apache.commons.net.smtp.SMTPReply;
-import org.apache.commons.net.smtp.SMTPSClient;
-
-import com.sun.mail.smtp.SMTPTransport;
 import org.assertj.core.api.AssertDelegateTarget;
 import org.junit.After;
 import org.junit.Test;
+
+import com.sun.mail.smtp.SMTPTransport;
 
 public class NettyStartTlsSMTPServerTest {
 

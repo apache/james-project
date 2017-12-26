@@ -23,8 +23,8 @@ import java.util.Collection;
 
 import javax.mail.MessagingException;
 
-import org.apache.james.transport.matchers.utils.MailAddressCollectionReader;
 import org.apache.james.core.MailAddress;
+import org.apache.james.transport.matchers.utils.MailAddressCollectionReader;
 import org.apache.mailet.base.GenericRecipientMatcher;
 
 import com.google.common.base.Strings;

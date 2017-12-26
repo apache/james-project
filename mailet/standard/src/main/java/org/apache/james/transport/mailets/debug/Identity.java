@@ -21,8 +21,8 @@
 
 package org.apache.james.transport.mailets.debug;
 
-import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMailet;
 
 /**
  * Opposite of Null Mailet. It let any incoming mail untouched. Used only for

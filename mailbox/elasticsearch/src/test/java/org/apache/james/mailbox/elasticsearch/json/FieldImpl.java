@@ -19,10 +19,10 @@
 
 package org.apache.james.mailbox.elasticsearch.json;
 
+import java.util.Objects;
+
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.util.ByteSequence;
-
-import java.util.Objects;
 
 public class FieldImpl implements Field {
     private final String name;

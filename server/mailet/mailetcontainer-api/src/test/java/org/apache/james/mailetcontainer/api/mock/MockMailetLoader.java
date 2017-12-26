@@ -19,6 +19,7 @@
 package org.apache.james.mailetcontainer.api.mock;
 
 import javax.mail.MessagingException;
+
 import org.apache.james.mailetcontainer.api.MailetLoader;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetConfig;

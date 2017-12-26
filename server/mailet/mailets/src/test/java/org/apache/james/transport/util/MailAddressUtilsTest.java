@@ -24,8 +24,8 @@ import java.util.List;
 
 import javax.mail.internet.InternetAddress;
 
-import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.core.MailAddress;
+import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

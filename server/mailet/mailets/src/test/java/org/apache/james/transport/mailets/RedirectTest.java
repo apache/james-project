@@ -22,14 +22,16 @@ package org.apache.james.transport.mailets;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
 import java.net.UnknownHostException;
 import java.util.Properties;
+
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.core.MailAddress;
+import org.apache.james.dnsservice.api.DNSService;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;

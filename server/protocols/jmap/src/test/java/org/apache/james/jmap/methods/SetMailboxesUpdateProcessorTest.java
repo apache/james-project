@@ -42,7 +42,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.NoopMetricFactory;
-import org.apache.james.util.OptionalUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;

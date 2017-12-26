@@ -19,11 +19,12 @@
 package org.apache.james.transport.mailets;
 
 import java.util.Locale;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 
-import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
 import com.github.steveash.guavate.Guavate;

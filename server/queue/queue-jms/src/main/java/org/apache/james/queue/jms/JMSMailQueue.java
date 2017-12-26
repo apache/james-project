@@ -47,8 +47,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.server.core.MailImpl;
-import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
+import org.apache.james.core.MailAddress;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
@@ -57,8 +56,9 @@ import org.apache.james.queue.api.MailPrioritySupport;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.server.core.MailImpl;
+import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

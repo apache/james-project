@@ -21,12 +21,12 @@ package org.apache.james.imap.message.response;
 
 import java.util.List;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 
 public class AnnotationResponse implements ImapResponseMessage {
     private final String mailboxName;

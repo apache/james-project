@@ -21,10 +21,12 @@ package org.apache.james.transport.mailets;
 
 import java.util.List;
 import java.util.Optional;
+
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.transport.mailets.redirect.AddressExtractor;
 import org.apache.james.transport.mailets.redirect.InitParameters;
@@ -40,7 +42,6 @@ import org.apache.james.transport.util.SenderUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.james.transport.util.TosUtils;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -20,6 +20,7 @@ package org.apache.james.mailbox.hbase.io;
 
 import java.io.IOException;
 import java.io.OutputStream;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Put;

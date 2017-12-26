@@ -23,16 +23,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+import org.apache.james.core.MailAddress;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.core.MailAddress;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 
 public class ResourceLocatorTest {
 

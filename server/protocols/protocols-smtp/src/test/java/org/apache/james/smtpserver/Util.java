@@ -20,13 +20,15 @@ package org.apache.james.smtpserver;
 
 import java.util.Arrays;
 import java.util.Random;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.ParseException;
+
+import org.apache.james.core.MailAddress;
 import org.apache.james.smtpserver.mock.MockMimeMessage;
 import org.apache.james.smtpserver.mock.mailet.MockMail;
-import org.apache.james.core.MailAddress;
 
 /**
  * some utilities for James unit testing

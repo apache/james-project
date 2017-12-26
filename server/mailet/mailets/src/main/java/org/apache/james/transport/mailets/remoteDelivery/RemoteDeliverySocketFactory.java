@@ -19,13 +19,13 @@
 
 package org.apache.james.transport.mailets.remoteDelivery;
 
-import javax.net.SocketFactory;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+
+import javax.net.SocketFactory;
 
 /**
  * <p>

@@ -24,10 +24,10 @@ import java.util.List;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.utils.MimeMessageBodyGenerator;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.AutomaticallySentMailDetector;
 
 import com.github.fge.lambdas.Throwing;

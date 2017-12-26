@@ -21,12 +21,12 @@ package org.apache.james.mpt.imapmailbox.external.james.host;
 import java.net.InetSocketAddress;
 import java.util.function.Supplier;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.ExternalHostSystem;
 import org.apache.james.mpt.monitor.NullMonitor;
-import org.apache.commons.lang.NotImplementedException;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;

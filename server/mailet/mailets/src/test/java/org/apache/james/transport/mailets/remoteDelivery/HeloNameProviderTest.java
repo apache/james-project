@@ -19,8 +19,8 @@
 
 package org.apache.james.transport.mailets.remoteDelivery;
 
-import static org.mockito.Mockito.mock;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.domainlist.api.DomainList;

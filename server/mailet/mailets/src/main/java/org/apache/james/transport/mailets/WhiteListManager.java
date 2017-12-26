@@ -46,6 +46,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.sql.DataSource;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.transport.mailets.managesieve.ManageSieveMailet;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.model.JamesUser;
@@ -53,7 +54,6 @@ import org.apache.james.util.sql.JDBCUtil;
 import org.apache.james.util.sql.SqlResources;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;

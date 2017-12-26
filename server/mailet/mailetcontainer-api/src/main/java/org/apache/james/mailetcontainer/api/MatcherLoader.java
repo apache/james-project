@@ -19,10 +19,10 @@
 
 package org.apache.james.mailetcontainer.api;
 
+import javax.mail.MessagingException;
+
 import org.apache.mailet.Matcher;
 import org.apache.mailet.MatcherConfig;
-
-import javax.mail.MessagingException;
 
 /**
  * Implementations of this interface are responsible for loading {@link Matcher}

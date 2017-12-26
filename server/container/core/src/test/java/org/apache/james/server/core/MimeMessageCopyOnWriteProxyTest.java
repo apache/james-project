@@ -34,8 +34,8 @@ import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.core.MailAddress;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.mailet.Mail;
 import org.junit.Test;
 

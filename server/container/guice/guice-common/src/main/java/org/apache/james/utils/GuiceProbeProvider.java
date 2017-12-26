@@ -19,13 +19,14 @@
 
 package org.apache.james.utils;
 
-import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Preconditions;
-
-import javax.inject.Inject;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+
+import javax.inject.Inject;
+
+import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Preconditions;
 
 public class GuiceProbeProvider {
     private final Map<Class<GuiceProbe>, GuiceProbe> registry;

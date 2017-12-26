@@ -19,12 +19,13 @@
 
 package org.apache.james.mailbox.store.event.distributed;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import org.apache.james.mailbox.store.publisher.MessageConsumer;
 import org.apache.james.mailbox.store.publisher.MessageReceiver;
 import org.apache.james.mailbox.store.publisher.Publisher;
 import org.apache.james.mailbox.store.publisher.Topic;
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 
 public class PublisherReceiver implements Publisher, MessageConsumer {
 

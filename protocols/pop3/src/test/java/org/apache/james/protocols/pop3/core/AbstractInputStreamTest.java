@@ -21,6 +21,7 @@ package org.apache.james.protocols.pop3.core;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
 import junit.framework.TestCase;
 
 

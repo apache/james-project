@@ -32,8 +32,8 @@ import java.util.Collection;
 
 import javax.mail.MessagingException;
 
-import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;

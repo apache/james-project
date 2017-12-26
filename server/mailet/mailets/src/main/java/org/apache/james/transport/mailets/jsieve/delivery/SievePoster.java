@@ -23,12 +23,12 @@ import java.util.Locale;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.transport.mailets.delivery.MailStore;
 import org.apache.james.transport.mailets.jsieve.Poster;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 
 public class SievePoster implements Poster {
     private final String folder;

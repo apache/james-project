@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.protocols.netty;
 
-import org.apache.james.protocols.api.ProtocolSessionImpl;
 import org.apache.james.protocols.api.ProtocolSession;
+import org.apache.james.protocols.api.ProtocolSessionImpl;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.jboss.netty.buffer.ChannelBuffer;

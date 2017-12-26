@@ -32,14 +32,14 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.ParseException;
 
-import org.apache.james.server.core.MailImpl;
+import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
+import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

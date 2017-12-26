@@ -19,15 +19,15 @@
 
 package org.apache.james.mailbox.elasticsearch.query;
 
-import org.apache.james.mailbox.model.SearchQuery;
-
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
+
+import org.apache.james.mailbox.model.SearchQuery;
 
 public class DateResolutionFormater {
 

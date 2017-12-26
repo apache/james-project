@@ -18,11 +18,11 @@
  ****************************************************************/
 package org.apache.james.dnsservice.library.inetnetwork.model;
 
-import org.apache.james.dnsservice.library.inetnetwork.InetNetworkBuilder;
-
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+
+import org.apache.james.dnsservice.library.inetnetwork.InetNetworkBuilder;
 
 
 public class Inet6Network implements InetNetwork {

@@ -18,15 +18,16 @@
  ****************************************************************/
 package org.apache.james.dnsservice.library.inetnetwork.model;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.StringTokenizer;
-import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * Test the InetNetwork class with various IPv4 and IPv6 network specification.

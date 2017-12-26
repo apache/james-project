@@ -19,11 +19,11 @@
 
 package org.apache.james.mailrepository.file;
 
-import org.apache.james.server.core.MimeMessageSource;
-import org.apache.james.repository.api.StreamRepository;
-
 import java.io.IOException;
 import java.io.InputStream;
+
+import org.apache.james.repository.api.StreamRepository;
+import org.apache.james.server.core.MimeMessageSource;
 
 public class MimeMessageStreamRepositorySource extends MimeMessageSource {
 

@@ -24,9 +24,9 @@ import java.util.Set;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.transport.matchers.utils.MailAddressCollectionReader;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
 
 import com.google.common.annotations.VisibleForTesting;

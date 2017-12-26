@@ -19,13 +19,14 @@
 
 package org.apache.james.mpt.imapmailbox.external.james;
 
-import com.google.inject.AbstractModule;
 import org.apache.james.mpt.api.HostSystem;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.api.UserAdder;
 import org.apache.james.mpt.host.ExternalHostSystem;
 import org.apache.james.mpt.imapmailbox.external.james.host.ExternalJamesHostSystem;
 import org.apache.james.mpt.imapmailbox.external.james.host.ExternalJamesUserAdder;
+
+import com.google.inject.AbstractModule;
 
 public class ExternalJamesModule extends AbstractModule {
 

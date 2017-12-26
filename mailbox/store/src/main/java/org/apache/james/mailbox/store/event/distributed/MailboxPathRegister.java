@@ -19,11 +19,11 @@
 
 package org.apache.james.mailbox.store.event.distributed;
 
+import java.util.Set;
+
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.publisher.Topic;
-
-import java.util.Set;
 
 /**
  * The TopicDispatcher allow you to :

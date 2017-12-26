@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.lmtpserver.netty;
 
-
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lmtpserver.CoreCmdHandlerLoader;

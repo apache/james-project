@@ -19,11 +19,11 @@
 
 package org.apache.mailet.base;
 
+import java.io.IOException;
+
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.ContentType;
-
-import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -19,17 +19,19 @@
 
 package org.apache.james.mailbox.kafka;
 
-import kafka.javaapi.producer.Producer;
-import kafka.producer.KeyedMessage;
-import kafka.producer.ProducerConfig;
+import java.util.Properties;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+
 import org.apache.james.mailbox.store.publisher.Publisher;
 import org.apache.james.mailbox.store.publisher.Topic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import java.util.Properties;
+import kafka.javaapi.producer.Producer;
+import kafka.producer.KeyedMessage;
+import kafka.producer.ProducerConfig;
 
 public class KafkaPublisher implements Publisher {
 

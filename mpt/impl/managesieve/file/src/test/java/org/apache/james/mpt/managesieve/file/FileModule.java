@@ -19,9 +19,10 @@
 
 package org.apache.james.mpt.managesieve.file;
 
-import com.google.inject.AbstractModule;
 import org.apache.james.mpt.host.ManageSieveHostSystem;
 import org.apache.james.mpt.managesieve.file.host.FileHostSystem;
+
+import com.google.inject.AbstractModule;
 
 public class FileModule extends AbstractModule {
 

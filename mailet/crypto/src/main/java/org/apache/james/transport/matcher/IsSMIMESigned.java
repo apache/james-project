@@ -25,9 +25,9 @@ import java.util.Collection;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.mailet.base.GenericMatcher;
-import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMatcher;
 
 /**
  * checks if a mail is smime signed. 

@@ -19,24 +19,26 @@
 
 package org.apache.james.mailbox.kafka;
 
-import kafka.consumer.ConsumerConfig;
-import kafka.consumer.KafkaStream;
-import kafka.javaapi.consumer.ConsumerConnector;
-import kafka.message.MessageAndMetadata;
-import org.apache.james.mailbox.store.publisher.MessageConsumer;
-import org.apache.james.mailbox.store.publisher.MessageReceiver;
-import org.apache.james.mailbox.store.publisher.Topic;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+
+import org.apache.james.mailbox.store.publisher.MessageConsumer;
+import org.apache.james.mailbox.store.publisher.MessageReceiver;
+import org.apache.james.mailbox.store.publisher.Topic;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import kafka.consumer.ConsumerConfig;
+import kafka.consumer.KafkaStream;
+import kafka.javaapi.consumer.ConsumerConnector;
+import kafka.message.MessageAndMetadata;
 
 public class KafkaMessageConsumer implements MessageConsumer {
 

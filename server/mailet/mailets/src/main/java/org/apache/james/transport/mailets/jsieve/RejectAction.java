@@ -29,6 +29,7 @@ import javax.mail.Multipart;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.mdn.MDN;
 import org.apache.james.mdn.MDNReport;
 import org.apache.james.mdn.action.mode.DispositionActionMode;
@@ -39,7 +40,6 @@ import org.apache.james.mdn.type.DispositionType;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionReject;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

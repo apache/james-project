@@ -33,6 +33,7 @@ import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.mime4j.dom.address.AddressList;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.address.MailboxList;
@@ -49,7 +50,6 @@ import org.apache.jsieve.mail.MailUtils;
 import org.apache.jsieve.mail.SieveMailException;
 import org.apache.jsieve.mail.optional.EnvelopeAccessors;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;

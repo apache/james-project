@@ -23,11 +23,13 @@ package org.apache.james.transport.mailets;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.stream.Stream;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.mime4j.dom.address.Address;
 import org.apache.james.mime4j.dom.address.AddressList;
 import org.apache.james.mime4j.dom.address.Group;
@@ -36,7 +38,6 @@ import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

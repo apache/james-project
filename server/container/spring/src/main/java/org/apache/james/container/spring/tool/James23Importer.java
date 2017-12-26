@@ -27,7 +27,6 @@ import javax.inject.Named;
 import javax.mail.Flags;
 import javax.mail.MessagingException;
 
-import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.mailbox.MailboxManager;
@@ -39,6 +38,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryStore.MailRepositoryStoreException;
+import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;

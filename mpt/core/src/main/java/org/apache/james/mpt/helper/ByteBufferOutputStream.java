@@ -19,13 +19,13 @@
 
 package org.apache.james.mpt.helper;
 
-import org.apache.james.mpt.api.Continuation;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+
+import org.apache.james.mpt.api.Continuation;
 
 public class ByteBufferOutputStream extends OutputStream {
 

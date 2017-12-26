@@ -22,8 +22,10 @@ package org.apache.james.transport.mailets.redirect;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
 import java.util.List;
 import java.util.Optional;
+
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;

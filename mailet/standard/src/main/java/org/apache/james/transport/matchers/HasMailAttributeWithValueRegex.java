@@ -21,17 +21,17 @@
 
 package org.apache.james.transport.matchers;
 
-
-import org.apache.mailet.base.GenericMatcher;
-import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
-import org.apache.mailet.MatcherConfig;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import javax.mail.MessagingException;
-import java.io.Serializable;
+
+import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MatcherConfig;
+import org.apache.mailet.base.GenericMatcher;
 
 /**
  * <P>This Matcher determines if the mail contains the attribute specified in the

@@ -22,11 +22,12 @@ package org.apache.james.transport.mailets.remoteDelivery;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+
 import javax.mail.Address;
 import javax.mail.internet.AddressException;
 
-import org.apache.james.util.OptionalUtils;
 import org.apache.james.core.MailAddress;
+import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -19,13 +19,13 @@
 
 package org.apache.james.mailbox.store.quota;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public abstract class GenericMaxQuotaManagerTest {
 

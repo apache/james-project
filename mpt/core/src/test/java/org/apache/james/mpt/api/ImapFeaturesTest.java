@@ -18,10 +18,10 @@
  ****************************************************************/
 package org.apache.james.mpt.api;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.junit.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class ImapFeaturesTest {
 

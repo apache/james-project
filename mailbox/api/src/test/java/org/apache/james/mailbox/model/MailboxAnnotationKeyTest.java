@@ -19,9 +19,9 @@
 
 package org.apache.james.mailbox.model;
 
-import org.junit.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.Test;
 
 public class MailboxAnnotationKeyTest {
     @Test(expected = IllegalArgumentException.class)

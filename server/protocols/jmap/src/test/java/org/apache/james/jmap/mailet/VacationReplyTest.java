@@ -33,9 +33,9 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.utils.MimeMessageBodyGenerator;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;

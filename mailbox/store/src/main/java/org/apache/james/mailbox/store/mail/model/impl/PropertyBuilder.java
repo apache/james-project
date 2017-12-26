@@ -39,6 +39,7 @@ import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_CONTE
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_MEDIA_TYPE_NAME;
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_MIME_TYPE_SPACE;
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_SUB_TYPE_NAME;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;

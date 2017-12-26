@@ -21,18 +21,18 @@
 
 package org.apache.james.transport.matchers;
 
-import org.apache.mailet.base.MailetUtil;
-import org.apache.mailet.base.RFC2822Headers;
-import org.apache.mailet.base.GenericMatcher;
-import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
+import java.util.Collection;
+import java.util.Enumeration;
 
 import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import java.util.Collection;
-import java.util.Enumeration;
+import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMatcher;
+import org.apache.mailet.base.MailetUtil;
+import org.apache.mailet.base.RFC2822Headers;
 
 /**
  * Matches mail which has been relayed more than a given number of times.

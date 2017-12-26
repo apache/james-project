@@ -22,10 +22,12 @@ package org.apache.james.transport.mailets.remoteDelivery;
 import static org.apache.james.transport.mailets.remoteDelivery.Bouncer.DELIVERY_ERROR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+
 import java.net.ConnectException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Optional;
+
 import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
 

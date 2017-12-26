@@ -22,8 +22,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.james.dnsservice.api.DNSService;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Some DNS Fixtures used by various Test related to DNS and InetNetwork.

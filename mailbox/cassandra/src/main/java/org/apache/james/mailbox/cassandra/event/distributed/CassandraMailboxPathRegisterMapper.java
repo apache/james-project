@@ -26,9 +26,9 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.ttl;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.UDTValue;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxPathRegisterTable;
@@ -36,8 +36,9 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.event.distributed.DistantMailboxPathRegisterMapper;
 import org.apache.james.mailbox.store.publisher.Topic;
 
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.datastax.driver.core.PreparedStatement;
+import com.datastax.driver.core.Session;
+import com.datastax.driver.core.UDTValue;
 
 public class CassandraMailboxPathRegisterMapper implements DistantMailboxPathRegisterMapper {
 

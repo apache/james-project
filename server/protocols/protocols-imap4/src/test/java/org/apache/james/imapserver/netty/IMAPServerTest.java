@@ -20,16 +20,16 @@
 package org.apache.james.imapserver.netty;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.concurrent.TimeUnit;
 
-import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
-
-import com.google.common.collect.ImmutableSet;
-
+import org.apache.james.imap.api.ImapConfiguration;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import com.google.common.collect.ImmutableSet;
 
 public class IMAPServerTest {
     @Rule

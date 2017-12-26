@@ -19,11 +19,11 @@
 
 package org.apache.james.smtpserver.fastfail;
 
+import java.util.Arrays;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
-
-import java.util.Arrays;
 
 public class SpamTrapHandler extends org.apache.james.protocols.smtp.core.fastfail.SpamTrapHandler implements ProtocolHandler {
 

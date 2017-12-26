@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Optional;
 
 import org.junit.Test;

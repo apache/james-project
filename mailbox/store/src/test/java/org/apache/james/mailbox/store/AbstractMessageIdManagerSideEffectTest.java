@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store;
 
+import static org.apache.james.mailbox.fixture.MailboxFixture.ALICE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -28,8 +29,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-
-import static org.apache.james.mailbox.fixture.MailboxFixture.ALICE;
 
 import java.util.List;
 

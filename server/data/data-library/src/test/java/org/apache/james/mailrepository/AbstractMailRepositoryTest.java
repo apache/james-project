@@ -33,13 +33,13 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.james.core.MailAddress;
+import org.apache.james.lifecycle.api.LifecycleUtil;
+import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.server.core.MimeMessageInputStreamSource;
-import org.apache.james.lifecycle.api.LifecycleUtil;
-import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

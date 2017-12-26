@@ -19,14 +19,13 @@
 
 package org.apache.james.webadmin.swagger.routes;
 
-
 import javax.inject.Inject;
 
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.swagger.SwaggerParser;
-
 import org.eclipse.jetty.http.HttpStatus;
+
 import spark.Service;
 
 public class SwaggerRoutes implements Routes {

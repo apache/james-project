@@ -21,8 +21,8 @@ package org.apache.james.filesystem.api;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * This service is used by components that wants to lookup a File resource from

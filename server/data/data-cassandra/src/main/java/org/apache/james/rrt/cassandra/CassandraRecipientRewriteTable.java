@@ -27,9 +27,11 @@ import static org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTab
 import static org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTableTable.MAPPING;
 import static org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTableTable.TABLE_NAME;
 import static org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTableTable.USER;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;

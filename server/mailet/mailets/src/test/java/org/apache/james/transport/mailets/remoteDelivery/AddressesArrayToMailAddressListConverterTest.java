@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets.remoteDelivery;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
 

@@ -21,11 +21,11 @@ package org.apache.james.mailbox.hbase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.UUID;
+
 import org.apache.james.mailbox.store.mail.model.MailboxIdDeserialisationException;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.UUID;
 
 public class HBaseMailboxIdDeserializerTest {
 

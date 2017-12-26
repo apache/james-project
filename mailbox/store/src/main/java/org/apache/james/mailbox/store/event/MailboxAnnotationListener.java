@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.event;
 
+import java.util.List;
+
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxAnnotation;
@@ -26,8 +28,6 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 public class MailboxAnnotationListener implements MailboxListener {
     private static final Logger logger = LoggerFactory.getLogger(MailboxAnnotationListener.class);

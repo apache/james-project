@@ -21,8 +21,8 @@
 
 package org.apache.james.transport.matchers;
 
-import org.apache.mailet.base.GenericRecipientMatcher;
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.base.GenericRecipientMatcher;
 
 /**
  * Matches mail to Domains which are local

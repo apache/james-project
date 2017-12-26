@@ -22,13 +22,13 @@ package org.apache.james.transport.mailets;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.jspf.core.Logger;
 import org.apache.james.jspf.executor.SPFResult;
 import org.apache.james.jspf.impl.DefaultSPF;
 import org.apache.james.transport.mailets.managesieve.ManageSieveMailet;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.LoggerFactory;
 

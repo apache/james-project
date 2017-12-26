@@ -1,12 +1,12 @@
 package org.apache.james.queue.jms;
 
+import java.util.Arrays;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-
-import java.util.Arrays;
 
 public class JMSMailQueueTest extends AbstractJMSMailQueueTest {
 

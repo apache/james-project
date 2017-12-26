@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.metrics.api.MetricFactory;
@@ -42,7 +43,6 @@ import org.apache.james.transport.mailets.remoteDelivery.DeliveryRunnable;
 import org.apache.james.transport.mailets.remoteDelivery.RemoteDeliveryConfiguration;
 import org.apache.james.transport.mailets.remoteDelivery.RemoteDeliverySocketFactory;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -26,8 +26,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.core.MailAddress;
+import org.apache.james.rrt.api.RecipientRewriteTable;
 
 /**
  * This helper class contains methods for the RecipientRewriteTable implementations

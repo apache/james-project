@@ -27,7 +27,6 @@ import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 

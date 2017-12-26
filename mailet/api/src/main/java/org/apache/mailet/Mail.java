@@ -19,16 +19,16 @@
 
 
 package org.apache.mailet;
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Iterator;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.PerRecipientHeaders.Header;
-
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
 
 /**
  * <p>Wraps a MimeMessage with additional routing and processing information.

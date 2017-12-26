@@ -19,10 +19,10 @@
 
 package org.apache.james.mailbox.indexer.events;
 
-import com.google.common.base.Objects;
-
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxPath;
+
+import com.google.common.base.Objects;
 
 public class MessageDeletedEvent implements ImpactingMessageEvent {
 

@@ -20,8 +20,8 @@ package org.apache.james.protocols.smtp.core;
 
 import java.nio.ByteBuffer;
 
-import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.ProtocolSession.State;
+import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.smtp.SMTPSession;
 

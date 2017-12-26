@@ -22,9 +22,9 @@ package org.apache.james.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
-import org.apache.james.filesystem.api.FileSystem;
 import org.junit.Before;
 import org.junit.Test;
 

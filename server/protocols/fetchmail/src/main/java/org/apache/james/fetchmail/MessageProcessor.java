@@ -32,11 +32,11 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.ParseException;
 
-import org.apache.james.server.core.MailImpl;
+import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.server.core.MailImpl;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

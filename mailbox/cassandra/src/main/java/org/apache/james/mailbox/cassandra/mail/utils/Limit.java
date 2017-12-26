@@ -19,11 +19,11 @@
 
 package org.apache.james.mailbox.cassandra.mail.utils;
 
-import com.google.common.base.Preconditions;
-
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
+
+import com.google.common.base.Preconditions;
 
 public class Limit {
 

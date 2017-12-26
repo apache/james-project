@@ -20,6 +20,7 @@ package org.apache.james.mailbox.hbase;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
+
 import org.apache.hadoop.hbase.util.Bytes;
 
 /**

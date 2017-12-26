@@ -20,11 +20,12 @@ package org.apache.james.mailbox.hbase.io;
 
 import java.io.IOException;
 import java.io.InputStream;
-import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.util.Bytes;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.util.Bytes;
 
 /**
  * Return an InputStream which retrieve columns from a row which stores chunk of

@@ -19,20 +19,19 @@
 
 package org.apache.james.mailbox.cassandra.mail.utils;
 
-import com.github.steveash.guavate.Guavate;
-import com.google.common.collect.ImmutableList;
-import nl.jqno.equalsverifier.EqualsVerifier;
-
-import org.apache.james.mailbox.cassandra.mail.utils.Limit;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
+
+import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class LimitTest {
 

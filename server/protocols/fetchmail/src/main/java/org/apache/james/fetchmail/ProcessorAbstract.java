@@ -25,10 +25,10 @@ import java.util.Set;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.core.MailAddress;
 
 /**
  * <p>

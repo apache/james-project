@@ -20,6 +20,7 @@
 package org.apache.mailet.base;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import javax.mail.MessagingException;
 
 import org.apache.mailet.base.test.FakeMailetConfig;

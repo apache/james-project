@@ -22,15 +22,16 @@ import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 
-import org.apache.james.server.core.MailImpl;
+import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.server.core.MailImpl;
 import org.apache.james.transport.util.MailAddressUtils;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;

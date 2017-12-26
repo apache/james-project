@@ -21,11 +21,11 @@
 
 package org.apache.james.transport.matchers;
 
+import javax.mail.MessagingException;
+
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.base.GenericRecipientMatcher;
-import org.apache.james.core.MailAddress;
-
-import javax.mail.MessagingException;
 
 /**
  * CommandListservMatcher is the matcher that pairs with the CommandListservManager

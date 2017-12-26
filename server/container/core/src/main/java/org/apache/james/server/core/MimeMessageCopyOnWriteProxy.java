@@ -19,26 +19,26 @@
 
 package org.apache.james.server.core;
 
-import javax.activation.DataHandler;
-import javax.mail.Address;
-import javax.mail.Flags;
-import javax.mail.Folder;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.Session;
-import javax.mail.Flags.Flag;
-import javax.mail.internet.MimeMessage;
-import javax.mail.search.SearchTerm;
-
-import org.apache.james.lifecycle.api.Disposable;
-import org.apache.james.lifecycle.api.LifecycleUtil;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
 import java.util.Enumeration;
+
+import javax.activation.DataHandler;
+import javax.mail.Address;
+import javax.mail.Flags;
+import javax.mail.Flags.Flag;
+import javax.mail.Folder;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.Session;
+import javax.mail.internet.MimeMessage;
+import javax.mail.search.SearchTerm;
+
+import org.apache.james.lifecycle.api.Disposable;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 
 /**
  * This object wraps a "possibly shared" MimeMessage tracking copies and

@@ -19,11 +19,12 @@
 package org.apache.james.transport.util;
 
 import java.util.Optional;
+
 import javax.mail.MessagingException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 
 public class ReplyToUtils {
 

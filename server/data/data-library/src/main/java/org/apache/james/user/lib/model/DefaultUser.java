@@ -19,11 +19,11 @@
 
 package org.apache.james.user.lib.model;
 
-import org.apache.james.user.api.model.User;
-import org.apache.james.user.lib.util.DigestUtil;
-
 import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
+
+import org.apache.james.user.api.model.User;
+import org.apache.james.user.lib.util.DigestUtil;
 
 /**
  * Implementation of User Interface. Instances of this class do not allow the

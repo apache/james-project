@@ -1,20 +1,26 @@
 package org.apache.james.karaf.features;
 
-import com.google.common.base.Stopwatch;
-import org.apache.karaf.features.Feature;
-import org.apache.karaf.features.FeaturesService;
-import org.apache.karaf.tooling.exam.options.KarafDistributionConfigurationFilePutOption;
 import static org.apache.karaf.tooling.exam.options.KarafDistributionOption.karafDistributionConfiguration;
 import static org.apache.karaf.tooling.exam.options.KarafDistributionOption.keepRuntimeFolder;
 import static org.apache.karaf.tooling.exam.options.KarafDistributionOption.logLevel;
-import org.apache.karaf.tooling.exam.options.LogLevelOption;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import org.junit.Before;
-import org.junit.runner.RunWith;
 import static org.ops4j.pax.exam.CoreOptions.maven;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+
+import java.io.File;
+import java.net.URI;
+import java.util.concurrent.TimeUnit;
+
+import javax.inject.Inject;
+
+import org.apache.karaf.features.Feature;
+import org.apache.karaf.features.FeaturesService;
+import org.apache.karaf.tooling.exam.options.KarafDistributionConfigurationFilePutOption;
+import org.apache.karaf.tooling.exam.options.LogLevelOption;
+import org.junit.Before;
+import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.MavenUtils;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.Configuration;
@@ -29,10 +35,7 @@ import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import java.io.File;
-import java.net.URI;
-import java.util.concurrent.TimeUnit;
+import com.google.common.base.Stopwatch;
 
 /**
  * Base class for integration testing with Karaf.

@@ -21,7 +21,6 @@
 
 package org.apache.james.protocols.api.handler;
 
-
 import java.util.Collection;
 
 import org.apache.james.protocols.api.ProtocolSession;

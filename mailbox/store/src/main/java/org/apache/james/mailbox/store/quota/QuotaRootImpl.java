@@ -19,8 +19,9 @@
 
 package org.apache.james.mailbox.store.quota;
 
-import com.google.common.base.Objects;
 import org.apache.james.mailbox.model.QuotaRoot;
+
+import com.google.common.base.Objects;
 
 public class QuotaRootImpl implements QuotaRoot {
 

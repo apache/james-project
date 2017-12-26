@@ -22,13 +22,13 @@ package org.apache.james.container.spring.bean.factorypostprocessor;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.container.spring.lifecycle.ConfigurationProvider;
-
-import com.google.common.collect.ImmutableSet;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.FatalBeanException;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Read mailbox.xml file and register the right bean alias in the

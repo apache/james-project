@@ -31,12 +31,12 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.sql.DataSource;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.util.bayesian.JDBCBayesianAnalyzer;
 import org.apache.james.util.sql.JDBCUtil;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;

@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,8 +53,6 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;
 
 public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AppendProcessor.class);

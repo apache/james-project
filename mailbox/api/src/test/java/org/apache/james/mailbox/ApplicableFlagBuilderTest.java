@@ -19,6 +19,7 @@
 package org.apache.james.mailbox;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import javax.mail.Flags;
 
 import org.assertj.core.api.JUnitSoftAssertions;

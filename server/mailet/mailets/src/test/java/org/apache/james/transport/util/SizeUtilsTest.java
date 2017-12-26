@@ -19,10 +19,10 @@
 
 package org.apache.james.transport.util;
 
-import org.junit.Test;
-
 import static org.apache.james.transport.util.SizeUtils.humanReadableSize;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.Test;
 
 public class SizeUtilsTest {
 

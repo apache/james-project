@@ -30,17 +30,18 @@ import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS;
 import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS_TABLE;
 import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTION_CF;
 import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.hbase.HBaseClusterSingleton;
 import org.apache.james.mailbox.hbase.mail.model.HBaseMailbox;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.hadoop.conf.Configuration;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;

@@ -28,8 +28,10 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageUidTable.MAILBOX_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageUidTable.NEXT_UID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageUidTable.TABLE_NAME;
+
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.CassandraConfiguration;

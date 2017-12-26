@@ -22,8 +22,8 @@ package org.apache.james.imap.message.response;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponse;
-import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 
 public abstract class AbstactStatusResponseFactory implements StatusResponseFactory {
 

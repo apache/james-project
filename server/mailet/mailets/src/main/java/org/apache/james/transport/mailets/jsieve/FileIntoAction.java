@@ -20,10 +20,10 @@ package org.apache.james.transport.mailets.jsieve;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionFileInto;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

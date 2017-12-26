@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.json;
 
-
 import java.util.function.Predicate;
 
 import com.fasterxml.jackson.databind.ser.PropertyWriter;

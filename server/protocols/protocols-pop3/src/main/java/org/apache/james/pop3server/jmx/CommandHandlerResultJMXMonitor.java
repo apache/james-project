@@ -20,7 +20,6 @@ package org.apache.james.pop3server.jmx;
 
 import java.util.Collection;
 
-
 import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.lib.jmx.AbstractCommandHandlerResultJMXMonitor;

@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.rrt.jpa.model;
 
-import com.google.common.base.Objects;
-
 import java.io.Serializable;
 
 import javax.persistence.Column;
@@ -29,6 +27,8 @@ import javax.persistence.IdClass;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
+
+import com.google.common.base.Objects;
 
 /**
  * RecipientRewriteTable class for the James Virtual User Table to be used for JPA

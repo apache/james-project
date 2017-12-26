@@ -34,6 +34,7 @@ import javax.management.openmbean.CompositeType;
 import javax.management.openmbean.OpenType;
 import javax.management.openmbean.SimpleType;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueueManagementMBean;
 import org.apache.james.queue.api.ManageableMailQueue;
@@ -41,7 +42,6 @@ import org.apache.james.queue.api.ManageableMailQueue.MailQueueItemView;
 import org.apache.james.queue.api.ManageableMailQueue.MailQueueIterator;
 import org.apache.james.queue.api.ManageableMailQueue.Type;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 
 /**
  * JMX MBean implementation which expose management functions by wrapping a

@@ -19,12 +19,11 @@
 
 package org.apache.james.server.core;
 
-import javax.mail.util.SharedByteArrayInputStream;
+import java.util.Properties;
 
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
-
-import java.util.Properties;
+import javax.mail.util.SharedByteArrayInputStream;
 
 public class MimeMessageFromSharedStreamTest extends MimeMessageFromStreamTest {
 

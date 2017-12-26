@@ -19,15 +19,15 @@
 
 package org.apache.james.transport.matchers;
 
-import org.apache.mailet.base.GenericMatcher;
-import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
-
 import java.util.Collection;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import javax.mail.MessagingException;
+
+import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMatcher;
 
 import com.google.common.base.Strings;
 

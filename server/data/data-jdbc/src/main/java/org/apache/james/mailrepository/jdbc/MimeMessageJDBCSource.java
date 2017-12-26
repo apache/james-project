@@ -29,8 +29,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.apache.james.server.core.MimeMessageSource;
 import org.apache.james.repository.api.StreamRepository;
+import org.apache.james.server.core.MimeMessageSource;
 import org.apache.james.util.sql.JDBCUtil;
 
 /**

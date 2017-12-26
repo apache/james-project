@@ -19,8 +19,8 @@
 
 package org.apache.james.user.lib.model;
 
-import org.apache.james.user.api.model.JamesUser;
 import org.apache.james.core.MailAddress;
+import org.apache.james.user.api.model.JamesUser;
 
 /**
  * Implementation of User Interface.

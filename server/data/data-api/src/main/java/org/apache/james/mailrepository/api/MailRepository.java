@@ -19,12 +19,12 @@
 
 package org.apache.james.mailrepository.api;
 
-import org.apache.mailet.Mail;
+import java.util.Collection;
+import java.util.Iterator;
 
 import javax.mail.MessagingException;
 
-import java.util.Collection;
-import java.util.Iterator;
+import org.apache.mailet.Mail;
 
 /**
  * Interface for a Repository to store Mails.

@@ -21,18 +21,16 @@
 
 package org.apache.james.transport.matchers;
 
-import org.apache.mailet.Experimental;
-import org.apache.mailet.base.GenericMatcher;
-import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
+import java.util.Collection;
+import java.util.StringTokenizer;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import java.lang.NumberFormatException;
-
-import java.util.Collection;
-import java.util.StringTokenizer;
+import org.apache.james.core.MailAddress;
+import org.apache.mailet.Experimental;
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMatcher;
 
 /**
  * <P>Matches mails containing a header with a numeric value whose comparison with the specified value is true.

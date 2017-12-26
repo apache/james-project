@@ -24,10 +24,8 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.Statement;
+import javax.inject.Inject;
+
 import org.apache.james.mailbox.cassandra.table.CassandraDefaultMaxQuota;
 import org.apache.james.mailbox.cassandra.table.CassandraMaxQuota;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -35,7 +33,10 @@ import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 
-import javax.inject.Inject;
+import com.datastax.driver.core.PreparedStatement;
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.Session;
+import com.datastax.driver.core.Statement;
 
 public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
 

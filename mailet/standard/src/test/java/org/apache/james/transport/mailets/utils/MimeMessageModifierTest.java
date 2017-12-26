@@ -20,8 +20,10 @@
 package org.apache.james.transport.mailets.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Optional;
 import java.util.Properties;
+
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 

@@ -19,10 +19,10 @@
 
 package org.apache.james.mailbox.store.json.event.dto;
 
+import javax.mail.Flags;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import javax.mail.Flags;
 
 public class FlagsDataTransferObject {
     @JsonProperty()

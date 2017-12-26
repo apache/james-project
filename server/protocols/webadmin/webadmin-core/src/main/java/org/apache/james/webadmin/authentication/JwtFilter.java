@@ -26,8 +26,8 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.jwt.JwtTokenVerifier;
-
 import org.eclipse.jetty.http.HttpStatus;
+
 import spark.Request;
 import spark.Response;
 

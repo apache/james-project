@@ -18,9 +18,7 @@
  ****************************************************************/
 package org.apache.james.imap.processor;
 
-
 import java.io.Closeable;
-
 import java.util.Collections;
 import java.util.List;
 

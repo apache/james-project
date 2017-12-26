@@ -19,10 +19,10 @@
 
 package org.apache.james.mailetcontainer.api;
 
+import javax.mail.MessagingException;
+
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetConfig;
-
-import javax.mail.MessagingException;
 
 /**
  * Implementations of this interface are responsible to create {@link Mailet}

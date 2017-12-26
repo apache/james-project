@@ -26,12 +26,12 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.JMAPModule;
 import org.apache.james.jmap.JMAPServer;
-import org.apache.james.utils.MessageIdProbe;
 import org.apache.james.jmap.crypto.JamesSignatureHandler;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.JmapGuiceProbe;
+import org.apache.james.utils.MessageIdProbe;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import com.google.common.base.Throwables;

@@ -22,8 +22,8 @@ package org.apache.james.imap.main;
 import java.io.IOException;
 
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.ImapProcessor.Responder;
+import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.ImapEncoder;
 import org.apache.james.imap.encode.ImapResponseComposer;
 

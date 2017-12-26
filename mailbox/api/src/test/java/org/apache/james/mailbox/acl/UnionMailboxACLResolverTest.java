@@ -20,6 +20,8 @@
 
 package org.apache.james.mailbox.acl;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Entry;
@@ -29,8 +31,6 @@ import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Peter Palaga

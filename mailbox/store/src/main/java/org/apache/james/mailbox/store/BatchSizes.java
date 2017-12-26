@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.mailbox.store;
 
-
 import java.util.Optional;
 
 import com.google.common.base.MoreObjects;

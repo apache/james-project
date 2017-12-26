@@ -19,7 +19,6 @@
 
 package org.apache.james.ai.classic;
 
-
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;

@@ -21,13 +21,13 @@ package org.apache.james.imap.decode;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.protocols.imap.DecodingException;
-import org.junit.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+
+import org.apache.james.protocols.imap.DecodingException;
+import org.junit.Test;
 
 public class ImapRequestLineReaderTest {
 

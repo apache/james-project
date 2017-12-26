@@ -26,9 +26,9 @@ import javax.jms.ObjectMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.james.server.core.MimeMessageSource;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
+import org.apache.james.server.core.MimeMessageSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

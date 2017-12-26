@@ -26,8 +26,8 @@ import java.util.Collection;
 
 import javax.mail.MessagingException;
 
-import org.apache.james.dnsservice.api.mock.MockDNSService;
 import org.apache.james.core.MailAddress;
+import org.apache.james.dnsservice.api.mock.MockDNSService;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Before;
