@@ -126,7 +126,7 @@ public class SMIMESignIntegrationTest {
     }
 
     @Test
-    public void NonAuthenticatedMessagesShouldNotBeSigned() throws Exception {
+    public void nonAuthenticatedMessagesShouldNotBeSigned() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_SECURE_PORT)
             .sendMessage(FROM, RECIPIENT)
             .awaitSent(awaitOneMinute);

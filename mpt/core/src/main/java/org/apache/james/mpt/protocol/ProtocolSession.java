@@ -142,7 +142,7 @@ public class ProtocolSession implements ProtocolInteractor {
     /**
      * adds a new Client request line to the test elements
      */
-    public void CL(String clientLine) {
+    public void cl(String clientLine) {
         testElements.add(new ClientRequest(clientLine));
     }
 
@@ -150,21 +150,21 @@ public class ProtocolSession implements ProtocolInteractor {
      * adds a new Server Response line to the test elements, with the specified
      * location.
      */
-    public void SL(String serverLine, String location) {
+    public void sl(String serverLine, String location) {
         testElements.add(new ServerResponse(serverLine, location));
     }
 
     /**
      * adds a new Server Unordered Block to the test elements.
      */
-    public void SUB(List<String> serverLines, String location) {
+    public void sub(List<String> serverLines, String location) {
         testElements.add(new ServerUnorderedBlockResponse(serverLines, location));
     }
 
     /**
      * adds a new Client request line to the test elements
      */
-    public void CL(int sessionNumber, String clientLine) {
+    public void cl(int sessionNumber, String clientLine) {
         this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
         testElements.add(new ClientRequest(sessionNumber, clientLine));
     }
@@ -172,7 +172,7 @@ public class ProtocolSession implements ProtocolInteractor {
     /**
      * Adds a continuation. To allow one thread to be used for testing.
      */
-    public void CONT(int sessionNumber) throws Exception {
+    public void cont(int sessionNumber) throws Exception {
         this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
         testElements.add(new ContinuationElement(sessionNumber));
     }
@@ -181,7 +181,7 @@ public class ProtocolSession implements ProtocolInteractor {
      * adds a new Server Response line to the test elements, with the specified
      * location.
      */
-    public void SL(int sessionNumber, String serverLine, String location, String lastClientMessage) {
+    public void sl(int sessionNumber, String serverLine, String location, String lastClientMessage) {
         this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
         testElements.add(new ServerResponse(sessionNumber, serverLine, location, lastClientMessage));
     }
@@ -189,7 +189,7 @@ public class ProtocolSession implements ProtocolInteractor {
     /**
      * adds a new Server Unordered Block to the test elements.
      */
-    public void SUB(int sessionNumber, List<String> serverLines, String location, String lastClientMessage) {
+    public void sub(int sessionNumber, List<String> serverLines, String location, String lastClientMessage) {
         this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
         testElements.add(new ServerUnorderedBlockResponse(sessionNumber, serverLines, location, lastClientMessage));
     }
@@ -197,22 +197,22 @@ public class ProtocolSession implements ProtocolInteractor {
     /**
      * adds a Wait condition
      */
-    public void WAIT(int sessionNumber, long timeToWaitInMs) {
+    public void wait(int sessionNumber, long timeToWaitInMs) {
         this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
         testElements.add(new WaitElement(timeToWaitInMs));
     }
 
-    public void LOG(int sessionNumber, LolLevel level, String message) {
+    public void log(int sessionNumber, LolLevel level, String message) {
         this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
         testElements.add(new LogElement(level, message));
     }
 
-    public void REINIT(int sessionNumber) {
+    public void reinit(int sessionNumber) {
         this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
         testElements.add(new ReinitElement(sessionNumber));
     }
 
-    public void TIMER(TimerCommand timerCommand, String timerName) {
+    public void timer(TimerCommand timerCommand, String timerName) {
         testElements.add(new TimerElement(timerCommand, timerName));
     }
 

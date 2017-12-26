@@ -455,14 +455,14 @@ public class POP3ServerTest {
         assertEquals(msgCount, uidlEntries.length);
         assertEquals(msgCount, statInfo.number);
 
-        POP3Client m_pop3Protocol2 = new POP3Client();
-        m_pop3Protocol2.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-        m_pop3Protocol2.login("foo2", "bar2");
-        assertEquals(1, m_pop3Protocol2.getState());
+        POP3Client pop3Protocol2 = new POP3Client();
+        pop3Protocol2.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        pop3Protocol2.login("foo2", "bar2");
+        assertEquals(1, pop3Protocol2.getState());
 
-        POP3MessageInfo[] listEntries2 = m_pop3Protocol2.listMessages();
-        POP3MessageInfo[] uidlEntries2 = m_pop3Protocol2.listUniqueIdentifiers();
-        POP3MessageInfo statInfo2 = m_pop3Protocol2.status();
+        POP3MessageInfo[] listEntries2 = pop3Protocol2.listMessages();
+        POP3MessageInfo[] uidlEntries2 = pop3Protocol2.listUniqueIdentifiers();
+        POP3MessageInfo statInfo2 = pop3Protocol2.status();
         assertEquals(msgCount, listEntries2.length);
         assertEquals(msgCount, uidlEntries2.length);
         assertEquals(msgCount, statInfo2.number);
@@ -477,9 +477,9 @@ public class POP3ServerTest {
 
         // even after the message was deleted it should get displayed in the
         // second connection
-        listEntries2 = m_pop3Protocol2.listMessages();
-        uidlEntries2 = m_pop3Protocol2.listUniqueIdentifiers();
-        statInfo2 = m_pop3Protocol2.status();
+        listEntries2 = pop3Protocol2.listMessages();
+        uidlEntries2 = pop3Protocol2.listUniqueIdentifiers();
+        statInfo2 = pop3Protocol2.status();
         assertEquals(msgCount, listEntries2.length);
         assertEquals(msgCount, uidlEntries2.length);
         assertEquals(msgCount, statInfo2.number);
@@ -489,19 +489,19 @@ public class POP3ServerTest {
 
         // even after the message was deleted and the session was quit it should
         // get displayed in the second connection
-        listEntries2 = m_pop3Protocol2.listMessages();
-        uidlEntries2 = m_pop3Protocol2.listUniqueIdentifiers();
-        statInfo2 = m_pop3Protocol2.status();
+        listEntries2 = pop3Protocol2.listMessages();
+        uidlEntries2 = pop3Protocol2.listUniqueIdentifiers();
+        statInfo2 = pop3Protocol2.status();
         assertEquals(msgCount, listEntries2.length);
         assertEquals(msgCount, uidlEntries2.length);
         assertEquals(msgCount, statInfo2.number);
 
         // This both should error and so return null
-        assertNull(m_pop3Protocol2.retrieveMessageTop(1, 100));
-        assertNull(m_pop3Protocol2.retrieveMessage(1));
+        assertNull(pop3Protocol2.retrieveMessageTop(1, 100));
+        assertNull(pop3Protocol2.retrieveMessage(1));
 
-        m_pop3Protocol2.sendCommand("quit");
-        m_pop3Protocol2.disconnect();
+        pop3Protocol2.sendCommand("quit");
+        pop3Protocol2.disconnect();
 
         mailboxManager.deleteMailbox(mailboxPath, session);
         

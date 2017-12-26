@@ -39,43 +39,43 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
             .toString();
     }
 
-    private long _lowVal;
+    private long lowVal;
 
-    private long _highVal;
+    private long highVal;
 
     public IdRange(long singleVal) {
-        _lowVal = singleVal;
-        _highVal = singleVal;
+        lowVal = singleVal;
+        highVal = singleVal;
     }
 
     public IdRange(long lowVal, long highVal) {
         if (lowVal > highVal) {
             throw new IllegalArgumentException("LowVal must be <= HighVal");
         }
-        _lowVal = lowVal;
-        _highVal = highVal;
+        this.lowVal = lowVal;
+        this.highVal = highVal;
     }
 
     public long getLowVal() {
-        return _lowVal;
+        return lowVal;
     }
 
     public long getHighVal() {
-        return _highVal;
+        return highVal;
     }
 
     public void setLowVal(long lowVal) {
-        if (lowVal > _highVal) {
+        if (lowVal > highVal) {
             throw new IllegalArgumentException("LowVal must be <= HighVal");
         }
-        _lowVal = lowVal;
+        this.lowVal = lowVal;
     }
 
     public void setHighVal(long highVal) {
-        if (_lowVal > highVal) {
+        if (lowVal > highVal) {
             throw new IllegalArgumentException("HighVal must be >= LowVal");
         }
-        _highVal = highVal;
+        this.highVal = highVal;
     }
 
     /**
@@ -85,7 +85,7 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
      * @return include
      */
     public boolean includes(long value) {
-        return _lowVal <= value && value <= _highVal;
+        return lowVal <= value && value <= highVal;
     }
 
     /**
@@ -94,8 +94,8 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
     public int hashCode() {
         final int PRIME = 31;
         int result = 1;
-        result = PRIME * result + (int) (_highVal ^ (_highVal >>> 32));
-        result = PRIME * result + (int) (_lowVal ^ (_lowVal >>> 32));
+        result = PRIME * result + (int) (highVal ^ (highVal >>> 32));
+        result = PRIME * result + (int) (lowVal ^ (lowVal >>> 32));
         return result;
     }
 
@@ -113,10 +113,10 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
             return false;
         }
         final IdRange other = (IdRange) obj;
-        if (_highVal != other._highVal) {
+        if (highVal != other.highVal) {
             return false;
         }
-        if (_lowVal != other._lowVal) {
+        if (lowVal != other.lowVal) {
             return false;
         }
         return true;
@@ -128,14 +128,14 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
      * @return a <code>String</code> representation of this object.
      */
     public String toString() {
-        return "IdRange ( " + this._lowVal + "->" + this._highVal + " )";
+        return "IdRange ( " + this.lowVal + "->" + this.highVal + " )";
     }
 
     public String getFormattedString() {
-        if (this._lowVal == this._highVal) {
-            return Long.toString(this._lowVal);
+        if (this.lowVal == this.highVal) {
+            return Long.toString(this.lowVal);
         } else {
-            return this._lowVal + ":" + this._highVal;
+            return this.lowVal + ":" + this.highVal;
         }
     }
 

@@ -522,7 +522,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
                 try {
                     String insertMessageSQL = sqlQueries.getSqlString("insertMessageSQL", true);
                     insertMessage = conn.prepareStatement(insertMessageSQL);
-                    int number_of_parameters = insertMessage.getParameterMetaData().getParameterCount();
+                    int numberOfParameters = insertMessage.getParameterMetaData().getParameterCount();
                     insertMessage.setString(1, mc.getName());
                     insertMessage.setString(2, repositoryName);
                     insertMessage.setString(3, mc.getState());
@@ -547,7 +547,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
                     insertMessage.setBinaryStream(10, is, (int) is.getSize());
 
                     // Store attributes
-                    if (number_of_parameters > 10) {
+                    if (numberOfParameters > 10) {
                         ByteArrayOutputStream baos = new ByteArrayOutputStream();
                         ObjectOutputStream oos = new ObjectOutputStream(baos);
                         try {
@@ -634,17 +634,17 @@ public class JDBCMailRepository extends AbstractMailRepository {
 
                     if (rsMessageAttr.next()) {
                         try {
-                            byte[] serialized_attr;
+                            byte[] serializedAttr;
                             String getAttributesOption = sqlQueries.getDbOption("getAttributes");
                             if (getAttributesOption != null && (getAttributesOption.equalsIgnoreCase("useBlob") || getAttributesOption.equalsIgnoreCase("useBinaryStream"))) {
                                 Blob b = rsMessageAttr.getBlob(1);
-                                serialized_attr = b.getBytes(1, (int) b.length());
+                                serializedAttr = b.getBytes(1, (int) b.length());
                             } else {
-                                serialized_attr = rsMessageAttr.getBytes(1);
+                                serializedAttr = rsMessageAttr.getBytes(1);
                             }
                             // this check is for better backwards compatibility
-                            if (serialized_attr != null) {
-                                ByteArrayInputStream bais = new ByteArrayInputStream(serialized_attr);
+                            if (serializedAttr != null) {
+                                ByteArrayInputStream bais = new ByteArrayInputStream(serializedAttr);
                                 ObjectInputStream ois = new ObjectInputStream(bais);
                                 attributes = (HashMap<String, Object>) ois.readObject();
                                 ois.close();

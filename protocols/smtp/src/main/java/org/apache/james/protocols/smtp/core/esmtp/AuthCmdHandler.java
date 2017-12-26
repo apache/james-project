@@ -263,7 +263,7 @@ public class AuthCmdHandler
                     If both steps succeed, the user is logged in.
                 */
                 StringTokenizer authTokenizer = new StringTokenizer(userpass, "\0");
-                String authorize_id = authTokenizer.nextToken();  // Authorization Identity
+                String authorizeId = authTokenizer.nextToken();  // Authorization Identity
                 user = authTokenizer.nextToken();                 // Authentication Identity
                 try {
                     pass = authTokenizer.nextToken();             // Password
@@ -284,7 +284,7 @@ public class AuthCmdHandler
                     // caught.  So we need to move the user to the
                     // password, and the authorize_id to the user.
                     pass = user;
-                    user = authorize_id;
+                    user = authorizeId;
                 }
 
                 authTokenizer = null;

@@ -75,7 +75,7 @@ public class SetAnnotationProcessorTest {
     private ImapSession mockImapSession;
     private MailboxSession mockMailboxSession;
 
-    private List<MailboxAnnotation> MAILBOX_ANNOTATIONS;
+    private List<MailboxAnnotation> mailboxAnnotations;
     private StatusResponse okResponse;
 
     private MailboxPath inbox; 
@@ -93,8 +93,8 @@ public class SetAnnotationProcessorTest {
 
         mockMailboxSession = new MockMailboxSession("username");
         inbox = MailboxPath.inbox(mockMailboxSession);
-        MAILBOX_ANNOTATIONS = ImmutableList.of(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/key"), "anyValue"));
-        request = new SetAnnotationRequest(TAG, ImapCommand.anyStateCommand("Name"), ImapConstants.INBOX_NAME, MAILBOX_ANNOTATIONS);
+        mailboxAnnotations = ImmutableList.of(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/key"), "anyValue"));
+        request = new SetAnnotationRequest(TAG, ImapCommand.anyStateCommand("Name"), ImapConstants.INBOX_NAME, mailboxAnnotations);
         humanTextCaptor = ArgumentCaptor.forClass(HumanReadableText.class);
 
         when(mockImapSession.getState()).thenReturn(ImapSessionState.SELECTED);
@@ -121,7 +121,7 @@ public class SetAnnotationProcessorTest {
     @Test
     public void processShouldResponseNoWithNoSuchMailboxWhenManagerThrowMailboxNotFoundException() throws Exception {
         doThrow(MailboxNotFoundException.class).when(mockMailboxManager).updateAnnotations(eq(inbox),
-            eq(mockMailboxSession), eq(MAILBOX_ANNOTATIONS));
+            eq(mockMailboxSession), eq(mailboxAnnotations));
 
         processor.process(request, mockResponder, mockImapSession);
 
@@ -133,7 +133,7 @@ public class SetAnnotationProcessorTest {
 
     @Test
     public void processShouldResponseNoWithGenericFailureWhenManagerThrowMailboxException() throws Exception {
-        doThrow(MailboxException.class).when(mockMailboxManager).updateAnnotations(eq(inbox), eq(mockMailboxSession), eq(MAILBOX_ANNOTATIONS));
+        doThrow(MailboxException.class).when(mockMailboxManager).updateAnnotations(eq(inbox), eq(mockMailboxSession), eq(mailboxAnnotations));
 
         processor.process(request, mockResponder, mockImapSession);
 
@@ -149,7 +149,7 @@ public class SetAnnotationProcessorTest {
 
         processor.process(request, mockResponder, mockImapSession);
 
-        verify(mockMailboxManager).updateAnnotations(inbox, mockMailboxSession, MAILBOX_ANNOTATIONS);
+        verify(mockMailboxManager).updateAnnotations(inbox, mockMailboxSession, mailboxAnnotations);
         verify(mockResponder).respond(okResponse);
         verify(mockStatusResponseFactory, times(1)).taggedOk(any(String.class), any(ImapCommand.class), humanTextCaptor.capture());
 
@@ -158,7 +158,7 @@ public class SetAnnotationProcessorTest {
 
     @Test
     public void processShouldResponseNoWhenManagerThrowsAnnotationException() throws Exception {
-        doThrow(AnnotationException.class).when(mockMailboxManager).updateAnnotations(eq(inbox), eq(mockMailboxSession), eq(MAILBOX_ANNOTATIONS));
+        doThrow(AnnotationException.class).when(mockMailboxManager).updateAnnotations(eq(inbox), eq(mockMailboxSession), eq(mailboxAnnotations));
 
         processor.process(request, mockResponder, mockImapSession);
 

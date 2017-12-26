@@ -30,20 +30,20 @@ import org.apache.james.jmap.utils.DependencyGraph.CycleDetectedException;
 
 import com.google.common.collect.Lists;
 
-public class SortingHierarchicalCollections<T, Id> {
+public class SortingHierarchicalCollections<T, IdT> {
 
-    private final Function<T, Id> index;
-    private final Function<T, Optional<Id>> parentId;
+    private final Function<T, IdT> index;
+    private final Function<T, Optional<IdT>> parentId;
 
-    public SortingHierarchicalCollections(Function<T, Id> index,
-                                  Function<T, Optional<Id>> parentId) {
+    public SortingHierarchicalCollections(Function<T, IdT> index,
+                                  Function<T, Optional<IdT>> parentId) {
         this.index = index;
         this.parentId = parentId;
     }
 
     public List<T> sortFromRootToLeaf(Collection<T> elements) throws CycleDetectedException {
 
-        Map<Id, T> mapOfElementsById = indexElementsById(elements);
+        Map<IdT, T> mapOfElementsById = indexElementsById(elements);
 
         DependencyGraph<T> graph = new DependencyGraph<>(m ->
                 parentId.apply(m).map(mapOfElementsById::get));
@@ -53,7 +53,7 @@ public class SortingHierarchicalCollections<T, Id> {
         return graph.getBuildChain().collect(Collectors.toList());
     }
 
-    private Map<Id, T> indexElementsById(Collection<T> elements) {
+    private Map<IdT, T> indexElementsById(Collection<T> elements) {
         return elements.stream()
                 .collect(Collectors.toMap(index, Function.identity()));
     }

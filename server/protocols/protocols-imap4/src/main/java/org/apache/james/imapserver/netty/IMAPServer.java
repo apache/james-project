@@ -156,12 +156,12 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             private final ChannelGroupHandler groupHandler = new ChannelGroupHandler(group);
             private final HashedWheelTimer timer = new HashedWheelTimer();
             
-            private final TimeUnit TIMEOUT_UNIT = TimeUnit.SECONDS;
+            private final TimeUnit timeoutUnit = TimeUnit.SECONDS;
 
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline pipeline = pipeline();
                 pipeline.addLast(GROUP_HANDLER, groupHandler);
-                pipeline.addLast("idleHandler", new IdleStateHandler(timer, 0, 0, timeout, TIMEOUT_UNIT));
+                pipeline.addLast("idleHandler", new IdleStateHandler(timer, 0, 0, timeout, timeoutUnit));
                 pipeline.addLast(TIMEOUT_HANDLER, new ImapIdleStateHandler());
                 pipeline.addLast(CONNECTION_LIMIT_HANDLER, new ConnectionLimitUpstreamHandler(IMAPServer.this.connectionLimit));
 

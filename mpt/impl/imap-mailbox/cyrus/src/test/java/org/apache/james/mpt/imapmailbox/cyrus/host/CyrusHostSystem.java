@@ -91,21 +91,21 @@ public class CyrusHostSystem extends ExternalHostSystem implements Provider<Cont
     @Override
     public void createMailbox(MailboxPath mailboxPath) {
         ProtocolSession protocolSession = logAndGetAdminProtocolSession(new ProtocolSession());
-        protocolSession.CL(String.format("A1 CREATE %s", createMailboxStringFromMailboxPath(mailboxPath)));
-        protocolSession.SL("A1 OK .*", CREATE_MAILBOX_LOCATION);
+        protocolSession.cl(String.format("A1 CREATE %s", createMailboxStringFromMailboxPath(mailboxPath)));
+        protocolSession.sl("A1 OK .*", CREATE_MAILBOX_LOCATION);
         executeProtocolSession(logoutAndGetProtocolSession(protocolSession));
     }
 
     public ProtocolSession logoutAndGetProtocolSession(ProtocolSession protocolSession) {
-        protocolSession.CL("A2 LOGOUT");
-        protocolSession.SL("\\* BYE .*", CREATE_MAILBOX_LOCATION);
+        protocolSession.cl("A2 LOGOUT");
+        protocolSession.sl("\\* BYE .*", CREATE_MAILBOX_LOCATION);
         return protocolSession;
     }
 
     public ProtocolSession logAndGetAdminProtocolSession(ProtocolSession protocolSession) {
-        protocolSession.SL(".*", CREATE_MAILBOX_LOCATION);
-        protocolSession.CL(". LOGIN cyrus cyrus");
-        protocolSession.SL("\\. OK .*", CREATE_MAILBOX_LOCATION);
+        protocolSession.sl(".*", CREATE_MAILBOX_LOCATION);
+        protocolSession.cl(". LOGIN cyrus cyrus");
+        protocolSession.sl("\\. OK .*", CREATE_MAILBOX_LOCATION);
         return protocolSession;
     }
 

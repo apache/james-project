@@ -31,11 +31,12 @@ import org.junit.Test;
 
 public class SetMimeHeaderHandlerTest {
 
+    private static final String HEADER_NAME = "JUNIT";
+    private static final String HEADER_VALUE = "test-value";
+
     private SMTPSession mockedSMTPSession;
     private MimeMessage mockedMimeMessage;
     private Mail mockedMail;
-    private final String HEADER_NAME = "JUNIT";
-    private final String HEADER_VALUE = "test-value";
     private String headerName = "defaultHeaderName";
     private String headerValue = "defaultHeaderValue";
 

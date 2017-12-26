@@ -189,7 +189,7 @@ public abstract class ImapRequestLineReader {
      * Reads an argument of type "atom" from the request.
      */
     public String atom() throws DecodingException {
-        return consumeWord(new ATOM_CHARValidator(), true);
+        return consumeWord(new AtomCharValidator(), true);
     }
 
     /**
@@ -851,7 +851,7 @@ public abstract class ImapRequestLineReader {
         }
     }
 
-    public static class ATOM_CHARValidator implements CharacterValidator {
+    public static class AtomCharValidator implements CharacterValidator {
         public boolean isValid(char chr) {
             return (isCHAR(chr) && !isAtomSpecial(chr) && !isListWildcard(chr) && !isQuotedSpecial(chr));
         }
@@ -861,7 +861,7 @@ public abstract class ImapRequestLineReader {
         }
     }
 
-    public static class TagCharValidator extends ATOM_CHARValidator {
+    public static class TagCharValidator extends AtomCharValidator {
         public boolean isValid(char chr) {
             if (chr == '+') {
                 return false;

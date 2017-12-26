@@ -54,18 +54,18 @@ public class ReadOnlyLDAPUser implements User, Serializable {
      * <code>&quot;myorg.com&quot;</code>, the user's email address will be
      * <code>&quot;john.bold&#64;myorg.com&quot;</code>.
      */
-    private String _userName;
+    private String userName;
 
     /**
      * The distinguished name of the user-record in the LDAP directory.
      */
-    private String _userDN;
+    private String userDN;
 
     /**
      * The context for the LDAP server from which to retrieve the
      * user's details.
      */
-    private LdapContext _ldapContext = null;
+    private LdapContext ldapContext = null;
 
     /**
      * Creates a new instance of ReadOnlyLDAPUser.
@@ -95,9 +95,9 @@ public class ReadOnlyLDAPUser implements User, Serializable {
      */
     public ReadOnlyLDAPUser(String userName, String userDN, LdapContext ldapContext) {
         this();
-        _userName = userName;
-        _userDN = userDN;
-        _ldapContext = ldapContext;
+        this.userName = userName;
+        this.userDN = userDN;
+        this.ldapContext = ldapContext;
     }
 
     /**
@@ -108,7 +108,7 @@ public class ReadOnlyLDAPUser implements User, Serializable {
      * @return The user's identifier or name.
      */
     public String getUserName() {
-        return _userName;
+        return userName;
     }
 
     /**
@@ -138,10 +138,10 @@ public class ReadOnlyLDAPUser implements User, Serializable {
         boolean result = false;
         LdapContext ldapContext = null;
         try {
-            ldapContext = _ldapContext.newInstance(null);
+            ldapContext = this.ldapContext.newInstance(null);
             ldapContext.addToEnvironment(Context.SECURITY_AUTHENTICATION,
                     LdapConstants.SECURITY_AUTHENTICATION_SIMPLE);
-            ldapContext.addToEnvironment(Context.SECURITY_PRINCIPAL, _userDN);
+            ldapContext.addToEnvironment(Context.SECURITY_PRINCIPAL, userDN);
             ldapContext.addToEnvironment(Context.SECURITY_CREDENTIALS, password);
             ldapContext.reconnect(null);
             result = true;

@@ -35,7 +35,7 @@ import org.apache.mailet.base.RFC2822Headers;
  */
 @Experimental
 public class NESSpamCheck extends GenericRegexMatcher {
-    protected Object[][] NESPatterns = {{RFC2822Headers.RECEIVED, "GAA.*-0600.*EST"},
+    protected Object[][] nesPatterns = {{RFC2822Headers.RECEIVED, "GAA.*-0600.*EST"},
     {RFC2822Headers.RECEIVED, "XAA.*-0700.*EDT"},
     {RFC2822Headers.RECEIVED, "xxxxxxxxxxxxxxxxxxxxx"},
     {RFC2822Headers.RECEIVED, "untrace?able"},
@@ -96,7 +96,7 @@ public class NESSpamCheck extends GenericRegexMatcher {
     public void init() throws MessagingException {
         //No condition passed... just compile a bunch of regular expressions
         try {
-            compile(NESPatterns);
+            compile(nesPatterns);
         } catch (PatternSyntaxException mp) {
             throw new MessagingException("Could not initialize NES patterns", mp);
         }

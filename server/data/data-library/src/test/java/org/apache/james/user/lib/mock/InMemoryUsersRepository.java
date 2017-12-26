@@ -33,7 +33,7 @@ import org.apache.james.user.lib.model.DefaultUser;
 @SuppressWarnings("deprecation")
 public class InMemoryUsersRepository extends AbstractJamesUsersRepository {
 
-    private final HashMap<String, User> m_users = new HashMap<>();
+    private final HashMap<String, User> users = new HashMap<>();
     /**
      * force the repository to hold implementations of JamesUser interface,
      * instead of User JamesUser is _not_ required as of the UsersRepository
@@ -41,10 +41,10 @@ public class InMemoryUsersRepository extends AbstractJamesUsersRepository {
      * UsersRepository while at the same time expecting it to hold JamesUsers
      * (like in RemoteManagerHandler)
      */
-    private boolean m_forceUseJamesUser = false;
+    private boolean forceUseJamesUser = false;
 
     public void setForceUseJamesUser() {
-        m_forceUseJamesUser = true;
+        forceUseJamesUser = true;
     }
 
     @Override
@@ -52,29 +52,29 @@ public class InMemoryUsersRepository extends AbstractJamesUsersRepository {
         if (ignoreCase) {
             return getUserByNameCaseInsensitive(name);
         } else {
-            return m_users.get(name);
+            return users.get(name);
         }
     }
 
     public User getUserByNameCaseInsensitive(String name) {
-        return m_users.get(name.toLowerCase(Locale.US));
+        return users.get(name.toLowerCase(Locale.US));
     }
 
     public String getRealName(String name) {
         if (ignoreCase) {
-            return m_users.get(name.toLowerCase(Locale.US)) != null ? 
-                    m_users.get(name.toLowerCase(Locale.US)).getUserName() : null;
+            return users.get(name.toLowerCase(Locale.US)) != null ? 
+                    users.get(name.toLowerCase(Locale.US)).getUserName() : null;
         } else {
-            return m_users.get(name) != null ? name : null;
+            return users.get(name) != null ? name : null;
         }
     }
 
     @Override
     public void removeUser(String name) throws UsersRepositoryException {
-        if (!m_users.containsKey(name)) {
+        if (!users.containsKey(name)) {
             throw new UsersRepositoryException("No such user");
         } else {
-            m_users.remove(name);
+            users.remove(name);
         }
     }
 
@@ -83,7 +83,7 @@ public class InMemoryUsersRepository extends AbstractJamesUsersRepository {
         if (ignoreCase) {
             return containsCaseInsensitive(name);
         } else {
-            return m_users.containsKey(name);
+            return users.containsKey(name);
         }
     }
 
@@ -99,11 +99,11 @@ public class InMemoryUsersRepository extends AbstractJamesUsersRepository {
 
     @Override
     public int countUsers() throws UsersRepositoryException {
-        return m_users.size();
+        return users.size();
     }
 
     protected List<String> listUserNames() {
-        Iterator<User> users = m_users.values().iterator();
+        Iterator<User> users = this.users.values().iterator();
         List<String> userNames = new LinkedList<>();
         while (users.hasNext()) {
             User user = users.next();
@@ -120,19 +120,19 @@ public class InMemoryUsersRepository extends AbstractJamesUsersRepository {
 
     @Override
     protected void doAddUser(User user) throws UsersRepositoryException {
-        if (m_forceUseJamesUser && user instanceof DefaultUser) {
+        if (forceUseJamesUser && user instanceof DefaultUser) {
             DefaultUser aUser = (DefaultUser) user;
             user = new DefaultJamesUser(aUser.getUserName(), aUser.getHashedPassword(), aUser.getHashAlgorithm());
         }
 
         String key = user.getUserName();
-        m_users.put(key, user);
+        users.put(key, user);
     }
 
     @Override
     protected void doUpdateUser(User user) throws UsersRepositoryException {
-        if (m_users.containsKey(user.getUserName())) {
-            m_users.put(user.getUserName(), user);
+        if (users.containsKey(user.getUserName())) {
+            users.put(user.getUserName(), user);
         } else {
             throw new UsersRepositoryException("No such user");
         }

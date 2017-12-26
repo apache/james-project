@@ -45,12 +45,12 @@ public class SortOrderTest {
     @Test
     public void sortOrderShouldBeComparable() {
         TreeSet<SortOrder> sortedSet = new TreeSet<>();
-        SortOrder _66 = SortOrder.of(66);
-        SortOrder _4 = SortOrder.of(4);
-        SortOrder _5 = SortOrder.of(5);
-        sortedSet.add(_66);
-        sortedSet.add(_4);
-        sortedSet.add(_5);
-        assertThat(sortedSet).containsExactly(_4, _5, _66);
+        SortOrder sixtySix = SortOrder.of(66);
+        SortOrder four = SortOrder.of(4);
+        SortOrder five = SortOrder.of(5);
+        sortedSet.add(sixtySix);
+        sortedSet.add(four);
+        sortedSet.add(five);
+        assertThat(sortedSet).containsExactly(four, five, sixtySix);
     }
 }

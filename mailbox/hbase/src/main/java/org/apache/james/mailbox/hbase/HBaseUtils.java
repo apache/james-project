@@ -101,7 +101,7 @@ public class HBaseUtils {
                 Bytes.toString(rawMailbox.get(MAILBOX_NAME)));
 
         HBaseMailbox mailbox = new HBaseMailbox(path, Bytes.toLong(rawMailbox.get(MAILBOX_UIDVALIDITY)));
-        mailbox.setMailboxId(HBaseIdFromRowKey(result.getRow()));
+        mailbox.setMailboxId(hBaseIdFromRowKey(result.getRow()));
         mailbox.setHighestModSeq(Bytes.toLong(rawMailbox.get(MAILBOX_HIGHEST_MODSEQ)));
         mailbox.setLastUid(Bytes.toLong(rawMailbox.get(MAILBOX_LASTUID)));
         mailbox.setMessageCount(Bytes.toLong(rawMailbox.get(MAILBOX_MESSAGE_COUNT)));
@@ -113,7 +113,7 @@ public class HBaseUtils {
      * @param rowkey
      * @return UUID calculated from the byte array
      */
-    public static HBaseId HBaseIdFromRowKey(byte[] rowkey) {
+    public static HBaseId hBaseIdFromRowKey(byte[] rowkey) {
         return HBaseId.of(new UUID(Bytes.toLong(rowkey, 0), Bytes.toLong(rowkey, 8)));
     }
 
@@ -320,7 +320,7 @@ public class HBaseUtils {
             }
             i++;
         }
-        HBaseId uuid = HBaseIdFromRowKey(result.getRow());
+        HBaseId uuid = hBaseIdFromRowKey(result.getRow());
         uid = MessageUid.of(Long.MAX_VALUE - Bytes.toLong(result.getRow(), 16));
         PropertyBuilder props = new PropertyBuilder(propList);
         props.setMediaType(mediaType);

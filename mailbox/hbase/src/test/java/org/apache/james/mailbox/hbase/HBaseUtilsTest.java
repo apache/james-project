@@ -37,8 +37,8 @@ import static org.apache.james.mailbox.hbase.HBaseNames.MARKER_MISSING;
 import static org.apache.james.mailbox.hbase.HBaseNames.MARKER_PRESENT;
 import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGES_META_CF;
 import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTION_CF;
-import static org.apache.james.mailbox.hbase.HBaseUtils.HBaseIdFromRowKey;
 import static org.apache.james.mailbox.hbase.HBaseUtils.flagsToPut;
+import static org.apache.james.mailbox.hbase.HBaseUtils.hBaseIdFromRowKey;
 import static org.apache.james.mailbox.hbase.HBaseUtils.toPut;
 import static org.apache.james.mailbox.hbase.PropertyConvertor.getProperty;
 import static org.apache.james.mailbox.hbase.PropertyConvertor.getValue;
@@ -82,10 +82,10 @@ public class HBaseUtilsTest {
         byte[] result = mailbox.getMailboxId().toBytes();
         assertArrayEquals(expResult, result);
 
-        HBaseId newUUID = HBaseIdFromRowKey(result);
+        HBaseId newUUID = hBaseIdFromRowKey(result);
         assertEquals(uuid, newUUID);
 
-        newUUID = HBaseIdFromRowKey(expResult);
+        newUUID = hBaseIdFromRowKey(expResult);
         assertEquals(uuid, newUUID);
     }
 

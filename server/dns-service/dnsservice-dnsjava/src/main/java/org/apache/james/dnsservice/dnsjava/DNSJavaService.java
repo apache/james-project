@@ -422,9 +422,9 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
     private static String allowIPLiteral(String host) {
         if ((host.charAt(host.length() - 1) == '.')) {
-            String possible_ip_literal = host.substring(0, host.length() - 1);
-            if (org.xbill.DNS.Address.isDottedQuad(possible_ip_literal)) {
-                host = possible_ip_literal;
+            String possibleIpLiteral = host.substring(0, host.length() - 1);
+            if (org.xbill.DNS.Address.isDottedQuad(possibleIpLiteral)) {
+                host = possibleIpLiteral;
             }
         }
         return host;

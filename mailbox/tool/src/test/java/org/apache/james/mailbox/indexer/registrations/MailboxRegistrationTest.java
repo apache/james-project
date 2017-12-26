@@ -72,7 +72,7 @@ public class MailboxRegistrationTest {
 
 
     @Test
-    public void AddedEventsShouldNotBeReported() {
+    public void addedEventsShouldNotBeReported() {
         TreeMap<MessageUid, MessageMetaData> treeMap = new TreeMap<>();
         treeMap.put(UID, new SimpleMessageMetaData(UID, MOD_SEQ, new Flags(), SIZE, new Date(), new DefaultMessageId()));
         MailboxListener.Event event = eventFactory.added(session, treeMap, MAILBOX, ImmutableMap.<MessageUid, MailboxMessage>of());
@@ -81,7 +81,7 @@ public class MailboxRegistrationTest {
     }
 
     @Test
-    public void ExpungedEventsShouldBeReported() {
+    public void expungedEventsShouldBeReported() {
         TreeMap<MessageUid, MessageMetaData> treeMap = new TreeMap<>();
         treeMap.put(UID, new SimpleMessageMetaData(UID, MOD_SEQ, new Flags(), SIZE, new Date(), new DefaultMessageId()));
         MailboxListener.Event event = eventFactory.expunged(session, treeMap, MAILBOX);
@@ -90,7 +90,7 @@ public class MailboxRegistrationTest {
     }
 
     @Test
-    public void FlagsEventsShouldBeReported() {
+    public void flagsEventsShouldBeReported() {
         MailboxListener.Event event = eventFactory.flagsUpdated(session,
             Lists.newArrayList(UID),
             MAILBOX,

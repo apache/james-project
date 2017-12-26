@@ -282,8 +282,8 @@ public class ScriptBuilder {
         return this;
     }
 
-    public ScriptBuilder NEW() {
-        search.NEW();
+    public ScriptBuilder newOperator() {
+        search.newOperator();
         return this;
     }
 
@@ -770,7 +770,7 @@ public class ScriptBuilder {
             return append("LARGER").append(size);
         }
 
-        public Search NEW() {
+        public Search newOperator() {
             return append("NEW");
         }
 

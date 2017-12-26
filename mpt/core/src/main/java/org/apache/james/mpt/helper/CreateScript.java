@@ -572,7 +572,7 @@ public class CreateScript {
         builder.larger(12500).search();
         builder.larger(15000).search();
         builder.larger(20000).search();
-        builder.NEW().search();
+        builder.newOperator().search();
         builder.not().flagged().search();
         builder.msn(3, 5).search();
         builder.msnAndDown(10).search();

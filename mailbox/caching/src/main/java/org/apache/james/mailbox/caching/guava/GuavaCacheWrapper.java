@@ -4,19 +4,19 @@ import org.apache.james.mailbox.caching.CacheLoaderFromUnderlying;
 
 import com.google.common.cache.Cache;
 
-public abstract class GuavaCacheWrapper<Key, Value, Underlying, KeyRepresentation, Except extends Throwable>
-    implements CacheLoaderFromUnderlying<Key, Value, Underlying, Except> {
+public abstract class GuavaCacheWrapper<KeyT, ValueT, UnderlyingT, KeyRepresentationT, ExceptT extends Throwable>
+    implements CacheLoaderFromUnderlying<KeyT, ValueT, UnderlyingT, ExceptT> {
 
-    private final Cache<KeyRepresentation, Value> cache;
-//  private final CacheLoaderFromUnderlying<Key, Value, Underlying, Except> loader;
+    private final Cache<KeyRepresentationT, ValueT> cache;
+//	private final CacheLoaderFromUnderlying<Key, Value, Underlying, Except> loader;
 
-    public GuavaCacheWrapper(Cache<KeyRepresentation, Value> cache/*, CacheLoaderFromUnderlying<Key, Value, Underlying, Except> loader*/) {
+    public GuavaCacheWrapper(Cache<KeyRepresentationT, ValueT> cache/*, CacheLoaderFromUnderlying<Key, Value, Underlying, Except> loader*/) {
         this.cache = cache;
 //        this.loader = loader;
     }
 
-    public Value get(Key key, Underlying underlying) throws Except {
-        Value value = cache.getIfPresent(getKeyRepresentation(key));
+    public ValueT get(KeyT key, UnderlyingT underlying) throws ExceptT {
+        ValueT value = cache.getIfPresent(getKeyRepresentation(key));
         if (value != null) {
             return value;
         } else {
@@ -29,12 +29,12 @@ public abstract class GuavaCacheWrapper<Key, Value, Underlying, KeyRepresentatio
 
     }
 
-    public void invalidate(Key key) {
+    public void invalidate(KeyT key) {
         if (key != null) { //needed?
             cache.invalidate(getKeyRepresentation(key));
         }
     }
 
-    public abstract KeyRepresentation getKeyRepresentation(Key key);
+    public abstract KeyRepresentationT getKeyRepresentation(KeyT key);
 
 }

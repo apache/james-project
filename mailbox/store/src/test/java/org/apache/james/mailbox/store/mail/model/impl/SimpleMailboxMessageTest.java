@@ -56,8 +56,8 @@ public class SimpleMailboxMessageTest {
     public static final int BODY_START_OCTET = 0;
     public static final MessageId MESSAGE_ID = new TestMessageId.Factory().generate();
     public static final int SIZE = 1000;
-    private SimpleMailboxMessage MESSAGE;
-    private SimpleMailboxMessage MESSAGE_SPECIAL_CHAR;
+    private SimpleMailboxMessage message;
+    private SimpleMailboxMessage messageSpecialChar;
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -67,19 +67,19 @@ public class SimpleMailboxMessageTest {
 
     @Before
     public void setUp() {
-        MESSAGE = buildMessage(MESSAGE_CONTENT);
-        MESSAGE_SPECIAL_CHAR = buildMessage(MESSAGE_CONTENT_SPECIAL_CHAR);
+        this.message = buildMessage(MESSAGE_CONTENT);
+        this.messageSpecialChar = buildMessage(MESSAGE_CONTENT_SPECIAL_CHAR);
     }
 
     @Test
     public void testSize() {
-        assertThat(MESSAGE.getFullContentOctets()).isEqualTo(MESSAGE_CONTENT.length());
+        assertThat(message.getFullContentOctets()).isEqualTo(MESSAGE_CONTENT.length());
     }
 
     @Test
     public void testInputStreamSize() throws IOException {
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-            byteArrayOutputStream.write(MESSAGE.getFullContent());
+            byteArrayOutputStream.write(message.getFullContent());
             assertThat(byteArrayOutputStream.size()).isEqualTo(MESSAGE_CONTENT.getBytes(MESSAGE_CHARSET).length);
         }
     }
@@ -87,21 +87,21 @@ public class SimpleMailboxMessageTest {
     @Test
     public void testInputStreamSizeSpecialCharacters() throws IOException {
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-            byteArrayOutputStream.write(MESSAGE_SPECIAL_CHAR.getFullContent());
+            byteArrayOutputStream.write(messageSpecialChar.getFullContent());
             assertThat(byteArrayOutputStream.size()).isEqualTo(MESSAGE_CONTENT_SPECIAL_CHAR.getBytes(MESSAGE_CHARSET).length);
         }
     }
 
     @Test
     public void testFullContent() throws IOException {
-        assertThat(new String(IOUtils.toByteArray(MESSAGE.getFullContent()), MESSAGE_CHARSET)).isEqualTo(MESSAGE_CONTENT);
-        assertThat(new String(IOUtils.toByteArray(MESSAGE_SPECIAL_CHAR.getFullContent()), MESSAGE_CHARSET)).isEqualTo(MESSAGE_CONTENT_SPECIAL_CHAR);
+        assertThat(new String(IOUtils.toByteArray(message.getFullContent()), MESSAGE_CHARSET)).isEqualTo(MESSAGE_CONTENT);
+        assertThat(new String(IOUtils.toByteArray(messageSpecialChar.getFullContent()), MESSAGE_CHARSET)).isEqualTo(MESSAGE_CONTENT_SPECIAL_CHAR);
     }
 
     @Test
     public void simpleMessageShouldReturnTheSameUserFlagsThatThoseProvided() {
-        MESSAGE.setFlags(new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("mozzarela", "parmesan", "coppa", "limonchello").build());
-        assertThat(MESSAGE.createUserFlags()).containsOnly("mozzarela", "parmesan", "coppa", "limonchello");
+        message.setFlags(new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("mozzarela", "parmesan", "coppa", "limonchello").build());
+        assertThat(message.createUserFlags()).containsOnly("mozzarela", "parmesan", "coppa", "limonchello");
     }
 
     @Test

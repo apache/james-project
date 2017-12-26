@@ -36,18 +36,18 @@ import org.junit.Test;
  */
 public class NamingExceptionRetryHandlerTest {
 
-    private Class<?>[] _exceptionClasses = null;
-    private ExceptionRetryingProxy _proxy = null;
-    private RetrySchedule _schedule = null;
+    private Class<?>[] exceptionClasses = null;
+    private ExceptionRetryingProxy proxy = null;
+    private RetrySchedule schedule = null;
 
     /**
      * @see junit.framework.TestCase#setUp()
      */
     @Before
     public void setUp() throws Exception {
-    _exceptionClasses = new Class<?>[]{NamingException.class};
-    _proxy = new TestRetryingProxy();
-    _schedule = new TestRetrySchedule();
+    exceptionClasses = new Class<?>[]{NamingException.class};
+    proxy = new TestRetryingProxy();
+    schedule = new TestRetrySchedule();
     }
 
     private class TestRetryingProxy implements ExceptionRetryingProxy {
@@ -89,7 +89,7 @@ public class NamingExceptionRetryHandlerTest {
     @Test
     public final void testExceptionRetryHandler() {
     assertTrue(RetryHandler.class.isAssignableFrom(new NamingExceptionRetryHandler(
-        _exceptionClasses, _proxy, _schedule, 0) {
+        exceptionClasses, proxy, schedule, 0) {
 
         @Override
         public Object operation() throws Exception {
@@ -105,7 +105,7 @@ public class NamingExceptionRetryHandlerTest {
     @Test
     public final void testPerform() throws NamingException {
     Object result = new NamingExceptionRetryHandler(
-        _exceptionClasses, _proxy, _schedule, 0) {
+        exceptionClasses, proxy, schedule, 0) {
 
         @Override
         public Object operation() throws NamingException {
@@ -116,7 +116,7 @@ public class NamingExceptionRetryHandlerTest {
 
     try {
         new NamingExceptionRetryHandler(
-            _exceptionClasses, _proxy, _schedule, 0) {
+            exceptionClasses, proxy, schedule, 0) {
 
         @Override
         public Object operation() throws Exception {

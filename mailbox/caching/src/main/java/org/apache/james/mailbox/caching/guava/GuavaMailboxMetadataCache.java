@@ -69,9 +69,9 @@ public class GuavaMailboxMetadataCache extends AbstractGuavaCache implements Mai
     }
 
 
-    abstract class MetadataCacheWrapper<Value> extends GuavaCacheWrapper<Mailbox, Value, MessageMapper, MailboxId, MailboxException> {
+    abstract class MetadataCacheWrapper<ValueT> extends GuavaCacheWrapper<Mailbox, ValueT, MessageMapper, MailboxId, MailboxException> {
 
-        public MetadataCacheWrapper(Cache<MailboxId, Value> cache) {
+        public MetadataCacheWrapper(Cache<MailboxId, ValueT> cache) {
             super(cache);
         }
 

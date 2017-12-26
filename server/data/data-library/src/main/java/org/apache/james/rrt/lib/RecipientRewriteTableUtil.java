@@ -115,18 +115,18 @@ public class RecipientRewriteTableUtil {
      * @return the substituted string
      */
     private static String substituteSubString(String input, String find, String replace) {
-        int find_length = find.length();
-        int replace_length = replace.length();
+        int findLength = find.length();
+        int replaceLength = replace.length();
 
         StringBuilder output = new StringBuilder(input);
         int index = input.indexOf(find);
         int outputOffset = 0;
 
         while (index > -1) {
-            output.replace(index + outputOffset, index + outputOffset + find_length, replace);
-            outputOffset = outputOffset + (replace_length - find_length);
+            output.replace(index + outputOffset, index + outputOffset + findLength, replace);
+            outputOffset = outputOffset + (replaceLength - findLength);
 
-            index = input.indexOf(find, index + find_length);
+            index = input.indexOf(find, index + findLength);
         }
 
         String result = output.toString();

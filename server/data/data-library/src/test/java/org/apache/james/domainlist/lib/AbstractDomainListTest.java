@@ -39,12 +39,12 @@ public abstract class AbstractDomainListTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDomainListTest.class);
 
-    private final String DOMAIN_1 = "domain1.tld";
-    private final String DOMAIN_2 = "domain2.tld";
-    private final String DOMAIN_3 = "domain3.tld";
-    private final String DOMAIN_4 = "domain4.tld";
-    private final String DOMAIN_5 = "domain5.tld";
-    private final String DOMAIN_UPPER_5 = "Domain5.tld";
+    private static final String DOMAIN_1 = "domain1.tld";
+    private static final String DOMAIN_2 = "domain2.tld";
+    private static final String DOMAIN_3 = "domain3.tld";
+    private static final String DOMAIN_4 = "domain4.tld";
+    private static final String DOMAIN_5 = "domain5.tld";
+    private static final String DOMAIN_UPPER_5 = "Domain5.tld";
 
     private DomainList domainList;
 
@@ -117,21 +117,21 @@ public abstract class AbstractDomainListTest {
     }
 
     @Test
-    public void ContainsShouldReturnFalseWhenDomainIsRemoved() throws DomainListException {
+    public void containsShouldReturnFalseWhenDomainIsRemoved() throws DomainListException {
         domainList.addDomain(DOMAIN_1);
         domainList.removeDomain(DOMAIN_1);
         assertThat(domainList.containsDomain(DOMAIN_1)).isFalse();
     }
 
     @Test
-    public void RemoveShouldRemoveDomainsUsingUpperCases() throws DomainListException {
+    public void removeShouldRemoveDomainsUsingUpperCases() throws DomainListException {
         domainList.addDomain(DOMAIN_UPPER_5);
         domainList.removeDomain(DOMAIN_UPPER_5);
         assertThat(domainList.containsDomain(DOMAIN_UPPER_5)).isFalse();
     }
 
     @Test
-    public void RemoveShouldRemoveDomainsUsingLowerCases() throws DomainListException {
+    public void removeShouldRemoveDomainsUsingLowerCases() throws DomainListException {
         domainList.addDomain(DOMAIN_UPPER_5);
         domainList.removeDomain(DOMAIN_5);
         assertThat(domainList.containsDomain(DOMAIN_UPPER_5)).isFalse();

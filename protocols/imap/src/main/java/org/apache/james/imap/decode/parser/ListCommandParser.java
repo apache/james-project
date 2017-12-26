@@ -23,7 +23,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapRequestLineReader;
-import org.apache.james.imap.decode.ImapRequestLineReader.ATOM_CHARValidator;
+import org.apache.james.imap.decode.ImapRequestLineReader.AtomCharValidator;
 import org.apache.james.imap.message.request.ListRequest;
 import org.apache.james.protocols.imap.DecodingException;
 
@@ -59,7 +59,7 @@ public class ListCommandParser extends AbstractUidCommandParser {
         }
     }
 
-    private class ListCharValidator extends ATOM_CHARValidator {
+    private class ListCharValidator extends AtomCharValidator {
         public boolean isValid(char chr) {
             if (ImapRequestLineReader.isListWildcard(chr)) {
                 return true;

@@ -39,11 +39,12 @@ import org.apache.james.util.retry.api.RetrySchedule;
  * @see org.apache.james.util.retry.naming.RetryingContext
  */
 public abstract class ExceptionRetryHandler implements RetryHandler {
-    private Class<?>[] _exceptionClasses = null;
+
+    private Class<?>[] exceptionClasses = null;
     
-        private ExceptionRetryingProxy _proxy = null;
-        private RetrySchedule _schedule;
-        private int _maxRetries = 0;
+    private ExceptionRetryingProxy proxy = null;
+    private RetrySchedule schedule;
+    private int maxRetries = 0;
 
         /**
          * Creates a new instance of ExceptionRetryHandler.
@@ -63,10 +64,10 @@ public abstract class ExceptionRetryHandler implements RetryHandler {
          */
         public ExceptionRetryHandler(Class<?>[] exceptionClasses, ExceptionRetryingProxy proxy, RetrySchedule schedule, int maxRetries) {
             this();
-            _exceptionClasses = exceptionClasses;
-            _proxy = proxy;
-            _schedule = schedule;
-            _maxRetries = maxRetries;
+            this.exceptionClasses = exceptionClasses;
+            this.proxy = proxy;
+            this.schedule = schedule;
+            this.maxRetries = maxRetries;
         }
 
         /**
@@ -78,13 +79,13 @@ public abstract class ExceptionRetryHandler implements RetryHandler {
             while (!success) {
                 try {
                     if (retryCount > 0) {
-                        _proxy.resetDelegate();
+                        proxy.resetDelegate();
                     }
                     result = operation();
                     success = true;
 
                 } catch (Exception ex) {
-                    if (retryCount >= _maxRetries || !isRetryable(ex)) {
+                    if (retryCount >= maxRetries || !isRetryable(ex)) {
                         throw ex;
                     }
                     postFailure(ex, retryCount);
@@ -93,7 +94,7 @@ public abstract class ExceptionRetryHandler implements RetryHandler {
                     } catch (InterruptedException ex1) {
                         // no-op
                     }
-                    retryCount = _maxRetries < 0 ? _maxRetries
+                    retryCount = maxRetries < 0 ? maxRetries
                             : retryCount + 1;
                 }
             }
@@ -108,8 +109,8 @@ public abstract class ExceptionRetryHandler implements RetryHandler {
          */
         private boolean isRetryable(Throwable ex) {
             boolean isRetryable = false;
-            for (int i = 0; !isRetryable && i < _exceptionClasses.length; i++) {
-                isRetryable = _exceptionClasses[i].isInstance(ex);
+            for (int i = 0; !isRetryable && i < exceptionClasses.length; i++) {
+                isRetryable = exceptionClasses[i].isInstance(ex);
             }
             return isRetryable;
         }
@@ -128,6 +129,6 @@ public abstract class ExceptionRetryHandler implements RetryHandler {
          * @return the retryInterval
          */
         public long getRetryInterval(int retryCount) {
-            return _schedule.getInterval(retryCount);
+            return schedule.getInterval(retryCount);
         }
 }

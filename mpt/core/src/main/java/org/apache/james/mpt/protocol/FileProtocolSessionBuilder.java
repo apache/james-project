@@ -103,41 +103,41 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
             while ((next = reader.readLine()) != null) {
                 String location = fileName + ":" + lineNumber;
                 if (SERVER_CONTINUATION_TAG.equals(next)) {
-                    session.CONT(sessionNumber);
+                    session.cont(sessionNumber);
                 } else if (next.startsWith(CLIENT_TAG)) {
                     String clientMsg = "";
                     if (next.length() > 3) {
                         clientMsg = next.substring(3);
                     }
-                    session.CL(sessionNumber, clientMsg);
+                    session.cl(sessionNumber, clientMsg);
                     lastClientMsg = clientMsg;
                 } else if (next.startsWith(SERVER_TAG)) {
                     String serverMsg = "";
                     if (next.length() > 3) {
                         serverMsg = next.substring(3);
                     }
-                    session.SL(sessionNumber, serverMsg, location, lastClientMsg);
+                    session.sl(sessionNumber, serverMsg, location, lastClientMsg);
                 } else if (next.startsWith(WAIT)) {
                     if (next.length() > 5) {
-                        session.WAIT(sessionNumber, Long.valueOf(next.substring(5)));
+                        session.wait(sessionNumber, Long.valueOf(next.substring(5)));
                     } else {
                         throw new Exception("Invalid line length on WAIT instruction : " + next);
                     }
                 } else if (next.startsWith(LOG)) {
                     String logInstruction = next.substring(4);
                     if (logInstruction.startsWith(DEBUG)) {
-                        session.LOG(sessionNumber, ProtocolSession.LolLevel.Debug, logInstruction.substring(6));
+                        session.log(sessionNumber, ProtocolSession.LolLevel.Debug, logInstruction.substring(6));
                     } else if (logInstruction.startsWith(INFO)) {
-                        session.LOG(sessionNumber, ProtocolSession.LolLevel.Info, logInstruction.substring(5));
+                        session.log(sessionNumber, ProtocolSession.LolLevel.Info, logInstruction.substring(5));
                     } else if (logInstruction.startsWith(WARN)) {
-                        session.LOG(sessionNumber, ProtocolSession.LolLevel.Warn, logInstruction.substring(5));
+                        session.log(sessionNumber, ProtocolSession.LolLevel.Warn, logInstruction.substring(5));
                     } else if (logInstruction.startsWith(ERR)) {
-                        session.LOG(sessionNumber, ProtocolSession.LolLevel.Err, logInstruction.substring(4));
+                        session.log(sessionNumber, ProtocolSession.LolLevel.Err, logInstruction.substring(4));
                     } else {
                         throw new Exception("Unrecognized log level for " + next);
                     }
                 } else if (next.startsWith(REINIT)) {
-                    session.REINIT(sessionNumber);
+                    session.reinit(sessionNumber);
                 } else if (next.startsWith(OPEN_UNORDERED_BLOCK_TAG)) {
                     List<String> unorderedLines = new ArrayList<>(5);
                     next = reader.readLine();
@@ -164,7 +164,7 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
 
                     }
 
-                    session.SUB(sessionNumber, unorderedLines, location, lastClientMsg);
+                    session.sub(sessionNumber, unorderedLines, location, lastClientMsg);
                 } else if (next.startsWith(COMMENT_TAG) || next.trim().length() == 0) {
                     // ignore these lines.
                 } else if (next.startsWith(SESSION_TAG)) {
@@ -176,7 +176,7 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
                 } else if (next.startsWith(TIMER)) {
                     TimerCommand timerCommand = TimerCommand.from(next.substring(TIMER_COMMAND_START, TIMER_COMMAND_END));
                     String timerName = next.substring(TIMER_COMMAND_END + 1);
-                    session.TIMER(timerCommand, timerName);
+                    session.timer(timerCommand, timerName);
                 } else {
                     String prefix = next;
                     if (next.length() > 3) {

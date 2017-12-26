@@ -36,9 +36,9 @@ import org.apache.james.util.retry.api.RetrySchedule;
  */
 public class DoublingRetrySchedule implements RetrySchedule {
     
-    private long _startInterval = 0;
-    private long _maxInterval = 0;
-    private long _multiplier = 1;
+    private long startInterval = 0;
+    private long maxInterval = 0;
+    private long multiplier = 1;
 
     /**
      * Creates a new instance of DoublingRetrySchedule.
@@ -71,23 +71,23 @@ public class DoublingRetrySchedule implements RetrySchedule {
      */
     public DoublingRetrySchedule(long startInterval, long maxInterval, int multiplier) {
         this();
-        _startInterval = Math.max(0, startInterval);
-        _maxInterval = Math.max(0, maxInterval);
-        _multiplier = Math.max(1, multiplier);
+        this.startInterval = Math.max(0, startInterval);
+        this.maxInterval = Math.max(0, maxInterval);
+        this.multiplier = Math.max(1, multiplier);
     }
 
     /**
      */
     @Override
     public long getInterval(int index) {
-        if (_startInterval > 0) {
-            return getInterval(index, _startInterval);
+        if (startInterval > 0) {
+            return getInterval(index, startInterval);
         }
         return index == 0 ? 0 : getInterval(index - 1, 1);
     }
     
     private long getInterval(int index, long startInterval) {
-        return _multiplier * Math.min((long) (startInterval * Math.pow(2, index)), _maxInterval);
+        return multiplier * Math.min((long) (startInterval * Math.pow(2, index)), maxInterval);
     }    
 
     /**
@@ -96,8 +96,8 @@ public class DoublingRetrySchedule implements RetrySchedule {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("DoublingRetrySchedule [startInterval=").append(_startInterval).append(
-                ", maxInterval=").append(_maxInterval).append(", multiplier=").append(_multiplier).append("]");
+        builder.append("DoublingRetrySchedule [startInterval=").append(startInterval).append(
+                ", maxInterval=").append(maxInterval).append(", multiplier=").append(multiplier).append("]");
         return builder.toString();
     }
 

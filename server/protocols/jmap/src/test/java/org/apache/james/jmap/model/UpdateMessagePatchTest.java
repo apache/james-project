@@ -36,7 +36,7 @@ public class UpdateMessagePatchTest {
     public ExpectedException expectedException = ExpectedException.none();
 
     @Test
-    public void UnsetUpdatePatchShouldBeValid() {
+    public void unsetUpdatePatchShouldBeValid() {
         UpdateMessagePatch emptyPatch = UpdateMessagePatch.builder().build();
         assertThat(emptyPatch.isValid()).isTrue();
     }

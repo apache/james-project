@@ -86,35 +86,35 @@ public class RejectAction implements MailAction {
         humanText.append("\r\n");
         humanText.append(anAction.getMessage());
 
-        String reporting_UA_name = null;
+        String reportingUAName = null;
         try {
-            reporting_UA_name = InetAddress.getLocalHost()
+            reportingUAName = InetAddress.getLocalHost()
                     .getCanonicalHostName();
         } catch (UnknownHostException ex) {
-            reporting_UA_name = "localhost";
+            reportingUAName = "localhost";
         }
 
-        String reporting_UA_product = context.getServerInfo();
+        String reportingUAProduct = context.getServerInfo();
 
         String[] originalRecipients = aMail.getMessage().getHeader(
                 "Original-Recipient");
-        String original_recipient = null;
+        String originalRecipient = null;
         if (null != originalRecipients && originalRecipients.length > 0) {
-            original_recipient = originalRecipients[0];
+            originalRecipient = originalRecipients[0];
         }
 
         MailAddress soleRecipient = ActionUtils.getSoleRecipient(aMail);
-        String final_recipient = soleRecipient.asString();
-        String original_message_id = aMail.getMessage().getMessageID();
+        String finalRecipient = soleRecipient.asString();
+        String originalMessageId = aMail.getMessage().getMessageID();
 
         Multipart multipart = MDN.builder()
             .humanReadableText(humanText.toString())
             .report(
                 MDNReport.builder()
-                    .reportingUserAgentField(reporting_UA_name, reporting_UA_product)
-                    .finalRecipientField(final_recipient)
-                    .originalRecipientField(original_recipient)
-                    .originalMessageIdField(original_message_id)
+                    .reportingUserAgentField(reportingUAName, reportingUAProduct)
+                    .finalRecipientField(finalRecipient)
+                    .originalRecipientField(originalRecipient)
+                    .originalMessageIdField(originalMessageId)
                     .dispositionField(Disposition.builder()
                         .actionMode(DispositionActionMode.Automatic)
                         .sendingMode(DispositionSendingMode.Automatic)

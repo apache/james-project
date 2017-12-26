@@ -38,13 +38,13 @@ public class KafkaPublisher implements Publisher {
     private static final Logger LOG = LoggerFactory.getLogger(KafkaPublisher.class);
 
     private Producer<String, byte[]> producer;
-    private final int kafka_port;
-    private final String kafka_ip;
+    private final int kafkaPort;
+    private final String kafkaIp;
     private boolean producerLaunched;
 
-    public KafkaPublisher(String kafkaHostIpString, int kafka_port) {
-        this.kafka_ip = kafkaHostIpString;
-        this.kafka_port = kafka_port;
+    public KafkaPublisher(String kafkaHostIpString, int kafkaPort) {
+        this.kafkaIp = kafkaHostIpString;
+        this.kafkaPort = kafkaPort;
         producerLaunched = false;
     }
 
@@ -53,7 +53,7 @@ public class KafkaPublisher implements Publisher {
     public void init() {
         if (!producerLaunched) {
             Properties props = new Properties();
-            props.put("metadata.broker.list", kafka_ip + ":" + kafka_port);
+            props.put("metadata.broker.list", kafkaIp + ":" + kafkaPort);
             props.put("serializer.class", "kafka.serializer.DefaultEncoder");
             props.put("request.required.acks", "1");
             ProducerConfig config = new ProducerConfig(props);

@@ -96,25 +96,25 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractJdbcUsersRepository.class);
 
-    protected Map<String, String> m_sqlParameters;
+    protected Map<String, String> sqlParameters;
 
-    private String m_sqlFileName;
+    private String sqlFileName;
 
-    private DataSource m_datasource;
+    private DataSource datasource;
 
     // Fetches all Users from the db.
-    private String m_getUsersSql;
+    private String getUsersSql;
 
     // This fetch a user by name, ensuring case-insensitive matching.
-    private String m_userByNameCaseInsensitiveSql;
+    private String userByNameCaseInsensitiveSql;
 
     // Insert, update and delete sql statements are not guaranteed
     // to be case-insensitive; this is handled in code.
-    private String m_insertUserSql;
+    private String insertUserSql;
 
-    private String m_updateUserSql;
+    private String updateUserSql;
 
-    private String m_deleteUserSql;
+    private String deleteUserSql;
 
     // The JDBCUtil helper class
     private JDBCUtil theJDBCUtil;
@@ -213,12 +213,12 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
     /**
      * Set the DataSourceSelector
      * 
-     * @param m_datasource
+     * @param datasource
      *            the DataSourceSelector
      */
     @Inject
-    public void setDatasource(DataSource m_datasource) {
-        this.m_datasource = m_datasource;
+    public void setDatasource(DataSource datasource) {
+        this.datasource = datasource;
     }
 
     /**
@@ -259,31 +259,31 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
             InputStream sqlFile;
 
             try {
-                sqlFile = fileSystem.getResource(m_sqlFileName);
+                sqlFile = fileSystem.getResource(sqlFileName);
             } catch (Exception e) {
                 LOGGER.error(e.getMessage(), e);
                 throw e;
             }
 
-            LOGGER.debug("Reading SQL resources from: {}, section {}.", m_sqlFileName, getClass().getName());
+            LOGGER.debug("Reading SQL resources from: {}, section {}.", sqlFileName, getClass().getName());
 
             SqlResources sqlStatements = new SqlResources();
-            sqlStatements.init(sqlFile, this.getClass().getName(), conn, m_sqlParameters);
+            sqlStatements.init(sqlFile, this.getClass().getName(), conn, sqlParameters);
 
             // Create the SQL Strings to use for this table.
             // Fetches all Users from the db.
-            m_getUsersSql = sqlStatements.getSqlString("select", true);
+            getUsersSql = sqlStatements.getSqlString("select", true);
 
             // Get a user by lowercase name. (optional)
             // If not provided, the entire list is iterated to find a user.
-            m_userByNameCaseInsensitiveSql = sqlStatements.getSqlString("selectByLowercaseName");
+            userByNameCaseInsensitiveSql = sqlStatements.getSqlString("selectByLowercaseName");
 
             // Insert, update and delete are not guaranteed to be
             // case-insensitive
             // Will always be called with correct case in username..
-            m_insertUserSql = sqlStatements.getSqlString("insert", true);
-            m_updateUserSql = sqlStatements.getSqlString("update", true);
-            m_deleteUserSql = sqlStatements.getSqlString("delete", true);
+            insertUserSql = sqlStatements.getSqlString("insert", true);
+            updateUserSql = sqlStatements.getSqlString("update", true);
+            deleteUserSql = sqlStatements.getSqlString("delete", true);
 
             // Creates a single table with "username" the Primary Key.
             String createUserTableSql = sqlStatements.getSqlString("createTable", true);
@@ -373,15 +373,15 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
         }
 
         // Build SqlParameters and get datasource name from URL parameters
-        m_sqlParameters = new HashMap<>();
+        sqlParameters = new HashMap<>();
         switch (urlParams.size()) {
         case 3:
-            m_sqlParameters.put("key", urlParams.get(2));
-            m_sqlParameters.put("table", urlParams.get(1));
+            sqlParameters.put("key", urlParams.get(2));
+            sqlParameters.put("table", urlParams.get(1));
             urlParams.get(0);
             break;
         case 2:
-            m_sqlParameters.put("table", urlParams.get(1));
+            sqlParameters.put("table", urlParams.get(1));
             urlParams.get(0);
             break;
         case 1:
@@ -391,10 +391,10 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
             throw new ConfigurationException("Malformed destinationURL - " + "Must be of the format \"db://<data-source>[/<table>[/<key>]]\".");
         }
 
-        LOGGER.debug("Parsed URL: table = '{}', key = '{}'", m_sqlParameters.get("table"), m_sqlParameters.get("key"));
+        LOGGER.debug("Parsed URL: table = '{}', key = '{}'", sqlParameters.get("table"), sqlParameters.get("key"));
 
         // Get the SQL file location
-        m_sqlFileName = configuration.getString("sqlFile", null);
+        sqlFileName = configuration.getString("sqlFile", null);
 
         // Get other sql parameters from the configuration object,
         // if any.
@@ -403,7 +403,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
             String rawName = paramIt.next();
             String paramName = paramIt.next().substring("sqlParameters.[@".length(), rawName.length() - 1);
             String paramValue = configuration.getString(rawName);
-            m_sqlParameters.put(paramName, paramValue);
+            sqlParameters.put(paramName, paramValue);
         }
     }
 
@@ -448,7 +448,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
         try {
             conn = openConnection();
             // Get a ResultSet containing all users.
-            getUsersStatement = conn.prepareStatement(m_getUsersSql);
+            getUsersStatement = conn.prepareStatement(getUsersSql);
             rsUsers = getUsersStatement.executeQuery();
 
             // Loop through and build a User for every row.
@@ -483,7 +483,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
         try {
             conn = openConnection();
             // Get a PreparedStatement for the insert.
-            addUserStatement = conn.prepareStatement(m_insertUserSql);
+            addUserStatement = conn.prepareStatement(insertUserSql);
 
             setUserForInsertStatement(user, addUserStatement);
 
@@ -513,7 +513,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
         // Delete from the database.
         try {
             conn = openConnection();
-            removeUserStatement = conn.prepareStatement(m_deleteUserSql);
+            removeUserStatement = conn.prepareStatement(deleteUserSql);
             removeUserStatement.setString(1, username);
             removeUserStatement.execute();
         } catch (SQLException sqlExc) {
@@ -538,7 +538,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
         // Update the database.
         try {
             conn = openConnection();
-            updateUserStatement = conn.prepareStatement(m_updateUserSql);
+            updateUserStatement = conn.prepareStatement(updateUserSql);
             setUserForUpdateStatement(user, updateUserStatement);
             updateUserStatement.execute();
         } catch (SQLException sqlExc) {
@@ -592,7 +592,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
     protected User getUserByName(String name, boolean ignoreCase) throws UsersRepositoryException {
         // See if this statement has been set, if not, use
         // simple superclass method.
-        if (m_userByNameCaseInsensitiveSql == null) {
+        if (userByNameCaseInsensitiveSql == null) {
             return getUserByNameIterating(name, ignoreCase);
         }
 
@@ -604,7 +604,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
         try {
             conn = openConnection();
             // Get a ResultSet containing all users.
-            String sql = m_userByNameCaseInsensitiveSql;
+            String sql = userByNameCaseInsensitiveSql;
             getUsersStatement = conn.prepareStatement(sql);
 
             getUsersStatement.setString(1, name.toLowerCase(Locale.US));
@@ -688,7 +688,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      * @throws SQLException
      */
     private Connection openConnection() throws SQLException {
-        return m_datasource.getConnection();
+        return datasource.getConnection();
 
     }
 }

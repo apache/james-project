@@ -170,14 +170,14 @@ public class AttachmentMessageIdCreationTest {
         MessageUid messageUid = MessageUid.of(1);
         CassandraId mailboxId = CassandraId.timeBased();
         String content = "Subject: Any subject \n\nThis is the body\n.\n";
-        int BODY_START = 22;
+        int bodyStart = 22;
 
         return SimpleMailboxMessage.builder()
             .messageId(messageId)
             .mailboxId(mailboxId)
             .uid(messageUid)
             .internalDate(new Date())
-            .bodyStartOctet(BODY_START)
+            .bodyStartOctet(bodyStart)
             .size(content.length())
             .content(new SharedByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)))
             .flags(new Flags())

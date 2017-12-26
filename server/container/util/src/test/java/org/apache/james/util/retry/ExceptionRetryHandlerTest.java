@@ -38,18 +38,18 @@ import org.junit.Test;
  */
 public class ExceptionRetryHandlerTest {
 
-    private Class<?>[] _exceptionClasses = null;
-    private ExceptionRetryingProxy _proxy = null;
-    private RetrySchedule _schedule = null;
+    private Class<?>[] exceptionClasses = null;
+    private ExceptionRetryingProxy proxy = null;
+    private RetrySchedule schedule = null;
 
     /**
      * @see junit.framework.TestCase#setUp()
      */
     @Before
     public void setUp() throws Exception {
-    _exceptionClasses = new Class<?>[]{Exception.class};
-    _proxy = new TestRetryingProxy();
-    _schedule = new TestRetrySchedule();
+    exceptionClasses = new Class<?>[]{Exception.class};
+    proxy = new TestRetryingProxy();
+    schedule = new TestRetrySchedule();
     }
 
     private class TestRetryingProxy implements ExceptionRetryingProxy {
@@ -91,7 +91,7 @@ public class ExceptionRetryHandlerTest {
     @Test
     public final void testExceptionRetryHandler() {
     assertTrue(RetryHandler.class.isAssignableFrom(new ExceptionRetryHandler(
-        _exceptionClasses, _proxy, _schedule, 0) {
+        exceptionClasses, proxy, schedule, 0) {
 
         @Override
         public Object operation() throws Exception {
@@ -107,7 +107,7 @@ public class ExceptionRetryHandlerTest {
     @Test
     public final void testPerform() throws Exception {
     Object result = new ExceptionRetryHandler(
-        _exceptionClasses, _proxy, _schedule, 0) {
+        exceptionClasses, proxy, schedule, 0) {
 
         @Override
         public Object operation() throws Exception {
@@ -118,7 +118,7 @@ public class ExceptionRetryHandlerTest {
 
     try {
         new ExceptionRetryHandler(
-            _exceptionClasses, _proxy, _schedule, 0) {
+            exceptionClasses, proxy, schedule, 0) {
 
         @Override
         public Object operation() throws Exception {
@@ -138,7 +138,7 @@ public class ExceptionRetryHandlerTest {
     public final void testPostFailure() {
     final List<Exception> results = new ArrayList<>();
     RetryHandler handler = new ExceptionRetryHandler(
-        _exceptionClasses, _proxy, _schedule, 7) {
+        exceptionClasses, proxy, schedule, 7) {
 
         @Override
         public void postFailure(Exception ex, int retryCount) {
@@ -166,7 +166,7 @@ public class ExceptionRetryHandlerTest {
     @Test
     public final void testOperation() throws Exception {
     RetryHandler handler = new ExceptionRetryHandler(
-        _exceptionClasses, _proxy, _schedule, 0) {
+        exceptionClasses, proxy, schedule, 0) {
 
         @Override
         public Object operation() throws Exception {
@@ -182,7 +182,7 @@ public class ExceptionRetryHandlerTest {
     @Test
     public final void testGetRetryInterval() {
     ExceptionRetryHandler handler = new ExceptionRetryHandler(
-        _exceptionClasses, _proxy, _schedule, 0) {
+        exceptionClasses, proxy, schedule, 0) {
 
         @Override
         public Object operation() throws Exception {

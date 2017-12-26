@@ -44,15 +44,15 @@ public class KafkaMessageConsumer implements MessageConsumer {
 
     private class Consumer implements Runnable {
 
-        private final KafkaStream<byte[], byte[]> m_stream;
+        private final KafkaStream<byte[], byte[]> stream;
 
-        public Consumer(KafkaStream<byte[], byte[]> a_stream) {
-            m_stream = a_stream;
+        public Consumer(KafkaStream<byte[], byte[]> stream) {
+            this.stream = stream;
         }
 
         public void run() {
-            for (MessageAndMetadata<byte[], byte[]> aM_stream : m_stream) {
-                messageReceiver.receiveSerializedEvent(aM_stream.message());
+            for (MessageAndMetadata<byte[], byte[]> message : stream) {
+                messageReceiver.receiveSerializedEvent(message.message());
             }
         }
     }

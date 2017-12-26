@@ -86,11 +86,11 @@ public class WebAdminConfiguration {
             return this;
         }
 
-        public Builder CORSenabled() {
+        public Builder corsEnabled() {
             return enableCORS(true);
         }
 
-        public Builder CORSdisabled() {
+        public Builder corsDisabled() {
             return enableCORS(false);
         }
 

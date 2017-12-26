@@ -28,7 +28,7 @@ import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
 public class BasicImapCommands implements ImapTestConstants {
     
     public static void welcome(GenericSimpleScriptedTestProtocol<?, ?> scriptedTestProtocol) {
-        scriptedTestProtocol.preElements().SL("\\* OK IMAP4rev1 Server ready", "BaseAuthenticatedState.java:32");
+        scriptedTestProtocol.preElements().sl("\\* OK IMAP4rev1 Server ready", "BaseAuthenticatedState.java:32");
     }
     
     public static void authenticate(GenericSimpleScriptedTestProtocol<?, ?> scriptedTestProtocol) {
@@ -37,29 +37,29 @@ public class BasicImapCommands implements ImapTestConstants {
 
 
     private static void addLogin(ProtocolInteractor preElements, String username, String password) {
-        preElements.CL("a001 LOGIN " + username + " " + password);
-        preElements.SL("a001 OK .*", "BaseAuthenticatedState.java:53");
+        preElements.cl("a001 LOGIN " + username + " " + password);
+        preElements.sl("a001 OK .*", "BaseAuthenticatedState.java:53");
     }
     
     public static void selectInbox(SimpleScriptedTestProtocol scriptedTestProtocol) {
         ProtocolInteractor preElements = scriptedTestProtocol.preElements();
         
-        preElements.CL("abcd SELECT inbox");
-        preElements.SL("\\* FLAGS \\(\\\\Answered \\\\Deleted \\\\Draft \\\\Flagged \\\\Seen\\)", "BasicImapCommands");
-        preElements.SL("\\* \\d+ EXISTS", "BasicImapCommands");
-        preElements.SL("\\* \\d+ RECENT", "BasicImapCommands");
-        preElements.SL("\\* OK \\[UIDVALIDITY \\d+\\].*", "BasicImapCommands");
-        preElements.SL("\\* OK \\[PERMANENTFLAGS \\(\\\\Answered \\\\Deleted \\\\Draft \\\\Flagged \\\\\\Seen( \\\\\\*)?\\)\\].*", "BasicImapCommands");
-        preElements.SL("\\* OK \\[HIGHESTMODSEQ \\d+\\].*", "BasicImapCommands");
-        preElements.SL("\\* OK \\[UIDNEXT 1\\].*", "BasicImapCommands");
-        preElements.SL("abcd OK \\[READ-WRITE\\] SELECT completed.", "BasicImapCommands");
+        preElements.cl("abcd SELECT inbox");
+        preElements.sl("\\* FLAGS \\(\\\\Answered \\\\Deleted \\\\Draft \\\\Flagged \\\\Seen\\)", "BasicImapCommands");
+        preElements.sl("\\* \\d+ EXISTS", "BasicImapCommands");
+        preElements.sl("\\* \\d+ RECENT", "BasicImapCommands");
+        preElements.sl("\\* OK \\[UIDVALIDITY \\d+\\].*", "BasicImapCommands");
+        preElements.sl("\\* OK \\[PERMANENTFLAGS \\(\\\\Answered \\\\Deleted \\\\Draft \\\\Flagged \\\\\\Seen( \\\\\\*)?\\)\\].*", "BasicImapCommands");
+        preElements.sl("\\* OK \\[HIGHESTMODSEQ \\d+\\].*", "BasicImapCommands");
+        preElements.sl("\\* OK \\[UIDNEXT 1\\].*", "BasicImapCommands");
+        preElements.sl("abcd OK \\[READ-WRITE\\] SELECT completed.", "BasicImapCommands");
         
         addCloseInbox(scriptedTestProtocol.postElements());
     }
     
     private static void addCloseInbox(ProtocolInteractor postElements) {
-        postElements.CL("a CLOSE");
-        postElements.SL(".*", "AbstractBaseTestSelectedInbox.java:76");
+        postElements.cl("a CLOSE");
+        postElements.sl(".*", "AbstractBaseTestSelectedInbox.java:76");
     }
     
     public static void prepareMailbox(SimpleScriptedTestProtocol scriptedTestProtocol) throws Exception {

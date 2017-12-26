@@ -66,11 +66,11 @@ public class HasMailAttributeWithValueRegex extends GenericMatcher {
         int idx = condition.indexOf(',');
         if (idx != -1) {
             attributeName = condition.substring(0,idx).trim();
-            String pattern_string = condition.substring(idx + 1, condition.length()).trim();
+            String patternString = condition.substring(idx + 1, condition.length()).trim();
             try {
-                pattern = Pattern.compile(pattern_string);
+                pattern = Pattern.compile(patternString);
             } catch (PatternSyntaxException mpe) {
-                throw new MessagingException("Malformed pattern: " + pattern_string, mpe);
+                throw new MessagingException("Malformed pattern: " + patternString, mpe);
             }
         } else {
             throw new MessagingException("malformed condition for HasMailAttributeWithValueRegex. must be of the form: attr,regex");

@@ -29,15 +29,15 @@ import java.io.ObjectStreamClass;
  * Avalon components that are juggling many classloaders.
  */
 public class ClassLoaderObjectInputStream extends ObjectInputStream {
-    private final ClassLoader m_classLoader;
+    private final ClassLoader classLoader;
 
     public ClassLoaderObjectInputStream(ClassLoader classLoader, InputStream inputStream) throws IOException {
         super(inputStream);
-        m_classLoader = classLoader;
+        this.classLoader = classLoader;
     }
 
     protected Class<?> resolveClass(ObjectStreamClass objectStreamClass) throws IOException, ClassNotFoundException {
-        final Class<?> clazz = Class.forName(objectStreamClass.getName(), false, m_classLoader);
+        final Class<?> clazz = Class.forName(objectStreamClass.getName(), false, classLoader);
 
         if (null != clazz) {
             return clazz; // the classloader knows of the class

@@ -29,40 +29,40 @@ public interface ProtocolInteractor {
     /**
      * adds a new Client request line to the test elements
      */
-    void CL(String clientLine);
+    void cl(String clientLine);
 
     /**
      * adds a new Server Response line to the test elements, with the specified
      * location.
      */
-    void SL(String serverLine, String location);
+    void sl(String serverLine, String location);
 
     /**
      * adds a new Server Unordered Block to the test elements.
      */
-    void SUB(List<String> serverLines, String location);
+    void sub(List<String> serverLines, String location);
 
     /**
      * adds a new Client request line to the test elements
      */
-    void CL(int sessionNumber, String clientLine);
+    void cl(int sessionNumber, String clientLine);
 
     /**
      * Adds a continuation. To allow one thread to be used for testing.
      */
-    void CONT(int sessionNumber) throws Exception;
+    void cont(int sessionNumber) throws Exception;
 
     /**
      * adds a new Server Response line to the test elements, with the specified
      * location.
      */
-    void SL(int sessionNumber, String serverLine,
+    void sl(int sessionNumber, String serverLine,
             String location, String lastClientMessage);
 
     /**
      * adds a new Server Unordered Block to the test elements.
      */
-    void SUB(int sessionNumber, List<String> serverLines,
+    void sub(int sessionNumber, List<String> serverLines,
              String location, String lastClientMessage);
 
 }

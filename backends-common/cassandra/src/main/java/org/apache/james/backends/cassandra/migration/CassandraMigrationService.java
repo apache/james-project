@@ -39,7 +39,7 @@ public class CassandraMigrationService {
     private final CassandraSchemaVersionDAO schemaVersionDAO;
     private final SchemaVersion latestVersion;
     private final Map<SchemaVersion, Migration> allMigrationClazz;
-    private final Logger LOG = LoggerFactory.getLogger(CassandraMigrationService.class);
+    private final Logger logger = LoggerFactory.getLogger(CassandraMigrationService.class);
 
     @Inject
     public CassandraMigrationService(CassandraSchemaVersionDAO schemaVersionDAO, Map<SchemaVersion, Migration> allMigrationClazz, @Named(LATEST_VERSION) SchemaVersion latestVersion) {
@@ -71,7 +71,7 @@ public class CassandraMigrationService {
     private SchemaVersion validateVersionNumber(SchemaVersion versionNumber) {
         if (!allMigrationClazz.containsKey(versionNumber)) {
             String message = String.format("Can not migrate to %d. No migration class registered.", versionNumber.getValue());
-            LOG.error(message);
+            logger.error(message);
             throw new NotImplementedException(message);
         }
         return versionNumber;
@@ -89,11 +89,11 @@ public class CassandraMigrationService {
                 return Migration.Result.COMPLETED;
             }
 
-            LOG.info("Migrating to version {} ", newVersion);
+            logger.info("Migrating to version {} ", newVersion);
             return allMigrationClazz.get(version).run()
                 .onComplete(() -> schemaVersionDAO.updateVersion(newVersion),
-                    () -> LOG.info("Migrating to version {} done", newVersion))
-                .onFailure(() -> LOG.warn(failureMessage(newVersion)),
+                    () -> logger.info("Migrating to version {} done", newVersion))
+                .onFailure(() -> logger.warn(failureMessage(newVersion)),
                     () -> throwMigrationException(newVersion));
         };
     }

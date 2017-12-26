@@ -38,7 +38,7 @@ public class StatusResponseTest  {
     }
 
     @Test
-    public void ResponseCodeShouldBuildTheLongestEntryForMetadata() throws Exception {
+    public void responseCodeShouldBuildTheLongestEntryForMetadata() throws Exception {
         assertThat(StatusResponse.ResponseCode.longestMetadataEntry(1024).getCode()).isEqualTo("METADATA LONGENTRIES");
         assertThat(StatusResponse.ResponseCode.longestMetadataEntry(1024).getNumber()).isEqualTo(1024);
     }

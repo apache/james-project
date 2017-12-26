@@ -24,18 +24,18 @@ import java.io.IOException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
-public class JsonExtractor<Request> {
+public class JsonExtractor<RequestT> {
 
     private final ObjectMapper objectMapper;
-    private final Class<Request> type;
+    private final Class<RequestT> type;
 
-    public JsonExtractor(Class<Request> type) {
+    public JsonExtractor(Class<RequestT> type) {
         this.objectMapper = new ObjectMapper()
             .registerModule(new Jdk8Module());
         this.type = type;
     }
 
-    public Request parse(String text) throws JsonExtractException {
+    public RequestT parse(String text) throws JsonExtractException {
         try {
             return objectMapper.readValue(text, type);
         } catch (IOException | IllegalArgumentException e) {

@@ -347,7 +347,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         final int next = consumeAndCap(request);
         switch (next) {
         case 'E':
-            return _new(request);
+            return newOperator(request);
         case 'O':
             return not(session, request, charset);
         default:
@@ -564,7 +564,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         return result;
     }
 
-    private SearchKey _new(ImapRequestLineReader request) throws DecodingException {
+    private SearchKey newOperator(ImapRequestLineReader request) throws DecodingException {
         final SearchKey result;
         nextIsW(request);
         result = SearchKey.buildNew();
