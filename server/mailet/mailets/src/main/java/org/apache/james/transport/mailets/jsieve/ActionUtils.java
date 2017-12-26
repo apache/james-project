@@ -41,8 +41,7 @@ public class ActionUtils {
      * @return String
      * @throws MessagingException
      */
-    public static MailAddress getSoleRecipient(Mail aMail) throws MessagingException
-    {
+    public static MailAddress getSoleRecipient(Mail aMail) throws MessagingException {
         if (aMail.getRecipients() == null) {
             throw new MessagingException("Invalid number of recipients - 0"
                     + ". Exactly 1 recipient is expected.");
@@ -64,13 +63,11 @@ public class ActionUtils {
      * @throws MessagingException
      */
     public static void detectAndHandleLocalLooping(Mail aMail, ActionContext context, String anAttributeSuffix)
-            throws MessagingException
-    {
+            throws MessagingException {
         MailAddress thisRecipient = getSoleRecipient(aMail);
         MailAddress lastRecipient = (MailAddress) aMail
                 .getAttribute(ATTRIBUTE_PREFIX + anAttributeSuffix);
-        if (null != lastRecipient && lastRecipient.equals(thisRecipient))
-        {
+        if (null != lastRecipient && lastRecipient.equals(thisRecipient)) {
             MessagingException ex = new MessagingException(
                     "This message is looping! Message ID: "
                             + aMail.getMessage().getMessageID());

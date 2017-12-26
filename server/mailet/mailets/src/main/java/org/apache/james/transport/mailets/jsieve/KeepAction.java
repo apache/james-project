@@ -57,8 +57,7 @@ public class KeepAction extends FileIntoAction implements MailAction {
      * @param context not null
      * @throws MessagingException
      */
-    public void execute(ActionKeep anAction, Mail aMail, ActionContext context) throws MessagingException
-    {
+    public void execute(ActionKeep anAction, Mail aMail, ActionContext context) throws MessagingException {
         final ActionFileInto action = new ActionFileInto(INBOX);
         execute(action, aMail, context);
     }

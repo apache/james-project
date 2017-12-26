@@ -456,8 +456,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         };
     }
 
-    protected Properties getContextEnvironment()
-    {
+    protected Properties getContextEnvironment() {
         final Properties props = new Properties();
         props.put(Context.INITIAL_CONTEXT_FACTORY, INITIAL_CONTEXT_FACTORY);
         props.put(Context.PROVIDER_URL, null == ldapHost ? "" : ldapHost);
@@ -470,12 +469,10 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         }
         // The following properties are specific to com.sun.jndi.ldap.LdapCtxFactory
         props.put(PROPERTY_NAME_CONNECTION_POOL, Boolean.toString(useConnectionPool));
-        if (connectionTimeout > -1)
-        {
+        if (connectionTimeout > -1) {
             props.put(PROPERTY_NAME_CONNECT_TIMEOUT, Integer.toString(connectionTimeout));
         }
-        if (readTimeout > -1)
-        {
+        if (readTimeout > -1) {
             props.put(PROPERTY_NAME_READ_TIMEOUT, Integer.toString(readTimeout));
         }
         return props;

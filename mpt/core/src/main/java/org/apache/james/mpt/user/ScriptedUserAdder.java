@@ -51,8 +51,7 @@ public class ScriptedUserAdder implements UserAdder {
      * @param host connect to this host
      * @param port connect to this port
      */
-    public ScriptedUserAdder(String host, int port)
-    {
+    public ScriptedUserAdder(String host, int port) {
         this(host, port, (String) null);
     }
     
@@ -114,8 +113,7 @@ public class ScriptedUserAdder implements UserAdder {
      * @return a <code>String</code> representation 
      * of this object.
      */
-    public String toString()
-    {
+    public String toString() {
         final String TAB = " ";
 
         return "ScriptedUserAdder ( "

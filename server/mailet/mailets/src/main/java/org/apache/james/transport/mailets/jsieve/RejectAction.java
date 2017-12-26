@@ -74,8 +74,7 @@ public class RejectAction implements MailAction {
      * @param context not null
      * @throws MessagingException
      */
-    public void execute(ActionReject anAction, Mail aMail, ActionContext context) throws MessagingException
-    {
+    public void execute(ActionReject anAction, Mail aMail, ActionContext context) throws MessagingException {
         ActionUtils.detectAndHandleLocalLooping(aMail, context, "reject");
 
         // Create the MDN part
@@ -88,13 +87,10 @@ public class RejectAction implements MailAction {
         humanText.append(anAction.getMessage());
 
         String reporting_UA_name = null;
-        try
-        {
+        try {
             reporting_UA_name = InetAddress.getLocalHost()
                     .getCanonicalHostName();
-        }
-        catch (UnknownHostException ex)
-        {
+        } catch (UnknownHostException ex) {
             reporting_UA_name = "localhost";
         }
 
@@ -103,8 +99,7 @@ public class RejectAction implements MailAction {
         String[] originalRecipients = aMail.getMessage().getHeader(
                 "Original-Recipient");
         String original_recipient = null;
-        if (null != originalRecipients && originalRecipients.length > 0)
-        {
+        if (null != originalRecipients && originalRecipients.length > 0) {
             original_recipient = originalRecipients[0];
         }
 
@@ -136,17 +131,14 @@ public class RejectAction implements MailAction {
         reply.setContent(multipart);
         reply.saveChanges();
         Address[] recipientAddresses = reply.getAllRecipients();
-        if (null != recipientAddresses)
-        {
+        if (null != recipientAddresses) {
             Collection<MailAddress> recipients = new ArrayList<>(recipientAddresses.length);
             for (Address recipientAddress : recipientAddresses) {
                 recipients.add(new MailAddress(
                         (InternetAddress) recipientAddress));
             }
             context.post(null, recipients, reply);
-        }
-        else
-        {
+        } else {
             LOGGER.info("Unable to send reject MDN. Could not determine the recipient.");
         }
     }

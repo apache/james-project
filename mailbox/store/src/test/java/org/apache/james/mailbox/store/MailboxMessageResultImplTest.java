@@ -40,8 +40,7 @@ public class MailboxMessageResultImplTest {
      * Initialize name instances
      */
     @Before
-    public void initNames() throws Exception
-    {
+    public void initNames() throws Exception {
         Date dateAB = new Date();
         MailboxMessage msgA = buildMessage(MessageUid.of(100), dateAB);
         MailboxMessage msgB = buildMessage(MessageUid.of(100), dateAB);
@@ -63,52 +62,45 @@ public class MailboxMessageResultImplTest {
 
 
     @Test
-    public void testEqualsNull() throws Exception
-    {
+    public void testEqualsNull() throws Exception {
         assertFalse(msgResultA.equals(null));
     }
 
 
     @Test
-    public void testEqualsReflexive() throws Exception
-    {
+    public void testEqualsReflexive() throws Exception {
         assertEquals(msgResultA, msgResultA);
     }
 
 
     @Test
-    public void testCompareToReflexive() throws Exception
-    {
+    public void testCompareToReflexive() throws Exception {
         assertEquals(0, msgResultA.compareTo(msgResultA));
     }
 
 
     @Test
-    public void testHashCodeReflexive() throws Exception
-    {
+    public void testHashCodeReflexive() throws Exception {
         assertEquals(msgResultA.hashCode(), msgResultA.hashCode());
     }
 
 
     @Test
-    public void testEqualsSymmetric() throws Exception
-    {
+    public void testEqualsSymmetric() throws Exception {
         assertEquals(msgResultA, msgResultACopy);
         assertEquals(msgResultACopy, msgResultA);
     }
 
 
     @Test
-    public void testHashCodeSymmetric() throws Exception
-    {
+    public void testHashCodeSymmetric() throws Exception {
         assertEquals(msgResultA.hashCode(), msgResultACopy.hashCode());
         assertEquals(msgResultACopy.hashCode(), msgResultA.hashCode());
     }
 
 
     @Test
-    public void testEqualsTransitive() throws Exception
-    {
+    public void testEqualsTransitive() throws Exception {
         assertEquals(msgResultA, msgResultACopy);
         assertEquals(msgResultACopy, msgResultB);
         assertEquals(msgResultA, msgResultB);
@@ -116,8 +108,7 @@ public class MailboxMessageResultImplTest {
 
 
     @Test
-    public void testCompareToTransitive() throws Exception
-    {
+    public void testCompareToTransitive() throws Exception {
         assertEquals(0, msgResultA.compareTo(msgResultACopy));
         assertEquals(0, msgResultACopy.compareTo(msgResultB));
         assertEquals(0, msgResultA.compareTo(msgResultB));
@@ -125,8 +116,7 @@ public class MailboxMessageResultImplTest {
 
 
     @Test
-    public void testHashCodeTransitive() throws Exception
-    {
+    public void testHashCodeTransitive() throws Exception {
         assertEquals(msgResultA.hashCode(), msgResultACopy.hashCode());
         assertEquals(msgResultACopy.hashCode(), msgResultB.hashCode());
         assertEquals(msgResultA.hashCode(), msgResultB.hashCode());
@@ -134,8 +124,7 @@ public class MailboxMessageResultImplTest {
 
 
     @Test
-    public void testNotEqualDiffValue() throws Exception
-    {
+    public void testNotEqualDiffValue() throws Exception {
         assertFalse(msgResultA.equals(msgResultC));
         assertFalse(msgResultC.equals(msgResultA));
     }

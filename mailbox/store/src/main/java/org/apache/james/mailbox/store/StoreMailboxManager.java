@@ -498,9 +498,7 @@ public class StoreMailboxManager implements MailboxManager {
             // If any creation fails then the mailbox will not be created
             // TODO: transaction
             List<MailboxId> mailboxIds = new ArrayList<>();
-            for (MailboxPath mailbox : sanitizedMailboxPath.getHierarchyLevels(getDelimiter()))
-
-            {
+            for (MailboxPath mailbox : sanitizedMailboxPath.getHierarchyLevels(getDelimiter())) {
                 locker.executeWithLock(mailboxSession, mailbox, (LockAwareExecution<Void>) () -> {
                     if (!mailboxExists(mailbox, mailboxSession)) {
                         Mailbox m = doCreateMailbox(mailbox, mailboxSession);

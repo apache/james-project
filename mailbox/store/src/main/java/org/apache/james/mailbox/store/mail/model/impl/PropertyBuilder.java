@@ -474,8 +474,7 @@ public class PropertyBuilder {
      * @return a <code>String</code> representation 
      * of this object.
      */
-    public String toString()
-    {
+    public String toString() {
         return "PropertyBuilder ( "
         + " textualLineCount = " + this.textualLineCount
         + " properties = " + this.properties

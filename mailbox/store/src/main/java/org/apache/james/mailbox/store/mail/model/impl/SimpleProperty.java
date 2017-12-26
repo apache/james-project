@@ -91,8 +91,7 @@ public final class SimpleProperty implements Property {
      * @return a <code>String</code> representation 
      * of this object.
      */
-    public String toString()
-    {
+    public String toString() {
         return "SimpleProperty("
         + "namespace='" + this.namespace 
         + "' localName='" + this.localName  

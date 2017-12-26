@@ -20,8 +20,7 @@
 
 package org.apache.james.managesieve.api;
 
-public class ManageSieveException extends Exception
-{
+public class ManageSieveException extends Exception {
     /**
      * Creates a new instance of ManageSieveException.
      *

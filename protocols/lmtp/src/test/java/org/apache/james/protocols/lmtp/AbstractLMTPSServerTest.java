@@ -78,8 +78,7 @@ public abstract class AbstractLMTPSServerTest extends AbstractLMTPServerTest {
             return sendCommand("LHLO", hostname);
         }
 
-        public int[] getReplies() throws IOException
-        {
+        public int[] getReplies() throws IOException {
             int[] codes = new int[replies.size()];
             for (int i = 0; i < codes.length; i++) {
                 codes[i] = replies.remove(0);
@@ -88,8 +87,7 @@ public abstract class AbstractLMTPSServerTest extends AbstractLMTPServerTest {
         }
         
         @Override
-        public boolean completePendingCommand() throws IOException
-        {
+        public boolean completePendingCommand() throws IOException {
             for (int i = 0; i < rcptCount; i++) {
                 replies.add(getReply());
             }

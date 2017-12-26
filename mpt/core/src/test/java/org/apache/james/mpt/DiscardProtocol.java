@@ -76,8 +76,7 @@ public class DiscardProtocol {
      * @throws IllegalStateException when already started
      */
     public void start() throws IOException {
-        synchronized (queue)
-        {
+        synchronized (queue) {
             if (socket == null) {
                 socket = ServerSocketChannel.open();
                 socket.socket().bind(new InetSocketAddress(0));
@@ -99,8 +98,7 @@ public class DiscardProtocol {
     }
     
     public Record recordNext() {
-        synchronized (queue)
-        {
+        synchronized (queue) {
             Server server = new Server();
             queue.add(server);
             return server;
@@ -108,8 +106,7 @@ public class DiscardProtocol {
     }
     
     private void abort() {
-        synchronized (queue)
-        {
+        synchronized (queue) {
             stop();
             for (Server server: queue) {
                 server.abort();
@@ -119,8 +116,7 @@ public class DiscardProtocol {
     }
     
     public void stop() {
-        synchronized (queue)
-        {
+        synchronized (queue) {
             try {
                 if (socket != null) {
                     if (socket.isOpen()) {
@@ -139,8 +135,7 @@ public class DiscardProtocol {
     
     private final class SocketMonitor implements Runnable {
         public void run() {
-            try
-            {
+            try {
                 long lastConnection = System.currentTimeMillis();
                 while (socket != null) {
                     final SocketChannel socketChannel = socket.accept();
@@ -215,14 +210,10 @@ public class DiscardProtocol {
         }
 
         public void run() {
-            try
-            {
-                if (socketChannel == null)
-                {
+            try {
+                if (socketChannel == null) {
                     LOG.fatal("Socket channel must be set before instance is run.");
-                }
-                else
-                {
+                } else {
                     try {
                         while (!socketChannel.finishConnect()) {
                             Thread.sleep(SOCKET_CONNECTION_WAIT_MILLIS);
@@ -250,8 +241,7 @@ public class DiscardProtocol {
                     }
                 }
             } finally {
-                synchronized (this)
-                {
+                synchronized (this) {
                     // Ensure completion is flagged
                     complete = true;
                     // Signal to any waiting threads 

@@ -71,8 +71,7 @@ import org.slf4j.LoggerFactory;
  * </pre>
  */
 @Experimental
-public class HasHabeasWarrantMark extends GenericMatcher
-{
+public class HasHabeasWarrantMark extends GenericMatcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(HasHabeasWarrantMark.class);
 
     public static final String[][] warrantMark =
@@ -88,8 +87,7 @@ public class HasHabeasWarrantMark extends GenericMatcher
         { "X-Habeas-SWE-9", "mark in spam to <http://www.habeas.com/report/>." }, 
     };
 
-    public Collection<MailAddress> match(Mail mail) throws MessagingException
-    {
+    public Collection<MailAddress> match(Mail mail) throws MessagingException {
         MimeMessage message = mail.getMessage();
 
         //Loop through all the patterns
@@ -127,8 +125,7 @@ public class HasHabeasWarrantMark extends GenericMatcher
      * @return a String containing matcher information
      */
 
-    public String getMatcherInfo()
-    {
+    public String getMatcherInfo() {
         return "Habeas Warrant Mark Matcher (see http://www.habeas.com for details).";
     }
 }

@@ -83,8 +83,7 @@ public abstract class ExceptionRetryHandler implements RetryHandler {
                     result = operation();
                     success = true;
 
-                }
-                catch (Exception ex) {
+                } catch (Exception ex) {
                     if (retryCount >= _maxRetries || !isRetryable(ex)) {
                         throw ex;
                     }
@@ -107,11 +106,9 @@ public abstract class ExceptionRetryHandler implements RetryHandler {
          * 
          * @return true if the array of exception classes contains <strong>ex</strong>
          */
-        private boolean isRetryable(Throwable ex)
-        {
+        private boolean isRetryable(Throwable ex) {
             boolean isRetryable = false;
-            for (int i = 0; !isRetryable && i < _exceptionClasses.length; i++)
-            {
+            for (int i = 0; !isRetryable && i < _exceptionClasses.length; i++) {
                 isRetryable = _exceptionClasses[i].isInstance(ex);
             }
             return isRetryable;
@@ -119,8 +116,7 @@ public abstract class ExceptionRetryHandler implements RetryHandler {
         
         /**
          */
-        public void postFailure(Exception ex, int retryCount)
-        {
+        public void postFailure(Exception ex, int retryCount) {
             // no-op
         }        
 

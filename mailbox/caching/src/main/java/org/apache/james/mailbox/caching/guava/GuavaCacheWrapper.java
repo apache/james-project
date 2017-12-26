@@ -30,8 +30,7 @@ public abstract class GuavaCacheWrapper<Key, Value, Underlying, KeyRepresentatio
     }
 
     public void invalidate(Key key) {
-        if (key != null) //needed?
-        {
+        if (key != null) { //needed?
             cache.invalidate(getKeyRepresentation(key));
         }
     }

@@ -20,8 +20,7 @@
 
 package org.apache.james.sieverepository.api.exception;
 
-public class QuotaExceededException extends SieveRepositoryException
-{
+public class QuotaExceededException extends SieveRepositoryException {
     /**
      * Creates a new instance of QuotaExceededException.
      *

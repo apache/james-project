@@ -198,9 +198,8 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
         String mName;
         if (folderName.equals("")) {
             mName = MailboxConstants.INBOX;
-        } else
-        // remove leading dot
-        {
+        } else {
+            // remove leading dot
             mName = folderName.substring(1);
         }
         // they are equal, anyways, this might change someday...

@@ -80,8 +80,7 @@ public class DoublingRetrySchedule implements RetrySchedule {
      */
     @Override
     public long getInterval(int index) {
-        if (_startInterval > 0)
-        {
+        if (_startInterval > 0) {
             return getInterval(index, _startInterval);
         }
         return index == 0 ? 0 : getInterval(index - 1, 1);

@@ -70,8 +70,7 @@ public abstract class NamingExceptionRetryHandler extends ExceptionRetryHandler 
         postFailure(((NamingException) ex), retryCount);        
     }
 
-    public void postFailure(NamingException ex, int retryCount)
-    {
+    public void postFailure(NamingException ex, int retryCount) {
         // no-op
     }
 }
