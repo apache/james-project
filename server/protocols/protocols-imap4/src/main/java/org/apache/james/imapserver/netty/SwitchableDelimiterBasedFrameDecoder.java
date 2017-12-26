@@ -27,32 +27,32 @@ import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
 
 public class SwitchableDelimiterBasedFrameDecoder extends DelimiterBasedFrameDecoder {
 
-	private volatile boolean framingEnabled = true;
+    private volatile boolean framingEnabled = true;
 
-	public SwitchableDelimiterBasedFrameDecoder(int maxFrameLength, boolean stripDelimiter, ChannelBuffer... delimiters) {
-		super(maxFrameLength, stripDelimiter, delimiters);
-	}
+    public SwitchableDelimiterBasedFrameDecoder(int maxFrameLength, boolean stripDelimiter, ChannelBuffer... delimiters) {
+        super(maxFrameLength, stripDelimiter, delimiters);
+    }
 
-	@Override
-	public synchronized void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-		if (this.framingEnabled) {
-			super.messageReceived(ctx, e);
-		} else {
-			ctx.sendUpstream(e);
-		}
-	}
+    @Override
+    public synchronized void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+        if (this.framingEnabled) {
+            super.messageReceived(ctx, e);
+        } else {
+            ctx.sendUpstream(e);
+        }
+    }
 
-	public synchronized void enableFraming() {
-		this.framingEnabled = true;
+    public synchronized void enableFraming() {
+        this.framingEnabled = true;
 
-	}
+    }
 
-	public synchronized void disableFraming(ChannelHandlerContext ctx) {
-		this.framingEnabled = false;
-		if (this.cumulation != null && this.cumulation.readable()) {
-			final ChannelBuffer spareBytes = this.cumulation.readBytes(this.cumulation.readableBytes());
-			Channels.fireMessageReceived(ctx, spareBytes);
-		}
-	}
+    public synchronized void disableFraming(ChannelHandlerContext ctx) {
+        this.framingEnabled = false;
+        if (this.cumulation != null && this.cumulation.readable()) {
+            final ChannelBuffer spareBytes = this.cumulation.readBytes(this.cumulation.readableBytes());
+            Channels.fireMessageReceived(ctx, spareBytes);
+        }
+    }
 
 }

@@ -53,36 +53,36 @@ public class MailboxStatusResponseEncoder extends AbstractChainedImapEncoder imp
         composer.openParen();
 
         if (messages != null) {
-        	composer.message(STATUS_MESSAGES);
+            composer.message(STATUS_MESSAGES);
             final long messagesValue = messages.longValue();
             composer.message(messagesValue);
         }
 
         if (recent != null) {
-        	composer.message(STATUS_RECENT);
+            composer.message(STATUS_RECENT);
             final long recentValue = recent.longValue();
             composer.message(recentValue);
         }
 
         if (uidNext != null) {
-        	composer.message(STATUS_UIDNEXT);
+            composer.message(STATUS_UIDNEXT);
             final long uidNextValue = uidNext.asLong();
             composer.message(uidNextValue);
         }
         
         if (highestModSeq != null) {
-        	composer.message(STATUS_HIGHESTMODSEQ);
-        	composer.message(highestModSeq);
+            composer.message(STATUS_HIGHESTMODSEQ);
+            composer.message(highestModSeq);
         }
 
         if (uidValidity != null) {
-        	composer.message(STATUS_UIDVALIDITY);
+            composer.message(STATUS_UIDVALIDITY);
             final long uidValidityValue = uidValidity.longValue();
             composer.message(uidValidityValue);
         }
 
         if (unseen != null) {
-        	composer.message(STATUS_UNSEEN);
+            composer.message(STATUS_UNSEEN);
             final long unseenValue = unseen.longValue();
             composer.message(unseenValue);
         }

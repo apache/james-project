@@ -27,13 +27,13 @@ import org.apache.james.protocols.smtp.SMTPSession;
  */
 public interface UnknownHook extends Hook {
 
-	/**
-	 * Called on unknown smtp command
-	 * 
-	 * @param session
-	 * @param command
-	 * @return result
-	 */
+    /**
+     * Called on unknown smtp command
+     *
+     * @param session
+     * @param command
+     * @return result
+     */
     HookResult doUnknown(SMTPSession session, String command);
 
 }

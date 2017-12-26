@@ -27,9 +27,9 @@ import java.io.IOException;
  */
 public class LookupException extends IOException {
 
-	private static final long serialVersionUID = -2016705390234811363L;
+    private static final long serialVersionUID = -2016705390234811363L;
 
-	/**
+    /**
      * Constructs a new lookup exception.
      */
     public LookupException() {

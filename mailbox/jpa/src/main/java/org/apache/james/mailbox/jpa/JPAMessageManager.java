@@ -62,7 +62,7 @@ public class JPAMessageManager extends StoreMessageManager {
                              BatchSizes batchSizes,
                              ImmutableMailboxMessage.Factory immutableMailboxMessageFactory,
                              StoreRightManager storeRightManager) throws MailboxException {
-    	
+
         super(mapperFactory, index, dispatcher, locker, mailbox,
             quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, immutableMailboxMessageFactory, storeRightManager);
     }

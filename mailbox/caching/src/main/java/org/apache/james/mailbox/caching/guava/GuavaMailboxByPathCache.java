@@ -16,72 +16,72 @@ import com.google.common.cache.Cache;
  *
  */
 public class GuavaMailboxByPathCache extends AbstractGuavaCache implements MailboxByPathCache {
-	
-	private final Cache<String, Mailbox> findMailboxByPathCache = BUILDER.build();
 
-	private final MailboxByPathCacheWrapper wrapper;
+    private final Cache<String, Mailbox> findMailboxByPathCache = BUILDER.build();
 
-	
-	public GuavaMailboxByPathCache() {
-		this.wrapper = new MailboxByPathCacheWrapper(findMailboxByPathCache);
-	}
-	
-	@Override
-	public Mailbox findMailboxByPath(MailboxPath mailboxName, MailboxMapper underlying) throws MailboxNotFoundException, MailboxException {
-		
-		return wrapper.get(mailboxName, underlying);
-	}
-	
-//	alternative plain implementation - review and choose the better
-//	public Mailbox findMailboxByPath(MailboxPath mailboxName, MailboxMapper underlying) throws MailboxNotFoundException, MailboxException {
-//		Mailbox mailbox = findMailboxByPathCache.getIfPresent(mailboxName.toString());
-//		if (mailbox != null)
-//			return mailbox;
-//		else {
-//			mailbox = new MailboxByPathCacheLoaderFromUnderlying().load(mailboxName, underlying);
-//			findMailboxByPathCache.put(mailboxName.toString(), mailbox);
-//			return mailbox;
-//		}
-//	}
-
-	
-
-	@Override
-	public void invalidate(Mailbox mailbox) {
-		invalidate(mailbox.generateAssociatedPath());
-	}
-	
-	@Override
-	public void invalidate(MailboxPath mailboxPath) {
-		wrapper.invalidate(mailboxPath);
-	}
+    private final MailboxByPathCacheWrapper wrapper;
 
 
-	//Does it make sense to define such loaders as separate classes for reuse?
-//	class MailboxByPathCacheLoaderFromUnderlying implements CacheLoaderFromUnderlying<MailboxPath, Mailbox, MailboxMapper, MailboxException> {
-//		@Override
-//		public Mailbox load(MailboxPath mailboxName, MailboxMapper underlying) throws MailboxException {
-//			return underlying.findMailboxByPath(mailboxName);
-//		}
-//	}
+    public GuavaMailboxByPathCache() {
+        this.wrapper = new MailboxByPathCacheWrapper(findMailboxByPathCache);
+    }
 
-	class MailboxByPathCacheWrapper extends GuavaCacheWrapper<MailboxPath, Mailbox, MailboxMapper, String, MailboxException> {
+    @Override
+    public Mailbox findMailboxByPath(MailboxPath mailboxName, MailboxMapper underlying) throws MailboxNotFoundException, MailboxException {
 
-		public MailboxByPathCacheWrapper(
-				Cache<String, Mailbox> cache/*,
-				MailboxByPathCacheLoaderFromUnderlying loader*/) {
-			super(cache);
-		}
+        return wrapper.get(mailboxName, underlying);
+    }
 
-		@Override
-		public Mailbox load(MailboxPath mailboxName, MailboxMapper underlying) throws MailboxException {
-			return underlying.findMailboxByPath(mailboxName);
-		}
+//    alternative plain implementation - review and choose the better
+//    public Mailbox findMailboxByPath(MailboxPath mailboxName, MailboxMapper underlying) throws MailboxNotFoundException, MailboxException {
+//        Mailbox mailbox = findMailboxByPathCache.getIfPresent(mailboxName.toString());
+//        if (mailbox != null)
+//            return mailbox;
+//        else {
+//            mailbox = new MailboxByPathCacheLoaderFromUnderlying().load(mailboxName, underlying);
+//            findMailboxByPathCache.put(mailboxName.toString(), mailbox);
+//            return mailbox;
+//        }
+//    }
 
-		@Override
-		public String getKeyRepresentation(MailboxPath key) {
-			return key.toString();
-		}
-		
-	}
+
+
+    @Override
+    public void invalidate(Mailbox mailbox) {
+        invalidate(mailbox.generateAssociatedPath());
+    }
+
+    @Override
+    public void invalidate(MailboxPath mailboxPath) {
+        wrapper.invalidate(mailboxPath);
+    }
+
+
+    //Does it make sense to define such loaders as separate classes for reuse?
+//    class MailboxByPathCacheLoaderFromUnderlying implements CacheLoaderFromUnderlying<MailboxPath, Mailbox, MailboxMapper, MailboxException> {
+//        @Override
+//        public Mailbox load(MailboxPath mailboxName, MailboxMapper underlying) throws MailboxException {
+//            return underlying.findMailboxByPath(mailboxName);
+//        }
+//    }
+
+    class MailboxByPathCacheWrapper extends GuavaCacheWrapper<MailboxPath, Mailbox, MailboxMapper, String, MailboxException> {
+
+        public MailboxByPathCacheWrapper(
+                Cache<String, Mailbox> cache/*,
+                MailboxByPathCacheLoaderFromUnderlying loader*/) {
+            super(cache);
+        }
+
+        @Override
+        public Mailbox load(MailboxPath mailboxName, MailboxMapper underlying) throws MailboxException {
+            return underlying.findMailboxByPath(mailboxName);
+        }
+
+        @Override
+        public String getKeyRepresentation(MailboxPath key) {
+            return key.toString();
+        }
+
+    }
 }

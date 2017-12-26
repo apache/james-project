@@ -70,7 +70,7 @@ public class FetchResponseEncoder extends AbstractChainedImapEncoder {
             final FetchResponse fetchResponse = (FetchResponse) acceptableMessage;
             final long messageNumber = fetchResponse.getMessageNumber();
             
-        	composer.untagged().message(messageNumber).message(ImapConstants.FETCH_COMMAND_NAME).openParen();
+            composer.untagged().message(messageNumber).message(ImapConstants.FETCH_COMMAND_NAME).openParen();
 
             
             encodeModSeq(composer, fetchResponse);
@@ -323,7 +323,7 @@ public class FetchResponseEncoder extends AbstractChainedImapEncoder {
             final String messageId = envelope.getMessageId();
 
             if (prefixWithName) {
-            	composer.message(ENVELOPE);
+                composer.message(ENVELOPE);
             }
             composer.openParen();
             nillableQuote(composer, date);
@@ -369,9 +369,9 @@ public class FetchResponseEncoder extends AbstractChainedImapEncoder {
 
     private ImapResponseComposer nillableQuote(ImapResponseComposer composer, String message) throws IOException {
         if (message == null) {
-        	composer.nil();
+            composer.nil();
         } else {
-        	composer.quote(message);
+            composer.quote(message);
         }
         return composer;
     }
@@ -379,11 +379,11 @@ public class FetchResponseEncoder extends AbstractChainedImapEncoder {
 
     private ImapResponseComposer nillableQuotes(ImapResponseComposer composer, List<String> quotes) throws IOException {
         if (quotes == null || quotes.size() == 0) {
-        	composer.nil();
+            composer.nil();
         } else {
-        	composer.openParen();
+            composer.openParen();
             for (String string : quotes) {
-            	nillableQuote(composer,string);
+                nillableQuote(composer,string);
             }
             composer.closeParen();
         }

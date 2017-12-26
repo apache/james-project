@@ -95,7 +95,7 @@ public class AddFooter extends GenericMailet {
             MimeMultipart multipart = (MimeMultipart) part.getContent();
             boolean added = attachFooterToFirstPart(multipart);
             if (added) {
-            	part.setContent(multipart);
+                part.setContent(multipart);
             }
             return added;
 
@@ -103,7 +103,7 @@ public class AddFooter extends GenericMailet {
             MimeMultipart multipart = (MimeMultipart) part.getContent();
             boolean added = attachFooterToAllSubparts(multipart);
             if (added) {
-            	part.setContent(multipart);
+                part.setContent(multipart);
             }
             return added;
         }

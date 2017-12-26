@@ -22,21 +22,21 @@ import org.apache.james.mailbox.store.user.SubscriptionMapper;
 public class CachingMailboxSessionMapperFactory extends
         MailboxSessionMapperFactory {
 
-	private final MailboxSessionMapperFactory underlying;
-	private final MailboxByPathCache mailboxByPathCache;
-	private final MailboxMetadataCache mailboxMetadataCache;
+    private final MailboxSessionMapperFactory underlying;
+    private final MailboxByPathCache mailboxByPathCache;
+    private final MailboxMetadataCache mailboxMetadataCache;
 
-	public CachingMailboxSessionMapperFactory(MailboxSessionMapperFactory underlying, MailboxByPathCache mailboxByPathCache, MailboxMetadataCache mailboxMetadataCache) {
-		this.underlying = underlying;
-		this.mailboxByPathCache = mailboxByPathCache;
-		this.mailboxMetadataCache = mailboxMetadataCache;
-	}
-	
-	@Override
-	public MessageMapper createMessageMapper(MailboxSession session)
-			throws MailboxException {
-		return new CachingMessageMapper(underlying.createMessageMapper(session), mailboxMetadataCache);
-	}
+    public CachingMailboxSessionMapperFactory(MailboxSessionMapperFactory underlying, MailboxByPathCache mailboxByPathCache, MailboxMetadataCache mailboxMetadataCache) {
+        this.underlying = underlying;
+        this.mailboxByPathCache = mailboxByPathCache;
+        this.mailboxMetadataCache = mailboxMetadataCache;
+    }
+
+    @Override
+    public MessageMapper createMessageMapper(MailboxSession session)
+            throws MailboxException {
+        return new CachingMessageMapper(underlying.createMessageMapper(session), mailboxMetadataCache);
+    }
 
     @Override
     public MailboxMapper createMailboxMapper(MailboxSession session)

@@ -531,7 +531,7 @@ public class AuthCmdHandler
      * @see org.apache.james.protocols.api.handler.ExtensibleHandler#wireExtensions(java.lang.Class, java.util.List)
      */
     @SuppressWarnings("unchecked")
-	public void wireExtensions(Class<?> interfaceName, List<?> extension) throws WiringException {
+    public void wireExtensions(Class<?> interfaceName, List<?> extension) throws WiringException {
         if (AuthHook.class.equals(interfaceName)) {
             this.hooks = (List<AuthHook>) extension;
             // If no AuthHook is configured then we revert to the default LocalUsersRespository check

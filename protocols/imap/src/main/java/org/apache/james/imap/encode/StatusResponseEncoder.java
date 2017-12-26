@@ -68,16 +68,16 @@ public class StatusResponseEncoder extends AbstractChainedImapEncoder {
         //composer.statusResponse(tag, command, type, code, parameters, useParens, number, text);
         
         if (tag == null) {
-        	composer.untagged();
+            composer.untagged();
         } else {
-        	composer.tag(tag);
+            composer.tag(tag);
         }
         composer.message(type);
         if (responseCode != null) {
-        	composer.openSquareBracket();
-        	composer.message(code);
+            composer.openSquareBracket();
+            composer.message(code);
             if (number > -1) {
-            	composer.message(number);
+                composer.message(number);
             }
             if (parameters != null && !parameters.isEmpty()) {
                 if (useParens) {
@@ -93,10 +93,10 @@ public class StatusResponseEncoder extends AbstractChainedImapEncoder {
             composer.closeSquareBracket();
         }
         if (command != null) {
-        	composer.commandName(command.getName());
+            composer.commandName(command.getName());
         }
         if (text != null && !"".equals(text)) {
-        	composer.message(text);
+            composer.message(text);
         }
         composer.end();
     }

@@ -136,8 +136,8 @@ public class DelaysAndMaxRetryTest {
     
     @Test
     public void getExpandedDelaysShouldExpandMultipleDelaysWithSpaces() throws Exception {
-    	DelaysAndMaxRetry testee = DelaysAndMaxRetry.from(3, "1 * 1 S, 2 * 2 S , 2 * 5 S");
-    	
-    	assertThat(testee.getExpandedDelays()).containsExactly(1000L, 2000L, 2000L, 5000L, 5000L);
+        DelaysAndMaxRetry testee = DelaysAndMaxRetry.from(3, "1 * 1 S, 2 * 2 S , 2 * 5 S");
+
+        assertThat(testee.getExpandedDelays()).containsExactly(1000L, 2000L, 2000L, 5000L, 5000L);
     }
 }

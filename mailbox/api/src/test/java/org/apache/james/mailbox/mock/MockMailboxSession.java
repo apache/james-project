@@ -100,9 +100,9 @@ public class MockMailboxSession implements MailboxSession {
         return open;
     }
 
-	public char getPathDelimiter() {
-		return '.';
-	}
+    public char getPathDelimiter() {
+        return '.';
+    }
 
     public SessionType getType() {
         return type;

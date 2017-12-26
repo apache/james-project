@@ -138,7 +138,7 @@ public class SearchCommandParserQuotedCharsetTest {
 
     private Mockery mockery = new JUnit4Mockery();
 
-	private ImapSession session;
+    private ImapSession session;
     
     @Before
     public void setUp() throws Exception {

@@ -93,7 +93,7 @@ public class DecoderUtilsLocaleDateTest  {
     }
 
     @SuppressWarnings("deprecation")
-	private void decodeDateTime() throws Exception {
+    private void decodeDateTime() throws Exception {
         assertEquals("21 Oct 1972 20:00:00 GMT", DecoderUtils.decodeDateTime(
                 "21-Oct-1972 20:00:00 +0000").toGMTString());
         assertEquals("21 Oct 1972 19:00:00 GMT", DecoderUtils.decodeDateTime(

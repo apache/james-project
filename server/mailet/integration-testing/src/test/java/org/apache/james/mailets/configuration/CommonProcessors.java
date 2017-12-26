@@ -46,7 +46,7 @@ import org.apache.mailet.Mail;
 
 public class CommonProcessors {
 
-	public static final String ERROR_REPOSITORY = "file://var/mail/error/";
+    public static final String ERROR_REPOSITORY = "file://var/mail/error/";
 
     public static ProcessorConfiguration root() {
         return ProcessorConfiguration.root()

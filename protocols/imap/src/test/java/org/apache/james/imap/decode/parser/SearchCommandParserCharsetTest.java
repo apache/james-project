@@ -74,7 +74,7 @@ public class SearchCommandParserCharsetTest {
 
     ImapMessage message;
 
-	private ImapSession session;
+    private ImapSession session;
 
     @Before
     public void setUp() throws Exception {

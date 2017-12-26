@@ -25,8 +25,8 @@ package org.apache.james.protocols.pop3.mailbox;
 public final class ImapMessageMetaData extends MessageMetaData {
 
     public ImapMessageMetaData(Long uid, long size) {
-		super(uid.toString(), size);
-	}
+        super(uid.toString(), size);
+    }
 
     @Override
     public String getUid(String mailboxId) {

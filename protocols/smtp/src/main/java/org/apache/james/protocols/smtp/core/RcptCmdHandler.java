@@ -220,7 +220,7 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
      * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
      */
     public Collection<String> getImplCommands() {
-    	return COMMANDS;
+        return COMMANDS;
     }
 
     /**
@@ -241,6 +241,6 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
     }
 
     protected String getDefaultDomain() {
-    	return "localhost";
+        return "localhost";
     }
 }

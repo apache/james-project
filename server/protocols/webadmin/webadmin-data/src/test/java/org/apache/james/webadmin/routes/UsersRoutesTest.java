@@ -73,12 +73,12 @@ public class UsersRoutesTest {
         webAdminServer.await();
 
         RestAssured.requestSpecification = new RequestSpecBuilder()
-        		.setContentType(ContentType.JSON)
-        		.setAccept(ContentType.JSON)
-        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
-        		.setPort(webAdminServer.getPort().get().getValue())
-        		.setBasePath(UserRoutes.USERS)
-        		.build();
+            .setContentType(ContentType.JSON)
+            .setAccept(ContentType.JSON)
+            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
+            .setPort(webAdminServer.getPort().get().getValue())
+            .setBasePath(UserRoutes.USERS)
+            .build();
     }
 
     @After

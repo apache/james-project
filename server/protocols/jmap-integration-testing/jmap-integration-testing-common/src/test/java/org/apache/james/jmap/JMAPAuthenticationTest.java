@@ -64,9 +64,9 @@ public abstract class JMAPAuthenticationTest {
         jmapServer = createJmapServer(zonedDateTimeProvider);
         jmapServer.start();
         RestAssured.requestSpecification = new RequestSpecBuilder()
-        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
-        		.setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
-        		.build();
+                .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
+                .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
+                .build();
         
         userCredentials = UserCredentials.builder()
                 .username("user@domain.tld")

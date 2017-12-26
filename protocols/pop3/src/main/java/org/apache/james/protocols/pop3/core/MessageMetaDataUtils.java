@@ -53,7 +53,7 @@ public class MessageMetaDataUtils {
      * @return
      */
     public static boolean isRFC1939Compatible(String uid) {
-    	if (uid == null) {
+        if (uid == null) {
             return false;
         }
 

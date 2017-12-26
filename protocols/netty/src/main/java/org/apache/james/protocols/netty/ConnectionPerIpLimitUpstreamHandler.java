@@ -70,11 +70,11 @@ public class ConnectionPerIpLimitUpstreamHandler extends SimpleChannelUpstreamHa
             AtomicInteger atomicCount = connections.get(remoteIp);
 
             if (atomicCount == null) {
-            	atomicCount = new AtomicInteger(1);
+                atomicCount = new AtomicInteger(1);
                 AtomicInteger oldAtomicCount = connections.putIfAbsent(remoteIp, atomicCount);
                 // if another thread put a new counter for this ip, we must use the other one.
                 if (oldAtomicCount != null) {
-                	atomicCount = oldAtomicCount;
+                    atomicCount = oldAtomicCount;
                 }
             } else {
                 Integer count = atomicCount.incrementAndGet();

@@ -55,7 +55,7 @@ public class MessageResultImpl implements MessageResult {
 
     private MimeDescriptor mimeDescriptor;
 
-	private final MailboxMessage message;
+    private final MailboxMessage message;
 
     private HeadersImpl headers;
     private Content fullContent;

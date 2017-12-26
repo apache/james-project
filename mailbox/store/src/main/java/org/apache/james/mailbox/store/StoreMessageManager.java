@@ -733,7 +733,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             movedRows.add(data);
         }
         return new MoveResult(movedRows.iterator(), originalRowsCopy.iterator());
-	}
+    }
 
 
     private SortedMap<MessageUid, MessageMetaData> copy(MessageRange set, StoreMessageManager to, MailboxSession session) throws MailboxException {

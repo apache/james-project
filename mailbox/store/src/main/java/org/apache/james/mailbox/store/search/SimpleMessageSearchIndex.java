@@ -94,17 +94,17 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
      *      first UidCriterion found
      *      null - if not found
      */
-  	private static UidCriterion findConjugatedUidCriterion(List<Criterion> crits) {
-		for (Criterion crit : crits) {
-			if (crit instanceof UidCriterion) {
-				return (UidCriterion) crit;
-			} else if (crit instanceof ConjunctionCriterion) {
-				return findConjugatedUidCriterion(((ConjunctionCriterion) crit)
-						.getCriteria());
-			}
-		}
-		return null;
-	}
+      private static UidCriterion findConjugatedUidCriterion(List<Criterion> crits) {
+        for (Criterion crit : crits) {
+            if (crit instanceof UidCriterion) {
+                return (UidCriterion) crit;
+            } else if (crit instanceof ConjunctionCriterion) {
+                return findConjugatedUidCriterion(((ConjunctionCriterion) crit)
+                        .getCriteria());
+            }
+        }
+        return null;
+    }
     
     @Override
     public Iterator<MessageUid> search(MailboxSession session, final Mailbox mailbox, SearchQuery query) throws MailboxException {
@@ -133,7 +133,7 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
                 }
             }
         } else {
-        	// we have to fetch all messages
+            // we have to fetch all messages
             Iterator<MailboxMessage> messages = mapper.findInMailbox(mailbox, MessageRange.all(), FetchType.Full, -1);
             while (messages.hasNext()) {
                 MailboxMessage m = messages.next();

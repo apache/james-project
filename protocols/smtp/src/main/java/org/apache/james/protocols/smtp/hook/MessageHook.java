@@ -27,9 +27,9 @@ import org.apache.james.protocols.smtp.SMTPSession;
  * store all the state information in the SMTPSession object
  */
 public interface MessageHook extends Hook {
-	/**
-	 * Handle Message
-	 */
-	HookResult onMessage(SMTPSession session, MailEnvelope mail);
+    /**
+     * Handle Message
+     */
+    HookResult onMessage(SMTPSession session, MailEnvelope mail);
 
 }

@@ -74,12 +74,12 @@ public final class EnvelopeBuilder {
 
                 // ENVELOPE header values must be unfolded
                 // See IMAP-269
-            	//
-            	//
-            	// IMAP-Servers are advised to also replace tabs with single spaces while doing the unfolding. This is what javamails
-            	// unfold does. mime4j's unfold does strictly follow the rfc and so preserve them
-            	// 
-            	// See IMAP-327 and https://mailman2.u.washington.edu/mailman/htdig/imap-protocol/2010-July/001271.html
+                //
+                //
+                // IMAP-Servers are advised to also replace tabs with single spaces while doing the unfolding. This is what javamails
+                // unfold does. mime4j's unfold does strictly follow the rfc and so preserve them
+                //
+                // See IMAP-327 and https://mailman2.u.washington.edu/mailman/htdig/imap-protocol/2010-July/001271.html
                 result = MimeUtility.unfold(value);
 
             }
@@ -116,11 +116,11 @@ public final class EnvelopeBuilder {
 
             // We need to unfold the header line.
             // See https://issues.apache.org/jira/browse/IMAP-154
-        	//
-        	// IMAP-Servers are advised to also replace tabs with single spaces while doing the unfolding. This is what javamails
-        	// unfold does. mime4j's unfold does strictly follow the rfc and so preserve them
-        	// 
-        	// See IMAP-327 and https://mailman2.u.washington.edu/mailman/htdig/imap-protocol/2010-July/001271.html
+            //
+            // IMAP-Servers are advised to also replace tabs with single spaces while doing the unfolding. This is what javamails
+            // unfold does. mime4j's unfold does strictly follow the rfc and so preserve them
+            //
+            // See IMAP-327 and https://mailman2.u.washington.edu/mailman/htdig/imap-protocol/2010-July/001271.html
             String value = MimeUtility.unfold(header.getValue());
 
             if ("".equals(value.trim())) {

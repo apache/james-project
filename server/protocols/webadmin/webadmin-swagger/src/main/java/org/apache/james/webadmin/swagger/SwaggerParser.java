@@ -36,49 +36,49 @@ import io.swagger.models.Swagger;
 
 @SwaggerDefinition
 public class SwaggerParser {
-	private static final String[] SCHEMES = new String[]{SwaggerDefinition.Scheme.HTTP.name(), SwaggerDefinition.Scheme.HTTPS.name()};
-	private static final String JSON_TYPE = "application/json";
-	private static final String API_DOC_VERSION = "V1.0";
-	private static final String API_DOC_TITLE = "JAMES Web Admin API";
-	private static final String API_DOC_DESCRIPTION = "All the web administration API for JAMES";
-	public static final String HOST_PORT_SEPARATOR = ":";
+    private static final String[] SCHEMES = new String[]{SwaggerDefinition.Scheme.HTTP.name(), SwaggerDefinition.Scheme.HTTPS.name()};
+    private static final String JSON_TYPE = "application/json";
+    private static final String API_DOC_VERSION = "V1.0";
+    private static final String API_DOC_TITLE = "JAMES Web Admin API";
+    private static final String API_DOC_DESCRIPTION = "All the web administration API for JAMES";
+    public static final String HOST_PORT_SEPARATOR = ":";
 
-	@Inject
-	public static String getSwaggerJson(String packageName, WebAdminConfiguration configuration) throws JsonProcessingException {
-		return swaggerToJson(getSwagger(packageName, configuration));
-	}
+    @Inject
+    public static String getSwaggerJson(String packageName, WebAdminConfiguration configuration) throws JsonProcessingException {
+        return swaggerToJson(getSwagger(packageName, configuration));
+    }
 
-	private static Swagger getSwagger(String packageName, WebAdminConfiguration configuration) {
-		return new Reader(getSwagger(getBeanConfig(packageName, configuration)))
-				.read(new Reflections(packageName)
-				.getTypesAnnotatedWith(Api.class));
-	}
+    private static Swagger getSwagger(String packageName, WebAdminConfiguration configuration) {
+        return new Reader(getSwagger(getBeanConfig(packageName, configuration)))
+                .read(new Reflections(packageName)
+                .getTypesAnnotatedWith(Api.class));
+    }
 
-	private static Swagger getSwagger(BeanConfig beanConfig) {
-		Swagger swagger = beanConfig.getSwagger();
+    private static Swagger getSwagger(BeanConfig beanConfig) {
+        Swagger swagger = beanConfig.getSwagger();
 
-		swagger.addConsumes(JSON_TYPE);
-		swagger.addProduces(JSON_TYPE);
-		return swagger;
-	}
+        swagger.addConsumes(JSON_TYPE);
+        swagger.addProduces(JSON_TYPE);
+        return swagger;
+    }
 
-	private static BeanConfig getBeanConfig(String packageName, WebAdminConfiguration configuration) {
-		BeanConfig beanConfig = new BeanConfig();
-		beanConfig.setResourcePackage(packageName);
-		beanConfig.setVersion(API_DOC_VERSION);
-		beanConfig.setTitle(API_DOC_TITLE);
-		beanConfig.setDescription(API_DOC_DESCRIPTION);
-		beanConfig.setHost(configuration.getHost() + HOST_PORT_SEPARATOR + configuration.getPort().get().getValue());
-		beanConfig.setSchemes(SCHEMES);
-		beanConfig.setScan(true);
-		beanConfig.scanAndRead();
-		return beanConfig;
-	}
+    private static BeanConfig getBeanConfig(String packageName, WebAdminConfiguration configuration) {
+        BeanConfig beanConfig = new BeanConfig();
+        beanConfig.setResourcePackage(packageName);
+        beanConfig.setVersion(API_DOC_VERSION);
+        beanConfig.setTitle(API_DOC_TITLE);
+        beanConfig.setDescription(API_DOC_DESCRIPTION);
+        beanConfig.setHost(configuration.getHost() + HOST_PORT_SEPARATOR + configuration.getPort().get().getValue());
+        beanConfig.setSchemes(SCHEMES);
+        beanConfig.setScan(true);
+        beanConfig.scanAndRead();
+        return beanConfig;
+    }
 
-	public static String swaggerToJson(Swagger swagger) throws JsonProcessingException {
-		ObjectMapper objectMapper = new ObjectMapper();
-		objectMapper.setSerializationInclusion(Include.NON_EMPTY);
-		return objectMapper.writeValueAsString(swagger);
-	}
+    public static String swaggerToJson(Swagger swagger) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.setSerializationInclusion(Include.NON_EMPTY);
+        return objectMapper.writeValueAsString(swagger);
+    }
 
 }

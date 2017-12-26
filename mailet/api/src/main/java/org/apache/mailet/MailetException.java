@@ -29,10 +29,10 @@ public class MailetException extends MessagingException {
 
     /**
      * @since Mailet API 2.5
-	 */
-	private static final long serialVersionUID = -2753505469139276160L;
+     */
+    private static final long serialVersionUID = -2753505469139276160L;
 
-	/**
+    /**
      * Constructs a new mailet exception.
      */
     public MailetException() {

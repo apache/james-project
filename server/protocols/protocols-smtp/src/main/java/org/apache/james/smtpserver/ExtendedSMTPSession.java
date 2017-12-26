@@ -35,7 +35,7 @@ public class ExtendedSMTPSession extends org.apache.james.protocols.smtp.SMTPSes
         this.smtpConfiguration = smtpConfiguration;
     }
 
-	public boolean verifyIdentity() {
+    public boolean verifyIdentity() {
         return !(smtpConfiguration instanceof SMTPHandlerConfigurationDataImpl) || ((SMTPHandlerConfigurationDataImpl) smtpConfiguration).verifyIdentity();
     }
 }

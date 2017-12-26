@@ -605,8 +605,8 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
 
     @Override
     public MessageMetaData move(Mailbox mailbox, MailboxMessage original) throws MailboxException {
-    	//TODO implement if possible
-    	throw new UnsupportedOperationException();
+        //TODO implement if possible
+        throw new UnsupportedOperationException();
     }
 
     @Override

@@ -657,7 +657,7 @@ public class MaildirFolder {
 
                     if (gap == -1) {
                         // there must be some issues in the file if no gap can be found
-                    	LOGGER.info("Corrupted entry in uid-file {} line {}", uidList, lineNumber);
+                        LOGGER.info("Corrupted entry in uid-file {} line {}", uidList, lineNumber);
                         continue;
                     }
                     

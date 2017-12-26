@@ -299,7 +299,7 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
      *      java.util.List)
      */
     @SuppressWarnings("unchecked")
-	public void wireExtensions(Class<?> interfaceName, List<?> extension) {
+    public void wireExtensions(Class<?> interfaceName, List<?> extension) {
         if (getHookInterface().equals(interfaceName)) {
             this.hooks = (List<Hook>) extension;
         } else if (HookResultHook.class.equals(interfaceName)) {

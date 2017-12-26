@@ -100,9 +100,9 @@ public class MaildirHostSystem extends JamesImapHostSystem {
     public void afterTest() throws Exception {
         resetUserMetaData();
         try {
-        	FileUtils.deleteDirectory(new File(MAILDIR_HOME));
+            FileUtils.deleteDirectory(new File(MAILDIR_HOME));
         } catch (Exception e) {
-        	e.printStackTrace();
+            e.printStackTrace();
         }
     }
     

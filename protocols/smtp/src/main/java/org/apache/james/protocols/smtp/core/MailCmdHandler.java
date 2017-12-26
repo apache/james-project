@@ -107,7 +107,7 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
         return response;
     }
 
-	/**
+    /**
      * Handler method called upon receipt of a MAIL command. Sets up handler to
      * deliver mail as the stated sender.
      * 
@@ -134,7 +134,7 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
      * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
      */
     public Collection<String> getImplCommands() {
-    	return COMMANDS;
+        return COMMANDS;
     }
 
     /**

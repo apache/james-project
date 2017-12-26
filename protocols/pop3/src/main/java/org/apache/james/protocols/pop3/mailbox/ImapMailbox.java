@@ -40,9 +40,9 @@ public abstract class ImapMailbox implements Mailbox {
      */
     public abstract InputStream getMessageBody(long uid) throws IOException;
 
-	public InputStream getMessageBody(String uid) throws NumberFormatException, IOException {
-		return this.getMessageBody(Long.parseLong(uid));
-	}
+    public InputStream getMessageBody(String uid) throws NumberFormatException, IOException {
+        return this.getMessageBody(Long.parseLong(uid));
+    }
 
     /**
      * Returns the message headers as {@link InputStream} or <code>null</code>
@@ -54,9 +54,9 @@ public abstract class ImapMailbox implements Mailbox {
      */
     public abstract InputStream getMessageHeaders(long uid) throws IOException;
 
-	public InputStream getMessageHeaders(String uid) throws NumberFormatException, IOException {
-		return this.getMessageHeaders(Long.parseLong(uid));
-	}
+    public InputStream getMessageHeaders(String uid) throws NumberFormatException, IOException {
+        return this.getMessageHeaders(Long.parseLong(uid));
+    }
 
     /**
      * Return the full message (headers + body) as {@link InputStream} or
@@ -69,9 +69,9 @@ public abstract class ImapMailbox implements Mailbox {
      */
     public abstract InputStream getMessage(long uid) throws IOException;
 
-	public InputStream getMessage(String uid) throws NumberFormatException, IOException {
-		return this.getMessage(Long.parseLong(uid));
-	}
+    public InputStream getMessage(String uid) throws NumberFormatException, IOException {
+        return this.getMessage(Long.parseLong(uid));
+    }
 
     /**
      * Remove the messages with the given uids
@@ -85,6 +85,6 @@ public abstract class ImapMailbox implements Mailbox {
             .mapToLong(Long::parseLong)
             .toArray();
         this.remove(imapUids);
-	}
+    }
 
 }

@@ -43,7 +43,7 @@ import com.google.common.collect.ImmutableSet;
  */
 public class HeloCmdHandler extends AbstractHookableCmdHandler<HeloHook> {
 
-	private static final String COMMAND_NAME = "HELO";
+    private static final String COMMAND_NAME = "HELO";
     /**
      * The name of the command handled by the command handler
      */

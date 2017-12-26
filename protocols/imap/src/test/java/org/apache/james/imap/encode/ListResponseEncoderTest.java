@@ -71,7 +71,7 @@ public class ListResponseEncoderTest {
     }
 
     @Test
-	public void encoderShouldIncludeListCommand() throws Exception {
+    public void encoderShouldIncludeListCommand() throws Exception {
         encoder.encode(new ListResponse(MailboxMetaData.Children.HAS_CHILDREN, MailboxMetaData.Selectability.NONE, "name", '.'), composer, new FakeImapSession());
         assertThat(writer.getString()).startsWith("* LIST");
     }

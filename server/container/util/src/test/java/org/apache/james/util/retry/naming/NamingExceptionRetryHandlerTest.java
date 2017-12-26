@@ -43,42 +43,42 @@ public class NamingExceptionRetryHandlerTest {
      */
     @Before
     public void setUp() throws Exception {
-	_exceptionClasses = new Class<?>[]{NamingException.class};
-	_proxy = new TestRetryingProxy();
-	_schedule = new TestRetrySchedule();
+    _exceptionClasses = new Class<?>[]{NamingException.class};
+    _proxy = new TestRetryingProxy();
+    _schedule = new TestRetrySchedule();
     }
 
     private class TestRetryingProxy implements ExceptionRetryingProxy {
 
-	/**
+    /**
      */
-	@Override
-	public Context getDelegate() {
-	    return null;
-	}
+    @Override
+    public Context getDelegate() {
+        return null;
+    }
 
-	/**
+    /**
      */
-	@Override
-	public Context newDelegate() throws NamingException {
-	    return null;
-	}
+    @Override
+    public Context newDelegate() throws NamingException {
+        return null;
+    }
 
-	/**
+    /**
      */
-	@Override
-	public void resetDelegate() throws NamingException {
-	}
+    @Override
+    public void resetDelegate() throws NamingException {
+    }
     }
 
     private class TestRetrySchedule implements RetrySchedule {
 
-	/**
+    /**
      */
-	@Override
-	public long getInterval(int index) {
-	    return index;
-	}
+    @Override
+    public long getInterval(int index) {
+        return index;
+    }
     }
 
     /**
@@ -86,14 +86,14 @@ public class NamingExceptionRetryHandlerTest {
      */
     @Test
     public final void testExceptionRetryHandler() {
-	assertTrue(RetryHandler.class.isAssignableFrom(new NamingExceptionRetryHandler(
-		_exceptionClasses, _proxy, _schedule, 0) {
+    assertTrue(RetryHandler.class.isAssignableFrom(new NamingExceptionRetryHandler(
+        _exceptionClasses, _proxy, _schedule, 0) {
 
-	    @Override
-	    public Object operation() throws Exception {
-		return null;
-	    }
-	}.getClass()));
+        @Override
+        public Object operation() throws Exception {
+        return null;
+        }
+    }.getClass()));
     }
 
     /**
@@ -102,28 +102,28 @@ public class NamingExceptionRetryHandlerTest {
      */
     @Test
     public final void testPerform() throws NamingException {
-	Object result = new NamingExceptionRetryHandler(
-		_exceptionClasses, _proxy, _schedule, 0) {
+    Object result = new NamingExceptionRetryHandler(
+        _exceptionClasses, _proxy, _schedule, 0) {
 
-	    @Override
-	    public Object operation() throws NamingException {
-		return "Hi!";
-	    }
-	}.perform();
-	assertEquals("Hi!", result);
+        @Override
+        public Object operation() throws NamingException {
+        return "Hi!";
+        }
+    }.perform();
+    assertEquals("Hi!", result);
 
-	try {
-	    new NamingExceptionRetryHandler(
-		    _exceptionClasses, _proxy, _schedule, 0) {
+    try {
+        new NamingExceptionRetryHandler(
+            _exceptionClasses, _proxy, _schedule, 0) {
 
-		@Override
-		public Object operation() throws Exception {
-		    throw new NamingException();
-		}
-	    }.perform();
-	} catch (NamingException ex) {
-	    // no-op
-	}
-	assertEquals("Hi!", result);
+        @Override
+        public Object operation() throws Exception {
+            throw new NamingException();
+        }
+        }.perform();
+    } catch (NamingException ex) {
+        // no-op
+    }
+    assertEquals("Hi!", result);
     }
 }

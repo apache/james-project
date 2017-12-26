@@ -43,7 +43,7 @@ public abstract class ForwardSmtpTest {
 
     @Rule
     public FakeSmtp fakeSmtp = new FakeSmtp();
-    
+
     private ConditionFactory calmlyAwait;
 
     protected abstract SmtpHostSystem createSmtpHostSystem();

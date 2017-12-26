@@ -118,7 +118,7 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
      *      java.util.List)
      */
     @SuppressWarnings("unchecked")
-	public void wireExtensions(Class<?> interfaceName, List<?> extension) {
+    public void wireExtensions(Class<?> interfaceName, List<?> extension) {
         super.wireExtensions(interfaceName, extension);
         if (EhloExtension.class.equals(interfaceName)) {
             this.ehloExtensions = (List<EhloExtension>) extension;

@@ -92,7 +92,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
             final Flags flags = request.getFlags();
             
             if (unchangedSince != -1) {
-            	MetaData metaData = mailbox.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT);
+                MetaData metaData = mailbox.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT);
                 if (metaData.isModSeqPermanent() == false) {
                     // Check if the mailbox did not support modsequences. If so return a tagged bad response.
                     // See RFC4551 3.1.2. NOMODSEQ Response Code 

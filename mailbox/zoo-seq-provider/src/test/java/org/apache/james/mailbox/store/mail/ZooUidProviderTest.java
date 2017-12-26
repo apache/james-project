@@ -136,73 +136,73 @@ public class ZooUidProviderTest {
         }
 
     }
-	
-		
-	    private static TestingServer testServer;
-	    private static final int ZOO_TEST_PORT = 3123;
-	    private final RetryPolicy retryPolicy = new RetryOneTime(1);
-	    private CuratorFramework client;
-	    private ZooUidProvider uuidProvider;
-	    private ZooUidProvider longProvider;
-	    private SimpleMailbox mailboxUUID;
-	    private SimpleMailbox mailboxLong;
-	    private UUID randomUUID = UUID.randomUUID();
-	
-	    @Before
-	    public void setUp() throws Exception {
-	        testServer = new TestingServer(ZOO_TEST_PORT);
-	        client = CuratorFrameworkFactory.builder().connectString("localhost:" + ZOO_TEST_PORT).retryPolicy(retryPolicy).
-	                namespace("JAMES").build();
-	        client.start();
-	        uuidProvider = new ZooUidProvider(client, retryPolicy);
-	        longProvider = new ZooUidProvider(client, retryPolicy);
-	        MailboxPath path1 = new MailboxPath("namespacetest", "namespaceuser", "UUID");
-	        MailboxPath path2 = new MailboxPath("namespacetest", "namespaceuser", "Long");
-	        mailboxUUID = new SimpleMailbox(path1, 1L);
-	        mailboxUUID.setMailboxId(UUIDId.of(randomUUID));
-	        mailboxLong = new SimpleMailbox(path2, 2L);
-	        mailboxLong.setMailboxId(new LongId(123L));
-	    }
-	
-	    @After
-	    public void tearDown() throws Exception {
-	        client.close();
-	        testServer.close();
-	    }
-	
-	    /**
-	     * Test of nextUid method, of class ZooUidProvider.
-	     */
-	    @Test
-	    public void testNextUid() throws Exception {
-	        System.out.println("Testing nextUid");
-	        MessageUid result = uuidProvider.nextUid(null, mailboxUUID);
-	        assertEquals("Next UID is 1", 1, result.asLong());
-	        result = longProvider.nextUid(null, mailboxLong);
-	        assertEquals("Next UID is 1", 1, result.asLong());
-	    }
-	
-	    /**
-	     * Test of lastUid method, of class ZooUidProvider.
-	     */
-	    @Test
-	    public void testLastUid() throws Exception {
-	        System.out.println("Testing lastUid");
-	        Optional<MessageUid> result = uuidProvider.lastUid(null, mailboxUUID);
-	        assertEquals("Next UID is empty", Optional.empty(), result);
-	        MessageUid nextResult = uuidProvider.nextUid(null, mailboxUUID);
-	        assertEquals("Next UID is 1", 1, nextResult.asLong());
-	    }
-	
-	    /**
-	     * Test of lastUid method, of class ZooUidProvider.
-	     */
-	    @Test
-	    public void testLongLastUid() throws Exception {
-	        System.out.println("Testing long lastUid");
-	        Optional<MessageUid> result = longProvider.lastUid(null, mailboxLong);
-	        assertEquals("Next UID is empty", Optional.empty(), result);
-	        MessageUid nextResult = longProvider.nextUid(null, mailboxLong);
-	        assertEquals("Next UID is 1", 1, nextResult.asLong());
-	    }
-	}
+
+
+        private static TestingServer testServer;
+        private static final int ZOO_TEST_PORT = 3123;
+        private final RetryPolicy retryPolicy = new RetryOneTime(1);
+        private CuratorFramework client;
+        private ZooUidProvider uuidProvider;
+        private ZooUidProvider longProvider;
+        private SimpleMailbox mailboxUUID;
+        private SimpleMailbox mailboxLong;
+        private UUID randomUUID = UUID.randomUUID();
+
+        @Before
+        public void setUp() throws Exception {
+            testServer = new TestingServer(ZOO_TEST_PORT);
+            client = CuratorFrameworkFactory.builder().connectString("localhost:" + ZOO_TEST_PORT).retryPolicy(retryPolicy).
+                    namespace("JAMES").build();
+            client.start();
+            uuidProvider = new ZooUidProvider(client, retryPolicy);
+            longProvider = new ZooUidProvider(client, retryPolicy);
+            MailboxPath path1 = new MailboxPath("namespacetest", "namespaceuser", "UUID");
+            MailboxPath path2 = new MailboxPath("namespacetest", "namespaceuser", "Long");
+            mailboxUUID = new SimpleMailbox(path1, 1L);
+            mailboxUUID.setMailboxId(UUIDId.of(randomUUID));
+            mailboxLong = new SimpleMailbox(path2, 2L);
+            mailboxLong.setMailboxId(new LongId(123L));
+        }
+
+        @After
+        public void tearDown() throws Exception {
+            client.close();
+            testServer.close();
+        }
+
+        /**
+         * Test of nextUid method, of class ZooUidProvider.
+         */
+        @Test
+        public void testNextUid() throws Exception {
+            System.out.println("Testing nextUid");
+            MessageUid result = uuidProvider.nextUid(null, mailboxUUID);
+            assertEquals("Next UID is 1", 1, result.asLong());
+            result = longProvider.nextUid(null, mailboxLong);
+            assertEquals("Next UID is 1", 1, result.asLong());
+        }
+
+        /**
+         * Test of lastUid method, of class ZooUidProvider.
+         */
+        @Test
+        public void testLastUid() throws Exception {
+            System.out.println("Testing lastUid");
+            Optional<MessageUid> result = uuidProvider.lastUid(null, mailboxUUID);
+            assertEquals("Next UID is empty", Optional.empty(), result);
+            MessageUid nextResult = uuidProvider.nextUid(null, mailboxUUID);
+            assertEquals("Next UID is 1", 1, nextResult.asLong());
+        }
+
+        /**
+         * Test of lastUid method, of class ZooUidProvider.
+         */
+        @Test
+        public void testLongLastUid() throws Exception {
+            System.out.println("Testing long lastUid");
+            Optional<MessageUid> result = longProvider.lastUid(null, mailboxLong);
+            assertEquals("Next UID is empty", Optional.empty(), result);
+            MessageUid nextResult = longProvider.nextUid(null, mailboxLong);
+            assertEquals("Next UID is 1", 1, nextResult.asLong());
+        }
+    }

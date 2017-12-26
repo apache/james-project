@@ -26,9 +26,9 @@ package org.apache.mailet;
  */
 public class TemporaryLookupException extends LookupException {
 
-	private static final long serialVersionUID = 6732299701194103662L;
+    private static final long serialVersionUID = 6732299701194103662L;
 
-	/**
+    /**
      * Constructs a new lookup exception.
      */
     public TemporaryLookupException() {

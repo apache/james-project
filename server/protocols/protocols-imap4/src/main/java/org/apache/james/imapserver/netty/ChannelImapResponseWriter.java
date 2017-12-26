@@ -43,10 +43,10 @@ import org.jboss.netty.handler.stream.ChunkedStream;
 public class ChannelImapResponseWriter implements ImapResponseWriter {
 
     private final Channel channel;
-	private final boolean zeroCopy;
+    private final boolean zeroCopy;
 
     public ChannelImapResponseWriter(Channel channel) {
-    	this(channel, true);
+        this(channel, true);
     }
 
     public ChannelImapResponseWriter(Channel channel, boolean zeroCopy) {

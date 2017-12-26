@@ -29,20 +29,20 @@ import org.apache.maven.plugin.MojoFailureException;
  */
 public class MailProtocolTestMojo extends AbstractMojo {
 
-	/**
-	 * The Mail Protocol Tests (MPT) to run
-	 * 
-	 * @parameter
-	 * @required
-	 * @since 0.1
-	 */
+    /**
+     * The Mail Protocol Tests (MPT) to run
+     *
+     * @parameter
+     * @required
+     * @since 0.1
+     */
     private MailProtocolTest[] mailProtocolTests;
 
-	public void execute() throws MojoExecutionException, MojoFailureException {
-		for (MailProtocolTest test : mailProtocolTests) {
-			test.execute();
-		}
-	}
+    public void execute() throws MojoExecutionException, MojoFailureException {
+        for (MailProtocolTest test : mailProtocolTests) {
+            test.execute();
+        }
+    }
     
     
     

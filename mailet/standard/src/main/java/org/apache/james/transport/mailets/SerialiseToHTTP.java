@@ -48,11 +48,11 @@ import org.slf4j.LoggerFactory;
  * Sample configuration:
  * 
  * <mailet match="All" class="SerialiseToHTTP">
- * 		<name>URL</name> <value>url where serialised message will be posted</value>
- * 		<name>ParameterKey</name> <value>An arbitrary parameter be added to the post</value>
- * 		<name>ParameterValue</name> <value>A value for the arbitrary parameter</value>
- * 		<name>MessageKeyName</name> <value>Field name for the serialised message</value>
- * 		<name>passThrough</name> <value>true or false</value>
+ *         <name>URL</name> <value>url where serialised message will be posted</value>
+ *         <name>ParameterKey</name> <value>An arbitrary parameter be added to the post</value>
+ *         <name>ParameterValue</name> <value>A value for the arbitrary parameter</value>
+ *         <name>MessageKeyName</name> <value>Field name for the serialised message</value>
+ *         <name>passThrough</name> <value>true or false</value>
  * </mailet>
  * 
  */

@@ -60,7 +60,7 @@ public class ExpnCmdHandler implements CommandHandler<SMTPSession> {
      * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
      */
     public Collection<String> getImplCommands() {
-    	return COMMANDS;
+        return COMMANDS;
     }
 
     @Override

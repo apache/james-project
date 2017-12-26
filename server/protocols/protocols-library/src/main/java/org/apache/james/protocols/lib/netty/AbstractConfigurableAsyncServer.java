@@ -392,9 +392,9 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
                 SSLContext context = SSLContext.getInstance("TLS");
                 context.init(kmf.getKeyManagers(), null, null);
                 if (useStartTLS) {
-                	encryption = Encryption.createStartTls(context, enabledCipherSuites);
+                    encryption = Encryption.createStartTls(context, enabledCipherSuites);
                 } else {
-                	encryption = Encryption.createTls(context, enabledCipherSuites);
+                    encryption = Encryption.createTls(context, enabledCipherSuites);
                 }
             } finally {
                 if (fis != null) {

@@ -29,9 +29,9 @@ import org.apache.james.mailbox.exception.MailboxException;
 public abstract class NonTransactionalMapper implements Mapper {
 
     /**
-	 * @see org.apache.james.mailbox.store.transaction.Mapper#execute(org.apache.james.mailbox.store.transaction.Mapper.Transaction)
-	 */
-	public final <T> T execute(Transaction<T> transaction) throws MailboxException {
+     * @see org.apache.james.mailbox.store.transaction.Mapper#execute(org.apache.james.mailbox.store.transaction.Mapper.Transaction)
+     */
+    public final <T> T execute(Transaction<T> transaction) throws MailboxException {
         return transaction.run();
     }
 

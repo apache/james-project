@@ -44,7 +44,7 @@ public class AddUser {
     }
 
     public void setHost(String host) {
-    	this.host = host;
+        this.host = host;
     }
     
     /**
@@ -112,11 +112,11 @@ public class AddUser {
     }
 
     public File getScriptFile() {
-    	return scriptFile;
+        return scriptFile;
     }
     
     public void setScriptFile(File scriptFile) {
-    	this.scriptFile = scriptFile;
+        this.scriptFile = scriptFile;
     }
     
 }
