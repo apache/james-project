@@ -32,8 +32,8 @@ public class MailHeadersTest {
 
     @Test
     public void testHeadersOrder() throws MessagingException {
-        MailHeaders header = new MailHeaders(new ByteArrayInputStream((RFC2822Headers.SUBJECT + ": testsubject\r\n").
-                getBytes()));
+        MailHeaders header = new MailHeaders(new ByteArrayInputStream((RFC2822Headers.SUBJECT + ": testsubject\r\n")
+                .getBytes()));
         header.setHeader(RFC2822Headers.RETURN_PATH, "<test@test>");
         header.setHeader(RFC2822Headers.FROM, "<test2@test.de>");
         @SuppressWarnings("unchecked")

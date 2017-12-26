@@ -151,8 +151,9 @@ public class ZooUidProviderTest {
         @Before
         public void setUp() throws Exception {
             testServer = new TestingServer(ZOO_TEST_PORT);
-            client = CuratorFrameworkFactory.builder().connectString("localhost:" + ZOO_TEST_PORT).retryPolicy(retryPolicy).
-                    namespace("JAMES").build();
+            client = CuratorFrameworkFactory.builder().connectString("localhost:" + ZOO_TEST_PORT)
+                    .retryPolicy(retryPolicy)
+                    .namespace("JAMES").build();
             client.start();
             uuidProvider = new ZooUidProvider(client, retryPolicy);
             longProvider = new ZooUidProvider(client, retryPolicy);

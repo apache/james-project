@@ -213,8 +213,8 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         ArrayList<MailAddress> recipients = new ArrayList<>();
         recipients.add(new MailAddress("recipient@test.com"));
         MimeMessageCopyOnWriteProxy mw = new MimeMessageCopyOnWriteProxy(new MimeMessageInputStreamSource("test",
-                new SharedByteArrayInputStream(("Return-path: return@test.com\r\n" + "Content-Transfer-Encoding: plain\r\n" + "Subject: test\r\n\r\n" + "Body Text testNPE1\r\n").
-                getBytes())));
+                new SharedByteArrayInputStream(("Return-path: return@test.com\r\n" + "Content-Transfer-Encoding: plain\r\n" + "Subject: test\r\n\r\n" + "Body Text testNPE1\r\n")
+                        .getBytes())));
 
         MimeMessageCopyOnWriteProxy mw2 = new MimeMessageCopyOnWriteProxy(mw);
         LifecycleUtil.dispose(mw2);

@@ -91,8 +91,8 @@ public abstract class AbstractMailRepositoryTest {
         }
         Mail m2 = mailRepository.retrieve(mailRepository.list().next());
 
-        assertEquals("stored and retrieved messages do not match", mail.getMessage().getContent().toString(), m2.
-                getMessage().getContent().toString());
+        assertEquals("stored and retrieved messages do not match", mail.getMessage().getContent().toString(), 
+                m2.getMessage().getContent().toString());
         assertEquals("stored and retrieved message sizes do not match", mail.getMessageSize(), m2.getMessageSize());
         assertEquals("stored and retrieved keys do not match", mail.getName(), m2.getName());
         assertEquals("stored and retrieved states do not match", mail.getState(), m2.getState());

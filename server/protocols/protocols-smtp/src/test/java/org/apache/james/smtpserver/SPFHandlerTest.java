@@ -251,8 +251,8 @@ public class SPFHandlerTest {
         spf.setDNSService(mockedDnsService);
 
         assertEquals("declined", HookReturnCode.DECLINED, spf.doMail(mockedSMTPSession, sender).getResult());
-        assertEquals("temperror denysoft", HookReturnCode.DENYSOFT, spf.doRcpt(mockedSMTPSession, sender, rcpt).
-                getResult());
+        assertEquals("temperror denysoft", HookReturnCode.DENYSOFT, 
+                spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult());
     }
 
     @Test

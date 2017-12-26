@@ -62,8 +62,8 @@ public class InMemoryUsersRepository extends AbstractJamesUsersRepository {
 
     public String getRealName(String name) {
         if (ignoreCase) {
-            return m_users.get(name.toLowerCase(Locale.US)) != null ? m_users.get(name.toLowerCase(Locale.US)).
-                    getUserName() : null;
+            return m_users.get(name.toLowerCase(Locale.US)) != null ? 
+                    m_users.get(name.toLowerCase(Locale.US)).getUserName() : null;
         } else {
             return m_users.get(name) != null ? name : null;
         }

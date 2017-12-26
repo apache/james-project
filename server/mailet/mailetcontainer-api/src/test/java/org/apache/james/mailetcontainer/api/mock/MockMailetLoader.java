@@ -30,8 +30,8 @@ public class MockMailetLoader implements MailetLoader {
     @Override
     public Mailet getMailet(MailetConfig config) throws MessagingException {
         try {
-            Class<Mailet> clazz = (Class<Mailet>) Thread.currentThread().getContextClassLoader().loadClass(config.
-                    getMailetName());
+            Class<Mailet> clazz = (Class<Mailet>) Thread.currentThread().getContextClassLoader().loadClass(
+                    config.getMailetName());
             Mailet m = clazz.newInstance();
             m.init(config);
             return m;

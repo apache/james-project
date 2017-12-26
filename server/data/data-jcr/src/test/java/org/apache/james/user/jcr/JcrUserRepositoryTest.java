@@ -56,8 +56,8 @@ public class JcrUserRepositoryTest extends AbstractUsersRepositoryTest {
         if (home.exists()) {
             delete(home);
         }
-        RepositoryConfig config = RepositoryConfig.create(new InputSource(this.getClass().getClassLoader().
-                getResourceAsStream("test-repository.xml")), JACKRABBIT_HOME);
+        RepositoryConfig config = RepositoryConfig.create(new InputSource(this.getClass().getClassLoader()
+                .getResourceAsStream("test-repository.xml")), JACKRABBIT_HOME);
         repository = RepositoryImpl.create(config);
         super.setUp();
     }

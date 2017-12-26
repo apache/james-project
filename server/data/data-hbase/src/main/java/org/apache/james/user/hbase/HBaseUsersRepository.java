@@ -274,8 +274,8 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
         try {
             table = TablePool.getInstance().getUsersRepositoryTable();
             Put put = new Put(Bytes.toBytes(username));
-            put.add(HUsersRepository.COLUMN_FAMILY_NAME, HUsersRepository.COLUMN.PWD, Bytes.toBytes(user.
-                    getHashedPassword()));
+            put.add(HUsersRepository.COLUMN_FAMILY_NAME, HUsersRepository.COLUMN.PWD, 
+                    Bytes.toBytes(user.getHashedPassword()));
             table.put(put);
             table.flushCommits();
         } catch (IOException e) {

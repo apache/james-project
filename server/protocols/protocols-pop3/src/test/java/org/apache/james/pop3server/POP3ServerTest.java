@@ -390,8 +390,9 @@ public class POP3ServerTest {
 
         int msgCount = 100;
         for (int i = 0; i < msgCount; i++) {
-            mailboxManager.getMailbox(mailboxPath, session).appendMessage(new ByteArrayInputStream(("Subject: test\r\n\r\n" + i).
-                    getBytes()), new Date(), session, true, new Flags());
+            mailboxManager.getMailbox(mailboxPath, session).appendMessage(
+                    new ByteArrayInputStream(("Subject: test\r\n\r\n" + i).getBytes()),
+                    new Date(), session, true, new Flags());
         }
 
         pop3Client.login("foo2", "bar2");
@@ -440,8 +441,8 @@ public class POP3ServerTest {
 
         int msgCount = 100;
         for (int i = 0; i < msgCount; i++) {
-            mailboxManager.getMailbox(mailboxPath, session).appendMessage(new ByteArrayInputStream(("Subject: test\r\n\r\n" + i).
-                    getBytes()), new Date(), session, true, new Flags());
+            mailboxManager.getMailbox(mailboxPath, session).appendMessage(
+                    new ByteArrayInputStream(("Subject: test\r\n\r\n" + i).getBytes()), new Date(), session, true, new Flags());
         }
 
         pop3Client.login("foo2", "bar2");
