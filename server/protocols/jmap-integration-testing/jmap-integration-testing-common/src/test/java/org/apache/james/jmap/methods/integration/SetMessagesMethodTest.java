@@ -4166,6 +4166,7 @@ public abstract class SetMessagesMethodTest {
             .body(firstAttachment + ".type", equalTo("text/html"))
             .body(firstAttachment + ".size", equalTo((int) attachment.getSize()));
     }
+    
     @Test
     public void attachmentAndEmptyBodyShouldBeRetrievedWhenChainingSetMessagesAndGetMessagesWithTextAttachmentWithoutMailBody() throws Exception {
         Attachment attachment = Attachment.builder()
@@ -4235,6 +4236,7 @@ public abstract class SetMessagesMethodTest {
             .body(firstAttachment + ".type", equalTo("text/plain"))
             .body(firstAttachment + ".size", equalTo((int) attachment.getSize()));
     }
+    
     @Test
     public void setMessagesShouldVerifyHeaderOfMessageInInbox() throws Exception {
         String toUsername = "username1@" + USERS_DOMAIN;

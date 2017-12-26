@@ -94,6 +94,7 @@ public class ACLDiffTest {
 
         assertThat(acldiff.changedEntries()).isEmpty();
     }
+    
     @Test
     public void addedEntriesShouldReturnNewEntryWhenAddedEntry() throws Exception {
         ACLDiff aclDiff = ACLDiff.computeDiff(

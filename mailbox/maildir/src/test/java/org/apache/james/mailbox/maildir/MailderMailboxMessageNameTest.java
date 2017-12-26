@@ -94,6 +94,7 @@ public class MailderMailboxMessageNameTest {
 
         return args;
     }
+    
     private static Object[] toObjectArray(Parts validName) {
         return new Object[] { validName };
     }

@@ -43,9 +43,11 @@ public class FileHostSystem extends JamesManageSieveHostSystem {
             public File getBasedir() throws FileNotFoundException {
                 return new File(System.getProperty("java.io.tmpdir"));
             }
+            
             public InputStream getResource(String url) throws IOException {
                 return new FileInputStream(getFile(url));
             }
+            
             public File getFile(String fileURL) throws FileNotFoundException {
                 return new File(getBasedir(), fileURL.substring(FileSystem.FILE_PROTOCOL.length()));
             }

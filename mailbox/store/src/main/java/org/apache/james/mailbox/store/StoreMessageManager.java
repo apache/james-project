@@ -122,6 +122,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
      * later!</strong>
      */
     protected static final Flags MINIMAL_PERMANET_FLAGS;
+
     static {
         MINIMAL_PERMANET_FLAGS = new Flags();
         MINIMAL_PERMANET_FLAGS.add(Flags.Flag.ANSWERED);
@@ -778,13 +779,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         }
         return copiedMessages;
     }
-    /**
-     * Return the count of unseen messages
-     *
-     * @param session
-     * @return count of unseen messages
-     * @throws MailboxException
-     */
+
     protected long countUnseenMessagesInMailbox(MailboxSession session) throws MailboxException {
         MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
         return messageMapper.countUnseenMessagesInMailbox(getMailboxEntity());

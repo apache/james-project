@@ -41,6 +41,7 @@ import com.google.common.collect.ImmutableList;
 public class LoginProcessor extends AbstractAuthProcessor<LoginRequest> implements CapabilityImplementingProcessor {
 
     private static final List<String> LOGINDISABLED_CAPS = ImmutableList.of("LOGINDISABLED");
+    
     public LoginProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
         super(LoginRequest.class, next, mailboxManager, factory, metricFactory);

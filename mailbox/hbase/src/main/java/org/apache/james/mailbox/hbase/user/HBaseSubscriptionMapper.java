@@ -39,6 +39,7 @@ import org.apache.james.mailbox.hbase.HBaseNonTransactionalMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
 import org.apache.james.mailbox.store.user.model.impl.SimpleSubscription;
+
 /**
  * HBase implementation of a {@link SubscriptionMapper}. 
  * I don't know if this class is thread-safe!

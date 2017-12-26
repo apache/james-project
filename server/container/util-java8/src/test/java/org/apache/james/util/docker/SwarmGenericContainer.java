@@ -63,6 +63,7 @@ public class SwarmGenericContainer implements TestRule {
             logAndCheckSkipTest(e);
         }
     }
+    
     private void logAndCheckSkipTest(IllegalStateException e) {
         LOGGER.error("Cannot initial a docker container", e);
         if (e.getMessage().startsWith(NO_DOCKER_ENVIRONMENT)) {

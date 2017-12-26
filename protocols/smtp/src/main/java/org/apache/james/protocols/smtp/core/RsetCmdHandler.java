@@ -45,10 +45,7 @@ public class RsetCmdHandler implements CommandHandler<SMTPSession> {
     private static final Collection<String> COMMANDS = ImmutableSet.of("RSET");
     private static final Response OK = new SMTPResponse(SMTPRetCode.MAIL_OK, DSNStatus.getStatus(DSNStatus.SUCCESS,DSNStatus.UNDEFINED_STATUS) + " OK").immutable();
     private static final Response SYNTAX_ERROR = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_COMMAND_UNRECOGNIZED, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.DELIVERY_INVALID_ARG) + " Unexpected argument provided with RSET command").immutable();
-    /**
-     * handles RSET command
-     *
-    **/
+    
     public Response onCommand(SMTPSession session, Request request) {
         return doRSET(session, request.getArgument());
     }

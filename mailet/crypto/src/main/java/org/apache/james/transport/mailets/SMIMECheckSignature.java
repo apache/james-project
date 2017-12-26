@@ -151,9 +151,7 @@ public class SMIMECheckSignature extends GenericMailet {
         }
 
     }
-    /**
-     * @see org.apache.mailet.Matcher#match(org.apache.mailet.Mail)
-     */
+
     public void service(Mail mail) throws MessagingException {
         // I extract the MimeMessage from the mail object and I check if the
         // mime type of the mail is one of the mime types that can contain a
@@ -161,7 +159,7 @@ public class SMIMECheckSignature extends GenericMailet {
         MimeMessage message = mail.getMessage();
 
         // strippedMessage will contain the signed content of the message 
-        MimeBodyPart strippedMessage =null;
+        MimeBodyPart strippedMessage = null;
         
         List<SMIMESignerInfo> signers = null;
         

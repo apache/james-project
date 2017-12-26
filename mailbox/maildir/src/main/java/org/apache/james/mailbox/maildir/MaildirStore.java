@@ -77,6 +77,7 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
     public String getMaildirLocation() {
         return maildirLocation;
     }
+    
     /**
      * Create a {@link MaildirFolder} for a mailbox
      * @param mailbox

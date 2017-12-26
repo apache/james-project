@@ -384,6 +384,7 @@ public class SearchProcessorTest {
         check(SearchKey.buildSentOn(DAY_MONTH_YEAR), SearchQuery.headerDateOn(
                 ImapConstants.RFC822_DATE, getDate(DAY, MONTH, YEAR), DateResolution.Day));
     }
+    
     @Test
     public void testSENTSINCE() throws Exception {
         expectsGetSelectedMailbox();

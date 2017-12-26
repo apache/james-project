@@ -20,14 +20,16 @@ package org.apache.james.dnsservice.api;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.james.dnsservice.api.mock.MockDNSService;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 
 /**
  * Basic tests for AbstractDNSServer. The goal is to verify that the interface

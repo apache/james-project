@@ -148,6 +148,7 @@ public class MockProtocolHandlerLoader implements ProtocolHandlerLoader {
             }
         }
     }
+    
     private boolean isInit(Method method) {
         return method.getName().equals("init")
             && method.getParameterTypes().length == 1

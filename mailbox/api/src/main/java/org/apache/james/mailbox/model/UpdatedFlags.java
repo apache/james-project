@@ -130,6 +130,7 @@ public class UpdatedFlags {
             }
         }
     }
+    
     private static boolean isChanged(Flags original, Flags updated, Flags.Flag flag) {
         return original != null && updated != null && (original.contains(flag) ^ updated.contains(flag));
     }

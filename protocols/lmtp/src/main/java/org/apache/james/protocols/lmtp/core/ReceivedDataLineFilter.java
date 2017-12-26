@@ -28,6 +28,7 @@ import org.apache.james.protocols.smtp.SMTPSession;
 public class ReceivedDataLineFilter extends org.apache.james.protocols.smtp.core.ReceivedDataLineFilter {
 
     private static final String SERVICE_TYPE = "LMTP";
+    
     /**
      * Always returns <code>LMTP</code>
      */

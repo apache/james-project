@@ -60,10 +60,7 @@ public class FutureResponseImpl implements FutureResponse {
             }
         }
     }
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.FutureResponse#addListener(org.apache.james.protocols.api.FutureResponse.ResponseListener)
-     */
+
     public synchronized void addListener(ResponseListener listener) {
         if (isReady()) {
             listener.onResponse(this);

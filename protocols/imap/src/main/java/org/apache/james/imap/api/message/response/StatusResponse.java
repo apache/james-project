@@ -318,6 +318,7 @@ public interface StatusResponse extends ImapResponseMessage {
         public static ResponseCode longestMetadataEntry(long entryLong) {
             return new ResponseCode("METADATA LONGENTRIES", entryLong);
         }
+        
         /**
          * Create a RFC4551 <code>NOMODSEQ</code> response code
          * 

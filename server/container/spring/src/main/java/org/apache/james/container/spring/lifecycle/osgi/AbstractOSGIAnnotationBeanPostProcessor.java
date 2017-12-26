@@ -77,6 +77,7 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
     public void setTimeout(long timeout) {
         this.timeout = timeout;
     }
+    
     public void setLookupBeanFactory(boolean lookupBeanFactory) {
         this.lookupBeanFactory = lookupBeanFactory;
     }

@@ -36,6 +36,7 @@ public class MailboxAnnotationListener implements MailboxListener {
     public MailboxAnnotationListener(MailboxSessionMapperFactory mailboxSessionMapperFactory) {
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
     }
+    
     @Override
     public ListenerType getType() {
         return ListenerType.EACH_NODE;

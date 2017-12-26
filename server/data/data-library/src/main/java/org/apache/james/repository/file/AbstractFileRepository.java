@@ -257,6 +257,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
             throw new RuntimeException("Exception caught while removing" + " an object: " + e);
         }
     }
+    
     /**
      * 
      * Indicates if the given key is associated to a contained object

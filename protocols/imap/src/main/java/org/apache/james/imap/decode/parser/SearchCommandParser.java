@@ -522,6 +522,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         result = SearchKey.buildUnanswered();
         return result;
     }
+    
     private SearchKey younger(ImapRequestLineReader request) throws DecodingException {
         final SearchKey result;
         nextIsO(request);
@@ -534,6 +535,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         result = SearchKey.buildYounger(request.nzNumber());
         return result;
     }
+    
     private SearchKey older(ImapRequestLineReader request) throws DecodingException {
         final SearchKey result;
         nextIsR(request);
@@ -819,9 +821,11 @@ public class SearchCommandParser extends AbstractUidCommandParser {
     private void nextIsX(ImapRequestLineReader request) throws DecodingException {
         nextIs(request, 'X', 'x');
     }
+    
     private void nextIsU(ImapRequestLineReader request) throws DecodingException {
         nextIs(request, 'U', 'u');
     }
+    
     private void nextIsO(ImapRequestLineReader request) throws DecodingException {
         nextIs(request, 'O', 'o');
     }
@@ -967,12 +971,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         }
         return options;
     }
-    /**
-     * @see
-     * org.apache.james.imap.decode.parser.AbstractUidCommandParser#decode(org.apache.james.imap.api.ImapCommand,
-     * org.apache.james.imap.decode.ImapRequestLineReader, java.lang.String,
-     * boolean, org.apache.james.imap.api.process.ImapSession)
-     */
+    
     protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, boolean useUids, ImapSession session) throws DecodingException {
         try {
             SearchKey recent = null;

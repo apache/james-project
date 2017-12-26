@@ -254,6 +254,7 @@ public final class SearchKey {
     public static SearchKey buildUnkeyword(String value) {
         return new SearchKey(TYPE_UNKEYWORD, null, null, 0, null, value, null, null, -1, -1);
     }
+    
     // ONE DATE
     public static SearchKey buildYounger(long seconds) {
         return new SearchKey(TYPE_YOUNGER, null, null, 0, null, null, null, null, seconds, -1);
@@ -332,6 +333,7 @@ public final class SearchKey {
     public static SearchKey buildModSeq(long modSeq) {
         return new SearchKey(TYPE_MODSEQ, null, null, 0, null, null, null, null, -1, modSeq);
     }
+    
     private final int type;
 
     private final DayMonthYear date;

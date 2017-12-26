@@ -259,9 +259,7 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
         }
         return null;
     }
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler#getHookInterface()
-     */
+    
     protected Class<MailHook> getHookInterface() {
         return MailHook.class;
     }

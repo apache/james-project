@@ -61,6 +61,7 @@ public class Runner {
     public ProtocolInteractor getPreElements() {
         return preElements;
     }
+
     /**
      * Gets protocol session run on test.
      * @return not null
@@ -92,6 +93,7 @@ public class Runner {
             }
 
         }
+        
         SessionContinuation continuation = new SessionContinuation();
 
         Session[] sessions = new Session[testElements

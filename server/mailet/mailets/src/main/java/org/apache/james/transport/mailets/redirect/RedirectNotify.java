@@ -146,6 +146,7 @@ public interface RedirectNotify extends Mailet, MailetConfig {
 
     @Deprecated
     void log(String message);
+    
     @Deprecated
     void log(String message, Throwable t);
 

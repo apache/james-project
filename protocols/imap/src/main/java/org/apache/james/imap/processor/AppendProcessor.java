@@ -27,7 +27,6 @@ import java.util.Date;
 import javax.mail.Flags;
 
 import org.apache.commons.io.IOUtils;
-import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -52,6 +51,8 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;
 
 public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AppendProcessor.class);

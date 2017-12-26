@@ -86,6 +86,7 @@ public class ConnectionPerIpLimitUpstreamHandler extends SimpleChannelUpstreamHa
         
         super.channelOpen(ctx, e);
     }
+    
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         if (maxConnectionsPerIp > 0) {

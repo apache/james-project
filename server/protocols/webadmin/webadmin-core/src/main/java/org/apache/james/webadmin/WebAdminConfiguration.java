@@ -67,6 +67,7 @@ public class WebAdminConfiguration {
             this.enabled = Optional.of(isEnabled);
             return this;
         }
+        
         public Builder enabled() {
             return enable(true);
         }

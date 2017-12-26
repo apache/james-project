@@ -395,6 +395,7 @@ public abstract class AbstractPOP3ServerTest {
         }
         
     }
+    
     @Test
     public void testDifferentStates() throws Exception {
         ProtocolServer server = null;
@@ -475,6 +476,7 @@ public abstract class AbstractPOP3ServerTest {
         }
         
     }
+    
     private void checkMessage(Message message, Reader reader) throws IOException {
         int read = 0;
         int i = -1;

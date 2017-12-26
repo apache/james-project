@@ -72,9 +72,10 @@ public class SearchUtilsTest {
     
     private Date getDate(int day, int month, int year) {
         Calendar cal = getGMT();
-        cal.set(year, month -1, day);
+        cal.set(year, month - 1, day);
         return cal.getTime();
     }
+    
     @Before
     public void setUp() throws Exception {
         recent = new ArrayList<>();

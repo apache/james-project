@@ -494,6 +494,7 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
         }
         return uid.get();
     }
+    
     /**
      * Format MessageRange to RANGE format applying selected folder min & max
      * UIDs constraints

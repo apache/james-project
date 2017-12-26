@@ -44,6 +44,7 @@ public final class StrictImapSearchAnalyzer extends Analyzer {
     public StrictImapSearchAnalyzer() {
         this(3, 40);
     }
+    
     public StrictImapSearchAnalyzer(int minTokenLength, int maxTokenLength) {
         this.minTokenLength = minTokenLength;
         this.maxTokenLength = maxTokenLength;

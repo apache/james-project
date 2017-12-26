@@ -125,11 +125,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
     {
         return getMail().getMessage();
     }
-    /**
-     * Returns the List of actions.
-     * 
-     * @return List
-     */
+
     public List<Action> getActions()
     {
         List<Action> actions = null;
@@ -140,36 +136,22 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         }
         return actions;
     }
-    /**
-     * Returns a new List of actions.
-     * 
-     * @return List
-     */
+    
     protected List<Action> computeActions()
     {
         return new ArrayList<>();
     }
-    /**
-     * Returns the List of actions.
-     * 
-     * @return List
-     */
+
     private List<Action> getActionsBasic()
     {
         return fieldActions;
     }
-    /**
-     * Adds an Action.
-     * 
-     * @param action The action to set
-     */
+
     public void addAction(Action action)
     {
         getActions().add(action);
     }
-    /**
-     * @see org.apache.jsieve.mail.MailAdapter#executeActions()
-     */
+
     public void executeActions() throws SieveException
     {
         final List<Action> actions = getActions();
@@ -185,11 +167,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
             }
         }
     }
-    /**
-     * Sets the actions.
-     * 
-     * @param actions The actions to set
-     */
+
     protected void setActions(List<Action> actions)
     {
         fieldActions = actions;
@@ -278,11 +256,8 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         }
         return envelopes;
     }
-    /**
-     * @see org.apache.jsieve.mail.optional.EnvelopeAccessors#getEnvelope(String)
-     */
-    public List<String> getEnvelope(String name) throws SieveMailException
-    {
+    
+    public List<String> getEnvelope(String name) throws SieveMailException {
         List<String> values = new ArrayList<>(1);
         String value = getEnvelopes().get(name);
         if (null != value) {

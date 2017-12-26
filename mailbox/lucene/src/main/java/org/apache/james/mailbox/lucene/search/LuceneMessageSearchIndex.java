@@ -849,6 +849,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             return new PrefixQuery(new Term(fieldName, value));
         }
     }
+    
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.HeaderCriterion}
      * 

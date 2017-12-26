@@ -83,6 +83,7 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
             }
         }
     }
+    
     TestableMimeMessageWrapper mw = null;
     final String content = "Subject: foo\r\nContent-Transfer-Encoding2: plain";
     final String sep = "\r\n\r\n";

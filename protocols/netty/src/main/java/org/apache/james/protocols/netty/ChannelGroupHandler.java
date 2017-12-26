@@ -32,6 +32,7 @@ import org.jboss.netty.channel.group.ChannelGroup;
  */
 public final class ChannelGroupHandler extends SimpleChannelUpstreamHandler {
     private final ChannelGroup channels;
+    
     public ChannelGroupHandler(ChannelGroup channels) {
         this.channels = channels;
     }

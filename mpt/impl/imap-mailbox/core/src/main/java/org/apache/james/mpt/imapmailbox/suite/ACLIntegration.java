@@ -37,7 +37,9 @@ public abstract class ACLIntegration implements ImapTestConstants {
     public static final MailboxPath MY_INBOX = MailboxPath.forUser(USER, "");
 
     protected abstract ImapHostSystem createImapHostSystem();
+    
     protected abstract GrantRightsOnHost createGrantRightsOnHost();
+    
     protected abstract MailboxMessageAppender createMailboxMessageAppender();
     
     private ImapHostSystem system;

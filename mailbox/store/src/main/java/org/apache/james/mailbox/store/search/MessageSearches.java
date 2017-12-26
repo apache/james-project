@@ -301,6 +301,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
             headerImpl.addField(Fields.to(Lists.newArrayList(addressList.iterator())));
         }
     }
+    
     private boolean matches(SearchQuery.ConjunctionCriterion criterion, MailboxMessage message,
             final Collection<MessageUid> recentMessageUids) throws MailboxException {
         final List<SearchQuery.Criterion> criteria = criterion.getCriteria();

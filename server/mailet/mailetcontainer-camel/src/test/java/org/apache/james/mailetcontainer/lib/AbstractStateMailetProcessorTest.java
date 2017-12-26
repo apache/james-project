@@ -43,6 +43,7 @@ import org.apache.mailet.Mailet;
 import org.apache.mailet.Matcher;
 import org.junit.Test;
 
+
 public abstract class AbstractStateMailetProcessorTest {
 
     protected abstract AbstractStateMailetProcessor createProcessor(HierarchicalConfiguration configuration) throws

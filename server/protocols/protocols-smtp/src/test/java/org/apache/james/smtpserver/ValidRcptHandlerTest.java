@@ -80,6 +80,7 @@ public class ValidRcptHandlerTest {
             public boolean isRelayingAllowed() {
                 return relayingAllowed;
             }
+            
             private final HashMap<String, Object> sstate = new HashMap<>();
             private final HashMap<String, Object> connectionState = new HashMap<>();
 

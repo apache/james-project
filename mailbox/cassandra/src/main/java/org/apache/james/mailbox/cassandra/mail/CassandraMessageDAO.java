@@ -442,6 +442,7 @@ public class CassandraMessageDAO {
         public boolean hasAttachment() {
             return ! attachmentIds.isEmpty();
         }
+        
         @Override
         public final boolean equals(Object o) {
             if (o instanceof MessageIdAttachmentIds) {

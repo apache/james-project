@@ -22,8 +22,9 @@ import java.io.ByteArrayInputStream;
 import java.util.Enumeration;
 import javax.mail.MessagingException;
 import org.apache.mailet.base.RFC2822Headers;
-import static org.junit.Assert.assertEquals;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 public class MailHeadersTest {
 

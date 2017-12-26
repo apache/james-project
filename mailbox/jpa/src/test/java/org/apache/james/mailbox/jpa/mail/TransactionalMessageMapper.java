@@ -45,6 +45,7 @@ public class TransactionalMessageMapper implements MessageMapper {
     public TransactionalMessageMapper(JPAMessageMapper messageMapper) {
         this.messageMapper = messageMapper;
     }
+    
     @Override
     public void endRequest() {
         throw new NotImplementedException();

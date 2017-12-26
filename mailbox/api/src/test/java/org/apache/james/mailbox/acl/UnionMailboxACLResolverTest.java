@@ -895,6 +895,7 @@ public class UnionMailboxACLResolverTest {
             .isFalse();
 
     }
+
     @Test
     public void testResolveRightsUserMemberOfOwnerGroup() throws UnsupportedRightException {
 

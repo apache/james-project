@@ -224,6 +224,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     protected abstract void await();
+    
     protected abstract void initializeMailboxManager() throws Exception;
 
     @Test

@@ -23,5 +23,6 @@ import java.util.Set;
 
 public interface Validator<T> {
     boolean isValid(T item);
+    
     Set<ValidationResult> validate(T item);
 }

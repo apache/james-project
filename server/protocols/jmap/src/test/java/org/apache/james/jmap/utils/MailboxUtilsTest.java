@@ -44,6 +44,7 @@ public class MailboxUtilsTest {
         mailboxSession = mailboxManager.login(user, "pass");
         sut = new MailboxUtils(mailboxManager);
     }
+    
     @Test
     public void hasChildrenShouldReturnFalseWhenNoChild() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(user, "myBox");

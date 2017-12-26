@@ -158,6 +158,7 @@ public class GenericSimpleScriptedTestProtocol<T extends HostSystem, SELF extend
             }
 
         }
+        
         SessionContinuation continuation = new SessionContinuation();
 
         Session[] sessions = new Session[testElements.getSessionCount()];

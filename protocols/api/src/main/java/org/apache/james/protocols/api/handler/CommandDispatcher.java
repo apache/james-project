@@ -223,6 +223,7 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
         }
         return responseFuture;
     }
+    
     /**
      * Parse the line into a {@link Request}
      *

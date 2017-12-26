@@ -105,8 +105,8 @@ public abstract class AbstractCommandHandlerResultJMXMonitor<S extends ProtocolS
     @Override
     public void init(Configuration config) throws ConfigurationException {
         this.jmxName = config.getString("jmxName", getDefaultJMXName());
-        
     }
+    
     protected abstract String getDefaultJMXName();
     
     protected String getJMXName() {

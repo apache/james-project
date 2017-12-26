@@ -85,6 +85,7 @@ public class MainStepdefs {
             .getMailbox(namespace, username, mailbox)
             .getMailboxId();
     }
+    
     public String getMailboxIds(String username, List<String> mailboxes) {
         return Joiner.on("\",\"")
             .join(getMailboxIdsList(username, mailboxes.stream()));

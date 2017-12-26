@@ -369,6 +369,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             return SearchQuery.all();
         }
     }
+    
     private Date createWithinDate(SearchKey key) {
         long seconds = key.getSeconds();
         long res = System.currentTimeMillis() - seconds * 1000;

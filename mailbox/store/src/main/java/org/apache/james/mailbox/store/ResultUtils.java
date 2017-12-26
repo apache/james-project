@@ -62,6 +62,7 @@ public class ResultUtils {
             public void endHeader() {
                 parser.stop();
             }
+            
             @Override
             public void field(Field field) throws MimeException {
                 String fieldValue;

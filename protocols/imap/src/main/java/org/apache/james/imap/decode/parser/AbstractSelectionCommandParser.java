@@ -227,6 +227,7 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
             }
         }
     }
+    
     /**
      * Create a new {@link AbstractMailboxSelectionRequest} for the given arguments
      */

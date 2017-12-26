@@ -133,9 +133,7 @@ public class JPAMailbox implements Mailbox {
     public void setMailboxId(MailboxId mailboxId) {
         this.mailboxId = ((JPAId)mailboxId).getRawId();
     }
-    /**
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getName()
-     */
+
     public String getName() {
         return name;
     }

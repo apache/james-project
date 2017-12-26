@@ -195,11 +195,13 @@ public class JmapResponseWriterImplTest {
         private static class Foo {
             public String id;
             public String name;
+            
             public Foo(String id, String name) {
                 this.id = id;
                 this.name = name;
             }
         }
+        
         public List<Foo> list;
     }
 

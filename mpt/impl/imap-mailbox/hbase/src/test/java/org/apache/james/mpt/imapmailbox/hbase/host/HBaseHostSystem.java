@@ -133,6 +133,7 @@ public class HBaseHostSystem extends JamesImapHostSystem {
                 new DefaultImapEncoderFactory().buildImapEncoder(),
                 defaultImapProcessorFactory);
     }
+    
     @Override
     public void afterTest() throws Exception {
         super.afterTest();

@@ -49,6 +49,7 @@ public abstract class UserProvisionningConcurrencyTest {
     private static final String DOMAIN = "mydomain.tld";
     private static final String USER = "myuser@" + DOMAIN;
     private static final String PASSWORD = "secret";
+    
     protected abstract GuiceJamesServer createJmapServer();
 
     private GuiceJamesServer jmapServer;

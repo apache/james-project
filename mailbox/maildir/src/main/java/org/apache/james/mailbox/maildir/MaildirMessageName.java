@@ -72,6 +72,7 @@ public class MaildirMessageName {
      * The process id of the server process
      */
     private static String processName = ManagementFactory.getRuntimeMXBean().getName();
+    
     static {
         String[] parts = processName.split("@");
         if (parts.length > 1) {
@@ -83,6 +84,7 @@ public class MaildirMessageName {
      * The host name of the machine the server is running on
      */
     private static String currentHostname;
+    
     static {
         try {
             currentHostname = InetAddress.getLocalHost().getHostName();

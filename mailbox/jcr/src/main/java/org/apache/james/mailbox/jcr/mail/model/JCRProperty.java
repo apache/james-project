@@ -59,13 +59,7 @@ public class JCRProperty implements JCRImapConstants, Persistent, Property {
     public JCRProperty(Property property) {
         this(property.getNamespace(), property.getLocalName(), property.getValue());
     }
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.james.mailbox.store.mail.model.AbstractComparableProperty#getOrder
-     * ()
-     */
+    
     public int getOrder() {
         if (isPersistent()) {
             try {

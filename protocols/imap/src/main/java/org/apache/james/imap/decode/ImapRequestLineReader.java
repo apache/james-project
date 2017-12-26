@@ -277,6 +277,7 @@ public abstract class ImapRequestLineReader {
             return mailbox;
         }
     }
+    
     /**
      * Reads one <code>date</code> argument from the request.
      * 
@@ -356,6 +357,7 @@ public abstract class ImapRequestLineReader {
         }
         return atom.toString();
     }
+    
     private static boolean isWhitespace(char next) {
         return (next == ' ' || next == '\n' || next == '\r' || next == '\t');
     }
@@ -731,6 +733,7 @@ public abstract class ImapRequestLineReader {
         }
         return next;
     }
+    
     /**
      * Parse a range which use a ":" as delimiter
      * 

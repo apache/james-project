@@ -221,10 +221,7 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent {
     public void setMailboxId(MailboxId mailboxId) {
         
     }
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getNamespace()
-     */
+
     public String getNamespace() {
         if (isPersistent()) {
             try {

@@ -21,8 +21,9 @@ package org.apache.james.dnsservice.library.inetnetwork;
 import java.net.UnknownHostException;
 import org.apache.james.dnsservice.api.mock.DNSFixture;
 import org.apache.james.dnsservice.library.inetnetwork.model.InetNetwork;
-import static org.junit.Assert.assertEquals;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test the InetNetworkBuilder.

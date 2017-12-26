@@ -107,6 +107,7 @@ public class SetAnnotationProcessorTest {
         initAndMockData();
         processor = new SetAnnotationProcessor(mockNextProcessor, mockMailboxManager, mockStatusResponseFactory, new NoopMetricFactory());
     }
+    
     @After
     public void tearDown() {
         processor = null;

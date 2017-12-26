@@ -192,6 +192,7 @@ public class MailboxQueryTest {
         assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(new MailboxPath("namespace", CURRENT_USER + "2", "name")))
             .isFalse();
     }
+    
     @Test
     public void belongsToNamespaceAndUserShouldReturnFalseWithOneOfTheUserNull() {
         MailboxQuery mailboxQuery = MailboxQuery.builder()

@@ -334,6 +334,7 @@ public final class FetchResponseBuilder {
         }
         return result;
     }
+    
     private FetchResponse.BodyElement headers(MessageResult messageResult, String name, int[] path, boolean isBase) throws MailboxException {      
         if (isBase) {
             // if its base we can just return the raw headers without parsing
