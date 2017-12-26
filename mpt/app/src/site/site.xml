@@ -26,9 +26,9 @@
     <menu name="Mail Protocol Tester">
       <item name="Interface" href="index.html"/>
       <item 
-      	name="DOAP" 
-      	href="doap_apache-james-mpt-app.rdf" 
-      	img='http://www.w3.org/RDF/icons/rdf_metadata_button.32'/>
+          name="DOAP"
+          href="doap_apache-james-mpt-app.rdf"
+          img='http://www.w3.org/RDF/icons/rdf_metadata_button.32'/>
     </menu>
     
     <menu ref="reports" />

@@ -27,32 +27,32 @@
 
 <pop3servers>
 
-	<!-- The POP3 server is enabled by default -->
-	<!-- Disabling blocks will stop them from listening, -->
-	<!-- but does not free as many resources as removing them would -->
-	<pop3server enabled="true">
-	
-	   <jmxName>pop3server</jmxName>
-	
-	   <!-- Configure this to bind to a specific inetaddress -->
-	   <!-- port 995 is the well-known/IANA registered port for POP3S  ie over SSL/TLS -->
-	   <!-- port 110 is the well-known/IANA registered port for Standard POP3 -->
-	   <bind>0.0.0.0:110</bind>
-	
-	   <connectionBacklog>200</connectionBacklog>
-	
-	   <!-- Set to true to support STARTTLS or SSL for the Socket.
-	         To use this you need to copy sunjce_provider.jar to /path/james/lib directory.
-	    -->
-	   <tls socketTLS="false" startTLS="false">
-	       <!-- To create a new keystore execute:
-	             keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore
-	        -->
-	       <keystore>file://conf/keystore</keystore>
-	       <secret>yoursecret</secret>
-	       <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
-	   </tls>
-	      
+    <!-- The POP3 server is enabled by default -->
+    <!-- Disabling blocks will stop them from listening, -->
+    <!-- but does not free as many resources as removing them would -->
+    <pop3server enabled="true">
+
+       <jmxName>pop3server</jmxName>
+
+       <!-- Configure this to bind to a specific inetaddress -->
+       <!-- port 995 is the well-known/IANA registered port for POP3S  ie over SSL/TLS -->
+       <!-- port 110 is the well-known/IANA registered port for Standard POP3 -->
+       <bind>0.0.0.0:110</bind>
+
+       <connectionBacklog>200</connectionBacklog>
+
+       <!-- Set to true to support STARTTLS or SSL for the Socket.
+             To use this you need to copy sunjce_provider.jar to /path/james/lib directory.
+        -->
+       <tls socketTLS="false" startTLS="false">
+           <!-- To create a new keystore execute:
+                 keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore
+            -->
+           <keystore>file://conf/keystore</keystore>
+           <secret>yoursecret</secret>
+           <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+       </tls>
+
        <!-- This is the name used by the server to identify itself in the POP3 -->
        <!-- protocol.  If autodetect is TRUE, the server will discover its -->
        <!-- own host name and use that in the protocol.  If discovery fails, -->
@@ -75,7 +75,7 @@
            <!-- know what you are doing -->
            <handler class="org.apache.james.pop3server.core.CoreCmdHandlerLoader"/>
        </handlerchain>
-	    
-	</pop3server>
-	
+
+    </pop3server>
+
 </pop3servers>

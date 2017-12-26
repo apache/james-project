@@ -53,9 +53,9 @@
             persistence manager of the workspace:
             class: FQN of class implementing the PersistenceManager interface
         -->
-		<PersistenceManager class="org.apache.jackrabbit.core.persistence.mem.InMemPersistenceManager">
-			<param name="persistent" value="false"/>
-		</PersistenceManager>
+        <PersistenceManager class="org.apache.jackrabbit.core.persistence.mem.InMemPersistenceManager">
+            <param name="persistent" value="false"/>
+        </PersistenceManager>
         
         <SearchIndex class='org.apache.jackrabbit.core.query.lucene.SearchIndex'>
             <param name='path' value='${wsp.home}/index'/>
@@ -73,9 +73,9 @@
         <FileSystem class='org.apache.jackrabbit.core.fs.mem.MemoryFileSystem'>
         </FileSystem>
 
-		<PersistenceManager class="org.apache.jackrabbit.core.persistence.mem.InMemPersistenceManager">
-			<param name="persistent" value="false"/>
-		</PersistenceManager>
+        <PersistenceManager class="org.apache.jackrabbit.core.persistence.mem.InMemPersistenceManager">
+            <param name="persistent" value="false"/>
+        </PersistenceManager>
         
     </Versioning>
     <!--

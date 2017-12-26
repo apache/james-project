@@ -18,24 +18,24 @@
   under the License.    
 -->
     <mailboxmanager>
-	   <namespaces>
-		   <usernamespace name="#mail" delimiter="." />
-	   </namespaces>	   
-		   
-	   <factory class="org.apache.james.mailboxmanager.mock.MockMailboxManagerFactory">
-		<mount>
-			<point point="#system" />
-			<target class="org.apache.james.mailboxmanager.impl.MailStoreMailboxManager">
-				<repository destinationURL="file://var/mail/" type="MAIL" />
-			</target>
-		</mount>	 
-		<mount>
-			<point point="#mail" />
-			<target type="service" service="org.apache.james.mailboxmanager.impl.MailStoreMailboxManager">
-				<repository destinationURL="file://var/mail/inboxes/" type="MAIL" />
-			</target>
-		</mount>	 
-	   </factory>	   
+       <namespaces>
+           <usernamespace name="#mail" delimiter="." />
+       </namespaces>
+
+       <factory class="org.apache.james.mailboxmanager.mock.MockMailboxManagerFactory">
+        <mount>
+            <point point="#system" />
+            <target class="org.apache.james.mailboxmanager.impl.MailStoreMailboxManager">
+                <repository destinationURL="file://var/mail/" type="MAIL" />
+            </target>
+        </mount>
+        <mount>
+            <point point="#mail" />
+            <target type="service" service="org.apache.james.mailboxmanager.impl.MailStoreMailboxManager">
+                <repository destinationURL="file://var/mail/inboxes/" type="MAIL" />
+            </target>
+        </mount>
+       </factory>
    </mailboxmanager>  
 
 </config>

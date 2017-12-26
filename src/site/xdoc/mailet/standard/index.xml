@@ -24,7 +24,7 @@
   </properties>
   <body>
     <section name="Standard Mailets">
-      	<p>A collection of generally useful reusable mailets and matchers with minimal dependencies.</p>
+          <p>A collection of generally useful reusable mailets and matchers with minimal dependencies.</p>
         <p>These mailets form the mail processing backbone of the 
         <a href='http://james.apache.org/server' rel='tag'>Apache James Server</a>.
         They are coupled only to the 

@@ -30,14 +30,14 @@
 <mailetcontainer enableJmx="true">
  
     <!-- MailAddress used for PostMaster -->
-	<context>
-	    <postmaster>postmaster@localhost</postmaster>
-	</context>
+    <context>
+        <postmaster>postmaster@localhost</postmaster>
+    </context>
 
     <!-- Number of spool threads -->
     <spooler>
-	  <threads>20</threads>
-	</spooler>
+      <threads>20</threads>
+    </spooler>
       
   <processors>
   
@@ -236,19 +236,19 @@ Regards, Postmaster XXX.YYY
        <!--
 
        <mailet match="IsOverQuota" class="ToProcessor">
-	      <processor>over-quota</processor>
-	    </mailet>
+          <processor>over-quota</processor>
+        </mailet>
          -->
 
        <!--  The RecipientRewriteTable will use the definitions found in recipientrewritetablexml -->
-	     <mailet match="All" class="RecipientRewriteTable" />
-	    
-	     <!-- Place a copy in the user Sent folder -->
-	     <mailet match="SenderIsLocal" class="ToSenderFolder">
-	       <folder>Sent</folder>
-	       <consume>false</consume>
-	     </mailet>
-	
+         <mailet match="All" class="RecipientRewriteTable" />
+
+         <!-- Place a copy in the user Sent folder -->
+         <mailet match="SenderIsLocal" class="ToSenderFolder">
+           <folder>Sent</folder>
+           <consume>false</consume>
+         </mailet>
+
        <!-- Is the recipient is for a local account, deliver it locally -->
        <mailet match="RecipientIsLocal" class="Sieve"/>
        <mailet match="RecipientIsLocal" class="AddDeliveredToHeader"/>
@@ -370,11 +370,11 @@ Regards, Postmaster XXX.YYY
      
        <!-- To place the spam messages in the user junk folder, uncomment this matcher/mailet configuration -->
        <!--
-	   <mailet match="RecipientIsLocal" class="ToRecipientFolder">
-	       <folder>Junk</folder>
-	       <consume>false</consume>
-	   </mailet>
-	    -->
+       <mailet match="RecipientIsLocal" class="ToRecipientFolder">
+           <folder>Junk</folder>
+           <consume>false</consume>
+       </mailet>
+        -->
 
        <!-- To destroy all messages, uncomment this matcher/mailet configuration -->
        <!--
