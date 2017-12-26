@@ -118,7 +118,7 @@ public final class CassandraCluster implements AutoCloseable {
     private void sleep(long sleepMs) {
         try {
             Thread.sleep(sleepMs);
-        } catch(InterruptedException interruptedException) {
+        } catch (InterruptedException interruptedException) {
             Throwables.propagate(interruptedException);
         }
     }

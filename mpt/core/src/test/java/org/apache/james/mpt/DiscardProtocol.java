@@ -142,7 +142,7 @@ public class DiscardProtocol {
             try
             {
                 long lastConnection = System.currentTimeMillis();
-                while(socket != null) {
+                while (socket != null) {
                     final SocketChannel socketChannel = socket.accept();
                     if (socketChannel == null) {
                         if (System.currentTimeMillis() - lastConnection > IDLE_TIMEOUT) {
@@ -150,7 +150,7 @@ public class DiscardProtocol {
                         }
                         Thread.sleep(SOCKET_CONNECTION_WAIT_MILLIS);
                     } else {
-                        synchronized(queue) {
+                        synchronized (queue) {
                             Server nextServer = (Server) queue.poll();
                             if (nextServer == null) {
                                 nextServer = new Server();
@@ -224,12 +224,12 @@ public class DiscardProtocol {
                 else
                 {
                     try {
-                        while(!socketChannel.finishConnect()) {
+                        while (!socketChannel.finishConnect()) {
                             Thread.sleep(SOCKET_CONNECTION_WAIT_MILLIS);
                         }
                         
                         int read = 0;
-                        while(!aborted && socketChannel.isOpen() && read >= 0) {
+                        while (!aborted && socketChannel.isOpen() && read >= 0) {
                             read = socketChannel.read(buffer);
                             if (!buffer.hasRemaining()) {
                                 decant();

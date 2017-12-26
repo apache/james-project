@@ -176,7 +176,7 @@ public class MailDispatcherTest {
         verify(mailStore).storeMail(any(MailAddress.class), mailCaptor.capture());
 
         assertThat(mailCaptor.getValue().getMessage().getHeader(RFC2822Headers.RETURN_PATH))
-            .containsOnly("<" + MailAddressFixture.OTHER_AT_JAMES +">");
+            .containsOnly("<" + MailAddressFixture.OTHER_AT_JAMES + ">");
     }
 
     @Test

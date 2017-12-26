@@ -137,7 +137,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
         // 
         // See IMAP-345
         int retryCount = 0;
-        while(unseen(responder, firstUnseen, selected, ImapSessionUtils.getMailboxSession(session)) == false) {
+        while (unseen(responder, firstUnseen, selected, ImapSessionUtils.getMailboxSession(session)) == false) {
             // if we not was able to get find the unseen within 5 retries we should just not send it
             if (retryCount == 5) {
                 LOGGER.info("Unable to uid for unseen message {} in mailbox {}", firstUnseen, selected.getPath());
@@ -459,14 +459,14 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
             // QRESYNC or CONDSTORE
             //
             // See http://www.dovecot.org/list/dovecot/2008-March/029561.html
-            if (capability.equalsIgnoreCase(ImapConstants.SUPPORTS_CONDSTORE)|| capability.equalsIgnoreCase(ImapConstants.SUPPORTS_QRESYNC)) {
+            if (capability.equalsIgnoreCase(ImapConstants.SUPPORTS_CONDSTORE) || capability.equalsIgnoreCase(ImapConstants.SUPPORTS_QRESYNC)) {
                 try {
                     MetaData metaData  = null;
                     boolean send = false;
                     if (sm != null) {
                         MessageManager mailbox = getSelectedMailbox(session);
                         metaData = mailbox.getMetaData(false, ImapSessionUtils.getMailboxSession(session), FetchGroup.NO_COUNT);
-                        send= true;
+                        send = true;
                     }
                     condstoreEnablingCommand(session, responder, metaData, send);
                 } catch (MailboxException e) {

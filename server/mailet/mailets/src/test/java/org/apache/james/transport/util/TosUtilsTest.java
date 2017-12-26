@@ -53,7 +53,7 @@ public class TosUtilsTest {
     @Test
     public void getToShouldReturnEmptyWhenMailetToIsEmpty() throws Exception {
         when(mailet.getTo())
-            .thenReturn(ImmutableList.<InternetAddress> of());
+            .thenReturn(ImmutableList.<InternetAddress>of());
 
         FakeMail fakeMail = FakeMail.defaultFakeMail();
 

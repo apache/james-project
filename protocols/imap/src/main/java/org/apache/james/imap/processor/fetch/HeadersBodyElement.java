@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import org.apache.james.mailbox.model.Content;
 
-public class HeadersBodyElement extends ContentBodyElement{
+public class HeadersBodyElement extends ContentBodyElement {
 
     private boolean noBody = false;
     

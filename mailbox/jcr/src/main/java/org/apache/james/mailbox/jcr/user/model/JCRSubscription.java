@@ -107,11 +107,11 @@ public class JCRSubscription implements Subscription, Persistent, JCRImapConstan
      * (non-Javadoc)
      * @see org.apache.james.mailbox.jcr.IsPersistent#merge(javax.jcr.Node)
      */
-    public void merge(Node node) throws RepositoryException{
+    public void merge(Node node) throws RepositoryException {
         node.setProperty(USERNAME_PROPERTY, getUser());
         if (node.hasProperty(MAILBOXES_PROPERTY)) {
             Value[] mailboxes = node.getProperty(MAILBOXES_PROPERTY).getValues();
-            List<String>newMailboxes = new ArrayList<>();
+            List<String> newMailboxes = new ArrayList<>();
             for (Value mailbox : mailboxes) {
                 String m = mailbox.getString();
                 newMailboxes.add(m);

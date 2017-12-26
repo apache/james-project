@@ -231,7 +231,7 @@ public class SetMailboxesMethodStepdefs {
 
     @When("^\"([^\"]*)\" deletes the mailbox \"([^\"]*)\" owned by \"([^\"]*)\"$")
     public void deletesMailbox(String user, String mailboxName, String owner) throws Throwable {
-        String mailboxId = mainStepdefs.getMailboxId( owner, mailboxName).serialize();
+        String mailboxId = mainStepdefs.getMailboxId(owner, mailboxName).serialize();
         userStepdefs.connectUser(user);
         String requestBody =
                 "[" +

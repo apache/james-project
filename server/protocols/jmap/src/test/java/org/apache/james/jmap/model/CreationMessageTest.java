@@ -85,7 +85,7 @@ public class CreationMessageTest {
     }
 
     @Test
-    public void validateShouldReturnErrorWhenNoRecipientSet(){
+    public void validateShouldReturnErrorWhenNoRecipientSet() {
         testedBuilder = testedBuilder
                 .subject("anything");
 

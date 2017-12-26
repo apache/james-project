@@ -26,7 +26,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
-public class MaildirSubscriptionManagerTest extends AbstractSubscriptionManagerTest{
+public class MaildirSubscriptionManagerTest extends AbstractSubscriptionManagerTest {
 
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();

@@ -384,7 +384,7 @@ public abstract class VacationIntegrationTest {
                 .body(SECOND_NAME, equalTo("messages"))
                 .body(SECOND_ARGUMENTS + ".list", hasSize(2));
             return true;
-        } catch(AssertionError e) {
+        } catch (AssertionError e) {
             return false;
         }
     }
@@ -393,7 +393,7 @@ public abstract class VacationIntegrationTest {
         try {
             assertOneMessageReceived(recipientToken, mailboxId, expectedTextBody, expectedFrom, expectedTo);
             return true;
-        } catch(AssertionError e) {
+        } catch (AssertionError e) {
             return false;
         }
     }

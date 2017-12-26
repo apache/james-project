@@ -255,7 +255,7 @@ public class ProtocolSessionBuilder {
                 if (end < 0) {
                     break;
                 }
-                final String name = buffer.substring(start+2, end);
+                final String name = buffer.substring(start + 2, end);
                 final String value = variables.getProperty(name);
                 if (value != null) {
                     buffer.replace(start, end + 1, value);

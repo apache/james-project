@@ -35,7 +35,7 @@ import org.apache.james.protocols.api.future.FutureResponse;
  * 
  *
  */
-public abstract class AbstractProtocolTransport implements ProtocolTransport{
+public abstract class AbstractProtocolTransport implements ProtocolTransport {
     
     private static final String CRLF = "\r\n";
 
@@ -52,7 +52,7 @@ public abstract class AbstractProtocolTransport implements ProtocolTransport{
         // we do this synchronously because we may have a dequeuer thread working on
         // isAsync and responses.
         boolean enqueued = false;
-        synchronized(this) {
+        synchronized (this) {
             if (isAsync == true) {
                 responses.offer(response);
                 enqueued = true;
@@ -88,7 +88,7 @@ public abstract class AbstractProtocolTransport implements ProtocolTransport{
             
             // synchrnously we check responses and if it is empty we move back to non asynch
             // behaviour
-            synchronized(this) {
+            synchronized (this) {
                 queuedResponse = responses.poll();
                 if (queuedResponse == null) {
                     isAsync = false;

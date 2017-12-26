@@ -253,7 +253,7 @@ public abstract class SetMailboxesMethodTest {
     }
 
     @Test
-    public void userShouldBeSubscribedOnCreatedMailboxWhenCreateMailbox() throws Exception{
+    public void userShouldBeSubscribedOnCreatedMailboxWhenCreateMailbox() throws Exception {
         String requestBody =
             "[" +
                 "  [ \"setMailboxes\"," +

@@ -115,8 +115,7 @@ public abstract class AbstractStorageQuota extends AbstractQuotaMatcher {
                 // see if we need use the full email address as username or not.
                 // See JAMES-1197
                 username = localUsers.getUser(recipient).toLowerCase(Locale.US);
-            }
-            catch (UsersRepositoryException e) {
+            } catch (UsersRepositoryException e) {
                 throw new MessagingException("Unable to access UsersRepository", e);
             }
             session = manager.createSystemSession(username);
@@ -139,11 +138,9 @@ public abstract class AbstractStorageQuota extends AbstractQuotaMatcher {
             }
             manager.endProcessingRequest(session);
             manager.logout(session, true);
-        }
-        catch (BadCredentialsException e) {
+        } catch (BadCredentialsException e) {
             throw new MessagingException("Unable to authenticate to mailbox", e);
-        }
-        catch (MailboxException e) {
+        } catch (MailboxException e) {
             throw new MessagingException("Unable to get used space from mailbox", e);
         }
 

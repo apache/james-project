@@ -50,7 +50,7 @@ import com.google.common.collect.ImmutableList;
 /**
  * Default implementation of {@link SelectedMailbox}
  */
-public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
+public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(SelectedMailboxImpl.class);
 
     private final Set<MessageUid> recentUids = new TreeSet<>();

@@ -48,8 +48,8 @@ import org.apache.openjpa.persistence.Persistent;
  *
  * TODO: Fix me!
  */
-@Entity(name="MailboxMessage")
-@Table(name="JAMES_MAIL")
+@Entity(name = "MailboxMessage")
+@Table(name = "JAMES_MAIL")
 public class JPAStreamingMailboxMessage extends AbstractJPAMailboxMessage {
 
     @Persistent(optional = false, fetch = FetchType.LAZY)
@@ -96,7 +96,7 @@ public class JPAStreamingMailboxMessage extends AbstractJPAMailboxMessage {
 
     @Override
     public InputStream getHeaderContent() throws IOException {
-        int headerEnd = getBodyStartOctet() -2;
+        int headerEnd = getBodyStartOctet() - 2;
         if (headerEnd < 0) {
             headerEnd = 0;
         }

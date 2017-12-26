@@ -216,7 +216,7 @@ public class UserMailboxesRoutesTest {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
-                .put(MAILBOX_NAME+ "*")
+                .put(MAILBOX_NAME + "*")
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
@@ -276,7 +276,7 @@ public class UserMailboxesRoutesTest {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
-                .put(MAILBOX_NAME+ "%")
+                .put(MAILBOX_NAME + "%")
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
@@ -336,7 +336,7 @@ public class UserMailboxesRoutesTest {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
-                .put(MAILBOX_NAME+ "#")
+                .put(MAILBOX_NAME + "#")
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
@@ -396,7 +396,7 @@ public class UserMailboxesRoutesTest {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
-                .put(MAILBOX_NAME+ "&")
+                .put(MAILBOX_NAME + "&")
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)

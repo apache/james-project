@@ -36,7 +36,7 @@ import com.google.common.collect.ImmutableSet;
  * @author Maurer
  *
  */
-public abstract class AbstractApopCmdHandler extends AbstractPassCmdHandler{
+public abstract class AbstractApopCmdHandler extends AbstractPassCmdHandler {
 
     private static final Collection<String> COMMANDS = ImmutableSet.of("APOP");
     

@@ -61,7 +61,7 @@ import org.bouncycastle.operator.OperatorCreationException;
  * @version CVS $Revision$ $Date$
  * @since 3.0
  */
-public class SMIMEKeyHolder implements KeyHolder{
+public class SMIMEKeyHolder implements KeyHolder {
 
     private final JcaCertStore jcaCertStore;
 
@@ -131,7 +131,7 @@ public class SMIMEKeyHolder implements KeyHolder{
         
         Enumeration<String> aliases = keyStore.aliases();
         if (keyAlias == null) {
-            if(aliases.hasMoreElements()) {
+            if (aliases.hasMoreElements()) {
                 keyAlias = aliases.nextElement();
             } else {
                 throw new KeyStoreException("No alias was found in keystore.");

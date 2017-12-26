@@ -106,7 +106,7 @@ public class FetchResponseEncoderNoExtensionsTest  {
                 null, null, null, null, stubStructure, null);
         final Map<String, String> parameters = new HashMap<>();
         parameters.put("CHARSET", "US-ASCII");
-        final List<String> parameterList= new ArrayList<>();
+        final List<String> parameterList = new ArrayList<>();
         parameterList.add("CHARSET");
         parameterList.add("US-ASCII");
         

@@ -66,7 +66,7 @@ public class InMemoryDNSService implements DNSService {
         records.put(hostname, dnsRecordFor(mxRecords, txtRecords, addresses));
     }
 
-    public void dropRecord(String hostname){
+    public void dropRecord(String hostname) {
         records.remove(hostname);
     }
 
@@ -138,7 +138,7 @@ public class InMemoryDNSService implements DNSService {
             this.txtRecords = txtRecords;
         }
 
-        public boolean contains(InetAddress address){
+        public boolean contains(InetAddress address) {
             return addresses.contains(address);
         }
     }

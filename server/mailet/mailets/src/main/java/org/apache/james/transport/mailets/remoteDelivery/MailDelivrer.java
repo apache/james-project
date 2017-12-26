@@ -213,7 +213,7 @@ public class MailDelivrer {
         if (sfe.getValidSentAddresses() != null) {
             Address[] validSent = sfe.getValidSentAddresses();
             if (validSent.length > 0) {
-                LOGGER.debug( "Mail ({}) sent successfully for {}", mail.getName(), validSent);
+                LOGGER.debug("Mail ({}) sent successfully for {}", mail.getName(), validSent);
             }
         }
 

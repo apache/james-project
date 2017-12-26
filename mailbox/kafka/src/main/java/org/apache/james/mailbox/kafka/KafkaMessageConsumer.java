@@ -57,7 +57,7 @@ public class KafkaMessageConsumer implements MessageConsumer {
 
     private static final String ZK_SESSION_TIMEOUT = "400";
     private static final String ZK_SYNC_TIME = "200";
-    private static final String AUTO_COMMIT8INTERVAL_MS ="1000";
+    private static final String AUTO_COMMIT8INTERVAL_MS = "1000";
     private static final Logger LOG = LoggerFactory.getLogger(KafkaMessageConsumer.class);
 
     private final ConsumerConnector consumer;
@@ -97,7 +97,7 @@ public class KafkaMessageConsumer implements MessageConsumer {
 
     @PostConstruct
     public void init(Topic topic) {
-        if(!isInitialized) {
+        if (!isInitialized) {
             this.isInitialized = true;
             List<KafkaStream<byte[], byte[]>> streams = getKafkaStreams(topic.getValue());
             executor = Executors.newFixedThreadPool(numberOfTread);

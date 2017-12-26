@@ -46,7 +46,7 @@ public class QuotaResponseEncoderTest {
 
     @Test
     public void quotaStorageResponseShouldBeWellFormatted() throws Exception {
-        QuotaResponse response = new QuotaResponse("STORAGE", "root", QuotaImpl.quota(231*1024, 1024*1024));
+        QuotaResponse response = new QuotaResponse("STORAGE", "root", QuotaImpl.quota(231 * 1024, 1024 * 1024));
         ByteImapResponseWriter byteImapResponseWriter = new ByteImapResponseWriter();
         ImapResponseComposer composer = new ImapResponseComposerImpl(byteImapResponseWriter, 1024);
         QuotaResponseEncoder encoder = new QuotaResponseEncoder(new EndImapEncoder());

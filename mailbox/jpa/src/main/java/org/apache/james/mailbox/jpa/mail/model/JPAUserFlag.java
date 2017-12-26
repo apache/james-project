@@ -25,8 +25,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-@Entity(name="UserFlag")
-@Table(name="JAMES_MAIL_USERFLAG")
+@Entity(name = "UserFlag")
+@Table(name = "JAMES_MAIL_USERFLAG")
 public class JPAUserFlag {
 
 

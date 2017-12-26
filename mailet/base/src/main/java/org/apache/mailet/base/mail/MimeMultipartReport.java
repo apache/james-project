@@ -28,14 +28,12 @@ import javax.mail.internet.MimeMultipart;
  * Class <code>MimeMultipartReport</code> implements JavaMail support
  * for a MIME type of MimeMultipart with a subtype of report.
  */
-public class MimeMultipartReport extends MimeMultipart
-{
+public class MimeMultipartReport extends MimeMultipart {
 
     /**
      * Default constructor
      */
-    public MimeMultipartReport()
-    {
+    public MimeMultipartReport() {
         this("report");
     }
 
@@ -43,8 +41,7 @@ public class MimeMultipartReport extends MimeMultipart
      * Constructs a MimeMultipartReport of the given subtype.
      * @param subtype
      */
-    public MimeMultipartReport(String subtype)
-    {
+    public MimeMultipartReport(String subtype) {
         super(subtype);
     }
 
@@ -53,8 +50,7 @@ public class MimeMultipartReport extends MimeMultipart
      * @param aDataSource
      * @throws javax.mail.MessagingException
      */
-    public MimeMultipartReport(DataSource aDataSource) throws MessagingException
-    {
+    public MimeMultipartReport(DataSource aDataSource) throws MessagingException {
         super(aDataSource);
     }
     
@@ -63,8 +59,7 @@ public class MimeMultipartReport extends MimeMultipart
      * @param reportType
      * @throws MessagingException
      */
-    public void setReportType(String reportType) throws MessagingException
-    {
+    public void setReportType(String reportType) throws MessagingException {
         ContentType contentType = new ContentType(getContentType());
         contentType.setParameter("report-type", reportType);
         setContentType(contentType);
@@ -74,8 +69,7 @@ public class MimeMultipartReport extends MimeMultipart
      * Sets the content type
      * @param aContentType
      */
-    protected void setContentType(ContentType aContentType)
-    {
+    protected void setContentType(ContentType aContentType) {
         contentType = aContentType.toString();
     }
 

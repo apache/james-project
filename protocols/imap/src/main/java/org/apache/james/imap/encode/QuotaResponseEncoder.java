@@ -51,8 +51,8 @@ public class QuotaResponseEncoder extends AbstractChainedImapEncoder {
         composer.message(quotaResponse.getResourceName());
         // See RFC 2087 : response for STORAGE should be in KB. For more accuracy, we stores B, so conversion should be made
         if (quotaResponse.getResourceName().equalsIgnoreCase(ImapConstants.STORAGE_QUOTA_RESOURCE)) {
-            composer.message(quota.getUsed()/1024);
-            composer.message(quota.getMax()/1024);
+            composer.message(quota.getUsed() / 1024);
+            composer.message(quota.getMax() / 1024);
         } else {
             composer.message(quota.getUsed());
             composer.message(quota.getMax());

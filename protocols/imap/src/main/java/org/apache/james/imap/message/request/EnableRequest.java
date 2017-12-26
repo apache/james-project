@@ -22,7 +22,7 @@ import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
 
-public class EnableRequest extends AbstractImapRequest{
+public class EnableRequest extends AbstractImapRequest {
 
     private final List<String> capabilities;
 

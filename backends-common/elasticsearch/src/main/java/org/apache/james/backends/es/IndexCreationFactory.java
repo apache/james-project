@@ -95,7 +95,7 @@ public class IndexCreationFactory {
         if (!aliasExist(client, aliasName)) {
             client.admin()
                 .indices()
-                .aliases( new IndicesAliasesRequest()
+                .aliases(new IndicesAliasesRequest()
                     .addAlias(aliasName.getValue(), indexName.getValue()))
                 .actionGet();
         }

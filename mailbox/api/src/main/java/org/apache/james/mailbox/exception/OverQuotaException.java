@@ -24,7 +24,7 @@ package org.apache.james.mailbox.exception;
  * 
  *
  */
-public class OverQuotaException extends MailboxException{
+public class OverQuotaException extends MailboxException {
 
     /**
      * 

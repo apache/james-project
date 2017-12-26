@@ -39,7 +39,7 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
  * 
  *
  */
-public class LazyMimeDescriptor implements MimeDescriptor{
+public class LazyMimeDescriptor implements MimeDescriptor {
 
     private final Message message;
     private final MessageResult result;

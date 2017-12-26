@@ -150,8 +150,7 @@ public abstract class AbstractQuotaMatcher extends GenericMatcher {
                 quota = Long.parseLong(amount);
             }
             return quota;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new MessagingException("Exception parsing quota", e);
         }
     }

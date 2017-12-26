@@ -329,7 +329,7 @@ public class MimeDescriptorImpl implements MimeDescriptor {
     public InputStream getInputStream() throws IOException {
         StringBuilder sb = new StringBuilder();
         Iterator<MessageResult.Header> hIt = headers.iterator();
-        while(hIt.hasNext()) {
+        while (hIt.hasNext()) {
             MessageResult.Header header = hIt.next();
             sb.append(header.getName()).append(": ").append(header.getValue()).append("\r\n");
         }
@@ -348,7 +348,7 @@ public class MimeDescriptorImpl implements MimeDescriptor {
         }
         
         // Add for CLRF
-        result +=2;
+        result += 2;
         return result;
     }
 }

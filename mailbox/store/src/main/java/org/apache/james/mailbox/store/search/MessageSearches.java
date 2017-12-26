@@ -423,7 +423,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
             if (headerName.equalsIgnoreCase(name)) {
                 String value = header.getValue();
                 AddressList aList = LenientAddressParser.DEFAULT.parseAddressList(value);
-                for ( Address address : aList) {
+                for (Address address : aList) {
                     if (address instanceof Mailbox) {
                         if (AddressFormatter.DEFAULT.encode((Mailbox) address).toUpperCase(Locale.US)
                             .contains(text)) {

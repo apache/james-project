@@ -117,7 +117,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTDOMAINS.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(dataProbe.listDomains()).andReturn(ImmutableList.<String> of());
+        expect(dataProbe.listDomains()).andReturn(ImmutableList.<String>of());
 
         control.replay();
         testee.executeCommandLine(commandLine);

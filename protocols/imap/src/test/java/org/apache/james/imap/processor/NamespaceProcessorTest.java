@@ -156,7 +156,7 @@ public class NamespaceProcessorTest {
 
     private Responder expectResponse(final NamespaceResponse response) {
         final Responder responderMock = mockery.mock(Responder.class);
-        mockery.checking(new Expectations(){{
+        mockery.checking(new Expectations() {{
                     oneOf(responderMock).respond(with(equal(response)));
                     oneOf(responderMock).respond(with(any(StatusResponse.class)));
                 }

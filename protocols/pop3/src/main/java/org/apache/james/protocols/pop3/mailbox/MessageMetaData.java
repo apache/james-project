@@ -32,8 +32,8 @@ public class MessageMetaData {
         this.uid = uid;
         this.size = size;
 
-        if(!MessageMetaDataUtils.isRFC1939Compatible(uid)) {
-        	throw new IllegalArgumentException("UID is not RFC1939 compatible");
+        if (!MessageMetaDataUtils.isRFC1939Compatible(uid)) {
+            throw new IllegalArgumentException("UID is not RFC1939 compatible");
         }
 	}
 
@@ -49,7 +49,7 @@ public class MessageMetaData {
     /**
 	 * Return the uid of the message. This method uses extra Mailbox ID argument to make
 	 * UID unique when it is not globally unique. By default assuming UID globally unique.
-	 * 
+	 *
 	 * @param mailboxId
 	 *            Mailbox ID
 	 * @return

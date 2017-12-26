@@ -28,7 +28,7 @@ import org.apache.james.protocols.smtp.SMTPSession;
  * Implement this interfaces to hook in the HELO Command
  * 
  */
-public interface HeloHook extends Hook{
+public interface HeloHook extends Hook {
 
     /**
      * Return the HookResult after run the hook

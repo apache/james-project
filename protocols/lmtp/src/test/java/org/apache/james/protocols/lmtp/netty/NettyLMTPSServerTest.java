@@ -9,7 +9,7 @@ import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.lmtp.AbstractLMTPSServerTest;
 import org.apache.james.protocols.netty.NettyServer;
 
-public class NettyLMTPSServerTest extends AbstractLMTPSServerTest{
+public class NettyLMTPSServerTest extends AbstractLMTPSServerTest {
 
     private static final String LOCALHOST_IP = "127.0.0.1";
     private static final int RANDOM_PORT = 0;

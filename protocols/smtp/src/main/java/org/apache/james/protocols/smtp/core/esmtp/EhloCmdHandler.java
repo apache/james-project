@@ -43,7 +43,7 @@ import com.google.common.collect.ImmutableSet;
 /**
  * Handles EHLO command
  */
-public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> implements EhloExtension{
+public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> implements EhloExtension {
 
     /**
      * The name of the command handled by the command handler

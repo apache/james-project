@@ -21,7 +21,7 @@ package org.apache.james.mailbox.store;
 import java.util.HashMap;
 import java.util.Map;
 
-public class FakeAuthenticator implements Authenticator{
+public class FakeAuthenticator implements Authenticator {
 
     private final Map<String, String> users = new HashMap<>();
 

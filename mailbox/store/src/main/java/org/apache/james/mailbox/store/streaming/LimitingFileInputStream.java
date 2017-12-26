@@ -30,7 +30,7 @@ import java.nio.channels.FileLock;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
-public class LimitingFileInputStream extends FileInputStream{
+public class LimitingFileInputStream extends FileInputStream {
     private long pos = 0;
     private final long limit;
     

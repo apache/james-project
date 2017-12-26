@@ -253,7 +253,7 @@ public class ICALToJsonAttributeTest {
         assertThat(jsons).hasSize(1);
         assertThatJson(new String(jsons.values().iterator().next(), StandardCharsets.UTF_8))
             .isEqualTo("{" +
-                "\"ical\": \"" + toJsonValue(ics) +"\"," +
+                "\"ical\": \"" + toJsonValue(ics) + "\"," +
                 "\"sender\": \"" + SENDER.asString() + "\"," +
                 "\"recipient\": \"" + recipient.asString() + "\"," +
                 "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
@@ -290,7 +290,7 @@ public class ICALToJsonAttributeTest {
         List<String> actual = toSortedValueList(jsons);
 
         assertThatJson(actual.get(0)).isEqualTo("{" +
-            "\"ical\": \"" + toJsonValue(ics) +"\"," +
+            "\"ical\": \"" + toJsonValue(ics) + "\"," +
             "\"sender\": \"" + SENDER.asString() + "\"," +
             "\"recipient\": \"" + MailAddressFixture.ANY_AT_JAMES2.asString() + "\"," +
             "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
@@ -300,7 +300,7 @@ public class ICALToJsonAttributeTest {
             "\"recurrence-id\": null" +
             "}");
         assertThatJson(actual.get(1)).isEqualTo("{" +
-            "\"ical\": \"" + toJsonValue(ics) +"\"," +
+            "\"ical\": \"" + toJsonValue(ics) + "\"," +
             "\"sender\": \"" + SENDER.asString() + "\"," +
             "\"recipient\": \"" + MailAddressFixture.OTHER_AT_JAMES.asString() + "\"," +
             "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
@@ -336,7 +336,7 @@ public class ICALToJsonAttributeTest {
         List<String> actual = toSortedValueList(jsons);
 
         assertThatJson(actual.get(0)).isEqualTo("{" +
-            "\"ical\": \"" + toJsonValue(ics2) +"\"," +
+            "\"ical\": \"" + toJsonValue(ics2) + "\"," +
             "\"sender\": \"" + SENDER.asString() + "\"," +
             "\"recipient\": \"" + recipient.asString() + "\"," +
             "\"uid\": \"f1514f44bf39311568d64072ac247c17656ceafde3b4b3eba961c8c5184cdc6ee047feb2aab16e43439a608f28671ab7c10e754c301b1e32001ad51dd20eac2fc7af20abf4093bbe\"," +
@@ -346,7 +346,7 @@ public class ICALToJsonAttributeTest {
             "\"recurrence-id\": null" +
             "}");
         assertThatJson(actual.get(1)).isEqualTo("{" +
-            "\"ical\": \"" + toJsonValue(ics) +"\"," +
+            "\"ical\": \"" + toJsonValue(ics) + "\"," +
             "\"sender\": \"" + SENDER.asString() + "\"," +
             "\"recipient\": \"" + recipient.asString() + "\"," +
             "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
@@ -454,7 +454,7 @@ public class ICALToJsonAttributeTest {
         assertThat(jsons).hasSize(1);
         assertThatJson(new String(jsons.values().iterator().next(), StandardCharsets.UTF_8))
             .isEqualTo("{" +
-                "\"ical\": \"" + toJsonValue(ics) +"\"," +
+                "\"ical\": \"" + toJsonValue(ics) + "\"," +
                 "\"sender\": \"" + from + "\"," +
                 "\"recipient\": \"" + recipient.asString() + "\"," +
                 "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
@@ -488,7 +488,7 @@ public class ICALToJsonAttributeTest {
         assertThat(jsons).hasSize(1);
         assertThatJson(new String(jsons.values().iterator().next(), StandardCharsets.UTF_8))
             .isEqualTo("{" +
-                "\"ical\": \"" + toJsonValue(ics) +"\"," +
+                "\"ical\": \"" + toJsonValue(ics) + "\"," +
                 "\"sender\": \"" + SENDER.asString() + "\"," +
                 "\"recipient\": \"" + recipient.asString() + "\"," +
                 "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
@@ -523,7 +523,7 @@ public class ICALToJsonAttributeTest {
         assertThat(jsons).hasSize(1);
         assertThatJson(new String(jsons.values().iterator().next(), StandardCharsets.UTF_8))
             .isEqualTo("{" +
-                "\"ical\": \"" + toJsonValue(ics) +"\"," +
+                "\"ical\": \"" + toJsonValue(ics) + "\"," +
                 "\"sender\": \"" + from + "\"," +
                 "\"recipient\": \"" + recipient.asString() + "\"," +
                 "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +

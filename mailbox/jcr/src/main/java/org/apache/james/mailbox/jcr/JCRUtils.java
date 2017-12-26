@@ -31,7 +31,7 @@ import org.apache.jackrabbit.commons.cnd.CndImporter;
  * Utilities used for JCR 
  *
  */
-public class JCRUtils implements JCRImapConstants{
+public class JCRUtils implements JCRImapConstants {
 
     /**
      * Register the imap CND file in the workspace

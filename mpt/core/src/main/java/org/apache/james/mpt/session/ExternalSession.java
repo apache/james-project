@@ -74,8 +74,7 @@ public final class ExternalSession implements Session {
             monitor.note("<-" + buffer.toString());
             result = shabang;
             first = false;
-        }
-        else {
+        } else {
             result = buffer.toString();
             monitor.note("<-" + result);
         }
@@ -101,20 +100,17 @@ public final class ExternalSession implements Session {
                 monitor.debug("[LF]");
                 // Reached end of the line
                 result = false;
-            }
-            else if (next == '\r') {
+            } else if (next == '\r') {
                 // CRLF line endings so drop
                 monitor.debug("[CR]");
                 result = true;
-            }
-            else {
+            } else {
                 // Load buffer
                 monitor.debug(next);
                 buffer.append(next);
                 result = true;
             }
-        }
-        else {
+        } else {
             monitor.debug("[Reading into buffer]");
             readBuffer.clear();
             result = tryReadFromSocket();

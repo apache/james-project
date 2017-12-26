@@ -29,7 +29,7 @@ import org.apache.james.protocols.api.Response;
  * 
  * Only one {@link LineHandler} will get called per line
  */
-public interface LineHandler<Session extends ProtocolSession> extends ProtocolHandler{
+public interface LineHandler<Session extends ProtocolSession> extends ProtocolHandler {
      
     /**
      * Processing the give line. The line includes the {@link ProtocolSession#getLineDelimiter()} delimiter.

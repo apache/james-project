@@ -24,7 +24,7 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 
-public class OioSMTPServerFactory extends SMTPServerFactory{
+public class OioSMTPServerFactory extends SMTPServerFactory {
 
     public OioSMTPServerFactory(DNSService dns, ProtocolHandlerLoader loader, FileSystem fileSystem, MetricFactory metricFactory) {
         super(dns, loader, fileSystem, metricFactory);

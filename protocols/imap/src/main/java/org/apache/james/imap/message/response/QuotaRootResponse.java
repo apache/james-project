@@ -32,7 +32,7 @@ public class QuotaRootResponse implements ImapResponseMessage {
     public QuotaRootResponse(String mailboxName, String quotaRoot) {
         super();
         this.mailboxName = mailboxName;
-        this.quotaRoot= quotaRoot;
+        this.quotaRoot = quotaRoot;
     }
 
     @Override

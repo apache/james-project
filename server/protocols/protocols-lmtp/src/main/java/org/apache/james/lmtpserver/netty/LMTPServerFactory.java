@@ -30,7 +30,7 @@ import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
 
-public class LMTPServerFactory extends AbstractServerFactory{
+public class LMTPServerFactory extends AbstractServerFactory {
 
     private final ProtocolHandlerLoader loader;
     private final FileSystem fileSystem;
@@ -48,7 +48,7 @@ public class LMTPServerFactory extends AbstractServerFactory{
     }
     
     @Override
-    protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration config) throws Exception{
+    protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration config) throws Exception {
         List<AbstractConfigurableAsyncServer> servers = new ArrayList<>();
         List<HierarchicalConfiguration> configs = config.configurationsAt("lmtpserver");
         

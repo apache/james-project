@@ -24,8 +24,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-@Entity(name="MaxDefaultStorage")
-@Table(name="JAMES_MAX_DEFAULT_STORAGE")
+@Entity(name = "MaxDefaultStorage")
+@Table(name = "JAMES_MAX_DEFAULT_STORAGE")
 public class MaxDefaultStorage {
     public static final String DEFAULT_KEY = "default_key";
    
@@ -33,7 +33,7 @@ public class MaxDefaultStorage {
     @Column(name = "QUOTAROOT_ID")
     private String quotaRoot = DEFAULT_KEY;
 
-    @Column(name="VALUE")
+    @Column(name = "VALUE")
     private long value;
 
     public MaxDefaultStorage(long value) {

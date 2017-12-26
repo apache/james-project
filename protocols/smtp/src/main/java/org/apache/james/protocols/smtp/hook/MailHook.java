@@ -26,7 +26,7 @@ import org.apache.james.protocols.smtp.SMTPSession;
  * Implement this interfaces to hook in the MAIL Command
  * 
  */
-public interface MailHook extends Hook{
+public interface MailHook extends Hook {
 
     /**
      * Return the HookResult after run the hook

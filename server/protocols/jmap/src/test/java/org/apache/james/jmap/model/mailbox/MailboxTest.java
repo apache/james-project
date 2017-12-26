@@ -29,31 +29,31 @@ import org.junit.Test;
 
 public class MailboxTest {
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void idShouldThrowWhenIdIsNull() {
         Mailbox.builder()
             .id(null);
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void nameShouldThrowWhenNameIsNull() {
         Mailbox.builder()
             .name(null);
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenIdIsNull() {
         Mailbox.builder().build();
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenNameIsNull() {
         Mailbox.builder()
             .id(InMemoryId.of(1))
             .build();
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenNameIsEmpty() {
         Mailbox.builder()
             .id(InMemoryId.of(1))

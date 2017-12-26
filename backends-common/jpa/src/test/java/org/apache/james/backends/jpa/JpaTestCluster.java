@@ -71,7 +71,7 @@ public class JpaTestCluster {
     public void clear(List<String> tables) {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         entityManager.getTransaction().begin();
-        for(String tableName: tables) {
+        for (String tableName: tables) {
             entityManager.createNativeQuery("DELETE FROM " + tableName).executeUpdate();
         }
         entityManager.getTransaction().commit();

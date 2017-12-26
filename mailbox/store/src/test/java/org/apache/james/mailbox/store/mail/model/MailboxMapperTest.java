@@ -96,24 +96,24 @@ public abstract class MailboxMapperTest {
     }
 
     @Test
-    public void saveShouldPersistTheMailbox() throws MailboxException{
+    public void saveShouldPersistTheMailbox() throws MailboxException {
         mailboxMapper.save(benwaInboxMailbox);
         MailboxAssert.assertThat(mailboxMapper.findMailboxByPath(benwaInboxPath)).isEqualTo(benwaInboxMailbox);
     }
 
     @Test
-    public void saveShouldThrowWhenMailboxAlreadyExist() throws MailboxException{
+    public void saveShouldThrowWhenMailboxAlreadyExist() throws MailboxException {
         mailboxMapper.save(benwaInboxMailbox);
 
         SimpleMailbox mailbox = new SimpleMailbox(benwaInboxMailbox);
         mailbox.setMailboxId(null);
 
-        assertThatThrownBy(() ->mailboxMapper.save(mailbox))
+        assertThatThrownBy(() -> mailboxMapper.save(mailbox))
             .isInstanceOf(MailboxExistsException.class);
     }
 
     @Test
-    public void saveWithNullUserShouldPersistTheMailbox() throws MailboxException{
+    public void saveWithNullUserShouldPersistTheMailbox() throws MailboxException {
         mailboxMapper.save(esnDevGroupInboxMailbox);
         MailboxAssert.assertThat(mailboxMapper.findMailboxByPath(esnDevGroupInboxPath)).isEqualTo(esnDevGroupInboxMailbox);
     }
@@ -251,19 +251,19 @@ public abstract class MailboxMapperTest {
 
     private void initData() {
         benwaInboxPath = MailboxPath.forUser("benwa", "INBOX");
-        benwaWorkPath = MailboxPath.forUser("benwa", "INBOX"+DELIMITER+"work");
-        benwaWorkTodoPath = MailboxPath.forUser("benwa", "INBOX"+DELIMITER+"work"+DELIMITER+"todo");
-        benwaPersoPath = MailboxPath.forUser("benwa", "INBOX"+DELIMITER+"perso");
-        benwaWorkDonePath = MailboxPath.forUser("benwa", "INBOX"+DELIMITER+"work"+DELIMITER+"done");
+        benwaWorkPath = MailboxPath.forUser("benwa", "INBOX" + DELIMITER + "work");
+        benwaWorkTodoPath = MailboxPath.forUser("benwa", "INBOX" + DELIMITER + "work" + DELIMITER + "todo");
+        benwaPersoPath = MailboxPath.forUser("benwa", "INBOX" + DELIMITER + "perso");
+        benwaWorkDonePath = MailboxPath.forUser("benwa", "INBOX" + DELIMITER + "work" + DELIMITER + "done");
         bobInboxPath = MailboxPath.forUser("bob", "INBOX");
         bobyMailboxPath = MailboxPath.forUser("boby", "INBOX.that.is.a.trick");
         bobDifferentNamespacePath = new MailboxPath("#private_bob", "bob", "INBOX.bob");
         esnDevGroupInboxPath = new MailboxPath("#community_ESN_DEV", null, "INBOX");
-        esnDevGroupHublinPath = new MailboxPath("#community_ESN_DEV", null, "INBOX"+DELIMITER+"hublin");
-        esnDevGroupJamesPath = new MailboxPath("#community_ESN_DEV", null, "INBOX"+DELIMITER+"james");
+        esnDevGroupHublinPath = new MailboxPath("#community_ESN_DEV", null, "INBOX" + DELIMITER + "hublin");
+        esnDevGroupJamesPath = new MailboxPath("#community_ESN_DEV", null, "INBOX" + DELIMITER + "james");
         obmTeamGroupInboxPath = new MailboxPath("#community_OBM_Core_Team", null, "INBOX");
-        obmTeamGroupOPushPath = new MailboxPath("#community_OBM_Core_Team", null, "INBOX"+DELIMITER+"OPush");
-        obmTeamGroupRoundCubePath = new MailboxPath("#community_OBM_Core_Team", null, "INBOX"+DELIMITER+"roundCube");
+        obmTeamGroupOPushPath = new MailboxPath("#community_OBM_Core_Team", null, "INBOX" + DELIMITER + "OPush");
+        obmTeamGroupRoundCubePath = new MailboxPath("#community_OBM_Core_Team", null, "INBOX" + DELIMITER + "roundCube");
 
         benwaInboxMailbox = createMailbox(benwaInboxPath);
         benwaWorkMailbox = createMailbox(benwaWorkPath);
@@ -281,7 +281,7 @@ public abstract class MailboxMapperTest {
         bobDifferentNamespaceMailbox = createMailbox(bobDifferentNamespacePath);
     }
 
-    private void saveAll() throws MailboxException{
+    private void saveAll() throws MailboxException {
         mailboxMapper.save(benwaInboxMailbox);
         mailboxMapper.save(benwaWorkMailbox);
         mailboxMapper.save(benwaWorkTodoMailbox);

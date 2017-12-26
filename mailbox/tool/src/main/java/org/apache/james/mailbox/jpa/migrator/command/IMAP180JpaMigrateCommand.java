@@ -79,7 +79,7 @@ public class IMAP180JpaMigrateCommand implements JpaMigrateCommand {
         
         DelegatingResultList headerNameList = (DelegatingResultList) headerQuery.getResultList();
         ResultList rl = headerNameList.getDelegate();
-        for (int i=0; i < rl.size(); i++) {
+        for (int i = 0; i < rl.size(); i++) {
             Object[] results = (Object[]) rl.get(i);
             Long messageId = (Long) results[0];
             Long headerId = (Long) results[1];
@@ -88,7 +88,7 @@ public class IMAP180JpaMigrateCommand implements JpaMigrateCommand {
             update.setParameter(1, messageId);
             update.setParameter(2, headerId);
             int result = update.executeUpdate();
-            System.out.printf("ExecuteUpdate returned a result=" + result + " for header %d of %d\n", i+1, headerCount);
+            System.out.printf("ExecuteUpdate returned a result=" + result + " for header %d of %d\n", i + 1, headerCount);
             em.getTransaction().commit();
         }
 
@@ -127,7 +127,7 @@ public class IMAP180JpaMigrateCommand implements JpaMigrateCommand {
 
         DelegatingResultList propertyNameList = (DelegatingResultList) propertyQuery.getResultList();
         ResultList rl = propertyNameList.getDelegate();
-        for (int i=0; i < rl.size(); i++) {
+        for (int i = 0; i < rl.size(); i++) {
             Object[] results = (Object[]) rl.get(i);
             Long messageId = (Long) results[0];
             Long propertyId = (Long) results[1];
@@ -136,7 +136,7 @@ public class IMAP180JpaMigrateCommand implements JpaMigrateCommand {
             update.setParameter(1, messageId);
             update.setParameter(2, propertyId);
             int result = update.executeUpdate();
-            System.out.printf("ExecuteUpdate returned a result=" + result + " for property %d of %d\n", i+1, propertyCount);     
+            System.out.printf("ExecuteUpdate returned a result=" + result + " for property %d of %d\n", i + 1, propertyCount);     
             em.getTransaction().commit();
         }
         

@@ -61,23 +61,23 @@ public class ImapFeaturesTest {
         assertThat(ImapFeatures.of().supports()).isTrue();
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void supportsShouldThrowOnNullFeature() {
         assertThat(ImapFeatures.of().supports((Feature)null));
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void supportsShouldThrowOnNullFeatureArray() {
         assertThat(ImapFeatures.of().supports((Feature[])null));
     }
 
     
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void ofShouldThrowOnNullFeature() {
         ImapFeatures.of((Feature)null);
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void ofShouldThrowOnNullFeatureArray() {
         ImapFeatures.of((Feature[])null);
     }

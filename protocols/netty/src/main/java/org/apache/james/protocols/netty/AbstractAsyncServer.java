@@ -40,7 +40,7 @@ import com.google.common.collect.ImmutableList;
  * Abstract base class for Servers which want to use async io
  *
  */
-public abstract class AbstractAsyncServer implements ProtocolServer{
+public abstract class AbstractAsyncServer implements ProtocolServer {
 
     public static final int DEFAULT_IO_WORKER_COUNT = Runtime.getRuntime().availableProcessors() * 2;
     private volatile int backlog = 250;

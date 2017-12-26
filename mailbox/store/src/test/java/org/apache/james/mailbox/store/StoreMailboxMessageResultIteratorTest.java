@@ -209,7 +209,7 @@ public class StoreMailboxMessageResultIteratorTest {
         assertThat(iterator.next()).isNotNull();
     }
     
-    @Test(expected=NoSuchElementException.class)
+    @Test(expected = NoSuchElementException.class)
     public void nextShouldThrowWhenNoElement() {
         MessageRange messages = MessageUid.of(1).toRange();
         MessageRange findRange = MessageUid.of(2).toRange();

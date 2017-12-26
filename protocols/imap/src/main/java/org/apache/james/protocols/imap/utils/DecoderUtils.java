@@ -64,7 +64,7 @@ public final class DecoderUtils {
 
     private static final int ALL_MONTH_BITS = JAN_BIT | FEB_BIT | MAR_BIT | APR_BIT | MAY_BIT | JUN_BIT | JUL_BIT | AUG_BIT | SEP_BIT | OCT_BIT | NOV_BIT | DEC_BIT;
 
-    public static void setFlag(String flagString, Flags flags) throws DecodingException{
+    public static void setFlag(String flagString, Flags flags) throws DecodingException {
         if (flagString.equalsIgnoreCase(MessageFlags.ANSWERED_ALL_CAPS)) {
             flags.add(Flags.Flag.ANSWERED);
         } else if (flagString.equalsIgnoreCase(MessageFlags.DELETED_ALL_CAPS)) {

@@ -163,7 +163,7 @@ public class SMIMECheckSignature extends GenericMailet {
         // strippedMessage will contain the signed content of the message 
         MimeBodyPart strippedMessage =null;
         
-        List<SMIMESignerInfo> signers=null;
+        List<SMIMESignerInfo> signers = null;
         
         try {
             Object obj = message.getContent();

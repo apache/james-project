@@ -192,7 +192,7 @@ public class RemoteDeliveryConfiguration {
         if (gateway != null) {
             ImmutableList.Builder<String> builder = ImmutableList.builder();
             Iterable<String> gatewayParts = Splitter.on(',').split(gateway);
-            for(String gatewayPart : gatewayParts) {
+            for (String gatewayPart : gatewayParts) {
                 builder.add(parsePart(gatewayPort, gatewayPart));
             }
             return builder.build();

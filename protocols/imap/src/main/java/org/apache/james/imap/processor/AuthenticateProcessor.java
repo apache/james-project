@@ -47,7 +47,7 @@ import com.google.common.collect.ImmutableList;
  * 
  *
  */
-public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateRequest> implements CapabilityImplementingProcessor{
+public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticateProcessor.class);
     private static final String PLAIN = "PLAIN";
     

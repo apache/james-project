@@ -68,7 +68,7 @@ public class SetMessagesMethodStepdefs {
 
         httpClient.post("[" +
             "  [" +
-            "    \"setMessages\","+
+            "    \"setMessages\"," +
             "    {" +
             "      \"update\": { \"" + messageId.serialize() + "\" : {" +
             "        \"mailboxIds\": [\"" + mailboxId.serialize() + "\"]" +
@@ -88,7 +88,7 @@ public class SetMessagesMethodStepdefs {
 
         httpClient.post("[" +
             "  [" +
-            "    \"setMessages\","+
+            "    \"setMessages\"," +
             "    {" +
             "      \"update\": { \"" + messageId.serialize() + "\" : {" +
             "        \"mailboxIds\": [\"" + mailboxId.serialize() + "\"]," +
@@ -115,7 +115,7 @@ public class SetMessagesMethodStepdefs {
 
         httpClient.post("[" +
             "  [" +
-            "    \"setMessages\","+
+            "    \"setMessages\"," +
             "    {" +
             "      \"update\": { \"" + messageId.serialize() + "\" : {" +
             "        \"mailboxIds\": [\"" + destinationMailboxId.serialize() + "\",\"" + sourceMailboxId.serialize() + "\"]" +
@@ -139,7 +139,7 @@ public class SetMessagesMethodStepdefs {
 
         httpClient.post("[" +
             "  [" +
-            "    \"setMessages\","+
+            "    \"setMessages\"," +
             "    {" +
             "      \"update\": { \"" + messageId.serialize() + "\" : {" +
             "        \"mailboxIds\": [\"" + destinationMailboxId.serialize() + "\",\"" + sourceMailboxId.serialize() + "\"]" +
@@ -162,7 +162,7 @@ public class SetMessagesMethodStepdefs {
 
         httpClient.post("[" +
             "  [" +
-            "    \"setMessages\","+
+            "    \"setMessages\"," +
             "    {" +
             "      \"update\": { \"" + messageId.serialize() + "\" : {" +
             "        \"mailboxIds\": [\"" + destinationMailboxId.serialize() + "\"]" +
@@ -186,7 +186,7 @@ public class SetMessagesMethodStepdefs {
 
             httpClient.post("[" +
                 "  [" +
-                "    \"setMessages\","+
+                "    \"setMessages\"," +
                 "    {" +
                 "      \"update\": { \"" + messageId.serialize() + "\" : {" +
                 "        \"isFlagged\": true" +
@@ -226,7 +226,7 @@ public class SetMessagesMethodStepdefs {
         userStepdefs.execWithUser(username, () -> {
             httpClient.post("[" +
                 "  [" +
-                "    \"setMessages\","+
+                "    \"setMessages\"," +
                 "    {" +
                 "      \"destroy\": [ \"" + messageId.serialize() + "\" ]" +
                 "    }," +
@@ -243,7 +243,7 @@ public class SetMessagesMethodStepdefs {
             String mailboxId = mainStepdefs.getMailboxId(username, mailboxName).serialize();
             httpClient.post("[" +
                 "  [" +
-                "    \"setMessages\","+
+                "    \"setMessages\"," +
                 "    {" +
                 "      \"create\": { \"" + message  + "\" : {" +
                 "        \"subject\": \"subject\"," +
@@ -271,7 +271,7 @@ public class SetMessagesMethodStepdefs {
 
         httpClient.post("[" +
             "  [" +
-            "    \"setMessages\","+
+            "    \"setMessages\"," +
             "    {" +
             "      \"update\": { \"" + messageId.serialize() + "\" : {" +
             "        \"keywords\": {" + keywordString + "}" +

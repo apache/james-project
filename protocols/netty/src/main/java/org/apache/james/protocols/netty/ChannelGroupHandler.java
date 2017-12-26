@@ -37,7 +37,7 @@ public final class ChannelGroupHandler extends SimpleChannelUpstreamHandler {
     }
    
     @Override
-    public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception{
+    public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         // Add all open channels to the global group so that they are
         // closed on shutdown.
         channels.add(e.getChannel());

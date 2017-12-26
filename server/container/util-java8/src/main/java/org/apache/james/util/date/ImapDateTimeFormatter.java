@@ -63,7 +63,7 @@ public class ImapDateTimeFormatter {
     }
 
     private static ImmutableMap<Long, String> monthOfYear() {
-        return ImmutableMap.<Long, String> builder()
+        return ImmutableMap.<Long, String>builder()
                 .put(1L, "Jan")
                 .put(2L, "Feb")
                 .put(3L, "Mar")
@@ -80,7 +80,7 @@ public class ImapDateTimeFormatter {
     }
 
     private static ImmutableMap<Long, String> dayOfWeek() {
-        return ImmutableMap.<Long, String> builder()
+        return ImmutableMap.<Long, String>builder()
                 .put(1L, "Mon")
                 .put(2L, "Tue")
                 .put(3L, "Wed")

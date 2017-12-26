@@ -75,7 +75,7 @@ public class CassandraACLMapper {
 
     @Inject
     public CassandraACLMapper(Session session, CassandraUserMailboxRightsDAO userMailboxRightsDAO, CassandraConfiguration cassandraConfiguration) {
-        this(session, userMailboxRightsDAO, cassandraConfiguration, () -> {});
+        this(session, userMailboxRightsDAO, cassandraConfiguration, () -> { });
     }
 
     public CassandraACLMapper(Session session, CassandraUserMailboxRightsDAO userMailboxRightsDAO, CassandraConfiguration cassandraConfiguration, CodeInjector codeInjector) {
@@ -215,7 +215,7 @@ public class CassandraACLMapper {
     private MailboxACL deserializeACL(CassandraId cassandraId, String serializedACL) {
         try {
             return MailboxACLJsonConverter.toACL(serializedACL);
-        } catch(IOException exception) {
+        } catch (IOException exception) {
             LOG.error("Unable to read stored ACL. " +
                 "We will use empty ACL instead." +
                 "Mailbox is {} ." +
@@ -236,7 +236,7 @@ public class CassandraACLMapper {
         public ACLWithVersion apply(MailboxACL.ACLCommand command) {
             try {
                 return new ACLWithVersion(version, mailboxACL.apply(command));
-            } catch(UnsupportedRightException exception) {
+            } catch (UnsupportedRightException exception) {
                 throw Throwables.propagate(exception);
             }
         }

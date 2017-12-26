@@ -56,7 +56,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
      * @param entityManagerFactory
      */
     @Inject
-    @PersistenceUnit(unitName="James")
+    @PersistenceUnit(unitName = "James")
     public void setEntityManagerFactory(EntityManagerFactory entityManagerFactory) {
         this.entityManagerFactory = entityManagerFactory;
     }

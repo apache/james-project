@@ -28,7 +28,7 @@ import org.apache.james.mailbox.model.Content;
  * Just an Empty {@link Content}
  *
  */
-public class EmptyContent implements Content{
+public class EmptyContent implements Content {
 
     /**
      * Return 0 as this {@link Content} is empty

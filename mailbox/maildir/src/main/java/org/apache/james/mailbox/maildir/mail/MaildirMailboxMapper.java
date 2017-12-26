@@ -86,13 +86,11 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
                         new File(folder, MaildirFolder.TMP),
                         new File(folder, MaildirFolder.UIDLIST_FILE),
                         new File(folder, MaildirFolder.VALIDITY_FILE));
-            }
-            else {
+            } else {
                 // We simply delete all the folder for non INBOX mailboxes.
                 delete(folder);
             }
-        }
-        else {
+        } else {
             throw new MailboxNotFoundException(mailbox.generateAssociatedPath());
         }
     }
@@ -212,8 +210,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
                     } catch (IOException e) {
                         throw new MailboxException("Failed to save Mailbox " + mailbox, e);
                     }
-                }
-                else {
+                } else {
                     if (!originalFolder.getRootFile().renameTo(folder.getRootFile())) {
                         throw new MailboxException("Failed to save Mailbox " + mailbox,
                             new IOException("Could not rename folder " + originalFolder));
@@ -323,8 +320,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
             
             if (domain == null) {
                 userName = user.getName();
-            }
-            else {
+            } else {
                 userName = user.getName() + "@" + domain.getName();
             }
             

@@ -71,7 +71,7 @@ public class Sieve extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        for(MailAddress recipient: mail.getRecipients()) {
+        for (MailAddress recipient: mail.getRecipients()) {
             sieveExecutor.execute(recipient, mail);
         }
     }

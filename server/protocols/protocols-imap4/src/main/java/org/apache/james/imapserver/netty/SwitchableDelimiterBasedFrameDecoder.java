@@ -35,7 +35,7 @@ public class SwitchableDelimiterBasedFrameDecoder extends DelimiterBasedFrameDec
 
 	@Override
 	public synchronized void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-		if(this.framingEnabled) {
+		if (this.framingEnabled) {
 			super.messageReceived(ctx, e);
 		} else {
 			ctx.sendUpstream(e);
@@ -49,10 +49,10 @@ public class SwitchableDelimiterBasedFrameDecoder extends DelimiterBasedFrameDec
 
 	public synchronized void disableFraming(ChannelHandlerContext ctx) {
 		this.framingEnabled = false;
-		if(this.cumulation != null && this.cumulation.readable()) {
+		if (this.cumulation != null && this.cumulation.readable()) {
 			final ChannelBuffer spareBytes = this.cumulation.readBytes(this.cumulation.readableBytes());
 			Channels.fireMessageReceived(ctx, spareBytes);
 		}
 	}
-	
+
 }

@@ -92,7 +92,7 @@ public class MailboxAnnotationListenerTest {
     }
 
     @Test
-    public void eventShoudlDoNothingIfMailboxDoesNotHaveAnyAnnotation() throws Exception{
+    public void eventShoudlDoNothingIfMailboxDoesNotHaveAnyAnnotation() throws Exception {
         when(annotationMapper.getAllAnnotations(any(MailboxId.class))).thenReturn(ImmutableList.<MailboxAnnotation>of());
 
         listener.event(deleteEvent);
@@ -106,7 +106,7 @@ public class MailboxAnnotationListenerTest {
     }
 
     @Test
-    public void eventShoudlDeleteAllMailboxAnnotation() throws Exception{
+    public void eventShoudlDeleteAllMailboxAnnotation() throws Exception {
         when(annotationMapper.getAllAnnotations(eq(mailboxId))).thenReturn(ANNOTATIONS);
 
         listener.event(deleteEvent);

@@ -62,7 +62,7 @@ public class DefaultQuotaRootResolver implements QuotaRootResolver {
     public List<MailboxPath> retrieveAssociatedMailboxes(QuotaRoot quotaRoot, MailboxSession mailboxSession) throws MailboxException {
         List<String> parts = Lists.newArrayList(Splitter.on(SEPARATOR).split(quotaRoot.getValue()));
         if (parts.size() != 2) {
-            throw new MailboxException(quotaRoot + " used as QuotaRoot should not contain 2 \""+SEPARATOR+"\"");
+            throw new MailboxException(quotaRoot + " used as QuotaRoot should not contain 2 \"" + SEPARATOR + "\"");
         }
         String namespace = parts.get(0);
         String user = parts.get(1);

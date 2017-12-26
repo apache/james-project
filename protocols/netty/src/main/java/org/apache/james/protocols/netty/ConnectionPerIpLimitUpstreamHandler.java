@@ -37,7 +37,7 @@ import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
  * TODO: Remove when its committed to NETTY. 
  *       https://jira.jboss.org/jira/browse/NETTY-311
  */
-public class ConnectionPerIpLimitUpstreamHandler extends SimpleChannelUpstreamHandler{
+public class ConnectionPerIpLimitUpstreamHandler extends SimpleChannelUpstreamHandler {
 
     private final ConcurrentMap<String, AtomicInteger> connections = new ConcurrentHashMap<>();
     private volatile int maxConnectionsPerIp = -1;

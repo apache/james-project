@@ -55,7 +55,7 @@ public class JmapResponseWriterImplTest {
     }
 
     @Ignore
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void formatMethodResponseShouldWorkWhenNullJmapResponse() {
         String expectedMethod = "nwonMethod";
         String expectedClientId = "#1";

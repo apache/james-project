@@ -26,7 +26,7 @@ import java.io.InputStream;
  * 
  *
  */
-public interface StreamResponse extends Response{
+public interface StreamResponse extends Response {
 
     /**
      * Return the stream which needs to get written to the remote peer. This method should only be called one time (when the data is written to the client) as it returns

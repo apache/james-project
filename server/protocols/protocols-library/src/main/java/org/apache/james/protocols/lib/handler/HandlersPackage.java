@@ -30,7 +30,7 @@ import org.apache.james.protocols.api.handler.ProtocolHandler;
  * a single object.
  * This is used for the default set of CoreCommands.
  */
-public interface HandlersPackage extends ProtocolHandler{
+public interface HandlersPackage extends ProtocolHandler {
     
     /**
      * Return a List which contains a set of CommandHandlers

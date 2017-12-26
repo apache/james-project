@@ -79,7 +79,7 @@ public class Keywords {
         }
 
         public Keywords fromSet(Set<Keyword> setKeywords) {
-            validator.orElse(keywords -> {})
+            validator.orElse(keywords -> { })
                 .validate(setKeywords);
 
             return new Keywords(setKeywords.stream()

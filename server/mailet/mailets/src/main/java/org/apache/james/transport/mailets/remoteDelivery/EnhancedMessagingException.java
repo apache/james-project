@@ -160,7 +160,7 @@ public class EnhancedMessagingException {
         try {
             Method getAddress = target.getClass().getMethod(getter);
             return getAddress.invoke(target);
-        } catch (NoSuchMethodException|IllegalAccessException|IllegalArgumentException|InvocationTargetException e) {
+        } catch (NoSuchMethodException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             return new IllegalStateException("Exception invoking " + getter + " on a " + target.getClass() + " object");            
         }
     }

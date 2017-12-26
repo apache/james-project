@@ -23,7 +23,7 @@ import com.google.common.base.Preconditions;
 
 import org.apache.james.mailbox.model.Quota;
 
-public final class QuotaImpl implements Quota{
+public final class QuotaImpl implements Quota {
 
     private static final Quota UNLIMITED_QUOTA = new QuotaImpl(UNKNOWN, UNLIMITED);
 

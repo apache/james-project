@@ -70,11 +70,7 @@ public class ResolvableEhloHeloHandler implements RcptHook, HeloHook {
     protected String resolve(String host) throws UnknownHostException {
         return InetAddress.getByName(host).getHostName();
     }
-    /**
-     * @param session the SMTPSession
-     * @param argument the argument
-     * @return true if the helo is bad.
-     */
+
     protected boolean isBadHelo(SMTPSession session, String argument) {
         // try to resolv the provided helo. If it can not resolved do not
         // accept it.

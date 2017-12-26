@@ -77,13 +77,13 @@ public abstract class AbstractProtocolAsyncServer extends AbstractConfigurableAs
      * 
      * @return core
      */
-    protected abstract Class< ? extends HandlersPackage> getCoreHandlersPackage();
+    protected abstract Class<? extends HandlersPackage> getCoreHandlersPackage();
     
     /**
      * Return the {@link HandlersPackage} which is responsible to load the jmx {@link ProtocolHandler}
      * 
      * @return jmx
      */
-    protected abstract Class< ? extends HandlersPackage> getJMXHandlersPackage();
+    protected abstract Class<? extends HandlersPackage> getJMXHandlersPackage();
 
 }

@@ -33,7 +33,7 @@ import org.apache.james.protocols.smtp.hook.UnknownHook;
  * 
  *
  */
-public class MaxUnknownCmdHandler implements UnknownHook{
+public class MaxUnknownCmdHandler implements UnknownHook {
 
     public static final int DEFAULT_MAX_UNKOWN = 5;
     

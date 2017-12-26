@@ -31,7 +31,7 @@ import org.apache.commons.net.smtp.SMTPSClient;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
 
-public abstract class AbstractLMTPSServerTest extends AbstractLMTPServerTest{
+public abstract class AbstractLMTPSServerTest extends AbstractLMTPServerTest {
 
     @Override
     protected SMTPClient createClient() {
@@ -41,7 +41,7 @@ public abstract class AbstractLMTPSServerTest extends AbstractLMTPServerTest{
         return client;
     }
 
-    protected final class LMTPSClient extends SMTPSClient implements LMTPClient{
+    protected final class LMTPSClient extends SMTPSClient implements LMTPClient {
 
         private final List<Integer> replies = new ArrayList<>();
         private int rcptCount = 0;

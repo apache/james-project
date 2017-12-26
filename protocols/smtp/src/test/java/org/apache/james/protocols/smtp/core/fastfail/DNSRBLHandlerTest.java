@@ -89,7 +89,7 @@ public class DNSRBLHandlerTest {
                 } else if ("1.0.168.192.bl.spamcop.net.".equals(host)) {
                     return false;
                 }
-                throw new UnsupportedOperationException("getByName("+host+") not implemented in DNSRBLHandlerTest mock");
+                throw new UnsupportedOperationException("getByName(" + host + ") not implemented in DNSRBLHandlerTest mock");
             }
 
             @Override

@@ -134,7 +134,7 @@ public class JPAMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    JPAConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws FileNotFoundException, ConfigurationException{
+    JPAConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws FileNotFoundException, ConfigurationException {
         PropertiesConfiguration dataSource = propertiesProvider.getConfiguration("james-database");
         return JPAConfiguration.builder()
                 .driverName(dataSource.getString("database.driverClassName"))

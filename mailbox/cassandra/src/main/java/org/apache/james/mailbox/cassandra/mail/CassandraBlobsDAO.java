@@ -111,7 +111,7 @@ public class CassandraBlobsDAO {
 
         BlobId blobId = BlobId.forPayload(data);
         return saveBlobParts(data, blobId)
-            .thenCompose(numberOfChunk-> saveBlobPartsReferences(blobId, numberOfChunk))
+            .thenCompose(numberOfChunk -> saveBlobPartsReferences(blobId, numberOfChunk))
             .thenApply(any -> blobId);
     }
 

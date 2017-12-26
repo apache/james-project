@@ -77,7 +77,7 @@ public class KeyStoreHolder {
     }
     
     public KeyStoreHolder(String password) throws IOException, GeneralSecurityException {
-        this(System.getProperty("java.home")+"/lib/security/cacerts".replace('/', File.separatorChar), password, KeyStore.getDefaultType());
+        this(System.getProperty("java.home") + "/lib/security/cacerts".replace('/', File.separatorChar), password, KeyStore.getDefaultType());
     }
     
     public KeyStoreHolder(String keyStoreFileName, String keyStorePassword, String keyStoreType) 

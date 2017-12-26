@@ -57,25 +57,25 @@ public class FlagsDataTransferObject {
     @JsonIgnore
     public Flags getFlags() {
         Flags result = new Flags();
-        if(answered) {
+        if (answered) {
             result.add(Flags.Flag.ANSWERED);
         }
-        if(flagged) {
+        if (flagged) {
             result.add(Flags.Flag.FLAGGED);
         }
-        if(recent) {
+        if (recent) {
             result.add(Flags.Flag.RECENT);
         }
-        if(deleted) {
+        if (deleted) {
             result.add(Flags.Flag.DELETED);
         }
-        if(draft) {
+        if (draft) {
             result.add(Flags.Flag.DRAFT);
         }
-        if(seen) {
+        if (seen) {
             result.add(Flags.Flag.SEEN);
         }
-        for(String flag : userFlags) {
+        for (String flag : userFlags) {
             result.add(flag);
         }
         return result;

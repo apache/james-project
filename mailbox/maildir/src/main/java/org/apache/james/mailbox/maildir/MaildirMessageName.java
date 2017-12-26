@@ -281,10 +281,10 @@ public class MaildirMessageName {
         }
         if (isMessageNameStrictParse()) {
             if (sizeString == null) {
-                throw new IllegalArgumentException("No message size found in message name: "+ fullName);
+                throw new IllegalArgumentException("No message size found in message name: " + fullName);
             }
             if (flagsString == null) {
-                throw new IllegalArgumentException("No flags found in message name: "+ fullName);
+                throw new IllegalArgumentException("No flags found in message name: " + fullName);
             }
         }
     }
@@ -454,10 +454,10 @@ public class MaildirMessageName {
      */
     public static MaildirMessageName createUniqueName(MaildirFolder parentFolder, long size) {
         String timestamp = String.valueOf(System.currentTimeMillis());
-        timestamp = timestamp.substring(0, timestamp.length()-3); // time in seconds
+        timestamp = timestamp.substring(0, timestamp.length() - 3); // time in seconds
         StringBuilder uniquePart = new StringBuilder();
         uniquePart.append(Integer.toHexString(random.nextInt())); // random number as hex
-        uniquePart.append(timestamp.substring(timestamp.length()-3)); // milliseconds
+        uniquePart.append(timestamp.substring(timestamp.length() - 3)); // milliseconds
         uniquePart.append(processName); // process name
         uniquePart.append(getNextDeliveryNumber()); // delivery number
         String sizeString = ",S=" + String.valueOf(size);

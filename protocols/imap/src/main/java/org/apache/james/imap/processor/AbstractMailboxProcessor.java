@@ -222,7 +222,7 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             final Collection<MessageUid> flagUpdateUids = selected.flagUpdateUids();
             if (!flagUpdateUids.isEmpty()) {
                 Iterator<MessageRange> ranges = MessageRange.toRanges(flagUpdateUids).iterator();
-                while(ranges.hasNext()) {
+                while (ranges.hasNext()) {
                  if (messageManager == null) {
                      messageManager = getMailbox(session, selected);
                  }
@@ -569,7 +569,7 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
                 }
                 MessageUid from = nr.getLowValue();
                 MessageUid to = nr.getHighValue();
-                while(from.compareTo(to) <= 0) {
+                while (from.compareTo(to) <= 0) {
                     vanishedUids.add(from);
                     from = from.next();
                 }
@@ -579,7 +579,7 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             searchQuery.andCriteria(SearchQuery.uid(nRanges));
             searchQuery.andCriteria(SearchQuery.modSeqGreaterThan(changedSince));
             Iterator<MessageUid> uids = mailbox.search(searchQuery, session);
-            while(uids.hasNext()) {
+            while (uids.hasNext()) {
                 vanishedUids.remove(uids.next());
             }
             UidRange[] vanishedIdRanges = uidRanges(MessageRange.toRanges(vanishedUids));
@@ -595,7 +595,7 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
         UidRange[] idRanges = new UidRange[mRanges.size()];
         Iterator<MessageRange> mIt = mRanges.iterator();
         int i = 0;
-        while(mIt.hasNext()) {
+        while (mIt.hasNext()) {
             MessageRange mr = mIt.next();
             UidRange ir;
             if (mr.getType() == Type.ONE) {

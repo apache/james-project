@@ -164,7 +164,7 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
                 if (currentSize == null) {
                     newSize = Long.valueOf(line.remaining());
                 } else {
-                    newSize = Long.valueOf(currentSize.intValue()+line.remaining());
+                    newSize = Long.valueOf(currentSize.intValue() + line.remaining());
                 }
 
                 session.setAttachment("CURRENT_SIZE", newSize, State.Transaction);

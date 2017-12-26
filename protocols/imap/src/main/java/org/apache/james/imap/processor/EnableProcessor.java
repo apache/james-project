@@ -90,7 +90,7 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
    
     public Set<String> enable(ImapRequest request, Responder responder, ImapSession session, Iterator<String> caps) throws EnableException {
         Set<String> enabledCaps = new HashSet<>();
-        while(caps.hasNext()) {
+        while (caps.hasNext()) {
             String cap = caps.next();
             // Check if the CAPABILITY is supported at all
             if (capabilityProcessor.getSupportedCapabilities(session).contains(cap)) {

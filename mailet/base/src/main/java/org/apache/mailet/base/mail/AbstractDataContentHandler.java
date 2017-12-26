@@ -33,16 +33,14 @@ import javax.mail.MessagingException;
 /**
  * Abstract class providing common Data Handler behavior.
  */
-public abstract class AbstractDataContentHandler implements DataContentHandler
-{
+public abstract class AbstractDataContentHandler implements DataContentHandler {
 
     private ActivationDataFlavor fieldDataFlavor;
 
     /**
      * Default Constructor
      */
-    public AbstractDataContentHandler()
-    {
+    public AbstractDataContentHandler() {
         super();
     }
 
@@ -50,8 +48,7 @@ public abstract class AbstractDataContentHandler implements DataContentHandler
      * Update the current DataFlavor.
      * 
      */    
-    protected void updateDataFlavor()
-    {
+    protected void updateDataFlavor() {
         setDataFlavor(computeDataFlavor());
     }
 
@@ -62,23 +59,18 @@ public abstract class AbstractDataContentHandler implements DataContentHandler
      */
     protected abstract ActivationDataFlavor computeDataFlavor();
 
-    protected void setDataFlavor(ActivationDataFlavor aDataFlavor)
-    {
+    protected void setDataFlavor(ActivationDataFlavor aDataFlavor) {
         fieldDataFlavor = aDataFlavor;
     }
 
     /**
      * @see javax.activation.DataContentHandler#getContent(javax.activation.DataSource)
      */
-    public Object getContent(DataSource aDataSource) throws IOException
-    {
+    public Object getContent(DataSource aDataSource) throws IOException {
         Object content = null;
-        try
-        {
+        try {
             content = computeContent(aDataSource);
-        }
-        catch (MessagingException e)
-        {
+        } catch (MessagingException e) {
             // No-op
         }
         return content;
@@ -99,8 +91,7 @@ public abstract class AbstractDataContentHandler implements DataContentHandler
      *      javax.activation.DataSource)
      */
     public Object getTransferData(DataFlavor aDataFlavor, DataSource aDataSource)
-            throws UnsupportedFlavorException, IOException
-    {
+            throws UnsupportedFlavorException, IOException {
         Object content = null;
         if (getDataFlavor().equals(aDataFlavor)) {
             content = getContent(aDataSource);
@@ -111,8 +102,7 @@ public abstract class AbstractDataContentHandler implements DataContentHandler
     /**
      * @see javax.activation.DataContentHandler#getTransferDataFlavors()
      */
-    public DataFlavor[] getTransferDataFlavors()
-    {
+    public DataFlavor[] getTransferDataFlavors() {
         return new DataFlavor[]{getDataFlavor()};
     }
 
@@ -121,11 +111,9 @@ public abstract class AbstractDataContentHandler implements DataContentHandler
      * 
      * @return Returns the dataFlavor, lazily initialised.
      */
-    protected ActivationDataFlavor getDataFlavor()
-    {
+    protected ActivationDataFlavor getDataFlavor() {
         ActivationDataFlavor dataFlavor;
-        if (null == (dataFlavor = getDataFlavorBasic()))
-        {
+        if (null == (dataFlavor = getDataFlavorBasic())) {
             updateDataFlavor();
             return getDataFlavor();
         }
@@ -137,8 +125,7 @@ public abstract class AbstractDataContentHandler implements DataContentHandler
      * 
      * @return Returns the dataFlavor.
      */
-    private ActivationDataFlavor getDataFlavorBasic()
-    {
+    private ActivationDataFlavor getDataFlavorBasic() {
         return fieldDataFlavor;
     }
 

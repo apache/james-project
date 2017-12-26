@@ -31,7 +31,7 @@ import com.google.common.collect.ImmutableList;
 /**
  * Represents a range of UID or MSN values.
  */
-public final class IdRange implements Iterable<Long>, Comparable<IdRange>{
+public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
 
     public static String toString(IdRange[] ranges) {
         return Optional.ofNullable(ranges)

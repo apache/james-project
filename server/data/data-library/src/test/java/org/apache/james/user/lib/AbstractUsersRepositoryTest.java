@@ -225,7 +225,7 @@ public abstract class AbstractUsersRepositoryTest {
         //Given
         usersRepository.addUser(login("username"), "password");
         //When
-        boolean actual= usersRepository.test(login("userName"), "password");
+        boolean actual = usersRepository.test(login("userName"), "password");
         //Then
         assertThat(actual).isFalse();
     }

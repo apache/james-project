@@ -49,8 +49,8 @@ public class CapabilityResponseEncoder extends AbstractChainedImapEncoder {
         Iterator<String> capabilities = response.getCapabilities().iterator();
         composer.untagged();
         composer.message(ImapConstants.CAPABILITY_COMMAND_NAME);
-        while(capabilities.hasNext()) {
-        	composer.message(capabilities.next());
+        while (capabilities.hasNext()) {
+            composer.message(capabilities.next());
         }
         composer.end();        
     }

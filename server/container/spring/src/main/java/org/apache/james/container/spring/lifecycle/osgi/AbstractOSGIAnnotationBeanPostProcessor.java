@@ -53,9 +53,9 @@ import org.springframework.util.ReflectionUtils;
  *
  * @param <A>
  */
-public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotation> extends InstantiationAwareBeanPostProcessorAdapter implements BundleContextAware, BeanClassLoaderAware, BeanFactoryAware{
+public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotation> extends InstantiationAwareBeanPostProcessorAdapter implements BundleContextAware, BeanClassLoaderAware, BeanFactoryAware {
 
-    public static final long DEFAULT_TIMEOUT = 60 * 1000* 5;
+    public static final long DEFAULT_TIMEOUT = 60 * 1000 * 5;
     private BundleContext bundleContext;
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractOSGIAnnotationBeanPostProcessor.class);
@@ -165,8 +165,7 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
                     try {
                         logger.debug("Processing annotation [{}] for [{}.{}()] on bean [{}]", s, bean.getClass().getName(), method.getName(), beanName);
                         method.invoke(bean, getServiceImporter(s, method, beanName).getObject());
-                    }
-                    catch (Exception e) {
+                    } catch (Exception e) {
                         throw new IllegalArgumentException("Error processing annotation " + s, e);
                     }
                 }
@@ -193,8 +192,7 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
                         ImporterCallAdapter.setCardinality(importer, Cardinality.C_0__1);
                     }
                     newprops.addPropertyValue(pd.getName(), importer.getObject());
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     throw new FatalBeanException("Could not create service reference", e);
                 }
             }

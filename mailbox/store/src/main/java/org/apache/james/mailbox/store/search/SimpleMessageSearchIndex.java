@@ -135,9 +135,9 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
         } else {
         	// we have to fetch all messages
             Iterator<MailboxMessage> messages = mapper.findInMailbox(mailbox, MessageRange.all(), FetchType.Full, -1);
-            while(messages.hasNext()) {
-            	MailboxMessage m = messages.next();
-            	hitSet.add(m);
+            while (messages.hasNext()) {
+                MailboxMessage m = messages.next();
+                hitSet.add(m);
             }
         }
         return ImmutableList.copyOf(new MessageSearches(hitSet.iterator(), query, textExtractor).iterator());

@@ -158,7 +158,7 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
         } catch (MailboxException e) {
             LOGGER.error("Error while updating mailbox", e);
             responseBuilder.notUpdated(mailboxId, SetError.builder()
-                    .type( "anErrorOccurred")
+                    .type("anErrorOccurred")
                     .description("An error occurred when updating the mailbox")
                     .build());
         }

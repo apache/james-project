@@ -32,7 +32,7 @@ import org.elasticsearch.client.Client;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 
-public class TestElasticSearchModule extends AbstractModule{
+public class TestElasticSearchModule extends AbstractModule {
 
     private final EmbeddedElasticSearch embeddedElasticSearch;
 

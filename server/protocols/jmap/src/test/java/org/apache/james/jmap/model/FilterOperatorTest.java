@@ -31,17 +31,17 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class FilterOperatorTest {
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void builderShouldThrowWhenOperatorIsNotGiven() {
         FilterOperator.builder().build();
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void builderShouldThrowWhenOperatorIsNull() {
         FilterOperator.builder().operator(null);
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void builderShouldThrowWhenConditionsIsEmpty() {
         FilterOperator.builder().operator(Operator.AND).build();
     }

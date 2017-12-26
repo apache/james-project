@@ -102,7 +102,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
         TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + "SetMessagesUpdateProcessor");
 
         SetMessagesResponse.Builder responseBuilder = SetMessagesResponse.builder();
-        request.buildUpdatePatches(updatePatchConverter).forEach( (id, patch) -> {
+        request.buildUpdatePatches(updatePatchConverter).forEach((id, patch) -> {
                 if (patch.isValid()) {
                     update(id, patch, mailboxSession, responseBuilder);
                 } else {
@@ -144,7 +144,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                 .build();
 
             handleInvalidRequest(builder, messageId, ImmutableList.of(invalidPropertyMailboxIds));
-        } catch (MailboxException|IOException|MessagingException e) {
+        } catch (MailboxException | IOException | MessagingException e) {
             handleMessageUpdateException(messageId, builder, e);
         } catch (IllegalArgumentException e) {
             ValidationResult invalidPropertyKeywords = ValidationResult.builder()

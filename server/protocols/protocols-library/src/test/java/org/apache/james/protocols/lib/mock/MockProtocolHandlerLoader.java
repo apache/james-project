@@ -19,7 +19,7 @@ import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 
-public class MockProtocolHandlerLoader implements ProtocolHandlerLoader{
+public class MockProtocolHandlerLoader implements ProtocolHandlerLoader {
 
     @Override
     public ProtocolHandler load(String name, Configuration config) throws LoadingException {
@@ -111,7 +111,7 @@ public class MockProtocolHandlerLoader implements ProtocolHandlerLoader{
                 String name = null;
                 Annotation[][] paramAnnotations = method.getParameterAnnotations();
                 if (paramAnnotations.length == 1) {
-                    if (paramAnnotations[0].length ==1) {
+                    if (paramAnnotations[0].length == 1) {
                         if (paramAnnotations[0][0].annotationType().equals(Named.class)) {
                             name = ((Named) paramAnnotations[0][0]).value();
                         }

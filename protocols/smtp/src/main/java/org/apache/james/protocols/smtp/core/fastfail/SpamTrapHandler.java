@@ -77,7 +77,7 @@ public class SpamTrapHandler implements RcptHook {
             return HookResult.deny();
         } else {
          
-            if (spamTrapRecips.contains(rcpt.toString().toLowerCase(Locale.US))){
+            if (spamTrapRecips.contains(rcpt.toString().toLowerCase(Locale.US))) {
         
                 addIp(address, session);
             
@@ -107,7 +107,7 @@ public class SpamTrapHandler implements RcptHook {
             } else {
                 LOGGER.debug("Remove ip {} from blockList", ip);
                
-                synchronized(blockedIps) {
+                synchronized (blockedIps) {
                     blockedIps.remove(ip);
                 }
             }
@@ -126,7 +126,7 @@ public class SpamTrapHandler implements RcptHook {
         
         LOGGER.debug("Add ip {} for {} to blockList", ip, bTime);
     
-        synchronized(blockedIps) {
+        synchronized (blockedIps) {
             blockedIps.put(ip, Long.valueOf(bTime));
         }
     

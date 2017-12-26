@@ -57,7 +57,7 @@ public class TooManyRecipientsTest {
     }
 
     @Test
-    public void initShouldThrowOnInvalidCondition() throws Exception{
+    public void initShouldThrowOnInvalidCondition() throws Exception {
         expectedException.expect(MessagingException.class);
 
         testee.init(FakeMatcherConfig.builder()

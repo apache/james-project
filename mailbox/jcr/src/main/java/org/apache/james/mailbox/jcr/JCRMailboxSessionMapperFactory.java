@@ -56,7 +56,7 @@ public class JCRMailboxSessionMapperFactory extends MailboxSessionMapperFactory 
         this.repository = repository;
         this.scaling = scaling;
         this.messageScaling = messageScaling;
-        this.uidProvider= uidProvider;
+        this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
     }
     

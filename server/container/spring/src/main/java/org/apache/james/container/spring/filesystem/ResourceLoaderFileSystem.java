@@ -27,7 +27,7 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.core.io.ResourceLoader;
 
-public class ResourceLoaderFileSystem implements FileSystem, ResourceLoaderAware{
+public class ResourceLoaderFileSystem implements FileSystem, ResourceLoaderAware {
 
     private ResourceLoader loader;
 

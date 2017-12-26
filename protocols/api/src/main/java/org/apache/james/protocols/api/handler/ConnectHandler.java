@@ -30,7 +30,7 @@ import org.apache.james.protocols.api.Response;
  * therefore the handlers must store all the state information
  * in the Session object
  */
-public interface ConnectHandler<Session extends ProtocolSession> extends ProtocolHandler{
+public interface ConnectHandler<Session extends ProtocolSession> extends ProtocolHandler {
     /**
      * Handle connection and disconnect if true is returned
      * 

@@ -103,7 +103,7 @@ public class JMAPModule extends AbstractModule {
 
     @Provides
     @Singleton
-    JMAPConfiguration provideConfiguration(PropertiesProvider propertiesProvider, FileSystem fileSystem) throws ConfigurationException, IOException{
+    JMAPConfiguration provideConfiguration(PropertiesProvider propertiesProvider, FileSystem fileSystem) throws ConfigurationException, IOException {
         try {
             PropertiesConfiguration configuration = propertiesProvider.getConfiguration("jmap");
             return JMAPConfiguration.builder()

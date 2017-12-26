@@ -31,37 +31,37 @@ import com.google.common.collect.ImmutableList;
 
 public class GetMessageListRequestTest {
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void builderShouldThrowWhenPositionIsNegative() {
         GetMessageListRequest.builder().position(-1L);
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void builderShouldThrowWhenLimitIsNegative() {
         GetMessageListRequest.builder().limit(-1);
     }
 
-    @Test(expected=NotImplementedException.class)
+    @Test(expected = NotImplementedException.class)
     public void builderShouldThrowWhenAccountId() {
         GetMessageListRequest.builder().accountId(null);
     }
 
-    @Test(expected=NotImplementedException.class)
+    @Test(expected = NotImplementedException.class)
     public void builderShouldThrowWhenAnchor() {
         GetMessageListRequest.builder().anchor(null);
     }
 
-    @Test(expected=NotImplementedException.class)
+    @Test(expected = NotImplementedException.class)
     public void builderShouldThrowWhenAnchorOffset() {
         GetMessageListRequest.builder().anchorOffset(0);
     }
 
-    @Test(expected=NotImplementedException.class)
+    @Test(expected = NotImplementedException.class)
     public void builderShouldThrowWhenFetchThreads() {
         GetMessageListRequest.builder().fetchThreads(false);
     }
 
-    @Test(expected=NotImplementedException.class)
+    @Test(expected = NotImplementedException.class)
     public void builderShouldThrowWhenFetchSearchSnippets() {
         GetMessageListRequest.builder().fetchSearchSnippets(false);
     }

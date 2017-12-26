@@ -128,8 +128,7 @@ public class UnwrapText extends GenericMailet {
                     if (result.charAt(result.length() - 1) != ' ') {
                         result.append(" ");
                     }
-                }
-                else {
+                } else {
                     result.append("\r\n");
                 }
             }

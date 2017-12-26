@@ -122,7 +122,7 @@ public class ReIndexerImpl implements ReIndexer {
             if (pathToIndex.isPresent()) {
                 try {
                     reIndex(pathToIndex.get());
-                } catch(Throwable e) {
+                } catch (Throwable e) {
                     LOGGER.error("Error while proceeding to full reindexing on {}", pathToIndex.get(), e);
                 }
             }

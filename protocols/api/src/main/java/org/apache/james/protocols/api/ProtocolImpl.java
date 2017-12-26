@@ -25,7 +25,7 @@ import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
  * Basic {@link Protocol} implementation 
  *
  */
-public abstract class ProtocolImpl implements Protocol{
+public abstract class ProtocolImpl implements Protocol {
     private final ProtocolHandlerChain chain;
     private final ProtocolConfiguration config;
 

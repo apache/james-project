@@ -35,7 +35,7 @@ import org.apache.james.protocols.api.Response;
  * therefore the command handlers must store all the state information
  * in the Session object
  */
- public interface CommandHandler<Session extends ProtocolSession> extends ProtocolHandler{
+ public interface CommandHandler<Session extends ProtocolSession> extends ProtocolHandler {
     /**
      * Handle the command
     **/

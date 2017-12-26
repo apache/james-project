@@ -42,7 +42,7 @@ public class VrfyCmdHandler implements CommandHandler<SMTPSession> {
     
     private static final Collection<String> COMMANDS = ImmutableSet.of("VRFY");
     private static final Response NOT_SUPPORTED = new SMTPResponse(SMTPRetCode.UNIMPLEMENTED_COMMAND, 
-            DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.SYSTEM_NOT_CAPABLE)+" VRFY is not supported").immutable();
+            DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.SYSTEM_NOT_CAPABLE) + " VRFY is not supported").immutable();
 
     /**
      * Handler method called upon receipt of a VRFY command.

@@ -33,7 +33,7 @@ import org.apache.james.protocols.api.handler.MultiLineHandler;
 import org.apache.james.protocols.imap.IMAPRequest;
 import org.apache.james.protocols.imap.IMAPSession;
 
-public class IMAPCommandDispatcher extends CommandDispatcher<IMAPSession>{
+public class IMAPCommandDispatcher extends CommandDispatcher<IMAPSession> {
 
     private static final Pattern LITERAL_PATTERN = Pattern.compile(".*\\{(\\d+)\\}.*");
     

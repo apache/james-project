@@ -585,14 +585,14 @@ public class ICSAttachmentWorkflowTest {
         Optional<String> content = amqpRule.readContent();
         assertThat(content).isPresent();
         DocumentContext jsonPath = toJsonPath(content.get());
-        assertThat(jsonPath.<String> read("ical")).isEqualTo(ICS_1);
-        assertThat(jsonPath.<String> read("sender")).isEqualTo(FROM);
-        assertThat(jsonPath.<String> read("recipient")).isEqualTo(RECIPIENT);
-        assertThat(jsonPath.<String> read("uid")).isEqualTo(ICS_UID);
-        assertThat(jsonPath.<String> read("sequence")).isEqualTo(ICS_SEQUENCE);
-        assertThat(jsonPath.<String> read("dtstamp")).isEqualTo(ICS_DTSTAMP);
-        assertThat(jsonPath.<String> read("method")).isEqualTo(ICS_METHOD);
-        assertThat(jsonPath.<String> read("recurrence-id")).isNull();
+        assertThat(jsonPath.<String>read("ical")).isEqualTo(ICS_1);
+        assertThat(jsonPath.<String>read("sender")).isEqualTo(FROM);
+        assertThat(jsonPath.<String>read("recipient")).isEqualTo(RECIPIENT);
+        assertThat(jsonPath.<String>read("uid")).isEqualTo(ICS_UID);
+        assertThat(jsonPath.<String>read("sequence")).isEqualTo(ICS_SEQUENCE);
+        assertThat(jsonPath.<String>read("dtstamp")).isEqualTo(ICS_DTSTAMP);
+        assertThat(jsonPath.<String>read("method")).isEqualTo(ICS_METHOD);
+        assertThat(jsonPath.<String>read("recurrence-id")).isNull();
     }
 
     private DocumentContext toJsonPath(String content) {
@@ -682,13 +682,13 @@ public class ICSAttachmentWorkflowTest {
         Optional<String> content = amqpRule.readContent();
         assertThat(content).isPresent();
         DocumentContext jsonPath = toJsonPath(content.get());
-        assertThat(jsonPath.<String> read("sender")).isEqualTo(FROM);
-        assertThat(jsonPath.<String> read("recipient")).isEqualTo(RECIPIENT);
-        assertThat(jsonPath.<String> read("uid")).isEqualTo(ICS_BASE64_UID);
-        assertThat(jsonPath.<String> read("sequence")).isEqualTo(ICS_SEQUENCE);
-        assertThat(jsonPath.<String> read("dtstamp")).isEqualTo(ICS_BASE64_DTSTAMP);
-        assertThat(jsonPath.<String> read("method")).isEqualTo(ICS_METHOD);
-        assertThat(jsonPath.<String> read("recurrence-id")).isNull();
+        assertThat(jsonPath.<String>read("sender")).isEqualTo(FROM);
+        assertThat(jsonPath.<String>read("recipient")).isEqualTo(RECIPIENT);
+        assertThat(jsonPath.<String>read("uid")).isEqualTo(ICS_BASE64_UID);
+        assertThat(jsonPath.<String>read("sequence")).isEqualTo(ICS_SEQUENCE);
+        assertThat(jsonPath.<String>read("dtstamp")).isEqualTo(ICS_BASE64_DTSTAMP);
+        assertThat(jsonPath.<String>read("method")).isEqualTo(ICS_METHOD);
+        assertThat(jsonPath.<String>read("recurrence-id")).isNull();
     }
 
     @Test
@@ -708,14 +708,14 @@ public class ICSAttachmentWorkflowTest {
         Optional<String> content = amqpRule.readContent();
         assertThat(content).isPresent();
         DocumentContext jsonPath = toJsonPath(content.get());
-        assertThat(jsonPath.<String> read("sender")).isEqualTo("obmlinagora@yahoo.fr");
-        assertThat(jsonPath.<String> read("recipient")).isEqualTo(RECIPIENT);
-        assertThat(jsonPath.<String> read("uid")).isEqualTo("5014513f-1026-4b58-82cf-80d4fc060bbe");
-        assertThat(jsonPath.<String> read("sequence")).isEqualTo("0");
-        assertThat(jsonPath.<String> read("dtstamp")).isEqualTo("20170123T121635Z");
-        assertThat(jsonPath.<String> read("method")).isEqualTo("REQUEST");
-        assertThat(jsonPath.<String> read("ical")).isEqualTo(ICS_YAHOO);
-        assertThat(jsonPath.<String> read("recurrence-id")).isNull();
+        assertThat(jsonPath.<String>read("sender")).isEqualTo("obmlinagora@yahoo.fr");
+        assertThat(jsonPath.<String>read("recipient")).isEqualTo(RECIPIENT);
+        assertThat(jsonPath.<String>read("uid")).isEqualTo("5014513f-1026-4b58-82cf-80d4fc060bbe");
+        assertThat(jsonPath.<String>read("sequence")).isEqualTo("0");
+        assertThat(jsonPath.<String>read("dtstamp")).isEqualTo("20170123T121635Z");
+        assertThat(jsonPath.<String>read("method")).isEqualTo("REQUEST");
+        assertThat(jsonPath.<String>read("ical")).isEqualTo(ICS_YAHOO);
+        assertThat(jsonPath.<String>read("recurrence-id")).isNull();
     }
 
     @Test

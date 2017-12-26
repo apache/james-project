@@ -90,7 +90,7 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
     public void testCopyOverQuotaMessages() throws Exception {
         try {
             resources.fillMailbox();
-        } catch(OverQuotaException overQuotaException) {
+        } catch (OverQuotaException overQuotaException) {
             // Silent these exception as we don't want it to disturb the test
         }
         maxQuotaManager.setMaxMessage(quotaRootResolver.getQuotaRoot(inbox), 20L);
@@ -102,7 +102,7 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
         maxQuotaManager.setMaxStorage(quotaRootResolver.getQuotaRoot(inbox), 20L * MockMail.MAIL_TEXT_PLAIN.length());
         try {
             resources.fillMailbox();
-        } catch(OverQuotaException overQuotaException) {
+        } catch (OverQuotaException overQuotaException) {
             // Silent these exception as we don't want it to disturb the test
         }
         mailboxManager.copyMessages(MessageRange.all(), inbox, subFolder, session);
@@ -113,7 +113,7 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
         maxQuotaManager.setMaxMessage(quotaRootResolver.getQuotaRoot(inbox), 8L);
         try {
             resources.fillMailbox();
-        } catch(OverQuotaException overQuotaException) {
+        } catch (OverQuotaException overQuotaException) {
             // We are here over quota
         }
         messageManager.expunge(MessageRange.all(), session);
@@ -126,7 +126,7 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
         maxQuotaManager.setMaxStorage(quotaRootResolver.getQuotaRoot(inbox), 8 * MockMail.MAIL_TEXT_PLAIN.length() + 1);
         try {
             resources.fillMailbox();
-        } catch(OverQuotaException overQuotaException) {
+        } catch (OverQuotaException overQuotaException) {
             // We are here over quota
         }
         messageManager.expunge(MessageRange.all(), session);

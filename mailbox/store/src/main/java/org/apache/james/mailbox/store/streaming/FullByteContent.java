@@ -48,7 +48,7 @@ public class FullByteContent implements Content {
         this.size = caculateSize();
     }
     
-    protected long caculateSize() throws MailboxException{
+    protected long caculateSize() throws MailboxException {
         long result = body.length;
         result += 2;
         for (Header header : headers) {

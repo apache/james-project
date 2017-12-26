@@ -49,7 +49,7 @@ public class DateResolutionFormater {
     }
 
     private static TemporalUnit convertDateResolutionField(SearchQuery.DateResolution resolution) {
-        switch(resolution) {
+        switch (resolution) {
             case Year:
                 return ChronoUnit.YEARS;
             case Month:

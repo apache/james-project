@@ -81,8 +81,7 @@ public class ExternalHostSystem extends ExternalSessionFactory implements ImapHo
         if (userAdder == null) {
             monitor.note("Please ensure user '" + user + "' with password '" + password + "' exists.");
             return false;
-        }
-        else {
+        } else {
             userAdder.addUser(user, password);
         }
         return true;

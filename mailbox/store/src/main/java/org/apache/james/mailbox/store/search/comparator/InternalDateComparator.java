@@ -25,7 +25,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 /**
  * {@link Comparator} which compares {@link MailboxMessage}'s with their {@link MailboxMessage#getInternalDate()} value
  */
-public class InternalDateComparator  implements Comparator<MailboxMessage>{
+public class InternalDateComparator  implements Comparator<MailboxMessage> {
     public static final Comparator<MailboxMessage> INTERNALDATE = new InternalDateComparator();
 
     @Override

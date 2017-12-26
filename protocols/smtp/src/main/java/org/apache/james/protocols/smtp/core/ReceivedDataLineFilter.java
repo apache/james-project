@@ -36,7 +36,7 @@ import org.apache.james.protocols.smtp.SMTPSession;
  * {@link AbstractAddHeadersFilter} which adds the Received header for the message.
  */
 public class ReceivedDataLineFilter extends AbstractAddHeadersFilter {
-    private static final String EHLO ="EHLO";
+    private static final String EHLO = "EHLO";
     private static final String SMTP = "SMTP";
     private static final String ESMTPA = "ESMTPA";
     private static final String ESMTP = "ESMTP";

@@ -71,9 +71,9 @@ public class AuthCmdHandler
     private static final List<String> ESMTP_FEATURES = ImmutableList.of("AUTH LOGIN PLAIN", "AUTH=LOGIN PLAIN");
     
     private static final Response AUTH_ABORTED = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH) + " Authentication aborted").immutable();
-    private static final Response ALREADY_AUTH = new SMTPResponse(SMTPRetCode.BAD_SEQUENCE, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.DELIVERY_OTHER)+" User has previously authenticated. "
+    private static final Response ALREADY_AUTH = new SMTPResponse(SMTPRetCode.BAD_SEQUENCE, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.DELIVERY_OTHER) + " User has previously authenticated. "
             + " Further authentication is not required!").immutable();
-    private static final Response SYNTAX_ERROR = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.DELIVERY_INVALID_ARG)+" Usage: AUTH (authentication type) <challenge>").immutable();
+    private static final Response SYNTAX_ERROR = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.DELIVERY_INVALID_ARG) + " Usage: AUTH (authentication type) <challenge>").immutable();
     private static final Response AUTH_READY_PLAIN = new SMTPResponse(SMTPRetCode.AUTH_READY, "OK. Continue authentication").immutable();
     private static final Response AUTH_READY_USERNAME_LOGIN = new SMTPResponse(SMTPRetCode.AUTH_READY, "VXNlcm5hbWU6").immutable(); // base64 encoded "Username:"
     private static final Response AUTH_READY_PASSWORD_LOGIN = new SMTPResponse(SMTPRetCode.AUTH_READY, "UGFzc3dvcmQ6").immutable(); // base64 encoded "Password:
@@ -267,8 +267,7 @@ public class AuthCmdHandler
                 user = authTokenizer.nextToken();                 // Authentication Identity
                 try {
                     pass = authTokenizer.nextToken();             // Password
-                }
-                catch (java.util.NoSuchElementException ignored) {
+                } catch (java.util.NoSuchElementException ignored) {
                     // If we got here, this is what happened.  RFC 2595
                     // says that "the client may leave the authorization
                     // identity empty to indicate that it is the same as
@@ -290,8 +289,7 @@ public class AuthCmdHandler
 
                 authTokenizer = null;
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             // Ignored - this exception in parsing will be dealt
             // with in the if clause below
         }
@@ -376,7 +374,7 @@ public class AuthCmdHandler
      */
     protected Response doAuthTest(SMTPSession session, String user, String pass, String authType) {
         if ((user == null) || (pass == null)) {
-            return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,"Could not decode parameters for AUTH "+authType);
+            return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,"Could not decode parameters for AUTH " + authType);
         }
 
         Response res = null;

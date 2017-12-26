@@ -52,7 +52,7 @@ public class MainStepdefs {
     public MailboxProbe mailboxProbe;
     public ACLProbe aclProbe;
     public MessageIdProbe messageIdProbe;
-    public Runnable awaitMethod = () -> {};
+    public Runnable awaitMethod = () -> { };
     public MessageId.Factory messageIdFactory;
     
     public void init() throws Exception {

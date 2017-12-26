@@ -227,8 +227,7 @@ public class MIMEMessageConverter {
         if (newMessage.getHtmlBody().isPresent() && newMessage.getTextBody().isPresent()) {
             Multipart body = createMultipartAlternativeBody(newMessage);
             builder.addBodyPart(BodyPartBuilder.create().setBody(body).build());
-        }
-        else {
+        } else {
             addText(builder, newMessage.getTextBody());
             addHtml(builder, newMessage.getHtmlBody());
         }

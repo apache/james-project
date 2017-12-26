@@ -112,7 +112,7 @@ public class IsOverQuotaTest {
     public void matchShouldKeepAddressesWithTooMuchMessages() throws Exception {
         maxQuotaManager.setDefaultMaxMessage(0);
 
-        FakeMail fakeMail=FakeMail.builder()
+        FakeMail fakeMail = FakeMail.builder()
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .build();
         Collection<MailAddress> result = testee.match(fakeMail);
@@ -124,7 +124,7 @@ public class IsOverQuotaTest {
     public void matchShouldReturnEmptyOnMessageLimit() throws Exception {
         maxQuotaManager.setDefaultMaxMessage(1);
 
-        FakeMail fakeMail=FakeMail.builder()
+        FakeMail fakeMail = FakeMail.builder()
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .build();
         Collection<MailAddress> result = testee.match(fakeMail);
@@ -138,7 +138,7 @@ public class IsOverQuotaTest {
         QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(MailboxPath.inbox(mailboxManager.createSystemSession(username)));
         maxQuotaManager.setMaxStorage(quotaRoot, 100);
 
-        FakeMail fakeMail=FakeMail.builder()
+        FakeMail fakeMail = FakeMail.builder()
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .recipient(MailAddressFixture.OTHER_AT_JAMES)
             .size(150)
@@ -156,7 +156,7 @@ public class IsOverQuotaTest {
         QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(MailboxPath.inbox(mailboxManager.createSystemSession(username)));
         maxQuotaManager.setMaxStorage(quotaRoot, 100);
 
-        FakeMail fakeMail=FakeMail.builder()
+        FakeMail fakeMail = FakeMail.builder()
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .recipient(MailAddressFixture.OTHER_AT_JAMES)
             .size(150)

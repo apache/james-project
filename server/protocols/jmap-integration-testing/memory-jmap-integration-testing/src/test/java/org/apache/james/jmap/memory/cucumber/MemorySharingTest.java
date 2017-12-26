@@ -24,7 +24,7 @@ import cucumber.api.junit.Cucumber;
 import org.junit.runner.RunWith;
 
 @RunWith(Cucumber.class)
-@CucumberOptions(features= {
+@CucumberOptions(features = {
     "classpath:cucumber/sharing/SharingParentMailboxWithAndWithoutChildren.feature",
     "classpath:cucumber/sharing/SharingChildrenWithoutSharingParent.feature",
     "classpath:cucumber/sharing/GetMessageAndSharing.feature",
@@ -40,7 +40,7 @@ import org.junit.runner.RunWith;
     "classpath:cucumber/sharing/SetFlagAndSharing.feature",
     "classpath:cucumber/sharing/RenamingMailboxAndSharing.feature",
     "classpath:cucumber/sharing/CopyAndSharing.feature" },
-    glue= { "org.apache.james.jmap.methods.integration", "org.apache.james.jmap.memory.cucumber" },
+    glue = { "org.apache.james.jmap.methods.integration", "org.apache.james.jmap.memory.cucumber" },
     tags = {"~@Ignore"},
     strict = true)
 public class MemorySharingTest {

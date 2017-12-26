@@ -138,7 +138,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
 
     @Override
     public String getDefaultDomain() throws DomainListException {
-        if (defaultDomain!= null) {
+        if (defaultDomain != null) {
             return defaultDomain;
         } else {
             throw new DomainListException("Null default domain. Domain list might not be configured yet.");

@@ -259,7 +259,7 @@ public class GroupMappingTest {
         restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + GROUP_ON_DOMAIN2);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage( FakeMail.builder()
+            .sendMessage(FakeMail.builder()
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1))
@@ -432,8 +432,10 @@ public class GroupMappingTest {
             .awaitSent(awaitOneMinute);
 
         fakeSmtp.isReceived(response -> response
-            .body("[0].from", equalTo(SENDER))
-            .body("[0].to[0]", equalTo(externalMail))
-            .body("[0].text", equalTo(MESSAGE_CONTENT)));
+                            .body("[0].from", equalTo(SENDER))
+                            .body("[0].to[0]", equalTo(externalMail))
+                            .body("[0].text", equalTo(MESSAGE_CONTENT)));
+
+
     }
 }

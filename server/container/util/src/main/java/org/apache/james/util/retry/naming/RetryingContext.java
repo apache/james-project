@@ -219,7 +219,7 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
     @Override
     public Context createSubcontext(final String name) throws NamingException {
         final Context context = getDelegate();
-        return new RetryingContext( getSchedule(), getMaxRetries()) {
+        return new RetryingContext(getSchedule(), getMaxRetries()) {
 
             @Override
             public Context newDelegate() throws NamingException {

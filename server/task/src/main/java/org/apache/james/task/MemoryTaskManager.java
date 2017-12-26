@@ -54,7 +54,7 @@ public class MemoryTaskManager implements TaskManager {
 
     @Override
     public TaskId submit(Task task) {
-        return submit(task, id -> {});
+        return submit(task, id -> { });
     }
 
     @VisibleForTesting

@@ -24,7 +24,7 @@ import org.apache.james.protocols.smtp.SMTPSession;
 /**
  * Implement this interfaces to hook in the MAIL Command
  */
-public interface RcptHook extends Hook{
+public interface RcptHook extends Hook {
     
     /**
      * Return the HookResult after run the hook

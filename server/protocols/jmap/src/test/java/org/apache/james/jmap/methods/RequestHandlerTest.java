@@ -133,7 +133,7 @@ public class RequestHandlerTest {
     }
 
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void processShouldThrowWhenUnknownMethod() throws Exception {
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("unknwonMethod"),
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{\"id\": \"id\"}"),
@@ -143,7 +143,7 @@ public class RequestHandlerTest {
         requestHandler.handle(AuthenticatedProtocolRequest.decorate(ProtocolRequest.deserialize(nodes), mockHttpServletRequest));
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void requestHandlerShouldThrowWhenAMethodIsRecordedTwice() {
         new RequestHandler(
                 ImmutableSet.of(
@@ -153,7 +153,7 @@ public class RequestHandlerTest {
                 jmapResponseWriter);
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void requestHandlerShouldThrowWhenTwoMethodsWithSameName() {
         new RequestHandler(
                 ImmutableSet.of(

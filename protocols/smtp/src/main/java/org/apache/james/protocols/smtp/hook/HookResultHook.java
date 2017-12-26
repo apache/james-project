@@ -22,7 +22,7 @@ package org.apache.james.protocols.smtp.hook;
 
 import org.apache.james.protocols.smtp.SMTPSession;
 
-public interface HookResultHook extends Hook{
+public interface HookResultHook extends Hook {
     
     HookResult onHookResult(SMTPSession session,HookResult result, long executionTime, Hook object);
 }

@@ -23,7 +23,7 @@ import org.apache.james.protocols.smtp.SMTPSession;
 /**
  * Implement this interfaces to hook in the AUTH Command
  */
-public interface AuthHook extends Hook{
+public interface AuthHook extends Hook {
 
     /**
      * Return the HookResult after run the hook

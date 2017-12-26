@@ -58,7 +58,7 @@ public class SupressDuplicateRcptHandler implements RcptHook {
         Collection<MailAddress> rcptList = (Collection<MailAddress>) session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction);
     
         // Check if the recipient is already in the rcpt list
-        if(rcptList != null && rcptList.contains(rcpt)) {
+        if (rcptList != null && rcptList.contains(rcpt)) {
             StringBuilder responseBuffer = new StringBuilder();
         
             responseBuffer.append(DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.ADDRESS_VALID))

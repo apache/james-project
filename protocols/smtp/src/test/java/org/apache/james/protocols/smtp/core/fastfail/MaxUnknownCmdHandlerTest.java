@@ -41,10 +41,7 @@ public class MaxUnknownCmdHandlerTest {
             public Map<String,Object> getState() {
                 return map;
             }
-            /*
-             * (non-Javadoc)
-             * @see org.apache.james.protocols.api.ProtocolSession#setAttachment(java.lang.String, java.lang.Object, org.apache.james.protocols.api.ProtocolSession.State)
-             */
+
             public Object setAttachment(String key, Object value, State state) {
                 if (state == State.Connection) {
                     throw new UnsupportedOperationException();

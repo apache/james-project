@@ -71,7 +71,7 @@ public final class HBaseClusterSingleton {
             Process process = Runtime.getRuntime().exec("/bin/sh -c umask");
             BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
             int rc = process.waitFor();
-            if(rc == 0) {
+            if (rc == 0) {
                 String umask = br.readLine();
 
                 int umaskBits = Integer.parseInt(umask, 8);

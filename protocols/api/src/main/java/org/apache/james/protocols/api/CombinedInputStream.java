@@ -31,7 +31,7 @@ import java.util.NoSuchElementException;
  * 
  *
  */
-public class CombinedInputStream extends SequenceInputStream implements Iterable<InputStream>{
+public class CombinedInputStream extends SequenceInputStream implements Iterable<InputStream> {
 
     private final InputStream[] streams;
 

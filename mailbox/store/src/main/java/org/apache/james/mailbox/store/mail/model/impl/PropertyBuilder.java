@@ -136,9 +136,8 @@ public class PropertyBuilder {
      * @param localName not null
      * @param value null to remove property
      */
-    public void setProperty(String namespace, String localName, String value)
-    {
-        for (Iterator<SimpleProperty> it= properties.iterator();it.hasNext();) {
+    public void setProperty(String namespace, String localName, String value) {
+        for (Iterator<SimpleProperty> it = properties.iterator();it.hasNext();) {
             final SimpleProperty property = it.next();
             if (property.isNamed(namespace, localName)) {
                 it.remove();
@@ -156,16 +155,15 @@ public class PropertyBuilder {
      * @param localName not null
      * @param values null to remove property
      */
-    public void setProperty(String namespace, String localName, List<String> values)
-    {
-        for (Iterator<SimpleProperty> it= properties.iterator();it.hasNext();) {
+    public void setProperty(String namespace, String localName, List<String> values) {
+        for (Iterator<SimpleProperty> it = properties.iterator();it.hasNext();) {
             final SimpleProperty property = it.next();
             if (property.isNamed(namespace, localName)) {
                 it.remove();
             }
         }
-        if (values !=null) {
-            for(String value:values) {
+        if (values != null) {
+            for (String value:values) {
                 properties.add(new SimpleProperty(namespace, localName, value));
             }
         }
@@ -194,7 +192,7 @@ public class PropertyBuilder {
      * @param valuesByLocalName not null
      */
     public void setProperties(String namespace, Map<String,String> valuesByLocalName) {
-        for (Iterator<SimpleProperty> it= properties.iterator();it.hasNext();) {
+        for (Iterator<SimpleProperty> it = properties.iterator();it.hasNext();) {
             final SimpleProperty property = it.next();
             if (property.isInSpace(namespace)) {
                 it.remove();

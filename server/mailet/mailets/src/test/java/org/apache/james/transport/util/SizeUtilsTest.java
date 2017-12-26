@@ -48,26 +48,26 @@ public class SizeUtilsTest {
 
     @Test
     public void humanSizeShouldScaleToMegabyteWhenSizeIsBetweenMegabyteAndGigabyte() {
-        assertThat(humanReadableSize(1024*1024)).isEqualTo("1 MiB");
+        assertThat(humanReadableSize(1024 * 1024)).isEqualTo("1 MiB");
     }
 
     @Test
     public void humanSizeShouldScaleToGigabyteWhenSizeIsBiggerThanGigabyte() {
-        assertThat(humanReadableSize(1024*1024*1024)).isEqualTo("1 GiB");
+        assertThat(humanReadableSize(1024 * 1024 * 1024)).isEqualTo("1 GiB");
     }
 
     @Test
     public void humanSizeShouldCorrectlyCountKilobyte() {
-        assertThat(humanReadableSize(42*1024)).isEqualTo("42 KiB");
+        assertThat(humanReadableSize(42 * 1024)).isEqualTo("42 KiB");
     }
 
     @Test
     public void humanSizeShouldNotUseMoreThanOneDigitAfterComma() {
-        assertThat(humanReadableSize(1.42*1024)).isEqualTo("1.4 KiB");
+        assertThat(humanReadableSize(1.42 * 1024)).isEqualTo("1.4 KiB");
     }
 
     @Test
     public void humanSizeShouldNotUseMoreThanOneDigitAfterCommaAndRoundUpCorrectly() {
-        assertThat(humanReadableSize(1.48*1024)).isEqualTo("1.5 KiB");
+        assertThat(humanReadableSize(1.48 * 1024)).isEqualTo("1.5 KiB");
     }
 }

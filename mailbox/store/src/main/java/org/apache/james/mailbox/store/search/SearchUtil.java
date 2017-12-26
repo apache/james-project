@@ -331,7 +331,7 @@ public class SearchUtil {
      */
     private static String removeSubjectBlob(String subject) {
         String subj = subject;
-        while(subj.charAt(0) == OPEN_SQUARE_BRACKED) {
+        while (subj.charAt(0) == OPEN_SQUARE_BRACKED) {
             int length = subj.length();
             subj = removeBlob(subject);
             int i = 0;
@@ -425,8 +425,8 @@ public class SearchUtil {
         int subStringEnd = decodedSubject.length();
 
         int originalSize = decodedSubject.length();
-        int curPos = originalSize -1;
-        while(true) {
+        int curPos = originalSize - 1;
+        while (true) {
             char c = decodedSubject.charAt(curPos--);
             if (c == WS) {
                 subStringEnd--;
@@ -456,7 +456,7 @@ public class SearchUtil {
         for (int a = 0; a < subject.length(); a++) {
             char c = subject.charAt(a);
             lastChar = c;
-            if (( a != 0  && c == OPEN_SQUARE_BRACKED) || c == CLOSE_SQUARE_BRACKED) {
+            if ((a != 0  && c == OPEN_SQUARE_BRACKED) || c == CLOSE_SQUARE_BRACKED) {
                 break;
             }
             i++;

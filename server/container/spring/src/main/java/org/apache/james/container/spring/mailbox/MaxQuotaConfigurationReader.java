@@ -49,7 +49,7 @@ public class MaxQuotaConfigurationReader implements Configurable {
         try {
             configureDefaultValues(defaultMaxMessage, defaultMaxStorage);
             configureQuotaRootSpecificValues(maxMessage, maxStorage);
-        } catch(MailboxException e) {
+        } catch (MailboxException e) {
             throw new ConfigurationException("Exception caught while configuring max quota manager", e);
         }
     }

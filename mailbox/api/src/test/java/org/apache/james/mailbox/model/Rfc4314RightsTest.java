@@ -59,7 +59,7 @@ public class Rfc4314RightsTest {
         none = MailboxACL.NO_RIGHTS;
     }
     
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void newInstanceShouldThrowWhenNullString() throws UnsupportedRightException {
         Rfc4314Rights.fromSerializedRfc4314Rights((String) null);
     }

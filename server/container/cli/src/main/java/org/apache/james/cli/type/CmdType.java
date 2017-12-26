@@ -122,7 +122,7 @@ public enum CmdType {
 
     public String getUsage() {
         StringBuilder stringBuilder = new StringBuilder(command);
-        for(String argument : arguments) {
+        for (String argument : arguments) {
             stringBuilder.append(" <" + argument + ">");
         }
         return stringBuilder.toString();

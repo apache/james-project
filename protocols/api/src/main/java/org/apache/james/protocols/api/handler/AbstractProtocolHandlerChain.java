@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
  * 
  *
  */
-public abstract class AbstractProtocolHandlerChain implements ProtocolHandlerChain{
+public abstract class AbstractProtocolHandlerChain implements ProtocolHandlerChain {
 
     /**
      * Return an immutable List of all Handlers

@@ -24,7 +24,7 @@ import java.io.InputStream;
 import junit.framework.TestCase;
 
 
-public abstract class AbstractInputStreamTest extends TestCase{
+public abstract class AbstractInputStreamTest extends TestCase {
 
     protected void checkRead(InputStream in, String expected) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();

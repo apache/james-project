@@ -30,13 +30,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public abstract class AbstractHeaderComparator implements Comparator<MailboxMessage>{
+public abstract class AbstractHeaderComparator implements Comparator<MailboxMessage> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractHeaderComparator.class);
 
-    public static final String FROM ="from";
-    public static final String TO ="to";
-    public static final String CC ="cc";
+    public static final String FROM = "from";
+    public static final String TO = "to";
+    public static final String CC = "cc";
 
     protected String getHeaderValue(String headerName, MailboxMessage message) {
         try {

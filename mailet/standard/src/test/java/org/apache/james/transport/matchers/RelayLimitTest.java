@@ -81,6 +81,7 @@ public class RelayLimitTest {
                 .condition("-1")
                 .build());
     }
+    
     @Test
     public void shouldNotMatchWhenNoReceivedHeader() throws Exception {
         testee.init(FakeMatcherConfig.builder()

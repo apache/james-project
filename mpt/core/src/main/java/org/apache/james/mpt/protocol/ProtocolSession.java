@@ -131,12 +131,10 @@ public class ProtocolSession implements ProtocolInteractor {
                 if (!elementsIterator.hasNext()) {
                     nextTest = null;
                 }
-            }
-            else {
+            } else {
                 throw new RuntimeException("Unexpected continuation");
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -256,8 +254,7 @@ public class ProtocolSession implements ProtocolInteractor {
                 for (Session session : sessions) {
                     writeMessage(session);
                 }
-            }
-            else {
+            } else {
                 Session session = sessions[sessionNumber];
                 writeMessage(session);
             }
@@ -337,8 +334,7 @@ public class ProtocolSession implements ProtocolInteractor {
                 for (Session session : sessions) {
                     checkResponse(session, continueAfterFailure);
                 }
-            }
-            else {
+            } else {
                 Session session = sessions[sessionNumber];
                 checkResponse(session, continueAfterFailure);
             }
@@ -377,8 +373,7 @@ public class ProtocolSession implements ProtocolInteractor {
         protected String readLine(Session session) throws Exception {
             try {
                 return session.readLine();
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 String errMsg = "\nLocation: " + location + "\nExpected: " + expectedLine + "\nReason: Server Timeout.";
                 throw new InvalidServerResponseException(errMsg);
             }
@@ -555,7 +550,7 @@ public class ProtocolSession implements ProtocolInteractor {
 
         @Override
         public void testProtocol(Session[] sessions, boolean continueAfterFailure) throws Exception {
-            switch(timerCommand) {
+            switch (timerCommand) {
             case START:
                 start();
                 break;

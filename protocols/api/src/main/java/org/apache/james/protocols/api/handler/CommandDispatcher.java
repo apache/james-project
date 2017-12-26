@@ -82,7 +82,7 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
      */
     protected void addToMap(String commandName, CommandHandler<Session> cmdHandler) {
         List<CommandHandler<Session>> handlers = commandHandlerMap.get(commandName);
-        if(handlers == null) {
+        if (handlers == null) {
             handlers = new ArrayList<>();
             commandHandlerMap.put(commandName, handlers);
         }
@@ -103,7 +103,7 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
         }
         LOGGER.debug("Lookup command handler for command: {}", command);
         List<CommandHandler<Session>> handlers =  commandHandlerMap.get(command);
-        if(handlers == null) {
+        if (handlers == null) {
             handlers = commandHandlerMap.get(getUnknownCommandHandlerIdentifier());
         }
 

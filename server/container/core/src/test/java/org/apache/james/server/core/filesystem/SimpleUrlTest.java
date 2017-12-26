@@ -24,7 +24,7 @@ import org.junit.Test;
 
 public class SimpleUrlTest {
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void simplifyPathShouldThrowOnNull() {
         SimpleUrl.simplifyPath(null);
     }
@@ -52,7 +52,7 @@ public class SimpleUrlTest {
         assertThat(new SimpleUrl("").getSimplified()).isEmpty();
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void simplifiedShouldThrowWhenNullInput() {
         new SimpleUrl(null);
     }

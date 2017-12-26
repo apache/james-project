@@ -80,14 +80,14 @@ public class MailboxCopierImpl implements MailboxCopier {
 
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Found " + mailboxPathList.size() + " mailboxes in source mailbox manager.");
-            for (int i=0; i < mailboxPathList.size(); i++) {
+            for (int i = 0; i < mailboxPathList.size(); i++) {
                 LOGGER.info("Mailbox#" + i + " path=" + mailboxPathList.get(i));
             }
         }
 
         MailboxPath mailboxPath = null;
         
-        for (int i=0; i < mailboxPathList.size(); i++) {
+        for (int i = 0; i < mailboxPathList.size(); i++) {
         
             mailboxPath = mailboxPathList.get(i);
             
@@ -114,7 +114,7 @@ public class MailboxCopierImpl implements MailboxCopier {
                 dstMailboxManager.startProcessingRequest(dstMailboxSession);
                 MessageManager dstMessageManager = dstMailboxManager.getMailbox(mailboxPath, dstMailboxSession);
 
-                int j=0;
+                int j = 0;
                 Iterator<MessageResult> messageResultIterator = srcMessageManager.getMessages(MessageRange.all(), GROUP, srcMailboxSession);
                 
                 while (messageResultIterator.hasNext()) {
@@ -131,12 +131,8 @@ public class MailboxCopierImpl implements MailboxCopier {
                 }
                 dstMailboxManager.endProcessingRequest(dstMailboxSession);
 
-            }
-            
-            else {
-                
+            } else {
                 LOGGER.info("Destination mailbox {}/{} with path={} has a null or empty name", i, mailboxPathList.size(), mailboxPath);
-
             }
 
         }

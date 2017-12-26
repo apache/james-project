@@ -98,7 +98,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                     // See RFC4551 3.1.2. NOMODSEQ Response Code 
                     taggedBad(command, tag, responder, HumanReadableText.NO_MOD_SEQ);
                     return;
-                } else if (unchangedSince == 0){
+                } else if (unchangedSince == 0) {
                     Flags.Flag[] systemFlags = flags.getSystemFlags();
                     if (systemFlags != null && systemFlags.length != 0) {
                         // we need to return all sequences as failed when using a UNCHANGEDSINCE 0 and the request specify a SYSTEM flags
@@ -279,7 +279,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
             //
             if (unchangedSince != -1 || qresyncEnabled || condstoreEnabled) {
                 MessageResultIterator results = mailbox.getMessages(messageSet, FetchGroupImpl.MINIMAL, mailboxSession);
-                while(results.hasNext()) {
+                while (results.hasNext()) {
                     MessageResult r = results.next();
                     // Store the modseq for the uid for later usage in the response
                     modSeqs.put(r.getUid(),r.getModSeq());
@@ -323,7 +323,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                 if (silent && (unchangedSince != -1 || qresyncEnabled || condstoreEnabled)) {
                     // We need to return an FETCH response which contains the mod-sequence of the message even if FLAGS.SILENT was used
                     response = new FetchResponse(msn, null, resultUid, modSeqs.get(uid), null, null, null, null, null, null);
-                } else if (!silent && (unchangedSince != -1 || qresyncEnabled || condstoreEnabled)){
+                } else if (!silent && (unchangedSince != -1 || qresyncEnabled || condstoreEnabled)) {
                     //
                     // Use a FETCH response which contains the mod-sequence and the flags
                     response = new FetchResponse(msn, resultFlags, resultUid, modSeqs.get(uid), null, null, null, null, null, null);

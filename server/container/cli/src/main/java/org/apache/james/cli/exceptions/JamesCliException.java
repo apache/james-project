@@ -19,7 +19,7 @@
 
 package org.apache.james.cli.exceptions;
 
-public class JamesCliException extends RuntimeException{
+public class JamesCliException extends RuntimeException {
 
     public JamesCliException(String s) {
         super(s);

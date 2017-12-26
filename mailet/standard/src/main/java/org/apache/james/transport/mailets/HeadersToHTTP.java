@@ -97,7 +97,7 @@ public class HeadersToHTTP extends GenericMailet {
             LOGGER.debug("I will attempt to deliver serialised messages to "
                     + targetUrl
                     + ". "
-                    + ( ((parameterKey==null) || (parameterKey.length()<1)) ? "I will not add any fields to the post. " : "I will prepend: "	+ parameterKey + "=" + parameterValue + ". ")
+                    + (((parameterKey == null) || (parameterKey.length() < 1)) ? "I will not add any fields to the post. " : "I will prepend: " + parameterKey + "=" + parameterValue + ". ")
                     + (passThrough ? "Messages will pass through." : "Messages will be ghosted."));
         }
     }
@@ -131,7 +131,7 @@ public class HeadersToHTTP extends GenericMailet {
         try {
             MimeMessage message = mail.getMessage();
             message.setHeader("X-headerToHTTP", (success ? "Succeeded" : "Failed"));
-            if (!success && errorMessage!=null && errorMessage.length()>0) {
+            if (!success && errorMessage != null && errorMessage.length() > 0) {
                 message.setHeader("X-headerToHTTPFailure", errorMessage);
             }
             message.saveChanges();
@@ -166,17 +166,17 @@ public class HeadersToHTTP extends GenericMailet {
 
         HashSet<NameValuePair> pairs = new HashSet<>();
 
-        if (message!=null) {
-            if (message.getSender()!=null) {
+        if (message != null) {
+            if (message.getSender() != null) {
                 pairs.add(new BasicNameValuePair("from", message.getSender().toString()));
             }
-            if (message.getReplyTo()!=null) {
+            if (message.getReplyTo() != null) {
                 pairs.add(new BasicNameValuePair("reply_to", Arrays.toString(message.getReplyTo())));
             }
-            if (message.getMessageID()!=null) {
+            if (message.getMessageID() != null) {
                 pairs.add(new BasicNameValuePair("message_id", message.getMessageID()));
             }
-            if (message.getSubject()!=null) {
+            if (message.getSubject() != null) {
                 pairs.add(new BasicNameValuePair("subject", message.getSubject()));
             }
             pairs.add(new BasicNameValuePair("size", Integer.toString(message.getSize())));

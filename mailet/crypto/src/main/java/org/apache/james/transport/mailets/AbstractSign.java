@@ -672,7 +672,7 @@ public abstract class AbstractSign extends GenericMailet {
         @SuppressWarnings("unchecked")
         Enumeration<String> heads = message.getAllHeaderLines();
         StringBuilder headBuffer = new StringBuilder(1024);
-        while(heads.hasMoreElements()) {
+        while (heads.hasMoreElements()) {
             headBuffer.append(heads.nextElement().toString()).append("\r\n");
         }
         return headBuffer.toString();
@@ -719,7 +719,7 @@ public abstract class AbstractSign extends GenericMailet {
                 sb.append(actual);
                 fromIndex = index + pattern.length();
             }
-            if (fromIndex < template.length()){
+            if (fromIndex < template.length()) {
                 sb.append(template.substring(fromIndex));
             }
             return sb.toString();

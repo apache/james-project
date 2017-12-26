@@ -26,7 +26,7 @@ import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.SearchResultOption;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 
-public class ESearchResponse implements ImapResponseMessage{
+public class ESearchResponse implements ImapResponseMessage {
 
     private final long minUid;
     private final long maxUid;

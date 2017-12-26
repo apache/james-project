@@ -69,7 +69,7 @@ public class StringUtilsTest {
 
     @Test
     public void listToStringShouldReturnOnlyBracketsWhenListIsEmpty() {
-        String listToString = StringUtils.listToString(ImmutableList.<String> of());
+        String listToString = StringUtils.listToString(ImmutableList.<String>of());
         assertThat(listToString).isEqualTo("[]");
     }
 

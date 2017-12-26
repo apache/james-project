@@ -37,7 +37,7 @@ import org.apache.james.mpt.user.ScriptedUserAdder;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 
-public class MailProtocolTest implements Monitor{
+public class MailProtocolTest implements Monitor {
 
    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
 

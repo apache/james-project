@@ -33,7 +33,7 @@ public class DelegatingMailboxMessageTest {
             throws Exception {
         MailboxMessage one = buildMessage(100);
         MailboxMessage two = buildMessage(99);
-        assertTrue( one.compareTo(two) > 0);
+        assertTrue(one.compareTo(two) > 0);
     }
 
     private MailboxMessage buildMessage(int uid) throws Exception {
@@ -47,7 +47,7 @@ public class DelegatingMailboxMessageTest {
             throws Exception {
         MailboxMessage one = buildMessage(98);
         MailboxMessage two = buildMessage(99);
-        assertTrue( one.compareTo(two) < 0);
+        assertTrue(one.compareTo(two) < 0);
     }
 
     @Test

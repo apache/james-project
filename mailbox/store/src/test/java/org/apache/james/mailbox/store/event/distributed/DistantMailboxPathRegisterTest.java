@@ -298,7 +298,7 @@ public class DistantMailboxPathRegisterTest {
         for (int i = 0; i < increments; i++) {
             register.register(MAILBOX_PATH);
         }
-        ExecutorService executorService = Executors.newFixedThreadPool(2* numTask);
+        ExecutorService executorService = Executors.newFixedThreadPool(2 * numTask);
         for (int i = 0; i < numTask; i++) {
             executorService.submit(() -> {
                 try {

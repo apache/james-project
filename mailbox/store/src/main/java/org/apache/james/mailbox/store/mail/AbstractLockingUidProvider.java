@@ -34,7 +34,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
  * 
  *
  */
-public abstract class AbstractLockingUidProvider implements UidProvider{
+public abstract class AbstractLockingUidProvider implements UidProvider {
 
     private final MailboxPathLocker locker;
 

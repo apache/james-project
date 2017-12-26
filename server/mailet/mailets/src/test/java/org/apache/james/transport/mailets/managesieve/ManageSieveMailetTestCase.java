@@ -513,7 +513,7 @@ public class ManageSieveMailetTestCase {
         MimeMessage result = verifyHeaders(subject);
         MimeMultipart multipart = (MimeMultipart) result.getContent();
         assertThat(multipart.getCount()).isEqualTo(contents.length);
-        for(int i = 0; i < contents.length; i++) {
+        for (int i = 0; i < contents.length; i++) {
             if (multipart.getBodyPart(i).getContent() instanceof String) {
                 assertThat(((String) multipart.getBodyPart(i).getContent()).trim()).isEqualTo(contents[i]);
             } else {

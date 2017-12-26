@@ -38,7 +38,7 @@ import com.google.common.collect.ImmutableList;
 /**
  * Processes a <code>LOGIN</code> command.
  */
-public class LoginProcessor extends AbstractAuthProcessor<LoginRequest> implements CapabilityImplementingProcessor{
+public class LoginProcessor extends AbstractAuthProcessor<LoginRequest> implements CapabilityImplementingProcessor {
 
     private static final List<String> LOGINDISABLED_CAPS = ImmutableList.of("LOGINDISABLED");
     public LoginProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,

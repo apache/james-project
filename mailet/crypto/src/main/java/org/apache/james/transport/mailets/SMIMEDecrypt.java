@@ -95,7 +95,7 @@ public class SMIMEDecrypt extends GenericMailet {
         
         String privateStorePass = config.getInitParameter("keyStorePassword");
         
-        String keyAlias= config.getInitParameter("keyAlias");
+        String keyAlias = config.getInitParameter("keyAlias");
         String keyPass = config.getInitParameter("keyAliasPassword");
         
         String mailAttributeConf = config.getInitParameter("mailAttribute");

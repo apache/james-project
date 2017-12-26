@@ -82,7 +82,7 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
             // 46 is "."
             // Stream terminated            
             int c = line.get();
-            if (line.remaining() == 2 && c== 46) {
+            if (line.remaining() == 2 && c == 46) {
                 out.flush();
                 out.close();
                 
@@ -94,7 +94,7 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
             // DotStuffing.
             } else if (c == 46 && line.get() == 46) {
                 byte[] bline = readBytes(line);
-                out.write(bline,1,bline.length-1);
+                out.write(bline,1,bline.length - 1);
             // Standard write
             } else {
                 // TODO: maybe we should handle the Header/Body recognition here
@@ -180,9 +180,7 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
             throw new WiringException("No messageHandler configured");
         }
     }
-    /**
-     * @see org.apache.james.protocols.api.handler.ExtensibleHandler#getMarkerInterfaces()
-     */
+    
     public List<Class<?>> getMarkerInterfaces() {
         List<Class<?>> classes = new LinkedList<>();
         classes.add(MessageHook.class);

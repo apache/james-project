@@ -35,7 +35,7 @@ import com.google.common.base.Throwables;
  * 
  *
  */
-public class RecipientToLowerCase extends GenericMailet{
+public class RecipientToLowerCase extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {

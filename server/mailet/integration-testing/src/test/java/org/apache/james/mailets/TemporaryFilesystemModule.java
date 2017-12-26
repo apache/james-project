@@ -86,7 +86,7 @@ public class TemporaryFilesystemModule extends AbstractModule {
     }
 
     private void copyResource(Path resourcesFolder, String resourceName) {
-        try (OutputStream outputStream = new FileOutputStream(resourcesFolder.resolve(resourceName).toFile())){
+        try (OutputStream outputStream = new FileOutputStream(resourcesFolder.resolve(resourceName).toFile())) {
             IOUtils.copy(ClassLoader.getSystemClassLoader().getResource(resourceName).openStream(), outputStream);
         } catch (IOException e) {
             Throwables.propagate(e);

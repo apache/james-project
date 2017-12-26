@@ -26,7 +26,7 @@ import org.apache.james.imap.api.process.ImapSession;
 /**
  * {@link CapabilityImplementingProcessor} which allows to ENABLE one ore more Capabilities
  */
-public interface PermitEnableCapabilityProcessor extends CapabilityImplementingProcessor{
+public interface PermitEnableCapabilityProcessor extends CapabilityImplementingProcessor {
 
     /**
      * Return the capabilities which supports to get ENABLED.

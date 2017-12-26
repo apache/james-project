@@ -31,7 +31,7 @@ public class MultimailboxesSearchQueryTest {
     private static final MailboxId ID_1 = FACTORY.fromString("1");
     private static final MailboxId ID_2 = FACTORY.fromString("2");
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void buildShouldThrowWhenQueryIsNull() {
         MultimailboxesSearchQuery.from(null);
     }

@@ -491,8 +491,7 @@ public class MaildirFolder {
                     } finally {
                         IOUtils.closeQuietly(pw);
                     }
-                }
-                else {
+                } else {
                     FileReader fileReader = null;
                     BufferedReader reader = null;
                 try {
@@ -787,8 +786,7 @@ public class MaildirFolder {
                     for (String entry : lines) {
                         pw.println(entry);
                     }
-                }
-                else {
+                } else {
                     // create the file
                     if (!uidList.createNewFile()) {
                         throw new IOException("Could not create file " + uidList);
@@ -905,8 +903,7 @@ public class MaildirFolder {
                     if (uid.equals(MessageUid.of(Long.valueOf(line.substring(0, line.indexOf(" ")))))) {
                         deletedMessage = newMaildirMessageName(MaildirFolder.this, line.substring(gap + 1, line.length()));
                         messageCount--;
-                    }
-                    else {
+                    } else {
                         lines.add(line);
                     }
                 }
@@ -964,9 +961,8 @@ public class MaildirFolder {
                     in = new FileInputStream(f);
                     props.load(in);
                 } catch (IOException e) {
-                    throw new MailboxException("Unable to read last ACL from "+ f.getAbsolutePath(), e);
-                }
-                finally {
+                    throw new MailboxException("Unable to read last ACL from " + f.getAbsolutePath(), e);
+                } finally {
                     IOUtils.closeQuietly(in);
                 }
             }
@@ -1005,11 +1001,10 @@ public class MaildirFolder {
                 if (f.exists()) {
                     try {
                         out = new FileOutputStream(f);
-                        props.store(out, "written by "+ getClass().getName());
+                        props.store(out, "written by " + getClass().getName());
                     } catch (IOException e) {
-                        throw new MailboxException("Unable to read last ACL from "+ f.getAbsolutePath(), e);
-                    }
-                    finally {
+                        throw new MailboxException("Unable to read last ACL from " + f.getAbsolutePath(), e);
+                    } finally {
                         IOUtils.closeQuietly(out);
                     }
                 }

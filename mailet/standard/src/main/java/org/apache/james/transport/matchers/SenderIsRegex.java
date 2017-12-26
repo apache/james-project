@@ -66,7 +66,7 @@ public class SenderIsRegex extends GenericMatcher {
         patternString = patternString.trim();
         try {
             pattern = Pattern.compile(patternString);
-        } catch(PatternSyntaxException mpe) {
+        } catch (PatternSyntaxException mpe) {
             throw new MessagingException("Malformed pattern: " + patternString, mpe);
         }
     }

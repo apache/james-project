@@ -33,7 +33,7 @@ import org.apache.james.core.MailAddress;
  * 
  *
  */
-public class MailEnvelopeImpl implements MailEnvelope{
+public class MailEnvelopeImpl implements MailEnvelope {
 
     private List<MailAddress> recipients;
 

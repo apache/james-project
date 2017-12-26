@@ -137,7 +137,7 @@ public class MockMailQueue implements MailQueue {
         Iterator<Mail> it = queue.iterator();
 
         Mail mail = null;
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             mail = it.next();
         }
 

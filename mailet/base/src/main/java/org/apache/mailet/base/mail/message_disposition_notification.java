@@ -44,24 +44,19 @@ import javax.mail.internet.ParseException;
  * <dt>MIME subtype name</dt><dd>disposition-notification</dd>
  * </dl>
  */
-public class message_disposition_notification
-        extends
-            AbstractDataContentHandler
-{
+public class message_disposition_notification extends AbstractDataContentHandler {
 
     /**
      * Default Constructor.
      */
-    public message_disposition_notification()
-    {
+    public message_disposition_notification() {
         super();
     }
 
     /**
      * @see org.apache.mailet.base.mail.AbstractDataContentHandler#computeDataFlavor()
      */
-    protected ActivationDataFlavor computeDataFlavor()
-    {
+    protected ActivationDataFlavor computeDataFlavor() {
         return new ActivationDataFlavor(String.class,
                 "message/disposition-notification", "Message String");
     }
@@ -70,14 +65,12 @@ public class message_disposition_notification
      * @see org.apache.mailet.base.mail.AbstractDataContentHandler#computeContent(javax.activation.DataSource)
      */
     protected Object computeContent(DataSource aDataSource)
-            throws MessagingException
-    {
+            throws MessagingException {
         String encoding = getCharacterSet(aDataSource.getContentType());
         Reader reader = null;
         Writer writer = new StringWriter(2048);
         String content = null;
-        try
-        {
+        try {
             reader = new BufferedReader(new InputStreamReader(aDataSource
                     .getInputStream(), encoding), 2048);
             while (reader.ready()) {
@@ -85,34 +78,22 @@ public class message_disposition_notification
             }
             writer.flush();
             content = writer.toString();
-        }
-        catch (IllegalArgumentException e)
-        {
+        } catch (IllegalArgumentException e) {
             throw new MessagingException("Encoding = \"" + encoding + "\"", e);
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             throw new MessagingException(
                     "Exception obtaining content from DataSource", e);
-        }
-        finally
-        {
-            try
-            {
+        } finally {
+            try {
                 writer.close();
-            }
-            catch (IOException e1)
-            {
+            } catch (IOException e1) {
                 // No-op
             }
-            try
-            {
+            try {
                 if (reader != null) {
                     reader.close();
                 }
-            }
-            catch (IOException e1)
-            {
+            } catch (IOException e1) {
                 // No-op
             }
         }
@@ -124,8 +105,7 @@ public class message_disposition_notification
      *      java.lang.String, java.io.OutputStream)
      */
     public void writeTo(Object aPart, String aMimeType, OutputStream aStream)
-            throws IOException
-    {
+            throws IOException {
         if (!(aPart instanceof String)) {
             throw new IOException("Type \"" + aPart.getClass().getName()
                 + "\" is not supported.");
@@ -133,32 +113,23 @@ public class message_disposition_notification
 
         String encoding = getCharacterSet(getDataFlavor().getMimeType());
         Writer writer;
-        try
-        {
+        try {
             writer = new BufferedWriter(new OutputStreamWriter(aStream,
                     encoding), 2048);
-        }
-        catch (IllegalArgumentException e)
-        {
+        } catch (IllegalArgumentException e) {
             throw new UnsupportedEncodingException(encoding);
         }
         writer.write((String) aPart);
         writer.flush();
     }
 
-    protected String getCharacterSet(String aType)
-    {
+    protected String getCharacterSet(String aType) {
         String characterSet = null;
-        try
-        {
+        try {
             characterSet = new ContentType(aType).getParameter("charset");
-        }
-        catch (ParseException e)
-        {
+        } catch (ParseException e) {
             // no-op
-        }
-        finally
-        {
+        } finally {
             if (null == characterSet) {
                 characterSet = "us-ascii";
             }

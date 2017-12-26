@@ -101,7 +101,7 @@ public class TaskTest {
     public void onCompleteShouldReturnPartialWhenPartial() {
         assertThat(
             Task.Result.PARTIAL
-                .onComplete(() -> {}))
+                .onComplete(() -> { }))
             .isEqualTo(Task.Result.PARTIAL);
     }
 
@@ -109,7 +109,7 @@ public class TaskTest {
     public void onFailureShouldReturnCompletedWhenCompleted() {
         assertThat(
             Task.Result.COMPLETED
-                .onFailure(() -> {}))
+                .onFailure(() -> { }))
             .isEqualTo(Task.Result.COMPLETED);
     }
 
@@ -117,7 +117,7 @@ public class TaskTest {
     public void onCompleteShouldReturnCompletedWhenCompleted() {
         assertThat(
             Task.Result.COMPLETED
-                .onComplete(() -> {}))
+                .onComplete(() -> { }))
             .isEqualTo(Task.Result.COMPLETED);
     }
 
@@ -125,7 +125,7 @@ public class TaskTest {
     public void onFailureShouldReturnPartialWhenPartial() {
         assertThat(
             Task.Result.PARTIAL
-                .onFailure(() -> {}))
+                .onFailure(() -> { }))
             .isEqualTo(Task.Result.PARTIAL);
     }
 

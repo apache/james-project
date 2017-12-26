@@ -88,7 +88,7 @@ public class MemoryMailQueueFactoryTest {
     }
 
     @Test
-    public void dequeueShouldWork() throws Exception{
+    public void dequeueShouldWork() throws Exception {
         Mail mail = FakeMail.builder()
                 .name(NAME_1)
                 .build();
@@ -97,7 +97,7 @@ public class MemoryMailQueueFactoryTest {
     }
 
     @Test
-    public void dequeueShouldPreserveState() throws Exception{
+    public void dequeueShouldPreserveState() throws Exception {
         String state = "state";
         Mail mail = FakeMail.builder()
                 .name(NAME_1)
@@ -115,7 +115,7 @@ public class MemoryMailQueueFactoryTest {
     }
 
     @Test
-    public void dequeueShouldPreserveName() throws Exception{
+    public void dequeueShouldPreserveName() throws Exception {
         Mail mail = FakeMail.builder()
             .name(NAME_1)
             .build();
@@ -131,7 +131,7 @@ public class MemoryMailQueueFactoryTest {
     }
 
     @Test
-    public void dequeueShouldWorkWithMultipleMessages() throws Exception{
+    public void dequeueShouldWorkWithMultipleMessages() throws Exception {
         Mail mail1 = FakeMail.builder()
                 .name(NAME_1)
                 .build();

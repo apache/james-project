@@ -80,7 +80,7 @@ public class ContinuationToken implements SignedExpiringToken {
                     .build();
         } catch (NoSuchElementException | IllegalArgumentException e) {
             throw new MalformedContinuationTokenException("Token " + serializedToken + " does not have enough parts", e);
-        } catch(DateTimeException e) {
+        } catch (DateTimeException e) {
             throw new MalformedContinuationTokenException("Token " + serializedToken + " as an incorrect date", e);
         }
     }

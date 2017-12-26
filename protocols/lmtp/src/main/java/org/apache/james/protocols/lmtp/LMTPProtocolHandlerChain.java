@@ -51,7 +51,7 @@ import org.apache.james.protocols.smtp.hook.Hook;
  * 
  *
  */
-public class LMTPProtocolHandlerChain extends SMTPProtocolHandlerChain{
+public class LMTPProtocolHandlerChain extends SMTPProtocolHandlerChain {
 
     public LMTPProtocolHandlerChain() {
         super(new NoopMetricFactory());

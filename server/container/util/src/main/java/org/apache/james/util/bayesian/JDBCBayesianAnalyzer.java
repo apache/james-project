@@ -281,7 +281,7 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
              // Used to insert new token entries.
             PreparedStatement insert = conn.prepareStatement(insertSqlStatement);
             // Used to update existing token entries.
-            PreparedStatement update = conn.prepareStatement(updateSqlStatement)){
+            PreparedStatement update = conn.prepareStatement(updateSqlStatement)) {
             
             for (Map.Entry<String, Integer> entry : tokens.entrySet()) {
                 update.setInt(1, entry.getValue());
@@ -374,7 +374,7 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
     private void deleteData(Connection conn, String deleteSqlStatement) throws SQLException {
         try (// Used to delete ham tokens
                 PreparedStatement delete = conn.prepareStatement(deleteSqlStatement);
-                ){
+                ) {
             delete.executeUpdate();
         }
     }

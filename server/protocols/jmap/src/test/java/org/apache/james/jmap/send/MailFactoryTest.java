@@ -93,12 +93,12 @@ public class MailFactoryTest {
         envelope = Envelope.fromMessage(jmapMessage);
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void buildMailShouldThrowWhenNullMailboxMessage() throws Exception {
         testee.build(null, envelope);
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void buildMailShouldThrowWhenNullJmapMessage() throws Exception {
         testee.build(message, null);
     }

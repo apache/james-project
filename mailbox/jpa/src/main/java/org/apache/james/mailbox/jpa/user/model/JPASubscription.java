@@ -38,7 +38,7 @@ import org.apache.james.mailbox.store.user.model.Subscription;
     name = "JAMES_SUBSCRIPTION",
     uniqueConstraints = 
         @UniqueConstraint(
-                columnNames={
+                columnNames = {
                         "USER_NAME", 
                         "MAILBOX_NAME"})
 )

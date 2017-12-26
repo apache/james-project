@@ -105,7 +105,7 @@ public class SerialiseToHTTP extends GenericMailet {
                     + " as "
                     + messageKeyName
                     + ". "
-                    + (parameterKey==null || parameterKey.length()<2 ? "I will not add any fields to the post. " : "I will prepend: "	+ parameterKey + "=" + parameterValue + ". ")
+                    + (parameterKey == null || parameterKey.length() < 2 ? "I will not add any fields to the post. " : "I will prepend: " + parameterKey + "=" + parameterValue + ". ")
                     + (passThrough ? "Messages will pass through."
                             : "Messages will be ghosted."));
         }
@@ -139,7 +139,7 @@ public class SerialiseToHTTP extends GenericMailet {
         try {
             MimeMessage message = mail.getMessage();
             message.setHeader("X-toHTTP", (success ? "Succeeded" : "Failed"));
-            if (!success && errorMessage!=null && errorMessage.length()>0) {
+            if (!success && errorMessage != null && errorMessage.length() > 0) {
                 message.setHeader("X-toHTTPFailure", errorMessage);
             }
             message.saveChanges();
@@ -159,7 +159,7 @@ public class SerialiseToHTTP extends GenericMailet {
 
         RequestBuilder requestBuilder = RequestBuilder.post(url);
 
-        if (data.length>1 && data[1]!=null) {
+        if (data.length > 1 && data[1] != null) {
             requestBuilder.addParameter(data[1].getName(),data[1].getValue());
             LOGGER.debug("{}::{}", data[1].getName(), data[1].getValue());
         }
@@ -189,14 +189,14 @@ public class SerialiseToHTTP extends GenericMailet {
     private NameValuePair[] getNameValuePairs(String message) throws UnsupportedEncodingException {
 
         int l = 1;
-        if (parameterKey!=null && parameterKey.length()>0) {
+        if (parameterKey != null && parameterKey.length() > 0) {
             l = 2;
         }
 
         NameValuePair[] data = new BasicNameValuePair[l];
-        data[0] = new BasicNameValuePair( messageKeyName, message);
-        if (l==2) {
-            data[1] = new BasicNameValuePair( parameterKey, parameterValue);
+        data[0] = new BasicNameValuePair(messageKeyName, message);
+        if (l == 2) {
+            data[1] = new BasicNameValuePair(parameterKey, parameterValue);
         }
 
         return data;

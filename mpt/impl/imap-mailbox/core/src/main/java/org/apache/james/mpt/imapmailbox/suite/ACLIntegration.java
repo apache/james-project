@@ -33,8 +33,8 @@ import org.junit.Test;
 public abstract class ACLIntegration implements ImapTestConstants {
     public static final String OTHER_USER_NAME = "Boby";
     public static final String OTHER_USER_PASSWORD = "password";
-    public static final MailboxPath OTHER_USER_MAILBOX = MailboxPath.forUser( OTHER_USER_NAME, "");
-    public static final MailboxPath MY_INBOX = MailboxPath.forUser( USER, "");
+    public static final MailboxPath OTHER_USER_MAILBOX = MailboxPath.forUser(OTHER_USER_NAME, "");
+    public static final MailboxPath MY_INBOX = MailboxPath.forUser(USER, "");
 
     protected abstract ImapHostSystem createImapHostSystem();
     protected abstract GrantRightsOnHost createGrantRightsOnHost();
@@ -103,7 +103,7 @@ public abstract class ACLIntegration implements ImapTestConstants {
     public void rightXOnOriginShouldBeSufficientToRenameAMailboxUS() throws Exception {
         scriptedTestProtocol
             .withMailbox(MailboxPath.forUser("Boby","test"))
-            .withGrantRights(MailboxPath.forUser( OTHER_USER_NAME, "test"), USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("x"))
+            .withGrantRights(MailboxPath.forUser(OTHER_USER_NAME, "test"), USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("x"))
             .run("aclIntegration/ACLIntegrationRightX");
     }
 
@@ -111,13 +111,13 @@ public abstract class ACLIntegration implements ImapTestConstants {
     public void rightXOnOriginShouldBeNeededToRenameAMailboxUS() throws Exception {
         scriptedTestProtocol
             .withMailbox(MailboxPath.forUser("Boby","test"))
-            .withGrantRights(MailboxPath.forUser( OTHER_USER_NAME, "test"), USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rswipktela"))
+            .withGrantRights(MailboxPath.forUser(OTHER_USER_NAME, "test"), USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rswipktela"))
             .run("aclIntegration/ACLIntegrationWithoutRightX");
     }
 
     @Test
     public void rightKOnDestinationShouldBeSufficientToRenameAMailboxUS() throws Exception {
-        MailboxPath newMailbox = MailboxPath.forUser( USER, "test");
+        MailboxPath newMailbox = MailboxPath.forUser(USER, "test");
         scriptedTestProtocol
             .withMailbox(newMailbox)
             .withGrantRights(newMailbox, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("x"))
@@ -127,7 +127,7 @@ public abstract class ACLIntegration implements ImapTestConstants {
 
     @Test
     public void rightKOnDestinationShouldBeNeededToRenameAMailboxUS() throws Exception {
-        MailboxPath newMailbox = MailboxPath.forUser( USER, "test");
+        MailboxPath newMailbox = MailboxPath.forUser(USER, "test");
         scriptedTestProtocol
             .withMailbox(newMailbox)
             .withGrantRights(newMailbox, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("x"))

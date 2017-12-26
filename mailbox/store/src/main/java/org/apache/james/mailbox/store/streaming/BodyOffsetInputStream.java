@@ -29,7 +29,7 @@ import java.io.PushbackInputStream;
  *  IMPORTANT: This class is not thread-safe!
  *
  */
-public class BodyOffsetInputStream extends InputStream{
+public class BodyOffsetInputStream extends InputStream {
     private long count = 0;
     private long bodyStartOctet = -1;
     private final PushbackInputStream in;
@@ -56,7 +56,7 @@ public class BodyOffsetInputStream extends InputStream{
                         int c = in.read();
 
                         if (c == 0x0A) {
-                            bodyStartOctet = count+4;
+                            bodyStartOctet = count + 4;
                         }
                         in.unread(c);
                     }
@@ -127,7 +127,7 @@ public class BodyOffsetInputStream extends InputStream{
     @Override
     public long skip(long n) throws IOException {
         long i = 0; 
-        while(i++ < n) {
+        while (i++ < n) {
             if (read() == -1) {
                 break;
             }

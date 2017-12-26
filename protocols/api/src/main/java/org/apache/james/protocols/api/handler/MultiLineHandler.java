@@ -34,7 +34,7 @@ import org.apache.james.protocols.api.Response;
  *
  * @param <S>
  */
-public abstract class MultiLineHandler<S extends ProtocolSession> implements LineHandler<S>{
+public abstract class MultiLineHandler<S extends ProtocolSession> implements LineHandler<S> {
 
     private static final String BUFFERED_LINES = "BUFFERED_LINES";
     

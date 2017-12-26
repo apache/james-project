@@ -316,10 +316,9 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         if (message.isRecent()) {
             messageName.setFlags(message.createFlags());
             newMessageFile = new File(folder.getNewFolder(), messageName.getFullName());
-        }
-        // appended via IMAP (might already have flags etc, goes to ./cur
-        // directly)
-        else {
+        } else {
+            // appended via IMAP (might already have flags etc, goes to ./cur
+            // directly)
             messageName.setFlags(message.createFlags());
             newMessageFile = new File(folder.getCurFolder(), messageName.getFullName());
         }

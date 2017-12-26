@@ -73,13 +73,13 @@ public class TestRunScripts extends TestCase {
         stubResourceCollection.add(unsupportedResource);
         subject.add(stubResourceCollection);
         subject.execute();
-        assertEquals(SCRIPT +"\r\n", record.complete());
+        assertEquals(SCRIPT + "\r\n", record.complete());
     }
     
     public void testRunOneScriptFromCollection() throws Exception {
         subject.add(stubResourceCollection);
         subject.execute();
-        assertEquals(SCRIPT +"\r\n", record.complete());
+        assertEquals(SCRIPT + "\r\n", record.complete());
     }
     
     public void testRunOneScriptFromAttribute() throws Exception {
@@ -90,6 +90,6 @@ public class TestRunScripts extends TestCase {
         writer.close();
         subject.setScript(file);
         subject.execute();
-        assertEquals(SCRIPT +"\r\n", record.complete());
+        assertEquals(SCRIPT + "\r\n", record.complete());
     }
 }

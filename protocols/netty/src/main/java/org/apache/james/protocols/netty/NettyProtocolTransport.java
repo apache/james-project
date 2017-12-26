@@ -142,7 +142,7 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
 
             } else if (in instanceof CombinedInputStream) {
                 Iterator<InputStream> streams = ((CombinedInputStream) in).iterator();
-                while(streams.hasNext()) {
+                while (streams.hasNext()) {
                     InputStream pIn = streams.next();
                     if (pIn instanceof FileInputStream) {
                         FileChannel fChannel = ((FileInputStream) in).getChannel();

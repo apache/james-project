@@ -98,8 +98,7 @@ public class ContentReplacer {
             if (charset.isPresent()) {
                 mail.getMessage().setSubject(subject, charset.get().name());
                 return true;
-            }
-            else {
+            } else {
                 String previousCharset = previousCharset(mail);
                 mail.getMessage().setSubject(subject, previousCharset);
                 return true;

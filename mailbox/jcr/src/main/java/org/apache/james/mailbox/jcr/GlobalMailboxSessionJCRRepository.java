@@ -30,7 +30,7 @@ import org.apache.james.mailbox.MailboxSession;
  * Manage JCR {@link Session}. It will use one user and password for all 
  *
  */
-public class GlobalMailboxSessionJCRRepository extends MailboxSessionJCRRepository{
+public class GlobalMailboxSessionJCRRepository extends MailboxSessionJCRRepository {
 
     private final String username;
     private final char[] pass;

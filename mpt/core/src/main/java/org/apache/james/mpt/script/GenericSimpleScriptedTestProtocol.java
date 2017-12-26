@@ -173,8 +173,7 @@ public class GenericSimpleScriptedTestProtocol<T extends HostSystem, SELF extend
             testElements.runSessions(sessions);
             continuation.session = postElements;
             postElements.runSessions(sessions);
-        }
-        finally {
+        } finally {
             for (Session session : sessions) {
                 session.stop();
             }
@@ -204,8 +203,7 @@ public class GenericSimpleScriptedTestProtocol<T extends HostSystem, SELF extend
 
         try {
             builder.addProtocolLinesFromStream(is, session, fileName);
-        }
-        finally {
+        } finally {
             IOUtils.closeQuietly(is);
         }
         

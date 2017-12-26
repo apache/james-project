@@ -53,7 +53,7 @@ public final class StringUtils {
                 // When the number of trailing "\" is odd then there was no separator and this pattern is part of
                 // the previous match.
                 int depth = 1;
-                while (depth < array[i-1].length() && array[i-1].charAt(array[i-1].length() - 1 - depth) == '\\') {
+                while (depth < array[i - 1].length() && array[i - 1].charAt(array[i - 1].length() - 1 - depth) == '\\') {
                     depth++;
                 }
                 escaped = depth % 2 == 1;
@@ -100,7 +100,7 @@ public final class StringUtils {
      * or null when the text is null
      */
     public static String capitalizeWords(String data) {
-        if (data==null) {
+        if (data == null) {
             return null;
         }
         StringBuilder res = new StringBuilder();

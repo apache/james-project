@@ -78,7 +78,7 @@ public class EventConverter {
                 mailboxDataTransferObject,
                 ((MailboxListener.FlagsUpdated) event).getUids(),
                 ((MailboxListener.FlagsUpdated) event).getUpdatedFlags());
-        } else if ( event instanceof MailboxListener.MailboxRenamed) {
+        } else if (event instanceof MailboxListener.MailboxRenamed) {
             return constructMailboxRenamedProxy(event.getSession(),
                 mailboxDataTransferObject,
                 event.getMailboxPath());
@@ -168,7 +168,7 @@ public class EventConverter {
                                                                        List<MessageUid> uids,
                                                                        MailboxListener.MetaDataHoldingEvent event) {
         HashMap<MessageUid, MessageMetaDataDataTransferObject> metaDataProxyMap = new HashMap<>();
-        for(MessageUid uid : uids) {
+        for (MessageUid uid : uids) {
             metaDataProxyMap.put(uid, new MessageMetaDataDataTransferObject(
                 event.getMetaData(uid)
             ));
@@ -183,7 +183,7 @@ public class EventConverter {
     }
 
     private SortedMap<MessageUid, MessageMetaData> retrieveMetadata(Map<MessageUid, MessageMetaDataDataTransferObject> metaDataProxyMap) {
-        if(metaDataProxyMap != null) {
+        if (metaDataProxyMap != null) {
             TreeMap<MessageUid, MessageMetaData> result = new TreeMap<>();
             Set<Map.Entry<MessageUid, MessageMetaDataDataTransferObject>> entrySet = metaDataProxyMap.entrySet();
             for (Map.Entry<MessageUid, MessageMetaDataDataTransferObject> entry : entrySet) {

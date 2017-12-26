@@ -27,7 +27,7 @@ import org.apache.maven.plugin.MojoFailureException;
  * Runs MPT scripts
  * @goal run
  */
-public class MailProtocolTestMojo extends AbstractMojo{
+public class MailProtocolTestMojo extends AbstractMojo {
 
 	/**
 	 * The Mail Protocol Tests (MPT) to run

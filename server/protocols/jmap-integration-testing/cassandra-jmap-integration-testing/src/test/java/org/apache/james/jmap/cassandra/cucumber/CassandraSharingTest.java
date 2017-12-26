@@ -27,7 +27,7 @@ import cucumber.api.CucumberOptions;
 import cucumber.api.junit.Cucumber;
 
 @RunWith(Cucumber.class)
-@CucumberOptions(features= {
+@CucumberOptions(features = {
     "classpath:cucumber/sharing/SharingParentMailboxWithAndWithoutChildren.feature",
     "classpath:cucumber/sharing/SharingChildrenWithoutSharingParent.feature",
     "classpath:cucumber/sharing/GetMessageAndSharing.feature",
@@ -43,7 +43,7 @@ import cucumber.api.junit.Cucumber;
     "classpath:cucumber/sharing/SetFlagAndSharing.feature",
     "classpath:cucumber/sharing/RenamingMailboxAndSharing.feature",
     "classpath:cucumber/sharing/CopyAndSharing.feature" },
-    glue= { "org.apache.james.jmap.methods.integration", "org.apache.james.jmap.cassandra.cucumber" },
+    glue = { "org.apache.james.jmap.methods.integration", "org.apache.james.jmap.cassandra.cucumber" },
     tags = {"~@Ignore"},
     strict = true)
 public class CassandraSharingTest {

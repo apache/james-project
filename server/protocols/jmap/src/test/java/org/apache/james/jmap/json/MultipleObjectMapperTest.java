@@ -50,7 +50,7 @@ public class MultipleObjectMapperTest {
                     .build();
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void registeringSameUniquePathShouldThrowAnException() throws Exception {
         new MultipleObjectMapperBuilder()
             .registerClass("/other", First.class)
@@ -68,7 +68,7 @@ public class MultipleObjectMapperTest {
         assertThat(o).isInstanceOf(First.class);
     }
 
-    @Test(expected=JsonMappingException.class)
+    @Test(expected = JsonMappingException.class)
     public void badJsonShouldThrowException() throws Exception {
         String json = "{\"bad\": \"value\"}";
         mapper.readValue(json, Object.class);

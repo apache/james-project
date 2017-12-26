@@ -27,7 +27,7 @@ import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
 
 
-public abstract class AbstractSMTPSServerTest extends AbstractSMTPServerTest{
+public abstract class AbstractSMTPSServerTest extends AbstractSMTPServerTest {
     
     
     @Override

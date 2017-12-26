@@ -43,7 +43,7 @@ public class FileRegexMatcher extends GenericRegexMatcher {
         try {
             patternSource = new java.io.RandomAccessFile(getCondition(), "r");
             int lines = 0;
-            while(patternSource.readLine() != null) {
+            while (patternSource.readLine() != null) {
                 lines++;
             }
             patterns = new Object[lines][2];
@@ -51,18 +51,15 @@ public class FileRegexMatcher extends GenericRegexMatcher {
             for (int i = 0; i < lines; i++) {
                 String line = patternSource.readLine();
                 patterns[i][0] = line.substring(0, line.indexOf(':'));
-                patterns[i][1] = line.substring(line.indexOf(':')+1);
+                patterns[i][1] = line.substring(line.indexOf(':') + 1);
             }          
             compile(patterns);
                   
-        }
-        catch (java.io.FileNotFoundException fnfe) {
+        } catch (java.io.FileNotFoundException fnfe) {
             throw new MessagingException("Could not locate patterns.", fnfe);
-        }
-        catch (java.io.IOException ioe) {
+        } catch (java.io.IOException ioe) {
             throw new MessagingException("Could not read patterns.", ioe);
-        }
-        catch(PatternSyntaxException mp) {
+        } catch (PatternSyntaxException mp) {
             throw new MessagingException("Could not initialize regex patterns", mp);
         } finally {
             if (patternSource != null) {

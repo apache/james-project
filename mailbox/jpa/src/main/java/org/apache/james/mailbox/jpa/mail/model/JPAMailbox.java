@@ -35,31 +35,31 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxUtil;
 
-@Entity(name="Mailbox")
-@Table(name="JAMES_MAILBOX")
+@Entity(name = "Mailbox")
+@Table(name = "JAMES_MAILBOX")
 @NamedQueries({
-    @NamedQuery(name="findMailboxById",
-        query="SELECT mailbox FROM Mailbox mailbox WHERE mailbox.mailboxId = :idParam"),
-    @NamedQuery(name="findMailboxByName",
-        query="SELECT mailbox FROM Mailbox mailbox WHERE mailbox.name = :nameParam and mailbox.user is NULL and mailbox.namespace= :namespaceParam"),
-    @NamedQuery(name="findMailboxByNameWithUser",
-        query="SELECT mailbox FROM Mailbox mailbox WHERE mailbox.name = :nameParam and mailbox.user= :userParam and mailbox.namespace= :namespaceParam"),
-    @NamedQuery(name="deleteAllMailboxes",
-        query="DELETE FROM Mailbox mailbox"),
-    @NamedQuery(name="findMailboxWithNameLikeWithUser",
-        query="SELECT mailbox FROM Mailbox mailbox WHERE mailbox.name LIKE :nameParam and mailbox.user= :userParam and mailbox.namespace= :namespaceParam"),
-    @NamedQuery(name="findMailboxWithNameLike",
-        query="SELECT mailbox FROM Mailbox mailbox WHERE mailbox.name LIKE :nameParam and mailbox.user is NULL and mailbox.namespace= :namespaceParam"),
-    @NamedQuery(name="countMailboxesWithNameLikeWithUser",
-        query="SELECT COUNT(mailbox) FROM Mailbox mailbox WHERE mailbox.name LIKE :nameParam and mailbox.user= :userParam and mailbox.namespace= :namespaceParam"),
-    @NamedQuery(name="countMailboxesWithNameLike",
-        query="SELECT COUNT(mailbox) FROM Mailbox mailbox WHERE mailbox.name LIKE :nameParam and mailbox.user is NULL and mailbox.namespace= :namespaceParam"),
-    @NamedQuery(name="listMailboxes",
-        query="SELECT mailbox FROM Mailbox mailbox"),
-    @NamedQuery(name="findHighestModSeq",
-        query="SELECT mailbox.highestModSeq FROM Mailbox mailbox WHERE mailbox.mailboxId = :idParam"),
-    @NamedQuery(name="findLastUid",
-        query="SELECT mailbox.lastUid FROM Mailbox mailbox WHERE mailbox.mailboxId = :idParam")
+    @NamedQuery(name = "findMailboxById",
+        query = "SELECT mailbox FROM Mailbox mailbox WHERE mailbox.mailboxId = :idParam"),
+    @NamedQuery(name = "findMailboxByName",
+        query = "SELECT mailbox FROM Mailbox mailbox WHERE mailbox.name = :nameParam and mailbox.user is NULL and mailbox.namespace= :namespaceParam"),
+    @NamedQuery(name = "findMailboxByNameWithUser",
+        query = "SELECT mailbox FROM Mailbox mailbox WHERE mailbox.name = :nameParam and mailbox.user= :userParam and mailbox.namespace= :namespaceParam"),
+    @NamedQuery(name = "deleteAllMailboxes",
+        query = "DELETE FROM Mailbox mailbox"),
+    @NamedQuery(name = "findMailboxWithNameLikeWithUser",
+        query = "SELECT mailbox FROM Mailbox mailbox WHERE mailbox.name LIKE :nameParam and mailbox.user= :userParam and mailbox.namespace= :namespaceParam"),
+    @NamedQuery(name = "findMailboxWithNameLike",
+        query = "SELECT mailbox FROM Mailbox mailbox WHERE mailbox.name LIKE :nameParam and mailbox.user is NULL and mailbox.namespace= :namespaceParam"),
+    @NamedQuery(name = "countMailboxesWithNameLikeWithUser",
+        query = "SELECT COUNT(mailbox) FROM Mailbox mailbox WHERE mailbox.name LIKE :nameParam and mailbox.user= :userParam and mailbox.namespace= :namespaceParam"),
+    @NamedQuery(name = "countMailboxesWithNameLike",
+        query = "SELECT COUNT(mailbox) FROM Mailbox mailbox WHERE mailbox.name LIKE :nameParam and mailbox.user is NULL and mailbox.namespace= :namespaceParam"),
+    @NamedQuery(name = "listMailboxes",
+        query = "SELECT mailbox FROM Mailbox mailbox"),
+    @NamedQuery(name = "findHighestModSeq",
+        query = "SELECT mailbox.highestModSeq FROM Mailbox mailbox WHERE mailbox.mailboxId = :idParam"),
+    @NamedQuery(name = "findLastUid",
+        query = "SELECT mailbox.lastUid FROM Mailbox mailbox WHERE mailbox.mailboxId = :idParam")
 })
 public class JPAMailbox implements Mailbox {
     

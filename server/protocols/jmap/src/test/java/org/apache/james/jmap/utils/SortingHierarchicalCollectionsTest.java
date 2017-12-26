@@ -87,7 +87,7 @@ public class SortingHierarchicalCollectionsTest {
         assertThat(result).containsExactly("A", "B", "C");
     }
 
-    @Test(expected=CycleDetectedException.class)
+    @Test(expected = CycleDetectedException.class)
     public void sortFromRootToLeafWithLoopShouldThrow() {
         Mailbox a = Mailbox.builder().name("A").id(A_ID).parentId(B_ID).build();
         Mailbox b = Mailbox.builder().name("B").id(B_ID).parentId(A_ID).build();
@@ -136,7 +136,7 @@ public class SortingHierarchicalCollectionsTest {
         assertThat(result).containsExactly("C", "B", "A");
     }
 
-    @Test(expected=CycleDetectedException.class)
+    @Test(expected = CycleDetectedException.class)
     public void sortFromLeafToRootWithLoopShouldThrow() {
         Mailbox a = Mailbox.builder().name("A").id(A_ID).parentId(B_ID).build();
         Mailbox b = Mailbox.builder().name("B").id(B_ID).parentId(A_ID).build();

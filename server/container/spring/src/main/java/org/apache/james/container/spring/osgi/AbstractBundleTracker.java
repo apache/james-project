@@ -143,7 +143,7 @@ public abstract class AbstractBundleTracker implements BeanFactoryAware, BundleL
         final ServiceReference<?>[] applicationContextRefs = bundleContext.getServiceReferences(ApplicationContext.class.getName(), filter);
         
         // Check if we found an ApplicationContext. If not create one
-        if(applicationContextRefs == null || applicationContextRefs.length != 1) {
+        if (applicationContextRefs == null || applicationContextRefs.length != 1) {
             
             // Create a new context which just serve as registry later
             AbstractDelegatedExecutionApplicationContext context = new AbstractDelegatedExecutionApplicationContext() {

@@ -60,7 +60,7 @@ public class AuthenticationFilterTest {
         accessTokenRepository = new MemoryAccessTokenRepository(TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS));
 
         when(mockedRequest.getMethod()).thenReturn("POST");
-        List<AuthenticationStrategy> fakeAuthenticationStrategies = ImmutableList.of( new FakeAuthenticationStrategy(false));
+        List<AuthenticationStrategy> fakeAuthenticationStrategies = ImmutableList.of(new FakeAuthenticationStrategy(false));
 
         testee = new AuthenticationFilter(fakeAuthenticationStrategies, new NoopMetricFactory());
         filterChain = mock(FilterChain.class);
@@ -94,7 +94,7 @@ public class AuthenticationFilterTest {
 
         accessTokenRepository.addToken("user@domain.tld", token);
 
-        AuthenticationFilter sut = new AuthenticationFilter(ImmutableList.of( new FakeAuthenticationStrategy(true)), new NoopMetricFactory());
+        AuthenticationFilter sut = new AuthenticationFilter(ImmutableList.of(new FakeAuthenticationStrategy(true)), new NoopMetricFactory());
         sut.doFilter(mockedRequest, mockedResponse, filterChain);
 
         verify(filterChain).doFilter(any(ServletRequest.class), eq(mockedResponse));

@@ -111,9 +111,8 @@ public class JamesUsersJdbcRepository extends AbstractJdbcUsersRepository {
         } else if (user instanceof DefaultUser) {
             DefaultUser aUser = (DefaultUser) user;
             jamesUser = new DefaultJamesUser(aUser.getUserName(), aUser.getHashedPassword(), aUser.getHashAlgorithm());
-        }
-        // Can't handle any other implementations.
-        else {
+        } else {
+            // Can't handle any other implementations.
             throw new RuntimeException("An unknown implementation of User was " + "found. This implementation cannot be " + "persisted to a UsersJDBCRepsitory.");
         }
 

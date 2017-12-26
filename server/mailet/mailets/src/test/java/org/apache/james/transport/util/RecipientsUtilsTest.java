@@ -52,7 +52,7 @@ public class RecipientsUtilsTest {
     @Test
     public void getRecipientsShouldReturnEmptyWhenMailetRecipientsIsEmpty() throws Exception {
         when(mailet.getRecipients())
-            .thenReturn(ImmutableList.<MailAddress> of());
+            .thenReturn(ImmutableList.<MailAddress>of());
 
         FakeMail fakeMail = FakeMail.defaultFakeMail();
 

@@ -86,7 +86,7 @@ public class SortConverter {
     }
 
     private static void checkField(List<String> splitToList) {
-        Preconditions.checkArgument(splitToList.size() > 0 && splitToList.size() <=2, "Bad sort field definition. Must contains a field and an optional order separated by a space");
+        Preconditions.checkArgument(splitToList.size() > 0 && splitToList.size() <= 2, "Bad sort field definition. Must contains a field and an optional order separated by a space");
     }
 
 }

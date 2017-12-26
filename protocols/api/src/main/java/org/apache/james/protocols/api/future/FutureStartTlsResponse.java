@@ -27,7 +27,7 @@ import org.apache.james.protocols.api.StartTlsResponse;
  * 
  *
  */
-public class FutureStartTlsResponse extends FutureResponseImpl implements StartTlsResponse{
+public class FutureStartTlsResponse extends FutureResponseImpl implements StartTlsResponse {
 
 
     /**

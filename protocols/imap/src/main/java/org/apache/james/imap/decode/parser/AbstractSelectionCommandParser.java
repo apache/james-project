@@ -32,7 +32,7 @@ import org.apache.james.imap.message.request.AbstractMailboxSelectionRequest;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.protocols.imap.DecodingException;
 
-public abstract class AbstractSelectionCommandParser extends AbstractImapCommandParser{
+public abstract class AbstractSelectionCommandParser extends AbstractImapCommandParser {
     private static final byte[] CONDSTORE = ImapConstants.SUPPORTS_CONDSTORE.getBytes();
     private static final byte[] QRESYNC = ImapConstants.SUPPORTS_QRESYNC.getBytes();
 

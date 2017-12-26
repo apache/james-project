@@ -231,7 +231,7 @@ public abstract class GetMailboxesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "myMailbox");
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "myMailbox2");
 
-        List<String> expectedMailboxes = ImmutableList.<String> builder()
+        List<String> expectedMailboxes = ImmutableList.<String>builder()
                 .addAll(DefaultMailboxes.DEFAULT_MAILBOXES)
                 .add("myMailbox")
                 .add("myMailbox2")
@@ -588,7 +588,7 @@ public abstract class GetMailboxesMethodTest {
         MailboxPath bobMailboxPath = MailboxPath.forUser(bob, sharedMailboxName);
         aclProbe.replaceRights(bobMailboxPath, alice, new Rfc4314Rights(Right.Lookup));
 
-        List<String> expectedMailboxes = ImmutableList.<String> builder()
+        List<String> expectedMailboxes = ImmutableList.<String>builder()
             .addAll(DefaultMailboxes.DEFAULT_MAILBOXES)
             .add(sharedMailboxName)
             .build();
@@ -620,7 +620,7 @@ public abstract class GetMailboxesMethodTest {
         aclProbe.replaceRights(bobSharedReadMailboxPath, alice, new Rfc4314Rights(Right.Lookup));
         aclProbe.replaceRights(bobSharedAdministerMailboxPath, alice, new Rfc4314Rights(Right.Administer));
 
-        List<String> expectedMailboxes = ImmutableList.<String> builder()
+        List<String> expectedMailboxes = ImmutableList.<String>builder()
             .addAll(DefaultMailboxes.DEFAULT_MAILBOXES)
             .add(sharedReadMailboxName)
             .build();

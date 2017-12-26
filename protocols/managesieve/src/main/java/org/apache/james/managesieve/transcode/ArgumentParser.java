@@ -174,7 +174,7 @@ public class ArgumentParser {
             try {
                 ParserUtils.getSize(arguments.next());
             } catch (ArgumentException e) {
-                return "NO \""+ e.getMessage() + "\"";
+                return "NO \"" + e.getMessage() + "\"";
             }
         }
         if (arguments.hasNext()) {

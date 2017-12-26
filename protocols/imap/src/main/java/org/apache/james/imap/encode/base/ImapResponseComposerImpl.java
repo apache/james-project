@@ -404,7 +404,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
 
     public ImapResponseComposer sequenceSet(UidRange[] ranges) throws IOException {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i< ranges.length; i++) {
+        for (int i = 0; i < ranges.length; i++) {
             UidRange range = ranges[i];
             sb.append(range.getFormattedString());
             if (i + 1 < ranges.length) {
@@ -416,7 +416,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
 
     public ImapResponseComposer sequenceSet(IdRange[] ranges) throws IOException {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i< ranges.length; i++) {
+        for (int i = 0; i < ranges.length; i++) {
             IdRange range = ranges[i];
             sb.append(range.getFormattedString());
             if (i + 1 < ranges.length) {

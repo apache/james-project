@@ -143,12 +143,12 @@ public class MailboxMessageResultImplTest {
     @Test
     public void testShouldReturnPositiveWhenFirstGreaterThanSecond()
             throws Exception {
-        assertTrue( msgResultC.compareTo(msgResultB) > 0);
+        assertTrue(msgResultC.compareTo(msgResultB) > 0);
     }
 
     @Test
     public void testShouldReturnNegativeWhenFirstLessThanSecond()
             throws Exception {
-        assertTrue( msgResultB.compareTo(msgResultC) < 0);
+        assertTrue(msgResultB.compareTo(msgResultC) < 0);
     }
 }

@@ -110,7 +110,7 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
             }
             synchronized (done) {
                 Iterator<MailboxMessage> messages = getFactory().getMessageMapper(session).findInMailbox(mailbox, MessageRange.all(), FetchType.Full, -1);
-                while(messages.hasNext()) {
+                while (messages.hasNext()) {
                     final MailboxMessage message = messages.next();
                     try {
                         add(session, mailbox, message);

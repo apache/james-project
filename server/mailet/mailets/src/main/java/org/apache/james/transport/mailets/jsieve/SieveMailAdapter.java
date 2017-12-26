@@ -413,15 +413,15 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
             List<String> headerValues = getHeader(arg);
             List<MailboxList> mailboxes = new ArrayList<>();
             int size = 0;
-            for(String headerValue : headerValues) {
+            for (String headerValue : headerValues) {
                 MailboxList mailboxList = new AddressList(DefaultAddressParser.DEFAULT.parseAddressList(headerValue), true).flatten();
                 size += mailboxList.size();
                 mailboxes.add(mailboxList);
             }
             int i = 0;
             final Address[] results = new Address[size];
-            for(MailboxList mailboxList : mailboxes) {
-                for(Mailbox mailbox : mailboxList) {
+            for (MailboxList mailboxList : mailboxes) {
+                for (Mailbox mailbox : mailboxList) {
                     results[i] = new AddressImpl(mailbox.getLocalPart(), mailbox.getDomain());
                     i++;
                 }

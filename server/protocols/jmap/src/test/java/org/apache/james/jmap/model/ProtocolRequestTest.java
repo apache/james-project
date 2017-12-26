@@ -34,7 +34,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ProtocolRequestTest {
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void deserializedRequestsShouldThrowWhenNotEnoughElements() throws Exception {
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("getAccounts"),
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{}")};
@@ -42,7 +42,7 @@ public class ProtocolRequestTest {
         ProtocolRequest.deserialize(nodes);
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void deserializedRequestsShouldThrowWhenTooMuchElements() throws Exception {
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("getAccounts"),
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{}"),
@@ -52,7 +52,7 @@ public class ProtocolRequestTest {
         ProtocolRequest.deserialize(nodes);
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void deserializedRequestsShouldThrowWhenFirstParameterIsNotString() throws JsonParseException, JsonMappingException, IOException {
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).booleanNode(true),
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{}"),
@@ -61,7 +61,7 @@ public class ProtocolRequestTest {
         ProtocolRequest.deserialize(nodes);
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void deserializedRequestsShouldThrowWhenSecondParameterIsNotJson() throws JsonParseException, JsonMappingException, IOException {
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("getAccounts"),
                 new ObjectNode(new JsonNodeFactory(false)).textNode("true"),
@@ -70,7 +70,7 @@ public class ProtocolRequestTest {
         ProtocolRequest.deserialize(nodes);
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void deserializedRequestsShouldThrowWhenThirdParameterIsNotString() throws JsonParseException, JsonMappingException, IOException {
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("getAccounts"),
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{}"),

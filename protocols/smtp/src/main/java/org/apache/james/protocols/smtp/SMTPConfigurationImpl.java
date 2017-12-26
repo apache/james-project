@@ -28,7 +28,7 @@ import org.apache.james.protocols.api.ProtocolConfigurationImpl;
  * are not thread-safe
  *
  */
-public class SMTPConfigurationImpl extends ProtocolConfigurationImpl implements SMTPConfiguration{
+public class SMTPConfigurationImpl extends ProtocolConfigurationImpl implements SMTPConfiguration {
 
     public String helloName = "localhost";
     private final long maxMessageSize = 0;

@@ -55,7 +55,7 @@ public abstract class AbstractValidRcptHandler implements RcptHook {
 
             } else {
                 if (isValidRecipient(session, rcpt) == false) {
-                    reject= true;
+                    reject = true;
                 }
             }
         }

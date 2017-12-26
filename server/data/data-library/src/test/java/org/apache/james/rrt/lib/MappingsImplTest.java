@@ -28,7 +28,7 @@ import org.junit.Test;
 
 public class MappingsImplTest {
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void fromRawStringShouldThrowWhenNull() {
         MappingsImpl.fromRawString(null);
     }
@@ -150,7 +150,7 @@ public class MappingsImplTest {
     }
 
     
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void containsShouldThrowWhenNull() {
         MappingsImpl mappings = MappingsImpl.builder().add(MappingImpl.regex("toto")).build();
         assertThat(mappings.contains((Mapping.Type)null));
@@ -182,7 +182,7 @@ public class MappingsImplTest {
     }
 
     
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void selectShouldThrowWhenNull() {
         MappingsImpl mappings = MappingsImpl.builder().add(MappingImpl.regex("toto")).build();
         assertThat(mappings.select((Mapping.Type)null));
@@ -213,7 +213,7 @@ public class MappingsImplTest {
     }
 
     
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void excludeShouldThrowWhenNull() {
         MappingsImpl mappings = MappingsImpl.builder().add(MappingImpl.regex("toto")).build();
         assertThat(mappings.exclude((Mapping.Type)null));
@@ -235,7 +235,7 @@ public class MappingsImplTest {
         assertThat(optional.isPresent()).isFalse();
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void unionShouldThrowWhenMappingsNull() {
         MappingsImpl.empty().union(null);
     }

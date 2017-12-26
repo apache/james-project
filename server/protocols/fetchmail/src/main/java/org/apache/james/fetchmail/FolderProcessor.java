@@ -88,10 +88,9 @@ public class FolderProcessor extends ProcessorAbstract {
                         try {
                             new MessageProcessor(message, getAccount()).process();
                             messagesProcessed++;
-                        }
-                        // Catch and report an exception but don't rethrow it,
-                        // allowing subsequent messages to be processed.
-                        catch (Exception ex) {
+                        } catch (Exception ex) {
+                            // Catch and report an exception but don't rethrow it,
+                            // allowing subsequent messages to be processed.
                             LOGGER.error("Exception processing message ID: {}", message.getMessageID(), ex);
                         }
                     }

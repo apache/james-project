@@ -69,7 +69,7 @@ public class SpecialAddressesUtilsTest {
         FakeMail mail = FakeMail.builder()
                 .build();
 
-        Collection<MailAddress> addresses = testee.replaceSpecialAddresses(mail, ImmutableList.<MailAddress> of());
+        Collection<MailAddress> addresses = testee.replaceSpecialAddresses(mail, ImmutableList.<MailAddress>of());
 
         assertThat(addresses).isEmpty();
     }
@@ -255,7 +255,7 @@ public class SpecialAddressesUtilsTest {
         FakeMail mail = FakeMail.builder()
                 .build();
 
-        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.<InternetAddress> of());
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.<InternetAddress>of());
 
         assertThat(addresses).isEmpty();
     }

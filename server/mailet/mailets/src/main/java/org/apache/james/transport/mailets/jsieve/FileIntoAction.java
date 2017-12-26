@@ -86,8 +86,7 @@ public class FileIntoAction implements MailAction {
             //TODO: copying this message so many times seems a waste
             context.post(url, aMail);
             delivered = true;
-        }
-        catch (MessagingException ex) {
+        } catch (MessagingException ex) {
             LOGGER.debug("Error while storing mail into {}.", destinationMailbox, ex);
             throw ex;
         }

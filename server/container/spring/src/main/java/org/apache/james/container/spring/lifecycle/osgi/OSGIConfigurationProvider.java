@@ -25,7 +25,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 
-public class OSGIConfigurationProvider implements org.apache.james.container.spring.lifecycle.ConfigurationProvider{
+public class OSGIConfigurationProvider implements org.apache.james.container.spring.lifecycle.ConfigurationProvider {
 
     @Override
     public void registerConfiguration(String beanName, HierarchicalConfiguration conf) {

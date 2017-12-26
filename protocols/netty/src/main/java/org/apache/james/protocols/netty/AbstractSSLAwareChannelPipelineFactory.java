@@ -31,7 +31,7 @@ import org.jboss.netty.handler.ssl.SslHandler;
  * 
  *
  */
-public abstract class AbstractSSLAwareChannelPipelineFactory extends AbstractChannelPipelineFactory{
+public abstract class AbstractSSLAwareChannelPipelineFactory extends AbstractChannelPipelineFactory {
 
     
     private String[] enabledCipherSuites = null;

@@ -25,7 +25,7 @@ import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.netty.NettyServer;
 import org.apache.james.protocols.pop3.AbstractPOP3ServerTest;
 
-public class NettyPOP3ServerTest extends AbstractPOP3ServerTest{
+public class NettyPOP3ServerTest extends AbstractPOP3ServerTest {
 
     private static final String LOCALHOST_IP = "127.0.0.1";
     private static final int RANDOM_PORT = 0;

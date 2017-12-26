@@ -79,9 +79,8 @@ public final class FlowedMessageUtils {
             int actualQuoteDepth = 0;
             
             if (line != null && line.length() > 0) {
-                if (line.equals(RFC2646_SIGNATURE))
+                if (line.equals(RFC2646_SIGNATURE)) {
                     // signature handling (the previous line is not flowed)
-                {
                     resultLineFlowed = false;
                 } else if (line.charAt(0) == RFC2646_QUOTE) {
                     // Quote
@@ -102,9 +101,8 @@ public final class FlowedMessageUtils {
                     }
                 }
                     
-                if (line.length() > 0 && line.charAt(0) == RFC2646_SPACE)
+                if (line.length() > 0 && line.charAt(0) == RFC2646_SPACE) {
                     // Line space-stuffed
-                {
                     line = line.substring(1);
                 }
                 
@@ -141,9 +139,7 @@ public final class FlowedMessageUtils {
                         line = line.substring(0, line.length() - 1);
                     }
                     resultLineFlowed = true;
-                } 
-                
-                else {
+                } else {
                     resultLineFlowed = false;
                 }
                 

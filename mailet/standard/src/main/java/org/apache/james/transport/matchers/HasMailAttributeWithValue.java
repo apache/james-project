@@ -65,8 +65,7 @@ import org.apache.mailet.base.GenericMatcher;
  * @version CVS $Revision$ $Date$
  * @since 2.2.0
  **/
-public class HasMailAttributeWithValue extends GenericMatcher
-{
+public class HasMailAttributeWithValue extends GenericMatcher {
 
     /**
      * The name of the attribute to match
@@ -85,8 +84,7 @@ public class HasMailAttributeWithValue extends GenericMatcher
      * 
      * @param mail
      */
-    public Collection<MailAddress> match(Mail mail) throws MessagingException
-    {
+    public Collection<MailAddress> match(Mail mail) throws MessagingException {
         Object attributeValue = mail.getAttribute(getAttributeName());
 
         if (attributeValue != null
@@ -100,8 +98,7 @@ public class HasMailAttributeWithValue extends GenericMatcher
      * Returns the attributeName.
      * @return String
      */
-    protected String getAttributeName()
-    {
+    protected String getAttributeName() {
         return fieldAttributeName;
     }
 
@@ -109,8 +106,7 @@ public class HasMailAttributeWithValue extends GenericMatcher
      * Returns the attributeValue.
      * @return String
      */
-    protected String getAttributeValue()
-    {
+    protected String getAttributeValue() {
         return fieldAttributeValue;
     }
 
@@ -118,8 +114,7 @@ public class HasMailAttributeWithValue extends GenericMatcher
      * Sets the attributeName.
      * @param attributeName The attributeName to set
      */
-    protected void setAttributeName(String attributeName)
-    {
+    protected void setAttributeName(String attributeName) {
         fieldAttributeName = attributeName;
     }
 
@@ -127,8 +122,7 @@ public class HasMailAttributeWithValue extends GenericMatcher
      * Sets the attributeValue.
      * @param attributeValue The attributeValue to set
      */
-    protected void setAttributeValue(String attributeValue)
-    {
+    protected void setAttributeValue(String attributeValue) {
         fieldAttributeValue = attributeValue;
     }
 
@@ -136,8 +130,7 @@ public class HasMailAttributeWithValue extends GenericMatcher
      * (non-Javadoc)
      * @see org.apache.mailet.base.GenericMatcher#init()
      */
-    public void init() throws MessagingException
-    {
+    public void init() throws MessagingException {
         String condition = getCondition().trim();
         int commaPosition = condition.indexOf(',');
 

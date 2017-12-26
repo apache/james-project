@@ -25,7 +25,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.mailbox.model.MessageResult.Header;
 
-public interface Headers extends Content{
+public interface Headers extends Content {
     /**
      * Gets headers for the message.
      * 

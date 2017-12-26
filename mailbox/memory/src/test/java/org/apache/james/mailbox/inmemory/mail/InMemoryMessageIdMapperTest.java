@@ -24,7 +24,7 @@ import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageIdMapperTest;
 import org.junit.Before;
 
-public class InMemoryMessageIdMapperTest extends MessageIdMapperTest{
+public class InMemoryMessageIdMapperTest extends MessageIdMapperTest {
 
     @Before
     public void setUp() throws MailboxException {

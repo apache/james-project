@@ -31,7 +31,7 @@ import org.apache.james.mailbox.tika.TikaHttpClientImpl;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 
-public class TestTikaModule extends AbstractModule{
+public class TestTikaModule extends AbstractModule {
 
     private final TikaContainer tika;
 

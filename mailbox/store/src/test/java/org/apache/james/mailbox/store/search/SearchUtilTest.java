@@ -31,26 +31,26 @@ public class SearchUtilTest {
 
     @Test
     public void testSimpleSubject() {
-        String subject ="This is my subject";
+        String subject = "This is my subject";
         assertEquals(subject, SearchUtil.getBaseSubject(subject));
     }
     
     @Test
     public void testReplaceSpacesAndTabsInSubject() {
-        String subject ="This   is my\tsubject";
+        String subject = "This   is my\tsubject";
         assertEquals("This is my subject", SearchUtil.getBaseSubject(subject));
     }
     
     @Test
     public void testRemoveTrailingSpace() {
-        String subject ="This is my subject ";
+        String subject = "This is my subject ";
         assertEquals("This is my subject", SearchUtil.getBaseSubject(subject));
     }
     
     
     @Test
     public void testRemoveTrailingFwd() {
-        String subject ="This is my subject (fwd)";
+        String subject = "This is my subject (fwd)";
         assertEquals("This is my subject", SearchUtil.getBaseSubject(subject));
     }
     

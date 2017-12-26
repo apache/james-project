@@ -189,7 +189,7 @@ public class NotifyMailetsMessageTest {
 
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()), new ByteArrayInputStream(content.getBytes()));
         FakeMail mail = FakeMail.from(message);
-        mail.setMessageSize((long)(5.9*1024));
+        mail.setMessageSize((long)(5.9 * 1024));
 
         String generateMessage = new NotifyMailetsMessage().generateMessage("my message", mail);
 

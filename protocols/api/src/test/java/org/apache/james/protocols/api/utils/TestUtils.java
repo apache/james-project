@@ -32,7 +32,7 @@ public class TestUtils {
      * @return port
      */
     public static synchronized int getFreePort() {
-        for(int start = START_PORT; start <= END_PORT; start++) {
+        for (int start = START_PORT; start <= END_PORT; start++) {
             try {
                 ServerSocket socket = new ServerSocket(start);
                 socket.setReuseAddress(true);

@@ -94,7 +94,7 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
                 HumanReadableText humanReadableText = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
                 no(command, tag, responder, humanReadableText);
             }
-        } catch(MailboxException me) {
+        } catch (MailboxException me) {
             taggedBad(command, tag, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX);
         }
 

@@ -99,7 +99,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
             
             QueryManager manager = getSession().getWorkspace().getQueryManager();
 
-            String queryString = "/jcr:root/" + MAILBOXES_PATH + "/" + ISO9075.encodePath(path.getNamespace())  + "//element(*,jamesMailbox:mailbox)[@" + JCRMailbox.NAME_PROPERTY + "='" + name+ "' and @" + JCRMailbox.NAMESPACE_PROPERTY +"='" + namespace + "' and @" + JCRMailbox.USER_PROPERTY + "='" + user + "']";
+            String queryString = "/jcr:root/" + MAILBOXES_PATH + "/" + ISO9075.encodePath(path.getNamespace())  + "//element(*,jamesMailbox:mailbox)[@" + JCRMailbox.NAME_PROPERTY + "='" + name + "' and @" + JCRMailbox.NAMESPACE_PROPERTY + "='" + namespace + "' and @" + JCRMailbox.USER_PROPERTY + "='" + user + "']";
             QueryResult result = manager.createQuery(queryString, XPATH_LANGUAGE).execute();
             NodeIterator it = result.getNodes();
             if (it.hasNext()) {
@@ -142,7 +142,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
             String namespace = Text.escapeIllegalXpathSearchChars(path.getNamespace());
             
             QueryManager manager = getSession().getWorkspace().getQueryManager();
-            String queryString = "/jcr:root/" + MAILBOXES_PATH + "/" + ISO9075.encodePath(path.getNamespace()) + "//element(*,jamesMailbox:mailbox)[jcr:like(@" + JCRMailbox.NAME_PROPERTY + ",'%" + name + "%') and @" + JCRMailbox.NAMESPACE_PROPERTY +"='" + namespace + "' and @" + JCRMailbox.USER_PROPERTY + "='" + user + "']";
+            String queryString = "/jcr:root/" + MAILBOXES_PATH + "/" + ISO9075.encodePath(path.getNamespace()) + "//element(*,jamesMailbox:mailbox)[jcr:like(@" + JCRMailbox.NAME_PROPERTY + ",'%" + name + "%') and @" + JCRMailbox.NAMESPACE_PROPERTY + "='" + namespace + "' and @" + JCRMailbox.USER_PROPERTY + "='" + user + "']";
             QueryResult result = manager.createQuery(queryString, XPATH_LANGUAGE).execute();
             NodeIterator it = result.getNodes();
             while (it.hasNext()) {
@@ -223,7 +223,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
                     .getQueryManager();
             String queryString = "/jcr:root/" + MAILBOXES_PATH + "/" + ISO9075.encodePath(mailbox.getNamespace()) 
                     + "//element(*,jamesMailbox:mailbox)[jcr:like(@"
-                    + JCRMailbox.NAME_PROPERTY + ",'" + name + delimiter + "%') and @" + JCRMailbox.NAMESPACE_PROPERTY +"='" + namespace + "' and @" + JCRMailbox.USER_PROPERTY + "='" + user + "']";
+                    + JCRMailbox.NAME_PROPERTY + ",'" + name + delimiter + "%') and @" + JCRMailbox.NAMESPACE_PROPERTY + "='" + namespace + "' and @" + JCRMailbox.USER_PROPERTY + "='" + user + "']";
             QueryResult result = manager.createQuery(queryString, XPATH_LANGUAGE)
                     .execute();
             NodeIterator it = result.getNodes();

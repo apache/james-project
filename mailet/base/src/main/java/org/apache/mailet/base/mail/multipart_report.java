@@ -34,21 +34,18 @@ import javax.mail.MessagingException;
  * <dt>MIME subtype name</dt><dd>report</dd>
  * </dl>
  */
-public class multipart_report extends AbstractDataContentHandler
-{
+public class multipart_report extends AbstractDataContentHandler {
     /**
      * Default constructor.
      */
-    public multipart_report()
-    {
+    public multipart_report() {
         super();
     }
 
     /**
      * @see org.apache.mailet.base.mail.AbstractDataContentHandler#computeDataFlavor()
      */
-    protected ActivationDataFlavor computeDataFlavor()
-    {
+    protected ActivationDataFlavor computeDataFlavor() {
         return new ActivationDataFlavor(MimeMultipartReport.class,
                 "multipart/report", "Multipart Report");
     }
@@ -58,18 +55,14 @@ public class multipart_report extends AbstractDataContentHandler
      *      java.lang.String, java.io.OutputStream)
      */
     public void writeTo(Object aPart, String aMimeType, OutputStream aStream)
-            throws IOException
-    {
+            throws IOException {
         if (!(aPart instanceof MimeMultipartReport)) {
             throw new IOException("Type \"" + aPart.getClass().getName()
                 + "\" is not supported.");
         }
-        try
-        {
+        try {
             ((MimeMultipartReport) aPart).writeTo(aStream);
-        }
-        catch (MessagingException e)
-        {
+        } catch (MessagingException e) {
             throw new IOException(e.getMessage());
         }
     }
@@ -78,8 +71,7 @@ public class multipart_report extends AbstractDataContentHandler
      * @see org.apache.mailet.base.mail.AbstractDataContentHandler#computeContent(javax.activation.DataSource)
      */
     protected Object computeContent(DataSource aDataSource)
-            throws MessagingException
-    {
+            throws MessagingException {
         return new MimeMultipartReport(aDataSource);
     }
 }

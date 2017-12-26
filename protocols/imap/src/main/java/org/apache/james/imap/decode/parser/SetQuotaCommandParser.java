@@ -44,7 +44,7 @@ public class SetQuotaCommandParser extends AbstractImapCommandParser {
         // We now parse resource limit declaration
         // It has the following shape : (RESOURCE1 1024000) (RESOURCE2 2048000)\n
         request.nextWordChar();
-        while ( request.nextChar() == '(') {
+        while (request.nextChar() == '(') {
             request.consume();
             String resource = request.atom();
             request.nextWordChar();
@@ -54,7 +54,7 @@ public class SetQuotaCommandParser extends AbstractImapCommandParser {
             setQuotaRequest.addResourceLimit(resource, limit);
             // Consume white spaces
             // Do not use nextWorldChar as it throws an exception on end of lines
-            while(request.nextChar() == ' ') {
+            while (request.nextChar() == ' ') {
                 request.consume();
             }
         }

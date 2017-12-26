@@ -30,7 +30,7 @@ import org.jboss.netty.handler.execution.ExecutionHandler;
  * 
  *
  */
-public abstract class AbstractExecutorAwareChannelPipelineFactory extends AbstractSSLAwareChannelPipelineFactory{
+public abstract class AbstractExecutorAwareChannelPipelineFactory extends AbstractSSLAwareChannelPipelineFactory {
 
     public AbstractExecutorAwareChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp, ChannelGroup group, ExecutionHandler eHandler, ChannelHandlerFactory frameHandlerFactory) {
         super(timeout, maxConnections, maxConnectsPerIp, group, eHandler, frameHandlerFactory);

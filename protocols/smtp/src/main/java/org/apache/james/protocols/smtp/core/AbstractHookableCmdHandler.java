@@ -194,7 +194,7 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
             String smtpRetCode = result.getSmtpRetCode();
             String smtpDesc = result.getSmtpDescription();
     
-            if ((rCode &HookReturnCode.DENY) == HookReturnCode.DENY) {
+            if ((rCode & HookReturnCode.DENY) == HookReturnCode.DENY) {
                 if (smtpRetCode == null) {
                     smtpRetCode = SMTPRetCode.TRANSACTION_FAILED;
                 }

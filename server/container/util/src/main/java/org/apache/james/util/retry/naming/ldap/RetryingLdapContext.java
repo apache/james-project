@@ -56,7 +56,7 @@ public abstract class RetryingLdapContext extends RetryingDirContext implements 
      */
     @Override
     public ExtendedResponse extendedOperation(final ExtendedRequest request) throws NamingException {
-        return (ExtendedResponse) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()){
+        return (ExtendedResponse) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
                 @Override
                 public Object operation() throws NamingException {
                     return ((LdapContext) getDelegate()).extendedOperation(request);
@@ -69,7 +69,7 @@ public abstract class RetryingLdapContext extends RetryingDirContext implements 
      */
     @Override
     public Control[] getConnectControls() throws NamingException {
-        return (Control[]) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()){
+        return (Control[]) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
                 @Override
                 public Object operation() throws NamingException {
                     return ((LdapContext) getDelegate()).getConnectControls();
@@ -82,7 +82,7 @@ public abstract class RetryingLdapContext extends RetryingDirContext implements 
      */
     @Override
     public Control[] getRequestControls() throws NamingException {
-        return (Control[]) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()){
+        return (Control[]) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
                 @Override
                 public Object operation() throws NamingException {
                     return ((LdapContext) getDelegate()).getRequestControls();
@@ -95,7 +95,7 @@ public abstract class RetryingLdapContext extends RetryingDirContext implements 
      */
     @Override
     public Control[] getResponseControls() throws NamingException {
-        return (Control[]) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()){
+        return (Control[]) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
                 @Override
                 public Object operation() throws NamingException {
                     return ((LdapContext) getDelegate()).getResponseControls();
@@ -123,7 +123,7 @@ public abstract class RetryingLdapContext extends RetryingDirContext implements 
      */
     @Override
     public void reconnect(final Control[] connCtls) throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()){
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
                 @Override
                 public Object operation() throws NamingException {
                     ((LdapContext) getDelegate()).reconnect(connCtls);
@@ -137,7 +137,7 @@ public abstract class RetryingLdapContext extends RetryingDirContext implements 
      */
     @Override
     public void setRequestControls(final Control[] requestControls) throws NamingException {
-        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()){
+        new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
                 @Override
                 public Object operation() throws NamingException {
                     ((LdapContext) getDelegate()).setRequestControls(requestControls);

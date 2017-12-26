@@ -96,7 +96,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
             }
             return mailbox.getMailboxId();
         } catch (PersistenceException e) {
-            throw new MailboxException("Save of mailbox " + mailbox.getName() +" failed", e);
+            throw new MailboxException("Save of mailbox " + mailbox.getName() + " failed", e);
         } 
     }
 
@@ -217,7 +217,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
 	/**
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#list()
      */
-    public List<Mailbox> list() throws MailboxException{
+    public List<Mailbox> list() throws MailboxException {
         try {
             return getEntityManager().createNamedQuery("listMailboxes", Mailbox.class).getResultList();
         } catch (PersistenceException e) {

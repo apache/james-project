@@ -26,7 +26,7 @@ import org.apache.james.protocols.smtp.SMTPSession;
  * be server-wide common to all the SMTPHandlers, therefore the handlers must
  * store all the state information in the SMTPSession object
  */
-public interface MessageHook extends Hook{
+public interface MessageHook extends Hook {
 	/**
 	 * Handle Message
 	 */

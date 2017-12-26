@@ -205,7 +205,7 @@ public class AttachmentFileNameIs extends GenericMatcher {
                     }
                     return true;
                 }
-                if (unzipIsRequested && fileName.endsWith(ZIP_SUFFIX) && matchFoundInZip(part)){
+                if (unzipIsRequested && fileName.endsWith(ZIP_SUFFIX) && matchFoundInZip(part)) {
                     return true;
                 }
             }

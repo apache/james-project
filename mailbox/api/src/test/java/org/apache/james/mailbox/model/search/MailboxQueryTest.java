@@ -81,7 +81,7 @@ public class MailboxQueryTest {
         testee.build();
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void builderShouldThrowWhenBaseAndUsernameGiven() throws Exception {
         Builder testee = MailboxQuery.builder()
                 .userAndNamespaceFrom(mailboxPath)
@@ -90,7 +90,7 @@ public class MailboxQueryTest {
         testee.build();
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void builderShouldThrowWhenBaseGiven() throws Exception {
         Builder testee = MailboxQuery.builder()
                 .userAndNamespaceFrom(mailboxPath)

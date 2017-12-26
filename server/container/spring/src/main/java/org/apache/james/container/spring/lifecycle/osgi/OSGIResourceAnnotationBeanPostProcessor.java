@@ -22,7 +22,7 @@ import javax.annotation.Resource;
 
 import org.springframework.osgi.service.exporter.OsgiServicePropertiesResolver;
 
-public class OSGIResourceAnnotationBeanPostProcessor extends AbstractOSGIAnnotationBeanPostProcessor<Resource>{
+public class OSGIResourceAnnotationBeanPostProcessor extends AbstractOSGIAnnotationBeanPostProcessor<Resource> {
 
     /**
      * @see org.apache.james.container.spring.lifecycle.osgi.AbstractOSGIAnnotationBeanPostProcessor#getAnnotation()
@@ -33,8 +33,9 @@ public class OSGIResourceAnnotationBeanPostProcessor extends AbstractOSGIAnnotat
 
     @Override
     protected String getFilter(Resource a) {
-        return  "(" +OsgiServicePropertiesResolver.BEAN_NAME_PROPERTY_KEY + "=" + a.name() +")";
+        return  "(" + OsgiServicePropertiesResolver.BEAN_NAME_PROPERTY_KEY + "=" + a.name() + ")";
     }
+    
     @Override
     protected Object getBeanFromFactory(Resource a, Class<?> clazz) {
         return beanFactory.getBean(a.name(), clazz);

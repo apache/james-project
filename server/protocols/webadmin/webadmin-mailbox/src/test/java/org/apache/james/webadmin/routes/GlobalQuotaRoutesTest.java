@@ -86,7 +86,7 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void getCountShouldReturnStoredValue() throws Exception{
+    public void getCountShouldReturnStoredValue() throws Exception {
         int value = 42;
         maxQuotaManager.setDefaultMaxMessage(value);
 
@@ -179,7 +179,7 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void getSizeShouldReturnStoredValue() throws Exception{
+    public void getSizeShouldReturnStoredValue() throws Exception {
         long value = 42;
         maxQuotaManager.setDefaultMaxStorage(value);
 

@@ -20,7 +20,7 @@ package org.apache.james.container.spring.osgi;
 
 import org.apache.james.domainlist.api.DomainList;
 
-public class DomainListTracker extends AbstractBundleTracker{
+public class DomainListTracker extends AbstractBundleTracker {
 
     @Override
     protected String getComponentName() {

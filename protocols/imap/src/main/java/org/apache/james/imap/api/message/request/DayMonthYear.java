@@ -67,7 +67,7 @@ public class DayMonthYear {
      */
     public final Date toDate() {
         Calendar cal = getGMT();
-        cal.set(getYear(), getMonth() -1,  getDay());
+        cal.set(getYear(), getMonth() - 1,  getDay());
         return cal.getTime();
     }
     

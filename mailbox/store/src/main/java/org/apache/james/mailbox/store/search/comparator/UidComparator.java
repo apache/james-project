@@ -25,7 +25,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 /**
  * {@link Comparator} which compares {@link MailboxMessage}'s with their {@link MailboxMessage#getUid()} value
  */
-public class UidComparator implements Comparator<MailboxMessage>{
+public class UidComparator implements Comparator<MailboxMessage> {
     public static final Comparator<MailboxMessage> UID = new UidComparator();
 
     @Override

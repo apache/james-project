@@ -44,7 +44,7 @@ import org.apache.james.protocols.smtp.SMTPSession;
  * 
  *
  */
-public abstract class SeparatingDataLineFilter implements DataLineFilter{
+public abstract class SeparatingDataLineFilter implements DataLineFilter {
 
     private static final String HEADERS_COMPLETE = "HEADERS_COMPLETE";
     

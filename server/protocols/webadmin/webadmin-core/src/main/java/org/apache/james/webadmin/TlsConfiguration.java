@@ -39,7 +39,7 @@ public class TlsConfiguration {
         public Builder raw(String keystoreFilePath,
                            String keystorePassword,
                            String truststoreFilePath,
-                           String truststorePassword){
+                           String truststorePassword) {
             Preconditions.checkNotNull(keystoreFilePath);
             Preconditions.checkNotNull(keystorePassword);
 
@@ -50,7 +50,7 @@ public class TlsConfiguration {
             return this;
         }
 
-        public Builder selfSigned(String keystoreFilePath, String keystorePassword){
+        public Builder selfSigned(String keystoreFilePath, String keystorePassword) {
             Preconditions.checkNotNull(keystoreFilePath);
             Preconditions.checkNotNull(keystorePassword);
 

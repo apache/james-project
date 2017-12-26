@@ -21,7 +21,7 @@ package org.apache.james.jmap.model;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
-@JsonDeserialize(builder=ContinuationTokenRequest.Builder.class)
+@JsonDeserialize(builder = ContinuationTokenRequest.Builder.class)
 public class ContinuationTokenRequest {
 
     public static final String UNIQUE_JSON_PATH = "/username";
@@ -30,7 +30,7 @@ public class ContinuationTokenRequest {
         return new Builder();
     }
 
-    @JsonPOJOBuilder(withPrefix="")
+    @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
 
         private String username;

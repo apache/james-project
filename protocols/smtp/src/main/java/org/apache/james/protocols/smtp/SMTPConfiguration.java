@@ -29,7 +29,7 @@ import org.apache.james.protocols.api.ProtocolConfiguration;
  * SMTPHandlers
  *
  */
-public interface SMTPConfiguration extends ProtocolConfiguration{
+public interface SMTPConfiguration extends ProtocolConfiguration {
 
     /**
      * Returns the service wide maximum message size in bytes.

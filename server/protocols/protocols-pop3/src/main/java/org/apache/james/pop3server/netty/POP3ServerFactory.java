@@ -11,7 +11,7 @@ import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
 
-public class POP3ServerFactory extends AbstractServerFactory{
+public class POP3ServerFactory extends AbstractServerFactory {
 
     private ProtocolHandlerLoader loader;
     private FileSystem fileSystem;
@@ -31,7 +31,7 @@ public class POP3ServerFactory extends AbstractServerFactory{
     }
     
     @Override
-    protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration config) throws Exception{
+    protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration config) throws Exception {
 
         List<AbstractConfigurableAsyncServer> servers = new ArrayList<>();
         List<HierarchicalConfiguration> configs = config.configurationsAt("pop3server");

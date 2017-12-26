@@ -208,7 +208,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     protected ChannelUpstreamHandler createCoreHandler() {
         ImapChannelUpstreamHandler coreHandler;
         Encryption secure = getEncryption();
-        if (secure!= null && secure.isStartTLS()) {
+        if (secure != null && secure.isStartTLS()) {
            coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, compress, plainAuthDisallowed, secure.getContext(), getEnabledCipherSuites(), imapMetrics);
         } else {
            coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, compress, plainAuthDisallowed, imapMetrics);

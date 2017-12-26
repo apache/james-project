@@ -75,7 +75,7 @@ public class RecipientRewriteTableProcessor {
         this.mailetContext = mailetContext;
     }
 
-    public void processMail(Mail mail) throws MessagingException{
+    public void processMail(Mail mail) throws MessagingException {
         ImmutableList<RrtExecutionResult> mappingDatas = toMappingDatas(mail);
 
         ImmutableSet<MailAddress> newRecipients = getRecipientsByCondition(mappingDatas, mappingData -> !mappingData.isError());

@@ -26,27 +26,27 @@ import org.junit.Test;
 
 public class AttachmentTest {
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenBlobIdIsNull() {
         Attachment.builder().build();
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenTypeIsNull() {
         Attachment.builder().blobId(BlobId.of("blobId")).build();
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenNameIsNull() {
         Attachment.builder().blobId(BlobId.of("blobId")).type("type").build();
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenSizeIsNull() {
         Attachment.builder().blobId(BlobId.of("blobId")).type("type").name("name").build();
     }
     
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenTypeIsEmpty() {
         Attachment.builder().blobId(BlobId.of("blobId")).type("").name("name").size(123).build();
     }

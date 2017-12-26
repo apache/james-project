@@ -27,7 +27,7 @@ import java.util.List;
  * 
  *
  */
-public abstract class AbstractResponse implements Response{
+public abstract class AbstractResponse implements Response {
 
 
     private String retCode = null;

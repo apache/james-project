@@ -57,7 +57,7 @@ public class StripAttachmentTest {
 
     private static final String EXPECTED_ATTACHMENT_CONTENT = "\u0023\u00A4\u00E3\u00E0\u00E9";
     private static final Optional<String> ABSENT_MIME_TYPE = Optional.empty();
-    private static final String CONTENT_TRANSFER_ENCODING_VALUE ="8bit";
+    private static final String CONTENT_TRANSFER_ENCODING_VALUE = "8bit";
 
     public static final String CONTENT_TRANSFER_ENCODING = "Content-Transfer-Encoding";
     public static final String CONTENT_TYPE = "Content-Type";

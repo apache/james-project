@@ -26,13 +26,13 @@ import org.junit.Test;
 
 public class MessageAttachmentTest {
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenAttachmentIsNotGiven() {
         MessageAttachment.builder()
             .build();
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void builderShouldThrowWhenAttachmentIsNull() {
         MessageAttachment.builder()
             .attachment(null);

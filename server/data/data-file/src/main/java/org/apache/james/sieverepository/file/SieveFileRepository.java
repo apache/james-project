@@ -275,7 +275,7 @@ public class SieveFileRepository implements SieveRepository {
         return new DateTime(getActiveFile(user).lastModified());
     }
 
-    public void setActive( String user, String name) throws ScriptNotFoundException, StorageException {
+    public void setActive(String user, String name) throws ScriptNotFoundException, StorageException {
         synchronized (lock) {
             // Turn off currently active script, if any
             File oldActive = null;

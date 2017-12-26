@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.protocols.lmtp;
 
-public class LMTPConfigurationImpl extends LMTPConfiguration{
+public class LMTPConfigurationImpl extends LMTPConfiguration {
 
     private long maxMessageSize = 0;    
 

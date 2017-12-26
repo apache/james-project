@@ -33,12 +33,12 @@ import com.google.common.collect.ImmutableMap;
 
 public class SetMailboxesRequestTest {
 
-    @Test(expected=NotImplementedException.class)
+    @Test(expected = NotImplementedException.class)
     public void builderShouldThrowWhenAccountId() {
         SetMailboxesRequest.builder().accountId("1");
     }
 
-    @Test(expected=NotImplementedException.class)
+    @Test(expected = NotImplementedException.class)
     public void builderShouldThrowWhenIfInState() {
         SetMailboxesRequest.builder().ifInState("1");
     }

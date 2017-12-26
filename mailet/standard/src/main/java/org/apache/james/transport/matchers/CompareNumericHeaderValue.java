@@ -74,8 +74,7 @@ public class CompareNumericHeaderValue extends GenericMatcher {
         StringTokenizer st = new StringTokenizer(getCondition(), " \t", false);
         if (st.hasMoreTokens()) {
             headerName = st.nextToken().trim();
-        }
-        else {
+        } else {
             throw new MessagingException("Missing headerName");
         }
         if (st.hasMoreTokens()) {
@@ -83,44 +82,36 @@ public class CompareNumericHeaderValue extends GenericMatcher {
             if (comparisonOperatorString.equals("<")
                 || comparisonOperatorString.equals("LT")) {
                 comparisonOperator = LT;
-            }
-            else if (comparisonOperatorString.equals("<=")
+            } else if (comparisonOperatorString.equals("<=")
                      || comparisonOperatorString.equals("=<")
                      || comparisonOperatorString.equals("LE")) {
                 comparisonOperator = LE;
-            }
-            else if (comparisonOperatorString.equals("==")
+            } else if (comparisonOperatorString.equals("==")
                      || comparisonOperatorString.equals("=")
                      || comparisonOperatorString.equals("EQ")) {
                 comparisonOperator = EQ;
-            }
-            else if (comparisonOperatorString.equals(">=")
+            } else if (comparisonOperatorString.equals(">=")
                      || comparisonOperatorString.equals("=>")
                      || comparisonOperatorString.equals("GE")) {
                 comparisonOperator = GE;
-            }
-            else if (comparisonOperatorString.equals(">")
+            } else if (comparisonOperatorString.equals(">")
                      || comparisonOperatorString.equals("GT")) {
                 comparisonOperator = GT;
-            }
-            else {
+            } else {
                 throw new MessagingException("Bad comparisonOperator: \"" + comparisonOperatorString + "\"");
             }
-        }
-        else {
+        } else {
             throw new MessagingException("Missing comparisonOperator");
         }
         if (st.hasMoreTokens()) {
             String headerValueString = st.nextToken().trim();
             try {
                 headerValue = Double.valueOf(headerValueString);
-            }
-            catch (NumberFormatException nfe) {
+            } catch (NumberFormatException nfe) {
                 throw new MessagingException("Bad header comparison value: \""
                                              + headerValueString + "\"", nfe);
             }
-        }
-        else {
+        } else {
             throw new MessagingException("Missing headerValue threshold");
         }
     }
@@ -172,8 +163,7 @@ public class CompareNumericHeaderValue extends GenericMatcher {
                         // should never get here
                         throw new IllegalStateException("Unknown comparisonOperator" + comparisonOperator);
                 }
-            }
-            catch (NumberFormatException nfe) {
+            } catch (NumberFormatException nfe) {
                 throw new MessagingException("Bad header value found in message: \"" + headerArray[0] + "\"", nfe);
             }
         }

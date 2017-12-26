@@ -31,7 +31,7 @@ import org.apache.james.protocols.api.Response;
  * @param <R>
  * @param <S>
  */
-public interface ProtocolHandlerResultHandler<R extends Response, S extends ProtocolSession> extends ProtocolHandler{
+public interface ProtocolHandlerResultHandler<R extends Response, S extends ProtocolSession> extends ProtocolHandler {
 
     /**
      * Get called when a {@link Response} was returned from the {@link ProtocolHandler}

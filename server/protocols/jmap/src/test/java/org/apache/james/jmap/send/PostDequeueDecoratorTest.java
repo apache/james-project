@@ -111,7 +111,7 @@ public class PostDequeueDecoratorTest {
         testee.done(true);
     }
     
-    @Test(expected=MailboxRoleNotFoundException.class)
+    @Test(expected = MailboxRoleNotFoundException.class)
     public void doneShouldThrowWhenSentDoesNotExist() throws Exception {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME);
         mailboxManager.createMailbox(OUTBOX_MAILBOX_PATH, mailboxSession);

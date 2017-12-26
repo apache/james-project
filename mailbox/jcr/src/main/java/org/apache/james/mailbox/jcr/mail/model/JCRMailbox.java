@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 /**
  * JCR implementation of a {@link Mailbox}
  */
-public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
+public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JCRMailbox.class);
 

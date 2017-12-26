@@ -50,7 +50,7 @@ public class AttachmentLoader {
             Stream<MessageAttachmentRepresentation>>> messageRepresentations, MessageMapper.FetchType fetchType) {
 
         if (fetchType == MessageMapper.FetchType.Body || fetchType == MessageMapper.FetchType.Full) {
-            return FluentFutureStream.<SimpleMailboxMessage> of(
+            return FluentFutureStream.<SimpleMailboxMessage>of(
                 messageRepresentations
                     .map(pair -> getAttachments(pair.getRight().collect(Guavate.toImmutableList()))
                         .thenApply(attachments -> pair.getLeft().toMailboxMessage(attachments))))

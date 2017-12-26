@@ -203,13 +203,13 @@ public class SetMessagesResponse implements Method.Response {
         responseBuilder.notCreated(getNotCreated());
         responseBuilder.notUpdated(getNotUpdated());
         responseBuilder.notDestroyed(getNotDestroyed());
-        if(! Strings.isNullOrEmpty(getAccountId())) {
+        if (! Strings.isNullOrEmpty(getAccountId())) {
             responseBuilder.accountId(getAccountId());
         }
-        if(! Strings.isNullOrEmpty(getOldState())) {
+        if (! Strings.isNullOrEmpty(getOldState())) {
             responseBuilder.accountId(getOldState());
         }
-        if(! Strings.isNullOrEmpty(getNewState())) {
+        if (! Strings.isNullOrEmpty(getNewState())) {
             responseBuilder.accountId(getAccountId());
         }
         return responseBuilder;

@@ -165,7 +165,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
 
                     if (ids.length > 0) {
                         min = ids[0];
-                        max = ids[ids.length -1];
+                        max = ids[ids.length - 1];
                     } 
                    
                     
@@ -240,7 +240,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         int size = ranges.size();
         for (int i = size - 1; i > 0; i--) {
             MessageResultIterator results = mailbox.getMessages(ranges.get(i), FetchGroupImpl.MINIMAL, session);
-            while(results.hasNext()) {
+            while (results.hasNext()) {
                 long modSeq = results.next().getModSeq();
                 if (highestModSeq == null || modSeq > highestModSeq) {
                     highestModSeq = modSeq;

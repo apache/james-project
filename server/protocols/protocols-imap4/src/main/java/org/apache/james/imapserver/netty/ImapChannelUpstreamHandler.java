@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 /**
  * {@link SimpleChannelUpstreamHandler} which handles IMAP
  */
-public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler implements NettyConstants{
+public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler implements NettyConstants {
     private static final Logger LOGGER = LoggerFactory.getLogger(ImapChannelUpstreamHandler.class);
 
     private final String hello;

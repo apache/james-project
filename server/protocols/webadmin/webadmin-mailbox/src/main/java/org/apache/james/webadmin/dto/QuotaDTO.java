@@ -32,7 +32,7 @@ public class QuotaDTO {
         return new Builder();
     }
 
-    @JsonPOJOBuilder(withPrefix="")
+    @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
         private long count;
         private long size;
