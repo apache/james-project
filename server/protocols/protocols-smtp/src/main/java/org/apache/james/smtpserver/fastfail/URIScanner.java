@@ -84,7 +84,7 @@ public class URIScanner {
 
     private static final String ctrl = "\\000-\\037";
 
-    private static final String cr_list = "\\n\\015";
+    private static final String cr_list = "\\n\\r";
 
     private static final String qtext = "[^" + esc + nonASCII + cr_list + "\"]";
 
