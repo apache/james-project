@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.service;
+package org.apache.james.backends.cassandra.migration;
 
 import java.util.Map;
 import java.util.Optional;
@@ -29,8 +29,6 @@ import javax.inject.Named;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
-import org.apache.james.mailbox.cassandra.mail.migration.Migration;
-import org.apache.james.webadmin.dto.CassandraVersionResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,12 +49,12 @@ public class CassandraMigrationService {
         this.allMigrationClazz = allMigrationClazz;
     }
 
-    public CassandraVersionResponse getCurrentVersion() {
-        return new CassandraVersionResponse(schemaVersionDAO.getCurrentSchemaVersion().join());
+    public Optional<Integer> getCurrentVersion() {
+        return schemaVersionDAO.getCurrentSchemaVersion().join();
     }
 
-    public CassandraVersionResponse getLatestVersion() {
-        return new CassandraVersionResponse(Optional.of(latestVersion));
+    public Optional<Integer> getLatestVersion() {
+        return Optional.of(latestVersion);
     }
 
     public synchronized void upgradeToVersion(int newVersion) {
@@ -77,8 +75,8 @@ public class CassandraMigrationService {
     private void doMigration(Integer version) {
         if (allMigrationClazz.containsKey(version)) {
             LOG.info("Migrating to version {} ", version + 1);
-            Migration.MigrationResult migrationResult = allMigrationClazz.get(version).run();
-            if (migrationResult == Migration.MigrationResult.COMPLETED) {
+            Migration.Result migrationResult = allMigrationClazz.get(version).run();
+            if (migrationResult == Migration.Result.COMPLETED) {
                 schemaVersionDAO.updateVersion(version + 1);
                 LOG.info("Migrating to version {} done", version + 1);
             } else {

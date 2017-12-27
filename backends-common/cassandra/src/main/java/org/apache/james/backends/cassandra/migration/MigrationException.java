@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.service;
+package org.apache.james.backends.cassandra.migration;
 
 public class MigrationException extends RuntimeException {
     public MigrationException(String message) {

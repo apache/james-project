@@ -21,11 +21,11 @@ package org.apache.james.webadmin.routes;
 
 import javax.inject.Inject;
 
+import org.apache.james.backends.cassandra.migration.CassandraMigrationService;
+import org.apache.james.backends.cassandra.migration.MigrationException;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.CassandraVersionRequest;
-import org.apache.james.webadmin.service.CassandraMigrationService;
-import org.apache.james.webadmin.service.MigrationException;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;

@@ -19,13 +19,13 @@
 
 package org.apache.james.modules.server;
 
+import org.apache.james.backends.cassandra.migration.CassandraMigrationService;
 import org.apache.james.backends.cassandra.migration.Migration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.mailbox.cassandra.mail.migration.AttachmentMessageIdCreation;
 import org.apache.james.mailbox.cassandra.mail.migration.AttachmentV2Migration;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.routes.CassandraMigrationRoutes;
-import org.apache.james.webadmin.service.CassandraMigrationService;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
