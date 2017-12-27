@@ -33,9 +33,8 @@ public class TaskExecutionDetails {
     public static TaskExecutionDetails from(Task task, TaskId id) {
         return new TaskExecutionDetails(
             id,
-            task.type(),
+            task,
             TaskManager.Status.WAITING,
-            task.details(),
             Optional.of(ZonedDateTime.now()),
             Optional.empty(),
             Optional.empty(),
@@ -44,24 +43,21 @@ public class TaskExecutionDetails {
     }
 
     private final TaskId taskId;
-    private final String type;
+    private final Task task;
     private final TaskManager.Status status;
-    private final Optional<AdditionalInformation> additionalInformation;
     private final Optional<ZonedDateTime> submitDate;
     private final Optional<ZonedDateTime> startedDate;
     private final Optional<ZonedDateTime> completedDate;
     private final Optional<ZonedDateTime> canceledDate;
     private final Optional<ZonedDateTime> failedDate;
 
-    public TaskExecutionDetails(TaskId taskId, String type, TaskManager.Status status,
-                                Optional<AdditionalInformation> additionalInformation,
+    public TaskExecutionDetails(TaskId taskId, Task task, TaskManager.Status status,
                                 Optional<ZonedDateTime> submitDate, Optional<ZonedDateTime> startedDate,
                                 Optional<ZonedDateTime> completedDate, Optional<ZonedDateTime> canceledDate,
                                 Optional<ZonedDateTime> failedDate) {
         this.taskId = taskId;
-        this.type = type;
+        this.task = task;
         this.status = status;
-        this.additionalInformation = additionalInformation;
         this.submitDate = submitDate;
         this.startedDate = startedDate;
         this.completedDate = completedDate;
@@ -74,7 +70,7 @@ public class TaskExecutionDetails {
     }
 
     public String getType() {
-        return type;
+        return task.type();
     }
 
     public TaskManager.Status getStatus() {
@@ -82,7 +78,7 @@ public class TaskExecutionDetails {
     }
 
     public Optional<AdditionalInformation> getAdditionalInformation() {
-        return additionalInformation;
+        return task.details();
     }
 
     public Optional<ZonedDateTime> getSubmitDate() {
@@ -109,9 +105,8 @@ public class TaskExecutionDetails {
         Preconditions.checkState(status == TaskManager.Status.WAITING);
         return new TaskExecutionDetails(
             taskId,
-            type,
+            task,
             TaskManager.Status.IN_PROGRESS,
-            additionalInformation,
             submitDate,
             Optional.of(ZonedDateTime.now()),
             Optional.empty(),
@@ -123,9 +118,8 @@ public class TaskExecutionDetails {
         Preconditions.checkState(status == TaskManager.Status.IN_PROGRESS);
         return new TaskExecutionDetails(
             taskId,
-            type,
+            task,
             TaskManager.Status.COMPLETED,
-            additionalInformation,
             submitDate,
             startedDate,
             Optional.of(ZonedDateTime.now()),
@@ -137,9 +131,8 @@ public class TaskExecutionDetails {
         Preconditions.checkState(status == TaskManager.Status.IN_PROGRESS);
         return new TaskExecutionDetails(
             taskId,
-            type,
+            task,
             TaskManager.Status.FAILED,
-            additionalInformation,
             submitDate,
             startedDate,
             Optional.empty(),
@@ -152,9 +145,8 @@ public class TaskExecutionDetails {
             || status == TaskManager.Status.WAITING);
         return new TaskExecutionDetails(
             taskId,
-            type,
+            task,
             TaskManager.Status.CANCELLED,
-            additionalInformation,
             submitDate,
             startedDate,
             Optional.empty(),
