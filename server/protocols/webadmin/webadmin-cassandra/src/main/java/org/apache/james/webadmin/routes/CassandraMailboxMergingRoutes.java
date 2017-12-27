@@ -20,6 +20,9 @@
 package org.apache.james.webadmin.routes;
 
 import javax.inject.Inject;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTask;
@@ -38,10 +41,20 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.ResponseHeader;
 import spark.Request;
 import spark.Response;
 import spark.Service;
 
+@Api(tags = "Mailbox merging route for fixing Ghost mailbox bug described in MAILBOX-322")
+@Path(":cassandra/mailbox/merging")
+@Produces("application/json")
 public class CassandraMailboxMergingRoutes implements Routes {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMailboxMergingRoutes.class);
@@ -68,7 +81,27 @@ public class CassandraMailboxMergingRoutes implements Routes {
         service.post(BASE, this::mergeMailboxes, jsonTransformer);
     }
 
-    private Object mergeMailboxes(Request request, Response response) {
+
+    @POST
+    @ApiOperation("Triggers the merge of 2 mailboxes. Old mailbox Id will no more be accessible, rights and messages will be merged.")
+    @ApiImplicitParams(
+        {
+            @ApiImplicitParam(
+                required = true,
+                paramType = "body",
+                dataType = "Mailbox merging request",
+                example = "{\"oldMailboxId\":\"4555-656-4554\",\"oldMailboxId\":\"9693-665-2500\"}",
+                value = "The mailboxes to merge together.")
+        })
+    @ApiResponses(
+        {
+            @ApiResponse(code = HttpStatus.CREATED_201, message = "The taskId of the given scheduled task",
+                response = TaskIdDto.class, responseHeaders = {
+                @ResponseHeader(name = "Location", description = "URL of the resource associated with the scheduled task")
+            }),
+            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Error with supplied data (JSON parsing or invalid mailbox ids)")
+        })
+    public Object mergeMailboxes(Request request, Response response) {
         try {
             LOGGER.debug("Cassandra upgrade launched");
             MailboxMergingRequest mailboxMergingRequest = jsonExtractor.parse(request.body());
