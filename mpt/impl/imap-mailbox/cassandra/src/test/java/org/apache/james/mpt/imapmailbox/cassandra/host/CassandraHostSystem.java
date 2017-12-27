@@ -151,11 +151,6 @@ public class CassandraHostSystem extends JamesImapHostSystem {
     }
     
     @Override
-    protected void finalize() throws Throwable {
-        super.finalize();
-    }
-    
-    @Override
     public boolean supports(Feature... features) {
         return IMAP_FEATURES.supports(features);
     }
