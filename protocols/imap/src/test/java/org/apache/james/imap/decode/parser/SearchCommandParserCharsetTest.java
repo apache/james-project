@@ -51,7 +51,7 @@ public class SearchCommandParserCharsetTest {
 
     private static final String ASCII_SEARCH_TERM = "A Search Term";
 
-    private static final String NON_ASCII_SEARCH_TERM = "\u043A\u0430\u043A \u0414\u0435\u043B\u0430?";
+    private static final String NON_ASCII_SEARCH_TERM = "как Дела?";
 
     private static final byte[] BYTES_NON_ASCII_SEARCH_TERM = NioUtils.toBytes(
             NON_ASCII_SEARCH_TERM, UTF8);

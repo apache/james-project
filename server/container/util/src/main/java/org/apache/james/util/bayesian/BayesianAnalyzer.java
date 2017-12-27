@@ -465,9 +465,7 @@ public class BayesianAnalyzer {
                 }
             }
 
-            if (Character.isLetter(ch) || ch == '-' || ch == '$' || ch == '\u20AC' // the
-                    // EURO
-                    // symbol
+            if (Character.isLetter(ch) || ch == '-' || ch == '$' || ch == '€'
                     || ch == '!' || ch == '\'') {
                 tokenCharFound = true;
                 previousWasDigit = false;

@@ -38,7 +38,7 @@ public abstract class AbstractSieveRepositoryTest {
 
     protected static final String USER = "test";
     protected static final String SCRIPT_NAME = "script";
-    protected static final String SCRIPT_CONTENT = "\u0048\u0065\u006C\u006C\u006F World"; // test utf-8
+    protected static final String SCRIPT_CONTENT = "Hello World";
 
     private static final String OTHER_SCRIPT_NAME = "other_script";
     private static final String OTHER_SCRIPT_CONTENT = "Other script content";

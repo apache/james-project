@@ -102,7 +102,7 @@ public class UnwrapText extends GenericMailet {
         Pattern p1 = Pattern.compile("([> ]*)(.*[^ .?!][ ]*)$", 0);
         
         //P2: Quotation char at the begin of a line and the first word starts with a lowercase char or a number. The word ends with a space, a tab or a lineend. 
-        Pattern p2 = Pattern.compile("^([> ]*)(([a-z\u00E0\u00E8\u00E9\u00EC\u00F2\u00F9][^ \t\r\n]*|[0-9][0-9,.]*)([ \t].*$|$))", 0);
+        Pattern p2 = Pattern.compile("^([> ]*)(([a-zàèéìòù][^ \t\r\n]*|[0-9][0-9,.]*)([ \t].*$|$))", 0);
         
         // Width computation
         int width = 0;

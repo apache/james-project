@@ -61,7 +61,7 @@ public class OnlyTextTest extends TestCase {
 
         message = new MimeMessage(Session.getDefaultInstance(new Properties()));
         message.setSubject("prova");
-        message.setText("Questa \u00E8 una prova");
+        message.setText("Questa è una prova");
         message.saveChanges();
 
         mail = FakeMail.builder()
@@ -70,7 +70,7 @@ public class OnlyTextTest extends TestCase {
         mailet.service(mail);
 
         assertEquals("prova", mail.getMessage().getSubject());
-        assertEquals("Questa \u00E8 una prova", mail.getMessage().getContent());
+        assertEquals("Questa è una prova", mail.getMessage().getContent());
 
         // -----------------
 
@@ -78,10 +78,10 @@ public class OnlyTextTest extends TestCase {
         message.setSubject("prova");
         MimeMultipart mp = new MimeMultipart();
         MimeBodyPart bp = new MimeBodyPart();
-        bp.setText("Questo \u00E8 un part interno1");
+        bp.setText("Questo è un part interno1");
         mp.addBodyPart(bp);
         bp = new MimeBodyPart();
-        bp.setText("Questo \u00E8 un part interno2");
+        bp.setText("Questo è un part interno2");
         mp.addBodyPart(bp);
         bp = new MimeBodyPart();
         MimeMessage message2 = new MimeMessage(Session
@@ -97,7 +97,7 @@ public class OnlyTextTest extends TestCase {
         mailet.service(mail);
 
         assertEquals("prova", mail.getMessage().getSubject());
-        assertEquals("Questo \u00E8 un part interno1", mail.getMessage()
+        assertEquals("Questo è un part interno1", mail.getMessage()
                 .getContent());
 
         // -----------------
@@ -106,10 +106,10 @@ public class OnlyTextTest extends TestCase {
         message.setSubject("prova");
         mp = new MimeMultipart();
         bp = new MimeBodyPart();
-        bp.setText("Questo \u00E8 un part interno1");
+        bp.setText("Questo è un part interno1");
         mp.addBodyPart(bp);
         bp = new MimeBodyPart();
-        bp.setText("Questo \u00E8 un part interno2");
+        bp.setText("Questo è un part interno2");
         mp.addBodyPart(bp);
         bp = new MimeBodyPart();
         message2 = new MimeMessage(Session.getDefaultInstance(new Properties()));
@@ -130,14 +130,14 @@ public class OnlyTextTest extends TestCase {
         mailet.service(mail);
 
         assertEquals("prova", mail.getMessage().getSubject());
-        assertEquals("Questo \u00E8 un part interno1", mail.getMessage()
+        assertEquals("Questo è un part interno1", mail.getMessage()
                 .getContent());
 
         // ---------------------
 
         message = new MimeMessage(Session.getDefaultInstance(new Properties()));
         message.setSubject("prova");
-        message.setContent("<p>Questa \u00E8 una prova<br />di html</p>",
+        message.setContent("<p>Questa è una prova<br />di html</p>",
                 "text/html");
         message.saveChanges();
 
@@ -147,7 +147,7 @@ public class OnlyTextTest extends TestCase {
         mailet.service(mail);
 
         assertEquals("prova", mail.getMessage().getSubject());
-        assertEquals("Questa \u00E8 una prova\ndi html\n", mail.getMessage()
+        assertEquals("Questa è una prova\ndi html\n", mail.getMessage()
                 .getContent());
         assertTrue(mail.getMessage().isMimeType("text/plain"));
 
@@ -161,7 +161,7 @@ public class OnlyTextTest extends TestCase {
         bp.setContent(message2, "message/rfc822");
         mp.addBodyPart(bp);
         bp = new MimeBodyPart();
-        bp.setContent("<p>Questa \u00E8 una prova<br />di html</p>", "text/html");
+        bp.setContent("<p>Questa è una prova<br />di html</p>", "text/html");
         mp.addBodyPart(bp);
         message.setContent(mp);
         message.saveChanges();
@@ -172,7 +172,7 @@ public class OnlyTextTest extends TestCase {
         mailet.service(mail);
 
         assertEquals("prova", mail.getMessage().getSubject());
-        assertEquals("Questa \u00E8 una prova\ndi html\n", mail.getMessage()
+        assertEquals("Questa è una prova\ndi html\n", mail.getMessage()
                 .getContent());
         assertTrue(mail.getMessage().isMimeType("text/plain"));
     }
@@ -191,7 +191,7 @@ public class OnlyTextTest extends TestCase {
 
         html = "<b>Vediamo invece come andiamo con gli entities</b><br />&egrave;&agrave; &amp;grave;<br>";
         assertEquals(
-                "Vediamo invece come andiamo con gli entities\n\u00E8\u00E0 &grave;\n",
+                "Vediamo invece come andiamo con gli entities\nèà &grave;\n",
                 mailet.html2Text(html));
     }
 

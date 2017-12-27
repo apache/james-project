@@ -55,7 +55,7 @@ import org.junit.rules.TemporaryFolder;
 
 public class StripAttachmentTest {
 
-    private static final String EXPECTED_ATTACHMENT_CONTENT = "\u0023\u00A4\u00E3\u00E0\u00E9";
+    private static final String EXPECTED_ATTACHMENT_CONTENT = "#¤ãàé";
     private static final Optional<String> ABSENT_MIME_TYPE = Optional.empty();
     private static final String CONTENT_TRANSFER_ENCODING_VALUE = "8bit";
 
@@ -127,7 +127,7 @@ public class StripAttachmentTest {
                 MimeMessageBuilder.bodyPartBuilder()
                     .data("simple text"),
                 createAttachmentBodyPart(expectedAttachmentContent, "10.tmp", TEXT_HEADERS),
-                createAttachmentBodyPart("\u0014\u00A3\u00E1\u00E2\u00E4", "temp.zip", TEXT_HEADERS));
+                createAttachmentBodyPart("\u0014£áâä", "temp.zip", TEXT_HEADERS));
 
         Mail mail = FakeMail.fromMessage(message);
 
@@ -198,7 +198,7 @@ public class StripAttachmentTest {
                 MimeMessageBuilder.bodyPartBuilder()
                     .data("simple text"),
                 createAttachmentBodyPart(expectedAttachmentContent, "temp_filname.tmp", TEXT_HEADERS),
-                createAttachmentBodyPart("\u0014\u00A3\u00E1\u00E2\u00E4", "winmail.dat", TEXT_HEADERS));
+                createAttachmentBodyPart("\u0014£áâä", "winmail.dat", TEXT_HEADERS));
 
         Mail mail = FakeMail.fromMessage(message);
 
@@ -232,7 +232,7 @@ public class StripAttachmentTest {
                     .data("simple text"),
                 createAttachmentBodyPart(expectedAttachmentContent,
                     "=?iso-8859-15?Q?=E9_++++Pubblicit=E0_=E9_vietata____Milano9052.tmp?=", TEXT_HEADERS),
-                createAttachmentBodyPart("\u0014\u00A3\u00E1\u00E2\u00E4", "temp.zip", TEXT_HEADERS));
+                createAttachmentBodyPart("\u0014£áâä", "temp.zip", TEXT_HEADERS));
 
         Mail mail = FakeMail.fromMessage(message);
 
@@ -270,7 +270,7 @@ public class StripAttachmentTest {
                 MimeMessageBuilder.bodyPartBuilder()
                     .data("simple text"),
                 createAttachmentBodyPart(EXPECTED_ATTACHMENT_CONTENT, expectedKey, TEXT_HEADERS),
-                createAttachmentBodyPart("\u0014\u00A3\u00E1\u00E2\u00E4", "temp.zip", TEXT_HEADERS));
+                createAttachmentBodyPart("\u0014£áâä", "temp.zip", TEXT_HEADERS));
 
         Mail mail = FakeMail.fromMessage(message);
 
@@ -815,18 +815,19 @@ public class StripAttachmentTest {
                 .setProperty("pattern", ".*\\.tmp")
                 .setProperty("decodeFilename", "true")
                 .setProperty("replaceFilenamePattern",
-                    "/[\u00C0\u00C1\u00C2\u00C3\u00C4\u00C5]/A//,"
-                            + "/[\u00C6]/AE//,"
-                            + "/[\u00C8\u00C9\u00CA\u00CB]/E//,"
-                            + "/[\u00CC\u00CD\u00CE\u00CF]/I//,"
-                            + "/[\u00D2\u00D3\u00D4\u00D5\u00D6]/O//,"
-                            + "/[\u00D7]/x//," + "/[\u00D9\u00DA\u00DB\u00DC]/U//,"
-                            + "/[\u00E0\u00E1\u00E2\u00E3\u00E4\u00E5]/a//,"
-                            + "/[\u00E6]/ae//,"
-                            + "/[\u00E8\u00E9\u00EA\u00EB]/e/r/,"
-                            + "/[\u00EC\u00ED\u00EE\u00EF]/i//,"
-                            + "/[\u00F2\u00F3\u00F4\u00F5\u00F6]/o//,"
-                            + "/[\u00F9\u00FA\u00FB\u00FC]/u//,"
+                        "/[ÀÁÂÃÄÅ]/A//,"
+                            + "/[Æ]/AE//,"
+                            + "/[ÈÉÊË]/E//,"
+                            + "/[ÌÍÎÏ]/I//,"
+                            + "/[ÒÓÔÕÖ]/O//,"
+                            + "/[×]/x//,"
+                            + "/[ÙÚÛÜ]/U//,"
+                            + "/[àáâãäå]/a//,"
+                            + "/[æ]/ae//,"
+                            + "/[èéêë]/e/r/,"
+                            + "/[ìíîï]/i//,"
+                            + "/[òóôõö]/o//,"
+                            + "/[ùúûü]/u//,"
                             + "/[^A-Za-z0-9._-]+/_/r/")
                 .build();
 

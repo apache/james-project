@@ -100,7 +100,7 @@ public class MimeMessageTest {
         mmCreated.setSubject("test");
         MimeMultipart mm = new MimeMultipart("alternative");
         mm.addBodyPart(new MimeBodyPart(new InternetHeaders(new ByteArrayInputStream("X-header: test1\r\nContent-Type: text/plain; charset=Cp1252\r\n"
-                .getBytes())), "first part \u00F2\u00E0\u00F9".getBytes()));
+                .getBytes())), "first part òàù".getBytes()));
         mm.addBodyPart(new MimeBodyPart(new InternetHeaders(new ByteArrayInputStream("X-header: test2\r\nContent-Type: text/plain; charset=Cp1252\r\nContent-Transfer-Encoding: quoted-printable\r\n"
                 .getBytes())), "second part =E8=E8".getBytes()));
         mmCreated.setContent(mm);
@@ -199,7 +199,7 @@ public class MimeMessageTest {
 
         MimeMultipart content1 = (MimeMultipart) mm.getContent();
         BodyPart b1 = content1.getBodyPart(0);
-        b1.setContent("test\u20AC", "text/plain; charset=Cp1252");
+        b1.setContent("test€", "text/plain; charset=Cp1252");
         mm.setContent(content1, mm.getContentType());
         // .setHeader(RFC2822Headers.CONTENT_TYPE,contentType);
         mm.saveChanges();
@@ -214,7 +214,7 @@ public class MimeMessageTest {
 
         assertEquals(getMultipartMessageExpected2(), getCleanedMessageSource(mm));
 
-        mm.setContent("mynewco\u00F2\u00E0\u00F9ntent\u20AC\u00E0!", "text/plain; charset=cp1252");
+        mm.setContent("mynewcoòàùntent€à!", "text/plain; charset=cp1252");
         mm.setHeader(RFC2822Headers.CONTENT_TYPE, "binary/octet-stream");
         // mm.setHeader("Content-Transfer-Encoding","8bit");
         mm.saveChanges();
@@ -227,7 +227,7 @@ public class MimeMessageTest {
 
     protected MimeMessage getMissingEncodingAddHeaderMessage() throws Exception {
         MimeMessage m = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        m.setText("Test\u00E0\r\n");
+        m.setText("Testà\r\n");
         m.setSubject("test");
         m.saveChanges();
         return m;
@@ -236,7 +236,7 @@ public class MimeMessageTest {
     protected String getMissingEncodingAddHeaderSource() {
         return "Subject: test\r\n"
                 + "\r\n"
-                + "Test\u00E0\r\n";
+                + "Testà\r\n";
     }
 
     protected String getMissingEncodingAddHeaderExpected() {

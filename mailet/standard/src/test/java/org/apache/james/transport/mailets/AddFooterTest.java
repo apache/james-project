@@ -94,7 +94,7 @@ public class AddFooterTest {
     public void shouldAddFooterWhenQuotedPrintableTextPlainMessage() throws MessagingException, IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty("text", "------ my footer \u00E0/\u20AC ------")
+                .setProperty("text", "------ my footer à/€ ------")
                 .build();
         mailet.init(mailetConfig);
         
@@ -120,7 +120,7 @@ public class AddFooterTest {
     public void shouldEnsureCarriageReturnWhenAddFooterWithTextPlainMessage() throws MessagingException, IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty("text", "------ my footer \u00E0/\u20AC ------")
+                .setProperty("text", "------ my footer à/€ ------")
                 .build();
         mailet.init(mailetConfig);
         
@@ -153,7 +153,7 @@ public class AddFooterTest {
     public void shouldNotAddFooterWhenUnsupportedEncoding() throws MessagingException, IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty("text", "------ my footer \u00E0/\u20AC ------")
+                .setProperty("text", "------ my footer à/€ ------")
                 .build();
         mailet.init(mailetConfig);
         
@@ -176,7 +176,7 @@ public class AddFooterTest {
     public void shouldNotAddFooterWhenUnsupportedTextContentType() throws MessagingException, IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty("text", "------ my footer \u00E0/\u20AC ------")
+                .setProperty("text", "------ my footer à/€ ------")
                 .build();
         mailet.init(mailetConfig);
         
@@ -203,7 +203,7 @@ public class AddFooterTest {
     public void shouldNotAddFooterWhenNestedUnsupportedMultipart() throws MessagingException, IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty("text", "------ my footer \u00E0/\u20AC ------")
+                .setProperty("text", "------ my footer à/€ ------")
                 .build();
         mailet.init(mailetConfig);
         
@@ -239,7 +239,7 @@ public class AddFooterTest {
     public void shouldAddFooterWhenMultipartRelatedHtmlMessage() throws MessagingException, IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty("text", "------ my footer \u00E0/\u20AC ------")
+                .setProperty("text", "------ my footer à/€ ------")
                 .build();
         mailet.init(mailetConfig);
         
@@ -292,7 +292,7 @@ public class AddFooterTest {
             IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty("text", "------ my footer \u00E0/\u20AC ------")
+                .setProperty("text", "------ my footer à/€ ------")
                 .build();
         mailet.init(mailetConfig);
         
@@ -352,7 +352,7 @@ public class AddFooterTest {
             IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty("text", "------ my footer \u00E0/\u20AC ------")
+                .setProperty("text", "------ my footer à/€ ------")
                 .build();
         mailet.init(mailetConfig);
         
@@ -389,7 +389,7 @@ public class AddFooterTest {
             IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty("text", "------ my footer \u00E0/\u20AC ------")
+                .setProperty("text", "------ my footer à/€ ------")
                 .build();
         mailet.init(mailetConfig);
         
@@ -426,7 +426,7 @@ public class AddFooterTest {
     public void shouldThrowMessagingExceptionWhenIOExceptionReadingMessage() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty("text", "------ my footer \u00E0/\u20AC ------")
+                .setProperty("text", "------ my footer à/€ ------")
                 .build();
         mailet.init(mailetConfig);
         

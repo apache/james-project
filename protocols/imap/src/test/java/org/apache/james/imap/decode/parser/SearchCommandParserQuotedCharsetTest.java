@@ -53,7 +53,7 @@ public class SearchCommandParserQuotedCharsetTest {
 
     private static final String ASCII_SEARCH_TERM = "A Search Term";
 
-    private static final String NON_ASCII_SEARCH_TERM = "\u043A\u0430\u043A \u0414\u0435\u043B\u0430?";
+    private static final String NON_ASCII_SEARCH_TERM = "как Дела?";
 
     private static final String LENGTHY_NON_ASCII_SEARCH_TERM = NON_ASCII_SEARCH_TERM
             + NON_ASCII_SEARCH_TERM

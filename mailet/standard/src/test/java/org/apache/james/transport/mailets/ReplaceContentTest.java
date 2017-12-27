@@ -79,7 +79,7 @@ public class ReplaceContentTest {
                 .setProperty("bodyPattern", 
                         "/test/TEST/i/," +
                         "/o/a/r/," +
-                        "/S/s/r/,/\\u00E8/e'//," +
+                        "/S/s/r/,/è/e'//," +
                         "/test([^\\/]*?)bla/X$1Y/im/," +
                         "/X(.\\n)Y/P$1Q//," +
                         "/\\/\\/,//")
@@ -87,7 +87,7 @@ public class ReplaceContentTest {
         mailet.init(mailetConfig);
 
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setText("This is one simple test/ \u00E8 one simple test.\n"
+        message.setText("This is one simple test/ è one simple test.\n"
                 + "Blo blo blo blo.\n");
 
         Mail mail = FakeMail.builder()
@@ -173,7 +173,7 @@ public class ReplaceContentTest {
 
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
         message.setSubject("one test");
-        message.setText("Replacement \u2026 one test \u2026");
+        message.setText("Replacement … one test …");
 
         Mail mail = FakeMail.builder()
                 .mimeMessage(message)
@@ -221,7 +221,7 @@ public class ReplaceContentTest {
 
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
         message.setSubject("one test");
-        message.setText("This is one simple test/ \u00E8 one simple test.\n"
+        message.setText("This is one simple test/ è one simple test.\n"
                 + "Blo blo blo blo.\n");
 
         Mail mail = FakeMail.builder()
