@@ -19,11 +19,45 @@
 
 package org.apache.james.task;
 
+import java.util.Arrays;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public interface Task {
+    Logger LOGGER = LoggerFactory.getLogger(Task.class);
+
+    interface Operation {
+        void run();
+    }
 
     enum Result {
         COMPLETED,
-        PARTIAL
+        PARTIAL;
+
+        public Result onComplete(Operation... operation) {
+            try {
+                if (this == COMPLETED) {
+                    run(operation);
+                }
+                return this;
+            } catch (Exception e) {
+                LOGGER.error("Error while executing operation", e);
+                return PARTIAL;
+            }
+        }
+
+        public Result onFailure(Operation... operation) {
+            if (this == PARTIAL) {
+                run(operation);
+            }
+            return this;
+        }
+
+        private void run(Operation... operation) {
+            Arrays.stream(operation)
+                .forEach(Operation::run);
+        }
     }
 
     static Result combine(Result result1, Result result2) {
