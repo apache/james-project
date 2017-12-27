@@ -17,30 +17,24 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.utils;
+package org.apache.james.webadmin.dto;
 
-import java.io.IOException;
+import java.util.UUID;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import org.apache.james.task.TaskId;
 
-public class JsonExtractor<Request> {
-
-    private final ObjectMapper objectMapper;
-    private final Class<Request> type;
-
-    public JsonExtractor(Class<Request> type) {
-        this.objectMapper = new ObjectMapper()
-            .registerModule(new Jdk8Module());
-        this.type = type;
+public class TaskIdDto {
+    public static TaskIdDto from(TaskId id) {
+        return new TaskIdDto(id.getValue());
     }
 
-    public Request parse(String text) throws JsonExtractException {
-        try {
-            return objectMapper.readValue(text, type);
-        } catch (IOException | IllegalArgumentException e) {
-            throw new JsonExtractException(e);
-        }
+    private final UUID uuid;
+
+    public TaskIdDto(UUID uuid) {
+        this.uuid = uuid;
     }
 
+    public UUID getTaskId() {
+        return uuid;
+    }
 }

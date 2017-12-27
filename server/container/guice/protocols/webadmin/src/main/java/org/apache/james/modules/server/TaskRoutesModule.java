@@ -17,30 +17,21 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.utils;
+package org.apache.james.modules.server;
 
-import java.io.IOException;
+import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.routes.TasksRoutes;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
 
-public class JsonExtractor<Request> {
+public class TaskRoutesModule extends AbstractModule {
+    @Override
+    protected void configure() {
+        bind(TasksRoutes.class).in(Scopes.SINGLETON);
 
-    private final ObjectMapper objectMapper;
-    private final Class<Request> type;
-
-    public JsonExtractor(Class<Request> type) {
-        this.objectMapper = new ObjectMapper()
-            .registerModule(new Jdk8Module());
-        this.type = type;
+        Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
+        routesMultibinder.addBinding().to(TasksRoutes.class);
     }
-
-    public Request parse(String text) throws JsonExtractException {
-        try {
-            return objectMapper.readValue(text, type);
-        } catch (IOException | IllegalArgumentException e) {
-            throw new JsonExtractException(e);
-        }
-    }
-
 }
