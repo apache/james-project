@@ -17,27 +17,36 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.mail.migration;
+package org.apache.james.task;
 
-public interface Migration {
+import static org.assertj.core.api.Assertions.assertThat;
 
-    enum MigrationResult {
-        COMPLETED,
-        PARTIAL
+import org.junit.Test;
+
+public class TaskTest {
+
+    @Test
+    public void combineShouldReturnCompletedWhenBothCompleted() {
+        assertThat(Task.combine(Task.Result.COMPLETED, Task.Result.COMPLETED))
+            .isEqualTo(Task.Result.COMPLETED);
     }
 
-    static MigrationResult combine(MigrationResult result1, MigrationResult result2) {
-        if (result1 == MigrationResult.COMPLETED
-            && result2 == MigrationResult.COMPLETED) {
-            return MigrationResult.COMPLETED;
-        }
-        return MigrationResult.PARTIAL;
+    @Test
+    public void combineShouldReturnPartialWhenPartialLeft() {
+        assertThat(Task.combine(Task.Result.PARTIAL, Task.Result.COMPLETED))
+            .isEqualTo(Task.Result.PARTIAL);
     }
 
-    /**
-     * Runs the migration
-     *
-     * @return Return true if fully migrated. Returns false otherwise.
-     */
-    MigrationResult run();
+    @Test
+    public void combineShouldReturnPartialWhenPartialRight() {
+        assertThat(Task.combine(Task.Result.COMPLETED, Task.Result.PARTIAL))
+            .isEqualTo(Task.Result.PARTIAL);
+    }
+
+    @Test
+    public void combineShouldReturnPartialWhenBothPartial() {
+        assertThat(Task.combine(Task.Result.PARTIAL, Task.Result.PARTIAL))
+            .isEqualTo(Task.Result.PARTIAL);
+    }
+
 }
