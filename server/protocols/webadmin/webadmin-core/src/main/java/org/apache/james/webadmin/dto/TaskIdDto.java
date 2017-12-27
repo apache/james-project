@@ -19,11 +19,24 @@
 
 package org.apache.james.webadmin.dto;
 
+import static org.eclipse.jetty.http.HttpHeader.LOCATION;
+
 import java.util.UUID;
 
 import org.apache.james.task.TaskId;
+import org.apache.james.webadmin.routes.TasksRoutes;
+import org.eclipse.jetty.http.HttpStatus;
+
+import spark.Response;
 
 public class TaskIdDto {
+
+    public static TaskIdDto respond(Response response, TaskId taskId) {
+        response.status(HttpStatus.CREATED_201);
+        response.header(LOCATION.asString(), TasksRoutes.BASE + "/" + taskId.toString());
+        return TaskIdDto.from(taskId);
+    }
+
     public static TaskIdDto from(TaskId id) {
         return new TaskIdDto(id.getValue());
     }

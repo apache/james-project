@@ -26,6 +26,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
 import org.apache.james.mailbox.cassandra.mail.CassandraBlobsDAO;
 import org.apache.james.mailbox.model.Attachment;
+import org.apache.james.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +50,7 @@ public class AttachmentV2Migration implements Migration {
         try {
             return attachmentDAOV1.retrieveAll()
                 .map(this::migrateAttachment)
-                .reduce(Result.COMPLETED, Migration::combine);
+                .reduce(Result.COMPLETED, Task::combine);
         } catch (Exception e) {
             LOGGER.error("Error while performing attachmentDAO V2 migration", e);
             return Result.PARTIAL;

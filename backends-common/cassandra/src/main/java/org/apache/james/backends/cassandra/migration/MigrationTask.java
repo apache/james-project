@@ -19,18 +19,43 @@
 
 package org.apache.james.backends.cassandra.migration;
 
-import org.apache.james.task.Task;
+import java.util.Optional;
 
-public interface Migration extends Task {
-    Migration IDENTITY = () -> Result.COMPLETED;
+public class MigrationTask implements Migration {
+    public static final String CASSANDRA_MIGRATION = "CassandraMigration";
 
-    static Migration combine(Migration migration1, Migration migration2) {
-        return () -> {
-            Result migration1Result = migration1.run();
-            if (migration1Result == Result.COMPLETED) {
-                return migration2.run();
-            }
-            return Result.PARTIAL;
-        };
+    public static class Details {
+        private final int toVersion;
+
+        public Details(int toVersion) {
+            this.toVersion = toVersion;
+        }
+
+        public int getToVersion() {
+            return toVersion;
+        }
+    }
+
+    private final Migration migration;
+    private final int toVersion;
+
+    public MigrationTask(Migration migration, int toVersion) {
+        this.migration = migration;
+        this.toVersion = toVersion;
+    }
+
+    @Override
+    public Result run() {
+        return migration.run();
+    }
+
+    @Override
+    public String type() {
+        return CASSANDRA_MIGRATION;
+    }
+
+    @Override
+    public Optional<Object> details() {
+        return Optional.of(new Details(toVersion));
     }
 }

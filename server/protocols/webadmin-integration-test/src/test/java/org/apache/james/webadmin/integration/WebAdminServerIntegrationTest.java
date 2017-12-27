@@ -20,6 +20,7 @@
 package org.apache.james.webadmin.integration;
 
 import static com.jayway.restassured.RestAssured.given;
+import static com.jayway.restassured.RestAssured.with;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
@@ -30,6 +31,8 @@ import static org.hamcrest.Matchers.is;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.james.CassandraJmapTestRule;
 import org.apache.james.DockerCassandraRule;
@@ -37,6 +40,8 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
+import org.apache.james.task.TaskManager;
+import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.routes.DomainsRoutes;
@@ -49,6 +54,7 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
@@ -226,13 +232,16 @@ public class WebAdminServerIntegrationTest {
 
     @Test
     public void postShouldDoMigrationAndUpdateCurrentVersion() throws Exception {
-        given()
+        String taskId = with()
             .port(webAdminGuiceProbe.getWebAdminPort())
             .body(String.valueOf(CassandraSchemaVersionManager.MAX_VERSION))
-        .when()
-            .post(UPGRADE_VERSION)
-        .then()
-            .statusCode(HttpStatus.NO_CONTENT_204);
+        .post(UPGRADE_VERSION)
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .port(webAdminGuiceProbe.getWebAdminPort())
+            .get("/task/" + taskId + "/await");
 
         given()
             .port(webAdminGuiceProbe.getWebAdminPort())
@@ -246,12 +255,15 @@ public class WebAdminServerIntegrationTest {
 
     @Test
     public void postShouldDoMigrationAndUpdateToTheLatestVersion() throws Exception {
-        given()
+        String taskId = with()
             .port(webAdminGuiceProbe.getWebAdminPort())
-        .when()
-            .post(UPGRADE_TO_LATEST_VERSION)
-        .then()
-            .statusCode(HttpStatus.OK_200);
+        .post(UPGRADE_TO_LATEST_VERSION)
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .port(webAdminGuiceProbe.getWebAdminPort())
+            .get("/task/" + taskId + "/await");
 
         given()
             .port(webAdminGuiceProbe.getWebAdminPort())
@@ -261,6 +273,40 @@ public class WebAdminServerIntegrationTest {
             .statusCode(HttpStatus.OK_200)
             .contentType(JSON_CONTENT_TYPE)
             .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION + "}"));
+    }
+
+    @Test
+    public void concurrentMigrationIsNotAllowed() throws Exception {
+        ConcurrentLinkedQueue<String> taskIds = new ConcurrentLinkedQueue<>();
+        int threadCount = 2;
+        int operationCount = 1;
+        new ConcurrentTestRunner(threadCount, operationCount, (a, b) -> {
+            String migrationId = with()
+                .port(webAdminGuiceProbe.getWebAdminPort())
+                .post(UPGRADE_TO_LATEST_VERSION)
+                .jsonPath()
+                .get("taskId");
+            taskIds.add(migrationId);
+        }).run()
+            .awaitTermination(1, TimeUnit.MINUTES);
+
+        String id1 = taskIds.poll();
+        String id2 = taskIds.poll();
+        String status1 = with()
+            .port(webAdminGuiceProbe.getWebAdminPort())
+            .get("/tasks/" + id1 + "/await")
+            .jsonPath()
+            .get("status");
+        String status2 = with()
+            .port(webAdminGuiceProbe.getWebAdminPort())
+            .get("/tasks/" + id2 + "/await")
+            .jsonPath()
+            .get("status");
+
+        assertThat(ImmutableList.of(status1, status2))
+            .containsOnly(
+                TaskManager.Status.COMPLETED.getValue(),
+                TaskManager.Status.FAILED.getValue());
     }
 
     @Test

@@ -22,10 +22,13 @@ package org.apache.james.webadmin.routes;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.migration.CassandraMigrationService;
-import org.apache.james.backends.cassandra.migration.MigrationException;
-import org.apache.james.webadmin.Constants;
+import org.apache.james.backends.cassandra.migration.Migration;
+import org.apache.james.task.TaskId;
+import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.CassandraVersionRequest;
+import org.apache.james.webadmin.dto.CassandraVersionResponse;
+import org.apache.james.webadmin.dto.TaskIdDto;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -45,6 +48,7 @@ public class CassandraMigrationRoutes implements Routes {
     private static final String VERSION_UPGRADE_TO_LATEST_BASE = VERSION_UPGRADE_BASE + "/latest";
 
     private final CassandraMigrationService cassandraMigrationService;
+    private final TaskManager taskManager;
     private final JsonTransformer jsonTransformer;
 
     public static String INVALID_VERSION_UPGRADE_REQUEST = "Invalid request for version upgrade";
@@ -52,27 +56,30 @@ public class CassandraMigrationRoutes implements Routes {
     public static String PARTIAL_MIGRATION_PROCESS = "An error lead to partial migration process";
 
     @Inject
-    public CassandraMigrationRoutes(CassandraMigrationService cassandraMigrationService, JsonTransformer jsonTransformer) {
+    public CassandraMigrationRoutes(CassandraMigrationService cassandraMigrationService,
+                                    TaskManager taskManager, JsonTransformer jsonTransformer) {
         this.cassandraMigrationService = cassandraMigrationService;
+        this.taskManager = taskManager;
         this.jsonTransformer = jsonTransformer;
     }
 
     @Override
     public void define(Service service) {
         service.get(VERSION_BASE,
-            (request, response) -> cassandraMigrationService.getCurrentVersion(),
+            (request, response) -> new CassandraVersionResponse(cassandraMigrationService.getCurrentVersion()),
             jsonTransformer);
 
         service.get(VERSION_BASE_LATEST,
-            (request, response) -> cassandraMigrationService.getLatestVersion(),
+            (request, response) -> new CassandraVersionResponse(cassandraMigrationService.getLatestVersion()),
             jsonTransformer);
 
         service.post(VERSION_UPGRADE_BASE, (request, response) -> {
             LOGGER.debug("Cassandra upgrade launched");
             try {
                 CassandraVersionRequest cassandraVersionRequest = CassandraVersionRequest.parse(request.body());
-                cassandraMigrationService.upgradeToVersion(cassandraVersionRequest.getValue());
-                response.status(HttpStatus.NO_CONTENT_204);
+                Migration migration = cassandraMigrationService.upgradeToVersion(cassandraVersionRequest.getValue());
+                TaskId taskId = taskManager.submit(migration);
+                return TaskIdDto.respond(response, taskId);
             } catch (NullPointerException | IllegalArgumentException e) {
                 LOGGER.info(INVALID_VERSION_UPGRADE_REQUEST);
                 throw ErrorResponder.builder()
@@ -89,21 +96,14 @@ public class CassandraMigrationRoutes implements Routes {
                     .message(MIGRATION_REQUEST_CAN_NOT_BE_DONE)
                     .cause(e)
                     .haltError();
-            } catch (MigrationException e) {
-                LOGGER.error(PARTIAL_MIGRATION_PROCESS, e);
-                throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                    .type(ErrorType.SERVER_ERROR)
-                    .message(PARTIAL_MIGRATION_PROCESS)
-                    .cause(e)
-                    .haltError();
             }
-            return Constants.EMPTY_BODY;
-        });
+        }, jsonTransformer);
 
         service.post(VERSION_UPGRADE_TO_LATEST_BASE, (request, response) -> {
             try {
-                cassandraMigrationService.upgradeToLastVersion();
+                Migration migration = cassandraMigrationService.upgradeToLastVersion();
+                TaskId taskId = taskManager.submit(migration);
+                return TaskIdDto.respond(response, taskId);
             } catch (IllegalStateException e) {
                 LOGGER.info(MIGRATION_REQUEST_CAN_NOT_BE_DONE, e);
                 throw ErrorResponder.builder()
@@ -112,17 +112,7 @@ public class CassandraMigrationRoutes implements Routes {
                     .message(MIGRATION_REQUEST_CAN_NOT_BE_DONE)
                     .cause(e)
                     .haltError();
-            } catch (MigrationException e) {
-                LOGGER.error(PARTIAL_MIGRATION_PROCESS, e);
-                throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                    .type(ErrorType.SERVER_ERROR)
-                    .message(PARTIAL_MIGRATION_PROCESS)
-                    .cause(e)
-                    .haltError();
             }
-
-            return Constants.EMPTY_BODY;
-        });
+        }, jsonTransformer);
     }
 }

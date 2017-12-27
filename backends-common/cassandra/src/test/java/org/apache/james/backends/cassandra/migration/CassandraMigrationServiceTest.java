@@ -21,7 +21,6 @@ package org.apache.james.backends.cassandra.migration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -34,8 +33,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
@@ -46,12 +43,12 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import com.datastax.driver.core.Session;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 
 public class CassandraMigrationServiceTest {
     private static final int LATEST_VERSION = 3;
-    private static final int CURRENT_VERSION = 2;
+    private static final int INTERMEDIARY_VERSION = 2;
+    private static final int CURRENT_VERSION = INTERMEDIARY_VERSION;
     private static final int OLDER_VERSION = 1;
     private CassandraMigrationService testee;
     private CassandraSchemaVersionDAO schemaVersionDAO;
@@ -98,14 +95,14 @@ public class CassandraMigrationServiceTest {
 
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(CURRENT_VERSION)));
 
-        testee.upgradeToVersion(OLDER_VERSION);
+        testee.upgradeToVersion(OLDER_VERSION).run();
     }
 
     @Test
     public void upgradeToVersionShouldUpdateToVersion() throws Exception {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(OLDER_VERSION)));
 
-        testee.upgradeToVersion(CURRENT_VERSION);
+        testee.upgradeToVersion(CURRENT_VERSION).run();
 
         verify(schemaVersionDAO, times(1)).updateVersion(eq(CURRENT_VERSION));
     }
@@ -116,14 +113,14 @@ public class CassandraMigrationServiceTest {
 
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(LATEST_VERSION)));
 
-        testee.upgradeToLastVersion();
+        testee.upgradeToLastVersion().run();
     }
 
     @Test
     public void upgradeToLastVersionShouldUpdateToLatestVersion() throws Exception {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(OLDER_VERSION)));
 
-        testee.upgradeToLastVersion();
+        testee.upgradeToLastVersion().run();
 
         verify(schemaVersionDAO, times(1)).updateVersion(eq(LATEST_VERSION));
     }
@@ -139,7 +136,7 @@ public class CassandraMigrationServiceTest {
 
         expectedException.expect(NotImplementedException.class);
 
-        testee.upgradeToVersion(LATEST_VERSION);
+        testee.upgradeToVersion(LATEST_VERSION).run();
     }
 
     @Test
@@ -147,6 +144,7 @@ public class CassandraMigrationServiceTest {
         try {
             Map<Integer, Migration> allMigrationClazz = ImmutableMap.<Integer, Migration>builder()
                 .put(OLDER_VERSION, successfulMigration)
+                .put(INTERMEDIARY_VERSION, () -> Migration.Result.PARTIAL)
                 .put(LATEST_VERSION, successfulMigration)
                 .build();
             testee = new CassandraMigrationService(schemaVersionDAO, allMigrationClazz, LATEST_VERSION);
@@ -154,47 +152,10 @@ public class CassandraMigrationServiceTest {
 
             expectedException.expect(RuntimeException.class);
 
-            testee.upgradeToVersion(LATEST_VERSION);
+            testee.upgradeToVersion(LATEST_VERSION).run();
         } finally {
             verify(schemaVersionDAO).updateVersion(CURRENT_VERSION);
         }
-    }
-
-    @Test
-    public void concurrentMigrationsShouldFail() throws Exception {
-        // Given a stateful migration service
-        Migration wait1SecondMigration = mock(Migration.class);
-        doAnswer(invocation -> {
-            Thread.sleep(1000);
-            return Migration.Result.COMPLETED;
-        }).when(wait1SecondMigration).run();
-        Map<Integer, Migration> allMigrationClazz = ImmutableMap.<Integer, Migration>builder()
-            .put(OLDER_VERSION, wait1SecondMigration)
-            .put(CURRENT_VERSION, wait1SecondMigration)
-            .put(LATEST_VERSION, wait1SecondMigration)
-            .build();
-        testee = new CassandraMigrationService(new InMemorySchemaDAO(OLDER_VERSION), allMigrationClazz, LATEST_VERSION);
-
-        // When I perform a concurrent migration
-        AtomicInteger encounteredExceptionCount = new AtomicInteger(0);
-        executorService.submit(() -> testee.upgradeToVersion(LATEST_VERSION));
-        executorService.submit(() -> {
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                throw Throwables.propagate(e);
-            }
-
-            try {
-                testee.upgradeToVersion(LATEST_VERSION);
-            } catch (IllegalStateException e) {
-                encounteredExceptionCount.incrementAndGet();
-            }
-        });
-        executorService.awaitTermination(10, TimeUnit.SECONDS);
-
-        // Then the second migration fails
-        assertThat(encounteredExceptionCount.get()).isEqualTo(1);
     }
 
     @Test
@@ -211,7 +172,7 @@ public class CassandraMigrationServiceTest {
 
         expectedException.expect(MigrationException.class);
 
-        testee.upgradeToVersion(LATEST_VERSION);
+        testee.upgradeToVersion(LATEST_VERSION).run();
     }
 
     @Test
@@ -230,7 +191,7 @@ public class CassandraMigrationServiceTest {
         expectedException.expect(MigrationException.class);
 
         try {
-            testee.upgradeToVersion(LATEST_VERSION);
+            testee.upgradeToVersion(LATEST_VERSION).run();
         } finally {
             verify(migration1, times(1)).run();
             verifyNoMoreInteractions(migration1);
