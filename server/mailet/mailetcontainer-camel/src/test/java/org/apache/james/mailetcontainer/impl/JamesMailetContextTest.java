@@ -42,7 +42,9 @@ import org.apache.james.server.core.MailImpl;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.MimeMessageBuilder;
+import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -55,6 +57,9 @@ public class JamesMailetContextTest {
     public static final String PASSWORD = "password";
     public static final DNSService DNS_SERVICE = null;
 
+    @Rule
+    public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
+    
     private MemoryDomainList domainList;
     private MemoryUsersRepository usersRepository;
     private JamesMailetContext testee;
@@ -230,9 +235,9 @@ public class JamesMailetContextTest {
         verify(spoolMailQueue).enQueue(mailArgumentCaptor.capture(), delayArgumentCaptor.capture(), timeUnitArgumentCaptor.capture());
         verifyNoMoreInteractions(spoolMailQueue);
 
-        assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(Mail.DEFAULT);
-        assertThat(delayArgumentCaptor.getValue()).isEqualTo(5L);
-        assertThat(timeUnitArgumentCaptor.getValue()).isEqualTo(TimeUnit.MINUTES);
+        softly.assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(Mail.DEFAULT);
+        softly.assertThat(delayArgumentCaptor.getValue()).isEqualTo(5L);
+        softly.assertThat(timeUnitArgumentCaptor.getValue()).isEqualTo(TimeUnit.MINUTES);
     }
 
     @Test
@@ -250,9 +255,9 @@ public class JamesMailetContextTest {
         verify(spoolMailQueue).enQueue(mailArgumentCaptor.capture(), delayArgumentCaptor.capture(), timeUnitArgumentCaptor.capture());
         verifyNoMoreInteractions(spoolMailQueue);
 
-        assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(other);
-        assertThat(delayArgumentCaptor.getValue()).isEqualTo(5L);
-        assertThat(timeUnitArgumentCaptor.getValue()).isEqualTo(TimeUnit.MINUTES);
+        softly.assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(other);
+        softly.assertThat(delayArgumentCaptor.getValue()).isEqualTo(5L);
+        softly.assertThat(timeUnitArgumentCaptor.getValue()).isEqualTo(TimeUnit.MINUTES);
     }
 
     @Test
