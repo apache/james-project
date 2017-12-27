@@ -111,9 +111,9 @@ public final class FlowedMessageUtils {
                 resultLineFlowed = false;
             }
 
-                        // Add the PREVIOUS line.
-                        // This often will find the flow looking for a space as the last char of the line.
-                        // With quote changes or signatures it could be the followinf line to void the flow.
+            // Add the PREVIOUS line.
+            // This often will find the flow looking for a space as the last char of the line.
+            // With quote changes or signatures it could be the following line to void the flow.
             if (!resultLineFlowed && i > 0) {
                 if (resultLineQuoteDepth > 0) {
                     resultLine.insert(0, RFC2646_SPACE);

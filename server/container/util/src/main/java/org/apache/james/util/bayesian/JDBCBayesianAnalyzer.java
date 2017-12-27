@@ -278,7 +278,7 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
     private void updateTokens(Connection conn, Map<String, Integer> tokens, String insertSqlStatement, String updateSqlStatement) throws java.sql.SQLException {
         
         try (
-             // Used to insert new token entries.
+            // Used to insert new token entries.
             PreparedStatement insert = conn.prepareStatement(insertSqlStatement);
             // Used to update existing token entries.
             PreparedStatement update = conn.prepareStatement(updateSqlStatement)) {

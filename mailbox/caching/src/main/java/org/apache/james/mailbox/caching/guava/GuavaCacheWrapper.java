@@ -8,11 +8,9 @@ public abstract class GuavaCacheWrapper<KeyT, ValueT, UnderlyingT, KeyRepresenta
     implements CacheLoaderFromUnderlying<KeyT, ValueT, UnderlyingT, ExceptT> {
 
     private final Cache<KeyRepresentationT, ValueT> cache;
-//	private final CacheLoaderFromUnderlying<Key, Value, Underlying, Except> loader;
 
     public GuavaCacheWrapper(Cache<KeyRepresentationT, ValueT> cache/*, CacheLoaderFromUnderlying<Key, Value, Underlying, Except> loader*/) {
         this.cache = cache;
-//        this.loader = loader;
     }
 
     public ValueT get(KeyT key, UnderlyingT underlying) throws ExceptT {

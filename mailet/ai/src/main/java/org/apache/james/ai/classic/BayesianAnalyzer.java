@@ -502,8 +502,7 @@ public class BayesianAnalyzer {
 
             // System.out.println(tps);
 
-            double theDoubleValue = DEFAULT_TOKEN_PROBABILITY; // initialize it
-                                                               // to the default
+            double theDoubleValue = DEFAULT_TOKEN_PROBABILITY; // initialize it to the default
             Double theDoubleObject = workCorpus.get(tps.token);
             // if either the original token or a degeneration was found use the
             // double value, otherwise use the default

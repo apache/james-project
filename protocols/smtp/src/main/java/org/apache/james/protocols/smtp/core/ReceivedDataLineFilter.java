@@ -64,7 +64,7 @@ public class ReceivedDataLineFilter extends AbstractAddHeadersFilter {
      * @return type
      */
     protected String getServiceType(SMTPSession session, String heloMode) {
-     // Check if EHLO was used
+        // Check if EHLO was used
         if (EHLO.equals(heloMode)) {
             // Not successful auth
             if (session.getUser() == null) {

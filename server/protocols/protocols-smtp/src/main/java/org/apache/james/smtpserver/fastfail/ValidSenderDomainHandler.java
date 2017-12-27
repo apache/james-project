@@ -45,7 +45,7 @@ public class ValidSenderDomainHandler extends org.apache.james.protocols.smtp.co
 
         Collection<String> records = null;
             
-        // try to resolv the provided domain in the senderaddress. If it can not resolved do not accept it.
+            // try to resolv the provided domain in the senderaddress. If it can not resolved do not accept it.
             try {
                 records = dnsService.findMXRecords(domain);
             } catch (org.apache.james.dnsservice.api.TemporaryResolutionException e) {

@@ -31,6 +31,4 @@ public interface MailboxMetadataCache {
 
     void invalidate(Mailbox mailbox);
 
-//    public abstract void invalidate(MailboxPath mailboxPath);
-
 }

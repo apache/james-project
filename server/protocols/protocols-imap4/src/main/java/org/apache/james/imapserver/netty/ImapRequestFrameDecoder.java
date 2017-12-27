@@ -175,10 +175,10 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
                 
                 // Code portion commented further to JAMES-1436.
                 // TODO Remove if no negative feedback on JAMES-1436.
-//                ChannelHandler handler = (ChannelHandler) attachment.remove(FRAMER);
-//                if (handler != null) {
-//                    channel.getPipeline().addFirst(FRAMER, handler);
-//                }
+                //ChannelHandler handler = (ChannelHandler) attachment.remove(FRAMER);
+                //if (handler != null) {
+                //    channel.getPipeline().addFirst(FRAMER, handler);
+                //}
                 
                 ((SwitchableDelimiterBasedFrameDecoder) channel.getPipeline().get(FRAMER)).enableFraming();
                 
@@ -196,8 +196,8 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
                 
                 // Code portion commented further to JAMES-1436.
                 // TODO Remove if no negative feedback on JAMES-1436.
-//                ChannelHandler handler = channel.getPipeline().remove(FRAMER);
-//                attachment.put(FRAMER, handler);
+                //ChannelHandler handler = channel.getPipeline().remove(FRAMER);
+                //attachment.put(FRAMER, handler);
 
                 // SwitchableDelimiterBasedFrameDecoder added further to JAMES-1436.
                 final SwitchableDelimiterBasedFrameDecoder framer = (SwitchableDelimiterBasedFrameDecoder) pipeline.get(FRAMER);

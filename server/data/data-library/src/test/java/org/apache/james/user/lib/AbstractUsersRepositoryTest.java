@@ -156,7 +156,7 @@ public abstract class AbstractUsersRepositoryTest {
     public void addUserShouldThrowWhenUserAlreadyPresentInRepository() throws UsersRepositoryException {
         //Given
         usersRepository.addUser(user1, "password");
-       //When
+        //When
         usersRepository.addUser(user1, "password2");
     }
     
@@ -268,7 +268,7 @@ public abstract class AbstractUsersRepositoryTest {
     
     @Test
     public void updateUserShouldAllowToAuthenticateWithNewPassword() throws UsersRepositoryException { 
-      //Given
+        //Given
         usersRepository.addUser(user1, "password");
         User user = usersRepository.getUserByName(user1);
         user.setPassword("newpass");

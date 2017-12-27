@@ -153,7 +153,7 @@ public class IsInWhiteList extends AbstractSQLWhitelistMatcher {
             }
 
             try {
-                    // check for wildcard domain entries on both
+                // check for wildcard domain entries on both
                 selectStmt = conn.prepareStatement(selectByPK);
     
                 selectStmt.setString(1, "*");

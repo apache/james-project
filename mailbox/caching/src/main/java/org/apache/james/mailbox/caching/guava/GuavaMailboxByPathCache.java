@@ -32,20 +32,6 @@ public class GuavaMailboxByPathCache extends AbstractGuavaCache implements Mailb
         return wrapper.get(mailboxName, underlying);
     }
 
-//    alternative plain implementation - review and choose the better
-//    public Mailbox findMailboxByPath(MailboxPath mailboxName, MailboxMapper underlying) throws MailboxNotFoundException, MailboxException {
-//        Mailbox mailbox = findMailboxByPathCache.getIfPresent(mailboxName.toString());
-//        if (mailbox != null)
-//            return mailbox;
-//        else {
-//            mailbox = new MailboxByPathCacheLoaderFromUnderlying().load(mailboxName, underlying);
-//            findMailboxByPathCache.put(mailboxName.toString(), mailbox);
-//            return mailbox;
-//        }
-//    }
-
-
-
     @Override
     public void invalidate(Mailbox mailbox) {
         invalidate(mailbox.generateAssociatedPath());
@@ -55,15 +41,6 @@ public class GuavaMailboxByPathCache extends AbstractGuavaCache implements Mailb
     public void invalidate(MailboxPath mailboxPath) {
         wrapper.invalidate(mailboxPath);
     }
-
-
-    //Does it make sense to define such loaders as separate classes for reuse?
-//    class MailboxByPathCacheLoaderFromUnderlying implements CacheLoaderFromUnderlying<MailboxPath, Mailbox, MailboxMapper, MailboxException> {
-//        @Override
-//        public Mailbox load(MailboxPath mailboxName, MailboxMapper underlying) throws MailboxException {
-//            return underlying.findMailboxByPath(mailboxName);
-//        }
-//    }
 
     class MailboxByPathCacheWrapper extends GuavaCacheWrapper<MailboxPath, Mailbox, MailboxMapper, String, MailboxException> {
 

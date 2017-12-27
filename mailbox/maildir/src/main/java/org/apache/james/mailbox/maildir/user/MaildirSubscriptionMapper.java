@@ -54,7 +54,7 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
      */
     @Override
     public void delete(Subscription subscription) throws SubscriptionException {
-     // TODO: we need some kind of file locking here
+        // TODO: we need some kind of file locking here
         Set<String> subscriptionNames = readSubscriptionsForUser(subscription.getUser());
         Set<String> newSubscriptions = Sets.difference(subscriptionNames, ImmutableSet.of(subscription.getMailbox()));
         boolean changed = subscriptionNames.size() != newSubscriptions.size();

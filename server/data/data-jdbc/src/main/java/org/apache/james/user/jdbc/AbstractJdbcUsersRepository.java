@@ -439,8 +439,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      * @throws UsersRepositoryException
      */
     private Collection<User> getAllUsers() throws UsersRepositoryException {
-        List<User> userList = new ArrayList<>(); // Build the users into
-                                                     // this list.
+        List<User> userList = new ArrayList<>(); // Build the users into this list.
 
         Connection conn = null;
         PreparedStatement getUsersStatement = null;

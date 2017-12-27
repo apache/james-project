@@ -50,8 +50,7 @@ import com.google.common.collect.ImmutableSet;
 public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> implements
         CommandHandler<SMTPSession> {
     private static final Logger LOGGER = LoggerFactory.getLogger(RcptCmdHandler.class);
-    public static final String CURRENT_RECIPIENT = "CURRENT_RECIPIENT"; // Current
-                                                                        // recipient
+    public static final String CURRENT_RECIPIENT = "CURRENT_RECIPIENT"; 
     private static final Collection<String> COMMANDS = ImmutableSet.of("RCPT");
     private static final Response MAIL_NEEDED = new SMTPResponse(SMTPRetCode.BAD_SEQUENCE, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_OTHER) + " Need MAIL before RCPT").immutable();
     private static final Response SYNTAX_ERROR_ARGS = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_SYNTAX) + " Usage: RCPT TO:<recipient>").immutable();

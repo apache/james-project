@@ -120,16 +120,13 @@ public class MBoxMailRepository implements MailRepository, Configurable {
     static final SimpleDateFormat dy = new SimpleDateFormat("EE MMM dd HH:mm:ss yyyy", Locale.US);
     static final String LOCKEXT = ".lock";
     static final String WORKEXT = ".work";
-    static final int LOCKSLEEPDELAY = 2000; // 2 second back off in the event of
-                                            // a problem with the lock file
+    static final int LOCKSLEEPDELAY = 2000; // 2 second back off in the event of a problem with the lock file
     static final int MAXSLEEPTIMES = 100; //
-    static final long MLISTPRESIZEFACTOR = 10 * 1024; // The hash table will be
-                                                      // loaded with a initial
-                                                      // capacity of
-                                                      // filelength/MLISTPRESIZEFACTOR
-    static final long DEFAULTMLISTCAPACITY = 20; // Set up a hashtable to have a
-                                                 // meaningful default
-
+    // The hash table will be loaded with a initial capacity of filelength/MLISTPRESIZEFACTOR
+    static final long MLISTPRESIZEFACTOR = 10 * 1024; 
+    // Set up a hashtable to have a meaningful default
+    static final long DEFAULTMLISTCAPACITY = 20; 
+    
     /**
      * Whether line buffering is turned used.
      */
@@ -151,8 +148,7 @@ public class MBoxMailRepository implements MailRepository, Configurable {
      * A callback used when a message is read from the mbox file
      */
     public interface MessageAction {
-        boolean isComplete(); // *** Not valid until AFTER each call to
-                              // messageAction(...)!
+        boolean isComplete(); // *** Not valid until AFTER each call to messageAction(...)!
 
         MimeMessage messageAction(String messageSeparator, String bodyText, long messageStart);
     }
@@ -511,9 +507,8 @@ public class MBoxMailRepository implements MailRepository, Configurable {
 
         LOGGER.debug("{} keys to be iterated over.", keys.size());
         if (fifo) {
-            Collections.sort(keys); // Keys is a HashSet; impose FIFO for apps
+            Collections.sort(keys); // Keys is a HashSet; impose FIFO for apps that need it
         }
-                                    // that need it
         return keys.iterator();
     }
 
@@ -600,10 +595,8 @@ public class MBoxMailRepository implements MailRepository, Configurable {
         // by reading through the
         // once we've done that then seek to the file
         try {
-            RandomAccessFile ins = new RandomAccessFile(mboxFile, "r"); // The
-                                                                        // source
-            final RandomAccessFile outputFile = new RandomAccessFile(mboxFile + WORKEXT, "rw"); // The
-                                                                                                // destination
+            RandomAccessFile ins = new RandomAccessFile(mboxFile, "r"); // The source
+            final RandomAccessFile outputFile = new RandomAccessFile(mboxFile + WORKEXT, "rw"); // The destination
             parseMboxFile(ins, new MessageAction() {
                 public boolean isComplete() {
                     return false;

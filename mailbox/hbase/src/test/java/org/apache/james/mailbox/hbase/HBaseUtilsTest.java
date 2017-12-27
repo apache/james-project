@@ -111,7 +111,7 @@ public class HBaseUtilsTest {
     /**
      * Test of metadataToPut method for message.
      */
-//    @Test
+    //@Test
     public void testMessageToPut() {
         System.out.println("messageToPut");
         // left to implement

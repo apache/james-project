@@ -127,7 +127,7 @@ public class MaildirFolder {
         this.messageNameStrictParse = messageNameStrictParse;
     }
 
-  /**
+    /**
      * Returns the {@link File} of this Maildir folder.
      * @return the root folder
      */

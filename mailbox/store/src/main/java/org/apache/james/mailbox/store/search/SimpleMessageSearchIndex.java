@@ -94,7 +94,7 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
      *      first UidCriterion found
      *      null - if not found
      */
-      private static UidCriterion findConjugatedUidCriterion(List<Criterion> crits) {
+    private static UidCriterion findConjugatedUidCriterion(List<Criterion> crits) {
         for (Criterion crit : crits) {
             if (crit instanceof UidCriterion) {
                 return (UidCriterion) crit;

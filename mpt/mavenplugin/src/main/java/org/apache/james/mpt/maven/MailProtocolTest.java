@@ -91,10 +91,6 @@ public class MailProtocolTest implements Monitor {
    }
 
    
-   /*
-    * (non-Javadoc)
-    * @see org.apache.maven.plugin.AbstractMojo#execute()
-    */
     public void execute() throws MojoExecutionException, MojoFailureException {
         validate();
 

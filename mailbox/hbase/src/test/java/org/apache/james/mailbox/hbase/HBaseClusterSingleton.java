@@ -90,13 +90,11 @@ public final class HBaseClusterSingleton {
         
         htu.getConfiguration().setBoolean("dfs.support.append", true);
         htu.getConfiguration().setInt("zookeeper.session.timeout", 20000);
-//        htu.getConfiguration().setInt("hbase.client.retries.number", 2);
         try {
             hbaseCluster = htu.startMiniCluster();
             LOG.info("After cluster start-up.");
             hbaseCluster.waitForActiveAndReadyMaster();
             LOG.info("After active and ready.");
-//            ensureTables();
             conf = hbaseCluster.getConfiguration();
         } catch (Exception ex) {
             throw new RuntimeException("Minicluster not starting.");

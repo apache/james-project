@@ -61,7 +61,7 @@ public abstract class AbstractValidRcptHandler implements RcptHook {
         }
        
         if (reject) {
-          //user not exist
+            //user not exist
             LOGGER.info("Rejected message. Unknown user: {}", rcpt);
             return new HookResult(HookReturnCode.DENY,SMTPRetCode.MAILBOX_PERM_UNAVAILABLE, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.ADDRESS_MAILBOX) + " Unknown user: " + rcpt.toString());
         } else {

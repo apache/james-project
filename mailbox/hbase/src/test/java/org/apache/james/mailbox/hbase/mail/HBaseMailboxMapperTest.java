@@ -117,7 +117,7 @@ public class HBaseMailboxMapperTest {
         testSave();
         testDelete();
         testHasChildren();
-//        testDeleteAllMemberships(); // Ignore this test
+        //testDeleteAllMemberships(); // Ignore this test
         testDeleteAllMailboxes();
         testChunkStream();
     }

@@ -132,17 +132,6 @@ public abstract class AbstractRecipientRewriteTableTest {
 
         removeMapping(user, domain, address, ADDRESS_TYPE);
 
-            /*
-             * TEMPORARILY REMOVE JDBC specific test String invalidAddress=
-             * ".*@localhost2:"; boolean catched = false; if (virtualUserTable
-             * instanceof JDBCRecipientRewriteTable) { try {
-             * assertTrue("Added virtual mapping", addMapping(user, domain,
-             * invalidAddress, ADDRESS_TYPE)); } catch (InvalidMappingException
-             * e) { catched = true; }
-             * assertTrue("Invalid Mapping throw exception" , catched); }
-             */
-
-
         removeMapping(user, domain, address2, ADDRESS_TYPE);
 
         assertThat(virtualUserTable.getMappings(user, domain)).describedAs("No mapping").isNull();

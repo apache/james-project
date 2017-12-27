@@ -206,15 +206,6 @@ public class ClassifyBounce extends GenericMailet {
                 s = (String) o;
             }
 
-//          else {
-//              if (m.isMimeType("text/html")) {
-//                  s = m.getContent().toString();
-//              }
-//              if (m.isMimeType("text/plain")) {
-//                  s = m.getContent().toString();
-//              }   
-//          }
-
             return s;
         }
 

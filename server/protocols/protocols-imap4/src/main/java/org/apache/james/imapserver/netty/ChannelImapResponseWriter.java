@@ -71,7 +71,7 @@ public class ChannelImapResponseWriter implements ImapResponseWriter {
             InputStream in = literal.getInputStream();
             if (in instanceof FileInputStream && channel.getFactory() instanceof NioServerSocketChannelFactory) {
                 FileChannel fc = ((FileInputStream) in).getChannel();
-                   // Zero-copy is only possible if no SSL/TLS  and no COMPRESS is in place
+                // Zero-copy is only possible if no SSL/TLS  and no COMPRESS is in place
                 //
                 // See JAMES-1305 and JAMES-1306
                 ChannelPipeline cp = channel.getPipeline();

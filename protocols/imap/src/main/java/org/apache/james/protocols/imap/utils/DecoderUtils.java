@@ -76,9 +76,7 @@ public final class DecoderUtils {
         } else if (flagString.equalsIgnoreCase(MessageFlags.SEEN_ALL_CAPS)) {
             flags.add(Flags.Flag.SEEN);
         } else {
-            if (flagString.equalsIgnoreCase(MessageFlags.RECENT_ALL_CAPS)) { // NOPMD
-                                                                             // keep
-                                                                             // comment
+            if (flagString.equalsIgnoreCase(MessageFlags.RECENT_ALL_CAPS)) {
                 // RFC3501 specifically excludes \Recent
                 // The \Recent flag should be set automatically by the server so throw Exception
                 //
