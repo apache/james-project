@@ -81,7 +81,7 @@ public interface Task {
         return UNKNOWN;
     }
 
-    default Optional<Object> details() {
+    default Optional<TaskExecutionDetails.AdditionalInformation> details() {
         return Optional.empty();
     }
 
