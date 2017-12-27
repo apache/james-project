@@ -80,7 +80,6 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
                 try {
                     if (!domainList.containsDomain(domain)) {
                         throw new UsersRepositoryException("Domain does not exist in DomainList");
-                    } else {
                     }
                 } catch (DomainListException e) {
                     throw new UsersRepositoryException("Unable to query DomainList", e);
