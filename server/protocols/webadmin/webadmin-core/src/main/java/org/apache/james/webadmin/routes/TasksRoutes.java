@@ -19,11 +19,16 @@
 
 package org.apache.james.webadmin.routes;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
 import javax.inject.Inject;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskId;
@@ -36,10 +41,19 @@ import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import spark.Request;
 import spark.Response;
 import spark.Service;
 
+@Api(tags = "Tasks")
+@Path(":task")
+@Produces("application/json")
 public class TasksRoutes implements Routes {
     public static final String BASE = "/tasks";
     private final TaskManager taskManager;
@@ -62,7 +76,24 @@ public class TasksRoutes implements Routes {
         service.get(BASE, this::list, jsonTransformer);
     }
 
-    private Object list(Request req, Response response) {
+    @GET
+    @ApiOperation(value = "Listing tasks")
+    @ApiImplicitParams({
+        @ApiImplicitParam(
+            required = false,
+            paramType = "query parameter",
+            dataType = "String",
+            defaultValue = "None",
+            example = "?status=inProgress",
+            value = "If present, allow to filter the tasks and keep only the one with a given status. " +
+                "The status are one of [waiting, inProgress, failed, canceled, completed]")
+    })
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.OK_200, message = "A specific class execution details", response = List.class),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The provided payload is invalid (JSON error or invalid status)"),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The taskId is not found")
+    })
+    public Object list(Request req, Response response) {
         try {
             return ExecutionDetailsDto.from(
                 Optional.ofNullable(req.queryParams("status"))
@@ -79,13 +110,29 @@ public class TasksRoutes implements Routes {
         }
     }
 
-    private Object getStatus(Request req, Response response) {
+    @GET
+    @Path("/{taskId}")
+    @ApiOperation(value = "Getting a task execution details")
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.OK_200, message = "A specific class execution details", response = ExecutionDetailsDto.class),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The taskId is invalid"),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The taskId is not found")
+    })
+    public Object getStatus(Request req, Response response) {
         TaskId taskId = getTaskId(req);
         return respondStatus(taskId,
             () -> taskManager.getExecutionDetails(getTaskId(req)));
     }
 
-    private Object await(Request req, Response response) {
+    @GET
+    @Path("/{taskId}/await")
+    @ApiOperation(value = "Await, then get a task execution details")
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.OK_200, message = "A specific class execution details", response = ExecutionDetailsDto.class),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The taskId is invalid"),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The taskId is not found")
+    })
+    public Object await(Request req, Response response) {
         TaskId taskId = getTaskId(req);
         return respondStatus(taskId,
             () -> taskManager.await(getTaskId(req)));
@@ -104,7 +151,14 @@ public class TasksRoutes implements Routes {
         }
     }
 
-    private Object cancel(Request req, Response response) {
+    @DELETE
+    @Path("/{taskId}")
+    @ApiOperation(value = "Cancel a given task")
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "Task is cancelled"),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The taskId is invalid")
+    })
+    public Object cancel(Request req, Response response) {
         TaskId taskId = getTaskId(req);
         taskManager.cancel(taskId);
         response.status(HttpStatus.NO_CONTENT_204);

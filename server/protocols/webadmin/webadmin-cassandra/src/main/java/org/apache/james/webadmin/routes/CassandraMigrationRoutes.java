@@ -20,6 +20,10 @@
 package org.apache.james.webadmin.routes;
 
 import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 
 import org.apache.james.backends.cassandra.migration.CassandraMigrationService;
 import org.apache.james.backends.cassandra.migration.Migration;
@@ -36,8 +40,20 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.ResponseHeader;
+import spark.Request;
+import spark.Response;
 import spark.Service;
 
+@Api(tags = "Cassandra migration")
+@Path(":cassandra/version")
+@Produces("application/json")
 public class CassandraMigrationRoutes implements Routes {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMigrationRoutes.class);
@@ -65,54 +81,101 @@ public class CassandraMigrationRoutes implements Routes {
 
     @Override
     public void define(Service service) {
-        service.get(VERSION_BASE,
-            (request, response) -> new CassandraVersionResponse(cassandraMigrationService.getCurrentVersion()),
-            jsonTransformer);
+        service.get(VERSION_BASE, (request, response) -> getCassandraCurrentVersion(), jsonTransformer);
 
-        service.get(VERSION_BASE_LATEST,
-            (request, response) -> new CassandraVersionResponse(cassandraMigrationService.getLatestVersion()),
-            jsonTransformer);
+        service.get(VERSION_BASE_LATEST, (request, response) -> getCassandraLatestVersion(), jsonTransformer);
 
-        service.post(VERSION_UPGRADE_BASE, (request, response) -> {
-            LOGGER.debug("Cassandra upgrade launched");
-            try {
-                CassandraVersionRequest cassandraVersionRequest = CassandraVersionRequest.parse(request.body());
-                Migration migration = cassandraMigrationService.upgradeToVersion(cassandraVersionRequest.getValue());
-                TaskId taskId = taskManager.submit(migration);
-                return TaskIdDto.respond(response, taskId);
-            } catch (NullPointerException | IllegalArgumentException e) {
-                LOGGER.info(INVALID_VERSION_UPGRADE_REQUEST);
-                throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .type(ErrorType.INVALID_ARGUMENT)
-                    .message(INVALID_VERSION_UPGRADE_REQUEST)
-                    .cause(e)
-                    .haltError();
-            } catch (IllegalStateException e) {
-                LOGGER.info(MIGRATION_REQUEST_CAN_NOT_BE_DONE, e);
-                throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.CONFLICT_409)
-                    .type(ErrorType.WRONG_STATE)
-                    .message(MIGRATION_REQUEST_CAN_NOT_BE_DONE)
-                    .cause(e)
-                    .haltError();
-            }
-        }, jsonTransformer);
+        service.post(VERSION_UPGRADE_BASE, this::upgradeToVersion, jsonTransformer);
 
-        service.post(VERSION_UPGRADE_TO_LATEST_BASE, (request, response) -> {
-            try {
-                Migration migration = cassandraMigrationService.upgradeToLastVersion();
-                TaskId taskId = taskManager.submit(migration);
-                return TaskIdDto.respond(response, taskId);
-            } catch (IllegalStateException e) {
-                LOGGER.info(MIGRATION_REQUEST_CAN_NOT_BE_DONE, e);
-                throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.CONFLICT_409)
-                    .type(ErrorType.WRONG_STATE)
-                    .message(MIGRATION_REQUEST_CAN_NOT_BE_DONE)
-                    .cause(e)
-                    .haltError();
-            }
-        }, jsonTransformer);
+        service.post(VERSION_UPGRADE_TO_LATEST_BASE, (request, response) -> upgradeToLatest(response), jsonTransformer);
+    }
+
+    @POST
+    @Path("upgrade/latest")
+    @ApiOperation("Triggers a migration of Cassandra schema to the latest available")
+    @ApiResponses({
+        @ApiResponse(code = HttpStatus.CREATED_201, message = "The taskId of the given scheduled task", response = TaskIdDto.class,
+            responseHeaders = {
+                @ResponseHeader(name = "Location", description = "URL of the resource associated with the scheduled task")
+            }),
+        @ApiResponse(code = HttpStatus.CONFLICT_409, message = "Migration can not be done")
+    })
+    public Object upgradeToLatest(Response response) {
+        try {
+            Migration migration = cassandraMigrationService.upgradeToLastVersion();
+            TaskId taskId = taskManager.submit(migration);
+            return TaskIdDto.respond(response, taskId);
+        } catch (IllegalStateException e) {
+            LOGGER.info(MIGRATION_REQUEST_CAN_NOT_BE_DONE, e);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.CONFLICT_409)
+                .type(ErrorType.WRONG_STATE)
+                .message(MIGRATION_REQUEST_CAN_NOT_BE_DONE)
+                .cause(e)
+                .haltError();
+        }
+    }
+
+    @POST
+    @Path("upgrade")
+    @ApiOperation("Triggers a migration of Cassandra schema to a specific version")
+    @ApiImplicitParams({
+        @ApiImplicitParam(
+            required = true,
+            paramType = "body",
+            dataType = "Integer",
+            example = "3",
+            value = "The schema version to upgrade to.")
+    })
+    @ApiResponses({
+        @ApiResponse(code = HttpStatus.CREATED_201, message = "The taskId of the given scheduled task", response = TaskIdDto.class,
+            responseHeaders = {
+            @ResponseHeader(name = "Location", description = "URL of the resource associated with the scheduled task")
+        }),
+        @ApiResponse(code = HttpStatus.CONFLICT_409, message = "Migration can not be done")
+    })
+    public Object upgradeToVersion(Request request, Response response) {
+        LOGGER.debug("Cassandra upgrade launched");
+        try {
+            CassandraVersionRequest cassandraVersionRequest = CassandraVersionRequest.parse(request.body());
+            Migration migration = cassandraMigrationService.upgradeToVersion(cassandraVersionRequest.getValue());
+            TaskId taskId = taskManager.submit(migration);
+            return TaskIdDto.from(taskId);
+        } catch (NullPointerException | IllegalArgumentException e) {
+            LOGGER.info(INVALID_VERSION_UPGRADE_REQUEST);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message(INVALID_VERSION_UPGRADE_REQUEST)
+                .cause(e)
+                .haltError();
+        } catch (IllegalStateException e) {
+            LOGGER.info(MIGRATION_REQUEST_CAN_NOT_BE_DONE, e);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.CONFLICT_409)
+                .type(ErrorType.WRONG_STATE)
+                .message(MIGRATION_REQUEST_CAN_NOT_BE_DONE)
+                .cause(e)
+                .haltError();
+        }
+    }
+
+    @GET
+    @Path("latest")
+    @ApiOperation(value = "Getting the latest version available for Cassandra schema")
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.OK_200, message = "The latest version of the schema", response = CassandraVersionResponse.class)
+    })
+    public CassandraVersionResponse getCassandraLatestVersion() {
+        return new CassandraVersionResponse(cassandraMigrationService.getLatestVersion());
+    }
+
+    @GET
+    @ApiOperation(value = "Getting the current version used by Cassandra schema")
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.OK_200, message = "The current version of the schema", response = CassandraVersionResponse.class)
+    })
+    public CassandraVersionResponse getCassandraCurrentVersion() {
+        return new CassandraVersionResponse(cassandraMigrationService.getCurrentVersion());
     }
 }
