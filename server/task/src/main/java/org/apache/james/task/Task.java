@@ -20,6 +20,7 @@
 package org.apache.james.task;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,4 +76,18 @@ public interface Task {
      */
     Result run();
 
+
+    default String type() {
+        return UNKNOWN;
+    }
+
+    default Optional<Object> details() {
+        return Optional.empty();
+    }
+
+    String TASK_ID = "taskId";
+    String TASK_TYPE = "taskType";
+    String TASK_DETAILS = "taskDetails";
+
+    String UNKNOWN = "unknown";
 }
