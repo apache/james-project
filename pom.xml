@@ -1426,7 +1426,7 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.datatype</groupId>
                 <artifactId>jackson-datatype-jsr310</artifactId>
-                <version>2.6.3</version>
+                <version>${jackson-databinding.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.github.dpaukov</groupId>
