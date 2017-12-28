@@ -28,8 +28,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 
-import javax.mail.MessagingException;
-
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -164,7 +162,7 @@ public abstract class AbstractStateMailetProcessorTest {
     }
 
     @Test
-    public void testMatcherNoThrowException() throws Exception {
+    public void matcherProcessingShouldNotResultInAnExceptionWhenMatcherThrows() throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
         final MailImpl mail = new MailImpl();
         mail.setName(MailImpl.getId());
@@ -196,13 +194,7 @@ public abstract class AbstractStateMailetProcessorTest {
 
         assertEquals(Mail.DEFAULT, mail.getState());
 
-        boolean catched = false;
-        try {
-            processor.service(mail);
-        } catch (MessagingException e) {
-            catched = true;
-        }
-        assertFalse(catched);
+        processor.service(mail);
 
         // the source mail should have state error as the exception was thrown
         assertEquals(Mail.ERROR, mail.getState());
@@ -212,7 +204,7 @@ public abstract class AbstractStateMailetProcessorTest {
     }
 
     @Test
-    public void testMailetNoThrowException() throws Exception {
+    public void mailetProcessingShouldNotResultInAnExceptionWhenMailetThrows() throws Exception {
         final CountDownLatch latch = new CountDownLatch(2);
         final MailImpl mail = new MailImpl();
         mail.setName(MailImpl.getId());
@@ -250,13 +242,7 @@ public abstract class AbstractStateMailetProcessorTest {
 
         assertEquals(Mail.DEFAULT, mail.getState());
 
-        boolean catched = false;
-        try {
-            processor.service(mail);
-        } catch (MessagingException e) {
-            catched = true;
-        }
-        assertFalse(catched);
+        processor.service(mail);
 
         latch.await();
         processor.destroy();

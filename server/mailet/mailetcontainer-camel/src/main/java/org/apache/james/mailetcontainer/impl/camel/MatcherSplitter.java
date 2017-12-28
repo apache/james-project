@@ -20,7 +20,6 @@
 package org.apache.james.mailetcontainer.impl.camel;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -43,7 +42,6 @@ import org.apache.james.core.MailAddress;
 import org.apache.mailet.Matcher;
 import org.slf4j.Logger;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -120,8 +118,6 @@ public class MatcherSplitter {
                     ProcessorUtil.verifyMailAddresses(matchedRcpts);
                 }
 
-            } catch (IOException e) {
-                throw Throwables.propagate(e);
             } catch (Exception me) {
                 ex = me;
                 if (onMatchException == null) {
