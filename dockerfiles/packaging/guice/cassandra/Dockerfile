@@ -1,4 +1,5 @@
-FROM linagora/james-project:latest as source
+ARG BASE=linagora/james-project:latest
+FROM ${BASE} as source
 
 FROM debian:8.1
 

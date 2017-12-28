@@ -357,11 +357,16 @@ You can generate a deb package and an RPM package for James by using the followi
 
 First step, you have to build the Docker image used to generate the package
 
-    $ docker build -t build-james-packages --build-arg RELEASE=3.0-beta6 --build-arg ITERATION=1 dockerfiles/packaging/guice/cassandra
+    $ docker build -t build-james-packages \
+        --build-arg RELEASE=3.0-beta6 \
+        --build-arg ITERATION=1 \
+        --build-arg BASE=linagora/james-project
+        dockerfiles/packaging/guice/cassandra
 
 Where:
 
 - ITERATION is the release number used after the last hyphen (e.g. 3.0-beta6-1, 3.0-beta6-2, 3.0-beta6-3...)
+- BASE is the image jar and executable are copied from. Defaults to linagora/james-project:latest
 
 Then, you have to run the container:
 
@@ -370,6 +375,3 @@ Then, you have to run the container:
 Where:
 
 - $PWD/result is the folder where the deb and the RPM packages will be copied
-
-This process will use the last generated docker image of James. You can change this behaviour by editing the first line of
-dockerfiles/packaging/Dockerfile and choose the source image you want to use.
