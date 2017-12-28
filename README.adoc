@@ -375,3 +375,8 @@ Then, you have to run the container:
 Where:
 
 - $PWD/result is the folder where the deb and the RPM packages will be copied
+
+Note: A helper script is provided for the generation of packages for a specific git commit. For instance:
+
+    $ sh dockerfiles/packaging/guice/cassandra/package.sh 3.0.1 1 c298195e84 $PWD/result
+

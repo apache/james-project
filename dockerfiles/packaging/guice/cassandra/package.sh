@@ -2,60 +2,40 @@
 
 printUsage() {
    echo "Usage : "
-   echo "./package.sh RELEASE ITERATION"
+   echo "./package.sh RELEASE ITERATION SHA1 DIRECTORY"
    echo "    RELEASE  : The release to be generated."
    echo "    ITERATION: The iteration to give to the package."
+   echo "    SHA1: The SHA-1 to build packages against"
+   echo "    DIRECTORY: The directory where to put build results"
    exit 1
 }
 
-if [ "$#" -ne 2 ]; then
+
+if [ "$#" -ne 4 ]; then
     printUsage
 fi
 
 RELEASE=$1
 ITERATION=$2
+SHA1=$3
+DIRECTORY=$4
 
-fpm -s dir -t deb \
- -n james \
- -v $RELEASE \
- -a x86_64 \
- -d openjdk-8-jre \
- -C package \
- --deb-systemd james.service \
- --after-install james.postinst \
- --provides mail-transport-agent \
- --provides default-mta \
- --iteration $ITERATION \
- --license http://www.apache.org/licenses/LICENSE-2.0 \
- --description "$(printf "James stands for Java Apache Mail Enterprise Server!\nIt has a modular architecture based on a rich set of modern and efficient components which provides at the end complete, stable, secure and extendable Mail Servers running on the JVM.")" \
- --vendor "Apache" \
- --maintainer "Apache" \
- --url http://james.apache.org/ \
- --category web \
- .
+# Compile James
+docker build -t james/project dockerfiles/compilation/java-8
+docker run \
+   --rm \
+   --volume $PWD/.m2:/root/.m2 \
+   --volume $PWD:/origin \
+   --volume $PWD/dockerfiles/run/guice/cassandra/destination:/cassandra/destination \
+   -t james/project -s $SHA1
 
-#Workaround waiting for https://github.com/jordansissel/fpm/issues/1163 to be released
-cp james.service.rhel package/usr/share/james/james.service
+# Build image
+docker build -t james_run dockerfiles/run/guice/cassandra
 
-fpm -s dir -t rpm \
- -n james \
- -v $RELEASE \
- -a x86_64 \
- -d java-1.8.0-openjdk-headless \
- -C package \
- --after-install james.rpm.postinst \
- --after-upgrade james.rpm.postupgrade \
- --after-remove james.rpm.postremove \
- --provides mail-transport-agent \
- --provides default-mta \
- --iteration $ITERATION \
- --license http://www.apache.org/licenses/LICENSE-2.0 \
- --description "$(printf "James stands for Java Apache Mail Enterprise Server!\nIt has a modular architecture based on a rich set of modern and efficient components which provides at the end complete, stable, secure and extendable Mail Servers running on the JVM.")" \
- --vendor "Apache" \
- --maintainer "Apache" \
- --url http://james.apache.org/ \
- --category web \
- .
-
-cp /packages/james*.deb /result/
-cp /packages/james*.rpm /result/
+# Build packages
+docker build -t build-james-packages \
+  --build-arg RELEASE=$RELEASE-$SHA1 \
+  --build-arg ITERATION=$ITERATION \
+  --build-arg BASE=james_run \
+  dockerfiles/packaging/guice/cassandra
+docker run --rm --name james-packages -v $DIRECTORY:/result build-james-packages
