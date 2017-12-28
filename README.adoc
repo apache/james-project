@@ -357,7 +357,7 @@ You can generate a deb package and an RPM package for James by using the followi
 
 First step, you have to build the Docker image used to generate the package
 
-    $ docker build -t build-james-packages --build-arg RELEASE=3.0-beta6 --build-arg ITERATION=1 dockerfiles/packaging/
+    $ docker build -t build-james-packages --build-arg RELEASE=3.0-beta6 --build-arg ITERATION=1 dockerfiles/packaging/guice/cassandra
 
 Where:
 
