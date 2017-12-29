@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -40,7 +41,6 @@ import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -57,15 +57,14 @@ public class FakeMailContext implements MailetContext {
         return new SentMail.Builder();
     }
 
-    public static SentMail fromMail(Mail mail) throws MessagingException {
+    public static SentMail.Builder fromMail(Mail mail) throws MessagingException {
         return sentMailBuilder()
             .sender(mail.getSender())
             .recipients(mail.getRecipients())
             .message(mail.getMessage())
             .state(mail.getState())
             .attributes(buildAttributesMap(mail))
-            .fromMailet()
-            .build();
+            .fromMailet();
     }
 
     private static ImmutableMap<String, Serializable> buildAttributesMap(Mail mail) {
@@ -114,6 +113,7 @@ public class FakeMailContext implements MailetContext {
             private Map<String, Serializable> attributes = new HashMap<>();
             private Optional<String> state = Optional.empty();
             private Optional<Boolean> fromMailet = Optional.empty();
+            private Optional<Delay> delay = Optional.empty();
 
             public Builder sender(MailAddress sender) {
                 this.sender = sender;
@@ -160,12 +160,17 @@ public class FakeMailContext implements MailetContext {
                 return this;
             }
 
+            public Builder delay(Delay delay) {
+                this.delay = Optional.of(delay);
+                return this;
+            }
+
             public SentMail build() {
                 if (fromMailet.orElse(false)) {
                     this.attribute(Mail.SENT_BY_MAILET, "true");
                 }
                 return new SentMail(sender, recipients.orElse(ImmutableList.<MailAddress>of()), msg,
-                    ImmutableMap.copyOf(attributes), state.orElse(Mail.DEFAULT));
+                    ImmutableMap.copyOf(attributes), state.orElse(Mail.DEFAULT), delay);
             }
         }
 
@@ -175,14 +180,16 @@ public class FakeMailContext implements MailetContext {
         private final Optional<String> subject;
         private final Map<String, Serializable> attributes;
         private final String state;
+        private final Optional<Delay> delay;
 
-        private SentMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg, Map<String, Serializable> attributes, String state) {
+        private SentMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg, Map<String, Serializable> attributes, String state, Optional<Delay> delay) {
             this.sender = sender;
             this.recipients = ImmutableList.copyOf(recipients);
             this.msg = msg;
             this.subject = getSubject(msg);
             this.attributes = ImmutableMap.copyOf(attributes);
             this.state = state;
+            this.delay = delay;
         }
 
         private Optional<String> getSubject(MimeMessage msg) {
@@ -213,6 +220,11 @@ public class FakeMailContext implements MailetContext {
             return subject;
         }
 
+
+        public Optional<Delay> getDelay() {
+            return delay;
+        }
+
         @Override
         public boolean equals(Object o) {
             if (!(o instanceof SentMail)) {
@@ -221,15 +233,15 @@ public class FakeMailContext implements MailetContext {
 
             SentMail sentMail = (SentMail) o;
 
-            return Objects.equal(this.sender, sentMail.sender)
-                && Objects.equal(this.recipients, sentMail.recipients)
-                && Objects.equal(this.attributes, sentMail.attributes)
-                && Objects.equal(this.state, sentMail.state);
+            return Objects.equals(this.sender, sentMail.sender)
+                && Objects.equals(this.recipients, sentMail.recipients)
+                && Objects.equals(this.attributes, sentMail.attributes)
+                && Objects.equals(this.state, sentMail.state);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(sender, recipients, attributes, state);
+            return Objects.hash(sender, recipients, attributes, state);
         }
 
         @Override
@@ -243,6 +255,40 @@ public class FakeMailContext implements MailetContext {
         }
     }
 
+    public static class Delay {
+        private final long duration;
+        private final TimeUnit timeUnit;
+
+        public Delay(long duration, TimeUnit timeUnit) {
+            this.duration = duration;
+            this.timeUnit = timeUnit;
+        }
+
+        public long getDuration() {
+            return duration;
+        }
+
+        public TimeUnit getTimeUnit() {
+            return timeUnit;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof Delay) {
+                Delay delay = (Delay) o;
+
+                return Objects.equals(this.duration, delay.duration)
+                    && Objects.equals(this.timeUnit, delay.timeUnit);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(duration, timeUnit);
+        }
+    }
+
     public static class BouncedMail {
         private final SentMail sentMail;
         private final String message;
@@ -252,6 +298,10 @@ public class FakeMailContext implements MailetContext {
             this.sentMail = sentMail;
             this.message = message;
             this.bouncer = bouncer;
+        }
+
+        public BouncedMail(SentMail.Builder sentMail, String message, Optional<MailAddress> bouncer) {
+            this(sentMail.build(), message, bouncer);
         }
 
         public SentMail getSentMail() {
@@ -270,16 +320,16 @@ public class FakeMailContext implements MailetContext {
         public boolean equals(Object o) {
             if (o instanceof BouncedMail) {
                 BouncedMail that = (BouncedMail) o;
-                return Objects.equal(this.sentMail, that.sentMail)
-                    && Objects.equal(this.message, that.message)
-                    && Objects.equal(this.bouncer, that.bouncer);
+                return Objects.equals(this.sentMail, that.sentMail)
+                    && Objects.equals(this.message, that.message)
+                    && Objects.equals(this.bouncer, that.bouncer);
             }
             return false;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(sentMail, message, bouncer);
+            return Objects.hash(sentMail, message, bouncer);
         }
 
         @Override
@@ -418,13 +468,16 @@ public class FakeMailContext implements MailetContext {
     @Override
     public void sendMail(Mail mail, String state) throws MessagingException {
         mail.setState(state);
-        sentMails.add(fromMail(mail));
+        sentMails.add(fromMail(mail).build());
     }
 
     @Override
     public void sendMail(Mail mail, String state, long delay, TimeUnit unit) throws MessagingException {
         mail.setState(state);
-        sentMails.add(fromMail(mail)); // FIXME delay ignored here for now
+        sentMails.add(
+            fromMail(mail)
+                .delay(new Delay(delay, unit))
+                .build());
     }
 
     public void setAttribute(String name, Serializable object) {
