@@ -19,12 +19,14 @@
 
 package org.apache.james.transport.matchers;
 
-import org.apache.mailet.base.GenericMatcher;
-import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
-
-import javax.mail.internet.MimeMessage;
 import java.util.Collection;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
+import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMatcher;
 
 import com.google.common.base.Objects;
 
@@ -41,7 +43,7 @@ public class FetchedFrom extends GenericMatcher {
 
     public static final String X_FETCHED_FROM = "X-fetched-from";
 
-    public Collection<MailAddress> match(Mail mail) throws javax.mail.MessagingException {
+    public Collection<MailAddress> match(Mail mail) throws MessagingException {
         MimeMessage message = mail.getMessage();
         String fetchHeaderValue = message.getHeader(X_FETCHED_FROM, null);
         if (Objects.equal(fetchHeaderValue, getCondition())) {

@@ -84,24 +84,19 @@ public class SpamAssassin extends GenericMailet {
     /**
      * @see org.apache.mailet.base.GenericMailet#service(Mail)
      */
-    public void service(Mail mail) {
-        try {
-            MimeMessage message = mail.getMessage();
+    public void service(Mail mail) throws MessagingException {
+        MimeMessage message = mail.getMessage();
 
-            // Invoke SpamAssassin connection and scan the message
-            SpamAssassinInvoker sa = new SpamAssassinInvoker(spamdHost, spamdPort);
-            sa.scanMail(message);
+        // Invoke SpamAssassin connection and scan the message
+        SpamAssassinInvoker sa = new SpamAssassinInvoker(spamdHost, spamdPort);
+        sa.scanMail(message);
 
-            // Add headers as attribute to mail object
-            for (String key : sa.getHeadersAsAttribute().keySet()) {
-                mail.setAttribute(key, sa.getHeadersAsAttribute().get(key));
-            }
-
-            message.saveChanges();
-        } catch (MessagingException e) {
-            LOGGER.error("Encountered exception", e);
+        // Add headers as attribute to mail object
+        for (String key : sa.getHeadersAsAttribute().keySet()) {
+            mail.setAttribute(key, sa.getHeadersAsAttribute().get(key));
         }
 
+        message.saveChanges();
     }
 
     /**

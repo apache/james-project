@@ -207,11 +207,13 @@ Regards, Postmaster XXX.YYY
        <mailet match="SMTPAuthSuccessful" class="SetMimeHeader">
           <name>X-UserIsAuth</name>
           <value>true</value>
+          <onMailetException>ignore</onMailetException>
        </mailet>
     
        <mailet match="HasMailAttribute=org.apache.james.SMIMECheckSignature" class="SetMimeHeader">
           <name>X-WasSigned</name>
           <value>true</value>
+          <onMailetException>ignore</onMailetException>
        </mailet>
 
        <!-- Add a server-side signature -->

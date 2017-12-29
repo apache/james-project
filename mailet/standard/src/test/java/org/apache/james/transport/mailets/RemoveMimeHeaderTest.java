@@ -21,6 +21,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -145,7 +146,7 @@ public class RemoveMimeHeaderTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void serviceShouldNotThrowWhenExceptionOccured() throws MessagingException {
+    public void serviceShouldThrowWhenExceptionOccured() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("name", "")
@@ -156,7 +157,8 @@ public class RemoveMimeHeaderTest {
         when(mail.getMessage())
             .thenThrow(MessagingException.class);
 
-        mailet.service(mail);
+        assertThatThrownBy(() -> mailet.service(mail))
+            .isInstanceOf(MessagingException.class);
     }
 
     private Mail createMail(MimeMessage message) throws MessagingException {
