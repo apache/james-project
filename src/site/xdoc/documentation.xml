@@ -66,7 +66,7 @@
 
             <h4>Internal Projects</h4>
 
-            <p>The <a href='http://james.apache.org/mailets/'>Apache James Mailet project</a> collects products
+            <p>The <a href='http://james.apache.org/mailet/'>Apache James Mailet project</a> collects products
                related to mailets (mail processing components analogous to servlets). These are independent of the
                 <a href='http://james.apache.org/server/'>James server</a> and can be reused in any mailet container.</p>
 

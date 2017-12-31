@@ -121,12 +121,12 @@
       </p>
 
       <p>
-        The reason for these rules is so that commiters can easily see
+        The reason for these rules is so that committers can easily see
         what you are trying to achieve,
         it is their responsibility to manage the code and review submissions,
         if you make it easy for them to see what you are doing your
         patch is more likely to
-        be commited quickly.
+        be committed quickly.
         <br />
       </p>
     </section>

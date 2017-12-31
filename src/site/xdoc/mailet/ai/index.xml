@@ -25,7 +25,7 @@
     <body>
         <section name="Artificial Intelligence Mailets">
             <p>Mail processors with artificial intelligence (AI). Their purpose is to use AI algorithms to process
-                emails - things like identify<a href="http://en.wikipedia.org/wiki/Spam_(electronic)">SPAM</a>,
+                emails - things like identify <a href="http://en.wikipedia.org/wiki/Spam_(electronic)">SPAM</a>,
                 <a href="http://en.wikipedia.org/wiki/Phishing">phishing</a>
                 attempts, etc.
             </p>
