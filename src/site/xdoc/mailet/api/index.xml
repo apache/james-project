@@ -32,9 +32,9 @@
                 processing functionality.
             </p>
             <p>
-                The Mailet API is a subproject of<a href='http://james.apache.org'>Apache James</a>.
+                The Mailet API is a subproject of <a href='http://james.apache.org'>Apache James</a>.
                 All who are interested in developing the Mailet API and James will be warmly
-                welcomed on the<a href='/mail-lists.html'>mailing lists</a>.
+                welcomed on the <a href='/mail-lists.html'>mailing lists</a>.
             </p>
         </section>
         <section name="Quick Start">
@@ -44,7 +44,7 @@
                     processing component is a useful analogy.
                 </p>
                 <p>
-                    Mailets implement<a href='/apidocs/org/apache/mailet/Mailet.html'>Mailet</a>.
+                    Mailets implement <a href='/apidocs/org/apache/mailet/Mailet.html'>Mailet</a>.
                     Mailets execute within a mailet container.
                     <a href='http://james.apache.org/server'>James server</a>
                     is a well known mailet container. Assembly and configuration of mailets and mail processors is the
@@ -111,12 +111,12 @@
             </subsection>
             <subsection name='Examples'>
                 <p>
-                    See<a href='http://james.apache.org/mailet/standard'>Standard mailets</a>.
+                    See <a href='http://james.apache.org/mailet/standard'>Standard mailets</a>.
                 </p>
             </subsection>
             <subsection name='Building the Mailet API'>
                 <p>
-                    The build uses<a href='http://ant.apache.org'>Ant</a>.
+                    The build uses <a href='http://ant.apache.org'>Ant</a>.
                     <code>ant -projecthelp</code>
                     describes appropriate targets.
                     <code>ant</code>
@@ -126,7 +126,7 @@
         </section>
 
         <section name="Comments, Questions and Issues">
-            <p>Please direct your feedback to the<a href='mail-lists.html'>mailet-api mailing list</a>.
+            <p>Please direct your feedback to the <a href='mail-lists.html'>mailet-api mailing list</a>.
             </p>
         </section>
     </body>
