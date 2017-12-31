@@ -44,7 +44,7 @@
                     processing component is a useful analogy.
                 </p>
                 <p>
-                    Mailets implement <a href='/apidocs/org/apache/mailet/Mailet.html'>Mailet</a>.
+                    Mailets implement <a href='/mailet/apidocs/org/apache/mailet/Mailet.html'>Mailet</a>.
                     Mailets execute within a mailet container.
                     <a href='http://james.apache.org/server'>James server</a>
                     is a well known mailet container. Assembly and configuration of mailets and mail processors is the
