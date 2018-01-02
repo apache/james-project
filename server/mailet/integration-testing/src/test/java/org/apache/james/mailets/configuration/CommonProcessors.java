@@ -47,7 +47,9 @@ import org.apache.mailet.Mail;
 
 public class CommonProcessors {
 
-    public static ProcessorConfiguration root() {
+	public static final String ERROR_REPOSITORY = "file://var/mail/error/";
+
+	public static ProcessorConfiguration root() {
         return ProcessorConfiguration.builder()
                 .state("root")
                 .enableJmx(true)
@@ -114,7 +116,7 @@ public class CommonProcessors {
                 .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(ToRepository.class)
-                        .addProperty("repositoryPath", "file://var/mail/error/")
+                        .addProperty("repositoryPath", ERROR_REPOSITORY)
                         .build())
                 .build();
     }

@@ -20,7 +20,6 @@
 package org.apache.james.mailetcontainer.impl.camel;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -43,7 +42,6 @@ import org.apache.james.core.MailAddress;
 import org.apache.mailet.Matcher;
 import org.slf4j.Logger;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -89,7 +87,7 @@ public class MatcherSplitter {
         Collection<MailAddress> matchedRcpts = null;
         Collection<MailAddress> origRcpts = new ArrayList<>(mail.getRecipients());
         long start = System.currentTimeMillis();
-        MessagingException ex = null;
+        Exception ex = null;
         TimeMetric timeMetric = metricFactory.timer(matcher.getClass().getSimpleName());
 
         try {
@@ -120,7 +118,7 @@ public class MatcherSplitter {
                     ProcessorUtil.verifyMailAddresses(matchedRcpts);
                 }
 
-            } catch (MessagingException me) {
+            } catch (Exception me) {
                 ex = me;
                 if (onMatchException == null) {
                     onMatchException = Mail.ERROR;
@@ -137,8 +135,6 @@ public class MatcherSplitter {
                 } else {
                     ProcessorUtil.handleException(me, mail, matcher.getMatcherConfig().getMatcherName(), onMatchException, logger);
                 }
-            } catch (IOException e) {
-                throw Throwables.propagate(e);
             }
 
             // check if the matcher matched
