@@ -21,63 +21,41 @@ package org.apache.james.mailets;
 
 import static org.apache.james.MemoryJamesServerMain.SMTP_ONLY_MODULE;
 import static org.apache.james.mailets.configuration.CommonProcessors.ERROR_REPOSITORY;
+import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
+import static org.apache.james.mailets.configuration.Constants.FROM;
+import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
+import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
+import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
 
+import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
-import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.ErrorMailet;
 import org.apache.james.transport.mailets.ErrorMatcher;
 import org.apache.james.transport.mailets.NoopMailet;
-import org.apache.james.transport.mailets.RemoveMimeHeader;
+import org.apache.james.transport.mailets.Null;
 import org.apache.james.transport.mailets.RuntimeErrorMailet;
 import org.apache.james.transport.mailets.RuntimeErrorMatcher;
 import org.apache.james.transport.mailets.ToRepository;
 import org.apache.james.transport.matchers.All;
-import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
-import org.apache.mailet.Mail;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
-
 public class MailetErrorsTest {
-    private static final String LOCALHOST_IP = "127.0.0.1";
-    private static final int SMTP_PORT = 1025;
-    private static final String PASSWORD = "secret";
-
-    private static final String JAMES_APACHE_ORG = "james.org";
-    private static final String JAMES_ANOTHER_DOMAIN = "james.com";
-
-    private static final String FROM = "from@" + JAMES_APACHE_ORG;
-    private static final String RECIPIENT = "touser@" + JAMES_ANOTHER_DOMAIN;
     public static final String CUSTOM_PROCESSOR = "custom";
-    public static final String CUSTOM_REPOSITORY = "file://var/mail/error/";
+    public static final String CUSTOM_REPOSITORY = "file://var/mail/custom/";
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @Rule
+    public SMTPMessageSender smtpMessageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
-    private ConditionFactory calmlyAwait;
-    private DataProbe dataProbe;
-
-    @Before
-    public void setup() throws Exception {
-        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        calmlyAwait = Awaitility.with()
-            .pollInterval(slowPacedPollInterval)
-            .and()
-            .with()
-            .pollDelay(slowPacedPollInterval)
-            .await();
-    }
 
     @After
     public void tearDown() {
@@ -90,454 +68,327 @@ public class MailetErrorsTest {
     public void mailetProcessorsShouldHandleMessagingException() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .build(temporaryFolder,
-                MailetContainer.builder()
-                    .threads(2)
-                    .postmaster("postmaster@localhost")
-                    .addProcessor(emptyTransport())
-                    .addProcessor(errorProcessor())
-                    .addProcessor(ProcessorConfiguration.builder()
-                        .state(Mail.DEFAULT)
-                        .addMailet(MailetConfiguration.builder()
-                            .matcher(All.class)
-                            .mailet(ErrorMailet.class)
-                            .build())
-                        .build())
-                    .build());
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+            .withMailetContainer(MailetContainer.builder()
+                .addProcessor(CommonProcessors.deliverOnlyTransport())
+                .addProcessor(errorProcessor())
+                .addProcessor(ProcessorConfiguration.root()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(ErrorMailet.class))))
+            .build(temporaryFolder);
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
-        dataProbe.addUser(FROM, PASSWORD);
+        smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
-
-            calmlyAwait.atMost(Duration.TEN_SECONDS)
-                .until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
-        }
+        awaitOneMinute.until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
     }
 
     @Test
     public void mailetProcessorsShouldHandleRuntimeException() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .build(temporaryFolder,
-                MailetContainer.builder()
-                    .threads(2)
-                    .postmaster("postmaster@localhost")
-                    .addProcessor(emptyTransport())
-                    .addProcessor(errorProcessor())
-                    .addProcessor(ProcessorConfiguration.builder()
-                        .state(Mail.DEFAULT)
-                        .addMailet(MailetConfiguration.builder()
-                            .matcher(All.class)
-                            .mailet(RuntimeErrorMailet.class)
-                            .build())
-                        .build())
-                    .build());
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+            .withMailetContainer(MailetContainer.builder()
+                .addProcessor(CommonProcessors.deliverOnlyTransport())
+                .addProcessor(errorProcessor())
+                .addProcessor(ProcessorConfiguration.root()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(RuntimeErrorMailet.class))))
+            .build(temporaryFolder);
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
-        dataProbe.addUser(FROM, PASSWORD);
+        smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
-
-            calmlyAwait.atMost(Duration.TEN_SECONDS)
-                .until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
-        }
+        awaitOneMinute.until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
     }
 
     @Test
     public void mailetProcessorsShouldHandleMessagingExceptionWhenSpecificErrorHandlingSpecified() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .build(temporaryFolder,
-                MailetContainer.builder()
-                    .threads(2)
-                    .postmaster("postmaster@localhost")
-                    .addProcessor(emptyTransport())
-                    .addProcessor(errorProcessor())
-                    .addProcessor(customProcessor())
-                    .addProcessor(ProcessorConfiguration.builder()
-                        .state(Mail.DEFAULT)
-                        .addMailet(MailetConfiguration.builder()
-                            .matcher(All.class)
-                            .mailet(ErrorMailet.class)
-                            .addProperty("onMailetException", CUSTOM_PROCESSOR)
-                            .build())
-                        .build())
-                    .build());
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+            .withMailetContainer(MailetContainer.builder()
+                .addProcessor(CommonProcessors.deliverOnlyTransport())
+                .addProcessor(errorProcessor())
+                .addProcessor(customProcessor())
+                .addProcessor(ProcessorConfiguration.root()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(ErrorMailet.class)
+                        .addProperty("onMailetException", CUSTOM_PROCESSOR))))
+            .build(temporaryFolder);
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
-        dataProbe.addUser(FROM, PASSWORD);
+        smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
+        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
 
-            calmlyAwait.atMost(Duration.TEN_SECONDS)
-                .until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
-        }
     }
 
     @Test
     public void mailetProcessorsShouldHandleRuntimeExceptionWhenSpecificErrorHandlingSpecified() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .build(temporaryFolder,
-                MailetContainer.builder()
-                    .threads(2)
-                    .postmaster("postmaster@localhost")
-                    .addProcessor(emptyTransport())
-                    .addProcessor(errorProcessor())
-                    .addProcessor(customProcessor())
-                    .addProcessor(ProcessorConfiguration.builder()
-                        .state(Mail.DEFAULT)
-                        .addMailet(MailetConfiguration.builder()
-                            .matcher(All.class)
-                            .mailet(RuntimeErrorMailet.class)
-                            .addProperty("onMailetException", CUSTOM_PROCESSOR)
-                            .build())
-                        .build())
-                    .build());
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+            .withMailetContainer(MailetContainer.builder()
+                .addProcessor(CommonProcessors.deliverOnlyTransport())
+                .addProcessor(errorProcessor())
+                .addProcessor(customProcessor())
+                .addProcessor(ProcessorConfiguration.root()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(RuntimeErrorMailet.class)
+                        .addProperty("onMailetException", CUSTOM_PROCESSOR))))
+            .build(temporaryFolder);
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
-        dataProbe.addUser(FROM, PASSWORD);
+        smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
-
-            calmlyAwait.atMost(Duration.TEN_SECONDS)
-                .until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
-        }
+        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
     }
 
     @Test
     public void onExceptionIgnoreShouldContinueProcessingWhenRuntimeException() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .build(temporaryFolder,
-                MailetContainer.builder()
-                    .threads(2)
-                    .postmaster("postmaster@localhost")
-                    .addProcessor(emptyTransport())
-                    .addProcessor(errorProcessor())
-                    .addProcessor(customProcessor())
-                    .addProcessor(ProcessorConfiguration.builder()
-                        .state(Mail.DEFAULT)
-                        .addMailet(MailetConfiguration.builder()
-                            .matcher(All.class)
-                            .mailet(RuntimeErrorMailet.class)
-                            .addProperty("onMailetException", "ignore")
-                            .build())
-                        .addMailet(MailetConfiguration.builder()
-                            .matcher(All.class)
-                            .mailet(ToRepository.class)
-                            .addProperty("repositoryPath", CUSTOM_REPOSITORY)
-                            .build())
-                        .build())
-                    .build());
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+            .withMailetContainer(MailetContainer.builder()
+                .addProcessor(CommonProcessors.deliverOnlyTransport())
+                .addProcessor(errorProcessor())
+                .addProcessor(customProcessor())
+                .addProcessor(ProcessorConfiguration.root()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(RuntimeErrorMailet.class)
+                        .addProperty("onMailetException", "ignore"))
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(ToRepository.class)
+                        .addProperty("repositoryPath", CUSTOM_REPOSITORY))))
+            .build(temporaryFolder);
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
-        dataProbe.addUser(FROM, PASSWORD);
+        smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
-
-            calmlyAwait.atMost(Duration.TEN_SECONDS)
-                .until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
-        }
+        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
     }
 
     @Test
     public void onExceptionIgnoreShouldContinueProcessingWhenMessagingException() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .build(temporaryFolder,
-                MailetContainer.builder()
-                    .threads(2)
-                    .postmaster("postmaster@localhost")
-                    .addProcessor(emptyTransport())
-                    .addProcessor(errorProcessor())
-                    .addProcessor(customProcessor())
-                    .addProcessor(ProcessorConfiguration.builder()
-                        .state(Mail.DEFAULT)
-                        .addMailet(MailetConfiguration.builder()
-                            .matcher(All.class)
-                            .mailet(ErrorMailet.class)
-                            .addProperty("onMailetException", "ignore")
-                            .build())
-                        .addMailet(MailetConfiguration.builder()
-                            .matcher(All.class)
-                            .mailet(ToRepository.class)
-                            .addProperty("repositoryPath", CUSTOM_REPOSITORY)
-                            .build())
-                        .build())
-                    .build());
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+            .withMailetContainer(MailetContainer.builder()
+                .addProcessor(CommonProcessors.deliverOnlyTransport())
+                .addProcessor(errorProcessor())
+                .addProcessor(customProcessor())
+                .addProcessor(ProcessorConfiguration.root()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(ErrorMailet.class)
+                        .addProperty("onMailetException", "ignore"))
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(ToRepository.class)
+                        .addProperty("repositoryPath", CUSTOM_REPOSITORY))))
+            .build(temporaryFolder);
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
-        dataProbe.addUser(FROM, PASSWORD);
+        smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
-
-            calmlyAwait.atMost(Duration.TEN_SECONDS)
-                .until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
-        }
+        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
     }
 
     @Test
     public void matcherProcessorsShouldHandleMessagingException() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .build(temporaryFolder,
-                MailetContainer.builder()
-                    .threads(2)
-                    .postmaster("postmaster@localhost")
-                    .addProcessor(emptyTransport())
-                    .addProcessor(errorProcessor())
-                    .addProcessor(ProcessorConfiguration.builder()
-                        .state(Mail.DEFAULT)
-                        .addMailet(MailetConfiguration.builder()
-                            .matcher(ErrorMatcher.class)
-                            .mailet(NoopMailet.class)
-                            .build())
-                        .build())
-                    .build());
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+            .withMailetContainer(MailetContainer.builder()
+                .addProcessor(CommonProcessors.deliverOnlyTransport())
+                .addProcessor(errorProcessor())
+                .addProcessor(ProcessorConfiguration.root()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(ErrorMatcher.class)
+                        .mailet(NoopMailet.class))))
+            .build(temporaryFolder);
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
-        dataProbe.addUser(FROM, PASSWORD);
+        smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
-
-            calmlyAwait.atMost(Duration.TEN_SECONDS)
-                .until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
-        }
+        awaitOneMinute.until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
     }
 
     @Test
     public void matcherProcessorsShouldHandleRuntimeException() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .build(temporaryFolder,
-                MailetContainer.builder()
-                    .threads(2)
-                    .postmaster("postmaster@localhost")
-                    .addProcessor(emptyTransport())
-                    .addProcessor(errorProcessor())
-                    .addProcessor(ProcessorConfiguration.builder()
-                        .state(Mail.DEFAULT)
-                        .addMailet(MailetConfiguration.builder()
-                            .matcher(RuntimeErrorMatcher.class)
-                            .mailet(NoopMailet.class)
-                            .build())
-                        .build())
-                    .build());
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+            .withMailetContainer(MailetContainer.builder()
+                .addProcessor(CommonProcessors.deliverOnlyTransport())
+                .addProcessor(errorProcessor())
+                .addProcessor(ProcessorConfiguration.root()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(RuntimeErrorMatcher.class)
+                        .mailet(NoopMailet.class))))
+            .build(temporaryFolder);
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
-        dataProbe.addUser(FROM, PASSWORD);
+        smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
-
-            calmlyAwait.atMost(Duration.TEN_SECONDS)
-                .until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
-        }
+        awaitOneMinute.until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
     }
 
     @Test
     public void matcherProcessorsShouldHandleMessagingExceptionWhenSpecificErrorHandlingSpecified() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .build(temporaryFolder,
-                MailetContainer.builder()
-                    .threads(2)
-                    .postmaster("postmaster@localhost")
-                    .addProcessor(emptyTransport())
-                    .addProcessor(errorProcessor())
-                    .addProcessor(customProcessor())
-                    .addProcessor(ProcessorConfiguration.builder()
-                        .state(Mail.DEFAULT)
-                        .addMailet(MailetConfiguration.builder()
-                            .matcher(ErrorMatcher.class)
-                            .mailet(NoopMailet.class)
-                            .addProperty("onMailetException", CUSTOM_PROCESSOR)
-                            .build())
-                        .build())
-                    .build());
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+            .withMailetContainer(MailetContainer.builder()
+                .addProcessor(CommonProcessors.deliverOnlyTransport())
+                .addProcessor(errorProcessor())
+                .addProcessor(customProcessor())
+                .addProcessor(ProcessorConfiguration.root()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(ErrorMatcher.class)
+                        .mailet(NoopMailet.class)
+                        .addProperty("onMatchException", CUSTOM_PROCESSOR))))
+            .build(temporaryFolder);
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
-        dataProbe.addUser(FROM, PASSWORD);
+        smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
-
-            calmlyAwait.atMost(Duration.TEN_SECONDS)
-                .until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
-        }
+        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
     }
 
     @Test
     public void matcherProcessorsShouldHandleRuntimeExceptionWhenSpecificErrorHandlingSpecified() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .build(temporaryFolder,
-                MailetContainer.builder()
-                    .threads(2)
-                    .postmaster("postmaster@localhost")
-                    .addProcessor(emptyTransport())
-                    .addProcessor(errorProcessor())
-                    .addProcessor(customProcessor())
-                    .addProcessor(ProcessorConfiguration.builder()
-                        .state(Mail.DEFAULT)
-                        .addMailet(MailetConfiguration.builder()
-                            .matcher(RuntimeErrorMatcher.class)
-                            .mailet(NoopMailet.class)
-                            .addProperty("onMailetException", CUSTOM_PROCESSOR)
-                            .build())
-                        .build())
-                    .build());
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+            .withMailetContainer(MailetContainer.builder()
+                .addProcessor(CommonProcessors.deliverOnlyTransport())
+                .addProcessor(errorProcessor())
+                .addProcessor(customProcessor())
+                .addProcessor(ProcessorConfiguration.root()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(RuntimeErrorMatcher.class)
+                        .mailet(NoopMailet.class)
+                        .addProperty("onMatchException", CUSTOM_PROCESSOR))))
+            .build(temporaryFolder);
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
-        dataProbe.addUser(FROM, PASSWORD);
+        smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
-
-            calmlyAwait.atMost(Duration.TEN_SECONDS)
-                .until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
-        }
+        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
     }
 
     @Test
-    public void onMatcherExceptionIgnoreShouldContinueProcessingWhenRuntimeException() throws Exception {
+    public void onMatcherExceptionIgnoreShouldNotMatchWhenRuntimeExceptionAndNoMatchConfigured() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .build(temporaryFolder,
-                MailetContainer.builder()
-                    .threads(2)
-                    .postmaster("postmaster@localhost")
-                    .addProcessor(emptyTransport())
-                    .addProcessor(errorProcessor())
-                    .addProcessor(customProcessor())
-                    .addProcessor(ProcessorConfiguration.builder()
-                        .state(Mail.DEFAULT)
-                        .addMailet(MailetConfiguration.builder()
-                            .matcher(RuntimeErrorMatcher.class)
-                            .mailet(NoopMailet.class)
-                            .addProperty("onMailetException", "ignore")
-                            .build())
-                        .addMailet(MailetConfiguration.builder()
-                            .matcher(All.class)
-                            .mailet(ToRepository.class)
-                            .addProperty("repositoryPath", CUSTOM_REPOSITORY)
-                            .build())
-                        .build())
-                    .build());
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+            .withMailetContainer(MailetContainer.builder()
+                .addProcessor(CommonProcessors.deliverOnlyTransport())
+                .addProcessor(errorProcessor())
+                .addProcessor(customProcessor())
+                .addProcessor(ProcessorConfiguration.root()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(RuntimeErrorMatcher.class)
+                        .mailet(Null.class)
+                        .addProperty("onMatchException", "nomatch"))
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(ToRepository.class)
+                        .addProperty("repositoryPath", CUSTOM_REPOSITORY))))
+            .build(temporaryFolder);
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
-        dataProbe.addUser(FROM, PASSWORD);
+        smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
-
-            calmlyAwait.atMost(Duration.TEN_SECONDS)
-                .until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
-        }
+        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
     }
 
     @Test
-    public void onMatcherExceptionIgnoreShouldContinueProcessingWhenMessagingException() throws Exception {
+    public void onMatcherExceptionIgnoreShouldNotMatchWhenMessagingExceptionAndNoMatchConfigured() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .build(temporaryFolder,
-                MailetContainer.builder()
-                    .threads(2)
-                    .postmaster("postmaster@localhost")
-                    .addProcessor(emptyTransport())
-                    .addProcessor(errorProcessor())
-                    .addProcessor(customProcessor())
-                    .addProcessor(ProcessorConfiguration.builder()
-                        .state(Mail.DEFAULT)
-                        .addMailet(MailetConfiguration.builder()
-                            .matcher(ErrorMatcher.class)
-                            .mailet(NoopMailet.class)
-                            .addProperty("onMailetException", "ignore")
-                            .build())
-                        .addMailet(MailetConfiguration.builder()
-                            .matcher(All.class)
-                            .mailet(ToRepository.class)
-                            .addProperty("repositoryPath", CUSTOM_REPOSITORY)
-                            .build())
-                        .build())
-                    .build());
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+            .withMailetContainer(MailetContainer.builder()
+                .addProcessor(CommonProcessors.deliverOnlyTransport())
+                .addProcessor(errorProcessor())
+                .addProcessor(customProcessor())
+                .addProcessor(ProcessorConfiguration.root()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(ErrorMatcher.class)
+                        .mailet(Null.class)
+                        .addProperty("onMatchException", "nomatch"))
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(ToRepository.class)
+                        .addProperty("repositoryPath", CUSTOM_REPOSITORY))))
+            .build(temporaryFolder);
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
-        dataProbe.addUser(FROM, PASSWORD);
+        smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
-
-            calmlyAwait.atMost(Duration.TEN_SECONDS)
-                .until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
-        }
+        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
     }
 
-    private ProcessorConfiguration errorProcessor() {
-        return ProcessorConfiguration.builder()
-            .state(Mail.ERROR)
-            .enableJmx(true)
+    @Test
+    public void onMatcherExceptionIgnoreShouldMatchWhenRuntimeExceptionAndAllMatchConfigured() throws Exception {
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(SMTP_ONLY_MODULE)
+            .withMailetContainer(MailetContainer.builder()
+                .putProcessor(CommonProcessors.deliverOnlyTransport())
+                .putProcessor(errorProcessor())
+                .putProcessor(customProcessor())
+                .putProcessor(ProcessorConfiguration.root()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(RuntimeErrorMatcher.class)
+                        .mailet(ToRepository.class)
+                        .addProperty("repositoryPath", CUSTOM_REPOSITORY)
+                        .addProperty("onMatchException", "matchall"))
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(Null.class))))
+            .build(temporaryFolder);
+        MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
+
+        smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
+
+        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
+    }
+
+    @Test
+    public void onMatcherExceptionIgnoreShouldMatchWhenMessagingExceptionAndAllMatchConfigured() throws Exception {
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(SMTP_ONLY_MODULE)
+            .withMailetContainer(MailetContainer.builder()
+                .putProcessor(CommonProcessors.deliverOnlyTransport())
+                .putProcessor(errorProcessor())
+                .putProcessor(customProcessor())
+                .putProcessor(ProcessorConfiguration.root()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(ErrorMatcher.class)
+                        .mailet(ToRepository.class)
+                        .addProperty("repositoryPath", CUSTOM_REPOSITORY)
+                        .addProperty("onMatchException", "matchall"))
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(Null.class))))
+            .build(temporaryFolder);
+        MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
+
+        smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
+
+        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
+    }
+
+    private ProcessorConfiguration.Builder errorProcessor() {
+        return ProcessorConfiguration.error()
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(ToRepository.class)
-                .addProperty("repositoryPath", ERROR_REPOSITORY)
-                .build())
-            .build();
+                .addProperty("repositoryPath", ERROR_REPOSITORY));
     }
 
-    private ProcessorConfiguration customProcessor() {
+    private ProcessorConfiguration.Builder customProcessor() {
         return ProcessorConfiguration.builder()
             .state("custom")
-            .enableJmx(true)
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(ToRepository.class)
-                .addProperty("repositoryPath", CUSTOM_REPOSITORY)
-                .build())
-            .build();
-    }
-
-    private ProcessorConfiguration emptyTransport() {
-        return ProcessorConfiguration.builder()
-            .state("transport")
-            .addMailet(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(RemoveMimeHeader.class)
-                .addProperty("name", "bcc")
-                .build())
-            .build();
+                .addProperty("repositoryPath", CUSTOM_REPOSITORY));
     }
 }

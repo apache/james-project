@@ -88,14 +88,14 @@ public class CamelProcessor implements Processor {
 
             MailetConfig mailetConfig = mailet.getMailetConfig();
             if (mailetConfig instanceof MailetConfigImpl) {
-                onMailetException = ((MailetConfigImpl) mailetConfig).getInitAttribute("onMailetException");
+                onMailetException = mailetConfig.getInitParameter("onMailetException");
             }
             if (onMailetException == null) {
                 onMailetException = Mail.ERROR;
             } else {
                 onMailetException = onMailetException.trim().toLowerCase(Locale.US);
             }
-            if (onMailetException.compareTo("ignore") == 0) {
+            if (onMailetException.equalsIgnoreCase("ignore")) {
                 // ignore the exception and continue
                 // this option should not be used if the mail object can be
                 // changed by the mailet
