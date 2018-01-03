@@ -63,6 +63,7 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
 import org.apache.james.mailbox.store.user.model.Subscription;
 import org.apache.james.mailbox.store.user.model.impl.SimpleSubscription;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -111,7 +112,8 @@ public class HBaseUtilsTest {
     /**
      * Test of metadataToPut method for message.
      */
-    //@Test
+    @Ignore
+    @Test
     public void testMessageToPut() {
         System.out.println("messageToPut");
         // left to implement
