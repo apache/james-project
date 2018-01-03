@@ -36,6 +36,7 @@ import java.util.concurrent.Executors;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
+import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -46,10 +47,10 @@ import com.datastax.driver.core.Session;
 import com.google.common.collect.ImmutableMap;
 
 public class CassandraMigrationServiceTest {
-    private static final int LATEST_VERSION = 3;
-    private static final int INTERMEDIARY_VERSION = 2;
-    private static final int CURRENT_VERSION = INTERMEDIARY_VERSION;
-    private static final int OLDER_VERSION = 1;
+    private static final SchemaVersion LATEST_VERSION = new SchemaVersion(3);
+    private static final SchemaVersion INTERMEDIARY_VERSION = new SchemaVersion(2);
+    private static final SchemaVersion CURRENT_VERSION = INTERMEDIARY_VERSION;
+    private static final SchemaVersion OLDER_VERSION = new SchemaVersion(1);
     private CassandraMigrationService testee;
     private CassandraSchemaVersionDAO schemaVersionDAO;
     private ExecutorService executorService;
@@ -63,7 +64,7 @@ public class CassandraMigrationServiceTest {
         schemaVersionDAO = mock(CassandraSchemaVersionDAO.class);
         successfulMigration = mock(Migration.class);
         when(successfulMigration.run()).thenReturn(Migration.Result.COMPLETED);
-        Map<Integer, Migration> allMigrationClazz = ImmutableMap.<Integer, Migration>builder()
+        Map<SchemaVersion, Migration> allMigrationClazz = ImmutableMap.<SchemaVersion, Migration>builder()
             .put(OLDER_VERSION, successfulMigration)
             .put(CURRENT_VERSION, successfulMigration)
             .put(LATEST_VERSION, successfulMigration)
@@ -127,7 +128,7 @@ public class CassandraMigrationServiceTest {
 
     @Test
     public void upgradeToVersionShouldThrowOnMissingVersion() throws Exception {
-        Map<Integer, Migration> allMigrationClazz = ImmutableMap.<Integer, Migration>builder()
+        Map<SchemaVersion, Migration> allMigrationClazz = ImmutableMap.<SchemaVersion, Migration>builder()
             .put(OLDER_VERSION, successfulMigration)
             .put(LATEST_VERSION, successfulMigration)
             .build();
@@ -142,7 +143,7 @@ public class CassandraMigrationServiceTest {
     @Test
     public void upgradeToVersionShouldUpdateIntermediarySuccessfulMigrationsInCaseOfError() throws Exception {
         try {
-            Map<Integer, Migration> allMigrationClazz = ImmutableMap.<Integer, Migration>builder()
+            Map<SchemaVersion, Migration> allMigrationClazz = ImmutableMap.<SchemaVersion, Migration>builder()
                 .put(OLDER_VERSION, successfulMigration)
                 .put(INTERMEDIARY_VERSION, () -> Migration.Result.PARTIAL)
                 .put(LATEST_VERSION, successfulMigration)
@@ -164,7 +165,7 @@ public class CassandraMigrationServiceTest {
         when(migration1.run()).thenReturn(Migration.Result.PARTIAL);
         Migration migration2 = successfulMigration;
 
-        Map<Integer, Migration> allMigrationClazz = ImmutableMap.<Integer, Migration>builder()
+        Map<SchemaVersion, Migration> allMigrationClazz = ImmutableMap.<SchemaVersion, Migration>builder()
             .put(OLDER_VERSION, migration1)
             .put(CURRENT_VERSION, migration2)
             .build();
@@ -182,7 +183,7 @@ public class CassandraMigrationServiceTest {
         Migration migration2 = mock(Migration.class);
         when(migration2.run()).thenReturn(Migration.Result.COMPLETED);
 
-        Map<Integer, Migration> allMigrationClazz = ImmutableMap.<Integer, Migration>builder()
+        Map<SchemaVersion, Migration> allMigrationClazz = ImmutableMap.<SchemaVersion, Migration>builder()
             .put(OLDER_VERSION, migration1)
             .put(CURRENT_VERSION, migration2)
             .build();
@@ -200,20 +201,20 @@ public class CassandraMigrationServiceTest {
     }
 
     public static class InMemorySchemaDAO extends CassandraSchemaVersionDAO {
-        private int currentVersion;
+        private SchemaVersion currentVersion;
 
-        public InMemorySchemaDAO(int currentVersion) {
+        public InMemorySchemaDAO(SchemaVersion currentVersion) {
             super(mock(Session.class), null);
             this.currentVersion = currentVersion;
         }
 
         @Override
-        public CompletableFuture<Optional<Integer>> getCurrentSchemaVersion() {
+        public CompletableFuture<Optional<SchemaVersion>> getCurrentSchemaVersion() {
             return CompletableFuture.completedFuture(Optional.of(currentVersion));
         }
 
         @Override
-        public CompletableFuture<Void> updateVersion(int newVersion) {
+        public CompletableFuture<Void> updateVersion(SchemaVersion newVersion) {
             currentVersion = newVersion;
             return CompletableFuture.completedFuture(null);
         }

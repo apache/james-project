@@ -44,6 +44,7 @@ import org.apache.james.backends.cassandra.migration.CassandraMigrationService;
 import org.apache.james.backends.cassandra.migration.Migration;
 import org.apache.james.backends.cassandra.migration.MigrationTask;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
+import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.webadmin.WebAdminServer;
@@ -61,9 +62,9 @@ import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
 public class CassandraMigrationRoutesTest {
-    private static final Integer LATEST_VERSION = 3;
-    private static final Integer CURRENT_VERSION = 2;
-    private static final Integer OLDER_VERSION = 1;
+    private static final SchemaVersion LATEST_VERSION = new SchemaVersion(3);
+    private static final SchemaVersion CURRENT_VERSION = new SchemaVersion(2);
+    private static final SchemaVersion OLDER_VERSION = new SchemaVersion(1);
     private WebAdminServer webAdminServer;
     private CassandraSchemaVersionDAO schemaVersionDAO;
     private MemoryTaskManager taskManager;
@@ -72,7 +73,7 @@ public class CassandraMigrationRoutesTest {
         Migration successfulMigration = mock(Migration.class);
         when(successfulMigration.run()).thenReturn(Migration.Result.COMPLETED);
 
-        Map<Integer, Migration> allMigrationClazz = ImmutableMap.<Integer, Migration>builder()
+        Map<SchemaVersion, Migration> allMigrationClazz = ImmutableMap.<SchemaVersion, Migration>builder()
             .put(OLDER_VERSION, successfulMigration)
             .put(CURRENT_VERSION, successfulMigration)
             .put(LATEST_VERSION, successfulMigration)
@@ -124,7 +125,7 @@ public class CassandraMigrationRoutesTest {
                 .jsonPath()
                 .getInt("version");
 
-        assertThat(version).isEqualTo(CURRENT_VERSION);
+        assertThat(version).isEqualTo(CURRENT_VERSION.getValue());
     }
 
     @Test
@@ -140,7 +141,7 @@ public class CassandraMigrationRoutesTest {
                 .jsonPath()
                 .getInt("version");
 
-        assertThat(version).isEqualTo(LATEST_VERSION);
+        assertThat(version).isEqualTo(LATEST_VERSION.getValue());
     }
 
     @Ignore
@@ -182,7 +183,7 @@ public class CassandraMigrationRoutesTest {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(OLDER_VERSION)));
 
         String taskId = with()
-            .body(String.valueOf(CURRENT_VERSION))
+            .body(String.valueOf(CURRENT_VERSION.getValue()))
         .post("/upgrade")
             .jsonPath()
             .get("taskId");
@@ -204,7 +205,7 @@ public class CassandraMigrationRoutesTest {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(CURRENT_VERSION)));
 
         Map<String, Object> errors = given()
-            .body(String.valueOf(OLDER_VERSION))
+            .body(String.valueOf(OLDER_VERSION.getValue()))
         .with()
             .post("/upgrade")
         .then()
@@ -272,7 +273,7 @@ public class CassandraMigrationRoutesTest {
             .body("status", is("completed"))
             .body("taskId", is(notNullValue()))
             .body("type", is(MigrationTask.CASSANDRA_MIGRATION))
-            .body("additionalInformation.toVersion", is(LATEST_VERSION))
+            .body("additionalInformation.toVersion", is(LATEST_VERSION.getValue()))
             .body("startedDate", is(notNullValue()))
             .body("submitDate", is(notNullValue()))
             .body("completedDate", is(notNullValue()));

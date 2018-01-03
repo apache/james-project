@@ -19,10 +19,10 @@
 
 package org.apache.james.backends.cassandra.versions;
 
-import static org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager.SchemaState.UP_TO_DATE;
-import static org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager.SchemaState.UPGRADABLE;
 import static org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager.SchemaState.TOO_OLD;
 import static org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager.SchemaState.TOO_RECENT;
+import static org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager.SchemaState.UPGRADABLE;
+import static org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager.SchemaState.UP_TO_DATE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -38,8 +38,8 @@ import org.junit.rules.ExpectedException;
 
 public class CassandraSchemaVersionManagerTest {
 
-    private final int minVersion = 2;
-    private final int maxVersion = 4;
+    private final SchemaVersion minVersion = new SchemaVersion(2);
+    private final SchemaVersion maxVersion = new SchemaVersion(4);
     private CassandraSchemaVersionDAO schemaVersionDAO;
 
     @Rule
@@ -52,7 +52,7 @@ public class CassandraSchemaVersionManagerTest {
 
     @Test
     public void computeSchemaStateShouldReturnTooOldWhenVersionIsLessThanMinVersion() {
-        int currentVersion = minVersion - 1;
+        SchemaVersion currentVersion = minVersion.previous();
 
         when(schemaVersionDAO.getCurrentSchemaVersion())
             .thenReturn(CompletableFuture.completedFuture(Optional.of(currentVersion)));
@@ -67,7 +67,7 @@ public class CassandraSchemaVersionManagerTest {
 
     @Test
     public void computeSchemaStateShouldReturnTooOldWhenVersionIsMoreThanMaxVersion() {
-        int currentVersion = maxVersion + 1;
+        SchemaVersion currentVersion = maxVersion.next();
 
         when(schemaVersionDAO.getCurrentSchemaVersion())
             .thenReturn(CompletableFuture.completedFuture(Optional.of(currentVersion)));
@@ -82,7 +82,7 @@ public class CassandraSchemaVersionManagerTest {
 
     @Test
     public void computeSchemaStateShouldReturnUpToDateWhenVersionEqualsMaxVersion() {
-        int currentVersion = maxVersion;
+        SchemaVersion currentVersion = maxVersion;
 
         when(schemaVersionDAO.getCurrentSchemaVersion())
             .thenReturn(CompletableFuture.completedFuture(Optional.of(currentVersion)));
@@ -97,7 +97,7 @@ public class CassandraSchemaVersionManagerTest {
 
     @Test
     public void computeSchemaStateShouldReturnUpgradableWhenVersionBetweenMinAnd() {
-        int currentVersion = maxVersion - 1;
+        SchemaVersion currentVersion = minVersion.next();
 
         when(schemaVersionDAO.getCurrentSchemaVersion())
             .thenReturn(CompletableFuture.completedFuture(Optional.of(currentVersion)));
@@ -111,51 +111,11 @@ public class CassandraSchemaVersionManagerTest {
     }
 
     @Test
-    public void constructorShouldThrowOnNegativeMinVersion() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        new CassandraSchemaVersionManager(
-            schemaVersionDAO,
-            -1,
-            maxVersion);
-    }
-
-    @Test
-    public void constructorShouldThrowOnZeroMinVersion() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        new CassandraSchemaVersionManager(
-            schemaVersionDAO,
-            0,
-            maxVersion);
-    }
-
-    @Test
-    public void constructorShouldThrowOnNegativeMaxVersion() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        new CassandraSchemaVersionManager(
-            schemaVersionDAO,
-            minVersion,
-            -1);
-    }
-
-    @Test
-    public void constructorShouldThrowOnZeroMaxVersion() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        new CassandraSchemaVersionManager(
-            schemaVersionDAO,
-            minVersion,
-            0);
-    }
-
-    @Test
     public void constructorShouldThrowMinVersionIsSuperiorToMaxVersion() {
         expectedException.expect(IllegalArgumentException.class);
 
-        int minVersion = 4;
-        int maxVersion = 2;
+        SchemaVersion minVersion = new SchemaVersion(4);
+        SchemaVersion maxVersion = new SchemaVersion(2);
         new CassandraSchemaVersionManager(
             schemaVersionDAO,
             minVersion,
@@ -164,9 +124,9 @@ public class CassandraSchemaVersionManagerTest {
 
     @Test
     public void computeSchemaStateShouldReturnUpToDateWhenMinMaxAndVersionEquals() {
-        int minVersion = 4;
-        int maxVersion = 4;
-        int currentVersion = 4;
+        SchemaVersion minVersion = new SchemaVersion(4);
+        SchemaVersion maxVersion = new SchemaVersion(4);
+        SchemaVersion currentVersion = new SchemaVersion(4);
         when(schemaVersionDAO.getCurrentSchemaVersion())
             .thenReturn(CompletableFuture.completedFuture(Optional.of(currentVersion)));
 

@@ -167,7 +167,7 @@ public class CassandraMigrationRoutes implements Routes {
         @ApiResponse(code = HttpStatus.OK_200, message = "The latest version of the schema", response = CassandraVersionResponse.class)
     })
     public CassandraVersionResponse getCassandraLatestVersion() {
-        return new CassandraVersionResponse(cassandraMigrationService.getLatestVersion());
+        return CassandraVersionResponse.from(cassandraMigrationService.getLatestVersion());
     }
 
     @GET
@@ -176,6 +176,6 @@ public class CassandraMigrationRoutes implements Routes {
         @ApiResponse(code = HttpStatus.OK_200, message = "The current version of the schema", response = CassandraVersionResponse.class)
     })
     public CassandraVersionResponse getCassandraCurrentVersion() {
-        return new CassandraVersionResponse(cassandraMigrationService.getCurrentVersion());
+        return CassandraVersionResponse.from(cassandraMigrationService.getCurrentVersion());
     }
 }

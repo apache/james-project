@@ -227,14 +227,14 @@ public class WebAdminServerIntegrationTest {
         .then()
             .statusCode(HttpStatus.OK_200)
             .contentType(JSON_CONTENT_TYPE)
-            .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION + "}"));
+            .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION.getValue() + "}"));
     }
 
     @Test
     public void postShouldDoMigrationAndUpdateCurrentVersion() throws Exception {
         String taskId = with()
             .port(webAdminGuiceProbe.getWebAdminPort())
-            .body(String.valueOf(CassandraSchemaVersionManager.MAX_VERSION))
+            .body(String.valueOf(CassandraSchemaVersionManager.MAX_VERSION.getValue()))
         .post(UPGRADE_VERSION)
             .jsonPath()
             .get("taskId");
@@ -250,7 +250,7 @@ public class WebAdminServerIntegrationTest {
         .then()
             .statusCode(HttpStatus.OK_200)
             .contentType(JSON_CONTENT_TYPE)
-            .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION + "}"));
+            .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION.getValue() + "}"));
     }
 
     @Test
@@ -272,7 +272,7 @@ public class WebAdminServerIntegrationTest {
         .then()
             .statusCode(HttpStatus.OK_200)
             .contentType(JSON_CONTENT_TYPE)
-            .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION + "}"));
+            .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION.getValue() + "}"));
     }
 
     @Test

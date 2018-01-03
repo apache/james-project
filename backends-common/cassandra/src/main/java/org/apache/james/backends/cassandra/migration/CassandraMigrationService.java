@@ -30,56 +30,55 @@ import javax.inject.Named;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
+import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
 
 public class CassandraMigrationService {
     public static final String LATEST_VERSION = "latestVersion";
     private final CassandraSchemaVersionDAO schemaVersionDAO;
-    private final int latestVersion;
-    private final Map<Integer, Migration> allMigrationClazz;
+    private final SchemaVersion latestVersion;
+    private final Map<SchemaVersion, Migration> allMigrationClazz;
     private final Logger LOG = LoggerFactory.getLogger(CassandraMigrationService.class);
 
     @Inject
-    public CassandraMigrationService(CassandraSchemaVersionDAO schemaVersionDAO, Map<Integer, Migration> allMigrationClazz, @Named(LATEST_VERSION) int latestVersion) {
-        Preconditions.checkArgument(latestVersion >= 0, "The latest version must be positive");
+    public CassandraMigrationService(CassandraSchemaVersionDAO schemaVersionDAO, Map<SchemaVersion, Migration> allMigrationClazz, @Named(LATEST_VERSION) SchemaVersion latestVersion) {
         this.schemaVersionDAO = schemaVersionDAO;
         this.latestVersion = latestVersion;
         this.allMigrationClazz = allMigrationClazz;
     }
 
-    public Optional<Integer> getCurrentVersion() {
+    public Optional<SchemaVersion> getCurrentVersion() {
         return schemaVersionDAO.getCurrentSchemaVersion().join();
     }
 
-    public Optional<Integer> getLatestVersion() {
+    public Optional<SchemaVersion> getLatestVersion() {
         return Optional.of(latestVersion);
     }
 
-    public Migration upgradeToVersion(int newVersion) {
-        int currentVersion = getCurrentVersion().orElse(DEFAULT_VERSION);
+    public Migration upgradeToVersion(SchemaVersion newVersion) {
+        SchemaVersion currentVersion = getCurrentVersion().orElse(DEFAULT_VERSION);
         assertMigrationNeeded(newVersion, currentVersion);
 
-        Migration migrationCombination = IntStream.range(currentVersion, newVersion)
+        Migration migrationCombination = IntStream.range(currentVersion.getValue(), newVersion.getValue())
             .boxed()
+            .map(SchemaVersion::new)
             .map(this::validateVersionNumber)
             .map(this::toMigration)
             .reduce(Migration.IDENTITY, Migration::combine);
         return new MigrationTask(migrationCombination, newVersion);
     }
 
-    private void assertMigrationNeeded(int newVersion, int currentVersion) {
-        boolean needMigration = currentVersion < newVersion;
+    private void assertMigrationNeeded(SchemaVersion newVersion, SchemaVersion currentVersion) {
+        boolean needMigration = currentVersion.isBefore(newVersion);
         if (!needMigration) {
             throw new IllegalStateException("Current version is already up to date");
         }
     }
 
-    private Integer validateVersionNumber(Integer versionNumber) {
+    private SchemaVersion validateVersionNumber(SchemaVersion versionNumber) {
         if (!allMigrationClazz.containsKey(versionNumber)) {
-            String message = String.format("Can not migrate to %d. No migration class registered.", versionNumber);
+            String message = String.format("Can not migrate to %d. No migration class registered.", versionNumber.getValue());
             LOG.error(message);
             throw new NotImplementedException(message);
         }
@@ -90,11 +89,11 @@ public class CassandraMigrationService {
         return upgradeToVersion(latestVersion);
     }
 
-    private Migration toMigration(Integer version) {
+    private Migration toMigration(SchemaVersion version) {
         return () -> {
-            int newVersion = version + 1;
-            int currentVersion = getCurrentVersion().orElse(DEFAULT_VERSION);
-            if (currentVersion >= newVersion) {
+            SchemaVersion newVersion = version.next();
+            SchemaVersion currentVersion = getCurrentVersion().orElse(DEFAULT_VERSION);
+            if (currentVersion.isAfterOrEquals(newVersion)) {
                 return Migration.Result.PARTIAL;
             }
 
@@ -107,13 +106,13 @@ public class CassandraMigrationService {
         };
     }
 
-    private void throwMigrationException(int newVersion) {
+    private void throwMigrationException(SchemaVersion newVersion) {
         throw new MigrationException(failureMessage(newVersion));
     }
 
-    private String failureMessage(Integer newVersion) {
+    private String failureMessage(SchemaVersion newVersion) {
         return String.format("Migrating to version %d partially done. " +
-                "Please check logs for cause of failure and re-run this migration.", newVersion);
+                "Please check logs for cause of failure and re-run this migration.", newVersion.getValue());
     }
 
 }

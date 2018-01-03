@@ -21,25 +21,28 @@ package org.apache.james.backends.cassandra.migration;
 
 import java.util.Optional;
 
+import org.apache.james.backends.cassandra.versions.SchemaVersion;
+import org.apache.james.task.TaskExecutionDetails;
+
 public class MigrationTask implements Migration {
     public static final String CASSANDRA_MIGRATION = "CassandraMigration";
 
-    public static class Details {
-        private final int toVersion;
+    public static class Details implements TaskExecutionDetails.AdditionalInformation {
+        private final SchemaVersion toVersion;
 
-        public Details(int toVersion) {
+        public Details(SchemaVersion toVersion) {
             this.toVersion = toVersion;
         }
 
         public int getToVersion() {
-            return toVersion;
+            return toVersion.getValue();
         }
     }
 
     private final Migration migration;
-    private final int toVersion;
+    private final SchemaVersion toVersion;
 
-    public MigrationTask(Migration migration, int toVersion) {
+    public MigrationTask(Migration migration, SchemaVersion toVersion) {
         this.migration = migration;
         this.toVersion = toVersion;
     }
@@ -55,7 +58,7 @@ public class MigrationTask implements Migration {
     }
 
     @Override
-    public Optional<Object> details() {
+    public Optional<TaskExecutionDetails.AdditionalInformation> details() {
         return Optional.of(new Details(toVersion));
     }
 }

@@ -17,26 +17,60 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.dto;
+package org.apache.james.backends.cassandra.versions;
 
-import org.apache.james.backends.cassandra.versions.SchemaVersion;
+import java.util.Objects;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
-public class CassandraVersionRequest {
-    public static CassandraVersionRequest parse(String version) {
-        Preconditions.checkNotNull(version, "Version is mandatory");
-        return new CassandraVersionRequest(Integer.valueOf(version));
-    }
-
+public class SchemaVersion {
     private final int value;
 
-    private CassandraVersionRequest(int value) {
-        Preconditions.checkArgument(value > 0);
+    public SchemaVersion(int value) {
+        Preconditions.checkArgument(value > 0, "version needs to be strictly positive");
         this.value = value;
     }
 
-    public SchemaVersion getValue() {
-        return new SchemaVersion(value);
+    public int getValue() {
+        return value;
+    }
+
+    public boolean isAfterOrEquals(SchemaVersion other) {
+        return this.value >= other.value;
+    }
+
+    public SchemaVersion next() {
+        return new SchemaVersion(value + 1);
+    }
+
+    public SchemaVersion previous() {
+        return new SchemaVersion(value - 1);
+    }
+
+    public boolean isBefore(SchemaVersion other) {
+        return this.value < other.value;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof SchemaVersion) {
+            SchemaVersion that = (SchemaVersion) o;
+
+            return Objects.equals(this.value, that.value);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(value);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("version", value)
+            .toString();
     }
 }

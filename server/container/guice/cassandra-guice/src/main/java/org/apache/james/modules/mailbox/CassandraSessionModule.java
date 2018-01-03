@@ -192,13 +192,17 @@ public class CassandraSessionModule extends AbstractModule {
                 case TOO_OLD:
                     throw new IllegalStateException(
                         String.format("Current schema version is %d whereas minimum required version is %d. " +
-                            "Recommended version is %d", versionManager.computeVersion(), versionManager.getMinimumSupportedVersion(),
-                            versionManager.getMaximumSupportedVersion()));
+                            "Recommended version is %d",
+                            versionManager.computeVersion().getValue(),
+                            versionManager.getMinimumSupportedVersion().getValue(),
+                            versionManager.getMaximumSupportedVersion().getValue()));
                 case TOO_RECENT:
                     throw new IllegalStateException(
                         String.format("Current schema version is %d whereas the minimum supported version is %d. " +
-                            "Recommended version is %d.", versionManager.computeVersion(), versionManager.getMinimumSupportedVersion(),
-                            versionManager.getMaximumSupportedVersion()));
+                            "Recommended version is %d.",
+                            versionManager.computeVersion().getValue(),
+                            versionManager.getMinimumSupportedVersion().getValue(),
+                            versionManager.getMaximumSupportedVersion().getValue()));
                 case UP_TO_DATE:
                     LOGGER.info("Schema version is up-to-date");
                     return;
