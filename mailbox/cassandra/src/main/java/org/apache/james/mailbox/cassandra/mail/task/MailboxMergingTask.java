@@ -20,8 +20,10 @@
 package org.apache.james.mailbox.cassandra.mail.task;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
+import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 
@@ -31,10 +33,17 @@ public class MailboxMergingTask implements Task {
     public static class Details implements TaskExecutionDetails.AdditionalInformation {
         private final CassandraId oldMailboxId;
         private final CassandraId newMailboxId;
+        private final long totalMessageCount;
+        private final long messageMovedCount;
+        private final long messageFailedCount;
 
-        public Details(CassandraId oldId, CassandraId newId) {
+
+        public Details(CassandraId oldId, CassandraId newId, long totalMessageCount, long messageMovedCount, long messageFailedCount) {
             this.oldMailboxId = oldId;
             this.newMailboxId = newId;
+            this.totalMessageCount = totalMessageCount;
+            this.messageMovedCount = messageMovedCount;
+            this.messageFailedCount = messageFailedCount;
         }
 
         public String getOldMailboxId() {
@@ -44,21 +53,67 @@ public class MailboxMergingTask implements Task {
         public String getNewMailboxId() {
             return newMailboxId.serialize();
         }
+
+        public long getTotalMessageCount() {
+            return totalMessageCount;
+        }
+
+        public long getMessageMovedCount() {
+            return messageMovedCount;
+        }
+
+        public long getMessageFailedCount() {
+            return messageFailedCount;
+        }
+    }
+
+    public static class Context {
+        private final long totalMessageCount;
+        private final AtomicLong totalMessageMoved;
+        private final AtomicLong totalMessageFailed;
+
+        public Context(long totalMessagesCount) {
+            this.totalMessageCount = totalMessagesCount;
+            this.totalMessageMoved = new AtomicLong(0L);
+            this.totalMessageFailed = new AtomicLong(0L);
+        }
+
+        public long getTotalMessageCount() {
+            return totalMessageCount;
+        }
+
+        public long getMessageMovedCount() {
+            return totalMessageMoved.get();
+        }
+
+        public long getMessageFailedCount() {
+            return totalMessageFailed.get();
+        }
+
+        public void incrementMovedCount() {
+            totalMessageMoved.incrementAndGet();
+        }
+
+        public void incrementFailedCount() {
+            totalMessageFailed.incrementAndGet();
+        }
     }
 
     private final MailboxMergingTaskRunner taskRunner;
     private final CassandraId oldMailboxId;
     private final CassandraId newMailboxId;
+    private final Context context;
 
-    public MailboxMergingTask(MailboxMergingTaskRunner taskRunner, CassandraId oldMailboxId, CassandraId newMailboxId) {
+    public MailboxMergingTask(MailboxMergingTaskRunner taskRunner, long totalMessagesToMove, CassandraId oldMailboxId, CassandraId newMailboxId) {
         this.taskRunner = taskRunner;
         this.oldMailboxId = oldMailboxId;
         this.newMailboxId = newMailboxId;
+        this.context = new Context(totalMessagesToMove);
     }
 
     @Override
     public Result run() {
-        return taskRunner.run(oldMailboxId, newMailboxId);
+        return taskRunner.run(oldMailboxId, newMailboxId, context);
     }
 
     @Override
@@ -68,6 +123,9 @@ public class MailboxMergingTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(new Details(oldMailboxId, newMailboxId));
+        return Optional.of(new Details(oldMailboxId, newMailboxId,
+            context.getTotalMessageCount(),
+            context.getMessageMovedCount(),
+            context.getMessageFailedCount()));
     }
 }

@@ -506,7 +506,10 @@ The scheduled task will have the following type `mailboxMerging` and the followi
 ```
 {
   "oldMailboxId":"5641376-02ed-47bd-bcc7-76ff6262d92a",
-  "newMailboxId":"4555159-52ae-895f-ccb7-586a4412fb50"
+  "newMailboxId":"4555159-52ae-895f-ccb7-586a4412fb50",
+  "totalMessageCount": 1,
+  "messageMovedCount": 1,
+  "messageFailedCount": 0
 }
 ```
 

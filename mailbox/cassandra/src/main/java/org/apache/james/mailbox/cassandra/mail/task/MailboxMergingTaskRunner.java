@@ -61,27 +61,29 @@ public class MailboxMergingTaskRunner {
         this.cassandraACLMapper = cassandraACLMapper;
     }
 
-    public Task.Result run(CassandraId oldMailboxId, CassandraId newMailboxId) {
-        return moveMessages(oldMailboxId, newMailboxId, mailboxSession)
+    public Task.Result run(CassandraId oldMailboxId, CassandraId newMailboxId, MailboxMergingTask.Context context) {
+        return moveMessages(oldMailboxId, newMailboxId, mailboxSession, context)
             .onComplete(
                 () -> mergeRights(oldMailboxId, newMailboxId),
                 () -> mailboxDAO.delete(oldMailboxId).join());
     }
 
-    private Task.Result moveMessages(CassandraId oldMailboxId, CassandraId newMailboxId, MailboxSession session) {
+    private Task.Result moveMessages(CassandraId oldMailboxId, CassandraId newMailboxId, MailboxSession session, MailboxMergingTask.Context context) {
         return cassandraMessageIdDAO.retrieveMessages(oldMailboxId, MessageRange.all())
             .join()
             .map(ComposedMessageIdWithMetaData::getComposedMessageId)
-            .map(messageId -> moveMessage(newMailboxId, messageId, session))
+            .map(messageId -> moveMessage(newMailboxId, messageId, session, context))
             .reduce(Task.Result.COMPLETED, Task::combine);
     }
 
-    private Task.Result moveMessage(CassandraId newMailboxId, ComposedMessageId composedMessageId, MailboxSession session) {
+    private Task.Result moveMessage(CassandraId newMailboxId, ComposedMessageId composedMessageId, MailboxSession session, MailboxMergingTask.Context context) {
         try {
             messageIdManager.setInMailboxesNoCheck(composedMessageId.getMessageId(), newMailboxId, session);
+            context.incrementMovedCount();
             return Task.Result.COMPLETED;
         } catch (MailboxException e) {
             LOGGER.warn("Failed moving message {}", composedMessageId.getMessageId(), e);
+            context.incrementFailedCount();
             return Task.Result.PARTIAL;
         }
     }

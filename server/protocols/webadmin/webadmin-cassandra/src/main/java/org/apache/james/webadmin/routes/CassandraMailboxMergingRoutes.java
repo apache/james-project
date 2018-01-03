@@ -25,6 +25,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
+import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTask;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTaskRunner;
 import org.apache.james.task.TaskId;
@@ -66,13 +67,15 @@ public class CassandraMailboxMergingRoutes implements Routes {
     private final JsonExtractor<MailboxMergingRequest> jsonExtractor;
     private final TaskManager taskManager;
     private final JsonTransformer jsonTransformer;
+    private final CassandraMailboxCounterDAO counterDAO;
 
     @Inject
-    public CassandraMailboxMergingRoutes(MailboxMergingTaskRunner mailboxMergingTaskRunner, CassandraId.Factory mailboxIdFactory, TaskManager taskManager, JsonTransformer jsonTransformer) {
+    public CassandraMailboxMergingRoutes(MailboxMergingTaskRunner mailboxMergingTaskRunner, CassandraId.Factory mailboxIdFactory, TaskManager taskManager, JsonTransformer jsonTransformer, CassandraMailboxCounterDAO counterDAO) {
         this.mailboxMergingTaskRunner = mailboxMergingTaskRunner;
         this.mailboxIdFactory = mailboxIdFactory;
         this.taskManager = taskManager;
         this.jsonTransformer = jsonTransformer;
+        this.counterDAO = counterDAO;
         this.jsonExtractor = new JsonExtractor<>(MailboxMergingRequest.class);
     }
 
@@ -108,7 +111,8 @@ public class CassandraMailboxMergingRoutes implements Routes {
             CassandraId originId = mailboxIdFactory.fromString(mailboxMergingRequest.getMergeOrigin());
             CassandraId destinationId = mailboxIdFactory.fromString(mailboxMergingRequest.getMergeDestination());
 
-            MailboxMergingTask task = new MailboxMergingTask(mailboxMergingTaskRunner, originId, destinationId);
+            long totalMessagesToMove = counterDAO.countMessagesInMailbox(originId).join().orElse(0L);
+            MailboxMergingTask task = new MailboxMergingTask(mailboxMergingTaskRunner, totalMessagesToMove, originId, destinationId);
             TaskId taskId = taskManager.submit(task);
             return TaskIdDto.respond(response, taskId);
         } catch (JsonExtractException e) {
