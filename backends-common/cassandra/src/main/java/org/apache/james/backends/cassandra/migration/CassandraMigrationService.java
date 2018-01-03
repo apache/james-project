@@ -58,7 +58,6 @@ public class CassandraMigrationService {
 
     public Migration upgradeToVersion(SchemaVersion newVersion) {
         SchemaVersion currentVersion = getCurrentVersion().orElse(DEFAULT_VERSION);
-        assertMigrationNeeded(newVersion, currentVersion);
 
         Migration migrationCombination = IntStream.range(currentVersion.getValue(), newVersion.getValue())
             .boxed()
@@ -67,13 +66,6 @@ public class CassandraMigrationService {
             .map(this::toMigration)
             .reduce(Migration.IDENTITY, Migration::combine);
         return new MigrationTask(migrationCombination, newVersion);
-    }
-
-    private void assertMigrationNeeded(SchemaVersion newVersion, SchemaVersion currentVersion) {
-        boolean needMigration = currentVersion.isBefore(newVersion);
-        if (!needMigration) {
-            throw new IllegalStateException("Current version is already up to date");
-        }
     }
 
     private SchemaVersion validateVersionNumber(SchemaVersion versionNumber) {
@@ -94,7 +86,7 @@ public class CassandraMigrationService {
             SchemaVersion newVersion = version.next();
             SchemaVersion currentVersion = getCurrentVersion().orElse(DEFAULT_VERSION);
             if (currentVersion.isAfterOrEquals(newVersion)) {
-                return Migration.Result.PARTIAL;
+                return Migration.Result.COMPLETED;
             }
 
             LOG.info("Migrating to version {} ", newVersion);

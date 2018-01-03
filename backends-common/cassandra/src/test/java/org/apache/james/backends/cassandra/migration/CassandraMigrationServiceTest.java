@@ -37,6 +37,7 @@ import java.util.concurrent.Executors;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
+import org.apache.james.task.Task;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -91,12 +92,11 @@ public class CassandraMigrationServiceTest {
     }
 
     @Test
-    public void upgradeToVersionShouldThrowWhenCurrentVersionIsUpToDate() throws Exception {
-        expectedException.expect(IllegalStateException.class);
-
+    public void upgradeToVersionShouldNotThrowWhenCurrentVersionIsUpToDate() throws Exception {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(CURRENT_VERSION)));
 
-        testee.upgradeToVersion(OLDER_VERSION).run();
+        assertThat(testee.upgradeToVersion(OLDER_VERSION).run())
+            .isEqualTo(Task.Result.COMPLETED);
     }
 
     @Test
@@ -109,12 +109,12 @@ public class CassandraMigrationServiceTest {
     }
 
     @Test
-    public void upgradeToLastVersionShouldThrowWhenVersionIsUpToDate() throws Exception {
-        expectedException.expect(IllegalStateException.class);
+    public void upgradeToLastVersionShouldNotThrowWhenVersionIsUpToDate() throws Exception {
 
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(LATEST_VERSION)));
 
-        testee.upgradeToLastVersion().run();
+        assertThat(testee.upgradeToLastVersion().run())
+            .isEqualTo(Task.Result.COMPLETED);
     }
 
     @Test

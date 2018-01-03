@@ -201,26 +201,38 @@ public class CassandraMigrationRoutesTest {
     }
 
     @Test
-    public void postShouldNotDoMigrationWhenCurrentVersionIsNewerThan() throws Exception {
+    public void postShouldCreateTaskWhenCurrentVersionIsNewerThan() throws Exception {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(CURRENT_VERSION)));
 
-        Map<String, Object> errors = given()
+        String taskId =  given()
             .body(String.valueOf(OLDER_VERSION.getValue()))
         .with()
             .post("/upgrade")
-        .then()
-            .statusCode(HttpStatus.CONFLICT_409)
-            .contentType(ContentType.JSON)
-            .extract()
-            .body()
             .jsonPath()
-            .getMap(".");
+            .get("taskId");
 
-        assertThat(errors)
-            .containsEntry("statusCode", HttpStatus.CONFLICT_409)
-            .containsEntry("type", "WrongState")
-            .containsEntry("message", "The migration requested can not be performed")
-            .containsEntry("cause", "Current version is already up to date");
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"));
+    }
+
+    @Test
+    public void postShouldNotUpdateVersionWhenCurrentVersionIsNewerThan() throws Exception {
+        when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(CURRENT_VERSION)));
+
+        String taskId =  given()
+            .body(String.valueOf(OLDER_VERSION.getValue()))
+        .with()
+            .post("/upgrade")
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .basePath(TasksRoutes.BASE)
+            .get(taskId + "/await");
 
         verify(schemaVersionDAO, times(1)).getCurrentSchemaVersion();
         verifyNoMoreInteractions(schemaVersionDAO);
@@ -280,24 +292,34 @@ public class CassandraMigrationRoutesTest {
     }
 
     @Test
-    public void postShouldNotDoMigrationToLatestVersionWhenItIsUpToDate() throws Exception {
+    public void postShouldCreateTaskWhenItIsUpToDate() throws Exception {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(LATEST_VERSION)));
 
-        Map<String, Object> errors = when()
+        String taskId = with()
             .post("/upgrade/latest")
-        .then()
-            .statusCode(HttpStatus.CONFLICT_409)
-            .contentType(ContentType.JSON)
-            .extract()
-            .body()
             .jsonPath()
-            .getMap(".");
+            .get("taskId");
 
-        assertThat(errors)
-            .containsEntry("statusCode", HttpStatus.CONFLICT_409)
-            .containsEntry("type", "WrongState")
-            .containsEntry("message", "The migration requested can not be performed")
-            .containsEntry("cause", "Current version is already up to date");
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"));
+    }
+
+    @Test
+    public void postShouldNotUpdateVersionWhenItIsUpToDate() throws Exception {
+        when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(LATEST_VERSION)));
+
+        String taskId = with()
+            .post("/upgrade/latest")
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .basePath(TasksRoutes.BASE)
+            .get(taskId + "/await");
 
         verify(schemaVersionDAO, times(1)).getCurrentSchemaVersion();
         verifyNoMoreInteractions(schemaVersionDAO);
