@@ -575,13 +575,13 @@ An Execution Report will be returned:
 Note that:
 
  - `status` can have the value:
-    - `waiting`: The task is schedule but its execution did not start yet
+    - `waiting`: The task is scheduled but its execution did not start yet
     - `inProgress`: The task is currently executed
     - `cancelled`: The task had been cancelled
     - `completed`: The task execution is finished, and this execution is a success
     - `failed`: The task execution is finished, and this execution is a failure
 
- - `additionalInformation` is a task specific object giving additional informationa and context about that task. The structure
+ - `additionalInformation` is a task specific object giving additional information and context about that task. The structure
    of this `additionalInformation` field is provided along the specific task submission endpoint.
 
 Response codes:
