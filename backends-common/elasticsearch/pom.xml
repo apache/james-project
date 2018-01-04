@@ -59,12 +59,12 @@
         <dependency>
             <groupId>org.elasticsearch</groupId>
             <artifactId>elasticsearch</artifactId>
-            <version>2.2.1</version>
+            <version>6.1.1</version>
         </dependency>
         <dependency>
             <groupId>org.elasticsearch</groupId>
             <artifactId>elasticsearch</artifactId>
-            <version>2.2.1</version>
+            <version>6.1.1</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
