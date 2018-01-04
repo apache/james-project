@@ -222,15 +222,15 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                         int index = 0;
                         for (IdRange knownSequence : knownSequences) {
                             boolean done = false;
-                            for (Long uid : knownSequence) {
+                            for (Long msn : knownSequence) {
 
                                 // Check if we have uids left to check against
                                 if (knownUidsList.size() > index++) {
-                                    int msn = uid.intValue();
+                                    int msnAsInt = msn.intValue();
                                     MessageUid knownUid = knownUidsList.get(index);
 
                                     // Check if the uid mathc if not we are done here
-                                    done = selected.uid(msn)
+                                    done = selected.uid(msnAsInt)
                                         .filter(selectedUid -> selectedUid.equals(knownUid))
                                         .isPresent();
                                     if (done) {
