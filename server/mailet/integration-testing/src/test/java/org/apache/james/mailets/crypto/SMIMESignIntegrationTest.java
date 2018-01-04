@@ -68,9 +68,9 @@ public class SMIMESignIntegrationTest {
     @Before
     public void setup() throws Exception {
         MailetContainer mailetContainer = MailetContainer.builder()
-            .addProcessor(CommonProcessors.root())
-            .addProcessor(CommonProcessors.error())
-            .addProcessor(ProcessorConfiguration.transport()
+            .putProcessor(CommonProcessors.root())
+            .putProcessor(CommonProcessors.error())
+            .putProcessor(ProcessorConfiguration.transport()
                 .addMailet(MailetConfiguration.builder()
                     .matcher(HasMailAttribute.class)
                     .matcherCondition("org.apache.james.SMIMECheckSignature")
@@ -86,11 +86,11 @@ public class SMIMESignIntegrationTest {
                     .addProperty("keyStoreType", "PKCS12")
                     .addProperty("debug", "true"))
                 .addMailet(MailetConfiguration.LOCAL_DELIVERY))
-            .addProcessor(CommonProcessors.spam())
-            .addProcessor(CommonProcessors.localAddressError())
-            .addProcessor(CommonProcessors.relayDenied())
-            .addProcessor(CommonProcessors.bounces())
-            .addProcessor(CommonProcessors.sieveManagerCheck())
+            .putProcessor(CommonProcessors.spam())
+            .putProcessor(CommonProcessors.localAddressError())
+            .putProcessor(CommonProcessors.relayDenied())
+            .putProcessor(CommonProcessors.bounces())
+            .putProcessor(CommonProcessors.sieveManagerCheck())
             .build();
 
         jamesServer = TemporaryJamesServer.builder()

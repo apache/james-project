@@ -69,7 +69,7 @@ public class SmtpAuthorizedAddressesTest {
 
     private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
-            .addProcessor(ProcessorConfiguration.transport()
+            .putProcessor(ProcessorConfiguration.transport()
                 .addMailetsFrom(CommonProcessors.deliverOnlyTransport())
                 .addMailet(MailetConfiguration.remoteDeliveryBuilder()
                     .matcher(SMTPIsAuthNetwork.class)

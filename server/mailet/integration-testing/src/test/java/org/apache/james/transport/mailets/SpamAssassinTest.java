@@ -71,8 +71,8 @@ public class SpamAssassinTest {
 
     @Before
     public void setup() throws Exception {
-        MailetContainer.Builder mailets = TemporaryJamesServer.DEFAUL_MAILET_CONTAINER_CONFIGURATION
-            .addProcessor(
+        MailetContainer.Builder mailets = TemporaryJamesServer.DEFAULT_MAILET_CONTAINER_CONFIGURATION
+            .putProcessor(
                 ProcessorConfiguration.transport()
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)

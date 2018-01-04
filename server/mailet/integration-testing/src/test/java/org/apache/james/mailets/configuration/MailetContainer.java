@@ -59,13 +59,13 @@ public class MailetContainer implements SerializableAsXml {
             return this;
         }
 
-        public Builder addProcessor(ProcessorConfiguration processorConfiguration) {
+        public Builder putProcessor(ProcessorConfiguration processorConfiguration) {
             this.processors.put(processorConfiguration.getState(), processorConfiguration);
             return this;
         }
 
-        public Builder addProcessor(ProcessorConfiguration.Builder processorConfiguration) {
-            return this.addProcessor(processorConfiguration.build());
+        public Builder putProcessor(ProcessorConfiguration.Builder processorConfiguration) {
+            return this.putProcessor(processorConfiguration.build());
         }
 
         public MailetContainer build() {

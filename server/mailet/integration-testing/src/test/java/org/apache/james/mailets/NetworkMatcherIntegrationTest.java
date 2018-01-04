@@ -62,9 +62,9 @@ public class NetworkMatcherIntegrationTest {
     private TemporaryJamesServer createJamesServerWithRootProcessor(ProcessorConfiguration.Builder rootProcessor) throws Exception {
         TemporaryJamesServer temporaryJamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
-            .withMailetContainer(TemporaryJamesServer.DEFAUL_MAILET_CONTAINER_CONFIGURATION
-                .addProcessor(rootProcessor)
-                .addProcessor(CommonProcessors.deliverOnlyTransport()))
+            .withMailetContainer(TemporaryJamesServer.DEFAULT_MAILET_CONTAINER_CONFIGURATION
+                .putProcessor(rootProcessor)
+                .putProcessor(CommonProcessors.deliverOnlyTransport()))
             .build(temporaryFolder);
 
         DataProbe dataProbe = temporaryJamesServer.getProbe(DataProbeImpl.class);

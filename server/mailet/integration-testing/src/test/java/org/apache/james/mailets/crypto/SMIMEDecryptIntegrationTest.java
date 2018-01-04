@@ -64,9 +64,9 @@ public class SMIMEDecryptIntegrationTest {
     @Before
     public void setup() throws Exception {
         MailetContainer mailetContainer = MailetContainer.builder()
-            .addProcessor(CommonProcessors.root())
-            .addProcessor(CommonProcessors.error())
-            .addProcessor(ProcessorConfiguration.transport()
+            .putProcessor(CommonProcessors.root())
+            .putProcessor(CommonProcessors.error())
+            .putProcessor(ProcessorConfiguration.transport()
                 .addMailet(MailetConfiguration.BCC_STRIPPER)
                 .addMailet(MailetConfiguration.builder()
                     .mailet(SMIMEDecrypt.class)

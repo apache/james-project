@@ -87,7 +87,7 @@ public class GroupMappingTest {
     @Before
     public void setup() throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
-            .addProcessor(ProcessorConfiguration.transport()
+            .putProcessor(ProcessorConfiguration.transport()
                 .addMailet(MailetConfiguration.builder()
                     .matcher(All.class)
                     .mailet(RecipientRewriteTable.class))

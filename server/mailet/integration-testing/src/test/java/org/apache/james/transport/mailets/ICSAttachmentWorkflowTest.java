@@ -446,8 +446,8 @@ public class ICSAttachmentWorkflowTest {
 
     @Before
     public void setup() throws Exception {
-        MailetContainer.Builder mailetContainer = TemporaryJamesServer.DEFAUL_MAILET_CONTAINER_CONFIGURATION
-            .addProcessor(ProcessorConfiguration.transport()
+        MailetContainer.Builder mailetContainer = TemporaryJamesServer.DEFAULT_MAILET_CONTAINER_CONFIGURATION
+            .putProcessor(ProcessorConfiguration.transport()
                 .addMailet(MailetConfiguration.builder()
                     .matcher(All.class)
                     .mailet(StripAttachment.class)

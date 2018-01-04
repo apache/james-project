@@ -49,23 +49,23 @@ import com.google.inject.Module;
 
 public class TemporaryJamesServer {
 
-    public static final MailetContainer.Builder DEFAUL_MAILET_CONTAINER_CONFIGURATION = MailetContainer.builder()
-        .addProcessor(CommonProcessors.root())
-        .addProcessor(CommonProcessors.error())
-        .addProcessor(CommonProcessors.transport())
-        .addProcessor(CommonProcessors.spam())
-        .addProcessor(CommonProcessors.localAddressError())
-        .addProcessor(CommonProcessors.relayDenied())
-        .addProcessor(CommonProcessors.bounces())
-        .addProcessor(CommonProcessors.sieveManagerCheck());
+    public static final MailetContainer.Builder DEFAULT_MAILET_CONTAINER_CONFIGURATION = MailetContainer.builder()
+        .putProcessor(CommonProcessors.root())
+        .putProcessor(CommonProcessors.error())
+        .putProcessor(CommonProcessors.transport())
+        .putProcessor(CommonProcessors.spam())
+        .putProcessor(CommonProcessors.localAddressError())
+        .putProcessor(CommonProcessors.relayDenied())
+        .putProcessor(CommonProcessors.bounces())
+        .putProcessor(CommonProcessors.sieveManagerCheck());
 
     public static final MailetContainer.Builder SIMPLE_MAILET_CONTAINER_CONFIGURATION = MailetContainer.builder()
-        .addProcessor(CommonProcessors.simpleRoot())
-        .addProcessor(CommonProcessors.error())
-        .addProcessor(CommonProcessors.transport())
-        .addProcessor(CommonProcessors.localAddressError())
-        .addProcessor(CommonProcessors.relayDenied())
-        .addProcessor(CommonProcessors.bounces());
+        .putProcessor(CommonProcessors.simpleRoot())
+        .putProcessor(CommonProcessors.error())
+        .putProcessor(CommonProcessors.transport())
+        .putProcessor(CommonProcessors.localAddressError())
+        .putProcessor(CommonProcessors.relayDenied())
+        .putProcessor(CommonProcessors.bounces());
 
     public static class Builder {
         private ImmutableList.Builder<Module> overrideModules;
@@ -112,7 +112,7 @@ public class TemporaryJamesServer {
         public TemporaryJamesServer build(TemporaryFolder temporaryFolder) throws Exception {
             return new TemporaryJamesServer(
                 temporaryFolder,
-                mailetConfiguration.orElse(DEFAUL_MAILET_CONTAINER_CONFIGURATION.build()),
+                mailetConfiguration.orElse(DEFAULT_MAILET_CONTAINER_CONFIGURATION.build()),
                 smtpConfiguration.orElse(SmtpConfiguration.DEFAULT),
                 module.orElse(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE),
                 overrideModules.build());
