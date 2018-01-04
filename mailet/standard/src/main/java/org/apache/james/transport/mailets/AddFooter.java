@@ -93,11 +93,19 @@ public class AddFooter extends GenericMailet {
         if (part.isMimeType("multipart/mixed")
                 || part.isMimeType("multipart/related")) {
             MimeMultipart multipart = (MimeMultipart) part.getContent();
-            return attachFooterToFirstPart(multipart);
+            boolean added = attachFooterToFirstPart(multipart);
+            if (added) {
+            	part.setContent(multipart);
+            }
+            return added;
 
         } else if (part.isMimeType("multipart/alternative")) {
             MimeMultipart multipart = (MimeMultipart) part.getContent();
-            return attachFooterToAllSubparts(multipart);
+            boolean added = attachFooterToAllSubparts(multipart);
+            if (added) {
+            	part.setContent(multipart);
+            }
+            return added;
         }
         //Give up... we won't attach the footer to this MimePart
         return false;

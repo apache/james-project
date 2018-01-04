@@ -21,11 +21,21 @@ package org.apache.james.jwt;
 
 import java.util.Optional;
 
+import com.google.common.base.Preconditions;
+
 public class JwtConfiguration {
+    private static final boolean DEFAULT_VALUE = true;
     private final Optional<String> jwtPublicKeyPem;
 
     public JwtConfiguration(Optional<String> jwtPublicKeyPem) {
+        Preconditions.checkState(validPublicKey(jwtPublicKeyPem), "The provided public key is not valid");
         this.jwtPublicKeyPem = jwtPublicKeyPem;
+    }
+
+    private boolean validPublicKey(Optional<String> jwtPublicKeyPem) {
+        PublicKeyReader reader = new PublicKeyReader();
+        return jwtPublicKeyPem.map(value -> reader.fromPEM(Optional.of(value)).isPresent())
+            .orElse(DEFAULT_VALUE);
     }
 
     public Optional<String> getJwtPublicKeyPem() {

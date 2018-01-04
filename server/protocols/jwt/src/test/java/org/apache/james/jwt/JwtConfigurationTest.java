@@ -17,19 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.crypto;
+package org.apache.james.jwt;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import java.util.Optional;
 
-import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.jmap.JMAPConfiguration;
+import org.junit.Test;
 
-public class JamesSignatureHandlerProvider {
-    private static final String JWT_PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\n" +
+public class JwtConfigurationTest {
+    private static final String INVALID_PUBLIC_KEY = "invalidPublicKey";
+    private static final String VALID_PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\n" +
         "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtlChO/nlVP27MpdkG0Bh\n" +
         "16XrMRf6M4NeyGa7j5+1UKm42IKUf3lM28oe82MqIIRyvskPc11NuzSor8HmvH8H\n" +
         "lhDs5DyJtx2qp35AT0zCqfwlaDnlDc/QDlZv1CoRZGpQk1Inyh6SbZwYpxxwh0fi\n" +
@@ -39,32 +38,35 @@ public class JamesSignatureHandlerProvider {
         "kwIDAQAB\n" +
         "-----END PUBLIC KEY-----";
 
-    public JamesSignatureHandler provide() throws Exception {
-        FileSystem fileSystem = new FileSystem() {
-            @Override
-            public InputStream getResource(String url) throws IOException {
-                return ClassLoader.getSystemResourceAsStream("keystore");
-            }
+    @Test
+    public void getJwtPublicKeyPemShouldReturnEmptyWhenEmptyPublicKey() throws Exception {
+        JwtConfiguration jwtConfiguration = new JwtConfiguration(Optional.empty());
 
-            @Override
-            public File getFile(String fileURL) throws FileNotFoundException {
-                return null;
-            }
-
-            @Override
-            public File getBasedir() throws FileNotFoundException {
-                return null;
-            }
-        };
-        JamesSignatureHandler signatureHandler = new JamesSignatureHandler(fileSystem, 
-                JMAPConfiguration.builder()
-                    .enable()
-                    .keystore("keystore")
-                    .secret("james72laBalle")
-                    .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
-                    .build());
-        signatureHandler.init();
-        return signatureHandler;
+        assertThat(jwtConfiguration.getJwtPublicKeyPem()).isNotPresent();
     }
 
+    @Test
+    public void constructorShouldThrowWhenNullPublicKey() throws Exception {
+        assertThatThrownBy(() -> new JwtConfiguration(null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void constructorShouldThrowWhenNonePublicKey() throws Exception {
+        assertThatThrownBy(() -> new JwtConfiguration(Optional.of("")))
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    public void constructorShouldThrowWhenInvalidPublicKey() throws Exception {
+        assertThatThrownBy(() -> new JwtConfiguration(Optional.of(INVALID_PUBLIC_KEY)))
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    public void getJwtPublicKeyPemShouldReturnWhenValidPublicKey() throws Exception {
+        JwtConfiguration jwtConfiguration = new JwtConfiguration(Optional.of(VALID_PUBLIC_KEY));
+
+        assertThat(jwtConfiguration.getJwtPublicKeyPem()).isPresent();
+    }
 }

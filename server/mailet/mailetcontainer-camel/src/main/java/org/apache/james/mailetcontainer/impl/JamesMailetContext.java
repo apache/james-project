@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.mail.Address;
@@ -400,10 +401,22 @@ public class JamesMailetContext implements MailetContext, Configurable {
     }
 
     @Override
+    public void sendMail(Mail mail, long delay, TimeUnit unit) throws MessagingException {
+        sendMail(mail, Mail.DEFAULT, delay, unit);
+    }
+
+    @Override
     public void sendMail(Mail mail, String state) throws MessagingException {
         mail.setAttribute(Mail.SENT_BY_MAILET, "true");
         mail.setState(state);
         rootMailQueue.enQueue(mail);
+    }
+    
+    @Override
+    public void sendMail(Mail mail, String state, long delay, TimeUnit unit) throws MessagingException {
+        mail.setAttribute(Mail.SENT_BY_MAILET, "true");
+        mail.setState(state);
+        rootMailQueue.enQueue(mail, delay, unit);
     }
 
     public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage message, String state) throws MessagingException {
