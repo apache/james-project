@@ -373,3 +373,4 @@ Where:
 
 This process will use the last generated docker image of James. You can change this behaviour by editing the first line of
 dockerfiles/packaging/Dockerfile and choose the source image you want to use.
+
