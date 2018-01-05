@@ -91,8 +91,8 @@
     
       <p>More on configuration of the SpoolManager can be found <a href="config-mailetcontainer.html">here</a>.</p>
     
-      <p>Much of the power of James lies in the SpoolManager component.  Custom matchers and 
-      mailets can be easily developed to address an administrator's particular needs.  The 
+      <p>Much of the power of James lies in the SpoolManager component.  <a href="dev-extend-matcher.html">Custom matchers</a> and
+      <a href="dev-extend-mailet.html">custom mailets</a> can be easily developed to address an administrator's particular needs.  The
       processor tree can easily be configured to sort, filter, and deliver mail based on any 
       number of criteria.  Mail administrators new to James should spend some time learning how 
       to configure the SpoolManager to meet their needs.</p>
