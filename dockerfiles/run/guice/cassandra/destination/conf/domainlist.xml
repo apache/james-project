@@ -20,11 +20,9 @@
 
 <domainlist>
     <domainnames>
-        <!--
         <domainname>james.linagora.com</domainname>
-        -->
     </domainnames>
-    <autodetect>false</autodetect>
-    <autodetectIP>false</autodetectIP>
+    <autodetect>true</autodetect>
+    <autodetectIP>true</autodetectIP>
     <defaultDomain>localhost</defaultDomain>
 </domainlist>
