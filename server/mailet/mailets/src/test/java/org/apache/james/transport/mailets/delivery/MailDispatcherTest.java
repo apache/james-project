@@ -31,11 +31,10 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders.Header;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.RFC2822Headers;
@@ -133,12 +132,10 @@ public class MailDispatcherTest {
             .when(mailStore)
             .storeMail(any(MailAddress.class), any(Mail.class));
 
-        MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+        MimeMessageBuilder mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
             .setMultipartWithBodyParts(
                 MimeMessageBuilder.bodyPartBuilder()
-                    .data("toto")
-                    .build())
-            .build();
+                    .data("toto"));
 
         FakeMail mail = FakeMail.builder()
             .sender(MailAddressFixture.OTHER_AT_JAMES)
@@ -311,8 +308,7 @@ public class MailDispatcherTest {
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
-                    .addHeader(TEST_HEADER_NAME, headerValue)
-                    .build())
+                    .addHeader(TEST_HEADER_NAME, headerValue))
             .state("state")
             .build();
         mail.addSpecificHeaderForRecipient(TEST_HEADER_USER1, MailAddressFixture.ANY_AT_JAMES);

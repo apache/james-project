@@ -42,7 +42,7 @@ public class UploadResponse {
         private String accountId;
         private String blobId;
         private String type;
-        private Long size;
+        private Number size;
         private ZonedDateTime expires;
 
         public Builder accountId(String accountId) {
@@ -61,7 +61,7 @@ public class UploadResponse {
         }
 
         public Builder size(long size) {
-            this.size = size;
+            this.size = Number.BOUND_SANITIZING_FACTORY.from(size);
             return this;
         }
 
@@ -81,10 +81,10 @@ public class UploadResponse {
     private final Optional<String> accountId;
     private final String blobId;
     private final String type;
-    private final Long size;
+    private final Number size;
     private final Optional<ZonedDateTime> expires;
 
-    @VisibleForTesting UploadResponse(Optional<String> accountId, String blobId, String type, long size, Optional<ZonedDateTime> expires) {
+    @VisibleForTesting UploadResponse(Optional<String> accountId, String blobId, String type, Number size, Optional<ZonedDateTime> expires) {
         this.accountId = accountId;
         this.blobId = blobId;
         this.type = type;
@@ -104,7 +104,7 @@ public class UploadResponse {
         return type;
     }
 
-    public long getSize() {
+    public Number getSize() {
         return size;
     }
 

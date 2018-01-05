@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
+import org.apache.james.jmap.model.Number;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.junit.Test;
 
@@ -62,8 +63,14 @@ public class MailboxTest {
 
     @Test
     public void buildShouldWork() {
+        Number totalMessages = Number.fromLong(456);
+        Number unreadMessages = Number.fromLong(789);
+        Number totalThreads = Number.fromLong(741);
+        Number unreadThreads = Number.fromLong(852);
         Mailbox expectedMailbox = new Mailbox(InMemoryId.of(1), "name", Optional.of(InMemoryId.of(0)), Optional.of(Role.DRAFTS), SortOrder.of(123),
-                true, true, true, true, true, true, true, 456, 789, 741, 852, Rights.EMPTY, MailboxNamespace.personal());
+            true, true, true, true, true, true, true,
+            totalMessages, unreadMessages, totalThreads, unreadThreads,
+            Rights.EMPTY, MailboxNamespace.personal());
 
         Mailbox mailbox = Mailbox.builder()
             .id(InMemoryId.of(1))
@@ -105,7 +112,7 @@ public class MailboxTest {
                 .totalMessages(-1234)
                 .build();
 
-        assertThat(mailbox.getTotalMessages()).isEqualTo(0);
+        assertThat(mailbox.getTotalMessages()).isEqualTo(Number.ZERO);
     }
 
     @Test
@@ -116,7 +123,7 @@ public class MailboxTest {
                 .unreadMessages(-1234)
                 .build();
 
-        assertThat(mailbox.getUnreadMessages()).isEqualTo(0);
+        assertThat(mailbox.getUnreadMessages()).isEqualTo(Number.ZERO);
     }
 
     @Test
@@ -127,7 +134,7 @@ public class MailboxTest {
                 .totalMessages(0)
                 .build();
 
-        assertThat(mailbox.getTotalMessages()).isEqualTo(0);
+        assertThat(mailbox.getTotalMessages()).isEqualTo(Number.ZERO);
     }
 
     @Test
@@ -138,7 +145,7 @@ public class MailboxTest {
                 .unreadMessages(0)
                 .build();
 
-        assertThat(mailbox.getUnreadMessages()).isEqualTo(0);
+        assertThat(mailbox.getUnreadMessages()).isEqualTo(Number.ZERO);
     }
 
     @Test
@@ -149,7 +156,8 @@ public class MailboxTest {
                 .totalMessages(1234)
                 .build();
 
-        assertThat(mailbox.getTotalMessages()).isEqualTo(1234);
+        Number expectedTotalMessages = Number.fromLong(1234);
+        assertThat(mailbox.getTotalMessages()).isEqualTo(expectedTotalMessages);
     }
 
     @Test
@@ -160,7 +168,8 @@ public class MailboxTest {
             .unreadMessages(1234)
             .build();
 
-        assertThat(mailbox.getUnreadMessages()).isEqualTo(1234);
+        Number expectedTotalMessages = Number.fromLong(1234);
+        assertThat(mailbox.getUnreadMessages()).isEqualTo(expectedTotalMessages);
     }
 
     @Test

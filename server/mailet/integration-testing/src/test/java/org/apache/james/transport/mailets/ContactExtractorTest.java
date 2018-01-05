@@ -19,14 +19,17 @@
 package org.apache.james.transport.mailets;
 
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
+import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
+import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
+import static org.apache.james.mailets.configuration.Constants.PASSWORD;
+import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
+import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
-import javax.mail.internet.MimeMessage;
-
-import org.apache.james.core.MailAddress;
-import org.apache.james.jmap.mailet.VacationMailet;
+import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
@@ -34,7 +37,6 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.transport.mailets.amqp.AmqpRule;
 import org.apache.james.transport.matchers.All;
-import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.transport.matchers.SMTPAuthSuccessful;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.SwarmGenericContainer;
@@ -50,20 +52,14 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
-
 public class ContactExtractorTest {
-
-    public static final String JAMES_ORG = "james.org";
-    public static final String SENDER = "sender@" + JAMES_ORG;
-    public static final String TO = "to@" + JAMES_ORG;
-    public static final String TO2 = "to2@" + JAMES_ORG;
-    public static final String CC = "cc@" + JAMES_ORG;
-    public static final String CC2 = "cc2@" + JAMES_ORG;
-    public static final String BCC = "bcc@" + JAMES_ORG;
-    public static final String BCC2 = "bcc2@" + JAMES_ORG;
-    public static final String PASSWORD = "secret";
+    public static final String SENDER = "sender@" + DEFAULT_DOMAIN;
+    public static final String TO = "to@" + DEFAULT_DOMAIN;
+    public static final String TO2 = "to2@" + DEFAULT_DOMAIN;
+    public static final String CC = "cc@" + DEFAULT_DOMAIN;
+    public static final String CC2 = "cc2@" + DEFAULT_DOMAIN;
+    public static final String BCC = "bcc@" + DEFAULT_DOMAIN;
+    public static final String BCC2 = "bcc2@" + DEFAULT_DOMAIN;
     public static final String EXCHANGE = "collector:email";
     public static final String ROUTING_KEY = "";
 
@@ -73,58 +69,41 @@ public class ContactExtractorTest {
 
     @Rule
     public RuleChain chain = RuleChain.outerRule(rabbit).around(amqpRule).around(folder);
+    @Rule
+    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
+    @Rule
+    public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
 
     @Before
     public void setup() throws Exception {
         String attribute = "ExtractedContacts";
-        MailetContainer mailets = MailetContainer
-            .builder()
-            .threads(5)
+        MailetContainer.Builder mailets = TemporaryJamesServer.DEFAULT_MAILET_CONTAINER_CONFIGURATION
             .postmaster(SENDER)
-            .addProcessor(CommonProcessors.root())
-            .addProcessor(CommonProcessors.error())
-            .addProcessor(
-                ProcessorConfiguration.builder()
-                    .state("transport")
+            .putProcessor(
+                ProcessorConfiguration.transport()
                     .addMailet(MailetConfiguration.builder()
                         .matcher(SMTPAuthSuccessful.class)
                         .mailet(ContactExtractor.class)
-                        .addProperty(ContactExtractor.Configuration.ATTRIBUTE, attribute)
-                        .build())
+                        .addProperty(ContactExtractor.Configuration.ATTRIBUTE, attribute))
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(AmqpForwardAttribute.class)
                         .addProperty(AmqpForwardAttribute.URI_PARAMETER_NAME, amqpRule.getAmqpUri())
                         .addProperty(AmqpForwardAttribute.EXCHANGE_PARAMETER_NAME, EXCHANGE)
-                        .addProperty(AmqpForwardAttribute.ATTRIBUTE_PARAMETER_NAME, attribute)
-                        .build())
-                    .addMailet(MailetConfiguration.builder()
-                        .matcher(All.class)
-                        .mailet(RemoveMimeHeader.class)
-                        .addProperty("name", "bcc")
-                        .build())
-                    .addMailet(MailetConfiguration.builder()
-                        .matcher(RecipientIsLocal.class)
-                        .mailet(VacationMailet.class)
-                        .build())
-                    .addMailet(MailetConfiguration.builder()
-                        .matcher(RecipientIsLocal.class)
-                        .mailet(LocalDelivery.class)
-                        .build())
-                    .build())
-            .build();
-        jamesServer = TemporaryJamesServer.builder().build(folder, mailets);
+                        .addProperty(AmqpForwardAttribute.ATTRIBUTE_PARAMETER_NAME, attribute))
+                    .addMailetsFrom(CommonProcessors.deliverOnlyTransport()));
+
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
+            .withMailetContainer(mailets)
+            .build(folder);
+
         DataProbeImpl probe = jamesServer.getProbe(DataProbeImpl.class);
-        probe.addDomain(JAMES_ORG);
+        probe.addDomain(DEFAULT_DOMAIN);
         probe.addUser(SENDER, PASSWORD);
         probe.addUser(TO, PASSWORD);
-        probe.addUser(TO2, PASSWORD);
-        probe.addUser(CC, PASSWORD);
-        probe.addUser(CC2, PASSWORD);
-        probe.addUser(BCC, PASSWORD);
-        probe.addUser(BCC2, PASSWORD);
     }
 
     @After
@@ -134,34 +113,32 @@ public class ContactExtractorTest {
 
     @Test
     public void recipientsShouldBePublishedToAmqpWhenSendingEmail() throws Exception {
-        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+        MimeMessageBuilder message = MimeMessageBuilder.mimeMessageBuilder()
             .setSender(SENDER)
             .addToRecipient(TO, "John To2 <" + TO2 + ">")
             .addCcRecipient(CC, "John Cc2 <" + CC2 + ">")
             .addBccRecipient(BCC, "John Bcc2 <" + BCC2 + ">")
             .setSubject("Contact collection Rocks")
-            .setText("This is my email")
-            .build();
-        FakeMail mail = FakeMail.builder()
-            .mimeMessage(message)
-            .sender(new MailAddress(SENDER))
-            .recipients(new MailAddress(TO), new MailAddress(TO2), new MailAddress(CC), new MailAddress(CC2), new MailAddress(BCC), new MailAddress(BCC2))
-            .build();
-        try (SMTPMessageSender messageSender = SMTPMessageSender.authentication("localhost", 1025, JAMES_ORG, SENDER, PASSWORD);
-                IMAPMessageReader imap = new IMAPMessageReader("localhost", 1143)) {
+            .setText("This is my email");
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .authenticate(SENDER, PASSWORD)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipients(TO, TO2, CC, CC2, BCC, BCC2))
+            .awaitSent(awaitOneMinute);
 
-            messageSender.sendMessage(mail);
-            Awaitility.await().pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
-                .atMost(Duration.ONE_MINUTE)
-                .until(() -> imap.userReceivedMessage(TO, PASSWORD));
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(TO, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitOneMinute);
 
-            Optional<String> actual = amqpRule.readContent();
-            assertThat(actual).isNotEmpty();
-            assertThatJson(actual.get()).isEqualTo("{"
-                    + "\"userEmail\" : \"sender@james.org\", "
-                    + "\"emails\" : [ \"to@james.org\", \"John To2 <to2@james.org>\", \"cc@james.org\", \"John Cc2 <cc2@james.org>\", \"bcc@james.org\", \"John Bcc2 <bcc2@james.org>\" ]"
-                    + "}");
-        }
+        Optional<String> actual = amqpRule.readContent();
+        assertThat(actual).isNotEmpty();
+        assertThatJson(actual.get()).isEqualTo("{"
+            + "\"userEmail\" : \"sender@james.org\", "
+            + "\"emails\" : [ \"to@james.org\", \"John To2 <to2@james.org>\", \"cc@james.org\", \"John Cc2 <cc2@james.org>\", \"bcc@james.org\", \"John Bcc2 <bcc2@james.org>\" ]"
+            + "}");
     }
 
 }

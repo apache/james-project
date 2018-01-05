@@ -69,6 +69,8 @@ public class WebAdminServerModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        install(new TaskRoutesModule());
+
         bind(JsonTransformer.class).in(Scopes.SINGLETON);
         bind(WebAdminServer.class).in(Scopes.SINGLETON);
 

@@ -31,6 +31,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
@@ -120,6 +121,10 @@ public class FakeMailContext implements MailetContext {
                 return this;
             }
 
+            public Builder sender(String sender) throws AddressException {
+                return sender(new MailAddress(sender));
+            }
+
             public Builder recipients(Collection<MailAddress> recipients) {
                 this.recipients = Optional.of(recipients);
                 return this;
@@ -138,6 +143,11 @@ public class FakeMailContext implements MailetContext {
             public Builder recipient(MailAddress recipient) {
                 Preconditions.checkNotNull(recipient);
                 return recipients(ImmutableList.of(recipient));
+            }
+
+            public Builder recipient(String recipient) throws AddressException {
+                Preconditions.checkNotNull(recipient);
+                return recipients(new MailAddress(recipient));
             }
 
             public Builder message(MimeMessage mimeMessage) {

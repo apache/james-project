@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.function.Function;
 
 import javax.activation.DataHandler;
 import javax.mail.BodyPart;
@@ -45,9 +44,9 @@ import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.commons.io.IOUtils;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 public class MimeMessageBuilder {
@@ -70,8 +69,20 @@ public class MimeMessageBuilder {
             return this;
         }
 
+        public MultipartBuilder addBody(BodyPartBuilder bodyPart) throws IOException, MessagingException {
+            this.bodyParts.add(bodyPart.build());
+            return this;
+        }
+
         public MultipartBuilder addBodies(BodyPart... bodyParts) {
             this.bodyParts.addAll(Arrays.asList(bodyParts));
+            return this;
+        }
+
+        public MultipartBuilder addBodies(BodyPartBuilder... bodyParts) {
+            this.bodyParts.addAll(Arrays.stream(bodyParts)
+                .map(Throwing.function(BodyPartBuilder::build).sneakyThrow())
+                .collect(Guavate.toImmutableList()));
             return this;
         }
 
@@ -176,14 +187,6 @@ public class MimeMessageBuilder {
         }
     }
 
-    public static final Function<String, InternetAddress> TO_INTERNET_ADDRESS = value -> {
-        try {
-            return new InternetAddress(value);
-        } catch (AddressException e) {
-            throw Throwables.propagate(e);
-        }
-    };
-
     public static MimeMessage defaultMimeMessage() {
         return new MimeMessage(Session.getDefaultInstance(new Properties()));
     }
@@ -270,23 +273,22 @@ public class MimeMessageBuilder {
     }
 
     public MimeMessageBuilder addToRecipient(String... tos) throws AddressException {
-        this.to.addAll(Arrays.asList(tos).stream()
-            .map(TO_INTERNET_ADDRESS)
+        this.to.addAll(Arrays.stream(tos)
+            .map(Throwing.function(InternetAddress::new))
             .collect(Guavate.toImmutableList()));
         return this;
     }
 
     public MimeMessageBuilder addCcRecipient(String... ccs) throws AddressException {
-        this.cc.addAll(Arrays.asList(ccs).stream()
-            .map(TO_INTERNET_ADDRESS)
+        this.cc.addAll(Arrays.stream(ccs)
+            .map(Throwing.function(InternetAddress::new))
             .collect(Guavate.toImmutableList()));
         return this;
     }
 
     public MimeMessageBuilder addBccRecipient(String... bccs) throws AddressException {
-        this.bcc.addAll(Arrays.asList(bccs)
-            .stream()
-            .map(TO_INTERNET_ADDRESS)
+        this.bcc.addAll(Arrays.stream(bccs)
+            .map(Throwing.function(InternetAddress::new))
             .collect(Guavate.toImmutableList()));
         return this;
     }
@@ -311,7 +313,19 @@ public class MimeMessageBuilder {
         return this;
     }
 
+    public MimeMessageBuilder setContent(MultipartBuilder mimeMultipart) throws MessagingException {
+        this.content = Optional.of(mimeMultipart.build());
+        return this;
+    }
+
     public MimeMessageBuilder setMultipartWithBodyParts(BodyPart... bobyParts) throws MessagingException {
+        this.content = Optional.of(MimeMessageBuilder.multipartBuilder()
+            .addBodies(bobyParts)
+            .build());
+        return this;
+    }
+
+    public MimeMessageBuilder setMultipartWithBodyParts(BodyPartBuilder... bobyParts) throws MessagingException {
         this.content = Optional.of(MimeMessageBuilder.multipartBuilder()
             .addBodies(bobyParts)
             .build());
@@ -323,6 +337,10 @@ public class MimeMessageBuilder {
             new MimeBodyPart(
                 new InternetHeaders(new ByteArrayInputStream("Content-Type: multipart/mixed".getBytes(StandardCharsets.US_ASCII))),
                 IOUtils.toByteArray(mimeMessage.getInputStream())));
+    }
+
+    public MimeMessageBuilder setMultipartWithSubMessage(MimeMessageBuilder mimeMessage) throws MessagingException, IOException {
+        return setMultipartWithSubMessage(mimeMessage.build());
     }
 
     public MimeMessageBuilder addHeader(String name, String value) {

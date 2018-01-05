@@ -17,27 +17,20 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.mail.migration;
+package org.apache.james.backends.cassandra.migration;
 
-public interface Migration {
+import org.apache.james.task.Task;
 
-    enum MigrationResult {
-        COMPLETED,
-        PARTIAL
+public interface Migration extends Task {
+    Migration IDENTITY = () -> Result.COMPLETED;
+
+    static Migration combine(Migration migration1, Migration migration2) {
+        return () -> {
+            Result migration1Result = migration1.run();
+            if (migration1Result == Result.COMPLETED) {
+                return migration2.run();
+            }
+            return Result.PARTIAL;
+        };
     }
-
-    static MigrationResult combine(MigrationResult result1, MigrationResult result2) {
-        if (result1 == MigrationResult.COMPLETED
-            && result2 == MigrationResult.COMPLETED) {
-            return MigrationResult.COMPLETED;
-        }
-        return MigrationResult.PARTIAL;
-    }
-
-    /**
-     * Runs the migration
-     *
-     * @return Return true if fully migrated. Returns false otherwise.
-     */
-    MigrationResult run();
 }

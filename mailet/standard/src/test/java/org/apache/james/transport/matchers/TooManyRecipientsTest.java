@@ -116,7 +116,7 @@ public class TooManyRecipientsTest {
             .build());
 
         FakeMail fakeMail = FakeMail.builder()
-            .recipient(new MailAddress("cuong.tran@gmail.com"))
+            .recipient("cuong.tran@gmail.com")
             .build();
 
         Collection<MailAddress> result = testee.match(fakeMail);
@@ -132,13 +132,8 @@ public class TooManyRecipientsTest {
             .matcherName("matcherName")
             .build());
 
-        ImmutableList<MailAddress> mailAddresses = ImmutableList.of(
-            new MailAddress("cuong.tran@gmail.com"),
-            new MailAddress("suu.tran@gmail.com"),
-            new MailAddress("tuan.tran@gmail.com"));
-
         FakeMail fakeMail = FakeMail.builder()
-            .recipients(mailAddresses)
+            .recipients("cuong.tran@gmail.com", "suu.tran@gmail.com", "tuan.tran@gmail.com")
             .build();
 
         Collection<MailAddress> result = testee.match(fakeMail);

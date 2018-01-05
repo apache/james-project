@@ -29,7 +29,7 @@
 <section name="What is the Apache James MPT?">
 <p>
 Apache James Mail Protocol Tester (MPT) is  a framework for the 
-scritable functional testing of ASCII based line protocols. 
+scriptable functional testing of ASCII based line protocols.
 Apache James MPT requires Java 1.5 or higher.</p>
 <subsection name='Releases'>
     <subsection name='0.2 (Roadmap)'>
@@ -61,7 +61,7 @@ templates (which may include regex's and so on).
 </p><p>
 The <a href='antlib'>AntLib</a> module extends the standalone framework
 to create functional testing tasks suitable for execution against a 
-indepedently running server.
+independently running server.
 </p>
 <p>
 The <a href='app'>Application</a> module provides an executable interface

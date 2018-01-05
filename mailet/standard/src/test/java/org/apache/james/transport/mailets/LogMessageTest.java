@@ -38,7 +38,6 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -262,8 +261,8 @@ public class LogMessageTest {
                 .mimeMessage(message)
                 .name("name")
                 .state(Mail.DEFAULT)
-                .recipient(new MailAddress("receiver@domain.com"))
-                .sender(new MailAddress("sender@any.com"))
+                .recipient("receiver@domain.com")
+                .sender("sender@any.com")
                 .build();
     }
 }

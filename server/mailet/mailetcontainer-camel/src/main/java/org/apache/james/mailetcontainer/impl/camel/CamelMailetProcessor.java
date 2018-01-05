@@ -33,7 +33,6 @@ import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.RouteDefinition;
 import org.apache.camel.processor.aggregate.UseLatestAggregationStrategy;
-import org.apache.james.mailetcontainer.impl.MailetConfigImpl;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor;
 import org.apache.james.metrics.api.MetricFactory;
@@ -161,12 +160,8 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
                 Matcher matcher = pair.getMatcher();
                 Mailet mailet = pair.getMailet();
 
-                String onMatchException = null;
                 MailetConfig mailetConfig = mailet.getMailetConfig();
-
-                if (mailetConfig instanceof MailetConfigImpl) {
-                    onMatchException = ((MailetConfigImpl) mailetConfig).getInitAttribute("onMatchException");
-                }
+                String onMatchException = mailetConfig.getInitParameter("onMatchException");
 
                 CamelProcessor mailetProccessor = new CamelProcessor(metricFactory, mailet, CamelMailetProcessor.this);
                 // Store the matcher to use for splitter in properties

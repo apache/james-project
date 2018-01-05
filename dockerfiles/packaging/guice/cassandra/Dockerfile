@@ -1,4 +1,5 @@
-FROM linagora/james-project:latest as source
+ARG BASE=linagora/james-project:latest
+FROM ${BASE} as source
 
 FROM debian:8.1
 
@@ -7,9 +8,9 @@ RUN apt-get install -y ruby-dev ruby build-essential
 RUN gem install fpm
 RUN apt-get install -y rpm
 
-ADD . /packages
+ADD scripts/ /packages
 
-COPY james.service /packages/package/usr/share/james/
+COPY scripts/james.service /packages/package/usr/share/james/
 COPY --from=source /root/*.jar /packages/package/usr/share/james/
 COPY --from=source /root/james-server-cassandra-guice.lib/ /packages/package/usr/share/james/james-server-cassandra-guice.lib/
 COPY --from=source /root/james-server-cli.lib/ /packages/package/usr/share/james/james-server-cli.lib/

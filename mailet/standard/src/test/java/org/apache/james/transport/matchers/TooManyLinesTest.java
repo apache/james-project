@@ -117,9 +117,7 @@ public class TooManyLinesTest {
         FakeMail fakeMail = FakeMail.builder()
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .setMultipartWithBodyParts(MimeMessageBuilder.bodyPartBuilder()
-                    .data("content")
-                    .build())
-                .build())
+                    .data("content")))
             .build();
 
         Collection<MailAddress> result = testee.match(fakeMail);
@@ -133,10 +131,9 @@ public class TooManyLinesTest {
 
         FakeMail fakeMail = FakeMail.builder()
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
-                .setMultipartWithBodyParts(MimeMessageBuilder.bodyPartBuilder()
-                    .data("1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11")
-                    .build())
-                .build())
+                .setMultipartWithBodyParts(
+                    MimeMessageBuilder.bodyPartBuilder()
+                        .data("1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11")))
             .build();
 
         Collection<MailAddress> result = testee.match(fakeMail);

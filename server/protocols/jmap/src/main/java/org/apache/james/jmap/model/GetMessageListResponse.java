@@ -20,6 +20,7 @@
 package org.apache.james.jmap.model;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.methods.Method;
@@ -42,8 +43,8 @@ public class GetMessageListResponse implements Method.Response {
         private boolean collapseThreads;
         private String state;
         private boolean canCalculateUpdates;
-        private int position;
-        private int total;
+        private Optional<Number> position;
+        private Optional<Number> total;
         private final ImmutableList.Builder<String> threadIds;
         private final ImmutableList.Builder<MessageId> messageIds;
 
@@ -51,6 +52,8 @@ public class GetMessageListResponse implements Method.Response {
             sort = ImmutableList.builder();
             threadIds = ImmutableList.builder();
             messageIds = ImmutableList.builder();
+            position = Optional.empty();
+            total = Optional.empty();
         }
 
         public Builder accountId(String accountId) {
@@ -103,7 +106,7 @@ public class GetMessageListResponse implements Method.Response {
 
         public GetMessageListResponse build() {
             return new GetMessageListResponse(accountId, filter, sort.build(), collapseThreads, state,
-                    canCalculateUpdates, position, total, threadIds.build(), messageIds.build());
+                    canCalculateUpdates, position.orElse(Number.ZERO), total.orElse(Number.ZERO), threadIds.build(), messageIds.build());
         }
     }
 
@@ -113,13 +116,13 @@ public class GetMessageListResponse implements Method.Response {
     private final boolean collapseThreads;
     private final String state;
     private final boolean canCalculateUpdates;
-    private final int position;
-    private final int total;
+    private final Number position;
+    private final Number total;
     private final List<String> threadIds;
     private final List<MessageId> messageIds;
 
     @VisibleForTesting GetMessageListResponse(String accountId, Filter filter, List<String> sort, boolean collapseThreads, String state,
-            boolean canCalculateUpdates, int position, int total, List<String> threadIds, List<MessageId> messageIds) {
+            boolean canCalculateUpdates, Number position, Number total, List<String> threadIds, List<MessageId> messageIds) {
 
         this.accountId = accountId;
         this.filter = filter;
@@ -157,11 +160,11 @@ public class GetMessageListResponse implements Method.Response {
         return canCalculateUpdates;
     }
 
-    public int getPosition() {
+    public Number getPosition() {
         return position;
     }
 
-    public int getTotal() {
+    public Number getTotal() {
         return total;
     }
 

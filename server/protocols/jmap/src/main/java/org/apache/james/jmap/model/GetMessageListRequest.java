@@ -28,7 +28,6 @@ import org.apache.james.jmap.methods.JmapRequest;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 @JsonDeserialize(builder = GetMessageListRequest.Builder.class)
@@ -40,21 +39,21 @@ public class GetMessageListRequest implements JmapRequest {
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
-
         private String accountId;
         private Filter filter;
         private final ImmutableList.Builder<String> sort;
         private Boolean collapseThreads;
-        private int position;
+        private Optional<Number> position;
         private String anchor;
-        private Integer anchorOffset;
-        private Integer limit;
+        private Number anchorOffset;
+        private Number limit;
         private Boolean fetchThreads;
         private Boolean fetchMessages;
         private final ImmutableList.Builder<String> fetchMessageProperties;
         private Boolean fetchSearchSnippets;
 
         private Builder() {
+            position = Optional.empty();
             sort = ImmutableList.builder();
             fetchMessageProperties = ImmutableList.builder();
         }
@@ -78,8 +77,10 @@ public class GetMessageListRequest implements JmapRequest {
             return this;
         }
 
-        public Builder position(int position) {
-            this.position = position;
+        public Builder position(long position) {
+            this.position = Optional.of(
+                Number.DEFAULT_FACTORY.from(position)
+                    .orElseThrow(() -> new IllegalArgumentException(Number.VALIDATION_MESSAGE)));
             return this;
         }
 
@@ -91,8 +92,9 @@ public class GetMessageListRequest implements JmapRequest {
             throw new NotImplementedException();
         }
 
-        public Builder limit(int limit) {
-            this.limit = limit;
+        public Builder limit(long limit) {
+            this.limit = Number.DEFAULT_FACTORY.from(limit)
+                .orElseThrow(() -> new IllegalArgumentException(Number.VALIDATION_MESSAGE));
             return this;
         }
 
@@ -115,17 +117,9 @@ public class GetMessageListRequest implements JmapRequest {
         }
 
         public GetMessageListRequest build() {
-            Preconditions.checkState(position >= 0, "'position' should be positive or null");
-            checkLimit();
             return new GetMessageListRequest(Optional.ofNullable(accountId), Optional.ofNullable(filter), sort.build(), Optional.ofNullable(collapseThreads),
                     position, Optional.ofNullable(anchor), Optional.ofNullable(anchorOffset), Optional.ofNullable(limit), Optional.ofNullable(fetchThreads),
                     Optional.ofNullable(fetchMessages), fetchMessageProperties.build(), Optional.ofNullable(fetchSearchSnippets));
-        }
-
-        private void checkLimit() {
-            if (limit != null) {
-                Preconditions.checkState(limit >= 0, "'limit' should be positive or null");
-            }
         }
     }
 
@@ -133,17 +127,17 @@ public class GetMessageListRequest implements JmapRequest {
     private final Optional<Filter> filter;
     private final List<String> sort;
     private final Optional<Boolean> collapseThreads;
-    private final int position;
+    private final Optional<Number> position;
     private final Optional<String> anchor;
-    private final Optional<Integer> anchorOffset;
-    private final Optional<Integer> limit;
+    private final Optional<Number> anchorOffset;
+    private final Optional<Number> limit;
     private final Optional<Boolean> fetchThreads;
     private final Optional<Boolean> fetchMessages;
     private final List<String> fetchMessageProperties;
     private final Optional<Boolean> fetchSearchSnippets;
 
     @VisibleForTesting GetMessageListRequest(Optional<String> accountId, Optional<Filter> filter, List<String> sort, Optional<Boolean> collapseThreads,
-            int position, Optional<String> anchor, Optional<Integer> anchorOffset, Optional<Integer> limit, Optional<Boolean> fetchThreads,
+            Optional<Number> position, Optional<String> anchor, Optional<Number> anchorOffset, Optional<Number> limit, Optional<Boolean> fetchThreads,
             Optional<Boolean> fetchMessages, List<String> fetchMessageProperties, Optional<Boolean> fetchSearchSnippets) {
 
         this.accountId = accountId;
@@ -176,7 +170,7 @@ public class GetMessageListRequest implements JmapRequest {
         return collapseThreads;
     }
 
-    public int getPosition() {
+    public Optional<Number> getPosition() {
         return position;
     }
 
@@ -184,11 +178,11 @@ public class GetMessageListRequest implements JmapRequest {
         return anchor;
     }
 
-    public Optional<Integer> getAnchorOffset() {
+    public Optional<Number> getAnchorOffset() {
         return anchorOffset;
     }
 
-    public Optional<Integer> getLimit() {
+    public Optional<Number> getLimit() {
         return limit;
     }
 

@@ -24,12 +24,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayInputStream;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.util.ClassLoaderUtils;
 import org.apache.mailet.base.MailAddressFixture;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import com.google.common.io.ByteStreams;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.model.Calendar;
@@ -54,7 +53,7 @@ public class ICALTest {
     public void buildShouldFailWhenNoSender() throws Exception {
         expectedException.expect(NullPointerException.class);
 
-        byte[] ics = ByteStreams.toByteArray(ClassLoader.getSystemResourceAsStream("ics/meeting.ics"));
+        byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics");
         Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
 
         ICAL.builder()
@@ -67,7 +66,7 @@ public class ICALTest {
     public void buildShouldFailWhenNoRecipient() throws Exception {
         expectedException.expect(NullPointerException.class);
 
-        byte[] ics = ByteStreams.toByteArray(ClassLoader.getSystemResourceAsStream("ics/meeting.ics"));
+        byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics");
         Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
 
         ICAL.builder()
@@ -79,7 +78,7 @@ public class ICALTest {
 
     @Test
     public void buildShouldWork() throws Exception {
-        byte[] ics = ByteStreams.toByteArray(ClassLoader.getSystemResourceAsStream("ics/meeting.ics"));
+        byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics");
         Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
 
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
@@ -109,7 +108,7 @@ public class ICALTest {
 
     @Test
     public void buildShouldThrowOnCalendarWithoutDtstamp() throws Exception {
-        byte[] ics = ByteStreams.toByteArray(ClassLoader.getSystemResourceAsStream("ics/meeting_without_dtstamp.ics"));
+        byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting_without_dtstamp.ics");
         Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
 
         expectedException.expect(IllegalStateException.class);
@@ -125,7 +124,7 @@ public class ICALTest {
 
     @Test
     public void buildShouldThrowOnCalendarWithoutUid() throws Exception {
-        byte[] ics = ByteStreams.toByteArray(ClassLoader.getSystemResourceAsStream("ics/meeting_without_uid.ics"));
+        byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting_without_uid.ics");
         Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
 
         expectedException.expect(IllegalStateException.class);
@@ -141,7 +140,7 @@ public class ICALTest {
 
     @Test
     public void buildShouldThrowOnCalendarWithoutMethod() throws Exception {
-        byte[] ics = ByteStreams.toByteArray(ClassLoader.getSystemResourceAsStream("ics/meeting_without_method.ics"));
+        byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting_without_method.ics");
         Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
 
         expectedException.expect(IllegalStateException.class);
@@ -157,7 +156,7 @@ public class ICALTest {
 
     @Test
     public void buildShouldSetDefaultValueWhenCalendarWithoutSequence() throws Exception {
-        byte[] ics = ByteStreams.toByteArray(ClassLoader.getSystemResourceAsStream("ics/meeting_without_sequence.ics"));
+        byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting_without_sequence.ics");
         Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
 
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;

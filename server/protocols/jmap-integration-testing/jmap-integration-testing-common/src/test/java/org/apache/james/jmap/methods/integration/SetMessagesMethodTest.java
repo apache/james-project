@@ -56,7 +56,6 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.DefaultMailboxes;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
@@ -78,6 +77,7 @@ import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
+import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.ZeroedInputStream;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
@@ -4527,8 +4527,11 @@ public abstract class SetMessagesMethodTest {
 
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
-        try (IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT);) {
-            assertThat(imapMessageReader.readFirstMessageHeadersInInbox(USERNAME, PASSWORD))
+        try (IMAPMessageReader imapMessageReader = new IMAPMessageReader()
+                .connect(LOCALHOST_IP, IMAP_PORT)
+                .login(USERNAME, PASSWORD)
+                .select(MailboxConstants.INBOX)) {
+            assertThat(imapMessageReader.readFirstMessage())
                 .contains("X-MY-MULTIVALUATED-HEADER: first value")
                 .contains("X-MY-MULTIVALUATED-HEADER: second value");
         }
@@ -4588,7 +4591,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldCreateMessageWhenSendingMessageWithNonIndexableAttachment() throws Exception {
         Attachment nonIndexableAttachment = Attachment.builder()
-                .bytes(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("attachment/nonIndexableAttachment.html")))
+                .bytes(ClassLoaderUtils.getSystemResourceAsByteArray("attachment/nonIndexableAttachment.html"))
                 .type("text/html")
                 .build();
         uploadTextAttachment(nonIndexableAttachment);
@@ -4640,7 +4643,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void messageWithNonIndexableAttachmentShouldBeRetrievedWhenChainingSetMessagesAndGetMessages() throws Exception {
         Attachment nonIndexableAttachment = Attachment.builder()
-                .bytes(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("attachment/nonIndexableAttachment.html")))
+                .bytes(ClassLoaderUtils.getSystemResourceAsByteArray("attachment/nonIndexableAttachment.html"))
                 .type("text/html")
                 .build();
         uploadTextAttachment(nonIndexableAttachment);
@@ -4700,7 +4703,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void messageWithNonIndexableAttachmentShouldHaveItsEmailBodyIndexed() throws Exception {
         Attachment nonIndexableAttachment = Attachment.builder()
-                .bytes(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("attachment/nonIndexableAttachment.html")))
+                .bytes(ClassLoaderUtils.getSystemResourceAsByteArray("attachment/nonIndexableAttachment.html"))
                 .type("text/html")
                 .build();
         uploadTextAttachment(nonIndexableAttachment);
@@ -4915,8 +4918,8 @@ public abstract class SetMessagesMethodTest {
 
         Mail mail = FakeMail.builder()
             .mimeMessage(calendarMessage)
-            .sender(new MailAddress(fromAddress))
-            .recipient(new MailAddress(fromAddress))
+            .sender(fromAddress)
+            .recipient(fromAddress)
             .build();
         try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, USERS_DOMAIN);) {
             messageSender.sendMessage(mail);

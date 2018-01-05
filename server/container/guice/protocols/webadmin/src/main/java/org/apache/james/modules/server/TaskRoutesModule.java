@@ -17,10 +17,21 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.service;
+package org.apache.james.modules.server;
 
-public class MigrationException extends RuntimeException {
-    public MigrationException(String message) {
-        super(message);
+import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.routes.TasksRoutes;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
+
+public class TaskRoutesModule extends AbstractModule {
+    @Override
+    protected void configure() {
+        bind(TasksRoutes.class).in(Scopes.SINGLETON);
+
+        Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
+        routesMultibinder.addBinding().to(TasksRoutes.class);
     }
 }

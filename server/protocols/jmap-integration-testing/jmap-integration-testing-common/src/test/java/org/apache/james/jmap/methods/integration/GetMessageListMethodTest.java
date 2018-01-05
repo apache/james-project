@@ -25,6 +25,7 @@ import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -39,11 +40,11 @@ import java.util.Date;
 
 import javax.mail.Flags;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.model.Number;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
@@ -62,6 +63,7 @@ import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
+import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.date.ImapDateTimeFormatter;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
@@ -1007,7 +1009,7 @@ public abstract class GetMessageListMethodTest {
     @Test
     public void getMessageListShouldFilterMessagesWhenAttachmentFilterDoesntMatches() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
-        byte[] attachmentContent = IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/attachment.pdf"));
+        byte[] attachmentContent = ClassLoaderUtils.getSystemResourceAsByteArray("eml/attachment.pdf");
         BodyPart attachment = BodyPartBuilder.create()
                 .setBody(attachmentContent, "application/pdf")
                 .setContentDisposition("attachment")
@@ -1040,7 +1042,7 @@ public abstract class GetMessageListMethodTest {
     @Test
     public void getMessageListShouldNotFilterMessagesWhenAttachmentFilterMatches() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
-        byte[] attachmentContent = IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/attachment.pdf"));
+        byte[] attachmentContent = ClassLoaderUtils.getSystemResourceAsByteArray("eml/attachment.pdf");
         BodyPart attachment = BodyPartBuilder.create()
                 .setBody(attachmentContent, "application/pdf")
                 .setContentDisposition("attachment")
@@ -1897,5 +1899,31 @@ public abstract class GetMessageListMethodTest {
 
     private Date convertToDate(LocalDate localDate) {
         return Date.from(localDate.atStartOfDay(ZONE_ID).toInstant());
+    }
+
+    @Test
+    public void getMessageListShouldAcceptLessThan2Pow53NumberForPosition() throws Exception {
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"position\":" + Number.MAX_VALUE + "}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messageList"));
+    }
+
+    @Test
+    public void getMessageListShouldErrorWhenPositionOver2Pow53() throws Exception {
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"position\":" + Number.MAX_VALUE + 1 + "}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("error"))
+            .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
+            .body(ARGUMENTS + ".description", containsString("value should be positive and less than 2^53"));
     }
 }

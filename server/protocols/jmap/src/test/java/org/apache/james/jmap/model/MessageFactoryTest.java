@@ -28,7 +28,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Optional;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
@@ -83,7 +82,7 @@ public class MessageFactoryTest {
         Message testee = messageFactory.fromMetaDataWithContent(testMail);
         assertThat(testee)
             .extracting(Message::getPreview, Message::getSize, Message::getSubject, Message::getHeaders, Message::getDate)
-            .containsExactly("(Empty)", 0L, "", ImmutableMap.of("MIME-Version", "1.0"), INTERNAL_DATE);
+            .containsExactly("(Empty)", Number.ZERO, "", ImmutableMap.of("MIME-Version", "1.0"), INTERNAL_DATE);
     }
 
     @Test
@@ -360,7 +359,7 @@ public class MessageFactoryTest {
             .keywords(Keywords.factory().from(Keyword.SEEN))
                 .size(0)
                 .internalDate(INTERNAL_DATE)
-                .content(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("spamMail.eml"))))
+                .content(ClassLoader.getSystemResourceAsStream("spamMail.eml"))
                 .attachments(ImmutableList.of())
                 .mailboxId(MAILBOX_ID)
                 .messageId(TestMessageId.of(2))
@@ -386,7 +385,7 @@ public class MessageFactoryTest {
             .keywords(Keywords.factory().from(Keyword.SEEN))
                 .size(0)
                 .internalDate(INTERNAL_DATE)
-                .content(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("spamMail.eml"))))
+                .content(ClassLoader.getSystemResourceAsStream("spamMail.eml"))
                 .attachments(ImmutableList.of(MessageAttachment.builder()
                         .attachment(org.apache.james.mailbox.model.Attachment.builder()
                                 .attachmentId(AttachmentId.from(blodId.getRawValue()))
@@ -550,7 +549,7 @@ public class MessageFactoryTest {
         Message testee = messageFactory.fromMetaDataWithContent(testMail);
         assertThat(testee)
             .extracting(Message::getPreview, Message::getSize, Message::getSubject, Message::getHeaders, Message::getDate)
-            .containsExactly("(Empty)", 1010L, "", ImmutableMap.of("MIME-Version", "1.0"), INTERNAL_DATE);
+            .containsExactly("(Empty)", Number.fromLong(1010L), "", ImmutableMap.of("MIME-Version", "1.0"), INTERNAL_DATE);
     }
 
     @Test

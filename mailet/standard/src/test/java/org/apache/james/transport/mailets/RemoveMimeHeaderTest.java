@@ -26,7 +26,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
@@ -66,10 +65,9 @@ public class RemoveMimeHeaderTest {
                 .build();
         mailet.init(mailetConfig);
 
-        Mail mail = createMail(MimeMessageBuilder.mimeMessageBuilder()
+        Mail mail = FakeMail.fromMessage(MimeMessageBuilder.mimeMessageBuilder()
             .addHeader(HEADER1, "true")
-            .addHeader(HEADER2, "true")
-            .build());
+            .addHeader(HEADER2, "true"));
 
         mailet.service(mail);
 
@@ -85,10 +83,9 @@ public class RemoveMimeHeaderTest {
                 .build();
         mailet.init(mailetConfig);
 
-        Mail mail = createMail(MimeMessageBuilder.mimeMessageBuilder()
+        Mail mail = FakeMail.fromMessage(MimeMessageBuilder.mimeMessageBuilder()
             .addHeader(HEADER1, "true")
-            .addHeader(HEADER2, "true")
-            .build());
+            .addHeader(HEADER2, "true"));
 
         mailet.service(mail);
 
@@ -105,10 +102,9 @@ public class RemoveMimeHeaderTest {
                 .build();
         mailet.init(mailetConfig);
 
-        Mail mail = createMail(MimeMessageBuilder.mimeMessageBuilder()
+        Mail mail = FakeMail.fromMessage(MimeMessageBuilder.mimeMessageBuilder()
             .addHeader(HEADER1, "true")
-            .addHeader(HEADER2, "true")
-            .build());
+            .addHeader(HEADER2, "true"));
 
         mailet.service(mail);
 
@@ -124,10 +120,9 @@ public class RemoveMimeHeaderTest {
                 .build();
         mailet.init(mailetConfig);
 
-        Mail mail = createMail(MimeMessageBuilder.mimeMessageBuilder()
+        Mail mail = FakeMail.fromMessage(MimeMessageBuilder.mimeMessageBuilder()
             .addHeader(HEADER1, "true")
-            .addHeader(HEADER2, "true")
-            .build());
+            .addHeader(HEADER2, "true"));
 
         mailet.service(mail);
 
@@ -159,11 +154,5 @@ public class RemoveMimeHeaderTest {
 
         assertThatThrownBy(() -> mailet.service(mail))
             .isInstanceOf(MessagingException.class);
-    }
-
-    private Mail createMail(MimeMessage message) throws MessagingException {
-        return FakeMail.builder()
-                .mimeMessage(message)
-                .build();
     }
 }

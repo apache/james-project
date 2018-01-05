@@ -28,11 +28,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.CassandraJmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jwt.JwtConfiguration;
+import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
@@ -78,8 +78,7 @@ public class JwtFilterIntegrationTest {
     @Before
     public void setUp() throws Exception {
         JwtConfiguration jwtConfiguration = new JwtConfiguration(
-            Optional.of(
-                IOUtils.toString(ClassLoader.getSystemResourceAsStream("jwt_publickey"), StandardCharsets.UTF_8)));
+            Optional.of(ClassLoaderUtils.getSystemResourceAsString("jwt_publickey")));
 
         guiceJamesServer = cassandraJmapTestRule.jmapServer(cassandra.getModule())
             .overrideWith(new WebAdminConfigurationModule(),

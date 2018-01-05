@@ -33,14 +33,14 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 public class CassandraSchemaVersionManager {
-    public static final int MIN_VERSION = 2;
-    public static final int MAX_VERSION = 5;
-    public static final int DEFAULT_VERSION = 2;
+    public static final SchemaVersion MIN_VERSION = new SchemaVersion(2);
+    public static final SchemaVersion MAX_VERSION = new SchemaVersion(5);
+    public static final SchemaVersion DEFAULT_VERSION = MIN_VERSION;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraSchemaVersionManager.class);
 
-    private final int minVersion;
-    private final int maxVersion;
+    private final SchemaVersion minVersion;
+    private final SchemaVersion maxVersion;
     private final CassandraSchemaVersionDAO schemaVersionDAO;
 
     public enum SchemaState {
@@ -56,10 +56,8 @@ public class CassandraSchemaVersionManager {
     }
 
     @VisibleForTesting
-    public CassandraSchemaVersionManager(CassandraSchemaVersionDAO schemaVersionDAO, int minVersion, int maxVersion) {
-        Preconditions.checkArgument(minVersion > 0, "minVersion needs to be strictly positive");
-        Preconditions.checkArgument(maxVersion > 0, "maxVersion needs to be strictly positive");
-        Preconditions.checkArgument(maxVersion >= minVersion,
+    public CassandraSchemaVersionManager(CassandraSchemaVersionDAO schemaVersionDAO, SchemaVersion minVersion, SchemaVersion maxVersion) {
+        Preconditions.checkArgument(maxVersion.isAfterOrEquals(minVersion),
             "maxVersion should not be inferior to minVersion");
 
         this.schemaVersionDAO = schemaVersionDAO;
@@ -67,7 +65,7 @@ public class CassandraSchemaVersionManager {
         this.maxVersion = maxVersion;
     }
 
-    public int computeVersion() {
+    public SchemaVersion computeVersion() {
         return schemaVersionDAO
             .getCurrentSchemaVersion()
             .join()
@@ -78,21 +76,21 @@ public class CassandraSchemaVersionManager {
             });
     }
 
-    public int getMinimumSupportedVersion() {
+    public SchemaVersion getMinimumSupportedVersion() {
         return minVersion;
     }
 
-    public int getMaximumSupportedVersion() {
+    public SchemaVersion getMaximumSupportedVersion() {
         return maxVersion;
     }
 
     public SchemaState computeSchemaState() {
-        int version = computeVersion();
-        if (version < minVersion) {
+        SchemaVersion version = computeVersion();
+        if (version.isBefore(minVersion)) {
             return TOO_OLD;
-        } else if (version < maxVersion) {
+        } else if (version.isBefore(maxVersion)) {
             return UPGRADABLE;
-        } else if (version == maxVersion) {
+        } else if (version.equals(maxVersion)) {
             return UP_TO_DATE;
         } else {
             return TOO_RECENT;

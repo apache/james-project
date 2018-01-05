@@ -31,17 +31,27 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 
 import org.apache.commons.net.smtp.AuthenticatingSMTPClient;
-import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
+import org.apache.mailet.base.test.FakeMail;
+import org.junit.rules.ExternalResource;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Throwables;
+import com.jayway.awaitility.core.ConditionFactory;
 
-public class SMTPMessageSender implements Closeable {
+public class SMTPMessageSender extends ExternalResource implements Closeable {
+
+    private static AuthenticatingSMTPClient createClient() {
+        try {
+            return new AuthenticatingSMTPClient();
+        } catch (NoSuchAlgorithmException e) {
+            throw Throwables.propagate(e);
+        }
+    }
 
     public static SMTPMessageSender noAuthentication(String ip, int port, String senderDomain) throws IOException {
-        SMTPClient smtpClient = new SMTPClient();
+        AuthenticatingSMTPClient smtpClient = createClient();
         smtpClient.connect(ip, port);
         return new SMTPMessageSender(smtpClient, senderDomain);
     }
@@ -56,15 +66,31 @@ public class SMTPMessageSender implements Closeable {
         return new SMTPMessageSender(smtpClient, senderDomain);
     }
 
-    private final SMTPClient smtpClient;
+    private final AuthenticatingSMTPClient smtpClient;
     private final String senderDomain;
 
-    private SMTPMessageSender(SMTPClient smtpClient, String senderDomain) {
+    private SMTPMessageSender(AuthenticatingSMTPClient smtpClient, String senderDomain) {
         this.smtpClient = smtpClient;
         this.senderDomain = senderDomain;
     }
 
-    public void sendMessage(String from, String recipient) {
+    public SMTPMessageSender(String senderDomain) {
+        this(createClient(), senderDomain);
+    }
+
+    public SMTPMessageSender connect(String ip, int port) throws IOException {
+        smtpClient.connect(ip, port);
+        return this;
+    }
+
+    public SMTPMessageSender authenticate(String username, String password) throws IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidKeySpecException {
+        if (smtpClient.auth(AuthenticatingSMTPClient.AUTH_METHOD.PLAIN, username, password) == false) {
+            throw new RuntimeException("auth failed");
+        }
+        return this;
+    }
+
+    public SMTPMessageSender sendMessage(String from, String recipient) {
         try {
             smtpClient.helo(senderDomain);
             smtpClient.setSender(from);
@@ -77,9 +103,10 @@ public class SMTPMessageSender implements Closeable {
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
+        return this;
     }
 
-    public void sendMessageNoBracket(String from, String recipient) {
+    public SMTPMessageSender sendMessageNoBracket(String from, String recipient) {
         try {
             smtpClient.helo(senderDomain);
             smtpClient.setSender(from);
@@ -92,9 +119,10 @@ public class SMTPMessageSender implements Closeable {
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
+        return this;
     }
 
-    public void sendMessageWithHeaders(String from, String recipient, String message) {
+    public SMTPMessageSender sendMessageWithHeaders(String from, String recipient, String message) {
         try {
             smtpClient.helo(senderDomain);
             smtpClient.setSender(from);
@@ -103,9 +131,10 @@ public class SMTPMessageSender implements Closeable {
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
+        return this;
     }
 
-    public void sendMessage(Mail mail) throws MessagingException {
+    public SMTPMessageSender sendMessage(Mail mail) throws MessagingException {
         try {
             String from = mail.getSender().asString();
             smtpClient.helo(senderDomain);
@@ -117,6 +146,11 @@ public class SMTPMessageSender implements Closeable {
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
+        return this;
+    }
+
+    public SMTPMessageSender sendMessage(FakeMail.Builder mail) throws MessagingException {
+        return sendMessage(mail.build());
     }
 
     private String asString(Message message) throws IOException, MessagingException {
@@ -128,6 +162,14 @@ public class SMTPMessageSender implements Closeable {
     public boolean messageHasBeenSent() throws IOException {
         return smtpClient.getReplyString()
             .contains("250 2.6.0 Message received");
+    }
+
+    public void awaitSent(ConditionFactory conditionFactory) {
+        conditionFactory.until(this::messageHasBeenSent);
+    }
+
+    public void awaitSentFail(ConditionFactory conditionFactory) {
+        conditionFactory.until(this::messageSendingFailed);
     }
 
     public boolean messageSendingFailed() throws IOException {

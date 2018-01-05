@@ -23,6 +23,12 @@ package org.apache.james.mailets.configuration;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.james.transport.mailets.LocalDelivery;
+import org.apache.james.transport.mailets.RemoteDelivery;
+import org.apache.james.transport.mailets.RemoveMimeHeader;
+import org.apache.james.transport.mailets.ToProcessor;
+import org.apache.james.transport.matchers.All;
+import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.Matcher;
 
@@ -73,6 +79,45 @@ public class MailetConfiguration implements SerializableAsXml {
             Preconditions.checkState(mailet != null, "'mailet' is mandatory");
             return new MailetConfiguration(matcher, matcherCondition, mailet, properties.build());
         }
+    }
+
+    public static final MailetConfiguration BCC_STRIPPER = MailetConfiguration.builder()
+        .matcher(All.class)
+        .mailet(RemoveMimeHeader.class)
+        .addProperty("name", "bcc")
+        .build();
+
+    public static final MailetConfiguration LOCAL_DELIVERY = MailetConfiguration.builder()
+        .matcher(RecipientIsLocal.class)
+        .mailet(LocalDelivery.class)
+        .build();
+
+    public static final MailetConfiguration TO_TRANSPORT = MailetConfiguration.builder()
+        .matcher(All.class)
+        .mailet(ToProcessor.class)
+        .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT)
+        .build();
+
+    public static final MailetConfiguration TO_BOUNCE = MailetConfiguration.builder()
+        .matcher(All.class)
+        .mailet(ToProcessor.class)
+        .addProperty("processor", ProcessorConfiguration.STATE_BOUNCES)
+        .build();
+
+    public static MailetConfiguration.Builder remoteDeliveryBuilder() {
+        return remoteDeliveryBuilderNoBounces()
+            .addProperty("bounceProcessor", ProcessorConfiguration.STATE_BOUNCES);
+    }
+
+    public static MailetConfiguration.Builder remoteDeliveryBuilderNoBounces() {
+        return MailetConfiguration.builder()
+            .mailet(RemoteDelivery.class)
+            .addProperty("outgoingQueue", "outgoing")
+            .addProperty("delayTime", "5000, 100000, 500000")
+            .addProperty("maxRetries", "2")
+            .addProperty("maxDnsProblemRetries", "0")
+            .addProperty("deliveryThreads", "2")
+            .addProperty("sendpartial", "true");
     }
 
     private final Class<? extends Matcher> matcher;

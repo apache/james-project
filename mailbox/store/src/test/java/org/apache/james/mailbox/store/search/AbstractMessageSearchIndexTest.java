@@ -31,7 +31,6 @@ import java.util.List;
 
 import javax.mail.Flags;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
@@ -56,6 +55,7 @@ import org.apache.james.mime4j.message.BodyPart;
 import org.apache.james.mime4j.message.BodyPartBuilder;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.message.MultipartBuilder;
+import org.apache.james.util.ClassLoaderUtils;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -1180,7 +1180,7 @@ public abstract class AbstractMessageSearchIndexTest {
     @Test
     public void searchWithPDFAttachmentShouldReturnMailsWhenAttachmentContentMatches() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Attachment));
-        byte[] attachmentContent = IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/attachment.pdf"));
+        byte[] attachmentContent = ClassLoaderUtils.getSystemResourceAsByteArray("eml/attachment.pdf");
         BodyPart attachment = BodyPartBuilder.create()
                 .setBody(attachmentContent, "application/pdf")
                 .setContentDisposition("attachment")

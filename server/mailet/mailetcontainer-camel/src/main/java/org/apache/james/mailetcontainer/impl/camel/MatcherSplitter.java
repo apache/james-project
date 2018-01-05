@@ -127,12 +127,12 @@ public class MatcherSplitter {
                 } else {
                     onMatchException = onMatchException.trim().toLowerCase(Locale.US);
                 }
-                if (onMatchException.compareTo("nomatch") == 0) {
+                if (onMatchException.equalsIgnoreCase("nomatch")) {
                     // In case the matcher returned null, create an empty
                     // Collection
                     LOGGER.warn("Encountered error while executing matcher {}. Matching none.", matcher, ex);
                     matchedRcpts = new ArrayList<>(0);
-                } else if (onMatchException.compareTo("matchall") == 0) {
+                } else if (onMatchException.equalsIgnoreCase("matchall")) {
                     LOGGER.warn("Encountered error while executing matcher {}. matching all.", matcher, ex);
                     matchedRcpts = mail.getRecipients();
                     // no need to verify addresses

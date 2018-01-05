@@ -19,6 +19,12 @@
 
 package org.apache.james.mailets;
 
+import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
+import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
+import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
+import static org.apache.james.mailets.configuration.Constants.PASSWORD;
+import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
+import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.MemoryJamesServerMain;
@@ -27,8 +33,6 @@ import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.probe.DataProbe;
-import org.apache.james.transport.mailets.LocalDelivery;
-import org.apache.james.transport.mailets.RemoveMimeHeader;
 import org.apache.james.transport.mailets.ToProcessor;
 import org.apache.james.transport.mailets.ToRepository;
 import org.apache.james.transport.matchers.All;
@@ -43,95 +47,51 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
-
 public class SmtpAuthIntegrationTest {
-    private static final String LOCALHOST_IP = "127.0.0.1";
-    private static final int SMTP_PORT = 1025;
-    private static final int IMAP_PORT = 1143;
-    private static final String PASSWORD = "secret";
-
-    private static final String JAMES_APACHE_ORG = "james.org";
-    private static final String FROM = "fromuser@" + JAMES_APACHE_ORG;
+    private static final String FROM = "fromuser@" + DEFAULT_DOMAIN;
     private static final String DROPPED_MAILS = "file://var/mail/dropped-mails/";
 
-
+    @Rule
+    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @Rule
+    public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
-    private ConditionFactory calmlyAwait;
+    private MailRepositoryProbeImpl repositoryProbe;
 
     @Before
     public void setup() throws Exception {
-        ProcessorConfiguration rootProcessor = ProcessorConfiguration.builder()
-            .state("root")
+        ProcessorConfiguration.Builder rootProcessor = ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(SMTPAuthSuccessful.class)
                 .mailet(ToProcessor.class)
-                .addProperty("processor", "transport")
-                .build())
-            .addMailet(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(ToProcessor.class)
-                .addProperty("processor", "bounces")
-                .build())
-            .build();
+                .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
+            .addMailet(MailetConfiguration.TO_BOUNCE);
 
-        MailetContainer mailetContainer = MailetContainer.builder()
-            .postmaster("postmaster@" + JAMES_APACHE_ORG)
-            .threads(5)
-            .addProcessor(rootProcessor)
-            .addProcessor(CommonProcessors.error())
-            .addProcessor(deliverOnlyTransport())
-            .addProcessor(bounces())
-            .addProcessor(CommonProcessors.sieveManagerCheck())
-            .build();
+        MailetContainer.Builder mailetContainer = TemporaryJamesServer.DEFAULT_MAILET_CONTAINER_CONFIGURATION
+            .putProcessor(rootProcessor)
+            .putProcessor(CommonProcessors.deliverOnlyTransport())
+            .putProcessor(bounces());
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
-            .build(temporaryFolder, mailetContainer);
+            .withMailetContainer(mailetContainer)
+            .build(temporaryFolder);
+
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(JAMES_APACHE_ORG);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
-
-        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        calmlyAwait = Awaitility.with()
-            .pollInterval(slowPacedPollInterval)
-            .and()
-            .with()
-            .pollDelay(slowPacedPollInterval)
-            .await();
+        repositoryProbe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
     }
 
-    private ProcessorConfiguration deliverOnlyTransport() {
-        return ProcessorConfiguration.builder()
-            .state("transport")
-            .enableJmx(true)
-            .addMailet(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(RemoveMimeHeader.class)
-                .addProperty("name", "bcc")
-                .build())
-            .addMailet(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(LocalDelivery.class)
-                .build())
-            .build();
-    }
-
-    private ProcessorConfiguration bounces() {
-        return ProcessorConfiguration.builder()
-            .state("bounces")
-            .enableJmx(true)
+    private ProcessorConfiguration.Builder bounces() {
+        return ProcessorConfiguration.bounces()
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(ToRepository.class)
-                .addProperty("repositoryPath", DROPPED_MAILS)
-                .build())
-            .build();
+                .addProperty("repositoryPath", DROPPED_MAILS));
     }
 
     @After
@@ -141,32 +101,30 @@ public class SmtpAuthIntegrationTest {
 
     @Test
     public void authenticatedSmtpSessionsShouldBeDelivered() throws Exception {
-        try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, FROM, PASSWORD);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .authenticate(FROM, PASSWORD)
+            .sendMessage(FROM, FROM)
+            .awaitSent(awaitOneMinute);
 
-            messageSender.sendMessage(FROM, FROM);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-
-            calmlyAwait.atMost(Duration.ONE_MINUTE)
-                .until(() -> imapMessageReader.userReceivedMessage(FROM, PASSWORD));
-        }
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(FROM, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitOneMinute);
     }
 
     @Test
     public void nonAuthenticatedSmtpSessionsShouldNotBeDelivered() throws Exception {
-        try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, FROM)
+            .awaitSent(awaitOneMinute);
 
-            messageSender.sendMessage(FROM, FROM);
-
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-
-            MailRepositoryProbeImpl repositoryProbe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> repositoryProbe.getRepositoryMailCount(DROPPED_MAILS) == 1);
-            assertThat(imapMessageReader.userReceivedMessage(FROM, PASSWORD)).isFalse();
-        }
+        awaitOneMinute.until(() -> repositoryProbe.getRepositoryMailCount(DROPPED_MAILS) == 1);
+        assertThat(
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+                .login(FROM, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .hasAMessage())
+            .isFalse();
     }
 
 }

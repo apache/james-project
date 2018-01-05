@@ -33,6 +33,7 @@ import java.util.concurrent.CompletableFuture;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.NotificationRegistry;
 import org.apache.james.jmap.api.vacation.RecipientId;
@@ -40,7 +41,6 @@ import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.utils.MimeMessageBodyGenerator;
 import org.apache.james.util.date.ZonedDateTimeProvider;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.AutomaticallySentMailDetector;
 import org.apache.mailet.base.test.FakeMail;
@@ -190,7 +190,7 @@ public class VacationMailetTest {
 
         FakeMail mail = FakeMail.builder()
             .fileName("spamMail.eml")
-            .recipients(ImmutableList.of(originalRecipient, secondRecipient))
+            .recipients(originalRecipient, secondRecipient)
             .sender(originalSender)
             .build();
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
