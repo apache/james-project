@@ -35,6 +35,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJamesServerMain;
+import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -48,15 +49,35 @@ import com.google.inject.Module;
 
 public class TemporaryJamesServer {
 
+    public static final MailetContainer.Builder DEFAULT_MAILET_CONTAINER_CONFIGURATION = MailetContainer.builder()
+        .putProcessor(CommonProcessors.root())
+        .putProcessor(CommonProcessors.error())
+        .putProcessor(CommonProcessors.transport())
+        .putProcessor(CommonProcessors.spam())
+        .putProcessor(CommonProcessors.localAddressError())
+        .putProcessor(CommonProcessors.relayDenied())
+        .putProcessor(CommonProcessors.bounces())
+        .putProcessor(CommonProcessors.sieveManagerCheck());
+
+    public static final MailetContainer.Builder SIMPLE_MAILET_CONTAINER_CONFIGURATION = MailetContainer.builder()
+        .putProcessor(CommonProcessors.simpleRoot())
+        .putProcessor(CommonProcessors.error())
+        .putProcessor(CommonProcessors.transport())
+        .putProcessor(CommonProcessors.localAddressError())
+        .putProcessor(CommonProcessors.relayDenied())
+        .putProcessor(CommonProcessors.bounces());
+
     public static class Builder {
         private ImmutableList.Builder<Module> overrideModules;
         private Optional<Module> module;
         private Optional<SmtpConfiguration> smtpConfiguration;
+        private Optional<MailetContainer> mailetConfiguration;
 
         private Builder() {
             overrideModules = ImmutableList.builder();
             module = Optional.empty();
             smtpConfiguration = Optional.empty();
+            mailetConfiguration = Optional.empty();
         }
 
         public Builder withBase(Module module) {
@@ -69,15 +90,29 @@ public class TemporaryJamesServer {
             return this;
         }
 
+        public Builder withSmtpConfiguration(SmtpConfiguration.Builder smtpConfiguration) {
+            return withSmtpConfiguration(smtpConfiguration.build());
+        }
+
+        public Builder withMailetContainer(MailetContainer mailetConfiguration) {
+            this.mailetConfiguration = Optional.of(mailetConfiguration);
+            return this;
+        }
+
+
+        public Builder withMailetContainer(MailetContainer.Builder mailetConfiguration) {
+            return withMailetContainer(mailetConfiguration.build());
+        }
+
         public Builder withOverrides(Module... modules) {
             this.overrideModules.addAll(Arrays.asList(modules));
             return this;
         }
 
-        public TemporaryJamesServer build(TemporaryFolder temporaryFolder, MailetContainer mailetContainer) throws Exception {
+        public TemporaryJamesServer build(TemporaryFolder temporaryFolder) throws Exception {
             return new TemporaryJamesServer(
                 temporaryFolder,
-                mailetContainer,
+                mailetConfiguration.orElse(DEFAULT_MAILET_CONTAINER_CONFIGURATION.build()),
                 smtpConfiguration.orElse(SmtpConfiguration.DEFAULT),
                 module.orElse(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE),
                 overrideModules.build());

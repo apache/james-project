@@ -68,17 +68,13 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
             unsolicitedResponses(session, responder, false);
             okComplete(command, tag, responder);
         } catch (MailboxNotFoundException e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Delete failed for mailbox " + mailboxPath + " as it not exist", e);
-            }
+            LOGGER.debug("Delete failed for mailbox {} as it doesn't exist", mailboxPath, e);
             no(command, tag, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX);
         } catch (TooLongMailboxNameException e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("The mailbox name length is over limit: " + mailboxPath.getName(), e);
-            }
+            LOGGER.debug("The mailbox name length is over limit: {}", mailboxPath.getName(), e);
             taggedBad(command, tag, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
         } catch (MailboxException e) {
-            LOGGER.error("Delete failed for mailbox " + mailboxPath, e);
+            LOGGER.error("Delete failed for mailbox {}", mailboxPath, e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

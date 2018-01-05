@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.mail.Address;
@@ -177,14 +178,12 @@ public class JamesMailetContext implements MailetContext, Configurable {
     @Override
     public void bounce(Mail mail, String message, MailAddress bouncer) throws MessagingException {
         if (mail.getSender() == null) {
-            if (LOGGER.isInfoEnabled())
-                LOGGER.info("Mail to be bounced contains a null (<>) reverse path.  No bounce will be sent.");
+            LOGGER.info("Mail to be bounced contains a null (<>) reverse path.  No bounce will be sent.");
             return;
         } else {
             // Bounce message goes to the reverse path, not to the Reply-To
             // address
-            if (LOGGER.isInfoEnabled())
-                LOGGER.info("Processing a bounce request for a message with a reverse path of " + mail.getSender().toString());
+            LOGGER.info("Processing a bounce request for a message with a reverse path of {}", mail.getSender());
         }
 
         MailImpl reply = rawBounce(mail, message);
@@ -248,7 +247,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
                 return isLocalEmail(new MailAddress(name.toLowerCase(Locale.US)));
             }
         } catch (ParseException e) {
-            LOGGER.info("Error checking isLocalUser for user " + name, e);
+            LOGGER.info("Error checking isLocalUser for user {}", name, e);
             return false;
         }
     }
@@ -402,10 +401,22 @@ public class JamesMailetContext implements MailetContext, Configurable {
     }
 
     @Override
+    public void sendMail(Mail mail, long delay, TimeUnit unit) throws MessagingException {
+        sendMail(mail, Mail.DEFAULT, delay, unit);
+    }
+
+    @Override
     public void sendMail(Mail mail, String state) throws MessagingException {
         mail.setAttribute(Mail.SENT_BY_MAILET, "true");
         mail.setState(state);
         rootMailQueue.enQueue(mail);
+    }
+    
+    @Override
+    public void sendMail(Mail mail, String state, long delay, TimeUnit unit) throws MessagingException {
+        mail.setAttribute(Mail.SENT_BY_MAILET, "true");
+        mail.setState(state);
+        rootMailQueue.enQueue(mail, delay, unit);
     }
 
     public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage message, String state) throws MessagingException {
@@ -465,11 +476,10 @@ public class JamesMailetContext implements MailetContext, Configurable {
             try {
                 this.postmaster = new MailAddress(postMasterAddress);
                 if (!domains.containsDomain(postmaster.getDomain())) {
-                    String warnBuffer = "The specified postmaster address ( " + postmaster + " ) is not a local " +
+                    LOGGER.warn("The specified postmaster address ( {} ) is not a local " +
                             "address.  This is not necessarily a problem, but it does mean that emails addressed to " +
                             "the postmaster will be routed to another server.  For some configurations this may " +
-                            "cause problems.";
-                    LOGGER.warn(warnBuffer);
+                            "cause problems.", postmaster);
                 }
             } catch (AddressException e) {
                 throw new ConfigurationException("Postmaster address " + postMasterAddress + "is invalid", e);

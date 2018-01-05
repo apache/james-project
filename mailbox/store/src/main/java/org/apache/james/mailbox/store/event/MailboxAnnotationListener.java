@@ -66,7 +66,7 @@ public class MailboxAnnotationListener implements MailboxListener {
             try {
                 annotationMapper.deleteAnnotation(mailboxId, annotation.getKey());
             } catch (Exception e) {
-                logger.error("Unable to delete annotation {0} cause {1}", annotation.getKey(), e.getMessage());
+                logger.error("Unable to delete annotation {} cause {}", annotation.getKey(), e.getMessage());
             }
         }
     }

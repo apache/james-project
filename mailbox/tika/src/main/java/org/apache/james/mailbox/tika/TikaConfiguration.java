@@ -21,6 +21,8 @@ package org.apache.james.mailbox.tika;
 
 import java.util.Optional;
 
+import org.apache.james.util.Port;
+
 import com.google.common.base.Preconditions;
 
 public class TikaConfiguration {
@@ -60,6 +62,7 @@ public class TikaConfiguration {
             Preconditions.checkState(host.isPresent(), "'host' is mandatory");
             Preconditions.checkState(port.isPresent(), "'port' is mandatory");
             Preconditions.checkState(timeoutInMillis.isPresent(), "'timeoutInMillis' is mandatory");
+            Port.assertValid(port.get());
 
             return new TikaConfiguration(host.get(), port.get(), timeoutInMillis.get());
         }

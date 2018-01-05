@@ -23,11 +23,21 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.JMAPConfiguration;
 
 public class JamesSignatureHandlerProvider {
+    private static final String JWT_PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\n" +
+        "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtlChO/nlVP27MpdkG0Bh\n" +
+        "16XrMRf6M4NeyGa7j5+1UKm42IKUf3lM28oe82MqIIRyvskPc11NuzSor8HmvH8H\n" +
+        "lhDs5DyJtx2qp35AT0zCqfwlaDnlDc/QDlZv1CoRZGpQk1Inyh6SbZwYpxxwh0fi\n" +
+        "+d/4RpE3LBVo8wgOaXPylOlHxsDizfkL8QwXItyakBfMO6jWQRrj7/9WDhGf4Hi+\n" +
+        "GQur1tPGZDl9mvCoRHjFrD5M/yypIPlfMGWFVEvV5jClNMLAQ9bYFuOc7H1fEWw6\n" +
+        "U1LZUUbJW9/CH45YXz82CYqkrfbnQxqRb2iVbVjs/sHopHd1NTiCfUtwvcYJiBVj\n" +
+        "kwIDAQAB\n" +
+        "-----END PUBLIC KEY-----";
 
     public JamesSignatureHandler provide() throws Exception {
         FileSystem fileSystem = new FileSystem() {
@@ -51,6 +61,7 @@ public class JamesSignatureHandlerProvider {
                     .enable()
                     .keystore("keystore")
                     .secret("james72laBalle")
+                    .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
                     .build());
         signatureHandler.init();
         return signatureHandler;

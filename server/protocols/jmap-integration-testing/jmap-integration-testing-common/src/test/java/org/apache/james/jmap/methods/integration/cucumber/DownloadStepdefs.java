@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +48,6 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mime4j.codec.DecoderUtil;
 
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ArrayListMultimap;
@@ -395,7 +395,7 @@ public class DownloadStepdefs {
     @Then("^(?:he|she|the user) can read that blob")
     public void httpOkStatusAndExpectedContent() throws IOException {
         assertThat(response.getStatusLine().getStatusCode()).isEqualTo(200);
-        assertThat(IOUtils.toString(response.getEntity().getContent(), Charsets.UTF_8)).isNotEmpty();
+        assertThat(IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8)).isNotEmpty();
     }
 
     @Then("^the user should receive a not found response$")
@@ -412,7 +412,7 @@ public class DownloadStepdefs {
     public void accessTokenResponse() throws Throwable {
         assertThat(response.getStatusLine().getStatusCode()).isEqualTo(200);
         assertThat(response.getHeaders("Content-Type")).extracting(Header::toString).containsExactly("Content-Type: text/plain");
-        assertThat(IOUtils.toString(response.getEntity().getContent(), Charsets.UTF_8)).isNotEmpty();
+        assertThat(IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8)).isNotEmpty();
     }
 
     @Then("^\"([^\"]*)\" should receive an attachment access token$")
@@ -448,6 +448,6 @@ public class DownloadStepdefs {
     }
 
     private String decode(String name) {
-        return DecoderUtil.decodeEncodedWords(name, Charsets.UTF_8);
+        return DecoderUtil.decodeEncodedWords(name, StandardCharsets.UTF_8);
     }
 }

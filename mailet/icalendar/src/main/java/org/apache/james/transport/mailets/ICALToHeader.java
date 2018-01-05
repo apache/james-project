@@ -97,7 +97,7 @@ public class ICALToHeader extends GenericMailet {
                 .ifPresent(Throwing.<Calendar>consumer(calendar -> writeToHeaders(calendar, mail))
                     .sneakyThrow());
         } catch (ClassCastException e) {
-            LOGGER.error("Received a mail with " + attribute + " not being an ICAL object for mail " + mail.getName(), e);
+            LOGGER.error("Received a mail with {} not being an ICAL object for mail {}", attribute, mail.getName(), e);
         }
     }
 
@@ -126,7 +126,7 @@ public class ICALToHeader extends GenericMailet {
             try {
                 mimeMessage.addHeader(headerName, property.getValue());
             } catch (MessagingException e) {
-                LOGGER.error("Could not add header " + headerName + " with value " + property.getValue(), e);
+                LOGGER.error("Could not add header {} with value {}", headerName, property.getValue(), e);
             }
         }
     }

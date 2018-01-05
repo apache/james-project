@@ -19,10 +19,15 @@
 
 package org.apache.james.mailets;
 
-import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.mailets.configuration.CommonProcessors;
-import org.apache.james.mailets.configuration.MailetContainer;
-import org.apache.james.modules.MailboxProbeImpl;
+import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
+import static org.apache.james.mailets.configuration.Constants.FROM;
+import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
+import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
+import static org.apache.james.mailets.configuration.Constants.PASSWORD;
+import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
+import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
+import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
+
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
@@ -33,42 +38,23 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
-
 public class CommonMailetConfigurationTest {
-
-    private static final String DEFAULT_DOMAIN = "james.org";
-    private static final String LOCALHOST_IP = "127.0.0.1";
-    private static final int IMAP_PORT = 1143;
-    private static final int SMTP_PORT = 1025;
-    private static final String PASSWORD = "secret";
-
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @Rule
+    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
+    @Rule
+    public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
-    private ConditionFactory calmlyAwait;
 
     @Before
     public void setup() throws Exception {
-        MailetContainer mailetContainer = MailetContainer.builder()
-            .postmaster("postmaster@" + DEFAULT_DOMAIN)
-            .threads(5)
-            .addProcessor(CommonProcessors.root())
-            .addProcessor(CommonProcessors.error())
-            .addProcessor(CommonProcessors.transport())
-            .addProcessor(CommonProcessors.spam())
-            .addProcessor(CommonProcessors.localAddressError())
-            .addProcessor(CommonProcessors.relayDenied())
-            .addProcessor(CommonProcessors.bounces())
-            .addProcessor(CommonProcessors.sieveManagerCheck())
-            .build();
+        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder);
 
-        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder, mailetContainer);
-        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
+        DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
+        dataProbe.addUser(RECIPIENT, PASSWORD);
     }
 
     @After
@@ -82,19 +68,13 @@ public class CommonMailetConfigurationTest {
 
     @Test
     public void simpleMailShouldBeSent() throws Exception {
-        DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(DEFAULT_DOMAIN);
-        String from = "user@" + DEFAULT_DOMAIN;
-        dataProbe.addUser(from, PASSWORD);
-        String recipient = "user2@" + DEFAULT_DOMAIN;
-        dataProbe.addUser(recipient, PASSWORD);
-        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, recipient, "INBOX");
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT)
+            .awaitSent(awaitOneMinute);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DEFAULT_DOMAIN);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(from, recipient);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(recipient, PASSWORD));
-        }
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(RECIPIENT, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitOneMinute);
     }
 }

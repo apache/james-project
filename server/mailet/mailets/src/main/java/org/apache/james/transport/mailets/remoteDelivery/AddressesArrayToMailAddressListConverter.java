@@ -51,7 +51,7 @@ public class AddressesArrayToMailAddressListConverter {
         try {
             return Optional.of(new MailAddress(address.toString()));
         } catch (AddressException e) {
-            LOGGER.debug("Can't parse unsent address " + address, e);
+            LOGGER.debug("Can't parse unsent address {}", address, e);
             return Optional.empty();
         }
     }

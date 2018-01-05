@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 
@@ -29,7 +30,6 @@ import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
 
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 
 
@@ -57,7 +57,7 @@ public class AllButStartTlsDelimiterChannelHandler extends DelimiterBasedFrameDe
     }
 
     private String readAll(ChannelBuffer buffer) {
-        return buffer.toString(Charsets.US_ASCII);
+        return buffer.toString(StandardCharsets.US_ASCII);
     }
 
     private boolean hasCommandInjection(String trimedLowerCasedInput) {

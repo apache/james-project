@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 import javax.mail.Session;
@@ -34,8 +35,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import com.google.common.base.Charsets;
 
 public class ReplaceContentTest {
 
@@ -216,7 +215,7 @@ public class ReplaceContentTest {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("subjectPattern", "/test/TEST/i/,/o/a//,/s/s/i/")
-                .setProperty("charset", Charsets.UTF_8.name())
+                .setProperty("charset", StandardCharsets.UTF_8.name())
                 .build();
         mailet.init(mailetConfig);
 

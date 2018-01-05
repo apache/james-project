@@ -161,7 +161,7 @@ public class RemoteDelivery extends GenericMailet {
             if (configuration.isBindUsed())
                 RemoteDeliverySocketFactory.setBindAdress(configuration.getBindAddress());
         } catch (UnknownHostException e) {
-            LOGGER.error("Invalid bind setting (" + configuration.getBindAddress() + "): ", e);
+            LOGGER.error("Invalid bind setting ({}): ", configuration.getBindAddress(), e);
         }
         if (startThreads == THREAD_STATE.START_THREADS) {
             initDeliveryThreads();
@@ -190,7 +190,7 @@ public class RemoteDelivery extends GenericMailet {
     @Override
     public void service(Mail mail) throws MessagingException {
         if (configuration.isDebug()) {
-            LOGGER.debug("Remotely delivering mail " + mail.getName());
+            LOGGER.debug("Remotely delivering mail {}", mail.getName());
         }
         if (configuration.isUsePriority()) {
             mail.setAttribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.HIGH_PRIORITY);
@@ -202,19 +202,19 @@ public class RemoteDelivery extends GenericMailet {
                 serviceWithGateway(mail);
             }
         } else {
-            LOGGER.debug("Mail " + mail.getName() + " from " + mail.getSender() + " has no recipients and can not be remotely delivered");
+            LOGGER.debug("Mail {} from {} has no recipients and can not be remotely delivered", mail.getName(), mail.getSender());
         }
         mail.setState(Mail.GHOST);
     }
 
     private void serviceWithGateway(Mail mail) {
         if (configuration.isDebug()) {
-            LOGGER.debug("Sending mail to " + mail.getRecipients() + " via " + configuration.getGatewayServer());
+            LOGGER.debug("Sending mail to {} via {}", mail.getRecipients(), configuration.getGatewayServer());
         }
         try {
             queue.enQueue(mail);
         } catch (MailQueueException e) {
-            LOGGER.error("Unable to queue mail " + mail.getName() + " for recipients + " + mail.getRecipients(), e);
+            LOGGER.error("Unable to queue mail {} for recipients {}", mail.getName(), mail.getRecipients(), e);
         }
     }
 
@@ -228,14 +228,14 @@ public class RemoteDelivery extends GenericMailet {
 
     private void serviceSingleServer(Mail mail, String originalName, Map.Entry<String, Collection<MailAddress>> entry) {
         if (configuration.isDebug()) {
-            LOGGER.debug("Sending mail to " + entry.getValue() + " on host " + entry.getKey());
+            LOGGER.debug("Sending mail to {} on host {}", entry.getValue(), entry.getKey());
         }
         mail.setRecipients(entry.getValue());
         mail.setName(originalName + NAME_JUNCTION + entry.getKey());
         try {
             queue.enQueue(mail);
         } catch (MailQueueException e) {
-            LOGGER.error("Unable to queue mail " + mail.getName() + " for recipients + " + mail.getRecipients(), e);
+            LOGGER.error("Unable to queue mail {} for recipients {}", mail.getName(), mail.getRecipients(), e);
         }
     }
 

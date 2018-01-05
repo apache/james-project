@@ -19,102 +19,61 @@
 
 package org.apache.james.mailets;
 
-import static com.jayway.restassured.RestAssured.when;
-import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
-import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.MemoryJamesServerMain.SMTP_AND_IMAP_MODULE;
 import static org.apache.james.MemoryJamesServerMain.SMTP_ONLY_MODULE;
+import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
+import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
+import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
+import static org.apache.james.mailets.configuration.Constants.PASSWORD;
+import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
+import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
-import java.net.InetAddress;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.probe.DataProbe;
-import org.apache.james.transport.mailets.LocalDelivery;
-import org.apache.james.transport.mailets.Null;
-import org.apache.james.transport.mailets.PostmasterAlias;
-import org.apache.james.transport.mailets.RemoteDelivery;
-import org.apache.james.transport.mailets.RemoveMimeHeader;
-import org.apache.james.transport.mailets.ToProcessor;
 import org.apache.james.transport.matchers.All;
-import org.apache.james.transport.matchers.RecipientIsLocal;
-import org.apache.james.transport.matchers.RelayLimit;
-import org.apache.james.util.streams.ContainerNames;
-import org.apache.james.util.streams.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.FakeSmtp;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
-import org.testcontainers.containers.wait.HostPortWaitStrategy;
-
-import com.google.common.base.Charsets;
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.builder.RequestSpecBuilder;
-import com.jayway.restassured.http.ContentType;
 
 public class GatewayRemoteDeliveryIntegrationTest {
-    private static final String LOCALHOST_IP = "127.0.0.1";
-    private static final int SMTP_PORT = 1025;
-    private static final int IMAP_PORT = 1143;
-    private static final String PASSWORD = "secret";
-
-    private static final String JAMES_APACHE_ORG = "james.org";
     private static final String JAMES_ANOTHER_DOMAIN = "james.com";
 
-    private static final String FROM = "from@" + JAMES_APACHE_ORG;
+    private static final String FROM = "from@" + DEFAULT_DOMAIN;
     private static final String RECIPIENT = "touser@" + JAMES_ANOTHER_DOMAIN;
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
-
-    private final TemporaryFolder smtpFolder = new TemporaryFolder();
-    private final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer(ContainerNames.FAKE_SMTP)
-        .withExposedPorts(25)
-        .withAffinityToContainer()
-        .waitingFor(new HostPortWaitStrategy());
-
     @Rule
-    public final RuleChain chain = RuleChain.outerRule(smtpFolder).around(fakeSmtp);
+    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
+    @Rule
+    public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
+    @Rule
+    public FakeSmtp fakeSmtp = new FakeSmtp();
 
     private TemporaryJamesServer jamesServer;
-    private ConditionFactory calmlyAwait;
     private DataProbe dataProbe;
+    private InMemoryDNSService inMemoryDNSService;
 
     @Before
     public void setup() throws Exception {
-        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        calmlyAwait = Awaitility.with()
-            .pollInterval(slowPacedPollInterval)
-            .and()
-            .with()
-            .pollDelay(slowPacedPollInterval)
-            .await();
+        fakeSmtp.awaitStarted(awaitOneMinute);
 
-        calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> fakeSmtp.tryConnect(25));
-
-        RestAssured.requestSpecification = new RequestSpecBuilder()
-            .setContentType(ContentType.JSON)
-            .setAccept(ContentType.JSON)
-            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-            .setPort(80)
-            .setBaseUri("http://" + fakeSmtp.getContainerIp())
-            .build();
+        inMemoryDNSService = new InMemoryDNSService()
+            .registerMxRecord(JAMES_ANOTHER_DOMAIN, fakeSmtp.getContainer().getContainerIp());
     }
 
     @After
@@ -126,344 +85,206 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
     @Test
     public void outgoingMailShouldTransitThroughGatewayWhenNoPort() throws Exception {
-        String gatewayProperty = fakeSmtp.getContainerIp();
+        String gatewayProperty = fakeSmtp.getContainer().getContainerIp();
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .build(temporaryFolder, generateMailetContainerConfiguration(gatewayProperty));
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+            .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
+            .build(temporaryFolder);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT);
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
-        }
+        awaitOneMinute.until(this::messageIsReceivedByTheSmtpServer);
     }
 
     @Test
     public void outgoingMailShouldTransitThroughGatewayWhenPort() throws Exception {
-        String gatewayProperty = fakeSmtp.getContainerIp() + ":25";
+        String gatewayProperty = fakeSmtp.getContainer().getContainerIp() + ":25";
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .build(temporaryFolder, generateMailetContainerConfiguration(gatewayProperty));
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+            .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
+            .build(temporaryFolder);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT);
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
-        }
+        awaitOneMinute.until(this::messageIsReceivedByTheSmtpServer);
     }
 
     @Test
     public void outgoingMailShouldTransitThroughGatewayWhenSeveralIps() throws Exception {
-        String gatewayProperty = fakeSmtp.getContainerIp() + ",invalid.domain";
+        String gatewayProperty = fakeSmtp.getContainer().getContainerIp() + ",invalid.domain";
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .build(temporaryFolder, generateMailetContainerConfiguration(gatewayProperty));
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+            .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
+            .build(temporaryFolder);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT);
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
-        }
+        awaitOneMinute.until(this::messageIsReceivedByTheSmtpServer);
     }
 
     @Test
     public void outgoingMailShouldFallbackToSecondGatewayWhenFirstInvalid() throws Exception {
-        String gatewayProperty = "invalid.domain," + fakeSmtp.getContainerIp();
+        String gatewayProperty = "invalid.domain," + fakeSmtp.getContainer().getContainerIp();
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .build(temporaryFolder, generateMailetContainerConfiguration(gatewayProperty));
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+            .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
+            .build(temporaryFolder);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT);
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
-        }
+        awaitOneMinute.until(this::messageIsReceivedByTheSmtpServer);
     }
 
     @Test
     public void outgoingMailShouldNotBeSentDirectlyToTheHostWhenGatewayFails() throws Exception {
         String gatewayProperty = "invalid.domain";
-        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService();
-        InetAddress containerIp = InetAddress.getByName(fakeSmtp.getContainerIp());
-        inMemoryDNSService.registerRecord(JAMES_ANOTHER_DOMAIN, containerIp, JAMES_ANOTHER_DOMAIN);
-
-        jamesServer = TemporaryJamesServer.builder()
-            .withBase(SMTP_ONLY_MODULE)
-            .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .build(temporaryFolder, generateMailetContainerConfiguration(gatewayProperty));
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-
-        dataProbe.addDomain(JAMES_APACHE_ORG);
-        dataProbe.addUser(FROM, PASSWORD);
-
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
-
-            Thread.sleep(TimeUnit.SECONDS.toMillis(5));
-            when()
-                .get("/api/email")
-            .then()
-                .statusCode(200)
-                .body("", hasSize(0));
-        }
-    }
-    @Test
-    public void remoteDeliveryShouldBounceUponFailure() throws Exception {
-        String gatewayProperty = "invalid.domain";
-        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService();
-        InetAddress containerIp = InetAddress.getByName(fakeSmtp.getContainerIp());
-        inMemoryDNSService.registerRecord(JAMES_ANOTHER_DOMAIN, containerIp, JAMES_ANOTHER_DOMAIN);
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .build(temporaryFolder, MailetContainer.builder()
-                .postmaster("postmaster@" + JAMES_APACHE_ORG)
-                .threads(5)
-                .addProcessor(root())
-                .addProcessor(CommonProcessors.error())
-                .addProcessor(relayAndLocalDeliveryTransport(gatewayProperty))
-                .addProcessor(CommonProcessors.bounces())
-                .build());
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+            .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
+            .build(temporaryFolder);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT);
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() ->
-                imapMessageReader.userReceivedMessageInMailbox(FROM, PASSWORD, MailboxConstants.INBOX));
-        }
+        // Wait for bounce being sent before checking no email is sent
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(FROM, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitOneMinute);
+        assertThat(fakeSmtp.isReceived(response -> response.body("", hasSize(0))))
+            .isTrue();
+    }
+
+    @Test
+    public void remoteDeliveryShouldBounceUponFailure() throws Exception {
+        String gatewayProperty = "invalid.domain";
+
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(SMTP_AND_IMAP_MODULE)
+            .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
+            .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
+            .build(temporaryFolder);
+
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
+        dataProbe.addUser(FROM, PASSWORD);
+
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT);
+
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(FROM, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitOneMinute);
     }
 
     @Test
     public void remoteDeliveryShouldBounceUponFailureWhenNoBounceProcessor() throws Exception {
         String gatewayProperty = "invalid.domain";
-        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService();
-        InetAddress containerIp = InetAddress.getByName(fakeSmtp.getContainerIp());
-        inMemoryDNSService.registerRecord(JAMES_ANOTHER_DOMAIN, containerIp, JAMES_ANOTHER_DOMAIN);
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .build(temporaryFolder, MailetContainer.builder()
-                .postmaster("postmaster@" + JAMES_APACHE_ORG)
-                .threads(5)
-                .addProcessor(root())
-                .addProcessor(CommonProcessors.error())
-                .addProcessor(ProcessorConfiguration.builder()
-                    .state("transport")
-                    .enableJmx(true)
-                    .addMailet(MailetConfiguration.builder()
+            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+                .putProcessor(ProcessorConfiguration.transport()
+                    .addMailet(MailetConfiguration.BCC_STRIPPER)
+                    .addMailet(MailetConfiguration.LOCAL_DELIVERY)
+                    .addMailet(MailetConfiguration.remoteDeliveryBuilderNoBounces()
                         .matcher(All.class)
-                        .mailet(RemoveMimeHeader.class)
-                        .addProperty("name", "bcc")
-                        .build())
-                    .addMailet(MailetConfiguration.builder()
-                        .matcher(RecipientIsLocal.class)
-                        .mailet(LocalDelivery.class)
-                        .build())
-                    .addMailet(MailetConfiguration.builder()
-                        .matcher(All.class)
-                        .mailet(RemoteDelivery.class)
-                        .addProperty("outgoingQueue", "outgoing")
-                        .addProperty("delayTime", "5000, 100000, 500000")
-                        .addProperty("maxRetries", "2")
-                        .addProperty("maxDnsProblemRetries", "0")
-                        .addProperty("deliveryThreads", "2")
-                        .addProperty("sendpartial", "true")
-                        .addProperty("gateway", gatewayProperty)
-                        .build())
-                    .build())
-                .addProcessor(CommonProcessors.bounces())
-                .build());
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+                        .addProperty("gateway", gatewayProperty))))
+            .build(temporaryFolder);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT);
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() ->
-                imapMessageReader.userReceivedMessageInMailbox(FROM, PASSWORD, MailboxConstants.INBOX));
-        }
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(FROM, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitOneMinute);
     }
 
     @Test
     public void directResolutionShouldBeWellPerformed() throws Exception {
-        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService();
-        InetAddress containerIp = InetAddress.getByName(fakeSmtp.getContainerIp());
-        inMemoryDNSService.registerRecord(JAMES_ANOTHER_DOMAIN, containerIp, JAMES_ANOTHER_DOMAIN);
-
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .build(temporaryFolder, MailetContainer.builder()
-                .postmaster("postmaster@" + JAMES_APACHE_ORG)
-                .threads(5)
-                .addProcessor(root())
-                .addProcessor(CommonProcessors.error())
-                .addProcessor(directResolutionTransport())
-                .addProcessor(CommonProcessors.bounces())
-                .build());
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+            .withMailetContainer(MailetContainer.builder()
+                .putProcessor(CommonProcessors.simpleRoot())
+                .putProcessor(CommonProcessors.error())
+                .putProcessor(directResolutionTransport())
+                .putProcessor(CommonProcessors.bounces()))
+            .build(temporaryFolder);
 
-        dataProbe.addDomain(JAMES_APACHE_ORG);
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT);
 
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(this::messageIsReceivedByTheSmtpServer);
-        }
+        awaitOneMinute.until(this::messageIsReceivedByTheSmtpServer);
     }
 
     private boolean messageIsReceivedByTheSmtpServer() {
-        try {
-            when()
-                .get("/api/email")
-            .then()
-                .statusCode(200)
-                .body("", hasSize(1))
-                .body("[0].from", equalTo(FROM))
-                .body("[0].subject", equalTo("test"));
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+        return fakeSmtp.isReceived(response -> response
+            .body("", hasSize(1))
+            .body("[0].from", equalTo(FROM))
+            .body("[0].subject", equalTo("test")));
     }
 
-    private MailetContainer generateMailetContainerConfiguration(String gatewayProperty) {
-        return MailetContainer.builder()
-            .postmaster("postmaster@" + JAMES_APACHE_ORG)
-            .threads(5)
-            .addProcessor(root())
-            .addProcessor(CommonProcessors.error())
-            .addProcessor(relayOnlyTransport(gatewayProperty))
-            .addProcessor(CommonProcessors.bounces())
-            .build();
+    private MailetContainer.Builder generateMailetContainerConfiguration(String gatewayProperty) {
+        return TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+            .putProcessor(relayAndLocalDeliveryTransport(gatewayProperty));
     }
 
-    public ProcessorConfiguration root() {
-        // Custom in memory DNS resolution is not possible combined with InSpamerBackList
-        return ProcessorConfiguration.builder()
-            .state("root")
-            .enableJmx(true)
-            .addMailet(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(PostmasterAlias.class)
-                .build())
-            .addMailet(MailetConfiguration.builder()
-                .matcher(RelayLimit.class)
-                .matcherCondition("30")
-                .mailet(Null.class)
-                .build())
-            .addMailet(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(ToProcessor.class)
-                .addProperty("processor", "transport")
-                .build())
-            .build();
-    }
-
-    private ProcessorConfiguration relayOnlyTransport(String gatewayProperty) {
-        return ProcessorConfiguration.builder()
-            .state("transport")
-            .enableJmx(true)
-            .addMailet(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(RemoveMimeHeader.class)
-                .addProperty("name", "bcc")
-                .build())
-            .addMailet(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(RemoteDelivery.class)
-                .addProperty("outgoingQueue", "outgoing")
-                .addProperty("delayTime", "5000, 100000, 500000")
-                .addProperty("maxRetries", "2")
-                .addProperty("maxDnsProblemRetries", "0")
-                .addProperty("deliveryThreads", "2")
-                .addProperty("sendpartial", "true")
-                .addProperty("bounceProcessor", "bounces")
+    private ProcessorConfiguration.Builder relayAndLocalDeliveryTransport(String gatewayProperty) {
+        return ProcessorConfiguration.transport()
+            .addMailetsFrom(CommonProcessors.deliverOnlyTransport())
+            .addMailet(MailetConfiguration.remoteDeliveryBuilder()
                 .addProperty("gateway", gatewayProperty)
-                .build())
-            .build();
+                .matcher(All.class));
     }
 
-    private ProcessorConfiguration relayAndLocalDeliveryTransport(String gatewayProperty) {
-        return ProcessorConfiguration.builder()
-            .state("transport")
-            .enableJmx(true)
-            .addMailet(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(RemoveMimeHeader.class)
-                .addProperty("name", "bcc")
-                .build())
-            .addMailet(MailetConfiguration.builder()
-                .matcher(RecipientIsLocal.class)
-                .mailet(LocalDelivery.class)
-                .build())
-            .addMailet(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(RemoteDelivery.class)
-                .addProperty("outgoingQueue", "outgoing")
-                .addProperty("delayTime", "5000, 100000, 500000")
-                .addProperty("maxRetries", "2")
-                .addProperty("maxDnsProblemRetries", "0")
-                .addProperty("deliveryThreads", "2")
-                .addProperty("sendpartial", "true")
-                .addProperty("bounceProcessor", "bounces")
-                .addProperty("gateway", gatewayProperty)
-                .build())
-            .build();
+    private ProcessorConfiguration.Builder directResolutionTransport() {
+        return ProcessorConfiguration.transport()
+            .addMailet(MailetConfiguration.BCC_STRIPPER)
+            .addMailet(MailetConfiguration.remoteDeliveryBuilder()
+                .matcher(All.class));
     }
 
-    private ProcessorConfiguration directResolutionTransport() {
-        return ProcessorConfiguration.builder()
-            .state("transport")
-            .enableJmx(true)
-            .addMailet(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(RemoveMimeHeader.class)
-                .addProperty("name", "bcc")
-                .build())
-            .addMailet(MailetConfiguration.builder()
-                .matcher(All.class)
-                .mailet(RemoteDelivery.class)
-                .addProperty("outgoingQueue", "outgoing")
-                .addProperty("delayTime", "5000, 100000, 500000")
-                .addProperty("maxRetries", "2")
-                .addProperty("maxDnsProblemRetries", "0")
-                .addProperty("deliveryThreads", "2")
-                .addProperty("sendpartial", "true")
-                .addProperty("bounceProcessor", "bounces")
-                .build())
-            .build();
-    }
 
 }

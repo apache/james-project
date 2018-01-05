@@ -20,6 +20,7 @@
 package org.apache.james.webadmin.integration;
 
 import static com.jayway.restassured.RestAssured.given;
+import static com.jayway.restassured.RestAssured.with;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
@@ -28,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.james.CassandraJmapTestRule;
@@ -49,7 +51,6 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
@@ -88,7 +89,7 @@ public class WebAdminServerIntegrationTest {
         RestAssured.requestSpecification = new RequestSpecBuilder()
         		.setContentType(ContentType.JSON)
         		.setAccept(ContentType.JSON)
-        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
         		.build();
     }
 
@@ -221,18 +222,21 @@ public class WebAdminServerIntegrationTest {
         .then()
             .statusCode(HttpStatus.OK_200)
             .contentType(JSON_CONTENT_TYPE)
-            .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION + "}"));
+            .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION.getValue() + "}"));
     }
 
     @Test
     public void postShouldDoMigrationAndUpdateCurrentVersion() throws Exception {
-        given()
+        String taskId = with()
             .port(webAdminGuiceProbe.getWebAdminPort())
-            .body(String.valueOf(CassandraSchemaVersionManager.MAX_VERSION))
-        .when()
-            .post(UPGRADE_VERSION)
-        .then()
-            .statusCode(HttpStatus.NO_CONTENT_204);
+            .body(String.valueOf(CassandraSchemaVersionManager.MAX_VERSION.getValue()))
+        .post(UPGRADE_VERSION)
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .port(webAdminGuiceProbe.getWebAdminPort())
+            .get("/task/" + taskId + "/await");
 
         given()
             .port(webAdminGuiceProbe.getWebAdminPort())
@@ -241,17 +245,20 @@ public class WebAdminServerIntegrationTest {
         .then()
             .statusCode(HttpStatus.OK_200)
             .contentType(JSON_CONTENT_TYPE)
-            .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION + "}"));
+            .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION.getValue() + "}"));
     }
 
     @Test
     public void postShouldDoMigrationAndUpdateToTheLatestVersion() throws Exception {
-        given()
+        String taskId = with()
             .port(webAdminGuiceProbe.getWebAdminPort())
-        .when()
-            .post(UPGRADE_TO_LATEST_VERSION)
-        .then()
-            .statusCode(HttpStatus.OK_200);
+        .post(UPGRADE_TO_LATEST_VERSION)
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .port(webAdminGuiceProbe.getWebAdminPort())
+            .get("/task/" + taskId + "/await");
 
         given()
             .port(webAdminGuiceProbe.getWebAdminPort())
@@ -260,7 +267,7 @@ public class WebAdminServerIntegrationTest {
         .then()
             .statusCode(HttpStatus.OK_200)
             .contentType(JSON_CONTENT_TYPE)
-            .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION + "}"));
+            .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION.getValue() + "}"));
     }
 
     @Test

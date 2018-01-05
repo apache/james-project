@@ -22,6 +22,7 @@ package org.apache.james.mdn;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 
 import javax.mail.internet.MimeMessage;
 
@@ -32,8 +33,6 @@ import org.apache.james.mdn.type.DispositionType;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import com.google.common.base.Charsets;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
@@ -67,7 +66,7 @@ public class MDNTest {
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         mimeMessage.writeTo(byteArrayOutputStream);
-        assertThat(new String(byteArrayOutputStream.toByteArray(), Charsets.UTF_8))
+        assertThat(new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8))
             .contains(
                 "Content-Type: text/plain; charset=UTF-8\r\n" +
                 "Content-Transfer-Encoding: 7bit\r\n" +
@@ -92,7 +91,7 @@ public class MDNTest {
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         mimeMessage.writeTo(byteArrayOutputStream);
-        assertThat(new String(byteArrayOutputStream.toByteArray(), Charsets.UTF_8))
+        assertThat(new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8))
             .contains(
                 "Content-Type: text/plain; charset=UTF-8\r\n" +
                     "Content-Transfer-Encoding: 7bit\r\n" +
@@ -155,7 +154,7 @@ public class MDNTest {
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         mimeMessage.writeTo(byteArrayOutputStream);
-        assertThat(new String(byteArrayOutputStream.toByteArray(), Charsets.UTF_8))
+        assertThat(new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8))
             .contains(
                 "Content-Type: text/plain; charset=UTF-8\r\n" +
                     "Content-Transfer-Encoding: 7bit\r\n" +

@@ -23,11 +23,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 import javax.mail.MessagingException;
@@ -36,7 +38,6 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -45,8 +46,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.slf4j.Logger;
-
-import com.google.common.base.Charsets;
 
 public class LogMessageTest {
 
@@ -61,6 +60,7 @@ public class LogMessageTest {
     @Before
     public void setup() {
         logger = mock(Logger.class);
+        when(logger.isInfoEnabled()).thenReturn(true);
         mailContext = FakeMailContext.builder()
                 .logger(logger)
                 .build();
@@ -97,7 +97,8 @@ public class LogMessageTest {
                 .mimeMessage(message)
                 .build());
 
-        verify(logger).info("Logging mail null");
+        verify(logger).info("Logging mail {}", (Object) null);
+        verify(logger, times(2)).isInfoEnabled();
         verify(logger).info("\n");
         verify(logger).info("Subject: subject\n");
         verify(logger).error(eq("Error logging message."), any(MessagingException.class));
@@ -114,7 +115,8 @@ public class LogMessageTest {
 
         mailet.service(createMail());
 
-        verify(logger).info("Logging mail name");
+        verify(logger).info("Logging mail {}", "name");
+        verify(logger, times(2)).isInfoEnabled();
         verify(logger).info("\n");
         verify(logger).info("Subject: subject\n");
         verify(logger).info("Content-Type: text/plain\n");
@@ -139,7 +141,7 @@ public class LogMessageTest {
 
         mailet.service(mail);
 
-        verify(logger).info("Logging mail name");
+        verify(logger).info("Logging mail {}", "name");
         verify(logger).error("Error logging message.", messagingException);
         verifyNoMoreInteractions(logger);
     }
@@ -186,7 +188,8 @@ public class LogMessageTest {
 
         mailet.service(createMail());
 
-        verify(logger).info("Logging mail name");
+        verify(logger).info("Logging mail {}", "name");
+        verify(logger).isInfoEnabled();
         verify(logger).info("This is a fake mail");
         verifyNoMoreInteractions(logger);
     }
@@ -202,7 +205,8 @@ public class LogMessageTest {
 
         mailet.service(createMail());
 
-        verify(logger).info("Logging mail name");
+        verify(logger).info("Logging mail {}", "name");
+        verify(logger).isInfoEnabled();
         verify(logger).info("\n");
         verify(logger).info("Subject: subject\n");
         verify(logger).info("Content-Type: text/plain\n");
@@ -220,7 +224,8 @@ public class LogMessageTest {
 
         mailet.service(createMail());
 
-        verify(logger).info("Logging mail name");
+        verify(logger).info("Logging mail {}", "name");
+        verify(logger, times(2)).isInfoEnabled();
         verify(logger).info("\n");
         verify(logger).info("Subject: subject\n");
         verify(logger).info("Content-Type: text/plain\n");
@@ -239,8 +244,9 @@ public class LogMessageTest {
 
         mailet.service(createMail());
 
-        verify(logger).info("Logging mail name");
+        verify(logger).info("Logging mail {}", "name");
         verify(logger).info("comment");
+        verify(logger, times(2)).isInfoEnabled();
         verify(logger).info("\n");
         verify(logger).info("Subject: subject\n");
         verify(logger).info("Content-Type: text/plain\n");
@@ -250,13 +256,13 @@ public class LogMessageTest {
 
     private FakeMail createMail() throws MessagingException, AddressException {
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()),
-                new ByteArrayInputStream("Subject: subject\r\nContent-Type: text/plain\r\n\r\nThis is a fake mail".getBytes(Charsets.UTF_8)));
+                new ByteArrayInputStream("Subject: subject\r\nContent-Type: text/plain\r\n\r\nThis is a fake mail".getBytes(StandardCharsets.UTF_8)));
         return FakeMail.builder()
                 .mimeMessage(message)
                 .name("name")
                 .state(Mail.DEFAULT)
-                .recipient(new MailAddress("receiver@domain.com"))
-                .sender(new MailAddress("sender@any.com"))
+                .recipient("receiver@domain.com")
+                .sender("sender@any.com")
                 .build();
     }
 }

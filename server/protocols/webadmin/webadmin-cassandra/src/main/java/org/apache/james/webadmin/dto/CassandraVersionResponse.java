@@ -21,7 +21,13 @@ package org.apache.james.webadmin.dto;
 
 import java.util.Optional;
 
+import org.apache.james.backends.cassandra.versions.SchemaVersion;
+
 public class CassandraVersionResponse {
+
+    public static CassandraVersionResponse from(Optional<SchemaVersion> schemaVersion) {
+        return new CassandraVersionResponse(schemaVersion.map(SchemaVersion::getValue));
+    }
 
     private final Optional<Integer> version;
 

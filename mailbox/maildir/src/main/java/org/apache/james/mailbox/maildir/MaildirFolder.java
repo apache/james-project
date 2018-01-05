@@ -338,13 +338,14 @@ public class MaildirFolder {
                 reader = new BufferedReader(fileReader);
                 String uidString = String.valueOf(uid.asLong());
                 String line = reader.readLine(); // the header
-                int lineNumber = 1;
+                int lineNumber = 1; // already read the first line
                 while ((line = reader.readLine()) != null) {
+                    lineNumber++;
                     if (!line.equals("")) {
                         int gap = line.indexOf(" ");
                         if (gap == -1) {
                             // there must be some issues in the file if no gap can be found
-                            LOGGER.info("Corrupted entry in uid-file " + uidList + " line " + lineNumber++);
+                            LOGGER.info("Corrupted entry in uid-file {} line {}", uidList, lineNumber);
                             continue;
                         }
 
@@ -510,7 +511,7 @@ public class MaildirFolder {
                         if (gap == -1) {
                             // there must be some issues in the file if no gap can be found
                             // there must be some issues in the file if no gap can be found
-                            LOGGER.info("Corrupted entry in uid-file " + uidList + " line " + lines.size());
+                            LOGGER.info("Corrupted entry in uid-file {} line {}", uidList, lines.size());
                             continue;
                         }
 
@@ -581,13 +582,14 @@ public class MaildirFolder {
             // the first line in the file contains the next uid and message count
             if (line != null)
                 readUidListHeader(line);
-            int lineNumber = 1;
+            int lineNumber = 1; // already read the first line
             while ((line = reader.readLine()) != null) {
+                lineNumber++;
                 if (!line.equals("")) {
                     int gap = line.indexOf(" ");
                     if (gap == -1) {
                         // there must be some issues in the file if no gap can be found
-                        throw new MailboxException("Corrupted entry in uid-file " + uidList + " line " + lineNumber++);
+                        throw new MailboxException("Corrupted entry in uid-file " + uidList + " line " + lineNumber);
                     }
                     MessageUid uid = MessageUid.of(Long.valueOf(line.substring(0, gap)));
                     String name = line.substring(gap + 1, line.length());
@@ -630,14 +632,15 @@ public class MaildirFolder {
             // count
             if (line != null)
                 readUidListHeader(line);
-            int lineNumber = 1;
+            int lineNumber = 1; // already read the first line
             while ((line = reader.readLine()) != null) {
+                lineNumber++;
                 if (!line.equals("")) {
                     int gap = line.indexOf(" ");
 
                     if (gap == -1) {
                         // there must be some issues in the file if no gap can be found
-                    	LOGGER.info("Corrupted entry in uid-file " + uidList + " line " + lineNumber++);
+                    	LOGGER.info("Corrupted entry in uid-file {} line {}", uidList, lineNumber);
                         continue;
                     }
                     
@@ -856,12 +859,13 @@ public class MaildirFolder {
                 // It may be possible that message count is 0 so we should better not try to calculate the size of the ArrayList
                 ArrayList<String> lines = new ArrayList<>();
                 String line;
-                int lineNumber = 1;
+                int lineNumber = 0;
                 while ((line = reader.readLine()) != null) {
+                    lineNumber++;
                     int gap = line.indexOf(" ");
                     if (gap == -1) {
                         // there must be some issues in the file if no gap can be found
-                        LOGGER.info("Corrupted entry in uid-file " + uidList + " line " + lineNumber++);
+                        LOGGER.info("Corrupted entry in uid-file {} line {}", uidList, lineNumber);
                         continue;
                     }
 

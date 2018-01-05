@@ -156,7 +156,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         enabled = config.getBoolean("[@enabled]", true);
 
         if (!enabled) {
-            LOGGER.info(getServiceType() + " disabled by configuration");
+            LOGGER.info("{} disabled by configuration", getServiceType());
             return;
         }
 
@@ -177,7 +177,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             }
             address = new InetSocketAddress(ip, port);
 
-            LOGGER.info(getServiceType() + " bound to: " + ip + ":" + port);
+            LOGGER.info("{} bound to: {}:{}", getServiceType(), ip, port);
 
             bindAddresses.add(address);
         }
@@ -194,13 +194,11 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
         setTimeout(config.getInt(TIMEOUT_NAME, DEFAULT_TIMEOUT));
 
-        StringBuilder infoBuffer = new StringBuilder(64).append(getServiceType()).append(" handler connection timeout is: ").append(getTimeout());
-        LOGGER.info(infoBuffer.toString());
+        LOGGER.info("{} handler connection timeout is: {}", getServiceType(), getTimeout());
 
         setBacklog(config.getInt(BACKLOG_NAME, DEFAULT_BACKLOG));
 
-        infoBuffer = new StringBuilder(64).append(getServiceType()).append(" connection backlog is: ").append(getBacklog());
-        LOGGER.info(infoBuffer.toString());
+        LOGGER.info("{} connection backlog is: {}", getServiceType(), getBacklog());
 
         String connectionLimitString = config.getString("connectionLimit", null);
         if (connectionLimitString != null) {
@@ -213,8 +211,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
                 LOGGER.error("Connection limit value cannot be less than zero.");
                 throw new ConfigurationException("Connection limit value cannot be less than zero.");
             } else if (connectionLimit > 0) {
-                infoBuffer = new StringBuilder(128).append(getServiceType()).append(" will allow a maximum of ").append(connectionLimitString).append(" connections.");
-                LOGGER.info(infoBuffer.toString());
+                LOGGER.info("{} will allow a maximum of {} connections.", getServiceType(), connectionLimitString);
             }
         }
 
@@ -229,8 +226,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
                 LOGGER.error("Connection limit per IP value cannot be less than zero.");
                 throw new ConfigurationException("Connection limit value cannot be less than zero.");
             } else if (connPerIP > 0) {
-                infoBuffer = new StringBuilder(128).append(getServiceType()).append(" will allow a maximum of ").append(connPerIP).append(" per IP connections for ").append(getServiceType());
-                LOGGER.info(infoBuffer.toString());
+                LOGGER.info("{} will allow a maximum of {} per IP connections for {}", getServiceType(), connPerIP, getServiceType());
             }
         }
 
@@ -268,7 +264,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             mbeanServer = ManagementFactory.getPlatformMBeanServer();
             registerMBean();
             
-            LOGGER.info("Init " + getServiceType() + " done");
+            LOGGER.info("Init {} done", getServiceType());
 
         }
     
@@ -277,7 +273,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     @PreDestroy
     public final void destroy() {
         
-        LOGGER.info("Dispose " + getServiceType());
+        LOGGER.info("Dispose {}", getServiceType());
         
         if (isEnabled()) {
             unbind();
@@ -289,7 +285,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
             unregisterMBean();
         }
-        LOGGER.info("Dispose " + getServiceType() + " done");
+        LOGGER.info("Dispose {} done", getServiceType());
 
     }
 

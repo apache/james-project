@@ -107,7 +107,7 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         try (Closeable closeable = ManageSieveMDCContext.from(ctx, attributes)) {
             InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
-            logger.info("Connection established from " + address.getAddress().getHostAddress());
+            logger.info("Connection established from {}", address.getAddress().getHostAddress());
 
             Session session = new SettableSession();
             if (sslServer) {
@@ -124,7 +124,7 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         try (Closeable closeable = ManageSieveMDCContext.from(ctx, attributes)) {
             InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
-            logger.info("Connection closed for " + address.getAddress().getHostAddress());
+            logger.info("Connection closed for {}", address.getAddress().getHostAddress());
             attributes.remove(ctx.getChannel());
             super.channelClosed(ctx, e);
         }

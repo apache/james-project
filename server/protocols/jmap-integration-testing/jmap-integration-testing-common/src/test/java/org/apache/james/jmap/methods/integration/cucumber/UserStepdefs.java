@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,7 +34,6 @@ import org.apache.james.jmap.api.access.AccessToken;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.runnable.ThrowingRunnable;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Hashing;
 
@@ -128,6 +128,6 @@ public class UserStepdefs {
     }
 
     private String generatePassword(String username) {
-        return Hashing.murmur3_128().hashString(username, Charsets.UTF_8).toString();
+        return Hashing.murmur3_128().hashString(username, StandardCharsets.UTF_8).toString();
     }
 }

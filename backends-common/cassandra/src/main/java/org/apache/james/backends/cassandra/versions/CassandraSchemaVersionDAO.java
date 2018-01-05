@@ -66,18 +66,19 @@ public class CassandraSchemaVersionDAO {
                 .value(VALUE, bindMarker(VALUE)));
     }
 
-    public CompletableFuture<Optional<Integer>> getCurrentSchemaVersion() {
+    public CompletableFuture<Optional<SchemaVersion>> getCurrentSchemaVersion() {
         return cassandraAsyncExecutor.execute(readVersionStatement.bind())
             .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
                 .map(row -> row.getInt(VALUE))
-                .reduce(Math::max));
+                .reduce(Math::max))
+            .thenApply(i -> i.map(SchemaVersion::new));
     }
 
-    public CompletableFuture<Void> updateVersion(int newVersion) {
+    public CompletableFuture<Void> updateVersion(SchemaVersion newVersion) {
         return cassandraAsyncExecutor.executeVoid(
             writeVersionStatement.bind()
                 .setUUID(KEY, UUIDs.timeBased())
-                .setInt(VALUE, newVersion));
+                .setInt(VALUE, newVersion.getValue()));
     }
 }
 

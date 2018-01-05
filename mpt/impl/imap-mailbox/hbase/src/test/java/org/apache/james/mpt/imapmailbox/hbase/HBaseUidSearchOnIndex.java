@@ -24,7 +24,9 @@ import org.apache.james.mpt.imapmailbox.hbase.host.HBaseHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.UidSearchOnIndex;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 
+@Ignore
 public class HBaseUidSearchOnIndex extends UidSearchOnIndex {
 
     private ImapHostSystem system;

@@ -192,12 +192,4 @@
         </plugins>
     </build>
 
-    <profiles>
-        <profile>
-            <id>cassandra</id>
-            <properties>
-                <cassandra.includes>**/*.java</cassandra.includes>
-            </properties>
-        </profile>
-    </profiles>
 </project>

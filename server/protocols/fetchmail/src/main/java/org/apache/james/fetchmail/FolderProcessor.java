@@ -75,7 +75,7 @@ public class FolderProcessor extends ProcessorAbstract {
             try {
                 open();
             } catch (MessagingException ex) {
-                LOGGER.error(getFetchTaskName() + " Failed to open folder!");
+                LOGGER.error("{} Failed to open folder!", getFetchTaskName());
                 throw ex;
             }
 
@@ -92,9 +92,7 @@ public class FolderProcessor extends ProcessorAbstract {
                         // Catch and report an exception but don't rethrow it,
                         // allowing subsequent messages to be processed.
                         catch (Exception ex) {
-                            StringBuilder logMessageBuffer = new StringBuilder("Exception processing message ID: ");
-                            logMessageBuffer.append(message.getMessageID());
-                            LOGGER.error(logMessageBuffer.toString(), ex);
+                            LOGGER.error("Exception processing message ID: {}", message.getMessageID(), ex);
                         }
                     }
                 }
@@ -108,14 +106,7 @@ public class FolderProcessor extends ProcessorAbstract {
             } catch (MessagingException ex) {
                 // No-op
             }
-            StringBuilder logMessageBuffer = new StringBuilder("Processed ");
-            logMessageBuffer.append(messagesProcessed);
-            logMessageBuffer.append(" messages of ");
-            logMessageBuffer.append(messageCount);
-            logMessageBuffer.append(" in folder '");
-            logMessageBuffer.append(getFolder().getName());
-            logMessageBuffer.append("'");
-            LOGGER.info(logMessageBuffer.toString());
+            LOGGER.info("Processed {} messages of {} in folder '{}'", messagesProcessed, messageCount, getFolder().getName());
         }
 
         // Recurse through sub-folders if required

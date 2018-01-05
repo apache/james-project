@@ -43,7 +43,7 @@ public class Delay {
         if (Strings.isNullOrEmpty(initString)) {
             throw new NumberFormatException("Null or Empty strings are not permitted");
         }
-        List<String> parts = Splitter.on('*').splitToList(initString);
+        List<String> parts = Splitter.on('*').trimResults().splitToList(initString);
 
         if (parts.size() == 1) {
             return new Delay(DEFAULT_ATTEMPTS, TimeConverter.getMilliSeconds(parts.get(0)));

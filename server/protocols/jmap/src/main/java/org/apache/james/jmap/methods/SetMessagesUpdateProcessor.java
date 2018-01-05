@@ -305,7 +305,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
 
     private void handleInvalidRequest(SetMessagesResponse.Builder responseBuilder, MessageId messageId,
                                       List<ValidationResult> validationErrors) {
-        LOGGER.error("Invalid update request for message #", messageId.toString());
+        LOGGER.error("Invalid update request for message #{}", messageId);
 
         String formattedValidationErrorMessage = validationErrors.stream()
                 .map(err -> err.getProperty() + ": " + err.getErrorMessage())

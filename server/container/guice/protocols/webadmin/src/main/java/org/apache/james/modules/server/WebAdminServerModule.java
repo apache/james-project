@@ -34,7 +34,7 @@ import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.PropertiesProvider;
 import org.apache.james.utils.WebAdminGuiceProbe;
-import org.apache.james.webadmin.FixedPort;
+import org.apache.james.webadmin.FixedPortSupplier;
 import org.apache.james.webadmin.TlsConfiguration;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.WebAdminServer;
@@ -69,6 +69,8 @@ public class WebAdminServerModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        install(new TaskRoutesModule());
+
         bind(JsonTransformer.class).in(Scopes.SINGLETON);
         bind(WebAdminServer.class).in(Scopes.SINGLETON);
 
@@ -82,7 +84,7 @@ public class WebAdminServerModule extends AbstractModule {
             PropertiesConfiguration configurationFile = propertiesProvider.getConfiguration("webadmin");
             return WebAdminConfiguration.builder()
                 .enable(configurationFile.getBoolean("enabled", DEFAULT_DISABLED))
-                .port(new FixedPort(configurationFile.getInt("port", WebAdminServer.DEFAULT_PORT)))
+                .port(new FixedPortSupplier(configurationFile.getInt("port", WebAdminServer.DEFAULT_PORT)))
                 .tls(readHttpsConfiguration(configurationFile))
                 .enableCORS(configurationFile.getBoolean("cors.enable", DEFAULT_CORS_DISABLED))
                 .urlCORSOrigin(configurationFile.getString("cors.origin", DEFAULT_NO_CORS_ORIGIN))

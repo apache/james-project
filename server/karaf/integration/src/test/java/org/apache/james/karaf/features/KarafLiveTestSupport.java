@@ -132,8 +132,8 @@ public class KarafLiveTestSupport {
                                 expectedCount, clazz.getCanonicalName(), actualCount, timeoutInMilliseconds));
                     }
 
-                    LOG.info(String.format("Found %d services implementing %s. Trying again in 1s.",
-                            actualCount, clazz.getCanonicalName()));
+                    LOG.info("Found {} services implementing {}. Trying again in 1s.",
+                            actualCount, clazz.getCanonicalName());
                     TimeUnit.SECONDS.sleep(1);
 
                 } else if (services.length > expectedCount) {

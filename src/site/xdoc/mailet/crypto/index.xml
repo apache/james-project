@@ -41,7 +41,7 @@
             <p>
                 SMIME is standardised by the
                 <acronym title='Internet Engineering Task Force'>
-                    <a href='http://www.imc.org/ietf-smime/index.html'>IEFT</a>
+                    <a href='http://www.ietf.org/mailman/listinfo/smime'>IEFT</a>
                 </acronym>
                 .
             </p>
@@ -93,7 +93,7 @@
             <ul>
                 <li>This library provides high level cryptographic operations
                     based on lower level cryptographic libraries created
-                    by<a href='http://www.bouncycastle.org/'>The Legion of the Bouncy Castle</a>.
+                    by <a href='http://www.bouncycastle.org/'>The Legion of the Bouncy Castle</a>.
                 </li>
             </ul>
             <p>Export classifications and source links can be found

@@ -330,7 +330,7 @@ public class CassandraMessageMapper implements MessageMapper {
                 .map(Throwing
                     .function((UpdatedFlags updatedFlags) -> indexTableHandler.updateIndexOnFlagsUpdate(mailboxId, updatedFlags))
                     .fallbackTo(failedindex -> {
-                        LOGGER.error("Could not update flag indexes for mailboxId {} UID {}. This will lead to inconsistencies across Cassandra tables");
+                        LOGGER.error("Could not update flag indexes for mailboxId {} UID {}. This will lead to inconsistencies across Cassandra tables", mailboxId, failedindex.getUid());
                         return CompletableFuture.completedFuture(null);
                     })))
             .completableFuture()

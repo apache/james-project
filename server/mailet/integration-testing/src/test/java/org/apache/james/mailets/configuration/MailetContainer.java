@@ -20,7 +20,10 @@
 
 package org.apache.james.mailets.configuration;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -34,33 +37,44 @@ public class MailetContainer implements SerializableAsXml {
 
     public static class Builder {
 
-        private String postmaster;
-        private int threads;
-        private ImmutableList.Builder<ProcessorConfiguration> processors;
+        public static final int DEFAULT_THREAD_COUNT = 5;
+        public static final String DEFAULT_POSTMASTER = "postmaster@localhost";
+        private Optional<String> postmaster;
+        private Optional<Integer> threads;
+        private Map<String, ProcessorConfiguration> processors;
 
         private Builder() {
-            processors = ImmutableList.builder();
+            processors = new HashMap<>();
+            threads = Optional.empty();
+            postmaster = Optional.empty();
         }
 
         public Builder postmaster(String postmaster) {
-            this.postmaster = postmaster;
+            this.postmaster = Optional.of(postmaster);
             return this;
         }
 
         public Builder threads(int threads) {
-            this.threads = threads;
+            this.threads = Optional.of(threads);
             return this;
         }
 
-        public Builder addProcessor(ProcessorConfiguration processorConfiguration) {
-            this.processors.add(processorConfiguration);
+        public Builder putProcessor(ProcessorConfiguration processorConfiguration) {
+            this.processors.put(processorConfiguration.getState(), processorConfiguration);
             return this;
+        }
+
+        public Builder putProcessor(ProcessorConfiguration.Builder processorConfiguration) {
+            return this.putProcessor(processorConfiguration.build());
         }
 
         public MailetContainer build() {
+            String postmaster = this.postmaster.orElse(DEFAULT_POSTMASTER);
+            int threads = this.threads.orElse(DEFAULT_THREAD_COUNT);
             Preconditions.checkState(!Strings.isNullOrEmpty(postmaster), "'postmaster' is mandatory");
             Preconditions.checkState(threads > 0, "'threads' should be greater than 0");
-            return new MailetContainer(postmaster, threads, processors.build());
+            return new MailetContainer(postmaster, threads,
+                ImmutableList.copyOf(processors.values()));
         }
     }
 

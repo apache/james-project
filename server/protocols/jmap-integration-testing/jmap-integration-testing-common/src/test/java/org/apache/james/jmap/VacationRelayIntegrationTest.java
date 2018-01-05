@@ -19,12 +19,9 @@
 
 package org.apache.james.jmap;
 
-import static com.jayway.restassured.RestAssured.when;
-import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
-import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static org.hamcrest.Matchers.equalTo;
 
-import java.net.InetAddress;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.net.smtp.SMTPClient;
@@ -36,23 +33,17 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
-import org.apache.james.util.streams.ContainerNames;
-import org.apache.james.util.streams.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.FakeSmtp;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.testcontainers.containers.wait.HostPortWaitStrategy;
 
-import com.google.common.base.Charsets;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.builder.RequestSpecBuilder;
-import com.jayway.restassured.http.ContentType;
 
 public abstract class VacationRelayIntegrationTest {
 
@@ -64,12 +55,9 @@ public abstract class VacationRelayIntegrationTest {
 
     private static final String LOCALHOST_IP = "127.0.0.1";
     private static final int SMTP_PORT = 1025;
-    private static final int REST_SMTP_SINK_PORT = 25;
 
     @Rule
-    public final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer(ContainerNames.FAKE_SMTP)
-        .withExposedPorts(REST_SMTP_SINK_PORT)
-        .waitingFor(new HostPortWaitStrategy());
+    public FakeSmtp fakeSmtp = new FakeSmtp();
 
 
     private ConditionFactory calmlyAwait;
@@ -84,10 +72,8 @@ public abstract class VacationRelayIntegrationTest {
 
     @Before
     public void setUp() throws Exception {
-
-        InetAddress containerIp = InetAddress.getByName(fakeSmtp.getContainerIp());
         getInMemoryDns()
-            .registerRecord("yopmail.com", containerIp, "yopmail.com");
+            .registerMxRecord("yopmail.com", fakeSmtp.getContainer().getContainerIp());
 
         guiceJamesServer = getJmapServer();
         guiceJamesServer.start();
@@ -102,14 +88,6 @@ public abstract class VacationRelayIntegrationTest {
 
         jmapGuiceProbe = guiceJamesServer.getProbe(JmapGuiceProbe.class);
 
-        RestAssured.requestSpecification = new RequestSpecBuilder()
-            .setContentType(ContentType.JSON)
-            .setAccept(ContentType.JSON)
-            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-            .setPort(80)
-            .setBaseUri("http://" + containerIp.getHostAddress())
-            .build();
-
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         calmlyAwait = Awaitility
             .with()
@@ -117,7 +95,7 @@ public abstract class VacationRelayIntegrationTest {
             .and()
             .pollDelay(slowPacedPollInterval).await();
 
-        calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> fakeSmtp.tryConnect(25));
+        fakeSmtp.awaitStarted(calmlyAwait.atMost(ONE_MINUTE));
     }
 
     @After
@@ -143,20 +121,10 @@ public abstract class VacationRelayIntegrationTest {
         smtpClient.sendShortMessageData("content");
 
         calmlyAwait.atMost(1, TimeUnit.MINUTES)
-            .until(() -> {
-                try {
-                    when()
-                        .get("/api/email")
-                    .then()
-                        .statusCode(200)
-                        .body("[0].from", equalTo(USER_WITH_DOMAIN))
-                        .body("[0].to[0]", equalTo(externalMail))
-                        .body("[0].text", equalTo(REASON));
-
-                    return true;
-                } catch(AssertionError e) {
-                    return false;
-                }
-            });
+            .until(() ->
+                fakeSmtp.isReceived(response -> response
+                    .body("[0].from", equalTo(USER_WITH_DOMAIN))
+                    .body("[0].to[0]", equalTo(externalMail))
+                    .body("[0].text", equalTo(REASON))));
     }
 }

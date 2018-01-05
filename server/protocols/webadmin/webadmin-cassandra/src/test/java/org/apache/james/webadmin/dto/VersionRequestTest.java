@@ -20,48 +20,41 @@
 package org.apache.james.webadmin.dto;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Rule;
+import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class VersionRequestTest {
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     @Test
     public void parseShouldThrowWhenNullVersion() throws Exception {
-        expectedException.expect(NullPointerException.class);
-
-        CassandraVersionRequest.parse(null);
+        assertThatThrownBy(() -> CassandraVersionRequest.parse(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void parseShouldThrowWhenNonIntegerVersion() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraVersionRequest.parse("NoInt");
+        assertThatThrownBy(() -> CassandraVersionRequest.parse("NoInt"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void parseShouldThrowWhenNegativeVersion() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        CassandraVersionRequest.parse("-1");
+        assertThatThrownBy(() -> CassandraVersionRequest.parse("-1"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void parseShouldAcceptZeroVersion() throws Exception {
-        CassandraVersionRequest cassandraVersionRequest = CassandraVersionRequest.parse("0");
-
-        assertThat(cassandraVersionRequest.getValue()).isEqualTo(0);
+    public void parseShouldThrowWhenZeroVersion() throws Exception {
+        assertThatThrownBy(() -> CassandraVersionRequest.parse("0"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void parseShouldParseTheVersionValue() throws Exception {
         CassandraVersionRequest cassandraVersionRequest = CassandraVersionRequest.parse("1");
 
-        assertThat(cassandraVersionRequest.getValue()).isEqualTo(1);
+        assertThat(cassandraVersionRequest.getValue()).isEqualTo(new SchemaVersion(1));
     }
 
 }

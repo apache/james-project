@@ -190,8 +190,7 @@ public class MailAttributesListToMimeHeadersTest {
         String firstValue = "first value";
         FakeMail mail = FakeMail.builder()
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
-                .addHeader(HEADER_NAME1, firstValue)
-                .build())
+                .addHeader(HEADER_NAME1, firstValue))
             .attribute(MAIL_ATTRIBUTE_NAME1, MAIL_ATTRIBUTE_VALUE1)
             .build();
 
@@ -212,7 +211,7 @@ public class MailAttributesListToMimeHeadersTest {
         mailet.init(mailetConfig);
 
         FakeMail mail = FakeMail.builder()
-            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder().build())
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
             .attribute(MAIL_ATTRIBUTE_NAME1, 3L)
             .attribute(MAIL_ATTRIBUTE_NAME2, MAIL_ATTRIBUTE_VALUE2)
             .build();
@@ -235,7 +234,7 @@ public class MailAttributesListToMimeHeadersTest {
 
         String value = "value";
         FakeMail mail = FakeMail.builder()
-            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder().build())
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
             .attribute(MAIL_ATTRIBUTE_NAME1, ImmutableList.of(3L, value))
             .build();
 

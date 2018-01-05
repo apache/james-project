@@ -156,7 +156,7 @@ public class GetMessagesMethod implements Method {
             try {
                 return Stream.of(messageFactory.fromMetaDataWithContent(metaDataWithContent));
             } catch (Exception e) {
-                LOGGER.error("Can not convert metaData with content to Message for " + metaDataWithContent.getMessageId(), e);
+                LOGGER.error("Can not convert metaData with content to Message for {}", metaDataWithContent.getMessageId(), e);
                 return Stream.of();
             }
         };
@@ -182,7 +182,7 @@ public class GetMessagesMethod implements Method {
                         .keywords(keywords)
                         .build());
             } catch (Exception e) {
-                LOGGER.error("Can not convert MessageResults to MetaData with content for messageId " + firstMessageResult.getMessageId() + " in " + mailboxIds, e);
+                LOGGER.error("Can not convert MessageResults to MetaData with content for messageId {} in {}", firstMessageResult.getMessageId(), mailboxIds, e);
                 return Stream.of();
             }
         };

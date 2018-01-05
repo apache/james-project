@@ -29,7 +29,6 @@ import org.apache.james.transport.mailets.Null;
 import org.apache.james.transport.mailets.PostmasterAlias;
 import org.apache.james.transport.mailets.RecipientRewriteTable;
 import org.apache.james.transport.mailets.RemoteDelivery;
-import org.apache.james.transport.mailets.RemoveMimeHeader;
 import org.apache.james.transport.mailets.SetMailAttribute;
 import org.apache.james.transport.mailets.SetMimeHeader;
 import org.apache.james.transport.mailets.Sieve;
@@ -47,120 +46,100 @@ import org.apache.mailet.Mail;
 
 public class CommonProcessors {
 
+	public static final String ERROR_REPOSITORY = "file://var/mail/error/";
+
     public static ProcessorConfiguration root() {
-        return ProcessorConfiguration.builder()
-                .state("root")
+        return ProcessorConfiguration.root()
                 .enableJmx(true)
                 .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
-                        .mailet(PostmasterAlias.class)
-                        .build())
+                        .mailet(PostmasterAlias.class))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(RelayLimit.class)
                         .matcherCondition("30")
-                        .mailet(Null.class)
-                        .build())
+                        .mailet(Null.class))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(RecipientIs.class)
                         .matcherCondition("sievemanager@james.linagora.com")
                         .mailet(ToProcessor.class)
-                        .addProperty("processor", "sieve-manager-check")
-                        .build())
+                        .addProperty("processor", "sieve-manager-check"))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(HasMailAttribute.class)
                         .matcherCondition("spamChecked")
                         .mailet(ToProcessor.class)
-                        .addProperty("processor", "transport")
-                        .build())
+                        .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(SetMailAttribute.class)
-                        .addProperty("spamChecked", "true")
-                        .build())
+                        .addProperty("spamChecked", "true"))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(SMTPAuthSuccessful.class)
                         .mailet(ToProcessor.class)
-                        .addProperty("processor", "transport")
-                        .build())
+                        .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(InSpammerBlacklist.class)
                         .matcherCondition("query.bondedsender.org.")
                         .mailet(ToProcessor.class)
-                        .addProperty("processor", "transport")
-                        .build())
+                        .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(InSpammerBlacklist.class)
                         .matcherCondition("dnsbl.njabl.org.")
                         .mailet(ToProcessor.class)
-                        .addProperty("processor", "spam")
-                        .addProperty("notice", "550 Requested action not taken: rejected - see http://njabl.org/")
-                        .build())
-                .addMailet(MailetConfiguration.builder()
-                        .matcher(All.class)
-                        .mailet(ToProcessor.class)
-                        .addProperty("processor", "transport")
-                        .build())
+                        .addProperty("processor", ProcessorConfiguration.STATE_SPAM)
+                        .addProperty("notice", "550 Requested action not taken: rejected - see http://njabl.org/"))
+                .addMailet(MailetConfiguration.TO_TRANSPORT)
                 .build();
     }
 
+    public static ProcessorConfiguration simpleRoot() {
+        return ProcessorConfiguration.root()
+            .addMailet(MailetConfiguration.TO_TRANSPORT)
+            .build();
+    }
+
     public static ProcessorConfiguration error() {
-        return ProcessorConfiguration.builder()
-                .state("error")
+        return ProcessorConfiguration.error()
                 .enableJmx(true)
                 .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
-                        .mailet(Bounce.class)
-                        .build())
+                        .mailet(Bounce.class))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(ToRepository.class)
-                        .addProperty("repositoryPath", "file://var/mail/error/")
-                        .build())
+                        .addProperty("repositoryPath", ERROR_REPOSITORY))
                 .build();
     }
 
     public static ProcessorConfiguration transport() {
-        return ProcessorConfiguration.builder()
-                .state("transport")
+        return ProcessorConfiguration.transport()
                 .enableJmx(true)
                 .addMailet(MailetConfiguration.builder()
                         .matcher(SMTPAuthSuccessful.class)
                         .mailet(SetMimeHeader.class)
                         .addProperty("name", "X-UserIsAuth")
-                        .addProperty("value", "true")
-                        .build())
+                        .addProperty("value", "true"))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(HasMailAttribute.class)
                         .matcherCondition("org.apache.james.SMIMECheckSignature")
                         .mailet(SetMimeHeader.class)
                         .addProperty("name", "X-WasSigned")
-                        .addProperty("value", "true")
-                        .build())
+                        .addProperty("value", "true"))
+                .addMailet(MailetConfiguration.BCC_STRIPPER)
                 .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
-                        .mailet(RemoveMimeHeader.class)
-                        .addProperty("name", "bcc")
-                        .build())
-                .addMailet(MailetConfiguration.builder()
-                        .matcher(All.class)
-                        .mailet(RecipientRewriteTable.class)
-                        .build())
+                        .mailet(RecipientRewriteTable.class))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(RecipientIsLocal.class)
-                        .mailet(VacationMailet.class)
-                        .build())
+                        .mailet(VacationMailet.class))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(RecipientIsLocal.class)
-                        .mailet(Sieve.class)
-                        .build())
+                        .mailet(Sieve.class))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(RecipientIsLocal.class)
-                        .mailet(AddDeliveredToHeader.class)
-                        .build())
+                        .mailet(AddDeliveredToHeader.class))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(RecipientIsLocal.class)
-                        .mailet(LocalDelivery.class)
-                        .build())
+                        .mailet(LocalDelivery.class))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(SMTPAuthSuccessful.class)
                         .mailet(RemoteDelivery.class)
@@ -170,25 +149,28 @@ public class CommonProcessors {
                         .addProperty("maxDnsProblemRetries", "0")
                         .addProperty("deliveryThreads", "10")
                         .addProperty("sendpartial", "true")
-                        .addProperty("bounceProcessor", "bounces")
-                        .build())
+                        .addProperty("bounceProcessor", "bounces"))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(ToProcessor.class)
-                        .addProperty("processor", "relay-denied")
-                        .build())
+                        .addProperty("processor", "relay-denied"))
                 .build();
     }
 
+    public static ProcessorConfiguration deliverOnlyTransport() {
+        return ProcessorConfiguration.transport()
+            .addMailet(MailetConfiguration.BCC_STRIPPER)
+            .addMailet(MailetConfiguration.LOCAL_DELIVERY)
+            .build();
+    }
+
     public static ProcessorConfiguration spam() {
-        return ProcessorConfiguration.builder()
-                .state("spam")
+        return ProcessorConfiguration.spam()
                 .enableJmx(true)
                 .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(ToRepository.class)
-                        .addProperty("repositoryPath", "file://var/mail/spam/")
-                        .build())
+                        .addProperty("repositoryPath", "file://var/mail/spam/"))
                 .build();
     }
 
@@ -199,13 +181,11 @@ public class CommonProcessors {
                 .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(Bounce.class)
-                        .addProperty("attachment", "none")
-                        .build())
+                        .addProperty("attachment", "none"))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(ToRepository.class)
-                        .addProperty("repositoryPath", "file://var/mail/address-error/")
-                        .build())
+                        .addProperty("repositoryPath", "file://var/mail/address-error/"))
                 .build();
     }
 
@@ -216,26 +196,22 @@ public class CommonProcessors {
                 .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(Bounce.class)
-                        .addProperty("attachment", "none")
-                        .build())
+                        .addProperty("attachment", "none"))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", "file://var/mail/relay-denied/")
-                        .addProperty("notice", "Warning: You are sending an e-mail to a remote server. You must be authentified to perform such an operation")
-                        .build())
+                        .addProperty("notice", "Warning: You are sending an e-mail to a remote server. You must be authentified to perform such an operation"))
                 .build();
     }
 
     public static ProcessorConfiguration bounces() {
-        return ProcessorConfiguration.builder()
-                .state("bounces")
+        return ProcessorConfiguration.bounces()
                 .enableJmx(true)
                 .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(DSNBounce.class)
-                        .addProperty("passThrough", "false")
-                        .build())
+                        .addProperty("passThrough", "false"))
                 .build();
     }
 
@@ -246,8 +222,7 @@ public class CommonProcessors {
                 .addMailet(MailetConfiguration.builder()
                         .matcher(RecipientIsLocal.class)
                         .mailet(ToProcessor.class)
-                        .addProperty("processor", "sieve-manager")
-                        .build())
+                        .addProperty("processor", "sieve-manager"))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(Bounce.class)
@@ -255,12 +230,10 @@ public class CommonProcessors {
                         .addProperty("attachment", "none")
                         .addProperty("passThrough", "false")
                         .addProperty("prefix", "[REJECTED]")
-                        .addProperty("notice", "You can't send messages to configure SIEVE on this serveur unless you are the official SIEVE manager.")
-                        .build())
+                        .addProperty("notice", "You can't send messages to configure SIEVE on this serveur unless you are the official SIEVE manager."))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
-                        .mailet(Null.class)
-                        .build())
+                        .mailet(Null.class))
                 .build();
     }
 
@@ -271,17 +244,14 @@ public class CommonProcessors {
                 .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(SetMailAttribute.class)
-                        .addProperty(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME, "true")
-                        .build())
+                        .addProperty(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME, "true"))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(ManageSieveMailet.class)
-                        .addProperty("helpURL", "file:/root/james-server-app-3.0.0-beta5-SNAPSHOT/conf/managesieve.help.txt")
-                        .build())
+                        .addProperty("helpURL", "file:/root/james-server-app-3.0.0-beta5-SNAPSHOT/conf/managesieve.help.txt"))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
-                        .mailet(Null.class)
-                        .build())
+                        .mailet(Null.class))
                 .build();
     }
 }

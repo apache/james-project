@@ -30,7 +30,6 @@ import java.time.ZoneId;
 
 import javax.mail.Flags;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.extractor.ParsedContent;
@@ -263,7 +262,7 @@ public class IndexableMessageTest {
         when(mailboxMessage.getMessageId())
             .thenReturn(InMemoryMessageId.of(42));
         when(mailboxMessage.getFullContent())
-            .thenReturn(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/mailWithHeaders.eml"))));
+            .thenReturn(ClassLoader.getSystemResourceAsStream("eml/mailWithHeaders.eml"));
         when(mailboxMessage.createFlags())
             .thenReturn(new Flags());
         when(mailboxMessage.getUid())
@@ -298,7 +297,7 @@ public class IndexableMessageTest {
         when(mailboxMessage.getMessageId())
             .thenReturn(InMemoryMessageId.of(42));
         when(mailboxMessage.getFullContent())
-            .thenReturn(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/mailWithHeaders.eml"))));
+            .thenReturn(ClassLoader.getSystemResourceAsStream("eml/mailWithHeaders.eml"));
         when(mailboxMessage.createFlags())
             .thenReturn(new Flags());
         when(mailboxMessage.getUid())
@@ -328,7 +327,7 @@ public class IndexableMessageTest {
         when(mailboxMessage.getMessageId())
             .thenReturn(InMemoryMessageId.of(42));
         when(mailboxMessage.getFullContent())
-            .thenReturn(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/mailWithHeaders.eml"))));
+            .thenReturn(ClassLoader.getSystemResourceAsStream("eml/mailWithHeaders.eml"));
         when(mailboxMessage.createFlags())
             .thenReturn(new Flags());
         when(mailboxMessage.getUid())
@@ -359,7 +358,7 @@ public class IndexableMessageTest {
         when(mailboxMessage.getMessageId())
             .thenReturn(InMemoryMessageId.of(42));
         when(mailboxMessage.getFullContent())
-            .thenReturn(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/mailWithHeaders.eml"))));
+            .thenReturn(ClassLoader.getSystemResourceAsStream("eml/mailWithHeaders.eml"));
         when(mailboxMessage.createFlags())
             .thenReturn(new Flags());
         when(mailboxMessage.getUid())
@@ -390,7 +389,7 @@ public class IndexableMessageTest {
         when(mailboxMessage.getMessageId())
             .thenReturn(InMemoryMessageId.of(42));
         when(mailboxMessage.getFullContent())
-            .thenReturn(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/mailWithHeaders.eml"))));
+            .thenReturn(ClassLoader.getSystemResourceAsStream("eml/mailWithHeaders.eml"));
         when(mailboxMessage.createFlags())
             .thenReturn(new Flags());
         when(mailboxMessage.getUid())
@@ -419,7 +418,7 @@ public class IndexableMessageTest {
         when(mailboxMessage.getMessageId())
             .thenReturn(InMemoryMessageId.of(42));
         when(mailboxMessage.getFullContent())
-            .thenReturn(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/emailWith3Attachments.eml"))));
+            .thenReturn(ClassLoader.getSystemResourceAsStream("eml/emailWith3Attachments.eml"));
         when(mailboxMessage.createFlags())
             .thenReturn(new Flags());
         when(mailboxMessage.getUid())
@@ -448,7 +447,7 @@ public class IndexableMessageTest {
         when(mailboxMessage.getMessageId())
             .thenReturn(InMemoryMessageId.of(42));
         when(mailboxMessage.getFullContent())
-            .thenReturn(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/emailWith3Attachments.eml"))));
+            .thenReturn(ClassLoader.getSystemResourceAsStream("eml/emailWith3Attachments.eml"));
         when(mailboxMessage.createFlags())
             .thenReturn(new Flags());
         when(mailboxMessage.getUid())
@@ -484,7 +483,7 @@ public class IndexableMessageTest {
         when(mailboxMessage.getMessageId())
             .thenReturn(InMemoryMessageId.of(42));
         when(mailboxMessage.getFullContent())
-            .thenReturn(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/bodyMakeTikaToFail.eml"))));
+            .thenReturn(ClassLoader.getSystemResourceAsStream("eml/bodyMakeTikaToFail.eml"));
         when(mailboxMessage.createFlags())
             .thenReturn(new Flags());
         when(mailboxMessage.getUid())
@@ -517,7 +516,7 @@ public class IndexableMessageTest {
         when(mailboxMessage.getMessageId())
             .thenReturn(invalidMessageIdThatReturnNull);
         when(mailboxMessage.getFullContent())
-            .thenReturn(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/bodyMakeTikaToFail.eml"))));
+            .thenReturn(ClassLoader.getSystemResourceAsStream("eml/bodyMakeTikaToFail.eml"));
         when(mailboxMessage.createFlags())
             .thenReturn(new Flags());
         when(mailboxMessage.getUid())
@@ -546,7 +545,7 @@ public class IndexableMessageTest {
         when(mailboxMessage.getMessageId())
             .thenReturn(null);
         when(mailboxMessage.getFullContent())
-            .thenReturn(new ByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/bodyMakeTikaToFail.eml"))));
+            .thenReturn(ClassLoader.getSystemResourceAsStream("eml/bodyMakeTikaToFail.eml"));
         when(mailboxMessage.createFlags())
             .thenReturn(new Flags());
         when(mailboxMessage.getUid())

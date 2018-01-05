@@ -189,7 +189,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
                 hostName = "localhost";
             }
 
-            LOGGER.info("Local host is: " + hostName);
+            LOGGER.info("Local host is: {}", hostName);
             if (hostName != null && !hostName.equals("localhost")) {
                 return ImmutableList.of(hostName.toLowerCase(Locale.US));
             }
@@ -219,7 +219,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
                 .map(InetAddress::getHostAddress)
                 .distinct();
         } catch (UnknownHostException e) {
-            log.error("Cannot get IP address(es) for " + domain);
+            log.error("Cannot get IP address(es) for {}", domain);
             return Stream.of();
         }
     }
@@ -232,7 +232,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
      *            set to <code>false</code> for disable
      */
     public synchronized void setAutoDetect(boolean autoDetect) {
-        LOGGER.info("Set autodetect to: " + autoDetect);
+        LOGGER.info("Set autodetect to: {}", autoDetect);
         this.autoDetect = autoDetect;
     }
 
@@ -244,7 +244,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
      *            set to <code>false</code> for disable
      */
     public synchronized void setAutoDetectIP(boolean autoDetectIP) {
-        LOGGER.info("Set autodetectIP to: " + autoDetectIP);
+        LOGGER.info("Set autodetectIP to: {}", autoDetectIP);
         this.autoDetectIP = autoDetectIP;
     }
 

@@ -37,6 +37,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.backends.cassandra.migration.Migration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -57,7 +58,6 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -100,7 +100,7 @@ public class AttachmentMessageIdCreationTest {
     @Test
     public void emptyMigrationShouldSucceed() {
         assertThat(migration.run())
-            .isEqualTo(Migration.MigrationResult.COMPLETED);
+            .isEqualTo(Migration.Result.COMPLETED);
     }
 
     @Test
@@ -111,7 +111,7 @@ public class AttachmentMessageIdCreationTest {
         cassandraMessageDAO.save(message).join();
 
         assertThat(migration.run())
-            .isEqualTo(Migration.MigrationResult.COMPLETED);
+            .isEqualTo(Migration.Result.COMPLETED);
     }
 
     @Test
@@ -122,7 +122,7 @@ public class AttachmentMessageIdCreationTest {
         cassandraMessageDAO.save(message).join();
 
         assertThat(migration.run())
-            .isEqualTo(Migration.MigrationResult.COMPLETED);
+            .isEqualTo(Migration.Result.COMPLETED);
     }
 
     @Test
@@ -146,7 +146,7 @@ public class AttachmentMessageIdCreationTest {
 
         when(cassandraMessageDAO.retrieveAllMessageIdAttachmentIds()).thenThrow(new RuntimeException());
 
-        assertThat(migration.run()).isEqualTo(Migration.MigrationResult.PARTIAL);
+        assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
     }
 
     @Test
@@ -163,7 +163,7 @@ public class AttachmentMessageIdCreationTest {
         when(attachmentMessageIdDAO.storeAttachmentForMessageId(any(AttachmentId.class), any(MessageId.class)))
             .thenThrow(new RuntimeException());
 
-        assertThat(migration.run()).isEqualTo(Migration.MigrationResult.PARTIAL);
+        assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
     }
 
     private SimpleMailboxMessage createMessage(MessageId messageId, Collection<MessageAttachment> attachments) {
@@ -179,7 +179,7 @@ public class AttachmentMessageIdCreationTest {
             .internalDate(new Date())
             .bodyStartOctet(BODY_START)
             .size(content.length())
-            .content(new SharedByteArrayInputStream(content.getBytes(Charsets.UTF_8)))
+            .content(new SharedByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)))
             .flags(new Flags())
             .propertyBuilder(new PropertyBuilder())
             .addAttachments(attachments)

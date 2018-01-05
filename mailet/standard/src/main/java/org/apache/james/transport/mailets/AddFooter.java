@@ -69,11 +69,10 @@ public class AddFooter extends GenericMailet {
             if (attachFooter(message)) {
                 message.saveChanges();
             } else {
-                LOGGER.info("Unable to add footer to mail " + mail.getName());
+                LOGGER.info("Unable to add footer to mail {}", mail.getName());
             }
         } catch (UnsupportedEncodingException e) {
-            LOGGER.warn("UnsupportedEncoding Unable to add footer to mail "
-                    + mail.getName(), e);
+            LOGGER.warn("UnsupportedEncoding Unable to add footer to mail {}", mail.getName(), e);
         } catch (IOException ioe) {
             throw new MessagingException("Could not read message", ioe);
         }
@@ -94,11 +93,19 @@ public class AddFooter extends GenericMailet {
         if (part.isMimeType("multipart/mixed")
                 || part.isMimeType("multipart/related")) {
             MimeMultipart multipart = (MimeMultipart) part.getContent();
-            return attachFooterToFirstPart(multipart);
+            boolean added = attachFooterToFirstPart(multipart);
+            if (added) {
+            	part.setContent(multipart);
+            }
+            return added;
 
         } else if (part.isMimeType("multipart/alternative")) {
             MimeMultipart multipart = (MimeMultipart) part.getContent();
-            return attachFooterToAllSubparts(multipart);
+            boolean added = attachFooterToAllSubparts(multipart);
+            if (added) {
+            	part.setContent(multipart);
+            }
+            return added;
         }
         //Give up... we won't attach the footer to this MimePart
         return false;

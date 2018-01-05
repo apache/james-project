@@ -85,6 +85,17 @@ public class JMAPConfigurationTest {
     }
 
     @Test
+    public void buildShouldThrowWhenJwtPublicKeyPemIsEmpty() {
+        assertThatThrownBy(() -> JMAPConfiguration.builder()
+            .enable()
+            .keystore("keystore")
+            .secret("secret")
+            .jwtPublicKeyPem(Optional.empty())
+            .build())
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
     public void buildShouldWorkWhenRandomPort() {
         JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration(ENABLED, "keystore", "secret", Optional.of("file://conf/jwt_publickey"), Optional.empty());
 

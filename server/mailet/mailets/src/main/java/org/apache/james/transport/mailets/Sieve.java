@@ -23,15 +23,15 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.james.core.MailAddress;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.sieverepository.api.SieveRepository;
-import org.apache.james.transport.mailets.jsieve.CommonsLoggingAdapter;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
 import org.apache.james.transport.mailets.jsieve.delivery.SieveExecutor;
 import org.apache.james.transport.mailets.jsieve.delivery.SievePoster;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 
 /**
@@ -60,11 +60,7 @@ public class Sieve extends GenericMailet {
 
     @Override
     public void init() throws MessagingException {
-        Log log = CommonsLoggingAdapter.builder()
-            .wrappedLogger(getMailetContext().getLogger())
-            .quiet(getInitParameter("quiet", false))
-            .verbose(getInitParameter("verbose", false))
-            .build();
+        Log log = LogFactory.getLog(Sieve.class);
         sieveExecutor = SieveExecutor.builder()
             .resourceLocator(resourceLocator)
             .mailetContext(getMailetContext())

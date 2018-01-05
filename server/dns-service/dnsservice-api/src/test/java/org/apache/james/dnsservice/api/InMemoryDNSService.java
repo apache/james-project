@@ -56,6 +56,12 @@ public class InMemoryDNSService implements DNSService {
         registerRecord(hostname, ImmutableList.of(address), ImmutableList.of(mxRecord), emptyTxtRecords);
     }
 
+    public InMemoryDNSService registerMxRecord(String hostname, String ip) throws UnknownHostException {
+        InetAddress containerIp = InetAddress.getByName(ip);
+        registerRecord(hostname, containerIp, hostname);
+        return this;
+    }
+
     public void registerRecord(String hostname, List<InetAddress> addresses, Collection<String> mxRecords, Collection<String> txtRecords ){
         records.put(hostname, dnsRecordFor(mxRecords, txtRecords, addresses));
     }

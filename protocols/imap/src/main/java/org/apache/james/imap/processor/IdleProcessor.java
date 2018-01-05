@@ -117,7 +117,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                         try {
                             mailboxManager.removeListener(sm.getPath(), idleListener, mailboxSession);
                         } catch (MailboxException e) {
-                                LOGGER.error("Unable to remove idle listener for mailbox {0}", sm.getPath(), e);
+                                LOGGER.error("Unable to remove idle listener for mailbox {}", sm.getPath(), e);
                         }
                     }
                     session.popLineHandler();
@@ -165,7 +165,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
 
         } catch (MailboxException e) {
-            LOGGER.error("Enable idle for " + session.getSelected().getPath() + " failed", e);
+            LOGGER.error("Enable idle for {} failed", session.getSelected().getPath(), e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

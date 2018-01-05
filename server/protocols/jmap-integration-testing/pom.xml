@@ -33,21 +33,8 @@
     <name>Apache James :: Server :: JMAP :: Integration testing</name>
 
     <modules>
+        <module>cassandra-jmap-integration-testing</module>
         <module>jmap-integration-testing-common</module>
     </modules>
 
-    <profiles>
-        <profile>
-            <id>cassandra</id>
-            <modules>
-                <module>cassandra-jmap-integration-testing</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>inmemory</id>
-            <modules>
-                <module>memory-jmap-integration-testing</module>
-            </modules>
-        </profile>
-    </profiles>
 </project>

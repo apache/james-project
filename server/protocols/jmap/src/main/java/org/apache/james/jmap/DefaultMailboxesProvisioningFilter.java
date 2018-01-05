@@ -104,7 +104,7 @@ public class DefaultMailboxesProvisioningFilter implements Filter {
     private void createMailbox(MailboxPath mailboxPath, MailboxSession session) {
         try {
             Optional<MailboxId> mailboxId = mailboxManager.createMailbox(mailboxPath, session);
-            LOGGER.info("Provisioning " + mailboxPath + ". " + mailboxId + " created.");
+            LOGGER.info("Provisioning {}. {} created.", mailboxPath, mailboxId);
         } catch (MailboxExistsException e) {
             LOGGER.info("Mailbox {} have been created concurrently", mailboxPath);
         } catch (MailboxException e) {

@@ -87,7 +87,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
             }
             return true;
         } catch (MailboxException e) {
-            LOGGER.error("Error while remove mailboxes for user " + username, e);
+            LOGGER.error("Error while remove mailboxes for user {}", username, e);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         } finally {
@@ -120,7 +120,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
                 .sorted()
                 .collect(Guavate.toImmutableList());
         } catch (MailboxException e) {
-            LOGGER.error("Error list mailboxes for user " + username, e);
+            LOGGER.error("Error list mailboxes for user {}", username, e);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         } finally {

@@ -65,7 +65,7 @@ public class Bouncer {
 
 
     private void bounceWithMailetContext(Mail mail, Exception ex) {
-        LOGGER.debug("Sending failure message " + mail.getName());
+        LOGGER.debug("Sending failure message {}", mail.getName());
         try {
             mailetContext.bounce(mail, explanationText(mail, ex));
         } catch (MessagingException me) {

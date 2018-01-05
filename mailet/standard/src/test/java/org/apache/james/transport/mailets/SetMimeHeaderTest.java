@@ -21,6 +21,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -83,7 +84,7 @@ public class SetMimeHeaderTest {
     }
 
     @Test
-    public void shouldNotThrowOnMessagingException() throws MessagingException {
+    public void shouldThrowOnMessagingException() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("name", "header-name")
@@ -93,7 +94,9 @@ public class SetMimeHeaderTest {
         
         Mail mail = mock(Mail.class);
         when(mail.getMessage()).thenThrow(new MessagingException());
-        mailet.service(mail);
+
+        assertThatThrownBy(() -> mailet.service(mail))
+            .isInstanceOf(MessagingException.class);
     }
     
     @Test

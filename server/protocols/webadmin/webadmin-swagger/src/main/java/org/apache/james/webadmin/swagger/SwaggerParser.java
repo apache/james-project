@@ -22,6 +22,7 @@ package org.apache.james.webadmin.swagger;
 import javax.inject.Inject;
 
 import org.apache.james.webadmin.WebAdminConfiguration;
+import org.reflections.Reflections;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -32,7 +33,6 @@ import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.jaxrs.Reader;
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.models.Swagger;
-import org.reflections.Reflections;
 
 @SwaggerDefinition
 public class SwaggerParser {
@@ -68,7 +68,7 @@ public class SwaggerParser {
 		beanConfig.setVersion(API_DOC_VERSION);
 		beanConfig.setTitle(API_DOC_TITLE);
 		beanConfig.setDescription(API_DOC_DESCRIPTION);
-		beanConfig.setHost(configuration.getHost() + HOST_PORT_SEPARATOR + configuration.getPort().toInt());
+		beanConfig.setHost(configuration.getHost() + HOST_PORT_SEPARATOR + configuration.getPort().get().getValue());
 		beanConfig.setSchemes(SCHEMES);
 		beanConfig.setScan(true);
 		beanConfig.scanAndRead();

@@ -25,6 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -73,7 +74,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -176,11 +176,11 @@ public class GetMessagesMethodTest {
     public void processShouldFetchMessages() throws MailboxException {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
         Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
-        ByteArrayInputStream message2Content = new ByteArrayInputStream("Subject: message 2 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        ByteArrayInputStream message2Content = new ByteArrayInputStream("Subject: message 2 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message2 = inbox.appendMessage(message2Content, now, session, false, null);
-        ByteArrayInputStream message3Content = new ByteArrayInputStream("Great-Header: message 3 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        ByteArrayInputStream message3Content = new ByteArrayInputStream("Great-Header: message 3 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message3 = inbox.appendMessage(message3Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
@@ -210,7 +210,7 @@ public class GetMessagesMethodTest {
         ByteArrayInputStream messageContent = new ByteArrayInputStream(("Content-Type: text/html\r\n"
                 + "Subject: message 1 subject\r\n"
                 + "\r\n"
-                + "my <b>HTML</b> message").getBytes(Charsets.UTF_8));
+                + "my <b>HTML</b> message").getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message = inbox.appendMessage(messageContent, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
@@ -232,7 +232,7 @@ public class GetMessagesMethodTest {
     public void processShouldReturnOnlyMandatoryPropertiesOnEmptyPropertyList() throws MailboxException {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
         Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
@@ -251,7 +251,7 @@ public class GetMessagesMethodTest {
     public void processShouldReturnAllPropertiesWhenNoPropertyGiven() throws MailboxException {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
         Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
@@ -268,7 +268,7 @@ public class GetMessagesMethodTest {
     public void processShouldAddMandatoryPropertiesWhenNotInPropertyList() throws MailboxException {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
         Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
@@ -288,7 +288,7 @@ public class GetMessagesMethodTest {
     public void processShouldReturnTextBodyWhenBodyInPropertyListAndEmptyHtmlBody() throws MailboxException {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
         Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
@@ -312,7 +312,7 @@ public class GetMessagesMethodTest {
         ByteArrayInputStream messageContent = new ByteArrayInputStream(("Content-Type: text/html\r\n"
             + "Subject: message 1 subject\r\n"
             + "\r\n"
-            + "my <b>HTML</b> message").getBytes(Charsets.UTF_8));
+            + "my <b>HTML</b> message").getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message = inbox.appendMessage(messageContent, now, session, false, null);
 
         GetMessagesRequest request = GetMessagesRequest.builder()
@@ -336,7 +336,7 @@ public class GetMessagesMethodTest {
         Date now = new Date();
         ByteArrayInputStream messageContent = new ByteArrayInputStream(("Content-Type: text/html\r\n"
             + "Subject: message 1 subject\r\n"
-            + "\r\n").getBytes(Charsets.UTF_8));
+            + "\r\n").getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message = inbox.appendMessage(messageContent, now, session, false, null);
 
         GetMessagesRequest request = GetMessagesRequest.builder()
@@ -373,7 +373,7 @@ public class GetMessagesMethodTest {
             + "Content-Transfer-Encoding: 7bit\n"
             + "\n"
             + "<a>The </a> <strong>HTML</strong> message"
-        ).getBytes(Charsets.UTF_8));
+        ).getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message = inbox.appendMessage(messageContent, now, session, false, null);
 
         GetMessagesRequest request = GetMessagesRequest.builder()
@@ -398,7 +398,7 @@ public class GetMessagesMethodTest {
         ByteArrayInputStream message1Content = new ByteArrayInputStream(("From: user@domain.tld\r\n"
                 + "header1: Header1Content\r\n"
                 + "HEADer2: Header2Content\r\n"
-                + "Subject: message 1 subject\r\n\r\nmy message").getBytes(Charsets.UTF_8));
+                + "Subject: message 1 subject\r\n\r\nmy message").getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
@@ -422,7 +422,7 @@ public class GetMessagesMethodTest {
         ByteArrayInputStream message1Content = new ByteArrayInputStream(("From: user@domain.tld\r\n"
                 + "header1: Header1Content\r\n"
                 + "HEADer2: Header2Content\r\n"
-                + "Subject: message 1 subject\r\n\r\nmy message").getBytes(Charsets.UTF_8));
+                + "Subject: message 1 subject\r\n\r\nmy message").getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
@@ -450,7 +450,7 @@ public class GetMessagesMethodTest {
         ByteArrayInputStream message1Content = new ByteArrayInputStream(("From: user@domain.tld\r\n"
             + "header1: Header1Content\r\n"
             + "HEADer2: Header2Content\r\n"
-            + "Subject: message 1 subject\r\n\r\nmy message").getBytes(Charsets.UTF_8));
+            + "Subject: message 1 subject\r\n\r\nmy message").getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
 
         MailboxId customMailboxId = mailboxManager.getMailbox(customMailboxPath, session).getId();
@@ -482,7 +482,7 @@ public class GetMessagesMethodTest {
         ByteArrayInputStream message1Content = new ByteArrayInputStream(("From: user@domain.tld\r\n"
             + "header1: Header1Content\r\n"
             + "HEADer2: Header2Content\r\n"
-            + "Subject: message 1 subject\r\n\r\nmy message").getBytes(Charsets.UTF_8));
+            + "Subject: message 1 subject\r\n\r\nmy message").getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, NOT_RECENT, FLAGS);
         ComposedMessageId message2 = inbox.appendMessage(message1Content, now, session, NOT_RECENT, FLAGS);
         when(messageFactory.fromMetaDataWithContent(any()))
@@ -510,11 +510,11 @@ public class GetMessagesMethodTest {
             .build();
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
         Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, flags);
-        ByteArrayInputStream message2Content = new ByteArrayInputStream("Subject: message 2 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        ByteArrayInputStream message2Content = new ByteArrayInputStream("Subject: message 2 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message2 = inbox.appendMessage(message2Content, now, session, false, flags);
-        ByteArrayInputStream message3Content = new ByteArrayInputStream("Great-Header: message 3 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        ByteArrayInputStream message3Content = new ByteArrayInputStream("Great-Header: message 3 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message3 = inbox.appendMessage(message3Content, now, session, false, flags);
 
         GetMessagesRequest request = GetMessagesRequest.builder()
@@ -559,11 +559,11 @@ public class GetMessagesMethodTest {
             .build();
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
         Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, flags1);
-        ByteArrayInputStream message2Content = new ByteArrayInputStream("Subject: message 2 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        ByteArrayInputStream message2Content = new ByteArrayInputStream("Subject: message 2 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message2 = inbox.appendMessage(message2Content, now, session, false, flags2);
-        ByteArrayInputStream message3Content = new ByteArrayInputStream("Great-Header: message 3 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        ByteArrayInputStream message3Content = new ByteArrayInputStream("Great-Header: message 3 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message3 = inbox.appendMessage(message3Content, now, session, false, flags3);
 
         GetMessagesRequest request = GetMessagesRequest.builder()
@@ -602,7 +602,7 @@ public class GetMessagesMethodTest {
             .build();
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
         Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
         ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, flags);
 
         GetMessagesRequest request = GetMessagesRequest.builder()

@@ -20,16 +20,16 @@
 package org.apache.james.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.james.server.core.JamesServerResourceLoader;
-import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.file.FileMailRepository;
 import org.apache.james.modules.server.MailStoreRepositoryModule;
+import org.apache.james.server.core.JamesServerResourceLoader;
+import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -71,28 +71,22 @@ public class InMemoryMailRepositoryStoreTest {
         assertThat(repositoryStore.select("file://repo")).isNotEqualTo(repositoryStore.select("file://repo1"));
     }
 
-    @Test(expected = ConfigurationException.class)
+    @Test
     public void configureShouldThrowWhenNonValidClassesAreProvided() throws Exception {
-        try {
-            repositoryStore = new InMemoryMailRepositoryStore(Sets.newHashSet(
-                    new MailStoreRepositoryModule.FileMailRepositoryProvider(
-                            fileSystem)));
-            repositoryStore.configure(new FileConfigurationProvider(fileSystem, FileSystem.CLASSPATH_PROTOCOL).getConfiguration("fakemailrepositorystore"));
-        } catch (ConfigurationException e) {
-            fail("Unexpected failure : ", e);
-        }
-        repositoryStore.init();
+        repositoryStore = new InMemoryMailRepositoryStore(Sets.newHashSet(
+            new MailStoreRepositoryModule.FileMailRepositoryProvider(
+                fileSystem)));
+        repositoryStore.configure(new FileConfigurationProvider(fileSystem, FileSystem.CLASSPATH_PROTOCOL).getConfiguration("fakemailrepositorystore"));
+
+        assertThatThrownBy(() -> repositoryStore.init())
+            .isInstanceOf(ConfigurationException.class);
     }
 
     @Test
     public void configureShouldNotThrowOnEmptyConfiguration() throws Exception {
-        try {
-            repositoryStore = new InMemoryMailRepositoryStore(Sets.newHashSet(
-                new MailStoreRepositoryModule.FileMailRepositoryProvider(
-                    fileSystem)));
-        } catch (Exception e) {
-            fail("Unexpected failure : ", e);
-        }
+        repositoryStore = new InMemoryMailRepositoryStore(Sets.newHashSet(
+            new MailStoreRepositoryModule.FileMailRepositoryProvider(
+                fileSystem)));
         repositoryStore.configure(new HierarchicalConfiguration());
 
         repositoryStore.init();

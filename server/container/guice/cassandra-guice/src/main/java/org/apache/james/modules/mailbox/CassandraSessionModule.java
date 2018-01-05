@@ -118,7 +118,7 @@ public class CassandraSessionModule extends AbstractModule {
                     .copyBatchSize(configuration.getInt("copy", BatchSizes.DEFAULT_BATCH_SIZE))
                     .moveBatchSize(configuration.getInt("move", BatchSizes.DEFAULT_BATCH_SIZE))
                     .build();
-            LOGGER.debug("BatchSize configuration: " + batchSizes);
+            LOGGER.debug("BatchSize configuration: {}", batchSizes);
             return batchSizes;
         } catch (FileNotFoundException | ConfigurationException e) {
             LOGGER.warn("Could not locate batchsizes configuration file. Using default values.");
@@ -192,13 +192,17 @@ public class CassandraSessionModule extends AbstractModule {
                 case TOO_OLD:
                     throw new IllegalStateException(
                         String.format("Current schema version is %d whereas minimum required version is %d. " +
-                            "Recommended version is %d", versionManager.computeVersion(), versionManager.getMinimumSupportedVersion(),
-                            versionManager.getMaximumSupportedVersion()));
+                            "Recommended version is %d",
+                            versionManager.computeVersion().getValue(),
+                            versionManager.getMinimumSupportedVersion().getValue(),
+                            versionManager.getMaximumSupportedVersion().getValue()));
                 case TOO_RECENT:
                     throw new IllegalStateException(
                         String.format("Current schema version is %d whereas the minimum supported version is %d. " +
-                            "Recommended version is %d.", versionManager.computeVersion(), versionManager.getMinimumSupportedVersion(),
-                            versionManager.getMaximumSupportedVersion()));
+                            "Recommended version is %d.",
+                            versionManager.computeVersion().getValue(),
+                            versionManager.getMinimumSupportedVersion().getValue(),
+                            versionManager.getMaximumSupportedVersion().getValue()));
                 case UP_TO_DATE:
                     LOGGER.info("Schema version is up-to-date");
                     return;

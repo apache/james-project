@@ -72,7 +72,7 @@ public class ToProcessor extends GenericMailet {
     @Override
     public void service(Mail mail) throws MessagingException {
         if (debug) {
-            LOGGER.debug(String.format("Sending mail %s to %s", mail, processor));
+            LOGGER.debug("Sending mail {} to {}", mail, processor);
         }
         mail.setState(processor);
         if (noticeText.isPresent()) {

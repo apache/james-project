@@ -32,13 +32,13 @@ import static org.hamcrest.Matchers.not;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 
 import javax.mail.Flags;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.HttpJmapAuthentication;
@@ -61,6 +61,7 @@ import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
+import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.date.ImapDateTimeFormatter;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
@@ -68,7 +69,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
@@ -104,7 +104,7 @@ public abstract class GetMessageListMethodTest {
         RestAssured.requestSpecification = new RequestSpecBuilder()
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
-                .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+                .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
                 .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
                 .build();
 
@@ -128,7 +128,7 @@ public abstract class GetMessageListMethodTest {
             .setHost("localhost")
             .setPort(jmapServer.getProbe(JmapGuiceProbe.class)
                 .getJmapPort())
-            .setCharset(Charsets.UTF_8);
+            .setCharset(StandardCharsets.UTF_8);
     }
 
     @After
@@ -1007,12 +1007,12 @@ public abstract class GetMessageListMethodTest {
     @Test
     public void getMessageListShouldFilterMessagesWhenAttachmentFilterDoesntMatches() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
-        byte[] attachmentContent = IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/attachment.pdf"));
+        byte[] attachmentContent = ClassLoaderUtils.getSystemResourceAsByteArray("eml/attachment.pdf");
         BodyPart attachment = BodyPartBuilder.create()
                 .setBody(attachmentContent, "application/pdf")
                 .setContentDisposition("attachment")
                 .build();
-        BodyPart textPart = BodyPartBuilder.create().setBody("The message has a PDF attachment.", "plain", Charsets.UTF_8).build();
+        BodyPart textPart = BodyPartBuilder.create().setBody("The message has a PDF attachment.", "plain", StandardCharsets.UTF_8).build();
         Multipart multipart = MultipartBuilder.create("mixed")
                 .addBodyPart(attachment)
                 .addBodyPart(textPart)
@@ -1040,12 +1040,12 @@ public abstract class GetMessageListMethodTest {
     @Test
     public void getMessageListShouldNotFilterMessagesWhenAttachmentFilterMatches() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
-        byte[] attachmentContent = IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/attachment.pdf"));
+        byte[] attachmentContent = ClassLoaderUtils.getSystemResourceAsByteArray("eml/attachment.pdf");
         BodyPart attachment = BodyPartBuilder.create()
                 .setBody(attachmentContent, "application/pdf")
                 .setContentDisposition("attachment")
                 .build();
-        BodyPart textPart = BodyPartBuilder.create().setBody("The message has a PDF attachment.", "plain", Charsets.UTF_8).build();
+        BodyPart textPart = BodyPartBuilder.create().setBody("The message has a PDF attachment.", "plain", StandardCharsets.UTF_8).build();
         Multipart multipart = MultipartBuilder.create("mixed")
                 .addBodyPart(attachment)
                 .addBodyPart(textPart)

@@ -22,11 +22,10 @@ package org.apache.james.managesieveserver.netty;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.stream.ChunkedStream;
-
-import com.google.common.base.Charsets;
 
 public class ChannelManageSieveResponseWriter {
     private final Channel channel;
@@ -37,7 +36,7 @@ public class ChannelManageSieveResponseWriter {
 
     public void write(String response) throws IOException {
         if (channel.isConnected()) {
-            InputStream in = new ByteArrayInputStream(response.getBytes(Charsets.UTF_8));
+            InputStream in = new ByteArrayInputStream(response.getBytes(StandardCharsets.UTF_8));
             channel.write(new ChunkedStream(in));
         }
     }

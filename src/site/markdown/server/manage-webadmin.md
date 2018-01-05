@@ -8,12 +8,15 @@ The web administration supports for now the CRUD operations on the domains,the u
 Please also note **webadmin** is only enabled with **Guice**. You can not use it when using James with **Spring**, as the required injections are not implemented.
 
 In case of any error, the system will return an error message which is json format like this:
+
+```
 {
     statusCode: <error_code>,
     type: <error_type>,
     message: <the_error_message>
     cause: <the_detail_message_from_throwable>
 }
+```
 
 ## Administrating domains
 
@@ -402,18 +405,30 @@ Response codes:
 curl -XPOST http://ip:port/cassandra/version/upgrade -d '3'
 ```
 
-Will run the migrations you need to reach schema version 3.
+
+Will schedule the run of the migrations you need to reach schema version 3. The `taskId` will allow you to monitor and manage this process.
+
+```
+{"taskId":"3294a976-ce63-491e-bd52-1b6f465ed7a2"}
+```
 
 Response codes:
 
- - 204: Success
+ - 200: Success. The scheduled task taskId is returned.
  - 400: The version is invalid. The version should be a strictly positive number.
- - 410: Error running the migration. This resource is gone away. Reason is mentionned in the body.
- - 500: Internal error. This can result from a partial migration, in which case the reason is contained in the body.
+ - 410: Error while planning this migration. This resource is gone away. Reason is mentionned in the body.
+ - 500: Internal error while creating the migration task.
 
 Note that several calls to this endpoint will be run in a sequential pattern.
 
 If the server restarts during the migration, the migration is silently aborted.
+
+
+The scheduled task will have the following type `CassandraMigration` and the following `additionalInformation`:
+
+```
+{"toVersion":3}
+```
 
 ### Upgrading to the latest version
 
@@ -421,17 +436,35 @@ If the server restarts during the migration, the migration is silently aborted.
 curl -XPOST http://ip:port/cassandra/version/upgrade/latest
 ```
 
-Will run the migrations you need to reach the latest schema version.
+Will schedule the run of the migrations you need to reach the latest schema version. The `taskId` will allow you to monitor and manage this process.
+
+```
+{"taskId":"3294a976-ce63-491e-bd52-1b6f465ed7a2"}
+```
+
+Positionned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
 
 Response codes:
 
- - 204: Success
- - 410: Error running the migration. This resource is gone away. Reason is mentionned in the body.
- - 500: Internal error. This can result from a partial migration, in which case the reason is contained in the body.
+ - 200: Success. The scheduled task taskId is returned.
+ - 410: Error while planning this migration. This resource is gone away. Reason is mentionned in the body.
+ - 500: Internal error while creating the migration task.
 
 Note that several calls to this endpoint will be run in a sequential pattern.
 
 If the server restarts during the migration, the migration is silently aborted.
+
+The scheduled task will have the following type `CassandraMigration` and the following `additionalInformation`:
+
+```
+{"toVersion":2}
+```
 
 ## Creating address group
 
@@ -510,3 +543,102 @@ Response codes:
  - 200: Success
  - 400: Group structure or member is not valid
  - 500: Internal error
+
+## Task management
+
+Some webadmin features schedules tasks. The task management API allow to monitor and manage the execution of the following tasks.
+
+Note that the `taskId` used in the following APIs is returned by other WebAdmin APIs scheduling tasks.
+
+### Getting a task details
+
+```
+curl -XGET http://ip:port/tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+An Execution Report will be returned:
+
+```
+{
+    "submitDate": "2017-12-27T15:15:24.805+0700",
+    "startedDate": "2017-12-27T15:15:24.809+0700",
+    "completedDate": "2017-12-27T15:15:24.815+0700",
+    "cancelledDate": null,
+    "failedDate": null,
+    "taskId": "3294a976-ce63-491e-bd52-1b6f465ed7a2",
+    "additionalInformation": {},
+    "status": "completed",
+    "type": "typeOfTheTask"
+}
+```
+
+Note that:
+
+ - `status` can have the value:
+    - `waiting`: The task is scheduled but its execution did not start yet
+    - `inProgress`: The task is currently executed
+    - `cancelled`: The task had been cancelled
+    - `completed`: The task execution is finished, and this execution is a success
+    - `failed`: The task execution is finished, and this execution is a failure
+
+ - `additionalInformation` is a task specific object giving additional information and context about that task. The structure
+   of this `additionalInformation` field is provided along the specific task submission endpoint.
+
+Response codes:
+
+ - 200: The specific task was found and the execution report exposed above is returned
+ - 400: Invalid task ID
+ - 404: Task ID was not found
+
+### Awaiting a task
+
+One can await the end of a task, then receive it's final execution report.
+
+That feature is especially usefull for testing purpose but still can serve real-life scenari.
+
+```
+curl -XGET http://ip:port/tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2/await
+```
+
+An Execution Report will be returned.
+
+Response codes:
+
+ - 200: The specific task was found and the execution report exposed above is returned
+ - 400: Invalid task ID
+ - 404: Task ID was not found
+
+### Cancelling a task
+
+You can cancel a task by calling:
+
+```
+curl -XDELETE http://ip:port/tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+ - 204: Task had been cancelled
+ - 400: Invalid task ID
+
+### Listing tasks
+
+A list of all tasks can be retrieved:
+
+```
+curl -XGET /tasks
+```
+
+Will return a list of Execution reports
+
+One can filter the above results by status. For example:
+
+```
+curl -XGET /tasks?status=inProgress
+```
+
+Will return a list of Execution reports that are currently in progress.
+
+Response codes:
+
+ - 200: A list of corresponding tasks is returned
+ - 400: Invalid status value

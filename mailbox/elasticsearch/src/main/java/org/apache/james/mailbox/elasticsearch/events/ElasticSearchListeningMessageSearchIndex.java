@@ -121,19 +121,19 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
             indexer.indexMessage(indexIdFor(mailbox, message.getUid()), messageToElasticSearchJson.convertToJson(message, ImmutableList.of(session.getUser())));
         } catch (Exception e) {
             try {
-                LOGGER.warn(String.format("Indexing mailbox %s-%s of user %s on message %s without attachments ",
+                LOGGER.warn("Indexing mailbox {}-{} of user {} on message {} without attachments ",
                         mailbox.getName(),
                         mailbox.getMailboxId().serialize(),
                         session.getUser().getUserName(),
-                        message.getUid().toString()),
-                    e);
+                        message.getUid(),
+                        e);
                 indexer.indexMessage(indexIdFor(mailbox, message.getUid()), messageToElasticSearchJson.convertToJsonWithoutAttachment(message, ImmutableList.of(session.getUser())));
             } catch (JsonProcessingException e1) {
-                LOGGER.error(String.format("Error when indexing mailbox %s-%s of user %s on message %s without its attachment",
+                LOGGER.error("Error when indexing mailbox {}-{} of user {} on message {} without its attachment",
                         mailbox.getName(),
                         mailbox.getMailboxId().serialize(),
                         session.getUser().getUserName(),
-                        message.getUid().toString()),
+                        message.getUid(),
                         e1);
             }
         }
@@ -146,10 +146,9 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
                 .map(uid ->  indexIdFor(mailbox, uid))
                 .collect(Collectors.toList()));
         } catch (Exception e) {
-            LOGGER.error(String.format("Error when deleting messages %s in mailbox %s from index",
-                mailbox.getMailboxId().serialize(),
-                ImmutableList.copyOf(expungedUids).toString()),
-                e);
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.error("Error when deleting messages {} in mailbox {} from index", mailbox.getMailboxId().serialize(), expungedUids.toArray(), e);
+            }
         }
     }
 
@@ -161,7 +160,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
                     JsonMessageConstants.MAILBOX_ID,
                     mailbox.getMailboxId().serialize()));
         } catch (Exception e) {
-            LOGGER.error(String.format("Error when deleting all messages in mailbox %s", mailbox.getMailboxId().serialize()), e);
+            LOGGER.error("Error when deleting all messages in mailbox {}", mailbox.getMailboxId().serialize(), e);
         }
     }
 
@@ -172,7 +171,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
                 .map(updatedFlags -> createUpdatedDocumentPartFromUpdatedFlags(mailbox, updatedFlags))
                 .collect(Collectors.toList()));
         } catch (Exception e) {
-            LOGGER.error(String.format("Error when updating index on mailbox %s", mailbox.getMailboxId().serialize()), e);
+            LOGGER.error("Error when updating index on mailbox {}", mailbox.getMailboxId().serialize(), e);
         }
     }
 

@@ -22,6 +22,7 @@ package org.apache.james.webadmin.utils;
 import java.io.IOException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 public class JsonExtractor<Request> {
 
@@ -29,14 +30,15 @@ public class JsonExtractor<Request> {
     private final Class<Request> type;
 
     public JsonExtractor(Class<Request> type) {
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = new ObjectMapper()
+            .registerModule(new Jdk8Module());
         this.type = type;
     }
 
     public Request parse(String text) throws JsonExtractException {
         try {
             return objectMapper.readValue(text, type);
-        } catch (IOException e) {
+        } catch (IOException | IllegalArgumentException e) {
             throw new JsonExtractException(e);
         }
     }

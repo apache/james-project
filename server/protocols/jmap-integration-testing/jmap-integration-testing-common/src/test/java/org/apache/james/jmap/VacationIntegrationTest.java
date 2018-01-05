@@ -27,6 +27,7 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -46,7 +47,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
@@ -98,7 +98,7 @@ public abstract class VacationIntegrationTest {
             .setAccept(ContentType.JSON)
             .setConfig(newConfig()
                 .encoderConfig(
-                    encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+                    encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
             .setPort(jmapGuiceProbe
                 .getJmapPort())
             .build();
@@ -117,7 +117,7 @@ public abstract class VacationIntegrationTest {
             .setHost("localhost")
             .setPort(guiceJamesServer.getProbe(JmapGuiceProbe.class)
                 .getJmapPort())
-            .setCharset(Charsets.UTF_8);
+            .setCharset(StandardCharsets.UTF_8);
     }
 
     @After

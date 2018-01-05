@@ -79,7 +79,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
 
     @PostConstruct
     public void init() throws Exception {
-        LOGGER.info("Init " + getClass().getName() + " Store");
+        LOGGER.info("Init {} Store", getClass().getName());
         setDestination(destination);
 
         File directory;
@@ -98,7 +98,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
 
         FileUtils.forceMkdir(directory);
 
-        LOGGER.info(getClass().getName() + " opened in " + m_baseDirectory);
+        LOGGER.info("{} opened in {}", getClass().getName(), m_baseDirectory);
 
         // We will look for all numbered repository files in this
         // directory and rename them to non-numbered repositories,
@@ -188,7 +188,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
             throw new RuntimeException("Cannot initialize child " + "repository " + childName + " : " + e);
         }
 
-        if (DEBUG) {
+        if (DEBUG && LOGGER.isDebugEnabled()) {
             LOGGER.debug("Child repository of " + m_name + " created in " + m_baseDirectory + File.pathSeparatorChar + childName + File.pathSeparator);
         }
 
@@ -269,7 +269,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
         try {
             final File file = getFile(key);
             if (DEBUG)
-                LOGGER.debug("checking key " + key);
+                LOGGER.debug("checking key {}", key);
             return file.exists();
         } catch (Exception e) {
             throw new RuntimeException("Exception caught while searching " + "an object: " + e);

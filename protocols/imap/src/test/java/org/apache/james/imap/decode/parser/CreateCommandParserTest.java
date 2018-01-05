@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
@@ -38,8 +39,6 @@ import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.protocols.imap.DecodingException;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.base.Charsets;
 
 public class CreateCommandParserTest {
     private static final OutputStream outputStream = null;
@@ -62,7 +61,7 @@ public class CreateCommandParserTest {
 
     @Test
     public void decodeShouldThrowWhenCommandHasEmptyMailbox() throws DecodingException {
-        InputStream inputStream = new ByteArrayInputStream(" \n".getBytes(Charsets.US_ASCII));
+        InputStream inputStream = new ByteArrayInputStream(" \n".getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
         assertThatThrownBy(() -> parser.decode(command, lineReader, TAG, mockImapSession))
@@ -71,7 +70,7 @@ public class CreateCommandParserTest {
 
     @Test
     public void decodeShouldThrowWhenCommandHasOnlySeparatorMailbox() throws DecodingException {
-        InputStream inputStream = new ByteArrayInputStream("..\n".getBytes(Charsets.US_ASCII));
+        InputStream inputStream = new ByteArrayInputStream("..\n".getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
         assertThatThrownBy(() -> parser.decode(command, lineReader, TAG, mockImapSession))
@@ -80,7 +79,7 @@ public class CreateCommandParserTest {
 
     @Test
     public void decodeShouldReturnCreateRequestWhenValidMailboxName() throws Exception {
-        InputStream inputStream = new ByteArrayInputStream(".AnyMailbox.\n".getBytes(Charsets.US_ASCII));
+        InputStream inputStream = new ByteArrayInputStream(".AnyMailbox.\n".getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
         CreateRequest imapMessage = (CreateRequest)parser.decode(command, lineReader, TAG, mockImapSession);

@@ -33,6 +33,7 @@ import spark.HaltException;
 public class ErrorResponder {
     public enum ErrorType {
         INVALID_ARGUMENT("InvalidArgument"),
+        NOT_FOUND("notFound"),
         WRONG_STATE("WrongState"),
         SERVER_ERROR("ServerError");
 

@@ -46,7 +46,7 @@ public class SenderInFakeDomain extends AbstractNetworkMatcher {
         if (servers.size() == 0) {
             // No records...could not deliver to this domain, so matches
             // criteria.
-            LOGGER.info("No MX, A, or CNAME record found for domain: " + domain);
+            LOGGER.info("No MX, A, or CNAME record found for domain: {}", domain);
             return mail.getRecipients();
         } else if (matchNetwork(servers.iterator().next())) {
             /*
@@ -65,8 +65,8 @@ public class SenderInFakeDomain extends AbstractNetworkMatcher {
              * 203.119.4.6/32          # .PH TLD (.ph)
              *
              */
-            LOGGER.info("Banned IP found for domain: " + domain);
-            LOGGER.info(" --> :" + servers.iterator().next());
+            LOGGER.info("Banned IP found for domain: {}", domain);
+            LOGGER.info(" --> :{}", servers.iterator().next());
             return mail.getRecipients();
         } else {
             // Some servers were found... the domain is not fake.

@@ -21,11 +21,13 @@ package org.apache.james.transport.mailets;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.stream.Stream;
 
 import javax.mail.MessagingException;
 
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
@@ -134,11 +136,24 @@ public class ICalendarParser extends GenericMailet {
             ByteArrayInputStream inputStream = new ByteArrayInputStream(icsContent);
             return Stream.of(Pair.of(key, builder.build(inputStream)));
         } catch (IOException e) {
-            LOGGER.error("Error while reading input: " + icsContent, e);
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.error("Error while reading input: " + icsContentToString(icsContent), e);
+            }
             return Stream.of();
         } catch (ParserException e) {
-            LOGGER.error("Error while parsing ICal object: " + icsContent, e);
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.error("Error while parsing ICal object: " + icsContentToString(icsContent), e);
+            }
             return Stream.of();
         }
+    }
+
+    private static String icsContentToString(byte[] icsContent) {
+        try {
+            return new String(icsContent, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            LOGGER.error("Error while decoding ics content", e);
+        }
+        return new String(Hex.encodeHex(icsContent));
     }
 }

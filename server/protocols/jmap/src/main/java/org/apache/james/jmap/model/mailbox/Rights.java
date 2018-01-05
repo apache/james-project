@@ -82,7 +82,7 @@ public class Rights {
                 Arrays.stream(values())
                     .filter(jmapRight -> jmapRight.right == right)
                     .findAny(),
-                () -> LOGGER.warn("Non handled right '" + right + "'"));
+                () -> LOGGER.warn("Non handled right '{}'", right));
         }
 
         public static Right forChar(char c) {
@@ -193,7 +193,7 @@ public class Rights {
             return false;
         }
         if (key.getNameType() != MailboxACL.NameType.user) {
-            LOGGER.info(key.getNameType() + " is not supported. Only 'user' is.");
+            LOGGER.info("{} is not supported. Only 'user' is.", key.getNameType());
             return false;
         }
         return true;

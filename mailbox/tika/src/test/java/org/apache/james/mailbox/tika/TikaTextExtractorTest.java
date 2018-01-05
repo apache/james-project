@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
@@ -39,7 +40,6 @@ import org.junit.rules.ExpectedException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 
 public class TikaTextExtractorTest {
@@ -63,7 +63,7 @@ public class TikaTextExtractorTest {
 
     @Test
     public void textualContentShouldReturnNullWhenInputStreamIsEmpty() throws Exception {
-        assertThat(textExtractor.extractContent(IOUtils.toInputStream("", Charsets.UTF_8), "text/plain").getTextualContent())
+        assertThat(textExtractor.extractContent(IOUtils.toInputStream("", StandardCharsets.UTF_8), "text/plain").getTextualContent())
             .isEmpty();
     }
 
@@ -157,7 +157,7 @@ public class TikaTextExtractorTest {
     public void deserializerShouldNotThrowWhenMoreThanOneNode() throws Exception {
         TikaTextExtractor textExtractor = new TikaTextExtractor(
             (inputStream, contentType) -> new ByteArrayInputStream(("[{\"X-TIKA:content\": \"This is an awesome LibreOffice document !\"}, " +
-                "{\"Chroma BlackIsZero\": \"true\"}]").getBytes(Charsets.UTF_8)));
+                "{\"Chroma BlackIsZero\": \"true\"}]").getBytes(StandardCharsets.UTF_8)));
 
         InputStream inputStream = null;
         textExtractor.extractContent(inputStream, "text/plain");
@@ -168,7 +168,7 @@ public class TikaTextExtractorTest {
         String expectedExtractedContent = "content A";
         TikaTextExtractor textExtractor = new TikaTextExtractor(
             (inputStream, contentType) -> new ByteArrayInputStream(("[{\"X-TIKA:content\": \"" + expectedExtractedContent + "\"}, " +
-                "{\"X-TIKA:content\": \"content B\"}]").getBytes(Charsets.UTF_8)));
+                "{\"X-TIKA:content\": \"content B\"}]").getBytes(StandardCharsets.UTF_8)));
 
         InputStream inputStream = null;
         ParsedContent parsedContent = textExtractor.extractContent(inputStream, "text/plain");
@@ -182,7 +182,7 @@ public class TikaTextExtractorTest {
         expectedException.expectMessage("The element should be a Json object");
 
         TikaTextExtractor textExtractor = new TikaTextExtractor(
-            (inputStream, contentType) -> new ByteArrayInputStream("[\"value1\"]".getBytes(Charsets.UTF_8)));
+            (inputStream, contentType) -> new ByteArrayInputStream("[\"value1\"]".getBytes(StandardCharsets.UTF_8)));
 
         InputStream inputStream = null;
         textExtractor.extractContent(inputStream, "text/plain");

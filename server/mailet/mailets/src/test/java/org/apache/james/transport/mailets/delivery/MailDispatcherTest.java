@@ -26,15 +26,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders.Header;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.RFC2822Headers;
@@ -45,7 +45,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ArrayListMultimap;
 
 public class MailDispatcherTest {
@@ -133,12 +132,10 @@ public class MailDispatcherTest {
             .when(mailStore)
             .storeMail(any(MailAddress.class), any(Mail.class));
 
-        MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+        MimeMessageBuilder mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
             .setMultipartWithBodyParts(
                 MimeMessageBuilder.bodyPartBuilder()
-                    .data("toto")
-                    .build())
-            .build();
+                    .data("toto"));
 
         FakeMail mail = FakeMail.builder()
             .sender(MailAddressFixture.OTHER_AT_JAMES)
@@ -155,7 +152,7 @@ public class MailDispatcherTest {
             .fromMailet()
             .state(Mail.ERROR).build();
         assertThat(actual).containsOnly(expected);
-        assertThat(IOUtils.toString(actual.get(0).getMsg().getInputStream(), Charsets.UTF_8))
+        assertThat(IOUtils.toString(actual.get(0).getMsg().getInputStream(), StandardCharsets.UTF_8))
             .contains("toto");
     }
 
@@ -311,8 +308,7 @@ public class MailDispatcherTest {
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
-                    .addHeader(TEST_HEADER_NAME, headerValue)
-                    .build())
+                    .addHeader(TEST_HEADER_NAME, headerValue))
             .state("state")
             .build();
         mail.addSpecificHeaderForRecipient(TEST_HEADER_USER1, MailAddressFixture.ANY_AT_JAMES);

@@ -26,8 +26,8 @@ import java.net.URISyntaxException;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.james.util.streams.ContainerNames;
-import org.apache.james.util.streams.SwarmGenericContainer;
+import org.apache.james.util.docker.Images;
+import org.apache.james.util.docker.SwarmGenericContainer;
 import org.junit.Rule;
 import org.junit.Test;
 import org.testcontainers.containers.wait.HttpWaitStrategy;
@@ -35,7 +35,7 @@ import org.testcontainers.containers.wait.HttpWaitStrategy;
 public class ContainerTest {
 
     @Rule
-    public SwarmGenericContainer container = new SwarmGenericContainer(ContainerNames.NGINX)
+    public SwarmGenericContainer container = new SwarmGenericContainer(Images.NGINX)
         .withAffinityToContainer()
         .withExposedPorts(80)
         .waitingFor(new HttpWaitStrategy().forStatusCode(200));

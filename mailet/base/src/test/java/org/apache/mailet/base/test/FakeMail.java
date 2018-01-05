@@ -23,6 +23,7 @@ package org.apache.mailet.base.test;
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -30,16 +31,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+
 import javax.mail.MessagingException;
 import javax.mail.Session;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.PerRecipientHeaders.Header;
 
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -49,6 +54,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class FakeMail implements Mail {
+
+    public static FakeMail fromMessage(MimeMessageBuilder message) throws MessagingException {
+        return FakeMail.builder()
+            .mimeMessage(message)
+            .build();
+    }
 
     public static FakeMail fromMime(String text, String javaEncodingCharset, String javamailDefaultEncodingCharset) throws MessagingException, UnsupportedEncodingException {
         Properties javamailProperties = new Properties();
@@ -126,19 +137,36 @@ public class FakeMail implements Mail {
             return this;
         }
 
+        public Builder mimeMessage(MimeMessageBuilder mimeMessage) throws MessagingException {
+            this.mimeMessage = Optional.of(mimeMessage.build());
+            return this;
+        }
+
+        public Builder recipients() {
+            return this;
+        }
+
         public Builder recipients(List<MailAddress> recipients) {
             this.recipients.addAll(recipients);
             return this;
         }
 
         public Builder recipients(MailAddress... recipients) {
-            this.recipients.addAll(ImmutableList.copyOf(recipients));
-            return this;
+            return recipients(ImmutableList.copyOf(recipients));
+        }
+
+        public Builder recipients(String... recipients) {
+            return recipients(Arrays.stream(recipients)
+                .map(Throwing.function(MailAddress::new))
+                .collect(Guavate.toImmutableList()));
         }
 
         public Builder recipient(MailAddress recipient) {
-            this.recipients.add(recipient);
-            return this;
+            return recipients(recipient);
+        }
+
+        public Builder recipient(String recipient) throws AddressException {
+            return recipients(recipient);
         }
 
         public Builder name(String name) {
@@ -149,6 +177,10 @@ public class FakeMail implements Mail {
         public Builder sender(MailAddress sender) {
             this.sender = Optional.of(sender);
             return this;
+        }
+
+        public Builder sender(String sender) throws AddressException {
+            return sender(new MailAddress(sender));
         }
 
         public Builder state(String state) {

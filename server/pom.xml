@@ -98,6 +98,7 @@
         <module>queue/queue-file</module>
         <module>queue/queue-jms</module>
 
+        <module>task</module>
         <module>testing</module>
     </modules>
 
@@ -166,24 +167,4 @@
         </plugins>
     </build>
 
-    <profiles>
-        <profile>
-            <!-- run live tests, ie. ones that do not run stably enough in
-            a CI environment (for example, karaf integration tests accessing external network
-            resources) -->
-            <id>livetests</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <includes>
-                                <include>**/*TestLive.java</include>
-                            </includes>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>

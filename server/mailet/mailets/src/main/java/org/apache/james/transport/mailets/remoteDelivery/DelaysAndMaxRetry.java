@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets.remoteDelivery;
 
 import java.util.List;
+
 import javax.mail.MessagingException;
 
 import org.slf4j.Logger;
@@ -81,6 +82,7 @@ public class DelaysAndMaxRetry {
 
         List<String> delayStrings = Splitter.on(',')
             .omitEmptyStrings()
+            .trimResults()
             .splitToList(delaysAsString);
 
         ImmutableList.Builder<Delay> builder = ImmutableList.builder();
@@ -133,7 +135,7 @@ public class DelaysAndMaxRetry {
      * @param list the list to expand
      * @return the expanded list
      */
-    public List<Long> getExpendedDelays() {
+    public List<Long> getExpandedDelays() {
         ImmutableList.Builder<Long> builder = ImmutableList.builder();
         for (Delay delay: delays) {
             builder.addAll(delay.getExpendendDelays());

@@ -27,8 +27,6 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 
@@ -45,7 +43,6 @@ import com.google.common.base.Strings;
  * </code></pre>
  */
 public class MailAttributesToMimeHeaders extends GenericMailet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MailAttributesToMimeHeaders.class);
 
     private Map<String, String> mappings;
 
@@ -61,20 +58,16 @@ public class MailAttributesToMimeHeaders extends GenericMailet {
     }
 
     @Override
-    public void service(Mail mail) {
-        try {
-            MimeMessage message = mail.getMessage();
-            for (Entry<String, String> entry : mappings.entrySet()) {
-                String value = (String) mail.getAttribute(entry.getKey());
-                if (value != null) {
-                    String headerName = entry.getValue();
-                    message.addHeader(headerName, value);
-                }
+    public void service(Mail mail) throws MessagingException {
+        MimeMessage message = mail.getMessage();
+        for (Entry<String, String> entry : mappings.entrySet()) {
+            String value = (String) mail.getAttribute(entry.getKey());
+            if (value != null) {
+                String headerName = entry.getValue();
+                message.addHeader(headerName, value);
             }
-            message.saveChanges();
-        } catch (MessagingException e) {
-            LOGGER.error("Encountered exception", e);
         }
+        message.saveChanges();
     }
 
 }

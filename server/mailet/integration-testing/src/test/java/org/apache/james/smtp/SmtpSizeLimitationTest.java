@@ -19,100 +19,41 @@
 
 package org.apache.james.smtp;
 
-import org.apache.james.MemoryJamesServerMain;
+import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
+import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
+import static org.apache.james.mailets.configuration.Constants.PASSWORD;
+import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
+import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
+
 import org.apache.james.mailets.TemporaryJamesServer;
-import org.apache.james.mailets.configuration.CommonProcessors;
-import org.apache.james.mailets.configuration.MailetConfiguration;
-import org.apache.james.mailets.configuration.MailetContainer;
-import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.probe.DataProbe;
-import org.apache.james.transport.mailets.LocalDelivery;
-import org.apache.james.transport.mailets.RemoveMimeHeader;
-import org.apache.james.transport.mailets.ToProcessor;
-import org.apache.james.transport.matchers.All;
-import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Strings;
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
 
 public class SmtpSizeLimitationTest {
-    private static final String DEFAULT_DOMAIN = "james.org";
-    private static final String LOCALHOST_IP = "127.0.0.1";
-    private static final int SMTP_PORT = 1025;
-    private static final String PASSWORD = "secret";
-
-    private static final String JAMES_APACHE_ORG = "james.org";
-    private static final String USER = "user@" + JAMES_APACHE_ORG;
+    private static final String USER = "user@" + DEFAULT_DOMAIN;
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @Rule
+    public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
-    private ConditionFactory calmlyAwait;
-
-    @Before
-    public void setup() throws Exception {
-        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        calmlyAwait = Awaitility.with()
-            .pollInterval(slowPacedPollInterval)
-            .and()
-            .with()
-            .pollDelay(slowPacedPollInterval)
-            .await();
-    }
 
     private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
-        MailetContainer mailetContainer = MailetContainer.builder()
-            .postmaster("postmaster@" + DEFAULT_DOMAIN)
-            .threads(5)
-            .addProcessor(ProcessorConfiguration.builder()
-                .state("root")
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(All.class)
-                    .mailet(ToProcessor.class)
-                    .addProperty("processor", "transport")
-                    .build())
-                .build())
-            .addProcessor(CommonProcessors.error())
-            .addProcessor(ProcessorConfiguration.builder()
-                .state("transport")
-                .enableJmx(true)
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(All.class)
-                    .mailet(RemoveMimeHeader.class)
-                    .addProperty("name", "bcc")
-                    .build())
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(RecipientIsLocal.class)
-                    .mailet(LocalDelivery.class)
-                    .build())
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(All.class)
-                    .mailet(ToProcessor.class)
-                    .addProperty("processor", "bounces")
-                    .build())
-                .build())
-            .addProcessor(CommonProcessors.localAddressError())
-            .addProcessor(CommonProcessors.relayDenied())
-            .addProcessor(CommonProcessors.bounces())
-            .build();
         jamesServer = TemporaryJamesServer.builder()
-            .withBase(MemoryJamesServerMain.SMTP_ONLY_MODULE)
-            .withSmtpConfiguration(smtpConfiguration.build())
-            .build(temporaryFolder, mailetContainer);
+            .withSmtpConfiguration(smtpConfiguration)
+            .build(temporaryFolder);
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(JAMES_APACHE_ORG);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(USER, PASSWORD);
     }
 
@@ -129,12 +70,10 @@ public class SmtpSizeLimitationTest {
             .doNotVerifyIdentity()
             .withMaxMessageSizeInKb(10));
 
-        try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, USER, PASSWORD)) {
-
-            messageSender.sendMessageWithHeaders(USER, USER, Strings.repeat("Long message", 1024));
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageSendingFailed);
-        }
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .authenticate(USER, PASSWORD)
+            .sendMessageWithHeaders(USER, USER, Strings.repeat("Long message", 1024))
+            .awaitSentFail(awaitOneMinute);
     }
 
     @Test
@@ -143,11 +82,9 @@ public class SmtpSizeLimitationTest {
             .doNotVerifyIdentity()
             .withMaxMessageSizeInKb(10));
 
-        try (SMTPMessageSender messageSender =
-                 SMTPMessageSender.authentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG, USER, PASSWORD)) {
-
-            messageSender.sendMessageWithHeaders(USER, USER,"Short message");
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-        }
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .authenticate(USER, PASSWORD)
+            .sendMessageWithHeaders(USER, USER,"Short message")
+            .awaitSent(awaitOneMinute);
     }
 }

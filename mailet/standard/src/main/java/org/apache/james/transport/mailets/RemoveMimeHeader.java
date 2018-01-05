@@ -17,8 +17,6 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
 package org.apache.james.transport.mailets;
 
 import java.util.List;
@@ -29,8 +27,6 @@ import javax.mail.internet.MimeMessage;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -48,8 +44,6 @@ import com.google.common.collect.ImmutableList;
  * 
  */
 public class RemoveMimeHeader extends GenericMailet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RemoveMimeHeader.class);
-    
     private List<String> headers;
 
     @Override
@@ -67,15 +61,11 @@ public class RemoveMimeHeader extends GenericMailet {
     }
 
     @Override
-    public void service(Mail mail) {
-        try {
-            MimeMessage  message = mail.getMessage();
-            for (String header : headers) {
-                message.removeHeader(header);
-            }
-            message.saveChanges();
-        } catch (MessagingException e) {
-            LOGGER.error("Unable to remove headers: ", e);
+    public void service(Mail mail) throws MessagingException {
+        MimeMessage  message = mail.getMessage();
+        for (String header : headers) {
+            message.removeHeader(header);
         }
+        message.saveChanges();
     }
 }
