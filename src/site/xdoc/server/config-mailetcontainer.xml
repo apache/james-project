@@ -30,7 +30,7 @@
       <p>This documents explains how to configure Mail processing. Mails pass through the MailetContainer. The
           MailetContainer is a Matchers (condition for executing a mailet) and Mailets (execution units that perform
           actions based on incoming mail) pipeline arranged into processors (List of mailet/matcher pairs allowing
-          better logical organisation).</p>
+          better logical organisation). You can read more about these concepts on <a href="feature-mailetcontainer.html">the mailet container feature description</a>.</p>
 
       <p>Apache James Server includes a number of pre-packaged <a href="dev-provided-mailets.html">Mailets and Matchers</a>.</p>
 
