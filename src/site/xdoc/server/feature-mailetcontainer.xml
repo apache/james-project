@@ -122,12 +122,9 @@
         <p>The Mailet API is currently in its second revision.  Although, the Mailet API is expected to undergo substantial changes in the near future, it is our aim that existing Mailets that abided purely by the prior Mailet API interfaces will continue to run with the revised specification.</p>
     
         <p>The Javadoc for the Mailet API can be found <a href="http://james.apache.org/mailet/api/apidocs/">here</a>.</p>
-    
-        <p>James bundles a number of Matchers and Mailets in its distribution.  Descriptions of provided matchers 
-        can be found <a href="dev-provided-matchers.html">here</a>, while descriptions of provided mailets can be found 
-        <a href="dev-provided-mailets.html">here</a>.</p>
 
-        <p>You can retrieve the full list of mailets and matchers packaged in James <a href="dev-provided-mailets.html">here</a></p>
+        <p>James bundles a number of Matchers and Mailets in its distribution. You can retrieve the full list of mailets
+            and matchers packaged in James <a href="dev-provided-mailets.html">here</a></p>
 
         <p>You can read more on mailets on following web sites:</p>
     
