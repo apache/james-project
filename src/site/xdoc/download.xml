@@ -70,10 +70,8 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
       <li><a href='#Apache_Crypto_Mailets'>Apache James Crypto Mailets</a></li>
       <li><a href='#Apache_James_Protocols'>Apache James Protocols</a></li>
       <li><a href='#Apache_MPT'>Apache James MPT</a></li>
-      <li>Apache James IMAP 0.3 is available from the James Maven repositories (*)</li>
-      <li>Apache James Mailbox 0.4 is available from the James Maven repositories (*)</li>
+      <li><a href='#Apache_HUPA'>Apache James Hupa</a></li>
       <li>Apache MailetDoc Plugin for Maven is available from the standard Maven repositories (*)</li>
-      <li>Apache James Hupa is available from the James Maven repositories (*)</li>
     </ul>
  
     <p>(*) James maven repositories can be found on 
