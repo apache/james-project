@@ -268,28 +268,19 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
 
   <section name="Apache jSPF">
   
-    <p>Apache James jSPF 1.0.0 is the latest jSPF stable version:</p>
-    <ul>
-    
-    <li>Binary (ZIP Format): <a
-    href="[preferred]/james/jspf/1.0.0/apache-jspf-1.0.0-bin.zip">apache-jspf-1.0.0-bin.zip</a> [<a
-    href="http://www.apache.org/dist/james/jspf/1.0.0/apache-jspf-1.0.0-bin.zip.asc">PGP</a>]</li>
-    
-    <li>Binary (Unix TAR.GZ): <a
-    href="[preferred]/james/jspf/1.0.0/apache-jspf-1.0.0-bin.tar.gz">apache-jspf-1.0.0-bin.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/jspf/1.0.0/apache-jspf-1.0.0-bin.tar.gz.asc">PGP</a>]</li>
-    
-    <li>Source (Unix TAR.GZ): <a
-    href="[preferred]/james/jspf/1.0.0/apache-jspf-1.0.0-src.tar.gz">apache-jspf-1.0.0-src.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/jspf/1.0.0/apache-jspf-1.0.0-src.tar.gz.asc">PGP</a>]</li>
-    
-    <li>Source (ZIP Format): <a
-    href="[preferred]/james/jspf/1.0.0/apache-jspf-1.0.0-src.zip">apache-jspf-1.0.0-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/jspf/1.0.0/apache-jspf-1.0.0-src.zip.asc">PGP</a>]</li>
-    
-    <li><a href="[preferred]/james/jspf/1.0.0/">Other Binaries</a></li>
-    
-    </ul>
+    <p>Apache James jSPF 1.0.1 is the latest jSPF stable version.</p>
+
+    <p>You can directly use it with maven:</p>
+
+    <pre>
+      <code>
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james.jspf&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-jspf&lt;/artifactId&gt;
+    &lt;version&gt;1.0.1&lt;/version&gt;
+  &lt;/dependency&gt;
+      </code>
+    </pre>
   
   </section>
   
