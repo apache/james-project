@@ -334,119 +334,55 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
 
   <section name="Apache Mailet">
   
-    <p>Apache Mailet 2.4 is the latest stable version:</p>
-    <ul>
-    
-    <li>Binary (Unix TAR): <a
-    href="[preferred]/james/apache-mailet/2.4/apache-mailet-2.4.tar.gz">apache-mailet-2.4.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Binary (ZIP Format): <a
-    href="[preferred]/james/apache-mailet/2.4/apache-mailet-2.4.zip">apache-mailet-2.4.zip</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4.zip.md5">MD5</a>]</li>
-    
-    <li>Source (Unix TAR): <a
-    href="[preferred]/james/apache-mailet/2.4/apache-mailet-2.4-src.tar.gz">apache-mailet-2.4-src.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4-src.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4-src.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Source (ZIP Format): <a
-    href="[preferred]/james/apache-mailet/2.4/apache-mailet-2.4-src.zip">apache-mailet-2.4-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4-src.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4-src.zip.md5">MD5</a>]</li>
-    
-    <li><abbr title='Java ARchive'>JAR</abbr> library only: <a
-    href="[preferred]/james/apache-mailet/2.4/apache-mailet-2.4.jar">apache-mailet-2.4.jar</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4.jar.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4.jar.md5">MD5</a>]</li>
-    
-    </ul>
+    <p>Apache Mailet 3.0.1 is the latest stable version. You can use the mailet API using this maven dependency:</p>
+
+    <pre>
+      <code>
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-mailet-api&lt;/artifactId&gt;
+    &lt;version&gt;3.0.1&lt;/version&gt;
+  &lt;/dependency&gt;
+      </code>
+    </pre>
     
   </section>
 
   <section name="Apache Mailet Base">
-  
-    <p>Apache Mailet Base 1.1 is the latest stable version:</p>
-    <ul>
-    
-    <li>Binary (Unix TAR): <a
-    href="[preferred]/james/apache-mailet-base/1.1/apache-mailet-base-1.1-bin.tar.gz">apache-mailet-base-1.1.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1-bin.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1-bin.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Binary (ZIP Format): <a
-    href="[preferred]/james/apache-mailet-base/1.1/apache-mailet-base-1.1-bin.zip">apache-mailet-base-1.1.zip</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1-bin.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1-bin.zip.md5">MD5</a>]</li>
-    
-    <li>Source (Unix TAR): <a
-    href="[preferred]/james/apache-mailet-base/1.1/apache-mailet-base-1.1-src.tar.gz">apache-mailet-base-1.1-src.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1-src.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1-src.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Source (ZIP Format): <a
-    href="[preferred]/james/apache-mailet-base/1.1/apache-mailet-base-1.1-src.zip">apache-mailet-base-1.1-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1-src.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1-src.zip.md5">MD5</a>]</li>
-    
-    <li>Source (Jar Format): <a
-    href="[preferred]/james/apache-mailet-base/1.1/apache-mailet-base-1.1-sources.jar">apache-mailet-base-1.1-sources.jar</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1-sources.jar.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1-sources.jar.md5">MD5</a>]</li>
-    
-    <li><abbr title='Java ARchive'>JAR</abbr> library only: <a
-    href="[preferred]/james/apache-mailet-base/1.1/apache-mailet-base-1.1.jar">apache-mailet-base-1.1.jar</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1.jar.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1.jar.md5">MD5</a>]</li>
-    
-    </ul>
-  
+
+    <p>Apache Mailet Base 3.0.1 is the latest stable version. You can use Mailet Base content using this maven dependency:</p>
+
+    <pre>
+      <code>
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-mailet-base&lt;/artifactId&gt;
+    &lt;version&gt;3.0.1&lt;/version&gt;
+  &lt;/dependency&gt;
+      </code>
+    </pre>
+
   </section>
 
   <section name="Apache Mailet Standard">
-  
-    <p>Apache Mailet Standard 1.0 is the latest stable version:</p>
-    <ul>
-    
-    <li>Binary (Unix TAR): <a
-    href="[preferred]/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-bin.tar.gz">apache-standard-mailets-1.0.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-bin.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-bin.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Binary (ZIP Format): <a
-    href="[preferred]/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-bin.zip">apache-standard-mailets-1.0.zip</a> [<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-bin.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-bin.zip.md5">MD5</a>]</li>
-    
-    <li>Source (Unix TAR): <a
-    href="[preferred]/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-src.tar.gz">apache-standard-mailets-1.0-src.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-src.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-src.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Source (ZIP Format): <a
-    href="[preferred]/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-src.zip">apache-standard-mailets-1.0-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-src.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-src.zip.md5">MD5</a>]</li>
-    
-    <li>Source (Jar Format): <a
-    href="[preferred]/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-sources.jar">apache-standard-mailets-1.0-sources.jar</a> [<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-sources.jar.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-sources.jar.md5">MD5</a>]</li>
-    
-    <li><abbr title='Java ARchive'>JAR</abbr> library only: <a
-    href="[preferred]/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0.jar">apache-standard-mailets-1.0.jar</a> [<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0.jar.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0.jar.md5">MD5</a>]</li>
-    
-    </ul>
-  
+
+    <p>Apache Mailet Standard 3.0.1 is the latest stable version. You can use mailet Standard content using this maven dependency:</p>
+
+    <pre>
+      <code>
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-mailet-standard&lt;/artifactId&gt;
+    &lt;version&gt;3.0.1&lt;/version&gt;
+  &lt;/dependency&gt;
+      </code>
+    </pre>
+
   </section>
 
   <section name="Apache Crypto Mailets">
   
-    <p>Apache Crypto Mailets 1.0 is the latest stable version:</p>
+    <p>Apache Crypto Mailets 3.0.1 is the latest stable version.</p>
     
   <div class="ui-widget">
     <div class="ui-priority-secondary ui-corner-all apache-james-crypto-notice">
@@ -461,39 +397,18 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
       </ul>
     </div>
   </div>
-    <ul>
-    
-    <li>Binary (Unix TAR): <a
-    href="[preferred]/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-bin.tar.gz">apache-crypto-mailets-1.0.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-bin.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-bin.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Binary (ZIP Format): <a
-    href="[preferred]/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-bin.zip">apache-crypto-mailets-1.0.zip</a> [<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-bin.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-bin.zip.md5">MD5</a>]</li>
-    
-    <li>Source (Unix TAR): <a
-    href="[preferred]/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-src.tar.gz">apache-crypto-mailets-1.0-src.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-src.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-src.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Source (ZIP Format): <a
-    href="[preferred]/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-src.zip">apache-crypto-mailets-1.0-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-src.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-src.zip.md5">MD5</a>]</li>
-    
-    <li>Source (Jar Format): <a
-    href="[preferred]/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-sources.jar">apache-crypto-mailets-1.0-sources.jar</a> [<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-sources.jar.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-sources.jar.md5">MD5</a>]</li>
-    
-    <li><abbr title='Java ARchive'>JAR</abbr> library only: <a
-    href="[preferred]/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0.jar">apache-crypto-mailets-1.0.jar</a> [<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0.jar.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0.jar.md5">MD5</a>]</li>
-    
-    </ul>
+
+    <p>You can use Mailet AI content using this maven dependency:</p>
+
+    <pre>
+      <code>
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-mailet-ai&lt;/artifactId&gt;
+    &lt;version&gt;3.0.1&lt;/version&gt;
+  &lt;/dependency&gt;
+      </code>
+    </pre>
     
   </section>
 
