@@ -286,22 +286,19 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
   
   <section name="Apache jDKIM">
   
-    <p>Apache James jDKIM 0.2 is the latest jDKIM stable version:</p>
-    <ul>
-    
-    <li>Binary (ZIP Format): <a
-    href="[preferred]/james/jdkim/apache-jdkim-0.2-bin.zip">apache-jdkim-0.2-bin.zip</a> [<a
-    href="http://www.apache.org/dist/james/jdkim/apache-jdkim-0.2-bin.zip.asc">PGP</a>]</li>
-    
-    <li>Binary (Unix TAR.GZ): <a
-    href="[preferred]/james/jdkim/apache-jdkim-0.2-bin.tar.gz">apache-jdkim-0.2-bin.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/jdkim/apache-jdkim-0.2-bin.tar.gz.asc">PGP</a>]</li>
-    
-    <li>Source (ZIP Format): <a
-    href="[preferred]/james/jdkim/apache-jdkim-project-0.2-source-release.zip">apache-jdkim-project-0.2-source-release.zip</a> [<a
-    href="http://www.apache.org/dist/james/jdkim/apache-jdkim-project-0.2-source-release.zip.asc">PGP</a>]</li>
-    
-    </ul>
+    <p>Apache James jDKIM 0.2 is the latest jDKIM stable version.</p>
+
+    <p>You can directly use it with maven:</p>
+
+    <pre>
+      <code>
+        &lt;dependency&gt;
+        &lt;groupId&gt;org.apache.james.jdkim&lt;/groupId&gt;
+        &lt;artifactId&gt;apache-jdkim&lt;/artifactId&gt;
+        &lt;version&gt;0.2&lt;/version&gt;
+        &lt;/dependency&gt;
+      </code>
+    </pre>
   
   </section>
   
