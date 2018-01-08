@@ -226,28 +226,43 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
 
   <section name="Apache Mime4J">
   
-    <p>Apache Mime4J 0.7.2 is the latest stable version:</p>
-    <ul>
-    
-    <li>Binary (Unix TAR): <a
-    href="[preferred]/james/mime4j/0.7.2/apache-mime4j-0.7.2-bin.tar.gz">apache-mime4j-0.7.2-bin.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/mime4j/0.7.2/apache-mime4j-0.7.2-bin.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/mime4j/0.7.2/apache-mime4j-0.7.2-bin.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Binary (ZIP Format): <a
-    href="[preferred]/james/mime4j/0.7.2/apache-mime4j-0.7.2-bin.zip">apache-mime4j-0.7.2-bin.zip</a> [<a
-    href="http://www.apache.org/dist/james/mime4j/0.7.2/apache-mime4j-0.7.2-bin.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/mime4j/0.7.2/apache-mime4j-0.7.2-bin.zip.md5">MD5</a>]</li>
-    
-    <li>Source (ZIP Format): <a
-    href="[preferred]/james/mime4j/0.7.2/apache-mime4j-project-0.7.2-source-release.zip">apache-mime4j-0.7.2-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/mime4j/0.7.2/apache-mime4j-project-0.7.2-source-release.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/mime4j/0.7.2/apache-mime4j-project-0.7.2-source-release.zip.md5">MD5</a>]</li>
-    
-    <li><a
-    href="[preferred]/james/mime4j/">Other Files</a> (javadoc.jar, sha1 checksums...)</li>
-    
-    </ul>
+    <p>Apache Mime4J 0.8.1 is the latest stable version.</p>
+
+    <p>You can directly use the core library with maven:</p>
+
+    <pre>
+      <code>
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-mime4j-core&lt;/artifactId&gt;
+    &lt;version&gt;0.8.1&lt;/version&gt;
+  &lt;/dependency&gt;
+     </code>
+    </pre>
+
+    <p>In order to use Mime-4j DOM:</p>
+
+    <pre>
+      <code>
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-mime4j-dom&lt;/artifactId&gt;
+    &lt;version&gt;0.8.1&lt;/version&gt;
+  &lt;/dependency&gt;
+     </code>
+    </pre>
+
+    <p>An aggregator project is also available:</p>
+
+    <pre>
+      <code>
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-mime4j&lt;/artifactId&gt;
+    &lt;version&gt;0.8.1&lt;/version&gt;
+  &lt;/dependency&gt;
+     </code>
+    </pre>
   
   </section>
 
