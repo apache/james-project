@@ -490,6 +490,12 @@ public class FakeMailContext implements MailetContext {
                 .build());
     }
 
+    @Override
+    public void sendMail(Mail mail, String state, long delay, TimeUnit unit) throws MessagingException {
+        mail.setState(state);
+        sentMails.add(fromMail(mail)); // FIXME delay ignored here for now
+    }
+
     public void setAttribute(String name, Serializable object) {
         attributes.put(name,object);
     }
