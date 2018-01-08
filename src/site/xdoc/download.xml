@@ -307,30 +307,31 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
   
   <section name="Apache JSieve">
   
-    <p>Apache JSieve 0.5 is the latest stable version:</p>
-    <ul>
-    
-    <li>Binary (Unix TAR): <a
-    href="[preferred]/james/jsieve/0.5/apache-jsieve-all-0.5-bin.tar.gz">apache-jsieve-all-0.5-bin.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-bin.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-bin.tar.gz.asc.md5">MD5</a>]</li>
-    
-    <li>Binary (ZIP Format): <a
-    href="[preferred]/james/jsieve/0.5/apache-jsieve-all-0.5-bin.zip">apache-jsieve-all-0.5-bin.zip</a> [<a
-    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-bin.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-bin.zip.asc.md5">MD5</a>]</li>
-    
-    <li>Source (Unix TAR): <a
-    href="[preferred]/james/jsieve/0.5/apache-jsieve-all-0.5-src.tar.gz">apache-jsieve-all-0.5-src.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-src.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-src.tar.gz.asc.md5">MD5</a>]</li>
-    
-    <li>Source (ZIP Format): <a
-    href="[preferred]/james/jsieve/0.5/apache-jsieve-all-0.5-src.zip">apache-jsieve-all-0.5-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-src.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-src.zip.asc.md5">MD5</a>]</li>
-    
-    </ul>
+    <p>Apache JSieve 0.7 is the latest stable version.</p>
+
+    <p>You can directly use it with maven:</p>
+
+    <pre>
+      <code>
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-jsieve-core&lt;/artifactId&gt;
+    &lt;version&gt;0.7&lt;/version&gt;
+  &lt;/dependency&gt;
+      </code>
+    </pre>
+
+    <p>An aggregator project is also available:</p>
+
+    <pre>
+      <code>
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-jsieve-all&lt;/artifactId&gt;
+    &lt;version&gt;0.7&lt;/version&gt;
+  &lt;/dependency&gt;
+      </code>
+    </pre>
   
   </section>
 
