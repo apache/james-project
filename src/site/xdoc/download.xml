@@ -414,19 +414,17 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
 
   <section name="Apache James Protocols">
   
-    <p>Apache James Protocols 1.6.2 is the latest stable version:</p>
+    <p>Apache James Protocols 3.0.1 is the latest stable version.</p>
+
     <ul>
-    <li>Source (Unix TAR): <a
-    href="[preferred]/james/protocols/1.6.3/protocols-1.6.2-source-release.tar.gz">protocols-1.6.2-source-release.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/protocols/1.6.3/protocols-1.6.2-source-release.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/protocols/1.6.3/protocols-1.6.2-source-release.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Source (ZIP Format): <a
-    href="[preferred]/james/protocols/1.6.3/protocols-1.6.2-source-release.zip">protocols-1.6.2-source-release.zip</a> [<a
-    href="http://www.apache.org/dist/james/protocols/1.6.3/protocols-1.6.2-source-release.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/protocols/1.6.3/protocols-1.6.2-source-release.zip.md5">MD5</a>]</li>
-    <li>Jars (including source and javadocs) for the modules are distributed through the standard 
-    <a href='http://maven.apache.org'>Maven</a> repositories on <a href="http://repo1.maven.org/maven2/org/apache/james/protocols">http://repo1.maven.org/maven2/org/apache/james/protocols</a>.</li>
+      You can get the James implementation of various protocols using maven:
+      <li><a href="https://mvnrepository.com/artifact/org.apache.james.protocols/protocols-api/3.0.1">API</a></li>
+      <li><a href="https://mvnrepository.com/artifact/org.apache.james.protocols/protocols-netty/3.0.1">NETTY</a></li>
+      <li><a href="https://mvnrepository.com/artifact/org.apache.james.protocols/protocols-smtp/3.0.1">SMTP</a></li>
+      <li><a href="https://mvnrepository.com/artifact/org.apache.james.protocols/protocols-lmtp/3.0.1">LMTP</a></li>
+      <li><a href="https://mvnrepository.com/artifact/org.apache.james.protocols/protocols-imap/3.0.1">IMAP</a></li>
+      <li><a href="https://mvnrepository.com/artifact/org.apache.james.protocols/protocols-pop3/3.0.1">POP3</a></li>
+      <li><a href="https://mvnrepository.com/artifact/org.apache.james.protocols/protocols-managesieve/3.0.1">MANAGESIEVE</a></li>
     </ul>
   
   </section>
