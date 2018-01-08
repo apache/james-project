@@ -20,7 +20,7 @@ Just include something like this in your *pom.xml*
     <dependency>
         <groupId>org.apache.james</groupId>
         <artifactId>apache-mailet-api</artifactId>
-        <version>2.5.0</version>
+        <version>3.0.1</version>
     </dependency>
     <!-- other dependencies -->
 </dependencies>
