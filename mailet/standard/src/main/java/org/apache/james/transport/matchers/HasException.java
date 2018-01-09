@@ -17,8 +17,6 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
 package org.apache.james.transport.matchers;
 
 import java.util.Collection;
@@ -32,17 +30,23 @@ import org.apache.mailet.base.GenericMatcher;
 import com.google.common.collect.ImmutableList;
 
 /**
- * <p>This Matcher determines if the exception specified in the condition or
- * the subclasses of it has occured during the processing of the mail.
- * If true, all recipients are returned, else null.
- * This matcher presupposes that the exception occured has set at the attribute
+ * <p>
+ * This Matcher determines if the exception specified in the condition or the
+ * subclasses of it has occured during the processing of the mail. If true, all
+ * recipients are returned, else null. This matcher presupposes that the
+ * exception occured has set at the attribute
  * {@value org.apache.mailet.Mail#MAILET_ERROR_ATTRIBUTE_NAME} in the process.
  * </p>
  * 
- * <p>Sample configuration:</p>
- * <pre><code>
+ * <p>
+ * Sample configuration:
+ * </p>
+ * 
+ * <pre>
+ * <code>
  * &lt;mailet match="HasException=org.apache.james.managesieve.api.ManageSieveException" class=&quot;&lt;any-class&gt;&quot;&gt;
- * </code></pre>
+ * </code>
+ * </pre>
  *
  * @version CVS $Revision$ $Date$
  * @since 3.0.2
@@ -55,13 +59,15 @@ public class HasException extends GenericMatcher {
     private Class<? extends Throwable> exceptionClass;
 
     /**
-     * <p>Answers the recipients of the mail if the specified exception or
-     * the subclasses of it has occured.</p>
+     * <p>
+     * Answers the recipients of the mail if the specified exception or the
+     * subclasses of it has occured.
+     * </p>
      * 
      * @param mail
      */
-    public Collection<MailAddress> match(Mail mail) throws MessagingException
-    {
+    @Override
+    public Collection<MailAddress> match(Mail mail) throws MessagingException {
         Object exceptionValue = mail.getAttribute(Mail.MAILET_ERROR_ATTRIBUTE_NAME);
 
         if (exceptionValue != null && exceptionClass.isAssignableFrom(exceptionValue.getClass())) {
@@ -72,8 +78,8 @@ public class HasException extends GenericMatcher {
     }
 
     @SuppressWarnings("unchecked")
-    public void init() throws MessagingException
-    {
+    @Override
+    public void init() throws MessagingException {
         String exceptionClassName = getCondition().trim();
 
         try {
@@ -84,15 +90,11 @@ public class HasException extends GenericMatcher {
                 throw new MessagingException("Specified class name is not a throwable.");
             }
         } catch (ClassNotFoundException e) {
-            throw new MessagingException("Specified exception class not found.");
+            throw new MessagingException("Specified exception class not found.", e);
         }
     }
-    
-    /**
-     * Return a string describing this matcher.
-     *
-     * @return a string describing this matcher
-     */
+
+    @Override
     public String getMatcherInfo() {
         return "Specified Exception Has Occured Matcher";
     }
