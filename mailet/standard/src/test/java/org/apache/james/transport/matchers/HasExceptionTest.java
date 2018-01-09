@@ -154,8 +154,6 @@ public class HasExceptionTest {
                 .condition("MessagingException")
                 .build();
 
-        testee.init(matcherConfig);
-
-        assertThat(testee.match(mockedMail)).containsExactlyElementsOf(mockedMail.getRecipients());
+        assertThatThrownBy(() -> testee.init(matcherConfig)).isInstanceOf(MessagingException.class);
     }
 }
