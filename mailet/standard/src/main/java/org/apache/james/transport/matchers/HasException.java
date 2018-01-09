@@ -23,18 +23,18 @@ import java.util.Collection;
 
 import javax.mail.MessagingException;
 
-import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
 import com.google.common.collect.ImmutableList;
 
 /**
  * <p>
- * This Matcher determines if the exception specified in the condition or the
- * subclasses of it has occured during the processing of the mail. If true, all
- * recipients are returned, else null. This matcher presupposes that the
- * exception occured has set at the attribute
+ * This Matcher determines if the exception specified in the condition or
+ * the subclasses of it has occured during the processing of the mail.
+ * If true, all recipients are returned, else null. This matcher presupposes
+ * that the exception has been captured as a Mail attribute
  * {@value org.apache.mailet.Mail#MAILET_ERROR_ATTRIBUTE_NAME} in the process.
  * </p>
  * 
@@ -48,7 +48,6 @@ import com.google.common.collect.ImmutableList;
  * </code>
  * </pre>
  *
- * @version CVS $Revision$ $Date$
  * @since 3.0.2
  **/
 public class HasException extends GenericMatcher {
@@ -60,7 +59,7 @@ public class HasException extends GenericMatcher {
 
     /**
      * <p>
-     * Answers the recipients of the mail if the specified exception or the
+     * Returns the recipients of the mail if the specified exception or the
      * subclasses of it has occured.
      * </p>
      * 
@@ -77,25 +76,27 @@ public class HasException extends GenericMatcher {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void init() throws MessagingException {
-        String exceptionClassName = getCondition().trim();
-
         try {
-            Class<?> exceptionClass = Class.forName(exceptionClassName);
-            if (Throwable.class.isAssignableFrom(exceptionClass)) {
-                this.exceptionClass = (Class<? extends Throwable>) exceptionClass;
-            } else {
-                throw new MessagingException("Specified class name is not a throwable.");
-            }
+            String exceptionClassName = getCondition().trim();
+            this.exceptionClass = castToThrowable(Class.forName(exceptionClassName));
         } catch (ClassNotFoundException e) {
             throw new MessagingException("Specified exception class not found.", e);
         }
     }
-
+    
     @Override
     public String getMatcherInfo() {
         return "Specified Exception Has Occured Matcher";
+    }
+    
+    @SuppressWarnings("unchecked")
+    private static Class<? extends Throwable> castToThrowable(Class<?> cls) throws MessagingException {
+        if (Throwable.class.isAssignableFrom(cls)) {
+            return (Class<? extends Throwable>)cls;
+        } else {
+            throw new MessagingException("Specified class name is not a Throwable.");
+        }
     }
 }

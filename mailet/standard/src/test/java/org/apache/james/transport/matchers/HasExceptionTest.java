@@ -36,93 +36,126 @@ import org.junit.Test;
 public class HasExceptionTest {
 
     private FakeMail mockedMail;
-    private Matcher matcher;
+    private Matcher testee;
 
     @Before
     public void setUp() throws Exception {
         MimeMessage mimeMessage = MailUtil.createMimeMessage();
         mockedMail = MailUtil.createMockMail2Recipients(mimeMessage);
-        matcher = new HasException();
+        testee = new HasException();
     }
 
     @Test
     public void matchShouldReturnAddressesWhenSpecifiedExceptionHasOccurred() throws MessagingException {
         mockedMail.setAttribute(Mail.MAILET_ERROR_ATTRIBUTE_NAME, new javax.mail.internet.AddressException());
 
-        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder().matcherName("HasException")
-                .condition("javax.mail.internet.AddressException").build();
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+                .matcherName("HasException")
+                .condition("javax.mail.internet.AddressException")
+                .build();
 
-        matcher.init(matcherConfig);
+        testee.init(matcherConfig);
 
-        assertThat(matcher.match(mockedMail)).containsExactlyElementsOf(mockedMail.getRecipients());
+        assertThat(testee.match(mockedMail)).containsExactlyElementsOf(mockedMail.getRecipients());
     }
 
     @Test
     public void matchShouldReturnAddressesWhenSubclassOfSpecifiedExceptionHasOccurred() throws MessagingException {
         mockedMail.setAttribute(Mail.MAILET_ERROR_ATTRIBUTE_NAME, new javax.mail.internet.AddressException());
 
-        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder().matcherName("HasException")
-                .condition("javax.mail.MessagingException").build();
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+                .matcherName("HasException")
+                .condition("javax.mail.MessagingException")
+                .build();
 
-        matcher.init(matcherConfig);
+        testee.init(matcherConfig);
 
-        assertThat(matcher.match(mockedMail)).containsExactlyElementsOf(mockedMail.getRecipients());
+        assertThat(testee.match(mockedMail)).containsExactlyElementsOf(mockedMail.getRecipients());
     }
 
     @Test
     public void matchShouldReturnEmptyWhenOtherExceptionHasOccurred() throws MessagingException {
         mockedMail.setAttribute(Mail.MAILET_ERROR_ATTRIBUTE_NAME, new java.lang.RuntimeException());
 
-        matcher.init(FakeMatcherConfig.builder().matcherName("HasException").condition("javax.mail.MessagingException")
+        testee.init(FakeMatcherConfig.builder()
+                .matcherName("HasException")
+                .condition("javax.mail.MessagingException")
                 .build());
 
-        assertThat(matcher.match(mockedMail)).isEmpty();
+        assertThat(testee.match(mockedMail)).isEmpty();
     }
 
     @Test
     public void matchShouldReturnEmptyWhenSuperclassOfSpecifiedExceptionHasOccurred() throws MessagingException {
         mockedMail.setAttribute(Mail.MAILET_ERROR_ATTRIBUTE_NAME, new javax.mail.MessagingException());
 
-        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder().matcherName("HasException")
-                .condition("javax.mail.internet.AddressException").build();
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+                .matcherName("HasException")
+                .condition("javax.mail.internet.AddressException")
+                .build();
 
-        matcher.init(matcherConfig);
+        testee.init(matcherConfig);
 
-        assertThat(matcher.match(mockedMail)).isEmpty();
+        assertThat(testee.match(mockedMail)).isEmpty();
     }
 
     @Test
     public void matchShouldReturnEmptyWhenNoExceptionHasOccurred() throws MessagingException {
-        matcher.init(FakeMatcherConfig.builder().matcherName("HasException").condition("java.lang.Exception").build());
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+                .matcherName("HasException")
+                .condition("java.lang.Exception")
+                .build();
 
-        assertThat(matcher.match(mockedMail)).isEmpty();
+        testee.init(matcherConfig);
+
+        assertThat(testee.match(mockedMail)).isEmpty();
     }
 
     @Test
     public void matchShouldReturnEmptyWhenNonExceptionIsAttached() throws MessagingException {
         mockedMail.setAttribute(Mail.MAILET_ERROR_ATTRIBUTE_NAME, new java.lang.String());
 
-        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder().matcherName("HasException")
-                .condition("java.lang.Exception").build();
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+                .matcherName("HasException")
+                .condition("java.lang.Exception")
+                .build();
 
-        matcher.init(matcherConfig);
+        testee.init(matcherConfig);
 
-        assertThat(matcher.match(mockedMail)).isEmpty();
+        assertThat(testee.match(mockedMail)).isEmpty();
     }
 
     @Test
     public void initShouldRaiseMessagingExceptionWhenInvalidClassName() throws MessagingException {
-        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder().matcherName("HasException")
-                .condition("java.lang.InvalidClassName").build();
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+                .matcherName("HasException")
+                .condition("java.lang.InvalidClassName")
+                .build();
 
-        assertThatThrownBy(() -> matcher.init(matcherConfig)).isInstanceOf(MessagingException.class);
+        assertThatThrownBy(() -> testee.init(matcherConfig)).isInstanceOf(MessagingException.class);
     }
 
     @Test
     public void initShouldRaiseMessagingExceptionWhenClassNameIsNotException() throws MessagingException {
-        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder().matcherName("HasException")
-                .condition("java.lang.String").build();
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+                .matcherName("HasException")
+                .condition("java.lang.String")
+                .build();
 
-        assertThatThrownBy(() -> matcher.init(matcherConfig)).isInstanceOf(MessagingException.class);
+        assertThatThrownBy(() -> testee.init(matcherConfig)).isInstanceOf(MessagingException.class);
+    }
+    
+    @Test
+    public void initShouldRaiseMessagingExceptionWhenClassNameIsNotFullyQualified() throws MessagingException {
+        mockedMail.setAttribute(Mail.MAILET_ERROR_ATTRIBUTE_NAME, new javax.mail.MessagingException());
+
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+                .matcherName("HasException")
+                .condition("MessagingException")
+                .build();
+
+        testee.init(matcherConfig);
+
+        assertThat(testee.match(mockedMail)).containsExactlyElementsOf(mockedMail.getRecipients());
     }
 }
