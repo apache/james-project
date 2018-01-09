@@ -87,31 +87,34 @@ public class CassandraMailboxModule extends AbstractModule {
         install(new DefaultEventModule());
         install(new CassandraQuotaModule());
 
-        bind(CassandraMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
-        bind(CassandraMailboxManager.class).in(Scopes.SINGLETON);
-        bind(NoMailboxPathLocker.class).in(Scopes.SINGLETON);
-        bind(CassandraSubscriptionManager.class).in(Scopes.SINGLETON);
-        bind(CassandraModSeqProvider.class).in(Scopes.SINGLETON);
-        bind(CassandraUidProvider.class).in(Scopes.SINGLETON);
-        bind(UserRepositoryAuthenticator.class).in(Scopes.SINGLETON);
-        bind(UserRepositoryAuthorizator.class).in(Scopes.SINGLETON);
-        bind(CassandraId.Factory.class).in(Scopes.SINGLETON);
-        bind(CassandraMessageId.Factory.class).in(Scopes.SINGLETON);
+        bind(CassandraAttachmentDAO.class).in(Scopes.SINGLETON);
+        bind(CassandraAttachmentDAOV2.class).in(Scopes.SINGLETON);
+        bind(CassandraAttachmentMessageIdDAO.class).in(Scopes.SINGLETON);
+        bind(CassandraBlobsDAO.class).in(Scopes.SINGLETON);
+        bind(CassandraMessageDAO.class).in(Scopes.SINGLETON);
         bind(CassandraMessageIdDAO.class).in(Scopes.SINGLETON);
         bind(CassandraMessageIdToImapUidDAO.class).in(Scopes.SINGLETON);
-        bind(MailboxEventDispatcher.class).in(Scopes.SINGLETON);
-        bind(StoreMessageIdManager.class).in(Scopes.SINGLETON);
-        bind(StoreAttachmentManager.class).in(Scopes.SINGLETON);
-        bind(CassandraMailboxMapper.class).in(Scopes.SINGLETON);
-        bind(CassandraMessageDAO.class).in(Scopes.SINGLETON);
-        bind(CassandraBlobsDAO.class).in(Scopes.SINGLETON);
-        bind(CassandraAttachmentDAO.class).in(Scopes.SINGLETON);
-        bind(CassandraAttachmentMessageIdDAO.class).in(Scopes.SINGLETON);
-        bind(CassandraAttachmentDAOV2.class).in(Scopes.SINGLETON);
         bind(CassandraUserMailboxRightsDAO.class).in(Scopes.SINGLETON);
-        bind(CassandraACLMapper.class).in(Scopes.SINGLETON);
+
+        bind(CassandraMailboxManager.class).in(Scopes.SINGLETON);
+        bind(CassandraSubscriptionManager.class).in(Scopes.SINGLETON);
+        bind(StoreAttachmentManager.class).in(Scopes.SINGLETON);
         bind(StoreBlobManager.class).in(Scopes.SINGLETON);
+        bind(StoreMessageIdManager.class).in(Scopes.SINGLETON);
         bind(StoreRightManager.class).in(Scopes.SINGLETON);
+
+        bind(CassandraACLMapper.class).in(Scopes.SINGLETON);
+        bind(CassandraMailboxMapper.class).in(Scopes.SINGLETON);
+
+        bind(CassandraId.Factory.class).in(Scopes.SINGLETON);
+        bind(CassandraMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
+        bind(CassandraMessageId.Factory.class).in(Scopes.SINGLETON);
+        bind(CassandraModSeqProvider.class).in(Scopes.SINGLETON);
+        bind(CassandraUidProvider.class).in(Scopes.SINGLETON);
+        bind(MailboxEventDispatcher.class).in(Scopes.SINGLETON);
+        bind(NoMailboxPathLocker.class).in(Scopes.SINGLETON);
+        bind(UserRepositoryAuthenticator.class).in(Scopes.SINGLETON);
+        bind(UserRepositoryAuthorizator.class).in(Scopes.SINGLETON);
 
         bind(BlobManager.class).to(StoreBlobManager.class);
         bind(MessageMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
