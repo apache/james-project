@@ -28,6 +28,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 
+import javax.mail.MessagingException;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -202,6 +204,41 @@ public abstract class AbstractStateMailetProcessorTest {
         latch.await();
         processor.destroy();
 
+    }
+
+    @Test
+    public void matcherProcessingShouldCaptureExceptionAsMailAttributeWhenMatcherThrows() throws Exception {
+        final CountDownLatch latch = new CountDownLatch(1);
+        final MailImpl mail = new MailImpl();
+        mail.setName(MailImpl.getId());
+        mail.setSender(new MailAddress("test@localhost"));
+        mail.setRecipients(Arrays.asList(new MailAddress("test@localhost"), new MailAddress("test2@localhost")));
+
+        AbstractStateMailetProcessor processor = createProcessor(createConfig(ExceptionThrowingMatcher.class,
+                MockMailet.class, 0));
+        processor.addListener(new MailetProcessorListener() {
+
+            @Override
+            public void afterMatcher(Matcher m, String mailName, Collection<MailAddress> recipients,
+                                     Collection<MailAddress> matches, long processTime, Exception e) {
+                if (ExceptionThrowingMatcher.class.equals(m.getClass())) {
+                    latch.countDown();
+                }
+
+            }
+
+            @Override
+            public void afterMailet(Mailet m, String mailName, String state, long processTime, Exception e) {
+                throw new RuntimeException("Should not call any mailet!");
+            }
+        });
+
+        processor.service(mail);
+
+        // the source mail should have captured the exception which was thrown
+        assertEquals(MessagingException.class, mail.getAttribute(Mail.MAILET_ERROR_ATTRIBUTE_NAME).getClass());
+        latch.await();
+        processor.destroy();
     }
 
     @Test

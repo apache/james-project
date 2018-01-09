@@ -63,6 +63,7 @@ public class ProcessorUtil {
         String errorString = sout.toString();
         mail.setErrorMessage(errorString);
         logger.error(errorString);
+        mail.setAttribute(Mail.MAILET_ERROR_ATTRIBUTE_NAME, me);
     }
 
     /**
