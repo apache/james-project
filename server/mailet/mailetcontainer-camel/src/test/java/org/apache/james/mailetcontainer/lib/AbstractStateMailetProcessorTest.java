@@ -28,6 +28,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 
+import javax.mail.MessagingException;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -198,6 +200,7 @@ public abstract class AbstractStateMailetProcessorTest {
 
         // the source mail should have state error as the exception was thrown
         assertEquals(Mail.ERROR, mail.getState());
+        assertEquals(MessagingException.class, mail.getAttribute(Mail.MAILET_ERROR_ATTRIBUTE_NAME));
         latch.await();
         processor.destroy();
 
