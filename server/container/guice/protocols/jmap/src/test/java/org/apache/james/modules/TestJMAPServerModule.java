@@ -44,9 +44,9 @@ public class TestJMAPServerModule extends AbstractModule{
             "kwIDAQAB\n" +
             "-----END PUBLIC KEY-----";
 
-    private final int maximumLimit;
+    private final long maximumLimit;
 
-    public TestJMAPServerModule(int maximumLimit) {
+    public TestJMAPServerModule(long maximumLimit) {
         this.maximumLimit = maximumLimit;
     }
 

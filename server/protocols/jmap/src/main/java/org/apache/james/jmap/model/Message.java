@@ -65,7 +65,7 @@ public class Message {
         private final ImmutableList.Builder<Emailer> replyTo;
         private String subject;
         private Instant date;
-        private Long size;
+        private Number size;
         private String preview;
         private Optional<String> textBody = Optional.empty();
         private Optional<String> htmlBody = Optional.empty();
@@ -163,7 +163,7 @@ public class Message {
         }
 
         public Builder size(long size) {
-            this.size = size;
+            this.size = Number.BOUND_SANITIZING_FACTORY.from(size);
             return this;
         }
 
@@ -244,7 +244,7 @@ public class Message {
     private final ImmutableList<Emailer> replyTo;
     private final String subject;
     private final Instant date;
-    private final long size;
+    private final Number size;
     private final String preview;
     private final Optional<String> textBody;
     private final Optional<String> htmlBody;
@@ -266,7 +266,7 @@ public class Message {
                                ImmutableList<Emailer> replyTo,
                                String subject,
                                Instant date,
-                               long size,
+                               Number size,
                                String preview,
                                Optional<String> textBody,
                                Optional<String> htmlBody,
@@ -372,7 +372,7 @@ public class Message {
         return date;
     }
 
-    public long getSize() {
+    public Number getSize() {
         return size;
     }
 

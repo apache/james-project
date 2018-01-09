@@ -89,7 +89,11 @@ public class CassandraMailboxCounterDAO {
     public CompletableFuture<Optional<Long>> countMessagesInMailbox(Mailbox mailbox) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
-        return cassandraAsyncExecutor.executeSingleRow(bindWithMailbox(mailboxId, readStatement))
+        return countMessagesInMailbox(mailboxId);
+    }
+
+    public CompletableFuture<Optional<Long>> countMessagesInMailbox(CassandraId cassandraId) {
+        return cassandraAsyncExecutor.executeSingleRow(bindWithMailbox(cassandraId, readStatement))
             .thenApply(optional -> optional.map(row -> row.getLong(CassandraMailboxCountersTable.COUNT)));
     }
 

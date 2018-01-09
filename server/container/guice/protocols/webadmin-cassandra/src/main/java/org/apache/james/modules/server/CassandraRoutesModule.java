@@ -26,6 +26,7 @@ import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.mailbox.cassandra.mail.migration.AttachmentMessageIdCreation;
 import org.apache.james.mailbox.cassandra.mail.migration.AttachmentV2Migration;
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.routes.CassandraMailboxMergingRoutes;
 import org.apache.james.webadmin.routes.CassandraMigrationRoutes;
 
 import com.google.inject.AbstractModule;
@@ -42,10 +43,12 @@ public class CassandraRoutesModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(CassandraRoutesModule.class).in(Scopes.SINGLETON);
+        bind(CassandraMailboxMergingRoutes.class).in(Scopes.SINGLETON);
         bind(CassandraMigrationService.class).in(Scopes.SINGLETON);
 
         Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
         routesMultibinder.addBinding().to(CassandraMigrationRoutes.class);
+        routesMultibinder.addBinding().to(CassandraMailboxMergingRoutes.class);
 
         MapBinder<SchemaVersion, Migration> allMigrationClazzBinder = MapBinder.newMapBinder(binder(), SchemaVersion.class, Migration.class);
         allMigrationClazzBinder.addBinding(FROM_V2_TO_V3).toInstance(() -> Migration.Result.COMPLETED);

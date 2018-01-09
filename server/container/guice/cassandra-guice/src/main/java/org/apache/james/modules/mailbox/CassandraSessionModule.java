@@ -39,7 +39,9 @@ import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManage
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.store.BatchSizes;
+import org.apache.james.server.CassandraProbe;
 import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,6 +93,8 @@ public class CassandraSessionModule extends AbstractModule {
         bind(CassandraSchemaVersionDAO.class).in(Scopes.SINGLETON);
 
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(CassandraSchemaChecker.class);
+
+        Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(CassandraProbe.class);
     }
 
     @Provides

@@ -53,7 +53,8 @@ public class AttachmentTest {
     
     @Test
     public void buildShouldWorkWhenMandatoryFieldsArePresent() {
-        Attachment expected = new Attachment(BlobId.of("blobId"), "type", Optional.empty(), 123, Optional.empty(), false, Optional.empty(), Optional.empty());
+        Number attachmentSize = Number.fromLong(123);
+        Attachment expected = new Attachment(BlobId.of("blobId"), "type", Optional.empty(), attachmentSize, Optional.empty(), false, Optional.empty(), Optional.empty());
         Attachment tested = Attachment.builder()
             .blobId(BlobId.of("blobId"))
             .type("type")
@@ -64,7 +65,11 @@ public class AttachmentTest {
 
     @Test
     public void buildShouldWorkWithAllFieldsSet() {
-        Attachment expected = new Attachment(BlobId.of("blobId"), "type", Optional.of("name"), 123, Optional.of("cid"), true, Optional.of(456L), Optional.of(789L));
+        Number attachmentSize = Number.fromLong(123);
+        Optional<Number> attachmentWidth = Optional.of(Number.fromLong(456L));
+        Optional<Number> attachmentHeight = Optional.of(Number.fromLong(789L));
+        Attachment expected = new Attachment(BlobId.of("blobId"), "type", Optional.of("name"), attachmentSize, Optional.of("cid"), true,
+            attachmentWidth, attachmentHeight);
         Attachment tested = Attachment.builder()
             .blobId(BlobId.of("blobId"))
             .type("type")
