@@ -23,12 +23,12 @@ import org.apache.james.CassandraJmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.ContainerLifecycleConfiguration;
-import org.apache.james.jmap.UserProvisionningConcurrencyTest;
+import org.apache.james.jmap.ProvisioningTest;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
 
-public class CassandraUserProvisionningConcurrencyTest extends UserProvisionningConcurrencyTest {
+public class CassandraProvisioningTest extends ProvisioningTest {
 
     @ClassRule
     public static DockerCassandraRule cassandra = new DockerCassandraRule();

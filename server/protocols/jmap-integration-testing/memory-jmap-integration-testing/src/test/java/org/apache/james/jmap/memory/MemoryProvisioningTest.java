@@ -21,10 +21,10 @@ package org.apache.james.jmap.memory;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
-import org.apache.james.jmap.UserProvisionningConcurrencyTest;
+import org.apache.james.jmap.ProvisioningTest;
 import org.junit.Rule;
 
-public class MemoryUserProvisionningConcurrencyTest extends UserProvisionningConcurrencyTest {
+public class MemoryProvisioningTest extends ProvisioningTest {
     @Rule
     public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
 

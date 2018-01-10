@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
@@ -43,7 +44,7 @@ import org.junit.Test;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 
-public abstract class UserProvisioningConcurrencyTest {
+public abstract class ProvisioningTest {
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
     private static final String DOMAIN = "mydomain.tld";
@@ -97,7 +98,20 @@ public abstract class UserProvisioningConcurrencyTest {
             .body(NAME, equalTo("mailboxes"))
             .body(ARGUMENTS + ".list", hasSize(5))
             .body(ARGUMENTS + ".list.name", hasItems(DefaultMailboxes.DEFAULT_MAILBOXES.toArray()));
+    }
 
+    @Test
+    public void provisionMailboxesShouldSubscribeToThem() throws Exception {
+        String token = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USER, PASSWORD).serialize();
+
+        with()
+            .header("Authorization", token)
+            .body("[[\"getMailboxes\", {}, \"#0\"]]")
+            .post("/jmap");
+
+        assertThat(jmapServer.getProbe(MailboxProbeImpl.class)
+            .listSubscriptions(USER))
+            .containsOnlyElementsOf(DefaultMailboxes.DEFAULT_MAILBOXES);
     }
 
     private URIBuilder baseUri() {
