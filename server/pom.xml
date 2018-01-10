@@ -80,6 +80,8 @@
         <module>mailet/mailetcontainer-camel</module>
         <module>mailet/mailets</module>
 
+        <module>mailrepository/mailrepository-api</module>
+
         <module>protocols/fetchmail</module>
         <module>protocols/jmap</module>
         <module>protocols/jmap-integration-testing</module>

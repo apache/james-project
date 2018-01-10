@@ -27,42 +27,15 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>james-server-data-api</artifactId>
+    <artifactId>james-server-mailrepository-api</artifactId>
     <packaging>bundle</packaging>
 
-    <name>Apache James :: Server :: Data  :: API</name>
+    <name>Apache James :: Server :: MailRepository :: API</name>
 
     <dependencies>
         <dependency>
-            <!-- only used by JamesUser (for MailAddress) -->
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-mailet-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-mailrepository-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.mail</groupId>
-            <artifactId>javax.mail</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>joda-time</groupId>
-            <artifactId>joda-time</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>nl.jqno.equalsverifier</groupId>
-            <artifactId>equalsverifier</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
