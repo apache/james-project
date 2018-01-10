@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.jmap;
 
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -28,8 +29,10 @@ import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxAnnotation;
@@ -56,12 +59,14 @@ public class DefaultMailboxesProvisioningFilterThreadTest {
     private DefaultMailboxesProvisioningFilter sut;
     private MailboxSession session;
     private MailboxManager mailboxManager;
+    private FakeSubscriptionManager subscriptionManager;
 
     @ThreadedBefore
     public void before() {
         session = new MockMailboxSession("username");
         mailboxManager = new FakeMailboxManager(session);
-        sut = new DefaultMailboxesProvisioningFilter(mailboxManager, new NoopMetricFactory());
+        subscriptionManager = new FakeSubscriptionManager();
+        sut = new DefaultMailboxesProvisioningFilter(mailboxManager, subscriptionManager, new NoopMetricFactory());
     }
     
     @ThreadedMain
@@ -84,7 +89,34 @@ public class DefaultMailboxesProvisioningFilterThreadTest {
         AnnotatedTestRunner runner = new AnnotatedTestRunner();
         runner.runTests(this.getClass(), DefaultMailboxesProvisioningFilter.class);
     }
-    
+
+    private static class FakeSubscriptionManager implements SubscriptionManager {
+        @Override
+        public void subscribe(MailboxSession session, String mailbox) throws SubscriptionException {
+
+        }
+
+        @Override
+        public Collection<String> subscriptions(MailboxSession session) throws SubscriptionException {
+            return null;
+        }
+
+        @Override
+        public void unsubscribe(MailboxSession session, String mailbox) throws SubscriptionException {
+
+        }
+
+        @Override
+        public void startProcessingRequest(MailboxSession session) {
+
+        }
+
+        @Override
+        public void endProcessingRequest(MailboxSession session) {
+
+        }
+    }
+
     private static class FakeMailboxManager implements MailboxManager {
         private MailboxSession mailboxSession;
 

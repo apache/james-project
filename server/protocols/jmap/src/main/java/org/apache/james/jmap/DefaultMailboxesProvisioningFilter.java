@@ -33,6 +33,7 @@ import javax.servlet.ServletResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSession.User;
+import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.model.MailboxId;
@@ -49,11 +50,16 @@ public class DefaultMailboxesProvisioningFilter implements Filter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultMailboxesProvisioningFilter.class);
     private final MailboxManager mailboxManager;
+    private final SubscriptionManager subscriptionManager;
     private final MetricFactory metricFactory;
 
     @Inject
-    @VisibleForTesting DefaultMailboxesProvisioningFilter(MailboxManager mailboxManager, MetricFactory metricFactory) {
+    @VisibleForTesting
+    DefaultMailboxesProvisioningFilter(MailboxManager mailboxManager,
+                                       SubscriptionManager subscriptionManager,
+                                       MetricFactory metricFactory) {
         this.mailboxManager = mailboxManager;
+        this.subscriptionManager = subscriptionManager;
         this.metricFactory = metricFactory;
     }
     
@@ -104,6 +110,9 @@ public class DefaultMailboxesProvisioningFilter implements Filter {
     private void createMailbox(MailboxPath mailboxPath, MailboxSession session) {
         try {
             Optional<MailboxId> mailboxId = mailboxManager.createMailbox(mailboxPath, session);
+            if (mailboxId.isPresent()) {
+                subscriptionManager.subscribe(session, mailboxPath.getName());
+            }
             LOGGER.info("Provisioning {}. {} created.", mailboxPath, mailboxId);
         } catch (MailboxExistsException e) {
             LOGGER.info("Mailbox {} have been created concurrently", mailboxPath);
