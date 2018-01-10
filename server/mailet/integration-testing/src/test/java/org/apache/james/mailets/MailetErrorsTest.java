@@ -39,6 +39,7 @@ import org.apache.james.transport.mailets.RuntimeErrorMailet;
 import org.apache.james.transport.mailets.RuntimeErrorMatcher;
 import org.apache.james.transport.mailets.ToRepository;
 import org.apache.james.transport.matchers.All;
+import org.apache.james.transport.matchers.HasException;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.junit.After;
@@ -375,6 +376,122 @@ public class MailetErrorsTest {
         awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
     }
 
+    @Test
+    public void hasExceptionMatcherShouldMatchWhenMatcherThrowsExceptionSpecified() throws Exception {
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(SMTP_ONLY_MODULE)
+            .withMailetContainer(MailetContainer.builder()
+                .putProcessor(CommonProcessors.deliverOnlyTransport())
+                .putProcessor(ProcessorConfiguration.error()
+                    .addMailet(MailetConfiguration.builder()
+                            .matcher(HasException.class)
+                            .matcherCondition("javax.mail.MessagingException")
+                            .mailet(ToRepository.class)
+                            .addProperty("repositoryPath", CUSTOM_REPOSITORY))
+                    .addMailet(MailetConfiguration.builder()
+                            .matcher(All.class)
+                            .mailet(ToRepository.class)
+                            .addProperty("repositoryPath", ERROR_REPOSITORY)))
+                .putProcessor(customProcessor())
+                .putProcessor(ProcessorConfiguration.root()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(ErrorMatcher.class)
+                        .mailet(Null.class))))
+            .build(temporaryFolder);
+        MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
+
+        smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
+
+        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
+    }
+    
+    @Test
+    public void hasExceptionMatcherShouldNotMatchWhenMatcherThrowsExceptionNotSpecified() throws Exception {
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(SMTP_ONLY_MODULE)
+            .withMailetContainer(MailetContainer.builder()
+                .putProcessor(CommonProcessors.deliverOnlyTransport())
+                .putProcessor(ProcessorConfiguration.error()
+                    .addMailet(MailetConfiguration.builder()
+                            .matcher(HasException.class)
+                            .matcherCondition("javax.mail.MessagingException")
+                            .mailet(ToRepository.class)
+                            .addProperty("repositoryPath", CUSTOM_REPOSITORY))
+                    .addMailet(MailetConfiguration.builder()
+                            .matcher(All.class)
+                            .mailet(ToRepository.class)
+                            .addProperty("repositoryPath", ERROR_REPOSITORY)))
+                .putProcessor(customProcessor())
+                .putProcessor(ProcessorConfiguration.root()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(RuntimeErrorMatcher.class)
+                        .mailet(Null.class))))
+            .build(temporaryFolder);
+        MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
+
+        smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
+
+        awaitOneMinute.until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
+    }
+    
+    @Test
+    public void hasExceptionMatcherShouldMatchWhenMailetThrowsExceptionSpecified() throws Exception {
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(SMTP_ONLY_MODULE)
+            .withMailetContainer(MailetContainer.builder()
+                .putProcessor(CommonProcessors.deliverOnlyTransport())
+                .putProcessor(ProcessorConfiguration.error()
+                    .addMailet(MailetConfiguration.builder()
+                            .matcher(HasException.class)
+                            .matcherCondition("javax.mail.MessagingException")
+                            .mailet(ToRepository.class)
+                            .addProperty("repositoryPath", CUSTOM_REPOSITORY))
+                    .addMailet(MailetConfiguration.builder()
+                            .matcher(All.class)
+                            .mailet(ToRepository.class)
+                            .addProperty("repositoryPath", ERROR_REPOSITORY)))
+                .putProcessor(customProcessor())
+                .putProcessor(ProcessorConfiguration.root()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(ErrorMailet.class))))
+            .build(temporaryFolder);
+        MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
+
+        smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
+
+        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
+    }
+    
+    @Test
+    public void hasExceptionMatcherShouldNotMatchWhenMailetThrowsExceptionNotSpecified() throws Exception {
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(SMTP_ONLY_MODULE)
+            .withMailetContainer(MailetContainer.builder()
+                .putProcessor(CommonProcessors.deliverOnlyTransport())
+                .putProcessor(ProcessorConfiguration.error()
+                    .addMailet(MailetConfiguration.builder()
+                            .matcher(HasException.class)
+                            .matcherCondition("javax.mail.MessagingException")
+                            .mailet(ToRepository.class)
+                            .addProperty("repositoryPath", CUSTOM_REPOSITORY))
+                    .addMailet(MailetConfiguration.builder()
+                            .matcher(All.class)
+                            .mailet(ToRepository.class)
+                            .addProperty("repositoryPath", ERROR_REPOSITORY)))
+                .putProcessor(customProcessor())
+                .putProcessor(ProcessorConfiguration.root()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(RuntimeErrorMailet.class))))
+            .build(temporaryFolder);
+        MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
+
+        smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
+
+        awaitOneMinute.until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
+    }
+    
     private ProcessorConfiguration.Builder errorProcessor() {
         return ProcessorConfiguration.error()
             .addMailet(MailetConfiguration.builder()
