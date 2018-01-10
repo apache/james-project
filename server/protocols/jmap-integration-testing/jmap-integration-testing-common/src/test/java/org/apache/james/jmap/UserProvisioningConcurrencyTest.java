@@ -43,7 +43,7 @@ import org.junit.Test;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 
-public abstract class UserProvisionningConcurrencyTest {
+public abstract class UserProvisioningConcurrencyTest {
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
     private static final String DOMAIN = "mydomain.tld";
