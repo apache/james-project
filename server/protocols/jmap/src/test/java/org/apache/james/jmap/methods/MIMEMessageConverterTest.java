@@ -21,6 +21,7 @@ package org.apache.james.jmap.methods;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -33,7 +34,6 @@ import org.apache.james.jmap.model.CreationMessageId;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
-import org.apache.james.mime4j.Charsets;
 import org.apache.james.mime4j.codec.EncoderUtil;
 import org.apache.james.mime4j.codec.EncoderUtil.Usage;
 import org.apache.james.mime4j.dom.Entity;
@@ -368,7 +368,7 @@ public class MIMEMessageConverterTest {
     public void convertToMimeShouldSetTextBodyWhenProvided() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
-        TextBody expected = new BasicBodyFactory().textBody("Hello all!", Charsets.UTF_8);
+        TextBody expected = new BasicBodyFactory().textBody("Hello all!", StandardCharsets.UTF_8);
 
         CreationMessage testMessage = CreationMessage.builder()
                 .mailboxId("dead-bada55")
@@ -389,7 +389,7 @@ public class MIMEMessageConverterTest {
     public void convertToMimeShouldSetEmptyBodyWhenNoBodyProvided() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
-        TextBody expected = new BasicBodyFactory().textBody("", Charsets.UTF_8);
+        TextBody expected = new BasicBodyFactory().textBody("", StandardCharsets.UTF_8);
 
         CreationMessage testMessage = CreationMessage.builder()
                 .mailboxId("dead-bada55")
@@ -409,7 +409,7 @@ public class MIMEMessageConverterTest {
     public void convertToMimeShouldSetHtmlBodyWhenProvided() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
-        TextBody expected = new BasicBodyFactory().textBody("Hello <b>all</b>!", Charsets.UTF_8);
+        TextBody expected = new BasicBodyFactory().textBody("Hello <b>all</b>!", StandardCharsets.UTF_8);
 
         CreationMessage testMessage = CreationMessage.builder()
                 .mailboxId("dead-bada55")
@@ -481,7 +481,7 @@ public class MIMEMessageConverterTest {
                 CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
-        String actual = new String(convert, Charsets.UTF_8);
+        String actual = new String(convert, StandardCharsets.UTF_8);
         assertThat(actual).startsWith(expectedHeaders);
         assertThat(actual).contains(expectedPart1);
         assertThat(actual).contains(expectedPart2);
@@ -531,7 +531,7 @@ public class MIMEMessageConverterTest {
     public void convertToMimeShouldSetEmptyHtmlBodyWhenProvided() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
-        TextBody expected = new BasicBodyFactory().textBody("", Charsets.UTF_8);
+        TextBody expected = new BasicBodyFactory().textBody("", StandardCharsets.UTF_8);
 
         CreationMessage testMessage = CreationMessage.builder()
                 .mailboxId("dead-bada55")
@@ -553,7 +553,7 @@ public class MIMEMessageConverterTest {
     public void convertToMimeShouldSetEmptyTextBodyWhenProvided() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
-        TextBody expected = new BasicBodyFactory().textBody("", Charsets.UTF_8);
+        TextBody expected = new BasicBodyFactory().textBody("", StandardCharsets.UTF_8);
 
         CreationMessage testMessage = CreationMessage.builder()
                 .mailboxId("dead-bada55")
@@ -586,7 +586,7 @@ public class MIMEMessageConverterTest {
         String expectedCID = "cid";
         String expectedMimeType = "image/png";
         String text = "123456";
-        TextBody expectedBody = new BasicBodyFactory().textBody(text.getBytes(), Charsets.UTF_8);
+        TextBody expectedBody = new BasicBodyFactory().textBody(text.getBytes(), StandardCharsets.UTF_8);
         MessageAttachment attachment = MessageAttachment.builder()
                 .attachment(org.apache.james.mailbox.model.Attachment.builder()
                     .attachmentId(AttachmentId.from("blodId"))
@@ -626,13 +626,13 @@ public class MIMEMessageConverterTest {
                 .textBody("Hello all!")
                 .htmlBody("Hello <b>all<b>!")
                 .build();
-        TextBody expectedTextBody = new BasicBodyFactory().textBody("Hello all!".getBytes(), Charsets.UTF_8);
-        TextBody expectedHtmlBody = new BasicBodyFactory().textBody("Hello <b>all<b>!".getBytes(), Charsets.UTF_8);
+        TextBody expectedTextBody = new BasicBodyFactory().textBody("Hello all!".getBytes(), StandardCharsets.UTF_8);
+        TextBody expectedHtmlBody = new BasicBodyFactory().textBody("Hello <b>all<b>!".getBytes(), StandardCharsets.UTF_8);
 
         String expectedCID = "cid";
         String expectedMimeType = "image/png";
         String text = "123456";
-        TextBody expectedAttachmentBody = new BasicBodyFactory().textBody(text.getBytes(), Charsets.UTF_8);
+        TextBody expectedAttachmentBody = new BasicBodyFactory().textBody(text.getBytes(), StandardCharsets.UTF_8);
         MessageAttachment attachment = MessageAttachment.builder()
                 .attachment(org.apache.james.mailbox.model.Attachment.builder()
                     .attachmentId(AttachmentId.from("blodId"))
@@ -689,7 +689,7 @@ public class MIMEMessageConverterTest {
         String expectedEncodedContent = "Some non-ASCII characters: =C3=A1=C3=84=C3=8E=C3=9F=C3=BF";
 
         // Then
-        String actual = new String(convert, Charsets.US_ASCII);
+        String actual = new String(convert, StandardCharsets.US_ASCII);
         assertThat(actual).contains(expectedEncodedContent);
     }
 
