@@ -20,6 +20,7 @@
 package org.apache.james.core.builder;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -50,6 +51,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class MimeMessageBuilder {
+
+    public static String asString(MimeMessage mimeMessage) throws Exception {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        mimeMessage.writeTo(byteArrayOutputStream);
+        return new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8);
+    }
 
     public static class Header {
         private final String name;
