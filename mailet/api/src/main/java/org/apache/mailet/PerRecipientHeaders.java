@@ -58,6 +58,10 @@ public class PerRecipientHeaders implements Serializable {
         headersByRecipient.put(recipient, header);
     }
 
+    public void addAll(PerRecipientHeaders other) {
+        headersByRecipient.putAll(other.headersByRecipient);
+    }
+
     public static class Header implements Serializable {
         private final String name;
         private final String value;

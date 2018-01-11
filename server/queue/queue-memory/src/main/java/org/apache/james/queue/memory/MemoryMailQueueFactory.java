@@ -17,13 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.server;
+package org.apache.james.queue.memory;
 
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
@@ -35,7 +36,6 @@ import org.apache.mailet.Mail;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Objects;
-import com.google.inject.Inject;
 
 public class MemoryMailQueueFactory implements MailQueueFactory {
 
@@ -90,6 +90,7 @@ public class MemoryMailQueueFactory implements MailQueueFactory {
             MailImpl mailImpl = MailImpl.duplicate(mail);
             mailImpl.setName(mail.getName());
             mailImpl.setState(mail.getState());
+            mailImpl.addAllSpecificHeaderForRecipient(mail.getPerRecipientSpecificHeaders());
             Optional.ofNullable(mail.getMessage())
                     .ifPresent(Throwing.consumer(message -> mailImpl.setMessage(new MimeMessage(message))));
             return mailImpl;
@@ -98,7 +99,7 @@ public class MemoryMailQueueFactory implements MailQueueFactory {
         @Override
         public MailQueueItem deQueue() throws MailQueueException, InterruptedException {
             while (true) {
-                MemoryMailQueueItem item = mailItems.take();
+                MemoryMailQueueItem item = mailItems.takeLast();
                 return mailQueueItemDecoratorFactory.decorate(item);
             }
         }

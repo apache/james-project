@@ -99,6 +99,7 @@
         <module>queue/queue-api</module>
         <module>queue/queue-file</module>
         <module>queue/queue-jms</module>
+        <module>queue/queue-memory</module>
 
         <module>task</module>
         <module>testing</module>

@@ -17,20 +17,38 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.server;
+package org.apache.james.queue.memory;
 
-import org.apache.james.queue.api.MailQueueFactory;
-import org.apache.james.queue.memory.MemoryMailQueueFactory;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
+import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class MemoryMailQueueModule extends AbstractModule {
+public class MemoryMailQueueFactoryTest {
 
-    @Override
-    protected void configure() {
-        bind(MemoryMailQueueFactory.class).in(Scopes.SINGLETON);
+    private static final String KEY = "key";
+    private static final String BIS = "keyBis";
 
-        bind(MailQueueFactory.class).to(MemoryMailQueueFactory.class);
+    private MemoryMailQueueFactory memoryMailQueueFactory;
+
+    @BeforeEach
+    public void setUp() {
+        memoryMailQueueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
+    }
+
+    @Test
+    public void getQueueShouldNotReturnNull() {
+        assertThat(memoryMailQueueFactory.getQueue(KEY)).isNotNull();
+    }
+
+    @Test
+    public void getQueueShouldReturnTwoTimeTheSameResultWhenUsedWithTheSameKey() {
+        assertThat(memoryMailQueueFactory.getQueue(KEY)).isEqualTo(memoryMailQueueFactory.getQueue(KEY));
+    }
+
+    @Test
+    public void getQueueShouldNotReturnTheSameQueueForTwoDifferentNames() {
+        assertThat(memoryMailQueueFactory.getQueue(KEY)).isNotEqualTo(memoryMailQueueFactory.getQueue(BIS));
     }
 }

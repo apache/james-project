@@ -17,20 +17,24 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.server;
+package org.apache.james.queue.memory;
 
-import org.apache.james.queue.api.MailQueueFactory;
-import org.apache.james.queue.memory.MemoryMailQueueFactory;
+import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.api.MailQueueContract;
+import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
+import org.junit.jupiter.api.BeforeEach;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
+public class MemoryMailQueueTest implements MailQueueContract {
 
-public class MemoryMailQueueModule extends AbstractModule {
+    private MemoryMailQueueFactory.MemoryMailQueue mailQueue;
+
+    @BeforeEach
+    public void setUp() {
+        mailQueue = new MemoryMailQueueFactory.MemoryMailQueue("test", new RawMailQueueItemDecoratorFactory());
+    }
 
     @Override
-    protected void configure() {
-        bind(MemoryMailQueueFactory.class).in(Scopes.SINGLETON);
-
-        bind(MailQueueFactory.class).to(MemoryMailQueueFactory.class);
+    public MailQueue getMailQueue() {
+        return mailQueue;
     }
 }
