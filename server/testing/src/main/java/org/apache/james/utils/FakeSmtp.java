@@ -23,6 +23,7 @@ import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 
+import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
 
 import org.apache.james.util.docker.Images;
@@ -32,7 +33,6 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.testcontainers.containers.wait.HostPortWaitStrategy;
 
-import com.google.common.base.Charsets;
 import com.jayway.awaitility.core.ConditionFactory;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.builder.ResponseSpecBuilder;
@@ -79,7 +79,7 @@ public class FakeSmtp implements TestRule {
         return new RequestSpecBuilder()
             .setContentType(ContentType.JSON)
             .setAccept(ContentType.JSON)
-            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
             .setPort(80)
             .setBaseUri("http://" + container.getContainerIp())
             .build();
