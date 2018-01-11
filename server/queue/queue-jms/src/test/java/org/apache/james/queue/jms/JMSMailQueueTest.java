@@ -27,7 +27,8 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.MailQueue;
-import org.apache.james.queue.api.MailQueueContract;
+import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.queue.api.ManageableMailQueueContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +37,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class JMSMailQueueTest implements MailQueueContract {
+public class JMSMailQueueTest implements ManageableMailQueueContract {
 
     private final static String QUEUE_NAME = "test";
 
@@ -83,6 +84,11 @@ public class JMSMailQueueTest implements MailQueueContract {
 
     @Test
     @Override
+    public ManageableMailQueue getManageableMailQueue() {
+        return mailQueue;
+    }
+
+    @Override
     @Disabled("JAMES-2295 Disabled as test was dead-locking")
     public void dequeueCanBeChainedBeforeAck() {
 
@@ -99,6 +105,13 @@ public class JMSMailQueueTest implements MailQueueContract {
     @Override
     @Disabled("JAMES-2301 Per recipients headers are not attached to the message.")
     public void queueShouldPreservePerRecipientHeaders() {
+
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2296 Not handled by JMS mailqueue. Only single recipient per-recipient removal works")
+    public void removeByRecipientShouldRemoveSpecificEmailWhenMultipleRecipients() {
 
     }
 }

@@ -34,11 +34,15 @@ import org.apache.mailet.base.test.FakeMail;
 public interface Mails {
 
     static FakeMail.Builder defaultMail() throws MessagingException {
+        return defaultMailNoRecipient()
+            .recipients(RECIPIENT1, RECIPIENT2);
+    }
+
+    static FakeMail.Builder defaultMailNoRecipient() throws MessagingException {
         return FakeMail.builder()
             .name("name")
             .mimeMessage(createMimeMessage())
             .sender(SENDER)
-            .recipients(RECIPIENT1, RECIPIENT2)
             .lastUpdated(new Date());
     }
 
