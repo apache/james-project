@@ -29,8 +29,6 @@ import org.apache.james.util.scanner.SpamAssassinInvoker;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.MailetUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
@@ -60,7 +58,6 @@ import com.google.common.base.Strings;
  * </pre>
  */
 public class SpamAssassin extends GenericMailet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SpamAssassin.class);
     public static final String SPAMD_HOST = "spamdHost";
     public static final String SPAMD_PORT = "spamdPort";
     public static final String DEFAULT_HOST = "127.0.0.1";

@@ -148,7 +148,6 @@ public class InstrumentationMailet implements Mailet {
         LOGGER.info("######## MAIL ENDS");
     }
 
-    @SuppressWarnings("Slf4jStringConcat")
     private void printAddresses(Address[] addresses, String prefix) {
         for (Address address1 : addresses) {
             if (address1 instanceof InternetAddress) {

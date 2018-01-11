@@ -38,12 +38,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class CassandraMailboxMapperTest {
     
-    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMailboxMapperTest.class);
     private static final int UID_VALIDITY = 52;
     private static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("user", "name");
 

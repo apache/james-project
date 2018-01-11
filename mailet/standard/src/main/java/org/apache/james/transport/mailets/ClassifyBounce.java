@@ -33,8 +33,6 @@ import javax.mail.internet.MimeMessage;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -48,7 +46,6 @@ import org.slf4j.LoggerFactory;
  */
 @Experimental
 public class ClassifyBounce extends GenericMailet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ClassifyBounce.class);
 
     /**
      * The name of the header to be added.

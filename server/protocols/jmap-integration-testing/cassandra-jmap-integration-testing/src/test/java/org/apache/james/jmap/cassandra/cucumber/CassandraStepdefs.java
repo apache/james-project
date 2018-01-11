@@ -29,6 +29,7 @@ import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
+import org.apache.james.jmap.methods.integration.cucumber.ImapStepdefs;
 import org.apache.james.jmap.methods.integration.cucumber.MainStepdefs;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
@@ -45,13 +46,15 @@ import cucumber.runtime.java.guice.ScenarioScoped;
 public class CassandraStepdefs {
 
     private final MainStepdefs mainStepdefs;
+    private final ImapStepdefs imapStepdefs;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
     private DockerCassandraRule cassandraServer = CucumberCassandraSingleton.cassandraServer;
 
     @Inject
-    private CassandraStepdefs(MainStepdefs mainStepdefs) {
+    private CassandraStepdefs(MainStepdefs mainStepdefs, ImapStepdefs imapStepdefs) {
         this.mainStepdefs = mainStepdefs;
+        this.imapStepdefs = imapStepdefs;
     }
 
     @Before
@@ -69,7 +72,8 @@ public class CassandraStepdefs {
 
     @After
     public void tearDown() {
-        ignoreFailures(mainStepdefs::tearDown,
+        ignoreFailures(imapStepdefs::closeConnections,
+                mainStepdefs::tearDown,
                 () -> embeddedElasticSearch.after(),
                 () -> temporaryFolder.delete());
     }

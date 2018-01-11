@@ -43,7 +43,7 @@ public class MemoryTaskManager implements TaskManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(MemoryTaskManager.class);
 
     private final ConcurrentHashMap<TaskId, TaskExecutionDetails> idToExecutionDetails;
-    private final ConcurrentHashMap<TaskId, Future> idToFuture;
+    private final ConcurrentHashMap<TaskId, Future<?>> idToFuture;
     private final ExecutorService executor;
 
     public MemoryTaskManager() {
