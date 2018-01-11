@@ -19,10 +19,14 @@
 
 package org.apache.james.queue.memory;
 
+import static org.apache.james.queue.api.Mails.defaultMail;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class MemoryMailQueueTest implements MailQueueContract {
 
@@ -36,5 +40,48 @@ public class MemoryMailQueueTest implements MailQueueContract {
     @Override
     public MailQueue getMailQueue() {
         return mailQueue;
+    }
+
+    @Test
+    public void getLastMailShouldReturnNullWhenNoMail() throws Exception {
+        assertThat(mailQueue.getLastMail())
+            .isNull();
+    }
+
+    @Test
+    public void getLastMailShouldReturnSingleMail() throws Exception {
+        mailQueue.enQueue(defaultMail()
+            .name("name")
+            .build());
+
+        assertThat(mailQueue.getLastMail().getName())
+            .isEqualTo("name");
+    }
+
+    @Test
+    public void getLastMailShouldReturnLastEnqueuedMail() throws Exception {
+        mailQueue.enQueue(defaultMail()
+            .name("name1")
+            .build());
+        mailQueue.enQueue(defaultMail()
+            .name("name2")
+            .build());
+
+        assertThat(mailQueue.getLastMail().getName())
+            .isEqualTo("name2");
+    }
+
+    @Test
+    public void getLastMailShouldNotAlterMailQueueState() throws Exception {
+        mailQueue.enQueue(defaultMail()
+            .name("name1")
+            .build());
+        mailQueue.enQueue(defaultMail()
+            .name("name2")
+            .build());
+
+        mailQueue.getLastMail();
+        assertThat(mailQueue.getLastMail().getName())
+            .isEqualTo("name2");
     }
 }

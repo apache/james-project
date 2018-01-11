@@ -39,7 +39,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.net.ProtocolCommandEvent;
@@ -59,8 +58,8 @@ import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.queue.api.MailQueueFactory;
-import org.apache.james.queue.api.mock.MockMailQueue;
-import org.apache.james.queue.api.mock.MockMailQueueFactory;
+import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
+import org.apache.james.queue.memory.MemoryMailQueueFactory;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mappings;
@@ -178,8 +177,8 @@ public class SMTPServerTest {
     protected MockFileSystem fileSystem;
     protected DNSService dnsService;
     protected MockProtocolHandlerLoader chain;
-    protected MockMailQueueFactory queueFactory;
-    protected MockMailQueue queue;
+    protected MemoryMailQueueFactory queueFactory;
+    protected MemoryMailQueueFactory.MemoryMailQueue queue;
 
     private SMTPServer smtpServer;
 
@@ -308,8 +307,8 @@ public class SMTPServerTest {
             }
         });
     
-        queueFactory = new MockMailQueueFactory();
-        queue = (MockMailQueue) queueFactory.getQueue(MockMailQueueFactory.SPOOL);
+        queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
+        queue = (MemoryMailQueueFactory.MemoryMailQueue) queueFactory.getQueue(MailQueueFactory.SPOOL);
         chain.put("mailqueuefactory", MailQueueFactory.class, queueFactory);
         chain.put("domainlist", DomainList.class, new SimpleDomainList() {
     
@@ -393,11 +392,10 @@ public class SMTPServerTest {
 
     @After
     public void tearDown() throws Exception {
-        queue.clear();
         smtpServer.destroy();
     }
 
-    public void verifyLastMail(String sender, String recipient, MimeMessage msg) throws IOException, MessagingException {
+    public void verifyLastMail(String sender, String recipient, MimeMessage msg) throws Exception {
         Mail mailData = queue.getLastMail();
         assertThat(mailData)
             .as("mail received by mail server")
@@ -818,7 +816,7 @@ public class SMTPServerTest {
         doTestHeloEhloResolv("helo");
     }
 
-    private void doTestHeloEhloResolv(String heloCommand) throws IOException {
+    private void doTestHeloEhloResolv(String heloCommand) throws Exception {
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());

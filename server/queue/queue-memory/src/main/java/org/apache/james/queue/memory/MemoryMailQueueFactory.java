@@ -19,6 +19,7 @@
 
 package org.apache.james.queue.memory;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -80,7 +81,7 @@ public class MemoryMailQueueFactory implements MailQueueFactory {
         @Override
         public void enQueue(Mail mail) throws MailQueueException {
             try {
-                mailItems.addFirst(new MemoryMailQueueItem(cloneMail(mail)));
+                mailItems.addLast(new MemoryMailQueueItem(cloneMail(mail)));
             } catch (MessagingException e) {
                 throw new MailQueueException("Error while copying mail " + mail.getName(), e);
             }
@@ -99,8 +100,16 @@ public class MemoryMailQueueFactory implements MailQueueFactory {
         @Override
         public MailQueueItem deQueue() throws MailQueueException, InterruptedException {
             while (true) {
-                MemoryMailQueueItem item = mailItems.takeLast();
+                MemoryMailQueueItem item = mailItems.takeFirst();
                 return mailQueueItemDecoratorFactory.decorate(item);
+            }
+        }
+
+        public Mail getLastMail() throws MailQueueException, InterruptedException {
+            try {
+                return mailItems.getLast().getMail();
+            } catch (NoSuchElementException e) {
+                return null;
             }
         }
 
