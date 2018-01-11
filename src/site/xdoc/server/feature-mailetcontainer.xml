@@ -58,7 +58,7 @@
       and that message is processed by the mailet.  The recipients for the other mail are set to the
       non-matching recipients, and that message is not processed by the mailet.</p>
 
-      <p>Note that you can specify per mailet and per matcher detailed error handling logic.</p>
+        <p>Note that you can specify per mailet and per matcher specific <a href="config-mailetcontainer.html#Error_handling">error handling logic.</a></p>
     
     </subsection>
 
