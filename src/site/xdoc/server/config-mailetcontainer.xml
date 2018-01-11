@@ -81,14 +81,14 @@
       <p>If an exception is encountered during the execution of a mailet or a matcher, the default behaviour is to
       process the mail using the <strong>error</strong> processor.</p>
 
-      <p>The <strong>onMailetException</strong> property allow you to override this behaviour. You can specify an other
-      processor than the error one for handling the errors of this mailet. The <strong>ignore</strong> special value also
-      allow to continue processing and ignore the error.</p>
+      <p>The <strong>onMailetException</strong> property allows you to override this behaviour. You can specify another
+          processor than the <strong>error</strong> one for handling the errors of this mailet. The <strong>ignore</strong> special value also
+      allows to continue processing and ignore the error.</p>
 
-      <p>Moreover, the <strong>onMatcherException</strong> allow you to override matcher error handling logic. You can
-          specify an other processor than the error one for handling the errors of this mailet. The <strong>matchall</strong>
-          special value also allow you to match all recipients when there is an error. The <strong>nomatch</strong>
-          special value also allow you to match no recipients when there is an error.</p>
+      <p>Moreover, the <strong>onMatcherException</strong> allows you to override matcher error handling. You can
+          specify another processor than the <strong>error</strong> one for handling the errors of this mailet. The <strong>matchall</strong>
+          special value also allows you to match all recipients when there is an error. The <strong>nomatch</strong>
+          special value also allows you to match no recipients when there is an error.</p>
 
       <p>Here is a short example to illustrate this:</p>
 
