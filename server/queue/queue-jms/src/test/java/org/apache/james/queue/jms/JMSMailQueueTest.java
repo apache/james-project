@@ -19,6 +19,8 @@
 
 package org.apache.james.queue.jms;
 
+import java.util.concurrent.ExecutorService;
+
 import javax.jms.ConnectionFactory;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -26,9 +28,9 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.queue.api.DelayedManageableMailQueueContract;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.ManageableMailQueue;
-import org.apache.james.queue.api.ManageableMailQueueContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,7 +39,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class JMSMailQueueTest implements ManageableMailQueueContract {
+public class JMSMailQueueTest implements DelayedManageableMailQueueContract {
 
     private final static String QUEUE_NAME = "test";
 
@@ -112,6 +114,21 @@ public class JMSMailQueueTest implements ManageableMailQueueContract {
     @Override
     @Disabled("JAMES-2296 Not handled by JMS mailqueue. Only single recipient per-recipient removal works")
     public void removeByRecipientShouldRemoveSpecificEmailWhenMultipleRecipients() {
+
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2308 Flushing JMS mail queue randomly re-order them" +
+        "Random test failing around 1% of the time")
+    public void flushShouldPreserveBrowseOrder() {
+
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2309 Long overflow in JMS delays")
+    public void enqueueWithVeryLongDelayShouldDelayMail(ExecutorService executorService) {
 
     }
 }
