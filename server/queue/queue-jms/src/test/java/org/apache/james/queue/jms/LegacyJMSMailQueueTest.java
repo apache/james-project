@@ -8,7 +8,7 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
-public class JMSMailQueueTest extends AbstractJMSMailQueueTest {
+public class LegacyJMSMailQueueTest extends AbstractJMSMailQueueTest {
 
     private static BrokerService broker;
 
