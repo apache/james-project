@@ -86,7 +86,8 @@ public class FakeMail implements Mail {
             attributes(mail),
             mail.getMessageSize(),
             mail.getRemoteAddr(),
-            mail.getRemoteHost());
+            mail.getRemoteHost(),
+            mail.getPerRecipientSpecificHeaders());
     }
 
     public static FakeMail from(MimeMessage message) throws MessagingException {
@@ -113,6 +114,7 @@ public class FakeMail implements Mail {
         private Optional<Long> size;
         private Optional<String> remoteAddr;
         private Optional<String> remoteHost;
+        private PerRecipientHeaders perRecipientHeaders;
 
         private Builder() {
             fileName = Optional.empty();
@@ -127,6 +129,7 @@ public class FakeMail implements Mail {
             size = Optional.empty();
             remoteAddr = Optional.empty();
             remoteHost = Optional.empty();
+            perRecipientHeaders = new PerRecipientHeaders();
         }
 
         public Builder size(long size) {
@@ -225,9 +228,14 @@ public class FakeMail implements Mail {
             return this;
         }
 
+        public Builder addHeaderForRecipient(Header header, MailAddress recipient) {
+            this.perRecipientHeaders.addHeaderForRecipient(header, recipient);
+            return this;
+        }
+
         public FakeMail build() throws MessagingException {
             return new FakeMail(getMimeMessage(), recipients, name.orElse(null), sender.orElse(null), state.orElse(null), errorMessage.orElse(null), lastUpdated.orElse(null),
-                attributes, size.orElse(0L), remoteAddr.orElse(DEFAULT_REMOTE_ADDRESS), remoteHost.orElse(DEFAULT_REMOTE_HOST));
+                attributes, size.orElse(0L), remoteAddr.orElse(DEFAULT_REMOTE_ADDRESS), remoteHost.orElse(DEFAULT_REMOTE_HOST), perRecipientHeaders);
         }
 
         private MimeMessage getMimeMessage() throws MessagingException {
@@ -265,7 +273,7 @@ public class FakeMail implements Mail {
     private PerRecipientHeaders perRecipientHeaders;
     
     public FakeMail(MimeMessage msg, List<MailAddress> recipients, String name, MailAddress sender, String state, String errorMessage, Date lastUpdated,
-            Map<String, Serializable> attributes, long size, String remoteAddr, String remoteHost) {
+            Map<String, Serializable> attributes, long size, String remoteAddr, String remoteHost, PerRecipientHeaders perRecipientHeaders) {
         this.msg = msg;
         this.recipients = recipients;
         this.name = name;
@@ -276,7 +284,7 @@ public class FakeMail implements Mail {
         this.attributes = attributes;
         this.size = size;
         this.remoteAddr = remoteAddr;
-        this.perRecipientHeaders = new PerRecipientHeaders();
+        this.perRecipientHeaders = perRecipientHeaders;
         this.remoteHost = remoteHost;
     }
 
