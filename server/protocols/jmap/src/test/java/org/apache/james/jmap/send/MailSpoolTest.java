@@ -21,80 +21,56 @@ package org.apache.james.jmap.send;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.queue.api.MailQueue;
-import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
-import org.apache.mailet.Mail;
+import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
+import org.apache.james.queue.memory.MemoryMailQueueFactory;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
 import org.junit.Test;
 
 public class MailSpoolTest {
+    private static final String USERNAME = "user";
+    private static final TestMessageId MESSAGE_ID = TestMessageId.of(1);
+    private static final String NAME = "Name";
 
     private MailSpool mailSpool;
     private MailQueue myQueue;
 
     @Before
     public void setup() {
-        myQueue = new MyQueue();
+        myQueue = new MemoryMailQueueFactory.MemoryMailQueue(MailQueueFactory.SPOOL, new RawMailQueueItemDecoratorFactory());
 
         mailSpool = new MailSpool(name -> myQueue);
     }
 
     @Test
     public void sendShouldEnQueueTheMail() throws Exception {
-        FakeMail mail = FakeMail.defaultFakeMail();
+        FakeMail mail = FakeMail.builder()
+            .name(NAME)
+            .build();
 
-        mailSpool.send(mail, new MailMetadata(TestMessageId.of(1), "user"));
+        mailSpool.send(mail, new MailMetadata(MESSAGE_ID, USERNAME));
 
-        assertThat(myQueue.deQueue())
-            .isNotNull()
-            .extracting(MailQueueItem::getMail)
-            .containsExactly(mail);
+        MailQueueItem actual = myQueue.deQueue();
+        assertThat(actual.getMail().getName()).isEqualTo(NAME);
     }
 
-    private static class MyQueue implements MailQueue {
+    @Test
+    public void sendShouldPositionJMAPRelatedMetadata() throws Exception {
+        FakeMail mail = FakeMail.builder()
+            .name(NAME)
+            .build();
 
-        private ConcurrentLinkedQueue<Mail> queue;
+        mailSpool.send(mail, new MailMetadata(MESSAGE_ID, USERNAME));
 
-        public MyQueue() {
-            queue = new ConcurrentLinkedQueue<>();
-        }
-
-        @Override
-        public void enQueue(Mail mail) throws MailQueueException {
-            queue.add(mail);
-        }
-
-        @Override
-        public void enQueue(Mail mail, long delay, TimeUnit unit) throws MailQueueException {
-        }
-
-        @Override
-        public MailQueueItem deQueue() throws MailQueueException {
-            return new MyMailQueueItem(queue.poll());
-        }
+        MailQueueItem actual = myQueue.deQueue();
+        assertThat(actual.getMail().getAttribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE))
+            .isEqualTo(USERNAME);
+        assertThat(actual.getMail().getAttribute(MailMetadata.MAIL_METADATA_MESSAGE_ID_ATTRIBUTE))
+            .isEqualTo(MESSAGE_ID.serialize());
     }
 
-    private static class MyMailQueueItem implements MailQueueItem {
-
-        private final Mail mail;
-
-        public MyMailQueueItem(Mail mail) {
-            this.mail = mail;
-        }
-
-        @Override
-        public Mail getMail() {
-            return mail;
-        }
-
-        @Override
-        public void done(boolean success) throws MailQueueException {
-        }
-    }
 }
