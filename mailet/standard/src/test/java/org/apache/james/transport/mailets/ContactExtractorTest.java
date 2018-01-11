@@ -34,6 +34,7 @@ import org.apache.mailet.MailetException;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
+import org.apache.mailet.base.test.MimeMessageUtil;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -85,7 +86,7 @@ public class ContactExtractorTest {
 
     @Test
     public void serviceShouldNotThrowWhenJsonProcessingFails() throws Exception {
-        FakeMail mail = FakeMail.builder().mimeMessage(MimeMessageBuilder.defaultMimeMessage())
+        FakeMail mail = FakeMail.builder().mimeMessage(MimeMessageUtil.defaultMimeMessage())
                 .sender(SENDER)
                 .recipient(TO)
                 .build();
@@ -164,7 +165,7 @@ public class ContactExtractorTest {
             + "Subject: extract this recipient please\r\n"
             + "\r\n"
             + "Please!";
-        MimeMessage message = MimeMessageBuilder.mimeMessageFromBytes(rawMessage.getBytes());
+        MimeMessage message = MimeMessageUtil.mimeMessageFromBytes(rawMessage.getBytes());
         FakeMail mail = FakeMail.builder().mimeMessage(message)
             .sender(SENDER)
             .recipient("recipient@example.com")
@@ -184,7 +185,7 @@ public class ContactExtractorTest {
             + "Subject: extract this recipient please\r\n"
             + "\r\n"
             + "Please!";
-        MimeMessage message = MimeMessageBuilder.mimeMessageFromBytes(rawMessage.getBytes());
+        MimeMessage message = MimeMessageUtil.mimeMessageFromBytes(rawMessage.getBytes());
         FakeMail mail = FakeMail.builder().mimeMessage(message)
             .sender(SENDER)
             .recipient("recipient@example.com")
@@ -204,7 +205,7 @@ public class ContactExtractorTest {
             + "Subject: extract this recipient please\r\n"
             + "\r\n"
             + "Please!";
-        MimeMessage message = MimeMessageBuilder.mimeMessageFromBytes(rawMessage.getBytes());
+        MimeMessage message = MimeMessageUtil.mimeMessageFromBytes(rawMessage.getBytes());
         FakeMail mail = FakeMail.builder().mimeMessage(message)
             .sender(SENDER)
             .recipient("recipient@example.com")

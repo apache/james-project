@@ -87,6 +87,7 @@ import org.apache.james.utils.MessageIdProbe;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.MimeMessageUtil;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -4915,7 +4916,7 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void textBodyOfMessageWithTextCalendarShouldBeConvertedToAttachment() throws Exception {
-        MimeMessage calendarMessage = MimeMessageBuilder.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream("eml/calendar.eml"));
+        MimeMessage calendarMessage = MimeMessageUtil.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream("eml/calendar.eml"));
         String fromAddress = USERNAME;
 
         Mail mail = FakeMail.builder()

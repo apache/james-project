@@ -40,6 +40,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
+import org.apache.mailet.base.test.MimeMessageUtil;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -268,7 +269,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/headerEncodedFolded.script");
 
         FakeMail mail = FakeMail.builder()
-            .mimeMessage(MimeMessageBuilder.mimeMessageFromStream(
+            .mimeMessage(MimeMessageUtil.mimeMessageFromStream(
                 ClassLoader.getSystemResourceAsStream("eml/gmail.eml")))
             .state(Mail.DEFAULT)
             .recipient(RECEIVER_DOMAIN_COM)

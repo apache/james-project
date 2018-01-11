@@ -49,6 +49,7 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.MimeMessageUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -524,7 +525,7 @@ public class ICSAttachmentWorkflowTest {
             .setSubject("test")
             .build();
 
-        yahooInvitationMessage = MimeMessageBuilder.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream("eml/yahooInvitation.eml"));
+        yahooInvitationMessage = MimeMessageUtil.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream("eml/yahooInvitation.eml"));
 
         messageWithThreeICSAttached = MimeMessageBuilder.mimeMessageBuilder()
             .setMultipartWithBodyParts(
@@ -778,7 +779,7 @@ public class ICSAttachmentWorkflowTest {
 
     @Test
     public void mailShouldNotContainCalendarContentInTextBodyButAttachment() throws Exception {
-        MimeMessage calendarMessage = MimeMessageBuilder.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream("eml/calendar.eml"));
+        MimeMessage calendarMessage = MimeMessageUtil.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream("eml/calendar.eml"));
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FakeMail.builder()

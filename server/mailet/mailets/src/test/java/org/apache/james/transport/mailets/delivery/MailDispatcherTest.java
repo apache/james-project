@@ -41,6 +41,7 @@ import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
+import org.apache.mailet.base.test.MimeMessageUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -75,7 +76,7 @@ public class MailDispatcherTest {
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
             .state("state")
-            .mimeMessage(MimeMessageBuilder.defaultMimeMessage())
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
             .build();
         testee.dispatch(mail);
 
@@ -95,7 +96,7 @@ public class MailDispatcherTest {
         FakeMail mail = FakeMail.builder()
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
             .state("state")
-            .mimeMessage(MimeMessageBuilder.defaultMimeMessage())
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
             .build();
         testee.dispatch(mail);
 
@@ -113,7 +114,7 @@ public class MailDispatcherTest {
         String state = "state";
         FakeMail mail = FakeMail.builder()
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
-            .mimeMessage(MimeMessageBuilder.defaultMimeMessage())
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
             .state(state)
             .build();
         testee.dispatch(mail);
@@ -167,7 +168,7 @@ public class MailDispatcherTest {
         FakeMail mail = FakeMail.builder()
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES)
-            .mimeMessage(MimeMessageBuilder.defaultMimeMessage())
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
             .state("state")
             .build();
         testee.dispatch(mail);
@@ -191,7 +192,7 @@ public class MailDispatcherTest {
         FakeMail mail = FakeMail.builder()
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES)
-            .mimeMessage(MimeMessageBuilder.defaultMimeMessage())
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
             .state("state")
             .build();
         mail.addSpecificHeaderForRecipient(TEST_HEADER_USER2, MailAddressFixture.ANY_AT_JAMES2);
@@ -213,7 +214,7 @@ public class MailDispatcherTest {
         FakeMail mail = FakeMail.builder()
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES)
-            .mimeMessage(MimeMessageBuilder.defaultMimeMessage())
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
             .state("state")
             .build();
         mail.addSpecificHeaderForRecipient(TEST_HEADER_USER1, MailAddressFixture.ANY_AT_JAMES);
@@ -235,7 +236,7 @@ public class MailDispatcherTest {
         FakeMail mail = FakeMail.builder()
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
-            .mimeMessage(MimeMessageBuilder.defaultMimeMessage())
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
             .state("state")
             .build();
         mail.addSpecificHeaderForRecipient(TEST_HEADER_USER1, MailAddressFixture.ANY_AT_JAMES);
@@ -259,7 +260,7 @@ public class MailDispatcherTest {
         FakeMail mail = FakeMail.builder()
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
-            .mimeMessage(MimeMessageBuilder.defaultMimeMessage())
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
             .state("state")
             .build();
         mail.addSpecificHeaderForRecipient(TEST_HEADER_USER1, MailAddressFixture.ANY_AT_JAMES);
@@ -284,7 +285,7 @@ public class MailDispatcherTest {
         FakeMail mail = FakeMail.builder()
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
-            .mimeMessage(MimeMessageBuilder.defaultMimeMessage())
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
             .state("state")
             .build();
         mail.addSpecificHeaderForRecipient(TEST_HEADER_USER1, MailAddressFixture.ANY_AT_JAMES);

@@ -28,12 +28,12 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.apache.mailet.base.test.MailUtil;
+import org.apache.mailet.base.test.MimeMessageUtil;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -139,7 +139,7 @@ public class HasHeaderTest {
             .build());
 
         Mail mail = MailUtil.createMockMail2Recipients(
-            MimeMessageBuilder.mimeMessageFromStream(
+                MimeMessageUtil.mimeMessageFromStream(
                 ClassLoader.getSystemResourceAsStream("mime/headerFolded.mime")));
 
         assertThat(matcher.match(mail)).containsAll(mail.getRecipients());
@@ -153,7 +153,7 @@ public class HasHeaderTest {
             .build());
 
         Mail mail = MailUtil.createMockMail2Recipients(
-            MimeMessageBuilder.mimeMessageFromStream(
+                MimeMessageUtil.mimeMessageFromStream(
                 ClassLoader.getSystemResourceAsStream("mime/gmail.mime")));
 
         assertThat(matcher.match(mail)).containsAll(mail.getRecipients());

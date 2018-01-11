@@ -42,6 +42,7 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.mailet.Mail;
+import org.apache.mailet.base.test.MimeMessageUtil;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Before;
 import org.junit.Rule;
@@ -171,7 +172,7 @@ public class JamesMailetContextTest {
         MailImpl mail = new MailImpl();
         mail.setSender(mailAddress);
         mail.setRecipients(ImmutableList.of(mailAddress));
-        mail.setMessage(MimeMessageBuilder.defaultMimeMessage());
+        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
         testee.bounce(mail, "message");
     }
 
@@ -180,7 +181,7 @@ public class JamesMailetContextTest {
         MailImpl mail = new MailImpl();
         mail.setSender(mailAddress);
         mail.setRecipients(ImmutableList.of(mailAddress));
-        mail.setMessage(MimeMessageBuilder.defaultMimeMessage());
+        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
         testee.bounce(mail, "message");
 
         ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
@@ -195,7 +196,7 @@ public class JamesMailetContextTest {
         MailImpl mail = new MailImpl();
         mail.setSender(mailAddress);
         mail.setRecipients(ImmutableList.of(mailAddress));
-        mail.setMessage(MimeMessageBuilder.defaultMimeMessage());
+        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
         testee.sendMail(mail);
 
         ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
@@ -210,7 +211,7 @@ public class JamesMailetContextTest {
         MailImpl mail = new MailImpl();
         mail.setSender(mailAddress);
         mail.setRecipients(ImmutableList.of(mailAddress));
-        mail.setMessage(MimeMessageBuilder.defaultMimeMessage());
+        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
         String other = "other";
         testee.sendMail(mail, other);
 
@@ -226,7 +227,7 @@ public class JamesMailetContextTest {
         MailImpl mail = new MailImpl();
         mail.setSender(mailAddress);
         mail.setRecipients(ImmutableList.of(mailAddress));
-        mail.setMessage(MimeMessageBuilder.defaultMimeMessage());
+        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
         testee.sendMail(mail, 5, TimeUnit.MINUTES);
 
         ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
@@ -245,7 +246,7 @@ public class JamesMailetContextTest {
         MailImpl mail = new MailImpl();
         mail.setSender(mailAddress);
         mail.setRecipients(ImmutableList.of(mailAddress));
-        mail.setMessage(MimeMessageBuilder.defaultMimeMessage());
+        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
         String other = "other";
         testee.sendMail(mail, other, 5, TimeUnit.MINUTES);
 

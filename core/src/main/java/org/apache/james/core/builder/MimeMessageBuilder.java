@@ -20,9 +20,7 @@
 package org.apache.james.core.builder;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
@@ -51,12 +49,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class MimeMessageBuilder {
-
-    public static String asString(MimeMessage mimeMessage) throws Exception {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        mimeMessage.writeTo(byteArrayOutputStream);
-        return new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8);
-    }
 
     public static class Header {
         private final String name;
@@ -192,18 +184,6 @@ public class MimeMessageBuilder {
             }
             return bodyPart;
         }
-    }
-
-    public static MimeMessage defaultMimeMessage() {
-        return new MimeMessage(Session.getDefaultInstance(new Properties()));
-    }
-
-    public static MimeMessage mimeMessageFromStream(InputStream inputStream) throws MessagingException {
-        return new MimeMessage(Session.getDefaultInstance(new Properties()), inputStream);
-    }
-
-    public static MimeMessage mimeMessageFromBytes(byte[] bytes) throws MessagingException {
-        return mimeMessageFromStream(new ByteArrayInputStream(bytes));
     }
 
     public static MimeMessageBuilder mimeMessageBuilder() {
