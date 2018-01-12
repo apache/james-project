@@ -111,7 +111,7 @@ public abstract class ProvisioningTest {
 
         assertThat(jmapServer.getProbe(MailboxProbeImpl.class)
             .listSubscriptions(USER))
-            .containsOnlyElementsOf(DefaultMailboxes.DEFAULT_MAILBOXES);
+            .containsAll(DefaultMailboxes.DEFAULT_MAILBOXES);
     }
 
     private URIBuilder baseUri() {

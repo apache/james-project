@@ -388,7 +388,7 @@ public abstract class SetMailboxesMethodTest {
             .post("/jmap");
 
         assertThat(mailboxProbe.listSubscriptions(username))
-            .containsOnly(DefaultMailboxes.OUTBOX,
+            .contains(DefaultMailboxes.OUTBOX,
                 DefaultMailboxes.SENT,
                 DefaultMailboxes.TRASH,
                 DefaultMailboxes.DRAFTS,
@@ -417,7 +417,7 @@ public abstract class SetMailboxesMethodTest {
             .statusCode(200);
 
         assertThat(mailboxProbe.listSubscriptions(username))
-            .containsOnly(DefaultMailboxes.OUTBOX,
+            .contains(DefaultMailboxes.OUTBOX,
             DefaultMailboxes.SENT,
             DefaultMailboxes.TRASH,
             DefaultMailboxes.DRAFTS);
@@ -470,7 +470,7 @@ public abstract class SetMailboxesMethodTest {
             .statusCode(200);
 
         assertThat(mailboxProbe.listSubscriptions(username))
-            .containsOnly(DefaultMailboxes.OUTBOX,
+            .contains(DefaultMailboxes.OUTBOX,
                 DefaultMailboxes.SENT,
                 DefaultMailboxes.TRASH,
                 DefaultMailboxes.DRAFTS);
