@@ -22,17 +22,14 @@ package org.apache.james.mailrepository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.StringJoiner;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailrepository.api.MailRepository;
-import org.apache.james.mime4j.io.InputStreams;
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
 import org.junit.jupiter.api.Test;
@@ -48,7 +45,7 @@ public interface MailRepositoryContract {
     }
 
     default  Mail createMail(String name, String body) throws MessagingException {
-        InputStream mailContent = generateMailContent(body);
+        MimeMessage mailContent = generateMailContent(body);
         List<MailAddress> recipients = ImmutableList
             .of(new MailAddress("rec1@domain.com"),
                 new MailAddress("rec2@domain.com"));
@@ -59,14 +56,11 @@ public interface MailRepositoryContract {
     }
 
 
-    default InputStream generateMailContent(String body) {
-        String headers = new StringJoiner("\r\n")
-            .add("Subject: test")
-            .add("Content-Type: text/plain")
-            .toString();
-        String headerBodySeparator = "\r\n\r\n";
-        String end = "\r\n.\r\n";
-        return InputStreams.create(headers + headerBodySeparator + body + end, StandardCharsets.UTF_8);
+    default MimeMessage generateMailContent(String body) throws MessagingException {
+        return MimeMessageBuilder.mimeMessageBuilder()
+            .setSubject("test")
+            .setText(body)
+            .build();
     }
 
     default void checkMailEquality(Mail actual, Mail expected) {
