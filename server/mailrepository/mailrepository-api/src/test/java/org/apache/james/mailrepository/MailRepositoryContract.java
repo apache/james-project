@@ -85,9 +85,10 @@ public interface MailRepositoryContract {
     @Test
     default void retrieveShouldGetStoredMail() throws Exception {
         MailRepository testee = retrieveRepository();
-        Mail email = createMail("mail1");
+        String key1 = "mail1";
+        Mail email = createMail(key1);
         testee.store(email);
-        assertThat(testee.retrieve("mail1")).satisfies(actual -> checkMailEquality(actual, email));
+        assertThat(testee.retrieve(key1)).satisfies(actual -> checkMailEquality(actual, email));
     }
 
     @Test
@@ -111,30 +112,34 @@ public interface MailRepositoryContract {
     @Test
     default void listShouldReturnStoredMailsKeys() throws Exception {
         MailRepository testee = retrieveRepository();
-        testee.store(createMail("mail1"));
-        testee.store(createMail("mail2"));
-        assertThat(testee.list()).containsExactly("mail1", "mail2");
+        String key1 = "mail1";
+        String key2 = "mail2";
+        testee.store(createMail(key1));
+        testee.store(createMail(key2));
+        assertThat(testee.list()).containsExactly(key1, key2);
     }
 
     @Test
     default void storingMessageWithSameKeyTwiceShouldUpdateMessageContent() throws Exception {
         MailRepository testee = retrieveRepository();
-        testee.store(createMail("mail1"));
-        Mail updatedMail = createMail("mail1", "modified content");
+        String key = "mail1";
+        testee.store(createMail(key));
+        Mail updatedMail = createMail(key, "modified content");
         testee.store(updatedMail);
         assertThat(testee.list()).hasSize(1);
-        assertThat(testee.retrieve("mail1")).satisfies(actual -> checkMailEquality(actual, updatedMail));
+        assertThat(testee.retrieve(key)).satisfies(actual -> checkMailEquality(actual, updatedMail));
     }
 
     @Test
     default void storingMessageWithSameKeyTwiceShouldUpdateMessageAttributes() throws Exception {
         MailRepository testee = retrieveRepository();
-        Mail mail = createMail("mail1");
+        String key = "mail1";
+        Mail mail = createMail(key);
         testee.store(mail);
         mail.setAttribute(TEST_ATTRIBUTE, "newValue");
         testee.store(mail);
         assertThat(testee.list()).hasSize(1);
-        assertThat(testee.retrieve("mail1")).satisfies(actual -> checkMailEquality(actual, mail));
+        assertThat(testee.retrieve(key)).satisfies(actual -> checkMailEquality(actual, mail));
     }
 
 }
