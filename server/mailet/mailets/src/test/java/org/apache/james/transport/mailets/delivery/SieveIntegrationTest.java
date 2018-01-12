@@ -29,6 +29,8 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.core.builder.MimeMessageBuilder.Header;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.transport.mailets.Sieve;
@@ -38,8 +40,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.apache.mailet.base.test.MimeMessageBuilder;
-import org.apache.mailet.base.test.MimeMessageBuilder.Header;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;

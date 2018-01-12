@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.util.Port;
 import org.apache.james.util.scanner.SpamAssassinInvoker;
 import org.apache.james.utils.MockSpamd;
@@ -31,7 +32,6 @@ import org.apache.james.utils.MockSpamdTestRule;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Rule;
 import org.junit.Test;
 

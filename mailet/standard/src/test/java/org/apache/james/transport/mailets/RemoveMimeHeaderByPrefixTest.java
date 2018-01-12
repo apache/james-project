@@ -23,12 +23,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.transport.mailets.utils.MimeMessageUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

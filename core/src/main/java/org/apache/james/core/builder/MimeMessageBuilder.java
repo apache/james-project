@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.mailet.base.test;
+package org.apache.james.core.builder;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

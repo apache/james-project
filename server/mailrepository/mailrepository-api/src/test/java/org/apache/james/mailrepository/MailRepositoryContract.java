@@ -30,6 +30,7 @@ import java.util.StringJoiner;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mime4j.io.InputStreams;
 import org.apache.james.server.core.MailImpl;
