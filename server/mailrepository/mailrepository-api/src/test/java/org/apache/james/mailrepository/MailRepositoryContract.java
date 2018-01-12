@@ -78,34 +78,40 @@ public interface MailRepositoryContract {
     @Test
     default void storeRegularMailShouldNotFail() throws Exception {
         MailRepository testee = retrieveRepository();
-        Mail email = createMail("mail1");
-        testee.store(email);
+        Mail mail = createMail("mail1");
+
+        testee.store(mail);
     }
 
     @Test
     default void retrieveShouldGetStoredMail() throws Exception {
         MailRepository testee = retrieveRepository();
         String key1 = "mail1";
-        Mail email = createMail(key1);
-        testee.store(email);
-        assertThat(testee.retrieve(key1)).satisfies(actual -> checkMailEquality(actual, email));
+        Mail mail = createMail(key1);
+
+        testee.store(mail);
+
+        assertThat(testee.retrieve(key1)).satisfies(actual -> checkMailEquality(actual, mail));
     }
 
     @Test
     default void newlyCreatedRepositoryShouldNotContainAnyMail() throws Exception {
         MailRepository testee = retrieveRepository();
+
         assertThat(testee.list()).isEmpty();
     }
 
     @Test
     default void retrievingUnknownMailShouldReturnNull() throws Exception {
         MailRepository testee = retrieveRepository();
+
         assertThat(testee.retrieve("random")).isNull();
     }
 
     @Test
     default void removingUnknownMailShouldHaveNoEffect() throws Exception {
         MailRepository testee = retrieveRepository();
+
         testee.remove("random");
     }
 
@@ -115,8 +121,10 @@ public interface MailRepositoryContract {
         String key1 = "mail1";
         String key2 = "mail2";
         testee.store(createMail(key1));
+
         testee.store(createMail(key2));
-        assertThat(testee.list()).containsExactly(key1, key2);
+
+        assertThat(testee.list()).containsOnly(key1, key2);
     }
 
     @Test
@@ -124,8 +132,10 @@ public interface MailRepositoryContract {
         MailRepository testee = retrieveRepository();
         String key = "mail1";
         testee.store(createMail(key));
+
         Mail updatedMail = createMail(key, "modified content");
         testee.store(updatedMail);
+
         assertThat(testee.list()).hasSize(1);
         assertThat(testee.retrieve(key)).satisfies(actual -> checkMailEquality(actual, updatedMail));
     }
@@ -136,8 +146,10 @@ public interface MailRepositoryContract {
         String key = "mail1";
         Mail mail = createMail(key);
         testee.store(mail);
+
         mail.setAttribute(TEST_ATTRIBUTE, "newValue");
         testee.store(mail);
+
         assertThat(testee.list()).hasSize(1);
         assertThat(testee.retrieve(key)).satisfies(actual -> checkMailEquality(actual, mail));
     }
