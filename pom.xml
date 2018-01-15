@@ -571,7 +571,7 @@
         -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <target.jdk>1.8</target.jdk>
-        <james-skin.version>1.8</james-skin.version>
+        <james-skin.version>1.9-SNAPSHOT</james-skin.version>
         <!--
             This property contains the directory where to deploy when running using "-Psite-reports" profile
             to avoid accidently overriding the common modules website. Empty by default.
