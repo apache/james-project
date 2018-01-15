@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.Enumeration;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -111,7 +110,7 @@ public class LogMessage extends GenericMailet {
     private void logHeaders(MimeMessage message) throws MessagingException {
         if (headers && logger.isInfoEnabled()) {
             logger.info("\n");
-            for (String header : Collections.list((Enumeration<String>) message.getAllHeaderLines())) {
+            for (String header : Collections.list(message.getAllHeaderLines())) {
                 logger.info(header + "\n");
             }
         }

@@ -27,12 +27,12 @@ import java.util.HashMap;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.apache.james.smtpserver.fastfail.SpamAssassinHandler;
-import org.apache.james.smtpserver.mock.MockMimeMessage;
 import org.apache.james.smtpserver.mock.mailet.MockMail;
 import org.apache.james.util.scanner.SpamAssassinInvoker;
 import org.apache.james.utils.MockSpamd;
@@ -103,11 +103,9 @@ public class SpamAssassinHandlerTest {
     }
 
     public MimeMessage setupMockedMimeMessage(String text) throws MessagingException {
-        MimeMessage message = new MimeMessage(new MockMimeMessage());
-        message.setText(text);
-        message.saveChanges();
-
-        return message;
+        return MimeMessageBuilder.mimeMessageBuilder()
+            .setText(text)
+            .build();
     }
 
     @Test

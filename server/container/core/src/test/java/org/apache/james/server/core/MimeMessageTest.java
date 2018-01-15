@@ -47,6 +47,7 @@ public class MimeMessageTest {
 
     protected MimeMessage getSimpleMessage() throws Exception {
         MimeMessage mmCreated = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        mmCreated.addHeader("Date", "Tue, 16 Jan 2018 09:56:01 +0700 (ICT)");
         mmCreated.setSubject("test");
         mmCreated.setText("test body");
         mmCreated.saveChanges();
@@ -56,6 +57,7 @@ public class MimeMessageTest {
     protected String getSimpleMessageCleanedSource() {
         return "Subject: test\r\n"
                 + "MIME-Version: 1.0\r\n"
+                + "Date: Tue, 16 Jan 2018 09:56:01 +0700 (ICT)\r\n"
                 + "Content-Type: text/plain; charset=us-ascii\r\n"
                 + "Content-Transfer-Encoding: 7bit\r\n"
                 + "\r\n"
@@ -64,6 +66,7 @@ public class MimeMessageTest {
 
     protected MimeMessage getMessageWithBadReturnPath() throws Exception {
         MimeMessage mmCreated = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        mmCreated.addHeader("Date", "Tue, 16 Jan 2018 09:56:01 +0700 (ICT)");
         mmCreated.setSubject("test");
         mmCreated.setHeader(RFC2822Headers.RETURN_PATH, "<mybadreturn@example.com>");
         mmCreated.setText("test body");
@@ -75,6 +78,7 @@ public class MimeMessageTest {
         return "Subject: test\r\n"
                 + "Return-Path: <mybadreturn@example.com>\r\n"
                 + "MIME-Version: 1.0\r\n"
+                + "Date: Tue, 16 Jan 2018 09:56:01 +0700 (ICT)\r\n"
                 + "Content-Type: text/plain; charset=us-ascii\r\n"
                 + "Content-Transfer-Encoding: 7bit\r\n"
                 + "\r\n"
@@ -98,6 +102,7 @@ public class MimeMessageTest {
     protected MimeMessage getMultipartMessage() throws Exception {
         MimeMessage mmCreated = new MimeMessage(Session.getDefaultInstance(new Properties()));
         mmCreated.setSubject("test");
+        mmCreated.addHeader("Date", "Tue, 16 Jan 2018 09:56:01 +0700 (ICT)");
         MimeMultipart mm = new MimeMultipart("alternative");
         mm.addBodyPart(new MimeBodyPart(new InternetHeaders(new ByteArrayInputStream("X-header: test1\r\nContent-Type: text/plain; charset=Cp1252\r\n"
                 .getBytes())), "first part òàù".getBytes()));
@@ -109,7 +114,8 @@ public class MimeMessageTest {
     }
 
     protected String getMultipartMessageSource() {
-        return "Subject: test\r\n"
+        return "Date: Tue, 16 Jan 2018 09:56:01 +0700 (ICT)\r\n"
+                + "Subject: test\r\n"
                 + "MIME-Version: 1.0\r\n"
                 + "Content-Type: multipart/alternative; \r\n"
                 + "\tboundary=\"----=_Part_0_XXXXXXXXXXX.XXXXXXXXXXX\"\r\n"
@@ -132,6 +138,7 @@ public class MimeMessageTest {
     protected String getMultipartMessageExpected1() {
         return "Subject: test\r\n"
                 + "MIME-Version: 1.0\r\n"
+                + "Date: Tue, 16 Jan 2018 09:56:01 +0700 (ICT)\r\n"
                 + "Content-Type: multipart/alternative; \r\n"
                 + "\tboundary=\"----=_Part_0_XXXXXXXXXXX.XXXXXXXXXXX\"\r\n"
                 + "\r\n"
@@ -153,6 +160,7 @@ public class MimeMessageTest {
     protected String getMultipartMessageExpected2() {
         return "Subject: test\r\n"
                 + "MIME-Version: 1.0\r\n"
+                + "Date: Tue, 16 Jan 2018 09:56:01 +0700 (ICT)\r\n"
                 + "Content-Type: multipart/alternative; \r\n"
                 + "\tboundary=\"----=_Part_0_XXXXXXXXXXX.XXXXXXXXXXX\"\r\n"
                 + "\r\n"
@@ -178,6 +186,7 @@ public class MimeMessageTest {
     protected String getMultipartMessageExpected3() {
         return "Subject: test\r\n"
                 + "MIME-Version: 1.0\r\n"
+                + "Date: Tue, 16 Jan 2018 09:56:01 +0700 (ICT)\r\n"
                 + "Content-Type: binary/octet-stream\r\n"
                 + "Content-Transfer-Encoding: quoted-printable\r\n"
                 + "\r\n"
@@ -414,7 +423,6 @@ public class MimeMessageTest {
     public void testHeaderOrder() throws Exception {
         MimeMessage message = getSimpleMessage();
         message.setHeader(RFC2822Headers.RETURN_PATH, "<test@test.de>");
-        @SuppressWarnings("unchecked")
         Enumeration<String> h = message.getAllHeaderLines();
 
         assertEquals(h.nextElement(), "Return-Path: <test@test.de>");

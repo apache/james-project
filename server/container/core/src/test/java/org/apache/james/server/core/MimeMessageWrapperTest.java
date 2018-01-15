@@ -187,14 +187,12 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
     public void testReplaceReturnPathOnBadMessage() throws Exception {
         MimeMessage message = getMessageWithBadReturnPath();
         message.setHeader(RFC2822Headers.RETURN_PATH, "<test@test.de>");
-        @SuppressWarnings("unchecked")
         Enumeration<String> e = message.getMatchingHeaderLines(new String[]{"Return-Path"});
         assertEquals("Return-Path: <test@test.de>", e.nextElement());
         assertFalse(e.hasMoreElements());
-        @SuppressWarnings("unchecked")
         Enumeration<String> h = message.getAllHeaderLines();
         assertEquals("Return-Path: <test@test.de>", h.nextElement());
-        assertFalse(h.nextElement().toString().startsWith("Return-Path:"));
+        assertFalse(h.nextElement().startsWith("Return-Path:"));
         LifecycleUtil.dispose(message);
     }
 
@@ -203,12 +201,10 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         MimeMessage message = getMessageWithBadReturnPath();
         message.addHeader(RFC2822Headers.RETURN_PATH, "<test@test.de>");
         // test that we have now 2 return-paths
-        @SuppressWarnings("unchecked")
         Enumeration<String> e = message.getMatchingHeaderLines(new String[]{"Return-Path"});
         assertEquals("Return-Path: <test@test.de>", e.nextElement());
         assertEquals("Return-Path: <mybadreturn@example.com>", e.nextElement());
         // test that return-path is the first line
-        @SuppressWarnings("unchecked")
         Enumeration<String> h = message.getAllHeaderLines();
         assertEquals("Return-Path: <test@test.de>", h.nextElement());
         LifecycleUtil.dispose(message);

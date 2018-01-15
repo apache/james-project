@@ -100,14 +100,12 @@ public class InstrumentationMailet implements Mailet {
             LOGGER.info("Received: " + message.getReceivedDate());
             LOGGER.info("Sent: " + message.getSentDate());
 
-            @SuppressWarnings("unchecked")
             Enumeration<String> allHeadersLines = message.getAllHeaderLines();
             while (allHeadersLines.hasMoreElements()) {
                 String header = allHeadersLines.nextElement();
                 LOGGER.info("Header Line:= " + header);
             }
 
-            @SuppressWarnings("unchecked")
             Enumeration<Header> allHeadersEnumeration = message.getAllHeaders();
             while (allHeadersEnumeration.hasMoreElements()) {
                 Header header = allHeadersEnumeration.nextElement();

@@ -159,7 +159,7 @@ public class MimeMessageUtilsTest {
                 .build())
                 .toHeaderList())
             .extracting("name")
-            .containsOnly("Message-Id", "MIME-Version");
+            .contains("Message-Id", "MIME-Version");
     }
 
     @Test
@@ -171,6 +171,6 @@ public class MimeMessageUtilsTest {
                 .build())
                 .toHeaderList())
             .extracting("name")
-            .containsOnly("Message-Id", "MIME-Version", headerName);
+            .containsOnly("Message-Id", "MIME-Version", headerName, "Date");
     }
 }

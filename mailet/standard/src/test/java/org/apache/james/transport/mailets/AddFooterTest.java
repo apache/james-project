@@ -51,6 +51,7 @@ import com.google.common.collect.Sets;
 @RunWith(Parameterized.class)
 public class AddFooterTest {
 
+    private static final String MY_FOOTER = "my footer";
     @Rule public ExpectedException exception = ExpectedException.none();
     
     private final String javaCharset;
@@ -94,7 +95,7 @@ public class AddFooterTest {
     public void shouldAddFooterWhenQuotedPrintableTextPlainMessage() throws MessagingException, IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty("text", "------ my footer à/€ ------")
+                .setProperty("text", "------ " + MY_FOOTER + " à/€ ------")
                 .build();
         mailet.init(mailetConfig);
         
@@ -107,20 +108,19 @@ public class AddFooterTest {
                 "Test=E0 and one =A4",
                 "");
 
-        String expectedFooter = "------ my footer =E0/=A4 ------";
+        String expectedFooter = "------ " + MY_FOOTER + " =E0/=A4 ------";
 
         Mail mail = FakeMail.fromMime(quotedPrintableTextPlainMessage, javaCharset, javaMailCharset);
         mailet.service(mail);
 
-        assertThat(MailUtil.toString(mail, javaCharset)).isEqualTo(quotedPrintableTextPlainMessage + expectedFooter);
-
+        assertThat(MailUtil.toString(mail, javaCharset)).endsWith(expectedFooter);
     }
 
     @Test
     public void shouldEnsureCarriageReturnWhenAddFooterWithTextPlainMessage() throws MessagingException, IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty("text", "------ my footer à/€ ------")
+                .setProperty("text", "------ " + MY_FOOTER + " à/€ ------")
                 .build();
         mailet.init(mailetConfig);
         
@@ -132,28 +132,20 @@ public class AddFooterTest {
                 "",
                 "Test=E0 and one =A4");
 
-        String expected = Joiner.on("\r\n").join(
-                "Subject: test",
-                "Content-Type: text/plain; charset=ISO-8859-15",
-                "MIME-Version: 1.0",
-                "Content-Transfer-Encoding: quoted-printable",
-                "",
-                "Test=E0 and one =A4",
-                "------ my footer =E0/=A4 ------");
+        String expectedFooter = "------ " + MY_FOOTER + " =E0/=A4 ------";
         
 
         Mail mail = FakeMail.fromMime(quotedPrintableTextPlainMessage, javaCharset, javaMailCharset);
         mailet.service(mail);
 
-        assertThat(MailUtil.toString(mail, javaCharset)).isEqualTo(expected);
-
+        assertThat(MailUtil.toString(mail, javaCharset)).endsWith("\r\n" + expectedFooter);
     }
     
     @Test
     public void shouldNotAddFooterWhenUnsupportedEncoding() throws MessagingException, IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty("text", "------ my footer à/€ ------")
+                .setProperty("text", "------ " + MY_FOOTER + " à/€ ------")
                 .build();
         mailet.init(mailetConfig);
         
@@ -169,14 +161,14 @@ public class AddFooterTest {
         Mail mail = FakeMail.fromMime(quotedPrintableTextPlainMessage, javaCharset, javaMailCharset);
         mailet.service(mail);
 
-        assertThat(MailUtil.toString(mail, javaCharset)).isEqualTo(quotedPrintableTextPlainMessage);
+        assertThat(MailUtil.toString(mail, javaCharset)).doesNotContain(MY_FOOTER);
     }
 
     @Test
     public void shouldNotAddFooterWhenUnsupportedTextContentType() throws MessagingException, IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty("text", "------ my footer à/€ ------")
+                .setProperty("text", "------ " + MY_FOOTER + " à/€ ------")
                 .build();
         mailet.init(mailetConfig);
         
@@ -203,7 +195,7 @@ public class AddFooterTest {
     public void shouldNotAddFooterWhenNestedUnsupportedMultipart() throws MessagingException, IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty("text", "------ my footer à/€ ------")
+                .setProperty("text", "------ " + MY_FOOTER + " à/€ ------")
                 .build();
         mailet.init(mailetConfig);
         
@@ -239,7 +231,7 @@ public class AddFooterTest {
     public void shouldAddFooterWhenMultipartRelatedHtmlMessage() throws MessagingException, IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty("text", "------ my footer à/€ ------")
+                .setProperty("text", "------ " + MY_FOOTER + " à/€ ------")
                 .build();
         mailet.init(mailetConfig);
         
@@ -279,12 +271,12 @@ public class AddFooterTest {
                 "--------------050206010102010306090507--",
                 "");
 
-        String expectedFooter = "<br />------ my footer =E0/=A4 ------";
+        String expectedFooter = "<br />------ " + MY_FOOTER + " =E0/=A4 ------";
 
         Mail mail = FakeMail.fromMime(htmlMultipartRelatedMessagePart1 + htmlMultipartRelatedMessagePart2, javaCharset, javaMailCharset);
         mailet.service(mail);
 
-        assertThat(MailUtil.toString(mail, javaCharset)).isEqualTo(htmlMultipartRelatedMessagePart1 + expectedFooter + htmlMultipartRelatedMessagePart2);
+        assertThat(MailUtil.toString(mail, javaCharset)).contains(expectedFooter);
     }
     
     @Test
@@ -292,7 +284,7 @@ public class AddFooterTest {
             IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty("text", "------ my footer à/€ ------")
+                .setProperty("text", "------ " + MY_FOOTER + " à/€ ------")
                 .build();
         mailet.init(mailetConfig);
         
@@ -320,31 +312,8 @@ public class AddFooterTest {
         
         Mail mail = FakeMail.fromMime(multipartAlternativeMessage, javaCharset, javaMailCharset);
         mailet.service(mail);
-
-        String expected = Joiner.on("\r\n").join(
-                "Subject: test",
-                "Content-Type: multipart/alternative;",
-                "    boundary=\"--==--\"",
-                "MIME-Version: 1.0",
-                "",
-                "----==--",
-                "Content-Type: text/plain;",
-                "    charset=\"ISO-8859-15\"",
-                "Content-Transfer-Encoding: quoted-printable",
-                "",
-                "Test=E0 and @=80",
-                "------ my footer =E0/=A4 ------",
-                "----==--",
-                "Content-Type: text/html;",
-                "    charset=\"CP1252\"",
-                "Content-Transfer-Encoding: quoted-printable",
-                "",
-                "<html><body>test =80 ss<br />------ my footer =E0/=80 ------</body></html>",
-                "----==----",
-                ""
-                );
         
-        assertThat(MailUtil.toString(mail, javaCharset)).isEqualTo(expected);
+        assertThat(MailUtil.toString(mail, javaCharset)).matches("(.|\n|\r)*" + MY_FOOTER + "(.|\n|\r)*" + MY_FOOTER + "(.|\n|\r)*");
     }
 
     @Test
@@ -352,7 +321,7 @@ public class AddFooterTest {
             IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty("text", "------ my footer à/€ ------")
+                .setProperty("text", "------ " + MY_FOOTER + " à/€ ------")
                 .build();
         mailet.init(mailetConfig);
         
@@ -370,18 +339,8 @@ public class AddFooterTest {
         Mail mail = FakeMail.fromMime(htmlMessage, javaCharset, javaMailCharset);
         mailet.service(mail);
 
-        String expected = Joiner.on("\r\n").join(
-                "Subject: test",
-                "MIME-Version: 1.0",
-                "Content-Type: text/html;",
-                "    charset=\"CP1252\"",
-                "Content-Transfer-Encoding: quoted-printable",
-                "",
-                "<html><body>test =80 ss<br />------ my footer =E0/=80 ------</bOdY></html>",
-                ""
-                );
-        
-        assertThat(MailUtil.toString(mail, javaCharset)).isEqualTo(expected);
+        String htmlContent = "<html><body>test =80 ss<br />------ " + MY_FOOTER + " =E0/=80 ------</bOdY></html>";
+        assertThat(MailUtil.toString(mail, javaCharset)).contains(htmlContent);
     }
 
     @Test
@@ -389,7 +348,7 @@ public class AddFooterTest {
             IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty("text", "------ my footer à/€ ------")
+                .setProperty("text", "------ " + MY_FOOTER + " à/€ ------")
                 .build();
         mailet.init(mailetConfig);
         
@@ -407,18 +366,9 @@ public class AddFooterTest {
         Mail mail = FakeMail.fromMime(htmlMessage, javaCharset, javaMailCharset);
         mailet.service(mail);
 
-        String expected = Joiner.on("\r\n").join(
-                "Subject: test",
-                "MIME-Version: 1.0",
-                "Content-Type: text/html;",
-                "    charset=\"CP1252\"",
-                "Content-Transfer-Encoding: quoted-printable",
-                "",
-                "<html><body>test =80 ss",
-                "<br />------ my footer =E0/=80 ------"
-                );
+        String expectedFooter = "<br />------ " + MY_FOOTER + " =E0/=80 ------";
         
-        assertThat(MailUtil.toString(mail, javaCharset)).isEqualTo(expected);
+        assertThat(MailUtil.toString(mail, javaCharset)).endsWith(expectedFooter);
     }
     
     @SuppressWarnings("unchecked")
@@ -426,7 +376,7 @@ public class AddFooterTest {
     public void shouldThrowMessagingExceptionWhenIOExceptionReadingMessage() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty("text", "------ my footer à/€ ------")
+                .setProperty("text", "------ " + MY_FOOTER + " à/€ ------")
                 .build();
         mailet.init(mailetConfig);
         

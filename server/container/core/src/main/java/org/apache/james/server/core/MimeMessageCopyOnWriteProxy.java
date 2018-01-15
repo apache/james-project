@@ -30,6 +30,7 @@ import javax.mail.Address;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 import javax.mail.Folder;
+import javax.mail.Header;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
@@ -284,37 +285,31 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
         return getWrappedMessage().getHeader(name, delimiter);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration<String> getAllHeaders() throws MessagingException {
+    public Enumeration<Header> getAllHeaders() throws MessagingException {
         return getWrappedMessage().getAllHeaders();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration<String> getMatchingHeaders(String[] names) throws MessagingException {
+    public Enumeration<Header> getMatchingHeaders(String[] names) throws MessagingException {
         return getWrappedMessage().getMatchingHeaders(names);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration<String> getNonMatchingHeaders(String[] names) throws MessagingException {
+    public Enumeration<Header> getNonMatchingHeaders(String[] names) throws MessagingException {
         return getWrappedMessage().getNonMatchingHeaders(names);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Enumeration<String> getAllHeaderLines() throws MessagingException {
         return getWrappedMessage().getAllHeaderLines();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Enumeration<String> getMatchingHeaderLines(String[] names) throws MessagingException {
         return getWrappedMessage().getMatchingHeaderLines(names);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Enumeration<String> getNonMatchingHeaderLines(String[] names) throws MessagingException {
         return getWrappedMessage().getNonMatchingHeaderLines(names);

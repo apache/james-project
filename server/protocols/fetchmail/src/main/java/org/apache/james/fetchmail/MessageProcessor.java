@@ -572,7 +572,6 @@ public class MessageProcessor extends ProcessorAbstract {
         MimeMessage messageOut = new MimeMessage(getSession());
 
         // Propogate the headers and subject
-        @SuppressWarnings("unchecked")
         Enumeration<String> headersInEnum = getMessageIn().getAllHeaderLines();
         while (headersInEnum.hasMoreElements()) {
             messageOut.addHeaderLine(headersInEnum.nextElement());
@@ -875,7 +874,6 @@ public class MessageProcessor extends ProcessorAbstract {
      * @return boolean
      */
     protected boolean isBouncing() throws MessagingException {
-        @SuppressWarnings("unchecked")
         Enumeration<String> enumeration = getMessageIn().getMatchingHeaderLines(new String[]{"X-fetched-from"});
         int count = 0;
         while (enumeration.hasMoreElements()) {
@@ -940,7 +938,6 @@ public class MessageProcessor extends ProcessorAbstract {
             }
         } else {
             try {
-                @SuppressWarnings("unchecked")
                 Enumeration<String> enumeration = msg.getMatchingHeaderLines(new String[]{"Received"});
                 while (enumeration.hasMoreElements()) {
                     String received = enumeration.nextElement();

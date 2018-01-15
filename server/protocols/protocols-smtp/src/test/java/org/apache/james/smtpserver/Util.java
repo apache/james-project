@@ -22,12 +22,11 @@ import java.util.Arrays;
 import java.util.Random;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.ParseException;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.smtpserver.mock.MockMimeMessage;
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.smtpserver.mock.mailet.MockMail;
 
 /**
@@ -46,38 +45,15 @@ public class Util {
         return mockedMail;
     }
 
-    public static MockMimeMessage createMimeMessage() throws MessagingException {
-        return createMimeMessage(null, null);
-    }
-
-    public static MockMimeMessage createMimeMessageWithSubject(String subject) throws MessagingException {
-        return createMimeMessage(null, null, subject, 0);
-    }
-
-    public static MockMimeMessage createMimeMessage(String subject, int number) throws MessagingException {
-        return createMimeMessage(null, null, subject, number);
-    }
-
-    public static MockMimeMessage createMimeMessage(String headerName, String headerValue) throws MessagingException {
-        return createMimeMessage(headerName, headerValue, "testmail", 0);
-    }
-
-    public static MockMimeMessage createMimeMessage(String headerName, String headerValue, String subject, int number)
-            throws MessagingException {
+    public static MimeMessage createMimeMessage(String headerName, String headerValue) throws MessagingException {
         String sender = "test@james.apache.org";
         String rcpt = "test2@james.apache.org";
-
-        MockMimeMessage mockedMimeMessage = new MockMimeMessage(number);
-        mockedMimeMessage.setFrom(new InternetAddress(sender));
-        mockedMimeMessage.setRecipients(MimeMessage.RecipientType.TO, rcpt);
-        if (headerName != null) {
-            mockedMimeMessage.setHeader(headerName, headerValue);
-        }
-        if (subject != null) {
-            mockedMimeMessage.setSubject(subject);
-        }
-        mockedMimeMessage.setText("testtext");
-        mockedMimeMessage.saveChanges();
-        return mockedMimeMessage;
+        return MimeMessageBuilder.mimeMessageBuilder()
+            .addHeader(headerName, headerValue)
+            .setSubject("testmail")
+            .setText("testtext")
+            .addToRecipient(rcpt)
+            .addFrom(sender)
+            .build();
     }
 }

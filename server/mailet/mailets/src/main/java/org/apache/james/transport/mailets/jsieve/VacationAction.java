@@ -86,9 +86,9 @@ public class VacationAction implements MailAction {
     }
 
     private boolean isMailingList(Mail mail) throws MessagingException {
-        Enumeration<?> enumeration = mail.getMessage().getAllHeaderLines();
+        Enumeration<String> enumeration = mail.getMessage().getAllHeaderLines();
         while (enumeration.hasMoreElements()) {
-            String headerName = (String) enumeration.nextElement();
+            String headerName = enumeration.nextElement();
             if (headerName.startsWith("List-")) {
                 return true;
             }

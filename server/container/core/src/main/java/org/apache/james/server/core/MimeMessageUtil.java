@@ -181,7 +181,6 @@ public class MimeMessageUtil {
      */
     private static void writeHeadersTo(MimeMessage message, OutputStream headerOs, String[] ignoreList) throws MessagingException {
         // Write the headers (minus ignored ones)
-        @SuppressWarnings("unchecked")
         Enumeration<String> headers = message.getNonMatchingHeaderLines(ignoreList);
         writeHeadersTo(headers, headerOs);
     }
@@ -284,13 +283,13 @@ public class MimeMessageUtil {
         // messages each time).
         size = message.getSize();
         if (size != -1) {
-            Enumeration<?> e = message.getAllHeaderLines();
+            Enumeration<String> e = message.getAllHeaderLines();
             if (e.hasMoreElements()) {
                 size += 2;
             }
             while (e.hasMoreElements()) {
                 // add 2 bytes for the CRLF
-                size += ((String) e.nextElement()).length() + 2;
+                size += e.nextElement().length() + 2;
             }
         }
 

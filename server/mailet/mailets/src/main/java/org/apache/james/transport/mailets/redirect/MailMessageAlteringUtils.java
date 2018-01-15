@@ -243,7 +243,6 @@ public class MailMessageAlteringUtils {
     }
 
     private void copyRelevantHeaders(MimeMessage originalMessage, MimeMessage newMessage) throws MessagingException {
-        @SuppressWarnings("unchecked")
         Enumeration<String> headerEnum = originalMessage.getMatchingHeaderLines(
                 new String[] { RFC2822Headers.DATE, RFC2822Headers.FROM, RFC2822Headers.REPLY_TO, RFC2822Headers.TO, 
                         RFC2822Headers.SUBJECT, RFC2822Headers.RETURN_PATH });

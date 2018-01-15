@@ -186,9 +186,9 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
     public List<String> getHeaderNames() throws SieveMailException {
         Set<String> headerNames = new HashSet<>();
         try {
-            Enumeration<?> allHeaders = getMessage().getAllHeaders();
+            Enumeration<Header> allHeaders = getMessage().getAllHeaders();
             while (allHeaders.hasMoreElements()) {
-                headerNames.add(((Header) allHeaders.nextElement()).getName());
+                headerNames.add(allHeaders.nextElement().getName());
             }
             return new ArrayList<>(headerNames);
         } catch (MessagingException ex) {

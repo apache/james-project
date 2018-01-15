@@ -49,7 +49,7 @@ public class RelayLimit extends GenericMatcher {
     public Collection<MailAddress> match(Mail mail) throws javax.mail.MessagingException {
         MimeMessage mm = mail.getMessage();
         int count = 0;
-        for (@SuppressWarnings("unchecked") Enumeration<Header> e = mm.getAllHeaders(); e.hasMoreElements();) {
+        for (Enumeration<Header> e = mm.getAllHeaders(); e.hasMoreElements();) {
             Header hdr = e.nextElement();
             if (hdr.getName().equals(RFC2822Headers.RECEIVED)) {
                 count++;
