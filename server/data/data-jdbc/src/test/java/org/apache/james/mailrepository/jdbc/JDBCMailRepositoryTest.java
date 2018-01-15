@@ -19,6 +19,9 @@
 
 package org.apache.james.mailrepository.jdbc;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
+
 import java.sql.SQLException;
 
 import javax.sql.DataSource;
@@ -30,6 +33,7 @@ import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailrepository.MailRepositoryContract;
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.mailet.Mail;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -79,5 +83,23 @@ public class JDBCMailRepositoryTest implements MailRepositoryContract {
     @Disabled("JAMES-2304 JDBC doesn't update the message Content")
     @Override
     public void storingMessageWithSameKeyTwiceShouldUpdateMessageContent() {
+    }
+
+    /**
+     * JAMES-2303 JDBC doesn't store PerRecipientSpecificHeaders
+     */
+    @Override
+    public void checkMailEquality(Mail actual, Mail expected) {
+        assertAll(
+            () -> assertThat(actual.getMessage().getContent()).isEqualTo(expected.getMessage().getContent()),
+            () -> assertThat(actual.getMessageSize()).isEqualTo(expected.getMessageSize()),
+            () -> assertThat(actual.getName()).isEqualTo(expected.getName()),
+            () -> assertThat(actual.getState()).isEqualTo(expected.getState()),
+            () -> assertThat(actual.getAttribute(TEST_ATTRIBUTE)).isEqualTo(expected.getAttribute(TEST_ATTRIBUTE)),
+            () -> assertThat(actual.getErrorMessage()).isEqualTo(expected.getErrorMessage()),
+            () -> assertThat(actual.getRemoteHost()).isEqualTo(expected.getRemoteHost()),
+            () -> assertThat(actual.getRemoteAddr()).isEqualTo(expected.getRemoteAddr()),
+            () -> assertThat(actual.getLastUpdated()).isEqualTo(expected.getLastUpdated())
+        );
     }
 }

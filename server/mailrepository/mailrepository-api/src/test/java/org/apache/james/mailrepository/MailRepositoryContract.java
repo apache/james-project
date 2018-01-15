@@ -22,6 +22,7 @@ package org.apache.james.mailrepository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+import java.util.Date;
 import java.util.List;
 
 import javax.mail.MessagingException;
@@ -32,6 +33,7 @@ import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
+import org.apache.mailet.PerRecipientHeaders;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -40,17 +42,17 @@ public interface MailRepositoryContract {
 
     String TEST_ATTRIBUTE = "testAttribute";
 
-    default  Mail createMail(String name) throws MessagingException {
+    default MailImpl createMail(String name) throws MessagingException {
         return createMail(name, "original body");
     }
 
-    default  Mail createMail(String name, String body) throws MessagingException {
+    default MailImpl createMail(String name, String body) throws MessagingException {
         MimeMessage mailContent = generateMailContent(body);
         List<MailAddress> recipients = ImmutableList
             .of(new MailAddress("rec1@domain.com"),
                 new MailAddress("rec2@domain.com"));
         MailAddress sender = new MailAddress("sender@domain.com");
-        Mail mail = new MailImpl(name, sender, recipients, mailContent);
+        MailImpl mail = new MailImpl(name, sender, recipients, mailContent);
         mail.setAttribute(TEST_ATTRIBUTE, "testValue");
         return mail;
     }
@@ -69,7 +71,12 @@ public interface MailRepositoryContract {
             () -> assertThat(actual.getMessageSize()).isEqualTo(expected.getMessageSize()),
             () -> assertThat(actual.getName()).isEqualTo(expected.getName()),
             () -> assertThat(actual.getState()).isEqualTo(expected.getState()),
-            () -> assertThat(actual.getAttribute(TEST_ATTRIBUTE)).isEqualTo(expected.getAttribute(TEST_ATTRIBUTE))
+            () -> assertThat(actual.getAttribute(TEST_ATTRIBUTE)).isEqualTo(expected.getAttribute(TEST_ATTRIBUTE)),
+            () -> assertThat(actual.getErrorMessage()).isEqualTo(expected.getErrorMessage()),
+            () -> assertThat(actual.getRemoteHost()).isEqualTo(expected.getRemoteHost()),
+            () -> assertThat(actual.getRemoteAddr()).isEqualTo(expected.getRemoteAddr()),
+            () -> assertThat(actual.getLastUpdated()).isEqualTo(expected.getLastUpdated()),
+            () -> assertThat(actual.getPerRecipientSpecificHeaders()).isEqualTo(expected.getPerRecipientSpecificHeaders())
         );
     }
 
@@ -88,6 +95,27 @@ public interface MailRepositoryContract {
         MailRepository testee = retrieveRepository();
         String key1 = "mail1";
         Mail mail = createMail(key1);
+
+        testee.store(mail);
+
+        assertThat(testee.retrieve(key1)).satisfies(actual -> checkMailEquality(actual, mail));
+    }
+
+
+    @Test
+    default void retrieveShouldReturnAllMailProperties() throws Exception {
+        MailRepository testee = retrieveRepository();
+        String key1 = "mail1";
+        MailImpl mail = createMail(key1);
+        mail.setErrorMessage("Error message");
+        mail.setRemoteAddr("172.5.2.3");
+        mail.setRemoteHost("smtp@domain.com");
+        mail.setLastUpdated(new Date());
+        mail.addSpecificHeaderForRecipient(PerRecipientHeaders.Header.builder()
+            .name("name")
+            .value("value")
+            .build(),
+            new MailAddress("bob@domain.com"));
 
         testee.store(mail);
 
