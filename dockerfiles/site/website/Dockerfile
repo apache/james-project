@@ -6,7 +6,7 @@ FROM java:openjdk-8-jdk
 
 # Install Maven
 WORKDIR /root
-RUN wget http://mirrors.ircam.fr/pub/apache/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.tar.gz
+RUN wget https://archive.apache.org/dist/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.tar.gz
 RUN tar -xvf apache-maven-3.5.0-bin.tar.gz
 RUN ln -s /root/apache-maven-3.5.0/bin/mvn /usr/bin/mvn
 
