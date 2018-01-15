@@ -35,6 +35,7 @@
     <modules>
         <module>cassandra-jmap-integration-testing</module>
         <module>jmap-integration-testing-common</module>
+        <module>memory-jmap-integration-testing</module>
     </modules>
 
 </project>
