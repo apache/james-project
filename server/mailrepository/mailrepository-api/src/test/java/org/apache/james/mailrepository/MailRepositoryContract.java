@@ -116,6 +116,91 @@ public interface MailRepositoryContract {
     }
 
     @Test
+    default void retrieveShouldReturnNullWhenKeyWasRemoved() throws Exception {
+        MailRepository testee = retrieveRepository();
+        String key = "mail1";
+        testee.store(createMail(key));
+
+        testee.remove(key);
+
+        assertThat(retrieveRepository().list()).doesNotContain(key);
+        assertThat(retrieveRepository().retrieve(key)).isNull();
+    }
+
+    @Test
+    default void removeShouldnotAffectUnrelatedMails() throws Exception {
+        MailRepository testee = retrieveRepository();
+        String key1 = "mail1";
+        testee.store(createMail(key1));
+        String key2 = "mail2";
+        testee.store(createMail(key2));
+
+        testee.remove(key1);
+
+        assertThat(retrieveRepository().list()).contains(key2);
+    }
+
+    @Test
+    default void removedMailsShouldNotBeListed() throws Exception {
+        MailRepository testee = retrieveRepository();
+
+        String key1 = "mail1";
+        String key2 = "mail2";
+        String key3 = "mail3";
+        Mail mail1 = createMail(key1);
+        Mail mail2 = createMail(key2);
+        Mail mail3 = createMail(key3);
+        retrieveRepository().store(mail1);
+        retrieveRepository().store(mail2);
+        retrieveRepository().store(mail3);
+
+        testee.remove(ImmutableList.of(mail1, mail3));
+
+        assertThat(retrieveRepository().list())
+            .contains(key2)
+            .doesNotContain(key1, key3);
+    }
+
+    @Test
+    default void removedMailShouldNotBeListed() throws Exception {
+        MailRepository testee = retrieveRepository();
+
+        String key1 = "mail1";
+        String key2 = "mail2";
+        String key3 = "mail3";
+        Mail mail1 = createMail(key1);
+        Mail mail2 = createMail(key2);
+        Mail mail3 = createMail(key3);
+        retrieveRepository().store(mail1);
+        retrieveRepository().store(mail2);
+        retrieveRepository().store(mail3);
+
+        testee.remove(mail2);
+
+        assertThat(retrieveRepository().list())
+            .contains(key1, key3)
+            .doesNotContain(key2);
+    }
+
+    @Test
+    default void removeShouldHaveNoEffectForUnknownMails() throws Exception {
+        MailRepository testee = retrieveRepository();
+
+        testee.remove(ImmutableList.of(createMail("unknown")));
+
+        assertThat(retrieveRepository().list()).isEmpty();
+    }
+
+    @Test
+    default void removeShouldHaveNoEffectForUnknownMail() throws Exception {
+        MailRepository testee = retrieveRepository();
+
+        testee.remove(createMail("unknown"));
+
+        assertThat(retrieveRepository().list()).isEmpty();
+    }
+
+    @Test
     default void listShouldReturnStoredMailsKeys() throws Exception {
         MailRepository testee = retrieveRepository();
         String key1 = "mail1";
