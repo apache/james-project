@@ -179,6 +179,7 @@
       <property name="specialImportsRegExp" value="org"/>
       <property name="sortImportsInGroupAlphabetically" value="true"/>
     </module>
+    <module name="UnusedImports"/>
     <module name="MethodParamPad"/>
     <module name="NoWhitespaceBefore">
       <property name="allowLineBreaks" value="true"/>
