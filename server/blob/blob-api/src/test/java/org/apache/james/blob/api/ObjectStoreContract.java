@@ -80,4 +80,15 @@ public interface ObjectStoreContract {
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEqualTo(longString);
     }
+
+    @Test
+    default void readShouldReturnBigSavedData() throws IOException {
+        // 12 MB of text
+        String bigString = Strings.repeat("0123456789\r\n", 1024 * 1024);
+        BlobId blobId = testee().save(bigString.getBytes(StandardCharsets.UTF_8)).join();
+
+        byte[] bytes = testee().read(blobId).join();
+
+        assertThat(new String(bytes, StandardCharsets.UTF_8)).isEqualTo(bigString);
+    }
 }
