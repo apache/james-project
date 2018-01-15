@@ -19,14 +19,10 @@
 
 package org.apache.james.mailrepository;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
-
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.file.FileMailRepository;
-import org.apache.mailet.Mail;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -55,24 +51,6 @@ public class FileMailRepositoryTest implements MailRepositoryContract {
     @Override
     public MailRepository retrieveRepository() {
         return mailRepository;
-    }
-
-    /**
-     * FileMailRepository doesn't store PerRecipientSpecificHeaders
-     */
-    @Override
-    public void checkMailEquality(Mail actual, Mail expected) {
-        assertAll(
-            () -> assertThat(actual.getMessage().getContent()).isEqualTo(expected.getMessage().getContent()),
-            () -> assertThat(actual.getMessageSize()).isEqualTo(expected.getMessageSize()),
-            () -> assertThat(actual.getName()).isEqualTo(expected.getName()),
-            () -> assertThat(actual.getState()).isEqualTo(expected.getState()),
-            () -> assertThat(actual.getAttribute(TEST_ATTRIBUTE)).isEqualTo(expected.getAttribute(TEST_ATTRIBUTE)),
-            () -> assertThat(actual.getErrorMessage()).isEqualTo(expected.getErrorMessage()),
-            () -> assertThat(actual.getRemoteHost()).isEqualTo(expected.getRemoteHost()),
-            () -> assertThat(actual.getRemoteAddr()).isEqualTo(expected.getRemoteAddr()),
-            () -> assertThat(actual.getLastUpdated()).isEqualTo(expected.getLastUpdated())
-        );
     }
 
 }

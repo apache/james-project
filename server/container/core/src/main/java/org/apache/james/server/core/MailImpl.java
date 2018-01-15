@@ -493,6 +493,7 @@ public class MailImpl implements Disposable, Mail {
                 throw ode;
             }
         }
+        perRecipientSpecificHeaders = (PerRecipientHeaders) in.readObject();
     }
 
     /**
@@ -511,6 +512,7 @@ public class MailImpl implements Disposable, Mail {
         out.writeObject(remoteAddr);
         out.writeObject(lastUpdated);
         out.writeObject(attributes);
+        out.writeObject(perRecipientSpecificHeaders);
     }
 
     @Override

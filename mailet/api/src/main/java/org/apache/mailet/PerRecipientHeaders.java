@@ -19,6 +19,7 @@
 
 package org.apache.mailet;
 
+import java.io.Serializable;
 import java.util.Collection;
 
 import org.apache.james.core.MailAddress;
@@ -31,7 +32,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
-public class PerRecipientHeaders {
+public class PerRecipientHeaders implements Serializable {
     private Multimap<MailAddress, Header> headersByRecipient;
 
     public PerRecipientHeaders() {
@@ -57,7 +58,7 @@ public class PerRecipientHeaders {
         headersByRecipient.put(recipient, header);
     }
 
-    public static class Header {
+    public static class Header implements Serializable {
         private final String name;
         private final String value;
 
