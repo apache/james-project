@@ -217,7 +217,7 @@ public class SMTPServerTest {
         smtpServer.init();
     }
 
-    protected void setUpFakeLoader() {
+    protected void setUpFakeLoader() throws IOException {
 
         chain = new MockProtocolHandlerLoader();
     

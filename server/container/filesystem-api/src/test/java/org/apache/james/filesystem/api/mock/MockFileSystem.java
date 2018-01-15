@@ -28,12 +28,20 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 import org.apache.james.filesystem.api.FileSystem;
+import org.junit.rules.TemporaryFolder;
 
 public class MockFileSystem implements FileSystem {
 
+    private final TemporaryFolder temporaryFolder;
+
+    public MockFileSystem() throws IOException {
+        this.temporaryFolder = new TemporaryFolder();
+        temporaryFolder.create();
+    }
+
     @Override
     public File getBasedir() throws FileNotFoundException {
-        return new File(".");
+        return temporaryFolder.getRoot();
     }
 
     @Override
@@ -54,7 +62,7 @@ public class MockFileSystem implements FileSystem {
                     }
                     // return new File("./src"+fileURL.substring(6));
                 } else {
-                    return new File(fileURL.substring(FileSystem.FILE_PROTOCOL.length()));
+                    return new File(temporaryFolder.getRoot() + File.separator + fileURL.substring(FileSystem.FILE_PROTOCOL.length()));
                 }
             } else {
                 throw new UnsupportedOperationException("getFile: " + fileURL);
@@ -62,5 +70,9 @@ public class MockFileSystem implements FileSystem {
         } catch (NullPointerException npe) {
             throw new FileNotFoundException("NPE on: " + fileURL);
         }
+    }
+
+    public void clear() {
+        temporaryFolder.delete();
     }
 }
