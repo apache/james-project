@@ -22,6 +22,7 @@ package org.apache.james.mailrepository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 
@@ -99,6 +100,17 @@ public interface MailRepositoryContract {
         testee.store(mail);
 
         assertThat(testee.retrieve(key1)).satisfies(actual -> checkMailEquality(actual, mail));
+    }
+
+    @Test
+    default void retrieveShouldGetStoredEmojiMail() throws Exception {
+        MailRepository testee = retrieveRepository();
+        String key1 = "mail1";
+        Mail mail = createMail(key1, "my content contains 🐋");
+
+        testee.store(mail);
+
+        assertThat(testee.retrieve(key1).getMessage().getContent()).isEqualTo("my content contains 🐋");
     }
 
 

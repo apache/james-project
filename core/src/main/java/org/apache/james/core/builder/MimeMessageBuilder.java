@@ -50,6 +50,8 @@ import com.google.common.collect.ImmutableList;
 
 public class MimeMessageBuilder {
 
+    public static final String DEFAULT_TEXT_PLAIN_UTF8_TYPE = "text/plain; charset=UTF-8";
+
     public static class Header {
         private final String name;
         private final String value;
@@ -96,7 +98,6 @@ public class MimeMessageBuilder {
     }
 
     public static class BodyPartBuilder {
-        public static final String DEFAULT_TEXT_PLAIN_UTF8_TYPE = "text/plain; charset=UTF-8";
         public static final String DEFAULT_VALUE = "";
 
         private Optional<String> cid = Optional.empty();
@@ -348,7 +349,7 @@ public class MimeMessageBuilder {
         Preconditions.checkState(!(text.isPresent() && content.isPresent()), "Can not get at the same time a text and a content");
         MimeMessage mimeMessage = new MimeMessage(Session.getInstance(new Properties()));
         if (text.isPresent()) {
-            mimeMessage.setContent(text.get(), textContentType.orElse("text/plain"));
+            mimeMessage.setContent(text.get(), textContentType.orElse(DEFAULT_TEXT_PLAIN_UTF8_TYPE));
         }
         if (content.isPresent()) {
             mimeMessage.setContent(content.get());
