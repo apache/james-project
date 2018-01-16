@@ -24,13 +24,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.net.UnknownHostException;
-import java.util.Properties;
 
 import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.base.MailAddressFixture;
@@ -50,16 +48,14 @@ public class NotifySenderTest {
     public ExpectedException expectedException = ExpectedException.none();
 
     private NotifySender notifySender;
-    private MailAddress postmaster;
     private FakeMailContext fakeMailContext;
 
     @Before
     public void setUp() throws Exception {
         DNSService dnsService = mock(DNSService.class);
         notifySender = new NotifySender(dnsService);
-        postmaster = new MailAddress("postmaster@james.org");
         fakeMailContext = FakeMailContext.builder()
-                .postmaster(postmaster)
+                .postmaster(new MailAddress("postmaster@james.org"))
                 .build();
 
         when(dnsService.getLocalHost()).thenThrow(new UnknownHostException());
@@ -166,12 +162,11 @@ public class NotifySenderTest {
                 .build();
         notifySender.init(mailetConfig);
 
-        MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        mimeMessage.setSubject("My subject");
         FakeMail mail = FakeMail.builder()
                 .name(MAILET_NAME)
                 .sender(MailAddressFixture.ANY_AT_JAMES)
-                .mimeMessage(mimeMessage)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setSubject("My subject"))
                 .build();
 
         notifySender.service(mail);

@@ -165,7 +165,7 @@ public class ContactExtractorTest {
             + "Subject: extract this recipient please\r\n"
             + "\r\n"
             + "Please!";
-        MimeMessage message = MimeMessageUtil.mimeMessageFromBytes(rawMessage.getBytes());
+        MimeMessage message = MimeMessageUtil.mimeMessageFromString(rawMessage);
         FakeMail mail = FakeMail.builder().mimeMessage(message)
             .sender(SENDER)
             .recipient("recipient@example.com")
@@ -185,7 +185,7 @@ public class ContactExtractorTest {
             + "Subject: extract this recipient please\r\n"
             + "\r\n"
             + "Please!";
-        MimeMessage message = MimeMessageUtil.mimeMessageFromBytes(rawMessage.getBytes());
+        MimeMessage message = MimeMessageUtil.mimeMessageFromString(rawMessage);
         FakeMail mail = FakeMail.builder().mimeMessage(message)
             .sender(SENDER)
             .recipient("recipient@example.com")
@@ -205,7 +205,7 @@ public class ContactExtractorTest {
             + "Subject: extract this recipient please\r\n"
             + "\r\n"
             + "Please!";
-        MimeMessage message = MimeMessageUtil.mimeMessageFromBytes(rawMessage.getBytes());
+        MimeMessage message = MimeMessageUtil.mimeMessageFromString(rawMessage);
         FakeMail mail = FakeMail.builder().mimeMessage(message)
             .sender(SENDER)
             .recipient("recipient@example.com")

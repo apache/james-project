@@ -22,12 +22,10 @@ package org.apache.james.transport.matchers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Properties;
-
 import javax.mail.MessagingException;
-import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
@@ -188,11 +186,10 @@ public class HasHeaderTest {
                 .condition(HEADER_NAME_1 + "+" + HEADER_NAME_2)
                 .build());
 
-        MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        mimeMessage.addHeader(HEADER_NAME_1, HEADER_VALUE_1);
-        mimeMessage.addHeader(HEADER_NAME_2, HEADER_VALUE_2);
-        mimeMessage.saveChanges();
-        Mail mail = MailUtil.createMockMail2Recipients(mimeMessage);
+        Mail mail = MailUtil.createMockMail2Recipients(MimeMessageBuilder.mimeMessageBuilder()
+            .addHeader(HEADER_NAME_1, HEADER_VALUE_1)
+            .addHeader(HEADER_NAME_2, HEADER_VALUE_2)
+            .build());
 
         assertThat(matcher.match(mail)).containsAll(mockedMail.getRecipients());
     }
@@ -204,11 +201,10 @@ public class HasHeaderTest {
                 .condition(HEADER_NAME_1 + "=" + HEADER_VALUE_2)
                 .build());
 
-        MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        mimeMessage.addHeader(HEADER_NAME_1, HEADER_VALUE_1);
-        mimeMessage.addHeader(HEADER_NAME_1, HEADER_VALUE_2);
-        mimeMessage.saveChanges();
-        Mail mail = MailUtil.createMockMail2Recipients(mimeMessage);
+        Mail mail = MailUtil.createMockMail2Recipients(MimeMessageBuilder.mimeMessageBuilder()
+            .addHeader(HEADER_NAME_1, HEADER_VALUE_1)
+            .addHeader(HEADER_NAME_1, HEADER_VALUE_2)
+            .build());
 
         assertThat(matcher.match(mail)).containsAll(mockedMail.getRecipients());
     }

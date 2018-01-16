@@ -21,16 +21,15 @@ package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Properties;
 
-import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
+import org.apache.mailet.base.test.MimeMessageUtil;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -61,11 +60,9 @@ public class ReplaceContentTest {
                 .build();
         mailet.init(mailetConfig);
 
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setSubject("one test");
-
         Mail mail = FakeMail.builder()
-                .mimeMessage(message)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setSubject("one test"))
                 .build();
         mailet.service(mail);
 
@@ -86,12 +83,10 @@ public class ReplaceContentTest {
                 .build();
         mailet.init(mailetConfig);
 
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setText("This is one simple test/ è one simple test.\n"
-                + "Blo blo blo blo.\n");
-
         Mail mail = FakeMail.builder()
-                .mimeMessage(message)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setText("This is one simple test/ è one simple test.\n"
+                        + "Blo blo blo blo.\n"))
                 .build();
         mailet.service(mail);
 
@@ -107,11 +102,9 @@ public class ReplaceContentTest {
                 .build();
         mailet.init(mailetConfig);
 
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setText("aaa");
-
         Mail mail = FakeMail.builder()
-                .mimeMessage(message)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setText("aaa"))
                 .build();
         mailet.service(mail);
 
@@ -126,11 +119,9 @@ public class ReplaceContentTest {
                 .build();
         mailet.init(mailetConfig);
 
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setSubject("re: r:ri:one test");
-
         Mail mail = FakeMail.builder()
-                .mimeMessage(message)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setSubject("re: r:ri:one test"))
                 .build();
         mailet.service(mail);
 
@@ -147,13 +138,11 @@ public class ReplaceContentTest {
                 .build();
         mailet.init(mailetConfig);
 
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setText("Test.\r\n" + "\r\n" + "--original message--\r\n"
-                + "part of\r\n" + "message\\ that\\0 must0 be\r\n"
-                + "quoted. Let's see if\r\n" + "he can do it.");
-
         Mail mail = FakeMail.builder()
-                .mimeMessage(message)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setText("Test.\r\n" + "\r\n" + "--original message--\r\n"
+                        + "part of\r\n" + "message\\ that\\0 must0 be\r\n"
+                        + "quoted. Let's see if\r\n" + "he can do it."))
                 .build();
         mailet.service(mail);
 
@@ -171,12 +160,10 @@ public class ReplaceContentTest {
                 .build();
         mailet.init(mailetConfig);
 
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setSubject("one test");
-        message.setText("Replacement … one test …");
-
         Mail mail = FakeMail.builder()
-                .mimeMessage(message)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setSubject("one test")
+                    .setText("Replacement … one test …"))
                 .build();
         mailet.service(mail);
 
@@ -199,8 +186,7 @@ public class ReplaceContentTest {
                 .build();
         mailet.init(mailetConfig);
 
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()),
-                new ByteArrayInputStream(messageSource.getBytes()));
+        MimeMessage message = MimeMessageUtil.mimeMessageFromString(messageSource);
 
         Mail mail = FakeMail.builder()
                 .mimeMessage(message)
@@ -219,13 +205,11 @@ public class ReplaceContentTest {
                 .build();
         mailet.init(mailetConfig);
 
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setSubject("one test");
-        message.setText("This is one simple test/ è one simple test.\n"
-                + "Blo blo blo blo.\n");
-
         Mail mail = FakeMail.builder()
-                .mimeMessage(message)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setSubject("one test")
+                    .setText("This is one simple test/ è one simple test.\n"
+                        + "Blo blo blo blo.\n"))
                 .build();
         mailet.service(mail);
 

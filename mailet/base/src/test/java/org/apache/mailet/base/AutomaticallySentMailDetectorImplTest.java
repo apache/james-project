@@ -21,7 +21,6 @@ package org.apache.mailet.base;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.ByteArrayInputStream;
 import java.util.Collections;
 import java.util.Properties;
 
@@ -34,6 +33,7 @@ import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.MimeMessageUtil;
 import org.junit.Test;
 
 public class AutomaticallySentMailDetectorImplTest {
@@ -53,7 +53,8 @@ public class AutomaticallySentMailDetectorImplTest {
             new AutomaticallySentMailDetectorImpl()
                 .isAutomaticallySent(FakeMail.builder()
                     .sender(MailAddressFixture.ANY_AT_JAMES)
-                    .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties()), new ByteArrayInputStream("".getBytes())))
+                    .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                        .setText("any"))
                     .build()))
             .isFalse();
     }
@@ -105,47 +106,43 @@ public class AutomaticallySentMailDetectorImplTest {
 
     @Test
     public void listIdShouldBeDetected() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setHeader("List-Id", "any");
         FakeMail fakeMail = FakeMail.builder()
-                .sender("any@any.com")
-                .mimeMessage(message)
-                .build();
+            .sender("any@any.com")
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader("List-Id", "any"))
+            .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMailingList(fakeMail)).isTrue();
     }
 
     @Test
     public void listHelpShouldBeDetected() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setHeader("List-Help", "any");
         FakeMail fakeMail = FakeMail.builder()
-                .sender("any@any.com")
-                .mimeMessage(message)
-                .build();
+            .sender("any@any.com")
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader("List-Help", "any"))
+            .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMailingList(fakeMail)).isTrue();
     }
 
     @Test
     public void listSubscribeShouldBeDetected() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setHeader("List-Subscribe", "any");
         FakeMail fakeMail = FakeMail.builder()
-                .sender("any@any.com")
-                .mimeMessage(message)
-                .build();
+            .sender("any@any.com")
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader("List-Subscribe", "any"))
+            .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMailingList(fakeMail)).isTrue();
     }
 
     @Test
     public void listUnsubscribeShouldBeDetected() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setHeader("List-Unsubscribe", "any");
         FakeMail fakeMail = FakeMail.builder()
                 .sender("any@any.com")
-                .mimeMessage(message)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .addHeader("List-Unsubscribe", "any"))
                 .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMailingList(fakeMail)).isTrue();
@@ -153,36 +150,35 @@ public class AutomaticallySentMailDetectorImplTest {
 
     @Test
     public void listPostShouldBeDetected() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setHeader("List-Post", "any");
         FakeMail fakeMail = FakeMail.builder()
-                .sender("any@any.com")
-                .mimeMessage(message)
-                .build();
+            .sender("any@any.com")
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader("List-Post", "any"))
+            .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMailingList(fakeMail)).isTrue();
     }
 
     @Test
     public void listOwnerShouldBeDetected() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setHeader("List-Owner", "any");
         FakeMail fakeMail = FakeMail.builder()
-                .sender("any@any.com")
-                .mimeMessage(message)
-                .build();
+            .sender("any@any.com")
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader("List-Owner", "any"))
+            .build();
+
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMailingList(fakeMail)).isTrue();
     }
 
     @Test
     public void listArchiveShouldBeDetected() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setHeader("List-Archive", "any");
         FakeMail fakeMail = FakeMail.builder()
-                .sender("any@any.com")
-                .mimeMessage(message)
-                .build();
+            .sender("any@any.com")
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader("List-Archive", "any"))
+            .build();
+
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMailingList(fakeMail)).isTrue();
     }
@@ -191,7 +187,7 @@ public class AutomaticallySentMailDetectorImplTest {
     public void normalMailShouldNotBeIdentifiedAsMailingList() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
                 .sender("any@any.com")
-                .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties())))
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
                 .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMailingList(fakeMail)).isFalse();
@@ -200,7 +196,7 @@ public class AutomaticallySentMailDetectorImplTest {
     @Test
     public void isAutoSubmittedShouldNotMatchNonAutoSubmittedMails() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
-                .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties())))
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
                 .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isAutoSubmitted(fakeMail)).isFalse();
@@ -208,11 +204,10 @@ public class AutomaticallySentMailDetectorImplTest {
 
     @Test
     public void isAutoSubmittedShouldBeDetected() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setHeader("Auto-Submitted", "auto-replied");
         FakeMail fakeMail = FakeMail.builder()
                 .sender("any@any.com")
-                .mimeMessage(message)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .addHeader("Auto-Submitted", "auto-replied"))
                 .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isAutoSubmitted(fakeMail)).isTrue();
@@ -243,7 +238,7 @@ public class AutomaticallySentMailDetectorImplTest {
 
     @Test
     public void isMdnSentAutomaticallyShouldNotFilterManuallySentMdn() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        MimeMessage message = MimeMessageUtil.defaultMimeMessage();
         MimeMultipart multipart = new MimeMultipart();
         MimeBodyPart scriptPart = new MimeBodyPart();
         scriptPart.setDataHandler(
@@ -266,7 +261,7 @@ public class AutomaticallySentMailDetectorImplTest {
 
     @Test
     public void isMdnSentAutomaticallyShouldManageItsMimeType() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        MimeMessage message = MimeMessageUtil.defaultMimeMessage();
         MimeMultipart multipart = new MimeMultipart();
         MimeBodyPart scriptPart = new MimeBodyPart();
         scriptPart.setDataHandler(

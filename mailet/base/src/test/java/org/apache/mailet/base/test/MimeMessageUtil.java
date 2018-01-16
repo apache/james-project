@@ -48,4 +48,8 @@ public class MimeMessageUtil {
         return mimeMessageFromStream(new ByteArrayInputStream(bytes));
     }
 
+    public static MimeMessage mimeMessageFromString(String string) throws MessagingException {
+        return mimeMessageFromBytes(string.getBytes(StandardCharsets.UTF_8));
+    }
+
 }

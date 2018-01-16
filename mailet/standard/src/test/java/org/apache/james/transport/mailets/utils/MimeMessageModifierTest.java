@@ -22,19 +22,19 @@ package org.apache.james.transport.mailets.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
-import java.util.Properties;
 
-import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.junit.Test;
 
 public class MimeMessageModifierTest {
 
     @Test
     public void replaceSubjectShouldReplaceTheSubjectWhenSubjectIsPresent() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setSubject("subject");
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .setSubject("subject")
+            .build();
 
         String expectedSubject = "new subject";
         new MimeMessageModifier(message).replaceSubject(Optional.of(expectedSubject));
@@ -44,9 +44,10 @@ public class MimeMessageModifierTest {
 
     @Test
     public void replaceSubjectShouldNotAlterTheSubjectWhenSubjectIsAbsent() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
         String expectedSubject = "subject";
-        message.setSubject(expectedSubject);
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+                .setSubject(expectedSubject)
+                .build();
 
         new MimeMessageModifier(message).replaceSubject(Optional.empty());
 

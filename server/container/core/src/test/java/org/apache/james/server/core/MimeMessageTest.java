@@ -36,8 +36,10 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.mailet.base.RFC2822Headers;
+import org.apache.mailet.base.test.MimeMessageUtil;
 import org.junit.Test;
 
 /**
@@ -46,12 +48,11 @@ import org.junit.Test;
 public class MimeMessageTest {
 
     protected MimeMessage getSimpleMessage() throws Exception {
-        MimeMessage mmCreated = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        mmCreated.addHeader("Date", "Tue, 16 Jan 2018 09:56:01 +0700 (ICT)");
-        mmCreated.setSubject("test");
-        mmCreated.setText("test body");
-        mmCreated.saveChanges();
-        return mmCreated;
+        return MimeMessageBuilder.mimeMessageBuilder()
+            .addHeader("Date", "Tue, 16 Jan 2018 09:56:01 +0700 (ICT)")
+            .setSubject("test")
+            .setText("test body")
+            .build();
     }
 
     protected String getSimpleMessageCleanedSource() {
@@ -65,13 +66,12 @@ public class MimeMessageTest {
     }
 
     protected MimeMessage getMessageWithBadReturnPath() throws Exception {
-        MimeMessage mmCreated = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        mmCreated.addHeader("Date", "Tue, 16 Jan 2018 09:56:01 +0700 (ICT)");
-        mmCreated.setSubject("test");
-        mmCreated.setHeader(RFC2822Headers.RETURN_PATH, "<mybadreturn@example.com>");
-        mmCreated.setText("test body");
-        mmCreated.saveChanges();
-        return mmCreated;
+        return MimeMessageBuilder.mimeMessageBuilder()
+            .addHeader("Date", "Tue, 16 Jan 2018 09:56:01 +0700 (ICT)")
+            .setSubject("test")
+            .addHeader(RFC2822Headers.RETURN_PATH, "<mybadreturn@example.com>")
+            .setText("test body")
+            .build();
     }
 
     protected String getMessageWithBadReturnPathSource() {
@@ -100,7 +100,7 @@ public class MimeMessageTest {
     }
 
     protected MimeMessage getMultipartMessage() throws Exception {
-        MimeMessage mmCreated = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        MimeMessage mmCreated = MimeMessageUtil.defaultMimeMessage();
         mmCreated.setSubject("test");
         mmCreated.addHeader("Date", "Tue, 16 Jan 2018 09:56:01 +0700 (ICT)");
         MimeMultipart mm = new MimeMultipart("alternative");

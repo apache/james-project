@@ -23,14 +23,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
-import java.util.Properties;
 
-import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMessage.RecipientType;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.transport.mailets.redirect.RedirectNotify;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.base.test.FakeMail;
@@ -106,15 +103,14 @@ public class TosUtilsTest {
         when(mailet.getTo())
             .thenReturn(ImmutableList.of(SpecialAddress.FROM.toInternetAddress(), SpecialAddress.TO.toInternetAddress()));
 
-        MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        mimeMessage.setRecipients(RecipientType.TO, "to@james.org, to2@james.org");
         MailAddress from = new MailAddress("from", "james.org");
         MailAddress toMailAddress = new MailAddress("to", "james.org");
         MailAddress toMailAddress2 = new MailAddress("to2", "james.org");
         FakeMail fakeMail = FakeMail.builder()
                 .sender(from)
                 .recipients(toMailAddress, toMailAddress2)
-                .mimeMessage(mimeMessage)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .addToRecipient("to@james.org", "to2@james.org"))
                 .build();
 
         List<MailAddress> to = testee.getTo(fakeMail);

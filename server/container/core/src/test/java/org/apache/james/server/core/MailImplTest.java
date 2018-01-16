@@ -21,7 +21,6 @@ package org.apache.james.server.core;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -29,10 +28,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 import javax.mail.MessagingException;
-import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.Before;
@@ -43,12 +42,13 @@ import com.google.common.collect.ImmutableList;
 
 public class MailImplTest {
 
-    private static final Session NO_SESSION = null;
     private MimeMessage emptyMessage;
 
     @Before
     public void setup() throws MessagingException {
-        emptyMessage = new MimeMessage(NO_SESSION, new ByteArrayInputStream(new byte[0]));
+        emptyMessage = MimeMessageBuilder.mimeMessageBuilder()
+            .setText("")
+            .build();
     }
 
     @Test

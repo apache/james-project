@@ -20,7 +20,6 @@
 
 package org.apache.mailet.base.test;
 
-import java.io.ByteArrayInputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
@@ -33,7 +32,6 @@ import java.util.Optional;
 import java.util.Properties;
 
 import javax.mail.MessagingException;
-import javax.mail.Session;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
@@ -69,9 +67,7 @@ public class FakeMail implements Mail, Serializable {
         Properties javamailProperties = new Properties();
         javamailProperties.setProperty("mail.mime.charset", javamailDefaultEncodingCharset);
         return FakeMail.builder()
-                .mimeMessage(new MimeMessage(
-                    Session.getInstance(javamailProperties),
-                    new ByteArrayInputStream(text.getBytes(javaEncodingCharset))))
+                .mimeMessage(MimeMessageUtil.mimeMessageFromBytes((text.getBytes(javaEncodingCharset))))
                 .build();
     }
 
@@ -94,6 +90,10 @@ public class FakeMail implements Mail, Serializable {
         return builder()
                 .mimeMessage(message)
                 .build();
+    }
+
+    public static FakeMail from(MimeMessageBuilder message) throws MessagingException {
+        return from(message.build());
     }
 
     public static Builder builder() {
@@ -241,7 +241,7 @@ public class FakeMail implements Mail, Serializable {
         private MimeMessage getMimeMessage() throws MessagingException {
             Preconditions.checkState(!(fileName.isPresent() && mimeMessage.isPresent()), "You can not specify a MimeMessage object when you alredy set Content from a file");
             if (fileName.isPresent()) {
-                return new MimeMessage(Session.getInstance(new Properties()), ClassLoader.getSystemResourceAsStream(fileName.get()));
+                return MimeMessageUtil.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream(fileName.get()));
             }
             return mimeMessage.orElse(null);
         }

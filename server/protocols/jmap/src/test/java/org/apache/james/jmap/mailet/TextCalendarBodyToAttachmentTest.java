@@ -24,9 +24,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
-
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
@@ -91,7 +88,7 @@ public class TextCalendarBodyToAttachmentTest {
             "Content-transfer-encoding: 8BIT\n" +
             "\n" +
             "BEGIN:VCALENDAR";
-        MimeMessage message = MimeMessageUtil.mimeMessageFromStream(new ByteArrayInputStream(messageContent.getBytes(StandardCharsets.US_ASCII)));
+        MimeMessage message = MimeMessageUtil.mimeMessageFromString(messageContent);
 
         Mail mail = FakeMail.builder()
             .mimeMessage(message)
@@ -109,7 +106,7 @@ public class TextCalendarBodyToAttachmentTest {
             "Content-transfer-encoding: 8BIT\n" +
             "\n" +
             "BEGIN:VCALENDAR";
-        MimeMessage message = MimeMessageUtil.mimeMessageFromStream(new ByteArrayInputStream(messageContent.getBytes(StandardCharsets.US_ASCII)));
+        MimeMessage message = MimeMessageUtil.mimeMessageFromString(messageContent);
 
         Mail mail = FakeMail.builder()
             .mimeMessage(message)
@@ -128,7 +125,7 @@ public class TextCalendarBodyToAttachmentTest {
             "BEGIN:VCALENDAR\n" +
             "END:VEVENT\n" +
             "END:VCALENDAR";
-        MimeMessage message = MimeMessageUtil.mimeMessageFromStream(new ByteArrayInputStream(messageContent.getBytes(StandardCharsets.US_ASCII)));
+        MimeMessage message = MimeMessageUtil.mimeMessageFromString(messageContent);
 
         Mail mail = FakeMail.builder()
             .mimeMessage(message)
@@ -207,7 +204,7 @@ public class TextCalendarBodyToAttachmentTest {
             "BEGIN:VCALENDAR\n" +
             "END:VEVENT\n" +
             "END:VCALENDAR";
-        MimeMessage message = MimeMessageUtil.mimeMessageFromStream(new ByteArrayInputStream(messageContent.getBytes(StandardCharsets.US_ASCII)));
+        MimeMessage message = MimeMessageUtil.mimeMessageFromString(messageContent);
 
         Mail mail = FakeMail.builder()
             .mimeMessage(message)
@@ -226,7 +223,7 @@ public class TextCalendarBodyToAttachmentTest {
             "BEGIN:VCALENDAR\n" +
             "END:VEVENT\n" +
             "END:VCALENDAR";
-        MimeMessage message = MimeMessageUtil.mimeMessageFromStream(new ByteArrayInputStream(messageContent.getBytes(StandardCharsets.US_ASCII)));
+        MimeMessage message = MimeMessageUtil.mimeMessageFromString(messageContent);
 
         Mail mail = FakeMail.builder()
             .mimeMessage(message)

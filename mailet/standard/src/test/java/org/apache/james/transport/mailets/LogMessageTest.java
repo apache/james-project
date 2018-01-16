@@ -28,19 +28,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Properties;
-
 import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
+import org.apache.mailet.base.test.MimeMessageUtil;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -90,11 +86,11 @@ public class LogMessageTest {
                 .build();
         mailet.init(mailetConfig);
 
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setSubject("subject");
-        message.setText("This is a fake mail");
         mailet.service(FakeMail.builder()
-                .mimeMessage(message)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .addHeader("Date", "Tue, 16 Jan 2018 10:23:03 +0100")
+                    .setSubject("subject")
+                    .setText("This is a fake mail"))
                 .build());
 
         verify(logger).info("Logging mail {}", (Object) null);
@@ -102,7 +98,6 @@ public class LogMessageTest {
         verify(logger).info("\n");
         verify(logger).info("Subject: subject\n");
         verify(logger).error(eq("Error logging message."), any(MessagingException.class));
-        verifyNoMoreInteractions(logger);
     }
 
     @Test
@@ -254,9 +249,12 @@ public class LogMessageTest {
         verifyNoMoreInteractions(logger);
     }
 
-    private FakeMail createMail() throws MessagingException, AddressException {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()),
-                new ByteArrayInputStream("Subject: subject\r\nContent-Type: text/plain\r\n\r\nThis is a fake mail".getBytes(StandardCharsets.UTF_8)));
+    private FakeMail createMail() throws MessagingException {
+        MimeMessage message = MimeMessageUtil.mimeMessageFromString(
+            "Subject: subject\r\n" +
+                "Content-Type: text/plain\r\n" +
+                "\r\n" +
+                "This is a fake mail");
         return FakeMail.builder()
                 .mimeMessage(message)
                 .name("name")

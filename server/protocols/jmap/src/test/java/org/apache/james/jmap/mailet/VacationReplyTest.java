@@ -27,16 +27,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
-import java.util.Properties;
 
 import javax.mail.MessagingException;
-import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.utils.MimeMessageBodyGenerator;
 import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.MimeMessageUtil;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.junit.Before;
@@ -62,12 +61,13 @@ public class VacationReplyTest {
         originalRecipient = new MailAddress("benwa@apache.org");
 
         mail = FakeMail.builder()
-                .mimeMessage(new MimeMessage(Session.getInstance(new Properties()), ClassLoader.getSystemResourceAsStream("spamMail.eml")))
+                .mimeMessage(
+                    MimeMessageUtil.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream("spamMail.eml")))
                 .sender(originalSender)
                 .build();
 
         mimeMessageBodyGenerator = mock(MimeMessageBodyGenerator.class);
-        generatedBody = new MimeMessage(Session.getInstance(new Properties()));
+        generatedBody = MimeMessageUtil.defaultMimeMessage();
         when(mimeMessageBodyGenerator.from(any(MimeMessage.class), any(), any())).thenReturn(generatedBody);
     }
 
