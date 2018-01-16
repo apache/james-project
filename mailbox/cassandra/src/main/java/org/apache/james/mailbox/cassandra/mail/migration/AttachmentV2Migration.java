@@ -22,9 +22,9 @@ package org.apache.james.mailbox.cassandra.mail.migration;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.migration.Migration;
+import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
-import org.apache.james.mailbox.cassandra.mail.CassandraBlobsDAO;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.task.Task;
 import org.slf4j.Logger;

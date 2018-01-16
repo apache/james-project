@@ -38,6 +38,7 @@ import java.util.concurrent.CompletableFuture;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.cassandra.CassandraBlobId;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
@@ -50,11 +51,11 @@ import com.google.common.base.Preconditions;
 public class CassandraAttachmentDAOV2 {
     public static class DAOAttachment {
         private final AttachmentId attachmentId;
-        private final CassandraBlobId blobId;
+        private final BlobId blobId;
         private final String type;
         private final long size;
 
-        private DAOAttachment(AttachmentId attachmentId, CassandraBlobId blobId, String type, long size) {
+        private DAOAttachment(AttachmentId attachmentId, BlobId blobId, String type, long size) {
             this.attachmentId = attachmentId;
             this.blobId = blobId;
             this.type = type;
@@ -65,7 +66,7 @@ public class CassandraAttachmentDAOV2 {
             return attachmentId;
         }
 
-        public CassandraBlobId getBlobId() {
+        public BlobId getBlobId() {
             return blobId;
         }
 
@@ -104,7 +105,7 @@ public class CassandraAttachmentDAOV2 {
         }
     }
 
-    public static DAOAttachment from(Attachment attachment, CassandraBlobId blobId) {
+    public static DAOAttachment from(Attachment attachment, BlobId blobId) {
         return new DAOAttachment(
             attachment.getAttachmentId(),
             blobId,

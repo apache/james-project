@@ -17,19 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.mail.utils;
+package org.apache.james.blob.cassandra.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
@@ -38,37 +37,31 @@ public class DataChunkerTest {
 
     public static final int CHUNK_SIZE = 10;
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     private DataChunker testee;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         testee = new DataChunker();
     }
 
     @Test
     public void chunkShouldThrowOnNullData() {
-        expectedException.expect(NullPointerException.class);
-
-        testee.chunk(null, CHUNK_SIZE);
+        assertThatThrownBy(() -> testee.chunk(null, CHUNK_SIZE))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void chunkShouldThrowOnNegativeChunkSize() {
-        expectedException.expect(IllegalArgumentException.class);
-
         int chunkSize = -1;
-        testee.chunk(new byte[0], chunkSize);
+        assertThatThrownBy(() -> testee.chunk(new byte[0], chunkSize))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void chunkShouldThrowOnZeroChunkSize() {
-        expectedException.expect(IllegalArgumentException.class);
-
         int chunkSize = 0;
-        testee.chunk(new byte[0], chunkSize);
+        assertThatThrownBy(() -> testee.chunk(new byte[0], chunkSize))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

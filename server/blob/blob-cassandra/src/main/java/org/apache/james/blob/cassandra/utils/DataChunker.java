@@ -17,16 +17,36 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.table;
+package org.apache.james.blob.cassandra.utils;
 
-public interface BlobTable {
-    String TABLE_NAME = "blobs";
-    String ID = "id";
-    String NUMBER_OF_CHUNK = "position";
+import java.nio.ByteBuffer;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
-    interface BlobParts {
-        String TABLE_NAME = "blobParts";
-        String CHUNK_NUMBER = "chunkNumber";
-        String DATA = "data";
+import org.apache.commons.lang3.tuple.Pair;
+
+import com.google.common.base.Preconditions;
+
+public class DataChunker {
+
+    public Stream<Pair<Integer, ByteBuffer>> chunk(byte[] data, int chunkSize) {
+        Preconditions.checkNotNull(data);
+        Preconditions.checkArgument(chunkSize > 0, "ChunkSize can not be negative");
+
+        int size = data.length;
+        int fullChunkCount = size / chunkSize;
+
+        return Stream.concat(
+            IntStream.range(0, fullChunkCount)
+                .mapToObj(i -> Pair.of(i, ByteBuffer.wrap(data, i * chunkSize, chunkSize))),
+            lastChunk(data, chunkSize * fullChunkCount, fullChunkCount));
     }
+
+    private Stream<Pair<Integer, ByteBuffer>> lastChunk(byte[] data, int offset, int index) {
+        if (offset == data.length && index > 0) {
+            return Stream.empty();
+        }
+        return Stream.of(Pair.of(index, ByteBuffer.wrap(data, offset, data.length - offset)));
+    }
+
 }
