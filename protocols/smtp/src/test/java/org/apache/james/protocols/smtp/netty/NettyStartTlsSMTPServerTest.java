@@ -46,7 +46,7 @@ import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.NettyServer;
-import org.apache.james.protocols.smtp.AllButStartTlsLineDelimiterChannelHandlerFactory;
+import org.apache.james.protocols.smtp.AllButStartTlsLineChannelHandlerFactory;
 import org.apache.james.protocols.smtp.SMTPConfigurationImpl;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.protocols.smtp.SMTPProtocolHandlerChain;
@@ -80,7 +80,7 @@ public class NettyStartTlsSMTPServerTest {
         NettyServer server = NettyServer.builder()
                 .protocol(protocol)
                 .secure(enc)
-                .frameHandlerFactory(new AllButStartTlsLineDelimiterChannelHandlerFactory(AbstractChannelPipelineFactory.MAX_LINE_LENGTH))
+                .frameHandlerFactory(new AllButStartTlsLineChannelHandlerFactory(AbstractChannelPipelineFactory.MAX_LINE_LENGTH))
                 .build();
         server.setListenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT));
         return server;
