@@ -23,12 +23,13 @@ import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.queue.api.MailQueue;
-import org.apache.james.queue.api.MailQueueContract;
+import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.queue.api.ManageableMailQueueContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class MemoryMailQueueTest implements MailQueueContract {
+public class MemoryMailQueueTest implements ManageableMailQueueContract {
 
     private MemoryMailQueueFactory.MemoryMailQueue mailQueue;
 
@@ -83,5 +84,10 @@ public class MemoryMailQueueTest implements MailQueueContract {
         mailQueue.getLastMail();
         assertThat(mailQueue.getLastMail().getName())
             .isEqualTo("name2");
+    }
+
+    @Override
+    public ManageableMailQueue getManageableMailQueue() {
+        return mailQueue;
     }
 }
