@@ -37,7 +37,9 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.hash.Hashing;
 
 public interface MailRepositoryContract {
 
@@ -92,6 +94,16 @@ public interface MailRepositoryContract {
     }
 
     @Test
+    default void storeBigMailShouldNotFail() throws Exception {
+        MailRepository testee = retrieveRepository();
+        String bigString = Strings.repeat("my mail is big 🐋", 1_000_000);
+        Mail mail = createMail("mail1", bigString);
+
+        testee.store(mail);
+    }
+
+
+    @Test
     default void retrieveShouldGetStoredMail() throws Exception {
         MailRepository testee = retrieveRepository();
         String key1 = "mail1";
@@ -111,6 +123,19 @@ public interface MailRepositoryContract {
         testee.store(mail);
 
         assertThat(testee.retrieve(key1).getMessage().getContent()).isEqualTo("my content contains 🐋");
+    }
+
+    @Test
+    default void retrieveBigMailShouldHaveSameHash() throws Exception {
+        MailRepository testee = retrieveRepository();
+        String bigString = Strings.repeat("my mail is big 🐋", 1_000_000);
+        Mail mail = createMail("mail1", bigString);
+        testee.store(mail);
+
+        Mail actual = testee.retrieve("mail1");
+
+        assertThat(Hashing.sha256().hashString((String)actual.getMessage().getContent(), StandardCharsets.UTF_8))
+            .isEqualTo(Hashing.sha256().hashString(bigString, StandardCharsets.UTF_8));
     }
 
 
