@@ -59,7 +59,7 @@ import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
-import org.apache.james.mailbox.cassandra.ids.BlobId;
+import org.apache.james.blob.cassandra.CassandraBlobId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.utils.Limit;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table;
@@ -176,7 +176,7 @@ public class CassandraMessageDAO {
             cassandraAsyncExecutor.executeVoid(boundWriteStatement(message, pair)));
     }
 
-    private CompletableFuture<Pair<BlobId, BlobId>> saveContent(MailboxMessage message) throws MailboxException {
+    private CompletableFuture<Pair<CassandraBlobId, CassandraBlobId>> saveContent(MailboxMessage message) throws MailboxException {
         try {
             return CompletableFutureUtil.combine(
                 blobsDAO.save(
@@ -191,7 +191,7 @@ public class CassandraMessageDAO {
         }
     }
 
-    private BoundStatement boundWriteStatement(MailboxMessage message, Pair<BlobId, BlobId> pair) {
+    private BoundStatement boundWriteStatement(MailboxMessage message, Pair<CassandraBlobId, CassandraBlobId> pair) {
         CassandraMessageId messageId = (CassandraMessageId) message.getMessageId();
         return insert.bind()
             .setUUID(MESSAGE_ID, messageId.get())
@@ -199,8 +199,8 @@ public class CassandraMessageDAO {
             .setInt(BODY_START_OCTET, (int) (message.getHeaderOctets()))
             .setLong(FULL_CONTENT_OCTETS, message.getFullContentOctets())
             .setLong(BODY_OCTECTS, message.getBodyOctets())
-            .setString(BODY_CONTENT, pair.getRight().getId())
-            .setString(HEADER_CONTENT, pair.getLeft().getId())
+            .setString(BODY_CONTENT, pair.getRight().asString())
+            .setString(HEADER_CONTENT, pair.getLeft().asString())
             .setLong(TEXTUAL_LINE_COUNT, Optional.ofNullable(message.getTextualLineCount()).orElse(DEFAULT_LONG_VALUE))
             .setList(PROPERTIES, buildPropertiesUdt(message))
             .setList(ATTACHMENTS, buildAttachmentUdt(message));
@@ -370,7 +370,7 @@ public class CassandraMessageDAO {
     }
 
     private CompletableFuture<byte[]> getFieldContent(String field, Row row) {
-        return blobsDAO.read(BlobId.from(row.getString(field)));
+        return blobsDAO.read(CassandraBlobId.from(row.getString(field)));
     }
 
     public static MessageResult notFound(ComposedMessageIdWithMetaData id) {

@@ -17,77 +17,70 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.ids;
+package org.apache.james.blob.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.util.ClassLoaderUtils;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class BlobIdTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+public class CassandraBlobIdTest {
 
     @Test
     public void shouldRespectBeanContract() {
-        EqualsVerifier.forClass(BlobId.class).verify();
+        EqualsVerifier.forClass(CassandraBlobId.class).verify();
     }
 
     @Test
     public void fromShouldConstructBlobId() {
         String id = "111";
-        assertThat(BlobId.from(id))
-            .isEqualTo(new BlobId(id));
+        assertThat(CassandraBlobId.from(id))
+            .isEqualTo(new CassandraBlobId(id));
     }
 
     @Test
     public void fromShouldThrowOnNull() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        BlobId.from(null);
+        assertThatThrownBy(() -> CassandraBlobId.from(null))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromShouldThrowOnEmpty() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        BlobId.from("");
+        assertThatThrownBy(() -> CassandraBlobId.from(""))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void forPayloadShouldThrowOnNull() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        BlobId.forPayload(null);
+        assertThatThrownBy(() -> CassandraBlobId.forPayload(null))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void forPayloadShouldHashEmptyArray() {
-        BlobId blobId = BlobId.forPayload(new byte[0]);
+        CassandraBlobId blobId = CassandraBlobId.forPayload(new byte[0]);
 
-        assertThat(blobId.getId()).isEqualTo("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+        assertThat(blobId.asString()).isEqualTo("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
     }
 
     @Test
     public void forPayloadShouldHashArray() {
-        BlobId blobId = BlobId.forPayload("content".getBytes(StandardCharsets.UTF_8));
+        CassandraBlobId blobId = CassandraBlobId.forPayload("content".getBytes(StandardCharsets.UTF_8));
 
-        assertThat(blobId.getId()).isEqualTo("ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73");
+        assertThat(blobId.asString()).isEqualTo("ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73");
     }
 
     @Test
     public void forPayloadShouldCalculateDifferentHashesWhenCraftedSha1Collision() throws Exception {
         byte[] payload1 = ClassLoaderUtils.getSystemResourceAsByteArray("shattered-1.pdf");
         byte[] payload2 = ClassLoaderUtils.getSystemResourceAsByteArray("shattered-2.pdf");
-        BlobId blobId1 = BlobId.forPayload(payload1);
-        BlobId blobId2 = BlobId.forPayload(payload2);
+        CassandraBlobId blobId1 = CassandraBlobId.forPayload(payload1);
+        CassandraBlobId blobId2 = CassandraBlobId.forPayload(payload2);
         assertThat(blobId1).isNotEqualTo(blobId2);
     }
 }

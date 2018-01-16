@@ -26,7 +26,7 @@ import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.mailbox.cassandra.ids.BlobId;
+import org.apache.james.blob.cassandra.CassandraBlobId;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2.DAOAttachment;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.model.Attachment;
@@ -75,7 +75,7 @@ public class CassandraAttachmentDAOV2Test {
             .type("application/json")
             .bytes("{\"property\":`\"value\"}".getBytes(StandardCharsets.UTF_8))
             .build();
-        BlobId blobId = BlobId.from("blobId");
+        CassandraBlobId blobId = CassandraBlobId.from("blobId");
         DAOAttachment daoAttachment = CassandraAttachmentDAOV2.from(attachment, blobId);
         testee.storeAttachment(daoAttachment).join();
 

@@ -28,7 +28,7 @@ import java.nio.charset.StandardCharsets;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.CassandraConfiguration;
-import org.apache.james.mailbox.cassandra.ids.BlobId;
+import org.apache.james.blob.cassandra.CassandraBlobId;
 import org.apache.james.mailbox.cassandra.modules.CassandraBlobModule;
 import org.junit.After;
 import org.junit.Before;
@@ -70,7 +70,7 @@ public class CassandraBlobsDAOTest {
 
     @Test
     public void saveShouldSaveEmptyData() throws Exception {
-        BlobId blobId = testee.save(new byte[]{}).join();
+        CassandraBlobId blobId = testee.save(new byte[]{}).join();
 
         byte[] bytes = testee.read(blobId).join();
 
@@ -79,7 +79,7 @@ public class CassandraBlobsDAOTest {
 
     @Test
     public void saveShouldSaveBlankData() throws Exception {
-        BlobId blobId = testee.save("".getBytes(StandardCharsets.UTF_8)).join();
+        CassandraBlobId blobId = testee.save("".getBytes(StandardCharsets.UTF_8)).join();
 
         byte[] bytes = testee.read(blobId).join();
 
@@ -88,21 +88,21 @@ public class CassandraBlobsDAOTest {
 
     @Test
     public void saveShouldReturnBlobId() throws Exception {
-        BlobId blobId = testee.save("toto".getBytes(StandardCharsets.UTF_8)).join();
+        CassandraBlobId blobId = testee.save("toto".getBytes(StandardCharsets.UTF_8)).join();
 
-        assertThat(blobId).isEqualTo(BlobId.from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
+        assertThat(blobId).isEqualTo(CassandraBlobId.from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
     }
 
     @Test
     public void readShouldBeEmptyWhenNoExisting() throws IOException {
-        byte[] bytes = testee.read(BlobId.from("unknown")).join();
+        byte[] bytes = testee.read(CassandraBlobId.from("unknown")).join();
 
         assertThat(bytes).isEmpty();
     }
 
     @Test
     public void readShouldReturnSavedData() throws IOException {
-        BlobId blobId = testee.save("toto".getBytes(StandardCharsets.UTF_8)).join();
+        CassandraBlobId blobId = testee.save("toto".getBytes(StandardCharsets.UTF_8)).join();
 
         byte[] bytes = testee.read(blobId).join();
 
@@ -112,7 +112,7 @@ public class CassandraBlobsDAOTest {
     @Test
     public void readShouldReturnLongSavedData() throws IOException {
         String longString = Strings.repeat("0123456789\n", 1000);
-        BlobId blobId = testee.save(longString.getBytes(StandardCharsets.UTF_8)).join();
+        CassandraBlobId blobId = testee.save(longString.getBytes(StandardCharsets.UTF_8)).join();
 
         byte[] bytes = testee.read(blobId).join();
 
@@ -122,7 +122,7 @@ public class CassandraBlobsDAOTest {
     @Test
     public void readShouldReturnSplitSavedDataByChunk() throws IOException {
         String longString = Strings.repeat("0123456789\n", MULTIPLE_CHUNK_SIZE);
-        BlobId blobId = testee.save(longString.getBytes(StandardCharsets.UTF_8)).join();
+        CassandraBlobId blobId = testee.save(longString.getBytes(StandardCharsets.UTF_8)).join();
 
         byte[] bytes = testee.read(blobId).join();
 

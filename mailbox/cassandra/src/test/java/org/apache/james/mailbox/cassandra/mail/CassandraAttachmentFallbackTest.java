@@ -29,7 +29,7 @@ import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
-import org.apache.james.mailbox.cassandra.ids.BlobId;
+import org.apache.james.blob.cassandra.CassandraBlobId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraBlobModule;
@@ -108,7 +108,7 @@ public class CassandraAttachmentFallbackTest {
             .bytes("{\"property\":`\"different\"}".getBytes(StandardCharsets.UTF_8))
             .build();
 
-        BlobId blobId = blobsDAO.save(attachment.getBytes()).join();
+        CassandraBlobId blobId = blobsDAO.save(attachment.getBytes()).join();
         attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).join();
         attachmentDAO.storeAttachment(otherAttachment).join();
 
@@ -143,7 +143,7 @@ public class CassandraAttachmentFallbackTest {
             .bytes("{\"property\":`\"different\"}".getBytes(StandardCharsets.UTF_8))
             .build();
 
-        BlobId blobId = blobsDAO.save(attachment.getBytes()).join();
+        CassandraBlobId blobId = blobsDAO.save(attachment.getBytes()).join();
         attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).join();
         attachmentDAO.storeAttachment(otherAttachment).join();
 
@@ -178,7 +178,7 @@ public class CassandraAttachmentFallbackTest {
             .bytes("{\"property\":`\"different\"}".getBytes(StandardCharsets.UTF_8))
             .build();
 
-        BlobId blobId = blobsDAO.save(attachment.getBytes()).join();
+        CassandraBlobId blobId = blobsDAO.save(attachment.getBytes()).join();
         attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).join();
         attachmentDAO.storeAttachment(otherAttachment).join();
 

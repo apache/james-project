@@ -34,7 +34,7 @@ import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.backends.cassandra.migration.Migration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
-import org.apache.james.mailbox.cassandra.ids.BlobId;
+import org.apache.james.blob.cassandra.CassandraBlobId;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
 import org.apache.james.mailbox.cassandra.mail.CassandraBlobsDAO;
@@ -112,12 +112,12 @@ public class AttachmentV2MigrationTest {
         migration.run();
 
         assertThat(attachmentDAOV2.getAttachment(ATTACHMENT_ID).join())
-            .contains(CassandraAttachmentDAOV2.from(attachment1, BlobId.forPayload(attachment1.getBytes())));
+            .contains(CassandraAttachmentDAOV2.from(attachment1, CassandraBlobId.forPayload(attachment1.getBytes())));
         assertThat(attachmentDAOV2.getAttachment(ATTACHMENT_ID_2).join())
-            .contains(CassandraAttachmentDAOV2.from(attachment2, BlobId.forPayload(attachment2.getBytes())));
-        assertThat(blobsDAO.read(BlobId.forPayload(attachment1.getBytes())).join())
+            .contains(CassandraAttachmentDAOV2.from(attachment2, CassandraBlobId.forPayload(attachment2.getBytes())));
+        assertThat(blobsDAO.read(CassandraBlobId.forPayload(attachment1.getBytes())).join())
             .isEqualTo(attachment1.getBytes());
-        assertThat(blobsDAO.read(BlobId.forPayload(attachment2.getBytes())).join())
+        assertThat(blobsDAO.read(CassandraBlobId.forPayload(attachment2.getBytes())).join())
             .isEqualTo(attachment2.getBytes());
     }
 
@@ -172,9 +172,9 @@ public class AttachmentV2MigrationTest {
             attachment1,
             attachment2));
         when(blobsDAO.save(attachment1.getBytes()))
-            .thenReturn(CompletableFuture.completedFuture(BlobId.forPayload(attachment1.getBytes())));
+            .thenReturn(CompletableFuture.completedFuture(CassandraBlobId.forPayload(attachment1.getBytes())));
         when(blobsDAO.save(attachment2.getBytes()))
-            .thenReturn(CompletableFuture.completedFuture(BlobId.forPayload(attachment2.getBytes())));
+            .thenReturn(CompletableFuture.completedFuture(CassandraBlobId.forPayload(attachment2.getBytes())));
         when(attachmentDAOV2.storeAttachment(any())).thenThrow(new RuntimeException());
 
         assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
@@ -191,9 +191,9 @@ public class AttachmentV2MigrationTest {
             attachment1,
             attachment2));
         when(blobsDAO.save(attachment1.getBytes()))
-            .thenReturn(CompletableFuture.completedFuture(BlobId.forPayload(attachment1.getBytes())));
+            .thenReturn(CompletableFuture.completedFuture(CassandraBlobId.forPayload(attachment1.getBytes())));
         when(blobsDAO.save(attachment2.getBytes()))
-            .thenReturn(CompletableFuture.completedFuture(BlobId.forPayload(attachment2.getBytes())));
+            .thenReturn(CompletableFuture.completedFuture(CassandraBlobId.forPayload(attachment2.getBytes())));
         when(attachmentDAOV2.storeAttachment(any())).thenReturn(CompletableFuture.completedFuture(null));
         when(attachmentDAO.deleteAttachment(any())).thenThrow(new RuntimeException());
 
@@ -211,7 +211,7 @@ public class AttachmentV2MigrationTest {
             attachment1,
             attachment2));
         when(blobsDAO.save(attachment1.getBytes()))
-            .thenReturn(CompletableFuture.completedFuture(BlobId.forPayload(attachment1.getBytes())));
+            .thenReturn(CompletableFuture.completedFuture(CassandraBlobId.forPayload(attachment1.getBytes())));
         when(blobsDAO.save(attachment2.getBytes()))
             .thenThrow(new RuntimeException());
         when(attachmentDAOV2.storeAttachment(any())).thenReturn(CompletableFuture.completedFuture(null));

@@ -38,7 +38,7 @@ import java.util.concurrent.CompletableFuture;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.mailbox.cassandra.ids.BlobId;
+import org.apache.james.blob.cassandra.CassandraBlobId;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 
@@ -50,11 +50,11 @@ import com.google.common.base.Preconditions;
 public class CassandraAttachmentDAOV2 {
     public static class DAOAttachment {
         private final AttachmentId attachmentId;
-        private final BlobId blobId;
+        private final CassandraBlobId blobId;
         private final String type;
         private final long size;
 
-        private DAOAttachment(AttachmentId attachmentId, BlobId blobId, String type, long size) {
+        private DAOAttachment(AttachmentId attachmentId, CassandraBlobId blobId, String type, long size) {
             this.attachmentId = attachmentId;
             this.blobId = blobId;
             this.type = type;
@@ -65,7 +65,7 @@ public class CassandraAttachmentDAOV2 {
             return attachmentId;
         }
 
-        public BlobId getBlobId() {
+        public CassandraBlobId getBlobId() {
             return blobId;
         }
 
@@ -104,7 +104,7 @@ public class CassandraAttachmentDAOV2 {
         }
     }
 
-    public static DAOAttachment from(Attachment attachment, BlobId blobId) {
+    public static DAOAttachment from(Attachment attachment, CassandraBlobId blobId) {
         return new DAOAttachment(
             attachment.getAttachmentId(),
             blobId,
@@ -115,7 +115,7 @@ public class CassandraAttachmentDAOV2 {
     private static DAOAttachment fromRow(Row row) {
         return new DAOAttachment(
             AttachmentId.from(row.getString(ID)),
-            BlobId.from(row.getString(BLOB_ID)),
+            CassandraBlobId.from(row.getString(BLOB_ID)),
             row.getString(TYPE),
             row.getLong(SIZE));
     }
@@ -163,7 +163,7 @@ public class CassandraAttachmentDAOV2 {
                 .setString(ID, attachment.getAttachmentId().getId())
                 .setLong(SIZE, attachment.getSize())
                 .setString(TYPE, attachment.getType())
-                .setString(BLOB_ID, attachment.getBlobId().getId()));
+                .setString(BLOB_ID, attachment.getBlobId().asString()));
     }
 
 }

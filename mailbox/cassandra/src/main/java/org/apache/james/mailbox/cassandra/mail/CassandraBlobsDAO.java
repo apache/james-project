@@ -35,7 +35,7 @@ import javax.inject.Inject;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.mailbox.cassandra.ids.BlobId;
+import org.apache.james.blob.cassandra.CassandraBlobId;
 import org.apache.james.mailbox.cassandra.mail.utils.DataChunker;
 import org.apache.james.mailbox.cassandra.table.BlobTable;
 import org.apache.james.mailbox.cassandra.table.BlobTable.BlobParts;
@@ -106,16 +106,16 @@ public class CassandraBlobsDAO {
             .value(BlobParts.DATA, bindMarker(BlobParts.DATA)));
     }
 
-    public CompletableFuture<BlobId> save(byte[] data) {
+    public CompletableFuture<CassandraBlobId> save(byte[] data) {
         Preconditions.checkNotNull(data);
 
-        BlobId blobId = BlobId.forPayload(data);
+        CassandraBlobId blobId = CassandraBlobId.forPayload(data);
         return saveBlobParts(data, blobId)
             .thenCompose(numberOfChunk -> saveBlobPartsReferences(blobId, numberOfChunk))
             .thenApply(any -> blobId);
     }
 
-    private CompletableFuture<Integer> saveBlobParts(byte[] data, BlobId blobId) {
+    private CompletableFuture<Integer> saveBlobParts(byte[] data, CassandraBlobId blobId) {
         return FluentFutureStream.of(
             dataChunker.chunk(data, configuration.getBlobPartSize())
                 .map(pair -> writePart(pair.getRight(), blobId, pair.getKey())
@@ -131,29 +131,29 @@ public class CassandraBlobsDAO {
         return stream.reduce((first, second) -> second);
     }
 
-    private CompletableFuture<Void> writePart(ByteBuffer data, BlobId blobId, int position) {
+    private CompletableFuture<Void> writePart(ByteBuffer data, CassandraBlobId blobId, int position) {
         return cassandraAsyncExecutor.executeVoid(
             insertPart.bind()
-                .setString(BlobTable.ID, blobId.getId())
+                .setString(BlobTable.ID, blobId.asString())
                 .setInt(BlobParts.CHUNK_NUMBER, position)
                 .setBytes(BlobParts.DATA, data));
     }
 
-    private CompletableFuture<Void> saveBlobPartsReferences(BlobId blobId, int numberOfChunk) {
+    private CompletableFuture<Void> saveBlobPartsReferences(CassandraBlobId blobId, int numberOfChunk) {
         return cassandraAsyncExecutor.executeVoid(insert.bind()
-            .setString(BlobTable.ID, blobId.getId())
+            .setString(BlobTable.ID, blobId.asString())
             .setInt(BlobTable.NUMBER_OF_CHUNK, numberOfChunk));
     }
 
-    public CompletableFuture<byte[]> read(BlobId blobId) {
+    public CompletableFuture<byte[]> read(CassandraBlobId blobId) {
         return cassandraAsyncExecutor.executeSingleRow(
             select.bind()
-                .setString(BlobTable.ID, blobId.getId()))
+                .setString(BlobTable.ID, blobId.asString()))
             .thenCompose(row -> toDataParts(row, blobId))
             .thenApply(this::concatenateDataParts);
     }
 
-    private CompletableFuture<Stream<BlobPart>> toDataParts(Optional<Row> blobRowOptional, BlobId blobId) {
+    private CompletableFuture<Stream<BlobPart>> toDataParts(Optional<Row> blobRowOptional, CassandraBlobId blobId) {
         return blobRowOptional.map(blobRow -> {
             int numOfChunk = blobRow.getInt(BlobTable.NUMBER_OF_CHUNK);
             return FluentFutureStream.of(
@@ -184,20 +184,20 @@ public class CassandraBlobsDAO {
         return data;
     }
 
-    private CompletableFuture<BlobPart> readPart(BlobId blobId, int position) {
+    private CompletableFuture<BlobPart> readPart(CassandraBlobId blobId, int position) {
         return cassandraAsyncExecutor.executeSingleRow(
             selectPart.bind()
-                .setString(BlobTable.ID, blobId.getId())
+                .setString(BlobTable.ID, blobId.asString())
                 .setInt(BlobParts.CHUNK_NUMBER, position))
             .thenApply(row -> new BlobPart(blobId, position, row));
     }
 
     private static class BlobPart {
-        private final BlobId blobId;
+        private final CassandraBlobId blobId;
         private final int position;
         private final Optional<Row> row;
 
-        public BlobPart(BlobId blobId, int position, Optional<Row> row) {
+        public BlobPart(CassandraBlobId blobId, int position, Optional<Row> row) {
             Preconditions.checkNotNull(blobId);
             Preconditions.checkArgument(position >= 0, "position need to be positive");
             this.blobId = blobId;
