@@ -47,11 +47,6 @@ public class MimeMessageFromStreamTest extends MimeMessageTest {
     }
 
     @Override
-    protected MimeMessage getMissingEncodingAddHeaderMessage() throws Exception {
-        return getMessageFromSources(getMissingEncodingAddHeaderSource());
-    }
-
-    @Override
     protected MimeMessage getMissingEncodingMessage() throws Exception {
         return getMessageFromSources(getMissingEncodingMessageSource());
     }

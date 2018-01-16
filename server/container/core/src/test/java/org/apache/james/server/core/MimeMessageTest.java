@@ -42,16 +42,13 @@ import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.test.MimeMessageUtil;
 import org.junit.Test;
 
-/**
- * Test the subject folding issue.
- */
 public class MimeMessageTest {
 
     protected MimeMessage getSimpleMessage() throws Exception {
         return MimeMessageBuilder.mimeMessageBuilder()
             .addHeader("Date", "Tue, 16 Jan 2018 09:56:01 +0700 (ICT)")
             .setSubject("test")
-            .setText("test body")
+            .setText("test body", "text/plain; charset=us-ascii")
             .build();
     }
 
@@ -89,9 +86,6 @@ public class MimeMessageTest {
         return "X-Test: foo\r\n" + getSimpleMessageCleanedSource();
     }
 
-    /*
-     * Class under test for String getSubject()
-     */
     @Test
     public void testSimpleMessage() throws Exception {
         MimeMessage m = getSimpleMessage();
@@ -193,18 +187,10 @@ public class MimeMessageTest {
                 + "mynewco=F2=E0=F9ntent=80=E0!";
     }
 
-    /*
-     * Class under test for String getSubject()
-     */
     @Test
     public void testMultipartMessageChanges() throws Exception {
 
         MimeMessage mm = getMultipartMessage();
-
-        // ByteArrayOutputStream out = new ByteArrayOutputStream();
-        // mmCreated.writeTo(out,new String[] {"Message-ID"});
-        // String messageSource = out.toString();
-        // System.out.println(messageSource);
 
         MimeMultipart content1 = (MimeMultipart) mm.getContent();
         BodyPart b1 = content1.getBodyPart(0);
@@ -234,27 +220,10 @@ public class MimeMessageTest {
 
     }
 
-    protected MimeMessage getMissingEncodingAddHeaderMessage() throws Exception {
-        MimeMessage m = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        m.setText("Testà\r\n");
-        m.setSubject("test");
-        m.saveChanges();
-        return m;
-    }
-
     protected String getMissingEncodingAddHeaderSource() {
         return "Subject: test\r\n"
                 + "\r\n"
                 + "Testà\r\n";
-    }
-
-    protected String getMissingEncodingAddHeaderExpected() {
-        return "Subject: test\r\n"
-                + "MIME-Version: 1.0\r\n"
-                + "Content-Type: text/plain; charset=Cp1252\r\n"
-                + "Content-Transfer-Encoding: quoted-printable\r\n"
-                + "\r\n"
-                + "Test=E0\r\n";
     }
 
     /**
@@ -294,12 +263,6 @@ public class MimeMessageTest {
 
         res = res.replaceAll("----=_Part_\\d*_\\d+\\.\\d+", "----=_Part_\\0_XXXXXXXXXXX.XXXXXXXXXXX");
         return res;
-    }
-
-    protected void debugMessage(MimeMessage mm) throws Exception {
-        System.out.println("-------------------");
-        System.out.println(getCleanedMessageSource(mm));
-        System.out.println("-------------------");
     }
 
     protected MimeMessage getMissingEncodingMessage() throws Exception {
