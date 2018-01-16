@@ -225,7 +225,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
 
     @Override
     protected ChannelHandlerFactory createFrameHandlerFactory() {
-        return new SwitchableLineDelimiterBasedFrameDecoderFactory(maxLineLength);
+        return new SwitchableLineBasedFrameDecoderFactory(maxLineLength);
     }
 
 }

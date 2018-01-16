@@ -16,23 +16,22 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.imapserver.netty;
+package org.apache.james.protocols.smtp;
 
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.handler.codec.frame.Delimiters;
 
-public class SwitchableLineDelimiterBasedFrameDecoderFactory implements ChannelHandlerFactory {
+public class AllButStartTlsLineChannelHandlerFactory implements ChannelHandlerFactory {
 
-    private int maxLineLength;
+    private int maxFrameLength;
 
-    public SwitchableLineDelimiterBasedFrameDecoderFactory(int maxLineLength) {
-        this.maxLineLength = maxLineLength;
+    public AllButStartTlsLineChannelHandlerFactory(int maxFrameLength) {
+        this.maxFrameLength = maxFrameLength;
     }
 
     @Override
     public ChannelHandler create(ChannelPipeline pipeline) {
-        return new SwitchableDelimiterBasedFrameDecoder(maxLineLength, false, Delimiters.lineDelimiter());
+        return new AllButStartTlsLineBasedChannelHandler(pipeline, maxFrameLength, false);
     }
 }

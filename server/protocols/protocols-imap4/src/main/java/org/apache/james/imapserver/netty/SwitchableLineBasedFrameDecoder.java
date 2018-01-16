@@ -23,14 +23,15 @@ import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
+import org.jboss.netty.handler.codec.frame.LineBasedFrameDecoder;
 
-public class SwitchableDelimiterBasedFrameDecoder extends DelimiterBasedFrameDecoder {
+public class SwitchableLineBasedFrameDecoder extends LineBasedFrameDecoder {
 
+    private static final Boolean FAIL_FAST = true;
     private volatile boolean framingEnabled = true;
 
-    public SwitchableDelimiterBasedFrameDecoder(int maxFrameLength, boolean stripDelimiter, ChannelBuffer... delimiters) {
-        super(maxFrameLength, stripDelimiter, delimiters);
+    public SwitchableLineBasedFrameDecoder(int maxFrameLength, boolean stripDelimiter) {
+        super(maxFrameLength, stripDelimiter, !FAIL_FAST);
     }
 
     @Override

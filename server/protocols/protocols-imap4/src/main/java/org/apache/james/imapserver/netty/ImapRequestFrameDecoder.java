@@ -180,7 +180,7 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
                 //    channel.getPipeline().addFirst(FRAMER, handler);
                 //}
                 
-                ((SwitchableDelimiterBasedFrameDecoder) channel.getPipeline().get(FRAMER)).enableFraming();
+                ((SwitchableLineBasedFrameDecoder) channel.getPipeline().get(FRAMER)).enableFraming();
                 
                 attachment.clear();
                 return message;
@@ -200,7 +200,7 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
                 //attachment.put(FRAMER, handler);
 
                 // SwitchableDelimiterBasedFrameDecoder added further to JAMES-1436.
-                final SwitchableDelimiterBasedFrameDecoder framer = (SwitchableDelimiterBasedFrameDecoder) pipeline.get(FRAMER);
+                final SwitchableLineBasedFrameDecoder framer = (SwitchableLineBasedFrameDecoder) pipeline.get(FRAMER);
                 framer.disableFraming(framerContext);
                 
                 buffer.resetReaderIndex();

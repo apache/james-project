@@ -27,19 +27,20 @@ import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
+import org.jboss.netty.handler.codec.frame.LineBasedFrameDecoder;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 
 
-public class AllButStartTlsDelimiterChannelHandler extends DelimiterBasedFrameDecoder {
+public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder {
 
     private static final String STARTTLS = "starttls";
+    private static final Boolean FAIL_FAST = true;
     private final ChannelPipeline pipeline;
 
-    public AllButStartTlsDelimiterChannelHandler(ChannelPipeline pipeline, int maxFrameLength, boolean stripDelimiter, ChannelBuffer[] delimiters) {
-        super(maxFrameLength, stripDelimiter, delimiters);
+    public AllButStartTlsLineBasedChannelHandler(ChannelPipeline pipeline, int maxFrameLength, boolean stripDelimiter) {
+        super(maxFrameLength, stripDelimiter, !FAIL_FAST);
         this.pipeline = pipeline;
     }
 
