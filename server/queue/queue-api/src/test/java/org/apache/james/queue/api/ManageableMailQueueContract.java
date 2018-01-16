@@ -431,7 +431,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         assertThat(getManageableMailQueue().browse())
             .extracting(ManageableMailQueue.MailQueueItemView::getMail)
             .extracting(Mail::getName)
-            .containsExactly("name1");
+            .containsExactly("name2");
     }
 
     @Test
