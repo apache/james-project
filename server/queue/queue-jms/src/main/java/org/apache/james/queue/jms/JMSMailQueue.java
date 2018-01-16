@@ -673,20 +673,8 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
                     while (hasNext()) {
                         try {
                             Message m = messages.nextElement();
-                            final Mail mail = createMail(m);
-                            final long nextDelivery = m.getLongProperty(JAMES_NEXT_DELIVERY);
-                            return new MailQueueItemView() {
-
-                                @Override
-                                public long getNextDelivery() {
-                                    return nextDelivery;
-                                }
-
-                                @Override
-                                public Mail getMail() {
-                                    return mail;
-                                }
-                            };
+                            return new MailQueueItemView(createMail(m),
+                                m.getLongProperty(JAMES_NEXT_DELIVERY));
                         } catch (MessagingException | JMSException e) {
                             LOGGER.error("Unable to browse queue", e);
                         }

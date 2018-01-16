@@ -89,14 +89,24 @@ public interface ManageableMailQueue extends MailQueue {
     /**
      * Represent a View over a queue {@link MailQueue.MailQueueItem}
      */
-    interface MailQueueItemView {
+    class MailQueueItemView {
+
+        private final Mail mail;
+        private final long nextDelivery;
+
+        public MailQueueItemView(Mail mail, long nextDelivery) {
+            this.mail = mail;
+            this.nextDelivery = nextDelivery;
+        }
 
         /**
          * Return the Mail
          * 
          * @return mail
          */
-        Mail getMail();
+        public Mail getMail() {
+            return mail;
+        }
 
         /**
          * Return the timestamp when the mail will be ready for dequeuing or -1
@@ -104,7 +114,9 @@ public interface ManageableMailQueue extends MailQueue {
          * 
          * @return nextDelivery
          */
-        long getNextDelivery();
+        public long getNextDelivery() {
+            return nextDelivery;
+        }
     }
 
 }

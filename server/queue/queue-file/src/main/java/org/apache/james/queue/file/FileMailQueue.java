@@ -105,10 +105,7 @@ public class FileMailQueue implements ManageableMailQueue {
 
                     oin = new ObjectInputStream(new FileInputStream(item.getObjectFile()));
                     Mail mail = (Mail) oin.readObject();
-                    Long next = (Long) mail.getAttribute(NEXT_DELIVERY);
-                    if (next == null) {
-                        next = 0L;
-                    }
+                    Long next = getNextDelivery(mail);
 
                     final String key = mail.getName();
                     keyMappings.put(key, item);
@@ -147,6 +144,14 @@ public class FileMailQueue implements ManageableMailQueue {
 
             }
         }
+    }
+
+    private Long getNextDelivery(Mail mail) {
+        Long next = (Long) mail.getAttribute(NEXT_DELIVERY);
+        if (next == null) {
+            next = 0L;
+        }
+        return next;
     }
 
     @Override
@@ -460,18 +465,7 @@ public class FileMailQueue implements ManageableMailQueue {
                         try {
                             in = new ObjectInputStream(new FileInputStream(items.next().getObjectFile()));
                             final Mail mail = (Mail) in.readObject();
-                            item = new MailQueueItemView() {
-
-                                @Override
-                                public long getNextDelivery() {
-                                    return (Long) mail.getAttribute(NEXT_DELIVERY);
-                                }
-
-                                @Override
-                                public Mail getMail() {
-                                    return mail;
-                                }
-                            };
+                            item = new MailQueueItemView(mail, getNextDelivery(mail));
                             return true;
                         } catch (IOException | ClassNotFoundException e) {
                             LOGGER.info("Unable to load mail", e);
