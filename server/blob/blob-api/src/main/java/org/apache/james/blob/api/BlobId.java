@@ -21,5 +21,11 @@ package org.apache.james.blob.api;
 
 public interface BlobId {
 
+    interface Factory {
+        BlobId forPayload(byte[] payload);
+
+        BlobId from(String id);
+    }
+
     String asString();
 }

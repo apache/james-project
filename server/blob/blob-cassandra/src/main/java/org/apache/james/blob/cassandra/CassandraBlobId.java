@@ -30,14 +30,18 @@ import com.google.common.base.Strings;
 
 public class CassandraBlobId implements BlobId {
 
-    public static CassandraBlobId forPayload(byte[] payload) {
-        Preconditions.checkArgument(payload != null);
-        return new CassandraBlobId(DigestUtils.sha256Hex(payload));
-    }
+    public static class Factory implements BlobId.Factory {
+        @Override
+        public CassandraBlobId forPayload(byte[] payload) {
+            Preconditions.checkArgument(payload != null);
+            return new CassandraBlobId(DigestUtils.sha256Hex(payload));
+        }
 
-    public static CassandraBlobId from(String id) {
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(id));
-        return new CassandraBlobId(id);
+        @Override
+        public CassandraBlobId from(String id) {
+            Preconditions.checkArgument(!Strings.isNullOrEmpty(id));
+            return new CassandraBlobId(id);
+        }
     }
 
     private final String id;

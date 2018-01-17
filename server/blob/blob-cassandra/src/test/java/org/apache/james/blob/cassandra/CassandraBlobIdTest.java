@@ -24,12 +24,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class CassandraBlobIdTest {
+
+    private static final CassandraBlobId.Factory BLOB_ID_FACTORY = new CassandraBlobId.Factory();
 
     @Test
     public void shouldRespectBeanContract() {
@@ -39,38 +42,38 @@ public class CassandraBlobIdTest {
     @Test
     public void fromShouldConstructBlobId() {
         String id = "111";
-        assertThat(CassandraBlobId.from(id))
+        assertThat(BLOB_ID_FACTORY.from(id))
             .isEqualTo(new CassandraBlobId(id));
     }
 
     @Test
     public void fromShouldThrowOnNull() {
-        assertThatThrownBy(() -> CassandraBlobId.from(null))
+        assertThatThrownBy(() -> BLOB_ID_FACTORY.from(null))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromShouldThrowOnEmpty() {
-        assertThatThrownBy(() -> CassandraBlobId.from(""))
+        assertThatThrownBy(() -> BLOB_ID_FACTORY.from(""))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void forPayloadShouldThrowOnNull() {
-        assertThatThrownBy(() -> CassandraBlobId.forPayload(null))
+        assertThatThrownBy(() -> BLOB_ID_FACTORY.forPayload(null))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void forPayloadShouldHashEmptyArray() {
-        CassandraBlobId blobId = CassandraBlobId.forPayload(new byte[0]);
+        BlobId blobId = BLOB_ID_FACTORY.forPayload(new byte[0]);
 
         assertThat(blobId.asString()).isEqualTo("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
     }
 
     @Test
     public void forPayloadShouldHashArray() {
-        CassandraBlobId blobId = CassandraBlobId.forPayload("content".getBytes(StandardCharsets.UTF_8));
+        BlobId blobId = BLOB_ID_FACTORY.forPayload("content".getBytes(StandardCharsets.UTF_8));
 
         assertThat(blobId.asString()).isEqualTo("ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73");
     }
@@ -79,8 +82,8 @@ public class CassandraBlobIdTest {
     public void forPayloadShouldCalculateDifferentHashesWhenCraftedSha1Collision() throws Exception {
         byte[] payload1 = ClassLoaderUtils.getSystemResourceAsByteArray("shattered-1.pdf");
         byte[] payload2 = ClassLoaderUtils.getSystemResourceAsByteArray("shattered-2.pdf");
-        CassandraBlobId blobId1 = CassandraBlobId.forPayload(payload1);
-        CassandraBlobId blobId2 = CassandraBlobId.forPayload(payload2);
+        BlobId blobId1 = BLOB_ID_FACTORY.forPayload(payload1);
+        BlobId blobId2 = BLOB_ID_FACTORY.forPayload(payload2);
         assertThat(blobId1).isNotEqualTo(blobId2);
     }
 }

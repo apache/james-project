@@ -55,7 +55,8 @@ public class CassandraBlobsDAOTest implements ObjectStoreContract {
         testee = new CassandraBlobsDAO(cassandra.getConf(),
             CassandraConfiguration.builder()
                 .blobPartSize(CHUNK_SIZE)
-                .build());
+                .build(),
+            new CassandraBlobId.Factory());
     }
 
     @AfterEach
@@ -69,8 +70,8 @@ public class CassandraBlobsDAOTest implements ObjectStoreContract {
     }
 
     @Override
-    public BlobId from(String blodIdAsString) {
-        return CassandraBlobId.from(blodIdAsString);
+    public BlobId.Factory blobIdFactory() {
+        return new CassandraBlobId.Factory();
     }
 
     @Test

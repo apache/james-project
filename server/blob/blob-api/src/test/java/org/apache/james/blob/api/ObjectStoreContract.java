@@ -31,7 +31,8 @@ import com.google.common.base.Strings;
 public interface ObjectStoreContract {
 
     ObjectStore testee();
-    BlobId from(String blodIdAsString);
+
+    BlobId.Factory blobIdFactory();
 
     @Test
     default void saveShouldReturnEmptyWhenNullData() throws Exception {
@@ -52,12 +53,12 @@ public interface ObjectStoreContract {
     default void saveShouldReturnBlobId() throws Exception {
         BlobId blobId = testee().save("toto".getBytes(StandardCharsets.UTF_8)).join();
 
-        assertThat(blobId).isEqualTo(from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
+        assertThat(blobId).isEqualTo(blobIdFactory().from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
     }
 
     @Test
     default void readShouldBeEmptyWhenNoExisting() throws IOException {
-        byte[] bytes = testee().read(from("unknown")).join();
+        byte[] bytes = testee().read(blobIdFactory().from("unknown")).join();
 
         assertThat(bytes).isEmpty();
     }

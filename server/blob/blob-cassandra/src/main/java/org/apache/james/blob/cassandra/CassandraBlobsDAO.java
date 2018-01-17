@@ -62,11 +62,13 @@ public class CassandraBlobsDAO implements ObjectStore {
     private final PreparedStatement selectPart;
     private final DataChunker dataChunker;
     private final CassandraConfiguration configuration;
+    private final CassandraBlobId.Factory blobIdFactory;
 
     @Inject
-    public CassandraBlobsDAO(Session session, CassandraConfiguration cassandraConfiguration) {
+    public CassandraBlobsDAO(Session session, CassandraConfiguration cassandraConfiguration, CassandraBlobId.Factory blobIdFactory) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.configuration = cassandraConfiguration;
+        this.blobIdFactory = blobIdFactory;
         this.dataChunker = new DataChunker();
         this.insert = prepareInsert(session);
         this.select = prepareSelect(session);
@@ -77,7 +79,7 @@ public class CassandraBlobsDAO implements ObjectStore {
 
     @VisibleForTesting
     public CassandraBlobsDAO(Session session) {
-        this(session, CassandraConfiguration.DEFAULT_CONFIGURATION);
+        this(session, CassandraConfiguration.DEFAULT_CONFIGURATION, new CassandraBlobId.Factory());
     }
 
     private PreparedStatement prepareSelect(Session session) {
@@ -110,7 +112,7 @@ public class CassandraBlobsDAO implements ObjectStore {
     public CompletableFuture<BlobId> save(byte[] data) {
         Preconditions.checkNotNull(data);
 
-        CassandraBlobId blobId = CassandraBlobId.forPayload(data);
+        CassandraBlobId blobId = blobIdFactory.forPayload(data);
         return saveBlobParts(data, blobId)
             .thenCompose(numberOfChunk -> saveBlobPartsReferences(blobId, numberOfChunk))
             .thenApply(any -> blobId);
