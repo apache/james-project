@@ -36,6 +36,8 @@ import java.util.concurrent.TimeoutException;
 
 import javax.mail.internet.MimeMessage;
 
+
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.junit.ExecutorExtension;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
@@ -43,11 +45,28 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Strings;
 
 @ExtendWith(ExecutorExtension.class)
 public interface MailQueueContract {
 
     MailQueue getMailQueue();
+
+    @Test
+    default void queueShouldSupportBigMail() throws Exception {
+        String name = "name1";
+        // 12 MB of text
+        String messageText = Strings.repeat("0123456789\r\n", 1024 * 1024);
+        getMailQueue().enQueue(defaultMail()
+            .name(name)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setText(messageText))
+            .build());
+
+        MailQueue.MailQueueItem mailQueueItem = getMailQueue().deQueue();
+        assertThat(mailQueueItem.getMail().getName())
+            .isEqualTo(name);
+    }
 
     @Test
     default void queueShouldPreserveMailRecipients() throws Exception {
