@@ -83,6 +83,7 @@
         <module>mailet/mailets</module>
 
         <module>mailrepository/mailrepository-api</module>
+        <module>mailrepository/mailrepository-memory</module>
 
         <module>protocols/fetchmail</module>
         <module>protocols/jmap</module>
