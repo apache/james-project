@@ -38,6 +38,11 @@
             <artifactId>james-server-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>james-server-testing</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-mailrepository-api</artifactId>
         </dependency>
