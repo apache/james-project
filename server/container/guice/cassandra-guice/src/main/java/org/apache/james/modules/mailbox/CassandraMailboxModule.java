@@ -23,7 +23,6 @@ import javax.inject.Singleton;
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthenticator;
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthorizator;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxListener;
@@ -94,13 +93,13 @@ public class CassandraMailboxModule extends AbstractModule {
     protected void configure() {
         install(new DefaultEventModule());
         install(new CassandraQuotaModule());
+        install(new CassandraObjectStoreModule());
 
         bind(CassandraApplicableFlagDAO.class).in(Scopes.SINGLETON);
         bind(CassandraAttachmentDAO.class).in(Scopes.SINGLETON);
         bind(CassandraAttachmentDAOV2.class).in(Scopes.SINGLETON);
         bind(CassandraAttachmentMessageIdDAO.class).in(Scopes.SINGLETON);
         bind(CassandraAttachmentOwnerDAO.class).in(Scopes.SINGLETON);
-        bind(CassandraBlobsDAO.class).in(Scopes.SINGLETON);
         bind(CassandraDeletedMessageDAO.class).in(Scopes.SINGLETON);
         bind(CassandraFirstUnseenDAO.class).in(Scopes.SINGLETON);
         bind(CassandraMailboxCounterDAO.class).in(Scopes.SINGLETON);
