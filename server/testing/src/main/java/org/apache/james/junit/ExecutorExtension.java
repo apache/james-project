@@ -35,7 +35,7 @@ public class ExecutorExtension implements ParameterResolver, BeforeEachCallback,
 
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
-        executorService = Executors.newCachedThreadPool();
+        executorService = Executors.newWorkStealingPool();
     }
 
     @Override
