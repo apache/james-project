@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.queue.api;
+package org.apache.james.junit;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
