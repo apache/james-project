@@ -75,13 +75,20 @@ public class FileMailQueue implements ManageableMailQueue {
     private static final String NEXT_DELIVERY = "FileQueueNextDelivery";
     private static final int SPLITCOUNT = 10;
     private static final SecureRandom RANDOM = new SecureRandom();
+    private final String queueName;
 
     public FileMailQueue(MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, File parentDir, String queuename, boolean sync) throws IOException {
         this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
         this.sync = sync;
-        this.queueDir = new File(parentDir, queuename);
+        this.queueName = queuename;
+        this.queueDir = new File(parentDir, queueName);
         this.queueDirName = queueDir.getAbsolutePath();
         init();
+    }
+
+    @Override
+    public String getMailQueueName() {
+        return queueName;
     }
 
     private void init() throws IOException {

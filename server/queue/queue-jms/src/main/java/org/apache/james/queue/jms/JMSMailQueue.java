@@ -151,6 +151,11 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         this.mailQueueSize = metricFactory.generate("mailQueueSize:" + queueName);
     }
 
+    @Override
+    public String getMailQueueName() {
+        return queueName;
+    }
+
     /**
      * <p>
      * Dequeues a mail when it is ready to process. As JMS does not support delay scheduling out-of-the box,

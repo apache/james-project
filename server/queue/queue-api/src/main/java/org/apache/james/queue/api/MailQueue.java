@@ -62,6 +62,8 @@ public interface MailQueue {
      */
     int NO_DELAY = -1;
 
+    String getMailQueueName();
+
     /**
      * Enqueue the Mail to the queue. The given delay and unit are used to
      * calculate the time when the Mail will be available for deQueue

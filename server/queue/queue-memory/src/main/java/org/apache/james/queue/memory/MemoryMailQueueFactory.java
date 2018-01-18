@@ -73,11 +73,16 @@ public class MemoryMailQueueFactory implements MailQueueFactory {
         private final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
         private final String name;
 
-        public MemoryMailQueue(String name,MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory) {
+        public MemoryMailQueue(String name, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory) {
             this.mailItems = new LinkedBlockingDeque<>();
             this.inProcessingMailItems = new LinkedBlockingDeque<>();
             this.name = name;
             this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
+        }
+
+        @Override
+        public String getMailQueueName() {
+            return name;
         }
 
         @Override

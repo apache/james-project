@@ -53,9 +53,16 @@ public class RemoteDeliveryTest {
 
     private static class FakeMailQueue implements MailQueue {
         private final List<Mail> enqueuedMail;
+        private final String name;
 
-        private FakeMailQueue() {
+        private FakeMailQueue(String name) {
+            this.name = name;
             this.enqueuedMail = Lists.newArrayList();
+        }
+
+        @Override
+        public String getMailQueueName() {
+            return name;
         }
 
         @Override
@@ -88,7 +95,7 @@ public class RemoteDeliveryTest {
     @Before
     public void setUp() {
         MailQueueFactory queueFactory = mock(MailQueueFactory.class);
-        mailQueue = new FakeMailQueue();
+        mailQueue = new FakeMailQueue("any");
         when(queueFactory.getQueue(RemoteDeliveryConfiguration.OUTGOING)).thenReturn(mailQueue);
         remoteDelivery = new RemoteDelivery(mock(DNSService.class), mock(DomainList.class), queueFactory, mock(MetricFactory.class), RemoteDelivery.ThreadState.DO_NOT_START_THREADS);
     }

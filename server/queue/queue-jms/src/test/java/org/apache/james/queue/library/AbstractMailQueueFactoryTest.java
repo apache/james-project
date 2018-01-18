@@ -54,6 +54,11 @@ public class AbstractMailQueueFactoryTest {
                 return new ManageableMailQueue() {
 
                     @Override
+                    public String getMailQueueName() {
+                        return "name";
+                    }
+
+                    @Override
                     public void enQueue(Mail mail, long delay, TimeUnit unit) throws MailQueueException {
 
                     }
