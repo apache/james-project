@@ -35,15 +35,15 @@ public class FileMailQueueTest implements DelayedManageableMailQueueContract {
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private FileMailQueue mailQueue;
 
-    @AfterEach
-    void teardown() {
-        temporaryFolder.delete();
-    }
-
     @BeforeEach
     public void setUp() throws Exception {
         temporaryFolder.create();
         mailQueue = new FileMailQueue(new RawMailQueueItemDecoratorFactory(), temporaryFolder.newFolder(), "test", SYNC);
+    }
+
+    @AfterEach
+    void teardown() {
+        temporaryFolder.delete();
     }
 
     @Override
