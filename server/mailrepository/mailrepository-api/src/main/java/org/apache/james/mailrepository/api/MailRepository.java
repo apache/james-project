@@ -85,22 +85,14 @@ public interface MailRepository {
     void remove(String key) throws MessagingException;
 
     /**
-     * Obtains a lock on a message identified by key
-     * 
-     * @param key
-     *            the key of the message to be locked
-     * 
-     * @return true if successfully obtained the lock, false otherwise
+     * @deprecated This method is implementation dependent, it has been moved to org.apache.james.mailrepository.lib.AbstractMailRepository
      */
+    @Deprecated
     boolean lock(String key) throws MessagingException;
 
     /**
-     * Releases a lock on a message identified the key
-     * 
-     * @param key
-     *            the key of the message to be unlocked
-     * 
-     * @return true if successfully released the lock, false otherwise
+     * @deprecated This method is implementation dependent, it has been moved to org.apache.james.mailrepository.lib.AbstractMailRepository
      */
+    @Deprecated
     boolean unlock(String key) throws MessagingException;
 }

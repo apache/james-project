@@ -60,14 +60,24 @@ public abstract class AbstractMailRepository implements MailRepository, Configur
     }
 
     /**
-     * @see org.apache.james.mailrepository.api.MailRepository#unlock(String)
+     * Releases a lock on a message identified the key
+     * 
+     * @param key
+     *            the key of the message to be unlocked
+     * 
+     * @return true if successfully released the lock, false otherwise
      */
     public boolean unlock(String key) {
         return lock.unlock(key);
     }
 
     /**
-     * @see org.apache.james.mailrepository.api.MailRepository#lock(String)
+     * Obtains a lock on a message identified by key
+     * 
+     * @param key
+     *            the key of the message to be locked
+     * 
+     * @return true if successfully obtained the lock, false otherwise
      */
     public boolean lock(String key) {
         return lock.lock(key);
