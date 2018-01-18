@@ -19,6 +19,8 @@
 
 package org.apache.james.queue.api;
 
+import java.util.List;
+
 /**
  * Factory for {@link MailQueue}
  */
@@ -36,4 +38,6 @@ public interface MailQueueFactory {
      * @return queue
      */
     MailQueue getQueue(String name);
+
+    List<MailQueue> getUsedMailQueues();
 }

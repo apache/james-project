@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 
 /**
  * {@link MailQueueFactory} abstract base class which take care of register the
@@ -65,6 +66,11 @@ public abstract class AbstractMailQueueFactory implements MailQueueFactory {
     @PostConstruct
     public void init() {
         mbeanServer = ManagementFactory.getPlatformMBeanServer();
+    }
+
+    @Override
+    public List<MailQueue> getUsedMailQueues() {
+        return ImmutableList.copyOf(queues.values());
     }
 
     @PreDestroy

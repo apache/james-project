@@ -17,45 +17,47 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.queue.memory;
+package org.apache.james.queue.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.queue.api.MailQueueFactory;
-import org.apache.james.queue.api.MailQueueFactoryContract;
-import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class MemoryMailQueueFactoryTest implements MailQueueFactoryContract {
+public interface MailQueueFactoryContract {
 
-    private static final String KEY = "key";
-    private static final String BIS = "keyBis";
+    String NAME_1 = "name1";
+    String NAME_2 = "name2";
 
-    private MemoryMailQueueFactory memoryMailQueueFactory;
+    MailQueueFactory getMailQueueFactory();
 
-    @BeforeEach
-    public void setUp() {
-        memoryMailQueueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
+    @Test
+    default void getUsedMailQueuesShouldReturnWhenNoMailQueue() {
+        assertThat(getMailQueueFactory().getUsedMailQueues())
+            .isEmpty();
     }
 
     @Test
-    public void getQueueShouldNotReturnNull() {
-        assertThat(memoryMailQueueFactory.getQueue(KEY)).isNotNull();
+    default void getUsedMailQueuesShouldReturnPreviouslyCreatedMailQueues() {
+        MailQueueFactory mailQueueFactory = getMailQueueFactory();
+
+        mailQueueFactory.getQueue(NAME_1);
+        mailQueueFactory.getQueue(NAME_2);
+
+        assertThat(mailQueueFactory.getUsedMailQueues())
+            .extracting(MailQueue::getMailQueueName)
+            .containsOnly(NAME_1, NAME_2);
     }
 
     @Test
-    public void getQueueShouldReturnTwoTimeTheSameResultWhenUsedWithTheSameKey() {
-        assertThat(memoryMailQueueFactory.getQueue(KEY)).isEqualTo(memoryMailQueueFactory.getQueue(KEY));
+    default void getUsedMailQueuesShouldNotReturnDuplicate() {
+        MailQueueFactory mailQueueFactory = getMailQueueFactory();
+
+        mailQueueFactory.getQueue(NAME_1);
+        mailQueueFactory.getQueue(NAME_1);
+
+        assertThat(mailQueueFactory.getUsedMailQueues())
+            .extracting(MailQueue::getMailQueueName)
+            .containsOnly(NAME_1);
     }
 
-    @Test
-    public void getQueueShouldNotReturnTheSameQueueForTwoDifferentNames() {
-        assertThat(memoryMailQueueFactory.getQueue(KEY)).isNotEqualTo(memoryMailQueueFactory.getQueue(BIS));
-    }
-
-    @Override
-    public MailQueueFactory getMailQueueFactory() {
-        return memoryMailQueueFactory;
-    }
 }

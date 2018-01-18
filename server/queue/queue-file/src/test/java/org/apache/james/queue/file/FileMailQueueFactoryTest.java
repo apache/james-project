@@ -17,45 +17,32 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.queue.memory;
+package org.apache.james.queue.file;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
+import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueFactoryContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-public class MemoryMailQueueFactoryTest implements MailQueueFactoryContract {
-
-    private static final String KEY = "key";
-    private static final String BIS = "keyBis";
-
-    private MemoryMailQueueFactory memoryMailQueueFactory;
+public class FileMailQueueFactoryTest implements MailQueueFactoryContract {
+    private FileMailQueueFactory mailQueueFactory;
+    private MockFileSystem fileSystem;
 
     @BeforeEach
-    public void setUp() {
-        memoryMailQueueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
+    public void setUp() throws Exception {
+        fileSystem = new MockFileSystem();
+        mailQueueFactory = new FileMailQueueFactory(fileSystem, new RawMailQueueItemDecoratorFactory());
     }
 
-    @Test
-    public void getQueueShouldNotReturnNull() {
-        assertThat(memoryMailQueueFactory.getQueue(KEY)).isNotNull();
-    }
-
-    @Test
-    public void getQueueShouldReturnTwoTimeTheSameResultWhenUsedWithTheSameKey() {
-        assertThat(memoryMailQueueFactory.getQueue(KEY)).isEqualTo(memoryMailQueueFactory.getQueue(KEY));
-    }
-
-    @Test
-    public void getQueueShouldNotReturnTheSameQueueForTwoDifferentNames() {
-        assertThat(memoryMailQueueFactory.getQueue(KEY)).isNotEqualTo(memoryMailQueueFactory.getQueue(BIS));
+    @AfterEach
+    void teardown() {
+        fileSystem.clear();
     }
 
     @Override
     public MailQueueFactory getMailQueueFactory() {
-        return memoryMailQueueFactory;
+        return mailQueueFactory;
     }
 }

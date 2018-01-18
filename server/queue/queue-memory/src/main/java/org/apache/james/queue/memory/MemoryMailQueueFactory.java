@@ -20,6 +20,7 @@
 package org.apache.james.queue.memory;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,6 +54,11 @@ public class MemoryMailQueueFactory implements MailQueueFactory {
     public MemoryMailQueueFactory(MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory) {
         this.mailQueues = new ConcurrentHashMap<>();
         this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
+    }
+
+    @Override
+    public List<MailQueue> getUsedMailQueues() {
+        return ImmutableList.copyOf(mailQueues.values());
     }
 
     @Override
