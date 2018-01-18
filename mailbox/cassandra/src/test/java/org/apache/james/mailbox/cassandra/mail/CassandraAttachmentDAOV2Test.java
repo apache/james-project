@@ -26,6 +26,7 @@ import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.cassandra.CassandraBlobId;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2.DAOAttachment;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
@@ -38,6 +39,7 @@ import org.junit.Test;
 
 public class CassandraAttachmentDAOV2Test {
     public static final AttachmentId ATTACHMENT_ID = AttachmentId.from("id1");
+    private static final CassandraBlobId.Factory BLOB_ID_FACTORY = new CassandraBlobId.Factory();
 
     @ClassRule
     public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
@@ -53,7 +55,7 @@ public class CassandraAttachmentDAOV2Test {
             cassandraServer.getIp(),
             cassandraServer.getBindingPort());
 
-        testee = new CassandraAttachmentDAOV2(cassandra.getConf());
+        testee = new CassandraAttachmentDAOV2(BLOB_ID_FACTORY, cassandra.getConf());
     }
 
     @After
@@ -75,7 +77,7 @@ public class CassandraAttachmentDAOV2Test {
             .type("application/json")
             .bytes("{\"property\":`\"value\"}".getBytes(StandardCharsets.UTF_8))
             .build();
-        CassandraBlobId blobId = CassandraBlobId.from("blobId");
+        BlobId blobId = BLOB_ID_FACTORY.from("blobId");
         DAOAttachment daoAttachment = CassandraAttachmentDAOV2.from(attachment, blobId);
         testee.storeAttachment(daoAttachment).join();
 

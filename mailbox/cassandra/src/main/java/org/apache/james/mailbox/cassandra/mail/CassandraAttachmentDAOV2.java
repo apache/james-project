@@ -39,7 +39,6 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.cassandra.CassandraBlobId;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 
@@ -113,20 +112,22 @@ public class CassandraAttachmentDAOV2 {
             attachment.getSize());
     }
 
-    private static DAOAttachment fromRow(Row row) {
+    private static DAOAttachment fromRow(Row row, BlobId.Factory blobIfFactory) {
         return new DAOAttachment(
             AttachmentId.from(row.getString(ID)),
-            CassandraBlobId.from(row.getString(BLOB_ID)),
+            blobIfFactory.from(row.getString(BLOB_ID)),
             row.getString(TYPE),
             row.getLong(SIZE));
     }
 
+    private final BlobId.Factory blobIdFactory;
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement insertStatement;
     private final PreparedStatement selectStatement;
 
     @Inject
-    public CassandraAttachmentDAOV2(Session session) {
+    public CassandraAttachmentDAOV2(BlobId.Factory blobIdFactory, Session session) {
+        this.blobIdFactory = blobIdFactory;
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
 
         this.selectStatement = prepareSelect(session);
@@ -154,7 +155,7 @@ public class CassandraAttachmentDAOV2 {
         return cassandraAsyncExecutor.executeSingleRow(
             selectStatement.bind()
                 .setUUID(ID_AS_UUID, attachmentId.asUUID()))
-            .thenApply(row -> row.map(CassandraAttachmentDAOV2::fromRow));
+            .thenApply(rowOptional -> rowOptional.map(row -> CassandraAttachmentDAOV2.fromRow(row, blobIdFactory)));
     }
 
     public CompletableFuture<Void> storeAttachment(DAOAttachment attachment) {

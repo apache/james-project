@@ -49,6 +49,7 @@ import org.junit.Test;
 public class AttachmentV2MigrationTest {
     public static final AttachmentId ATTACHMENT_ID = AttachmentId.from("id1");
     public static final AttachmentId ATTACHMENT_ID_2 = AttachmentId.from("id2");
+    private static final CassandraBlobId.Factory BLOB_ID_FACTORY = new CassandraBlobId.Factory();
 
     @ClassRule
     public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
@@ -72,9 +73,8 @@ public class AttachmentV2MigrationTest {
         attachmentDAO = new CassandraAttachmentDAO(cassandra.getConf(),
             CassandraUtils.WITH_DEFAULT_CONFIGURATION,
             CassandraConfiguration.DEFAULT_CONFIGURATION);
-        attachmentDAOV2 = new CassandraAttachmentDAOV2(cassandra.getConf());
+        attachmentDAOV2 = new CassandraAttachmentDAOV2(BLOB_ID_FACTORY, cassandra.getConf());
         blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
-
         migration = new AttachmentV2Migration(attachmentDAO, attachmentDAOV2, blobsDAO);
 
         attachment1 = Attachment.builder()
@@ -112,12 +112,12 @@ public class AttachmentV2MigrationTest {
         migration.run();
 
         assertThat(attachmentDAOV2.getAttachment(ATTACHMENT_ID).join())
-            .contains(CassandraAttachmentDAOV2.from(attachment1, CassandraBlobId.forPayload(attachment1.getBytes())));
+            .contains(CassandraAttachmentDAOV2.from(attachment1, BLOB_ID_FACTORY.forPayload(attachment1.getBytes())));
         assertThat(attachmentDAOV2.getAttachment(ATTACHMENT_ID_2).join())
-            .contains(CassandraAttachmentDAOV2.from(attachment2, CassandraBlobId.forPayload(attachment2.getBytes())));
-        assertThat(blobsDAO.read(CassandraBlobId.forPayload(attachment1.getBytes())).join())
+            .contains(CassandraAttachmentDAOV2.from(attachment2, BLOB_ID_FACTORY.forPayload(attachment2.getBytes())));
+        assertThat(blobsDAO.read(BLOB_ID_FACTORY.forPayload(attachment1.getBytes())).join())
             .isEqualTo(attachment1.getBytes());
-        assertThat(blobsDAO.read(CassandraBlobId.forPayload(attachment2.getBytes())).join())
+        assertThat(blobsDAO.read(BLOB_ID_FACTORY.forPayload(attachment2.getBytes())).join())
             .isEqualTo(attachment2.getBytes());
     }
 
@@ -172,9 +172,9 @@ public class AttachmentV2MigrationTest {
             attachment1,
             attachment2));
         when(blobsDAO.save(attachment1.getBytes()))
-            .thenReturn(CompletableFuture.completedFuture(CassandraBlobId.forPayload(attachment1.getBytes())));
+            .thenReturn(CompletableFuture.completedFuture(BLOB_ID_FACTORY.forPayload(attachment1.getBytes())));
         when(blobsDAO.save(attachment2.getBytes()))
-            .thenReturn(CompletableFuture.completedFuture(CassandraBlobId.forPayload(attachment2.getBytes())));
+            .thenReturn(CompletableFuture.completedFuture(BLOB_ID_FACTORY.forPayload(attachment2.getBytes())));
         when(attachmentDAOV2.storeAttachment(any())).thenThrow(new RuntimeException());
 
         assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
@@ -191,9 +191,9 @@ public class AttachmentV2MigrationTest {
             attachment1,
             attachment2));
         when(blobsDAO.save(attachment1.getBytes()))
-            .thenReturn(CompletableFuture.completedFuture(CassandraBlobId.forPayload(attachment1.getBytes())));
+            .thenReturn(CompletableFuture.completedFuture(BLOB_ID_FACTORY.forPayload(attachment1.getBytes())));
         when(blobsDAO.save(attachment2.getBytes()))
-            .thenReturn(CompletableFuture.completedFuture(CassandraBlobId.forPayload(attachment2.getBytes())));
+            .thenReturn(CompletableFuture.completedFuture(BLOB_ID_FACTORY.forPayload(attachment2.getBytes())));
         when(attachmentDAOV2.storeAttachment(any())).thenReturn(CompletableFuture.completedFuture(null));
         when(attachmentDAO.deleteAttachment(any())).thenThrow(new RuntimeException());
 
@@ -211,7 +211,7 @@ public class AttachmentV2MigrationTest {
             attachment1,
             attachment2));
         when(blobsDAO.save(attachment1.getBytes()))
-            .thenReturn(CompletableFuture.completedFuture(CassandraBlobId.forPayload(attachment1.getBytes())));
+            .thenReturn(CompletableFuture.completedFuture(BLOB_ID_FACTORY.forPayload(attachment1.getBytes())));
         when(blobsDAO.save(attachment2.getBytes()))
             .thenThrow(new RuntimeException());
         when(attachmentDAOV2.storeAttachment(any())).thenReturn(CompletableFuture.completedFuture(null));

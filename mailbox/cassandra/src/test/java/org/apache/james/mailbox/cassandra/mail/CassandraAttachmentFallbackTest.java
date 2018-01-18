@@ -30,6 +30,7 @@ import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.cassandra.CassandraBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -46,6 +47,7 @@ import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 public class CassandraAttachmentFallbackTest {
     public static final AttachmentId ATTACHMENT_ID_1 = AttachmentId.from("id1");
     public static final AttachmentId ATTACHMENT_ID_2 = AttachmentId.from("id2");
+    private static final CassandraBlobId.Factory BLOB_ID_FACTORY = new CassandraBlobId.Factory();
 
     @ClassRule
     public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
@@ -69,7 +71,7 @@ public class CassandraAttachmentFallbackTest {
             cassandraServer.getIp(),
             cassandraServer.getBindingPort());
 
-        attachmentDAOV2 = new CassandraAttachmentDAOV2(cassandra.getConf());
+        attachmentDAOV2 = new CassandraAttachmentDAOV2(BLOB_ID_FACTORY, cassandra.getConf());
         attachmentDAO = new CassandraAttachmentDAO(cassandra.getConf(),
             CassandraUtils.WITH_DEFAULT_CONFIGURATION,
             CassandraConfiguration.DEFAULT_CONFIGURATION);

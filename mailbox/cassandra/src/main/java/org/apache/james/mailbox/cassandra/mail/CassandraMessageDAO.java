@@ -60,8 +60,7 @@ import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.cassandra.CassandraBlobId;
-import org.apache.james.blob.cassandra.CassandraBlobsDAO;
+import org.apache.james.blob.api.ObjectStore;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.utils.Limit;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table;
@@ -103,7 +102,8 @@ public class CassandraMessageDAO {
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final CassandraTypesProvider typesProvider;
-    private final CassandraBlobsDAO blobsDAO;
+    private final ObjectStore objectStore;
+    private final BlobId.Factory blobIdFactory;
     private final CassandraConfiguration configuration;
     private final CassandraUtils cassandraUtils;
     private final CassandraMessageId.Factory messageIdFactory;
@@ -117,11 +117,13 @@ public class CassandraMessageDAO {
     private final Cid.CidParser cidParser;
 
     @Inject
-    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, CassandraBlobsDAO blobsDAO, CassandraConfiguration cassandraConfiguration,
+    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, ObjectStore objectStore,
+                               BlobId.Factory blobIdFactory, CassandraConfiguration cassandraConfiguration,
             CassandraUtils cassandraUtils, CassandraMessageId.Factory messageIdFactory) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.typesProvider = typesProvider;
-        this.blobsDAO = blobsDAO;
+        this.objectStore = objectStore;
+        this.blobIdFactory = blobIdFactory;
         this.configuration = cassandraConfiguration;
         this.cassandraUtils = cassandraUtils;
         this.messageIdFactory = messageIdFactory;
@@ -137,9 +139,9 @@ public class CassandraMessageDAO {
     }
 
     @VisibleForTesting
-    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, CassandraBlobsDAO blobsDAO,
-            CassandraUtils cassandraUtils, CassandraMessageId.Factory messageIdFactory) {
-        this(session, typesProvider, blobsDAO, CassandraConfiguration.DEFAULT_CONFIGURATION, cassandraUtils, messageIdFactory);
+    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, ObjectStore objectStore,
+                               BlobId.Factory blobIdFactory, CassandraUtils cassandraUtils, CassandraMessageId.Factory messageIdFactory) {
+        this(session, typesProvider, objectStore,  blobIdFactory, CassandraConfiguration.DEFAULT_CONFIGURATION, cassandraUtils, messageIdFactory);
     }
 
     private PreparedStatement prepareSelect(Session session, String[] fields) {
@@ -180,13 +182,11 @@ public class CassandraMessageDAO {
 
     private CompletableFuture<Pair<BlobId, BlobId>> saveContent(MailboxMessage message) throws MailboxException {
         try {
+            byte[] headerContent = IOUtils.toByteArray(message.getHeaderContent());
+            byte[] bodyContent = IOUtils.toByteArray(message.getBodyContent());
             return CompletableFutureUtil.combine(
-                blobsDAO.save(
-                    IOUtils.toByteArray(
-                        message.getHeaderContent())),
-                blobsDAO.save(
-                    IOUtils.toByteArray(
-                        message.getBodyContent())),
+                objectStore.save(headerContent),
+                objectStore.save(bodyContent),
                 Pair::of);
         } catch (IOException e) {
             throw new MailboxException("Error saving mail content", e);
@@ -372,7 +372,7 @@ public class CassandraMessageDAO {
     }
 
     private CompletableFuture<byte[]> getFieldContent(String field, Row row) {
-        return blobsDAO.read(CassandraBlobId.from(row.getString(field)));
+        return objectStore.read(blobIdFactory.from(row.getString(field)));
     }
 
     public static MessageResult notFound(ComposedMessageIdWithMetaData id) {

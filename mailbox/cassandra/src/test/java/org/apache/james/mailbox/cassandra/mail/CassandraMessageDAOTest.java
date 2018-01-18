@@ -38,6 +38,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.blob.cassandra.CassandraBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 import org.apache.james.mailbox.MessageUid;
@@ -89,7 +90,9 @@ public class CassandraMessageDAOTest {
         messageIdFactory = new CassandraMessageId.Factory();
         messageId = messageIdFactory.generate();
         CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
-        testee = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), blobsDAO, CassandraUtils.WITH_DEFAULT_CONFIGURATION, new CassandraMessageId.Factory());
+        CassandraBlobId.Factory blobIdFactory = new CassandraBlobId.Factory();
+        testee = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), blobsDAO, blobIdFactory,
+            CassandraUtils.WITH_DEFAULT_CONFIGURATION, new CassandraMessageId.Factory());
 
         messageIds = ImmutableList.of(ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(new ComposedMessageId(MAILBOX_ID, messageId, messageUid))

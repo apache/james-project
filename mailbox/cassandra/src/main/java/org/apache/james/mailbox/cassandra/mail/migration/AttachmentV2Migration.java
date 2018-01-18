@@ -22,7 +22,7 @@ package org.apache.james.mailbox.cassandra.mail.migration;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.migration.Migration;
-import org.apache.james.blob.cassandra.CassandraBlobsDAO;
+import org.apache.james.blob.api.ObjectStore;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
 import org.apache.james.mailbox.model.Attachment;
@@ -34,15 +34,15 @@ public class AttachmentV2Migration implements Migration {
     private static final Logger LOGGER = LoggerFactory.getLogger(AttachmentV2Migration.class);
     private final CassandraAttachmentDAO attachmentDAOV1;
     private final CassandraAttachmentDAOV2 attachmentDAOV2;
-    private final CassandraBlobsDAO blobsDAO;
+    private final ObjectStore objectStore;
 
     @Inject
     public AttachmentV2Migration(CassandraAttachmentDAO attachmentDAOV1,
                                  CassandraAttachmentDAOV2 attachmentDAOV2,
-                                 CassandraBlobsDAO blobsDAO) {
+                                 ObjectStore objectStore) {
         this.attachmentDAOV1 = attachmentDAOV1;
         this.attachmentDAOV2 = attachmentDAOV2;
-        this.blobsDAO = blobsDAO;
+        this.objectStore = objectStore;
     }
 
     @Override
@@ -59,7 +59,7 @@ public class AttachmentV2Migration implements Migration {
 
     private Result migrateAttachment(Attachment attachment) {
         try {
-            blobsDAO.save(attachment.getBytes())
+            objectStore.save(attachment.getBytes())
                 .thenApply(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
                 .thenCompose(attachmentDAOV2::storeAttachment)
                 .thenCompose(any -> attachmentDAOV1.deleteAttachment(attachment.getAttachmentId()))
