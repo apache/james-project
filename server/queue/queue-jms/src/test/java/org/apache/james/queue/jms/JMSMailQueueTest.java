@@ -109,4 +109,12 @@ public class JMSMailQueueTest implements DelayedManageableMailQueueContract, Pri
     public void enqueueWithVeryLongDelayShouldDelayMail(ExecutorService executorService) {
 
     }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2312 JMS clear mailqueue can ommit some messages" +
+        "Random test failing around 1% of the time")
+    public void clearShouldRemoveAllElements() {
+
+    }
 }

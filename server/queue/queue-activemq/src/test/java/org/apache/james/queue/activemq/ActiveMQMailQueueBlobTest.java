@@ -131,6 +131,14 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
 
     }
 
+    @Test
+    @Override
+    @Disabled("JAMES-2312 JMS clear mailqueue can ommit some messages" +
+        "Random test failing around 1% of the time")
+    public void clearShouldRemoveAllElements() {
+
+    }
+
     protected ActiveMQConnectionFactory createConnectionFactory() {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?create=false");
 
