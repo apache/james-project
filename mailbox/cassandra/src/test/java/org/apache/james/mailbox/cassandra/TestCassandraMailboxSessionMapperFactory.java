@@ -73,7 +73,7 @@ public class TestCassandraMailboxSessionMapperFactory {
                 new CassandraUserMailboxRightsDAO(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION),
                 CassandraConfiguration.DEFAULT_CONFIGURATION),
             new CassandraUserMailboxRightsDAO(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION),
-            blobIdFactory, CassandraUtils.WITH_DEFAULT_CONFIGURATION,
+            CassandraUtils.WITH_DEFAULT_CONFIGURATION,
             CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 

@@ -72,7 +72,6 @@ public abstract class AbstractFileSystemTest {
         fileSystem = buildFileSystem(rootDirectory.getAbsolutePath());
     }
 
-    @SuppressWarnings("deprecation")
     private void createSubFolderWithAFileIn(String folderName, String fileName, String fileContent) throws IOException {
         File folder = tmpFolder.newFolder(folderName);
         File file = new File(folder.getAbsolutePath() + "/" + fileName);
@@ -231,7 +230,6 @@ public abstract class AbstractFileSystemTest {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     @Parameters(source = FileToCreateProvider.class)
     public final void createdFilesAsInputStreamShouldBeAvailable(String name, String extension) throws Exception {
@@ -246,7 +244,6 @@ public abstract class AbstractFileSystemTest {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     @Parameters(source = FileToCreateProvider.class)
     public final void createdFilesAsInputStreamShouldBeAvailableWhenAccessedWithTwoSlashes(String name, String extension) throws Exception {
@@ -261,7 +258,6 @@ public abstract class AbstractFileSystemTest {
         }
     }
 
-    @SuppressWarnings("deprecation")
     private File createTempFile(String name, String extension) throws IOException {
         File temp = File.createTempFile(name, extension);
         FileUtils.write(temp, "content", StandardCharsets.UTF_8);
