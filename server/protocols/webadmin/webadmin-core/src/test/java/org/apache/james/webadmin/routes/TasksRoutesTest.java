@@ -92,11 +92,15 @@ public class TasksRoutesTest {
     }
 
     @Test
-    public void listShouldReturnTaskDetailsWhenTaskInProgress() {
+    public void listShouldReturnTaskDetailsWhenTaskInProgress() throws Exception {
+        CountDownLatch taskInProgressLatch = new CountDownLatch(1);
         TaskId taskId = taskManager.submit(() -> {
+            taskInProgressLatch.countDown();
             await();
             return Task.Result.COMPLETED;
         });
+
+        taskInProgressLatch.await();
 
         when()
             .get()
