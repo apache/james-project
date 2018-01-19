@@ -37,6 +37,7 @@
         <module>webadmin-core</module>
         <module>webadmin-data</module>
         <module>webadmin-mailbox</module>
+        <module>webadmin-mailrepository</module>
         <module>webadmin-swagger</module>
     </modules>
 
