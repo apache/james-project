@@ -25,8 +25,6 @@ import javax.jms.ConnectionFactory;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.DelayedManageableMailQueueContract;
 import org.apache.james.queue.api.DelayedPriorityMailQueueContract;
@@ -38,47 +36,25 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import com.google.common.collect.ImmutableList;
-
+@ExtendWith(BrokerExtension.class)
 public class JMSMailQueueTest implements DelayedManageableMailQueueContract, PriorityManageableMailQueueContract, DelayedPriorityMailQueueContract {
-
-    private final static String QUEUE_NAME = "test";
 
     private JMSMailQueue mailQueue;
 
-    private BrokerService broker;
-
     @BeforeEach
-    public void setUp() throws Exception {
-        broker = createBroker();
-        broker.start();
+    public void setUp(BrokerService broker) throws Exception {
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
         RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
         NoopMetricFactory metricFactory = new NoopMetricFactory();
-        mailQueue = new JMSMailQueue(connectionFactory, mailQueueItemDecoratorFactory, QUEUE_NAME, metricFactory);
-    }
-
-    private BrokerService createBroker() throws Exception {
-        BrokerService aBroker = new BrokerService();
-        aBroker.setPersistent(false);
-        aBroker.setUseJmx(false);
-        aBroker.addConnector("tcp://127.0.0.1:61616");
-
-        // Enable priority support
-        PolicyMap pMap = new PolicyMap();
-        PolicyEntry entry = new PolicyEntry();
-        entry.setPrioritizedMessages(true);
-        entry.setQueue(QUEUE_NAME);
-        pMap.setPolicyEntries(ImmutableList.of(entry));
-        aBroker.setDestinationPolicy(pMap);
-
-        return aBroker;
+        String queueName = BrokerExtension.generateRandomQueueName(broker);
+        mailQueue = new JMSMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, metricFactory);
     }
 
     @AfterEach
     public void tearDown() throws Exception {
-        broker.stop();
+        mailQueue.dispose();
     }
 
     @Override

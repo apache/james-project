@@ -25,11 +25,7 @@ import java.io.InputStream;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.plugin.StatisticsBrokerPlugin;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.metrics.api.NoopMetricFactory;
@@ -39,66 +35,47 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.PriorityManageableMailQueueContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
+import org.apache.james.queue.jms.BrokerExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
 
+@ExtendWith(BrokerExtension.class)
+@Tag(BrokerExtension.STATISTICS)
 public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueContract, DelayedPriorityMailQueueContract, PriorityManageableMailQueueContract {
 
     static final String BASE_DIR = "file://target/james-test";
-    static final String QUEUE_NAME = "test";
     static final boolean USE_BLOB = true;
 
     ActiveMQMailQueue mailQueue;
-    BrokerService broker;
     MyFileSystem fileSystem;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    public void setUp(BrokerService broker) throws Exception {
         fileSystem = new MyFileSystem();
-        broker = createBroker();
-        broker.start();
         ActiveMQConnectionFactory connectionFactory = createConnectionFactory();
         FileSystemBlobTransferPolicy policy = new FileSystemBlobTransferPolicy();
         policy.setFileSystem(fileSystem);
         policy.setDefaultUploadUrl(BASE_DIR);
         connectionFactory.setBlobTransferPolicy(policy);
+
         RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
         NoopMetricFactory metricFactory = new NoopMetricFactory();
-        mailQueue = new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, QUEUE_NAME, USE_BLOB, metricFactory);
-
-    }
-
-    protected static BrokerService createBroker() throws Exception {
-        BrokerService broker = new BrokerService();
-        broker.setPersistent(false);
-        broker.setUseJmx(false);
-        broker.addConnector("tcp://127.0.0.1:61616");
-
-        // Enable priority support
-        PolicyMap pMap = new PolicyMap();
-        PolicyEntry entry = new PolicyEntry();
-        entry.setPrioritizedMessages(true);
-        entry.setQueue(QUEUE_NAME);
-        pMap.setPolicyEntries(ImmutableList.of(entry));
-        broker.setDestinationPolicy(pMap);
-        // Enable statistics
-        broker.setPlugins(new BrokerPlugin[]{new StatisticsBrokerPlugin()});
-        broker.setEnableStatistics(true);
-
-        return broker;
+        String queueName = BrokerExtension.generateRandomQueueName(broker);
+        mailQueue = new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, USE_BLOB, metricFactory);
     }
 
     @AfterEach
     public void tearDown() throws Exception {
         fileSystem.destroy();
-        broker.stop();
+        mailQueue.dispose();
     }
 
     @Override
