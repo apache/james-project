@@ -24,8 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.ExecutorService;
 
-import javax.jms.ConnectionFactory;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
@@ -66,7 +64,11 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
         fileSystem = new MyFileSystem();
         broker = createBroker();
         broker.start();
-        ConnectionFactory connectionFactory = createConnectionFactory();
+        ActiveMQConnectionFactory connectionFactory = createConnectionFactory();
+        FileSystemBlobTransferPolicy policy = new FileSystemBlobTransferPolicy();
+        policy.setFileSystem(fileSystem);
+        policy.setDefaultUploadUrl(BASE_DIR);
+        connectionFactory.setBlobTransferPolicy(policy);
         RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
         NoopMetricFactory metricFactory = new NoopMetricFactory();
         mailQueue = new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, QUEUE_NAME, USE_BLOB, metricFactory);
