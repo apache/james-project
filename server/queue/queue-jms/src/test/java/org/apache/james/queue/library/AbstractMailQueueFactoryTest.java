@@ -25,15 +25,12 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import java.util.concurrent.TimeUnit;
-
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.ManageableMailQueue;
-import org.apache.mailet.Mail;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -48,56 +45,10 @@ public class AbstractMailQueueFactoryTest {
     @Before
     public void setUp() {
         mBeanServer = mock(MBeanServer.class);
-        abstractMailQueueFactory = new AbstractMailQueueFactory<MailQueue>() {
+        abstractMailQueueFactory = new AbstractMailQueueFactory<ManageableMailQueue>() {
             @Override
-            protected MailQueue createMailQueue(String name) {
-                return new ManageableMailQueue() {
-
-                    @Override
-                    public String getName() {
-                        return "name";
-                    }
-
-                    @Override
-                    public void enQueue(Mail mail, long delay, TimeUnit unit) throws MailQueueException {
-
-                    }
-
-                    @Override
-                    public void enQueue(Mail mail) throws MailQueueException {
-
-                    }
-
-                    @Override
-                    public MailQueueItem deQueue() throws MailQueueException {
-                        return null;
-                    }
-
-                    @Override
-                    public long getSize() throws MailQueueException {
-                        return 0;
-                    }
-
-                    @Override
-                    public long flush() throws MailQueueException {
-                        return 0;
-                    }
-
-                    @Override
-                    public long clear() throws MailQueueException {
-                        return 0;
-                    }
-
-                    @Override
-                    public long remove(Type type, String value) throws MailQueueException {
-                        return 0;
-                    }
-
-                    @Override
-                    public MailQueueIterator browse() throws MailQueueException {
-                        return null;
-                    }
-                };
+            protected ManageableMailQueue createMailQueue(String name) {
+                return mock(ManageableMailQueue.class);
             }
         };
         abstractMailQueueFactory.setMbeanServer(mBeanServer);
