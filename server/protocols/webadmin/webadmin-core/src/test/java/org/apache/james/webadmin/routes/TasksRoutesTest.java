@@ -131,11 +131,15 @@ public class TasksRoutesTest {
     }
 
     @Test
-    public void listShouldReturnEmptyWhenNonMatchingStatusFilter() {
+    public void listShouldReturnEmptyWhenNonMatchingStatusFilter() throws Exception {
+        CountDownLatch inProgressLatch = new CountDownLatch(1);
         taskManager.submit(() -> {
+            inProgressLatch.countDown();
             await();
             return Task.Result.COMPLETED;
         });
+
+        inProgressLatch.await();
 
         given()
             .param("status", TaskManager.Status.WAITING.getValue())
