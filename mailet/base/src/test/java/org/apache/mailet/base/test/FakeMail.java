@@ -430,7 +430,7 @@ public class FakeMail implements Mail, Serializable {
 
     @Override
     public final int hashCode() {
-        return Objects.hashCode(name, sender, recipients, state, errorMessage, lastUpdated, attributes, size, recipients, remoteAddr);
+        return Objects.hashCode(name, sender, recipients, state, errorMessage, lastUpdated, attributes, size, remoteAddr);
     }
 
     @Override
