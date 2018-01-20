@@ -63,8 +63,9 @@ public class InMemoryDNSService implements DNSService {
         return this;
     }
 
-    public void registerRecord(String hostname, List<InetAddress> addresses, Collection<String> mxRecords, Collection<String> txtRecords) {
+    public InMemoryDNSService registerRecord(String hostname, List<InetAddress> addresses, Collection<String> mxRecords, Collection<String> txtRecords) {
         records.put(hostname, dnsRecordFor(mxRecords, txtRecords, addresses));
+        return this;
     }
 
     public void dropRecord(String hostname) {
@@ -127,7 +128,7 @@ public class InMemoryDNSService implements DNSService {
             .orElseThrow(() -> new UnknownHostException());
     }
 
-    private static class DNSRecord {
+    public static class DNSRecord {
 
         final Collection<String> mxRecords;
         final Collection<String> txtRecords;
