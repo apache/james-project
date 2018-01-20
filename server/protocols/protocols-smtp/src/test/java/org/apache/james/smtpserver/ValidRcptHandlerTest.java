@@ -22,12 +22,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 
-import java.util.Arrays;
+import java.io.ByteArrayInputStream;
 import java.util.HashMap;
-import java.util.Map;
 
+import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.SMTPConfiguration;
@@ -36,8 +37,7 @@ import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
-import org.apache.james.rrt.lib.Mappings;
-import org.apache.james.rrt.lib.MappingsImpl;
+import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.smtpserver.fastfail.ValidRcptHandler;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
@@ -59,13 +59,17 @@ public class ValidRcptHandlerTest {
 
         users = MemoryUsersRepository.withoutVirtualHosting();
         users.addUser(VALID_USER, "xxx");
-        
-        handler = new ValidRcptHandler();
-        handler.setUsersRepository(users);
-        handler.setRecipientRewriteTable(setUpRecipientRewriteTable());
 
         MemoryDomainList memoryDomainList = new MemoryDomainList(mock(DNSService.class));
         memoryDomainList.addDomain(VALID_DOMAIN);
+        DefaultConfigurationBuilder config = new DefaultConfigurationBuilder();
+        String configString = "<domainlist><defaultDomain>localhost</defaultDomain></domainlist>";
+        config.load(new ByteArrayInputStream(configString.getBytes()));
+        memoryDomainList.configure(config);
+
+        handler = new ValidRcptHandler();
+        handler.setUsersRepository(users);
+        handler.setRecipientRewriteTable(setUpRecipientRewriteTable(memoryDomainList));
         handler.setDomainList(memoryDomainList);
     }
 
@@ -108,96 +112,12 @@ public class ValidRcptHandlerTest {
         };
     }
 
-    private RecipientRewriteTable setUpRecipientRewriteTable() {
-        return new RecipientRewriteTable() {
-
-            @Override
-            public Mappings getMappings(String user, String domain) throws ErrorMappingException,
-                    RecipientRewriteTableException {
-                if (user.equals(USER1)) {
-                    return MappingsImpl.fromCollection(Arrays.asList("address@localhost"));
-                } else if (user.equals(USER2)) {
-                    throw new ErrorMappingException("554 BOUNCE");
-                }
-                return MappingsImpl.empty();
-            }
-
-            @Override
-            public void addRegexMapping(String user, String domain, String regex) throws RecipientRewriteTableException {
-                throw new UnsupportedOperationException("Not implemented");
-            }
-
-            @Override
-            public void removeRegexMapping(String user, String domain, String regex) throws
-                    RecipientRewriteTableException {
-                throw new UnsupportedOperationException("Not implemented");
-
-            }
-
-            @Override
-            public void addAddressMapping(String user, String domain, String address) throws
-                    RecipientRewriteTableException {
-                throw new UnsupportedOperationException("Not implemented");
-
-            }
-
-            @Override
-            public void removeAddressMapping(String user, String domain, String address) throws
-                    RecipientRewriteTableException {
-                throw new UnsupportedOperationException("Not implemented");
-
-            }
-
-            @Override
-            public void addErrorMapping(String user, String domain, String error) throws RecipientRewriteTableException {
-                throw new UnsupportedOperationException("Not implemented");
-
-            }
-
-            @Override
-            public void removeErrorMapping(String user, String domain, String error) throws
-                    RecipientRewriteTableException {
-                throw new UnsupportedOperationException("Not implemented");
-
-            }
-
-            @Override
-            public Mappings getUserDomainMappings(String user, String domain) throws
-                    RecipientRewriteTableException {
-                throw new UnsupportedOperationException("Not implemented");
-            }
-
-            @Override
-            public void addMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
-                throw new UnsupportedOperationException("Not implemented");
-
-            }
-
-            @Override
-            public void removeMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
-                throw new UnsupportedOperationException("Not implemented");
-
-            }
-
-            @Override
-            public Map<String, Mappings> getAllMappings() throws RecipientRewriteTableException {
-                throw new UnsupportedOperationException("Not implemented");
-            }
-
-            @Override
-            public void addAliasDomainMapping(String aliasDomain, String realDomain) throws
-                    RecipientRewriteTableException {
-                throw new UnsupportedOperationException("Not implemented");
-
-            }
-
-            @Override
-            public void removeAliasDomainMapping(String aliasDomain, String realDomain) throws
-                    RecipientRewriteTableException {
-                throw new UnsupportedOperationException("Not implemented");
-
-            }
-        };
+    private RecipientRewriteTable setUpRecipientRewriteTable(DomainList domainList) throws RecipientRewriteTableException {
+        MemoryRecipientRewriteTable memoryRecipientRewriteTable = new MemoryRecipientRewriteTable();
+        memoryRecipientRewriteTable.setDomainList(domainList);
+        memoryRecipientRewriteTable.addAddressMapping(USER1, "localhost", "address");
+        memoryRecipientRewriteTable.addErrorMapping(USER2, "localhost", "554 BOUNCE");
+        return memoryRecipientRewriteTable;
     }
 
     private SMTPConfiguration setupMockedSMTPConfiguration() {
