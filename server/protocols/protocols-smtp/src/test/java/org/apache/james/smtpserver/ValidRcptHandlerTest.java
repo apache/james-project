@@ -20,13 +20,15 @@ package org.apache.james.smtpserver;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.domainlist.api.mock.SimpleDomainList;
+import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.SMTPConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -62,13 +64,9 @@ public class ValidRcptHandlerTest {
         handler.setUsersRepository(users);
         handler.setRecipientRewriteTable(setUpRecipientRewriteTable());
 
-        handler.setDomainList(new SimpleDomainList() {
-
-            @Override
-            public boolean containsDomain(String domain) {
-                return domain.equals(VALID_DOMAIN);
-            }
-        });
+        MemoryDomainList memoryDomainList = new MemoryDomainList(mock(DNSService.class));
+        memoryDomainList.addDomain(VALID_DOMAIN);
+        handler.setDomainList(memoryDomainList);
     }
 
     private SMTPSession setupMockedSMTPSession(SMTPConfiguration conf, MailAddress rcpt,
