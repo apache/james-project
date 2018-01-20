@@ -63,7 +63,7 @@ import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.smtpserver.netty.SMTPServer;
 import org.apache.james.smtpserver.netty.SmtpMetricsImpl;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.lib.mock.InMemoryUsersRepository;
+import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.mailet.Mail;
 import org.junit.After;
 import org.junit.Before;
@@ -163,7 +163,7 @@ public class SMTPServerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(SMTPServerTest.class);
 
     protected SMTPTestConfiguration smtpConfiguration;
-    protected final InMemoryUsersRepository usersRepository = new InMemoryUsersRepository();
+    protected final MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
     protected AlterableDNSServer dnsServer;
     protected MockMailRepositoryStore store;
     protected MockFileSystem fileSystem;

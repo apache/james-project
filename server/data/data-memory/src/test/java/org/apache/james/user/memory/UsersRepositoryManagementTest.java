@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.user.lib;
+package org.apache.james.user.memory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -26,7 +26,8 @@ import static org.junit.Assert.fail;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.james.user.lib.mock.InMemoryUsersRepository;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.lib.UsersRepositoryManagement;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,12 +36,12 @@ import org.junit.Test;
  */
 public class UsersRepositoryManagementTest {
 
-    private InMemoryUsersRepository mockUsersRepository;
+    private UsersRepository mockUsersRepository;
     private UsersRepositoryManagement userManagement;
 
     @Before
     public void setUp() throws Exception {
-        mockUsersRepository = new InMemoryUsersRepository();
+        mockUsersRepository = MemoryUsersRepository.withoutVirtualHosting();
 
         userManagement = new UsersRepositoryManagement();
         userManagement.setUsersRepository(mockUsersRepository);

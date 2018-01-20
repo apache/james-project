@@ -54,7 +54,7 @@ import org.apache.james.protocols.lib.POP3BeforeSMTPHelper;
 import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.james.user.lib.mock.InMemoryUsersRepository;
+import org.apache.james.user.memory.MemoryUsersRepository;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -63,7 +63,7 @@ import org.junit.Test;
 public class POP3ServerTest {
 
     private POP3TestConfiguration pop3Configuration;
-    private final InMemoryUsersRepository usersRepository = new InMemoryUsersRepository();
+    private final MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
     private POP3Client pop3Client = null;
     protected MockFileSystem fileSystem;
     protected MockProtocolHandlerLoader protocolHandlerChain;

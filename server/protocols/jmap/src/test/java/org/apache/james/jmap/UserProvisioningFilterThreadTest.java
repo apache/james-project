@@ -21,7 +21,7 @@ package org.apache.james.jmap;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.metrics.api.NoopMetricFactory;
-import org.apache.james.user.lib.mock.InMemoryUsersRepository;
+import org.apache.james.user.memory.MemoryUsersRepository;
 import org.junit.Test;
 
 import com.google.testing.threadtester.AnnotatedTestRunner;
@@ -33,12 +33,12 @@ import com.google.testing.threadtester.ThreadedSecondary;
 public class UserProvisioningFilterThreadTest {
 
     private UserProvisioningFilter sut;
-    private InMemoryUsersRepository usersRepository;
+    private MemoryUsersRepository usersRepository;
     private MailboxSession session;
 
     @ThreadedBefore
     public void before() {
-        usersRepository = new InMemoryUsersRepository();
+        usersRepository = MemoryUsersRepository.withoutVirtualHosting();
         session = new MockMailboxSession("username");
         sut = new UserProvisioningFilter(usersRepository, new NoopMetricFactory());
     }
