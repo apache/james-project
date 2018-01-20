@@ -20,14 +20,13 @@ package org.apache.james.transport.matchers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Collection;
 
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.dnsservice.api.mock.MockDNSService;
+import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Before;
@@ -39,13 +38,12 @@ public class RemoteAddrInNetworkTest {
     private MailAddress testRecipient;
 
     @Before
-    public void setup() throws MessagingException {
-        MockDNSService dnsServer = new MockDNSService() {
-            @Override
-            public InetAddress getByName(String host) throws UnknownHostException {
-                return InetAddress.getByName(host);
-            }
-        };
+    public void setup() throws Exception {
+        DNSService dnsServer = new InMemoryDNSService()
+            .registerMxRecord("192.168.0.1", "192.168.0.1")
+            .registerMxRecord("192.168.200.1", "192.168.200.1")
+            .registerMxRecord("192.168.200.0", "192.168.200.0")
+            .registerMxRecord("255.255.255.0", "255.255.255.0");
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
                 .matcherName("AllowedNetworkIs")
                 .condition("192.168.200.0/24")
