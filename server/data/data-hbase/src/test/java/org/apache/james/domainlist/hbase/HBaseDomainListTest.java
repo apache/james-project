@@ -52,7 +52,7 @@ public class HBaseDomainListTest extends AbstractDomainListTest {
     }
     
     @After
-    public void tearDown() throws DomainListException {
+    public void tearDown() throws Exception {
         DomainList domainList = createDomainList();
         for (String domain: domainList.getDomains()) {
             domainList.removeDomain(domain);
@@ -63,7 +63,7 @@ public class HBaseDomainListTest extends AbstractDomainListTest {
      * @see org.apache.james.domainlist.lib.AbstractDomainListTest#createDomainList()
      */
     @Override
-    protected DomainList createDomainList() {
+    protected DomainList createDomainList() throws Exception {
         HBaseDomainList domainList = new HBaseDomainList(getDNSServer("localhost"));
         domainList.setAutoDetect(false);
         domainList.setAutoDetectIP(false);

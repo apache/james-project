@@ -21,19 +21,15 @@ package org.apache.james.domainlist.lib;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
-import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collection;
 
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.dnsservice.api.mock.MockDNSService;
+import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractDomainListTest {
 
@@ -155,24 +151,10 @@ public abstract class AbstractDomainListTest {
     /**
      * Return a fake DNSServer.
      */
-    protected DNSService getDNSServer(final String hostName) {
-        return new MockDNSService() {
-
-            @Override
-            public String getHostName(InetAddress inet) {
-                return hostName;
-            }
-
-            @Override
-            public Collection<InetAddress> getAllByName(String name) throws UnknownHostException {
-                return ImmutableList.of(InetAddress.getByName("127.0.0.1"));
-            }
-
-            @Override
-            public InetAddress getLocalHost() throws UnknownHostException {
-                return InetAddress.getLocalHost();
-            }
-        };
+    protected DNSService getDNSServer(final String hostName) throws UnknownHostException {
+        return new InMemoryDNSService()
+            .registerMxRecord(hostName, "127.0.0.1")
+            .registerMxRecord("127.0.0.1", "127.0.0.1");
     }
 
     /**
@@ -181,5 +163,5 @@ public abstract class AbstractDomainListTest {
      * 
      * @return an implementation of DomainList
      */
-    protected abstract DomainList createDomainList();
+    protected abstract DomainList createDomainList() throws Exception;
 }

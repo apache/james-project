@@ -31,7 +31,7 @@ public class MemoryDomainListTest extends AbstractDomainListTest {
     }
 
     @Override
-    protected DomainList createDomainList() {
+    protected DomainList createDomainList() throws Exception {
         MemoryDomainList testee = new MemoryDomainList(getDNSServer("localhost"));
         testee.setAutoDetect(false);
         testee.setAutoDetectIP(false);
