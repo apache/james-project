@@ -20,26 +20,21 @@ package org.apache.james.smtpserver;
 
 import static org.junit.Assert.assertEquals;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.dnsservice.api.mock.MockDNSService;
+import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.apache.james.smtpserver.fastfail.ValidRcptMX;
 import org.junit.Test;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 public class ValidRcptMXTest {
 
     private static final String INVALID_HOST = "invalid.host.de";
-    private static final String INVALID_MX = "mx." + INVALID_HOST;
-    private static final String LOOPBACK = "127.0.0.1";
 
     private SMTPSession setupMockedSMTPSession(MailAddress rcpt) {
         return new BaseFakeSMTPSession() {
@@ -73,44 +68,20 @@ public class ValidRcptMXTest {
         };
     }
 
-    private DNSService setupMockedDNSServer() {
-
-        return new MockDNSService() {
-
-            @Override
-            public Collection<String> findMXRecords(String hostname) {
-                Collection<String> mx = new ArrayList<>();
-
-                if (hostname.equals(INVALID_HOST)) {
-                    mx.add(INVALID_MX);
-                }
-                return mx;
-            }
-
-            @Override
-            public InetAddress getByName(String host) throws UnknownHostException {
-                if (host.equals(INVALID_MX) || host.equals(LOOPBACK)) {
-                    return InetAddress.getByName(LOOPBACK);
-                } else if (host.equals("255.255.255.255")) {
-                    return InetAddress.getByName("255.255.255.255");
-                }
-                throw new UnknownHostException("Unknown host");
-            }
-        };
-    }
-
     @Test
     public void testRejectLoopbackMX() throws Exception {
-        Collection<String> bNetworks = new ArrayList<>();
-        bNetworks.add("127.0.0.1");
+        String bannedAddress = "172.53.64.2";
 
-        DNSService dns = setupMockedDNSServer();
+        DNSService dns = new InMemoryDNSService()
+            .registerMxRecord(INVALID_HOST, bannedAddress)
+            .registerMxRecord("255.255.255.255", "255.255.255.255")
+            .registerMxRecord(bannedAddress, bannedAddress);
         MailAddress mailAddress = new MailAddress("test@" + INVALID_HOST);
         SMTPSession session = setupMockedSMTPSession(mailAddress);
-        ValidRcptMX handler = new ValidRcptMX();
 
+        ValidRcptMX handler = new ValidRcptMX();
         handler.setDNSService(dns);
-        handler.setBannedNetworks(bNetworks, dns);
+        handler.setBannedNetworks(ImmutableList.of(bannedAddress ), dns);
         int rCode = handler.doRcpt(session, null, mailAddress).getResult();
 
         assertEquals("Reject", rCode, HookReturnCode.DENY);
