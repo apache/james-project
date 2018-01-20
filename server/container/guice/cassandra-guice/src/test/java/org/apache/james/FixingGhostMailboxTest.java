@@ -80,7 +80,6 @@ import org.junit.rules.TestRule;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
-import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
@@ -136,7 +135,7 @@ public class FixingGhostMailboxTest {
         RestAssured.requestSpecification = new RequestSpecBuilder()
             .setContentType(ContentType.JSON)
             .setAccept(ContentType.JSON)
-            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
             .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
             .build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
@@ -203,7 +202,7 @@ public class FixingGhostMailboxTest {
             .setHost("localhost")
             .setPort(jmapServer.getProbe(JmapGuiceProbe.class)
                 .getJmapPort())
-            .setCharset(Charsets.UTF_8);
+            .setCharset(StandardCharsets.UTF_8);
     }
 
     @After

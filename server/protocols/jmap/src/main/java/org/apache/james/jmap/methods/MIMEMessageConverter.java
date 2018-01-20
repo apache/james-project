@@ -21,6 +21,7 @@ package org.apache.james.jmap.methods;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -33,7 +34,6 @@ import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.mailbox.model.MessageAttachment;
-import org.apache.james.mime4j.Charsets;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.EncoderUtil;
 import org.apache.james.mime4j.codec.EncoderUtil.Usage;
@@ -75,7 +75,7 @@ public class MIMEMessageConverter {
 
     private static final String PLAIN_TEXT_MEDIA_TYPE = MediaType.PLAIN_TEXT_UTF_8.withoutParameters().toString();
     private static final String HTML_MEDIA_TYPE = MediaType.HTML_UTF_8.withoutParameters().toString();
-    private static final NameValuePair UTF_8_CHARSET = new NameValuePair("charset", Charsets.UTF_8.name());
+    private static final NameValuePair UTF_8_CHARSET = new NameValuePair("charset", StandardCharsets.UTF_8.name());
     private static final String ALTERNATIVE_SUB_TYPE = "alternative";
     private static final String MIXED_SUB_TYPE = "mixed";
     private static final String FIELD_PARAMETERS_SEPARATOR = ";";
@@ -201,7 +201,7 @@ public class MIMEMessageConverter {
         String body = newMessage.getHtmlBody()
                         .orElse(newMessage.getTextBody()
                                 .orElse(""));
-        return bodyFactory.textBody(body, Charsets.UTF_8);
+        return bodyFactory.textBody(body, StandardCharsets.UTF_8);
     }
 
     private Multipart createMultipart(CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments) {
@@ -244,7 +244,7 @@ public class MIMEMessageConverter {
         if (textBody.isPresent()) {
             builder.addBodyPart(BodyPartBuilder.create()
                 .use(bodyFactory)
-                .setBody(textBody.get(), Charsets.UTF_8)
+                .setBody(textBody.get(), StandardCharsets.UTF_8)
                 .setContentType(PLAIN_TEXT_MEDIA_TYPE, UTF_8_CHARSET)
                 .setContentTransferEncoding(QUOTED_PRINTABLE)
                 .build());
@@ -255,7 +255,7 @@ public class MIMEMessageConverter {
         if (htmlBody.isPresent()) {
             builder.addBodyPart(BodyPartBuilder.create()
                 .use(bodyFactory)
-                .setBody(htmlBody.get(), Charsets.UTF_8)
+                .setBody(htmlBody.get(), StandardCharsets.UTF_8)
                 .setContentType(HTML_MEDIA_TYPE, UTF_8_CHARSET)
                 .setContentTransferEncoding(QUOTED_PRINTABLE)
                 .build());
