@@ -69,6 +69,7 @@ import org.apache.james.utils.JmapGuiceProbe;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.RandomPortSupplier;
 import org.apache.james.webadmin.WebAdminConfiguration;
+import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.CassandraMailboxMergingRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
 import org.junit.After;
@@ -84,6 +85,7 @@ import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
+import com.jayway.restassured.specification.RequestSpecification;
 
 public class FixingGhostMailboxTest {
 
@@ -119,6 +121,7 @@ public class FixingGhostMailboxTest {
     private MailboxPath aliceInboxPath;
     private ComposedMessageId message2;
     private WebAdminGuiceProbe webAdminProbe;
+    private RequestSpecification webadminSpecification;
 
     @Before
     public void setup() throws Throwable {
@@ -140,6 +143,8 @@ public class FixingGhostMailboxTest {
             .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
             .build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+        webadminSpecification = WebAdminUtils.buildRequestSpecification(webAdminProbe.getWebAdminPort())
+            .build();
 
         domain = "domain.tld";
         alice = "alice@" + domain;
@@ -298,8 +303,8 @@ public class FixingGhostMailboxTest {
 
         String taskId = fixGhostMailboxes(newAliceInbox);
 
-        given()
-            .port(webAdminProbe.getWebAdminPort())
+        with()
+            .spec(webadminSpecification)
             .basePath(TasksRoutes.BASE)
         .when()
             .get(taskId + "/await")
@@ -315,22 +320,21 @@ public class FixingGhostMailboxTest {
             .body("submitDate", is(not(nullValue())))
             .body("startedDate", is(not(nullValue())))
             .body("completedDate", is(not(nullValue())));
-
     }
 
     private String fixGhostMailboxes(Mailbox newAliceInbox) {
-        String taskId = with()
-            .port(webAdminProbe.getWebAdminPort())
-            .basePath(CassandraMailboxMergingRoutes.BASE)
+        String taskId = given()
+            .spec(webadminSpecification)
             .body("{" +
                 "    \"mergeOrigin\":\"" + aliceGhostInboxId.serialize() + "\"," +
                 "    \"mergeDestination\":\"" + newAliceInbox.getMailboxId().serialize() + "\"" +
                 "}")
-            .post()
+            .post(CassandraMailboxMergingRoutes.BASE)
             .jsonPath()
             .getString("taskId");
-        with()
-            .port(webAdminProbe.getWebAdminPort())
+
+        given()
+            .spec(webadminSpecification)
             .basePath(TasksRoutes.BASE)
             .get(taskId + "/await");
         rule.await();

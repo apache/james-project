@@ -81,7 +81,7 @@ public class MailRepositoriesRoutesTest {
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
 
-        RestAssured.requestSpecification = WebAdminUtils.defineRequestSpecification(webAdminServer)
+        RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(MailRepositoriesRoutes.MAIL_REPOSITORIES)
             .build();
     }

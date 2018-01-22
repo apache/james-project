@@ -68,7 +68,7 @@ public class UsersRoutesTest {
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
 
-        RestAssured.requestSpecification = WebAdminUtils.defineRequestSpecification(webAdminServer)
+        RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(UserRoutes.USERS)
             .build();
     }

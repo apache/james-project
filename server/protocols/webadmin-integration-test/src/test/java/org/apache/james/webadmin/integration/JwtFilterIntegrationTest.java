@@ -20,12 +20,9 @@
 package org.apache.james.webadmin.integration;
 
 import static com.jayway.restassured.RestAssured.given;
-import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
-import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import org.apache.james.CassandraJmapTestRule;
@@ -35,6 +32,7 @@ import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
+import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.JwtFilter;
 import org.apache.james.webadmin.routes.DomainsRoutes;
@@ -46,8 +44,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.builder.RequestSpecBuilder;
-import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.response.Header;
 
 public class JwtFilterIntegrationTest {
@@ -88,11 +84,7 @@ public class JwtFilterIntegrationTest {
         dataProbe = guiceJamesServer.getProbe(DataProbeImpl.class);
         webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
 
-        RestAssured.requestSpecification = new RequestSpecBuilder()
-            .setContentType(ContentType.JSON)
-            .setAccept(ContentType.JSON)
-            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
-            .build();
+        RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort()).build();
     }
 
     @After
@@ -103,7 +95,6 @@ public class JwtFilterIntegrationTest {
     @Test
     public void jwtAuthenticationShouldWork() throws Exception {
         given()
-            .port(webAdminGuiceProbe.getWebAdminPort())
             .header(new Header("Authorization", "Bearer " + VALID_TOKEN_ADMIN_TRUE))
         .when()
             .put(SPECIFIC_DOMAIN)
@@ -117,7 +108,6 @@ public class JwtFilterIntegrationTest {
     @Test
     public void jwtShouldRejectNonAdminRequests() throws Exception {
         given()
-            .port(webAdminGuiceProbe.getWebAdminPort())
             .header(new Header("Authorization", "Bearer " + VALID_TOKEN_ADMIN_FALSE))
         .when()
             .put(SPECIFIC_DOMAIN)
@@ -131,7 +121,6 @@ public class JwtFilterIntegrationTest {
     @Test
     public void jwtShouldRejectInvalidRequests() throws Exception {
         given()
-            .port(webAdminGuiceProbe.getWebAdminPort())
             .header(new Header("Authorization", "Bearer invalid"))
         .when()
             .put(SPECIFIC_DOMAIN)

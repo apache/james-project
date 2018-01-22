@@ -88,7 +88,7 @@ public class CassandraMigrationRoutesTest {
         webAdminServer.await();
 
 
-        RestAssured.requestSpecification = WebAdminUtils.defineRequestSpecification(webAdminServer)
+        RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(CassandraMigrationRoutes.VERSION_BASE)
             .build();
     }

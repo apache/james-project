@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets;
 
+import static com.jayway.restassured.RestAssured.given;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
@@ -47,6 +48,7 @@ import org.apache.james.utils.FakeSmtp;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.WebAdminGuiceProbe;
+import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.GroupsRoutes;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.After;
@@ -55,7 +57,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.specification.RequestSpecification;
 
 public class GroupMappingTest {
@@ -73,7 +74,7 @@ public class GroupMappingTest {
     private TemporaryJamesServer jamesServer;
     private MimeMessage message;
     private DataProbe dataProbe;
-    private RequestSpecification restApiRequest;
+    private RequestSpecification webAdminApi;
 
     @Rule
     public final FakeSmtp fakeSmtp = new FakeSmtp();
@@ -119,8 +120,8 @@ public class GroupMappingTest {
 
         WebAdminGuiceProbe webAdminGuiceProbe = jamesServer.getProbe(WebAdminGuiceProbe.class);
         webAdminGuiceProbe.await();
-        restApiRequest = RestAssured.given()
-            .port(webAdminGuiceProbe.getWebAdminPort());
+        webAdminApi = given()
+            .spec(WebAdminUtils.buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort()).build());
 
         message = MimeMessageBuilder.mimeMessageBuilder()
             .setSubject("test")
@@ -135,7 +136,7 @@ public class GroupMappingTest {
 
     @Test
     public void messageShouldRedirectToUserWhenBelongingToGroup() throws Exception {
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FakeMail.builder()
@@ -153,7 +154,7 @@ public class GroupMappingTest {
 
     @Test
     public void messageShouldRedirectToUserDoesNotHaveSameDomainWhenBelongingToGroup() throws Exception {
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN2);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN2);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FakeMail.builder()
@@ -171,9 +172,9 @@ public class GroupMappingTest {
 
     @Test
     public void messageShouldRedirectToAllUsersBelongingToGroup() throws Exception {
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
 
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN2);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN2);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FakeMail.builder()
@@ -194,9 +195,9 @@ public class GroupMappingTest {
 
     @Test
     public void messageShouldRedirectWhenGroupBelongingToAnotherGroup() throws Exception {
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + USER_DOMAIN2);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + USER_DOMAIN2);
 
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + GROUP_ON_DOMAIN2);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + GROUP_ON_DOMAIN2);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FakeMail.builder()
@@ -214,11 +215,11 @@ public class GroupMappingTest {
 
     @Test
     public void messageShouldNotBeDuplicatedWhenUserBelongingToTwoGroups() throws Exception {
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
 
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + USER_DOMAIN1);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + USER_DOMAIN1);
 
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + GROUP_ON_DOMAIN2);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + GROUP_ON_DOMAIN2);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FakeMail.builder()
@@ -235,7 +236,7 @@ public class GroupMappingTest {
 
     @Test
     public void messageShouldNotBeDuplicatedWhenRecipientIsAlsoPartOfGroup() throws Exception {
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FakeMail.builder()
@@ -252,11 +253,11 @@ public class GroupMappingTest {
 
     @Test
     public void groupMappingShouldSupportTreeStructure() throws Exception {
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
 
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + USER_DOMAIN2);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + USER_DOMAIN2);
 
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + GROUP_ON_DOMAIN2);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + GROUP_ON_DOMAIN2);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FakeMail.builder()
@@ -278,13 +279,13 @@ public class GroupMappingTest {
 
     @Test
     public void messageShouldNotBeSentWhenGroupLoopMapping() throws Exception {
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
 
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + USER_DOMAIN2);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + USER_DOMAIN2);
 
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + GROUP_ON_DOMAIN2);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + GROUP_ON_DOMAIN2);
 
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + GROUP_ON_DOMAIN1);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + GROUP_ON_DOMAIN1);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FakeMail.builder()
@@ -308,7 +309,7 @@ public class GroupMappingTest {
     public void messageShouldRedirectToUserWhenDomainMapping() throws Exception {
         dataProbe.addDomainAliasMapping(DOMAIN1, DOMAIN2);
 
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FakeMail.builder()
@@ -327,7 +328,7 @@ public class GroupMappingTest {
     public void messageShouldNotSendToUserBelongingToGroupWhenDomainMapping() throws Exception {
         dataProbe.addDomainAliasMapping(DOMAIN1, DOMAIN2);
 
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FakeMail.builder()
@@ -346,7 +347,7 @@ public class GroupMappingTest {
     public void messageShouldRedirectToGroupWhenDomainMapping() throws Exception {
         dataProbe.addDomainAliasMapping(DOMAIN1, DOMAIN2);
 
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + USER_DOMAIN2);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + USER_DOMAIN2);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FakeMail.builder()
@@ -365,7 +366,7 @@ public class GroupMappingTest {
     public void messageShouldRedirectToGroupContainingSlash() throws Exception {
         String groupWithSlash = "a/a@" + DOMAIN1;
         String groupWithEncodedSlash = "a%2Fa@" + DOMAIN1;
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + groupWithEncodedSlash + "/" + USER_DOMAIN1);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + groupWithEncodedSlash + "/" + USER_DOMAIN1);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FakeMail.builder()
@@ -385,7 +386,7 @@ public class GroupMappingTest {
         String userWithSlash = "a/a@" + DOMAIN1;
         dataProbe.addUser(userWithSlash, PASSWORD);
         String userWithEncodedSlash = "a%2Fa@" + DOMAIN1;
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + userWithEncodedSlash);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + userWithEncodedSlash);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FakeMail.builder()
@@ -404,7 +405,7 @@ public class GroupMappingTest {
     public void messageShouldRedirectToUserWhenEncodingAt() throws Exception {
         String userWithEncodedAt = "user%40" + DOMAIN1;
         String groupWithEncodedAt = "group%40" + DOMAIN1;
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + groupWithEncodedAt + "/" + userWithEncodedAt);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + groupWithEncodedAt + "/" + userWithEncodedAt);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FakeMail.builder()
@@ -422,7 +423,7 @@ public class GroupMappingTest {
     @Test
     public void sendMessageShouldSendAMessageToAnExternalGroupMember() throws Exception {
         String externalMail = "ray@yopmail.com";
-        restApiRequest.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + externalMail);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + externalMail);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FakeMail.builder()
@@ -432,10 +433,8 @@ public class GroupMappingTest {
             .awaitSent(awaitOneMinute);
 
         fakeSmtp.isReceived(response -> response
-                            .body("[0].from", equalTo(SENDER))
-                            .body("[0].to[0]", equalTo(externalMail))
-                            .body("[0].text", equalTo(MESSAGE_CONTENT)));
-
-
+            .body("[0].from", equalTo(SENDER))
+            .body("[0].to[0]", equalTo(externalMail))
+            .body("[0].text", equalTo(MESSAGE_CONTENT)));
     }
 }
