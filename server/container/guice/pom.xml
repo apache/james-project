@@ -57,6 +57,7 @@
         <module>protocols/webadmin-cassandra</module>
         <module>protocols/webadmin-data</module>
         <module>protocols/webadmin-mailbox</module>
+        <module>protocols/webadmin-mailrepository</module>
         <module>protocols/webadmin-swagger</module>
     </modules>
 
@@ -141,6 +142,11 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-guice-webadmin-mailbox</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>james-server-guice-webadmin-mailrepository</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

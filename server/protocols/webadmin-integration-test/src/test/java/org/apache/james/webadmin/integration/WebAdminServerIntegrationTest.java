@@ -26,6 +26,7 @@ import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
@@ -41,6 +42,7 @@ import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.routes.DomainsRoutes;
+import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
 import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
@@ -108,6 +110,21 @@ public class WebAdminServerIntegrationTest {
             .statusCode(HttpStatus.NO_CONTENT_204);
 
         assertThat(dataProbe.listDomains()).contains(DOMAIN);
+    }
+
+    @Test
+    public void mailRepositoriesRoutesShouldBeExposed() throws Exception {
+        given()
+            .port(webAdminGuiceProbe.getWebAdminPort())
+        .when()
+            .get(MailRepositoriesRoutes.MAIL_REPOSITORIES)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("repository", containsInAnyOrder(
+                "file://var/mail/error/",
+                "file://var/mail/relay-denied/",
+                "file://var/mail/spam/",
+                "file://var/mail/address-error/"));
     }
 
     @Test

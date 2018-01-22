@@ -34,6 +34,7 @@ import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.CamelMailetContainerModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.JMXServerModule;
+import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.MemoryMailQueueModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
@@ -49,6 +50,7 @@ public class MemoryJamesServerMain {
         new WebAdminServerModule(),
         new DataRoutesModules(),
         new MailboxRoutesModule(),
+        new MailRepositoriesRoutesModule(),
         new SwaggerRoutesModule());
 
     public static final Module PROTOCOLS = Modules.combine(

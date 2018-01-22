@@ -113,6 +113,10 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-guice-webadmin-mailrepository</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-guice-webadmin-swagger</artifactId>
         </dependency>
         <dependency>
