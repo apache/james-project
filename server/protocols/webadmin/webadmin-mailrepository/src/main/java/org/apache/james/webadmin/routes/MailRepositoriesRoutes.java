@@ -26,6 +26,7 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -33,6 +34,7 @@ import javax.ws.rs.Produces;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.util.streams.Limit;
 import org.apache.james.util.streams.Offset;
+import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.ExtendedMailRepositoryResponse;
 import org.apache.james.webadmin.service.MailRepositoryStoreService;
@@ -80,6 +82,8 @@ public class MailRepositoriesRoutes implements Routes {
         defineGetMailRepository();
 
         defineGetMail();
+
+        defineDeleteMail();
     }
 
     @GET
@@ -207,7 +211,33 @@ public class MailRepositoriesRoutes implements Routes {
         }, jsonTransformer);
     }
 
-    private Optional<Integer> assertPositiveInteger(Request request, String parameterName) {
+    @DELETE
+    @Path("/{encodedUrl}/mails/{mailKey}")
+    @ApiOperation(value = "Deleting a specific mail from that mailRepository")
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.OK_200, message = "Mail is no more stored in the repository", response = List.class),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
+    })
+    public void defineDeleteMail() {
+        service.delete(MAIL_REPOSITORIES + "/:encodedUrl/mails/:mailKey", (request, response) -> {
+            String url = URLDecoder.decode(request.params("encodedUrl"), StandardCharsets.UTF_8.displayName());
+            String mailKey = request.params("mailKey");
+            try {
+                response.status(HttpStatus.NO_CONTENT_204);
+                repositoryStoreService.deleteMail(url, mailKey);
+                return Constants.EMPTY_BODY;
+            } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                    .type(ErrorResponder.ErrorType.SERVER_ERROR)
+                    .cause(e)
+                    .message("Error while deleting mail")
+                    .haltError();
+            }
+        });
+    }
+
+private Optional<Integer> assertPositiveInteger(Request request, String parameterName) {
         try {
             return Optional.ofNullable(request.queryParams(parameterName))
                 .filter(s -> !Strings.isNullOrEmpty(s))

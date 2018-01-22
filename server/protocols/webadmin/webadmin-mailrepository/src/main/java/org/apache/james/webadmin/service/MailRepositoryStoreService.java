@@ -79,4 +79,10 @@ public class MailRepositoryStoreService {
         return Optional.ofNullable(mailRepository.retrieve(mailKey))
             .map(Throwing.function(MailDto::fromMail).sneakyThrow());
     }
+
+    public void deleteMail(String url, String mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+        mailRepositoryStore.select(url)
+            .remove(mailKey);
+    }
+
 }

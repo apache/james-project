@@ -423,4 +423,53 @@ public class MailRepositoriesRoutesTest {
             .body("message", is("Could not retrieve " + name));
     }
 
+    @Test
+    public void deletingAMailShouldRemoveIt() throws Exception {
+        when(mailRepositoryStore.select(URL_MY_REPO)).thenReturn(mailRepository);
+
+        String name1 = "name1";
+        String name2 = "name2";
+        mailRepository.store(FakeMail.builder()
+            .name(name1)
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name(name2)
+            .build());
+
+        given()
+            .delete(URL_ESCAPED_MY_REPO + "/mails/" + name1);
+
+        when()
+            .get(URL_ESCAPED_MY_REPO + "/mails")
+            .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(1))
+            .body("mailKey", contains(name2));
+    }
+
+    @Test
+    public void deletingAMailShouldReturnOkWhenExist() throws Exception {
+        when(mailRepositoryStore.select(URL_MY_REPO)).thenReturn(mailRepository);
+
+        String name1 = "name1";
+        mailRepository.store(FakeMail.builder()
+            .name(name1)
+            .build());
+
+        when()
+            .delete(URL_ESCAPED_MY_REPO + "/mails/" + name1)
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+    }
+
+    @Test
+    public void deletingAMailShouldReturnOkWhenNotExist() throws Exception {
+        when(mailRepositoryStore.select(URL_MY_REPO)).thenReturn(mailRepository);
+
+        when()
+            .delete(URL_ESCAPED_MY_REPO + "/mails/name")
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+    }
+
 }
