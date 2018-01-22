@@ -26,9 +26,9 @@ import static org.mockito.Mockito.when;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.memory.MemoryMailRepository;
 import org.apache.james.util.streams.Limit;
+import org.apache.james.util.streams.Offset;
 import org.apache.james.webadmin.dto.MailKey;
 import org.apache.james.webadmin.dto.MailRepositoryResponse;
-import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
 import org.junit.Test;
@@ -80,7 +80,7 @@ public class MailRepositoryStoreServiceTest {
         when(mailRepositoryStore.select(FIRST_REPOSITORY))
             .thenThrow(new MailRepositoryStore.MailRepositoryStoreException("message"));
 
-        assertThatThrownBy(() -> testee.listMails(FIRST_REPOSITORY, MailRepositoriesRoutes.NO_OFFSET, Limit.unlimited()))
+        assertThatThrownBy(() -> testee.listMails(FIRST_REPOSITORY, Offset.none(), Limit.unlimited()))
             .isInstanceOf(MailRepositoryStore.MailRepositoryStoreException.class);
     }
 
@@ -88,7 +88,7 @@ public class MailRepositoryStoreServiceTest {
     public void listMailsShouldReturnEmptyWhenMailRepositoryIsEmpty() throws Exception {
         when(mailRepositoryStore.select(FIRST_REPOSITORY)).thenReturn(repository);
 
-        assertThat(testee.listMails(FIRST_REPOSITORY, MailRepositoriesRoutes.NO_OFFSET, Limit.unlimited()))
+        assertThat(testee.listMails(FIRST_REPOSITORY, Offset.none(), Limit.unlimited()).get())
             .isEmpty();
     }
 
@@ -103,7 +103,7 @@ public class MailRepositoryStoreServiceTest {
             .name(NAME_2)
             .build());
 
-        assertThat(testee.listMails(FIRST_REPOSITORY, MailRepositoriesRoutes.NO_OFFSET, Limit.unlimited()))
+        assertThat(testee.listMails(FIRST_REPOSITORY, Offset.none(), Limit.unlimited()).get())
             .containsOnly(new MailKey(NAME_1), new MailKey(NAME_2));
     }
 
@@ -121,8 +121,7 @@ public class MailRepositoryStoreServiceTest {
             .name("name3")
             .build());
 
-        int offset = 1;
-        assertThat(testee.listMails(FIRST_REPOSITORY, offset, Limit.from(1)))
+        assertThat(testee.listMails(FIRST_REPOSITORY, Offset.from(1), Limit.from(1)).get())
             .containsOnly(new MailKey(NAME_2));
     }
 }

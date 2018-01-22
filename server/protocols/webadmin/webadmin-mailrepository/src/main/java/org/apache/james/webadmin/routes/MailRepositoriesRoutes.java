@@ -32,9 +32,12 @@ import javax.ws.rs.Produces;
 
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.util.streams.Limit;
+import org.apache.james.util.streams.Offset;
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.dto.ExtendedMailRepositoryResponse;
 import org.apache.james.webadmin.service.MailRepositoryStoreService;
 import org.apache.james.webadmin.utils.ErrorResponder;
+import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 
@@ -55,7 +58,6 @@ import spark.Service;
 public class MailRepositoriesRoutes implements Routes {
 
     public static final String MAIL_REPOSITORIES = "mailRepositories";
-    public static final int NO_OFFSET = 0;
 
     private final JsonTransformer jsonTransformer;
     private final MailRepositoryStoreService repositoryStoreService;
@@ -74,6 +76,8 @@ public class MailRepositoriesRoutes implements Routes {
         defineGetMailRepositories();
 
         defineListMails();
+
+        defineGetMailRepository();
     }
 
     @GET
@@ -82,6 +86,7 @@ public class MailRepositoriesRoutes implements Routes {
     @ApiImplicitParams({
         @ApiImplicitParam(
             required = false,
+            name = "offset",
             paramType = "query parameter",
             dataType = "Integer",
             defaultValue = "0",
@@ -90,6 +95,7 @@ public class MailRepositoriesRoutes implements Routes {
         @ApiImplicitParam(
             required = false,
             paramType = "query parameter",
+            name = "limit",
             dataType = "Integer",
             defaultValue = "absent",
             example = "?limit=100",
@@ -97,19 +103,26 @@ public class MailRepositoriesRoutes implements Routes {
     })
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.OK_200, message = "The list of all mails in a repository", response = List.class),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - invalid parameter")
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - invalid parameter"),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The repository does not exist", response = ErrorResponder.class),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineListMails() {
         service.get(MAIL_REPOSITORIES + "/:encodedUrl/mails", (request, response) -> {
-            int offset = asInteger(request, "offset").orElse(NO_OFFSET);
-            Limit limit = Limit.from(asInteger(request, "limit")
-                .map(value -> keepNotZero(value, "limit")));
+            Offset offset = Offset.from(assertPositiveInteger(request, "offset"));
+            Limit limit = Limit.from(assertPositiveInteger(request, "limit")
+                .map(value -> assertNotZero(value, "limit")));
             String encodedUrl = request.params("encodedUrl");
             String url = URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8.displayName());
             try {
-                return repositoryStoreService.listMails(url, offset, limit);
-            } catch (MailRepositoryStore.MailRepositoryStoreException| MessagingException e) {
+                return repositoryStoreService.listMails(url, offset, limit)
+                    .orElseThrow(() -> ErrorResponder.builder()
+                            .statusCode(HttpStatus.NOT_FOUND_404)
+                            .type(ErrorType.NOT_FOUND)
+                            .message("The repository " + encodedUrl + "(decoded value: '" + url + "') does not exist")
+                            .haltError());
+
+            } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                     .type(ErrorResponder.ErrorType.SERVER_ERROR)
@@ -127,18 +140,48 @@ public class MailRepositoriesRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineGetMailRepositories() {
-        service.get(MAIL_REPOSITORIES, (request, response) -> {
-            response.status(HttpStatus.OK_200);
-            return repositoryStoreService.listMailRepositories();
+        service.get(MAIL_REPOSITORIES,
+            (request, response) -> repositoryStoreService.listMailRepositories(),
+            jsonTransformer);
+    }
+
+    @GET
+    @Path("/{encodedUrl}")
+    @ApiOperation(value = "Reading the information of a repository, such as size (can take some time to compute)")
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.OK_200, message = "The repository information", response = List.class),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The repository does not exist", response = ErrorResponder.class),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
+    })
+    public void defineGetMailRepository() {
+        service.get(MAIL_REPOSITORIES + "/:encodedUrl", (request, response) -> {
+            String encodedUrl = request.params("encodedUrl");
+            String url = URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8.displayName());
+            try {
+                long size = repositoryStoreService.size(url)
+                    .orElseThrow(() -> ErrorResponder.builder()
+                            .statusCode(HttpStatus.NOT_FOUND_404)
+                            .type(ErrorType.NOT_FOUND)
+                            .message("The repository " + encodedUrl + "(decoded value: '" + url + "') does not exist")
+                            .haltError());
+                return new ExtendedMailRepositoryResponse(url, size);
+            } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                    .type(ErrorResponder.ErrorType.SERVER_ERROR)
+                    .cause(e)
+                    .message("Error while retrieving mail repository information")
+                    .haltError();
+            }
         }, jsonTransformer);
     }
 
-    private Optional<Integer> asInteger(Request request, String parameterName) {
+    private Optional<Integer> assertPositiveInteger(Request request, String parameterName) {
         try {
             return Optional.ofNullable(request.queryParams(parameterName))
                 .filter(s -> !Strings.isNullOrEmpty(s))
                 .map(Integer::valueOf)
-                .map(value -> keepPositive(value, parameterName));
+                .map(value -> assertPositive(value, parameterName));
         } catch (NumberFormatException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
@@ -149,7 +192,7 @@ public class MailRepositoriesRoutes implements Routes {
         }
     }
 
-    private int keepPositive(int value, String parameterName) {
+    private int assertPositive(int value, String parameterName) {
         if (value < 0) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
@@ -160,7 +203,7 @@ public class MailRepositoriesRoutes implements Routes {
         return value;
     }
 
-    private int keepNotZero(int value, String parameterName) {
+    private int assertNotZero(int value, String parameterName) {
         if (value == 0) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)

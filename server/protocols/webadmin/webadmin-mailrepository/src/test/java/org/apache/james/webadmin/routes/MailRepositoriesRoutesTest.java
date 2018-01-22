@@ -19,13 +19,16 @@
 
 package org.apache.james.webadmin.routes;
 
+import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.when;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
@@ -36,7 +39,7 @@ import java.util.List;
 
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.memory.MemoryMailRepository;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.service.MailRepositoryStoreService;
@@ -68,7 +71,7 @@ public class MailRepositoriesRoutesTest {
         mailRepository = new MemoryMailRepository();
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
-                new DefaultMetricFactory(),
+                new NoopMetricFactory(),
                 new MailRepositoriesRoutes(new MailRepositoryStoreService(mailRepositoryStore), new JsonTransformer()));
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
@@ -138,6 +141,14 @@ public class MailRepositoriesRoutesTest {
     }
 
     @Test
+    public void listingKeysShouldReturnNotFoundWhenNoRepository() throws Exception {
+        when()
+            .get(MY_REPO_MAILS)
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404);
+    }
+
+    @Test
     public void listingKeysShouldReturnEmptyWhenNoMail() throws Exception {
         when(mailRepositoryStore.select(URL_MY_REPO)).thenReturn(mailRepository);
 
@@ -186,7 +197,7 @@ public class MailRepositoriesRoutesTest {
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(1))
-            .body("mailKey", containsInAnyOrder("name2"));
+            .body("mailKey", contains("name2"));
     }
 
     @Test
@@ -224,6 +235,27 @@ public class MailRepositoriesRoutesTest {
             .body("statusCode", is(400))
             .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
             .body("message", is("offset can not be negative"));
+    }
+
+    @Test
+    public void listingKeysShouldReturnEmptyWhenOffsetExceedsSize() throws Exception {
+        when(mailRepositoryStore.select(URL_MY_REPO)).thenReturn(mailRepository);
+
+        mailRepository.store(FakeMail.builder()
+            .name("name1")
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name2")
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name3")
+            .build());
+
+        when()
+            .get(MY_REPO_MAILS + "?offset=5")
+            .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(0));
     }
 
     @Test
@@ -276,5 +308,54 @@ public class MailRepositoriesRoutesTest {
             .body("statusCode", is(400))
             .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
             .body("message", is("limit can not be equal to zero"));
+    }
+
+    @Test
+    public void retrievingRepositoryShouldReturnNotFoundWhenNone() throws Exception {
+        given()
+            .get(URL_ESCAPED_MY_REPO)
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404);
+    }
+
+    @Test
+    public void retrievingRepositoryShouldReturnBasicInformation() throws Exception {
+        when(mailRepositoryStore.select(URL_MY_REPO)).thenReturn(mailRepository);
+
+        given()
+            .get(URL_ESCAPED_MY_REPO)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .contentType(ContentType.JSON)
+            .body("repository", is(URL_MY_REPO))
+            .body("encodedUrl", is(URL_ESCAPED_MY_REPO));
+    }
+
+    @Test
+    public void retrievingRepositorySizeShouldReturnZeroWhenEmpty() throws Exception {
+        when(mailRepositoryStore.select(URL_MY_REPO)).thenReturn(mailRepository);
+
+        given()
+            .get(URL_ESCAPED_MY_REPO)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .contentType(ContentType.JSON)
+            .body("size", equalTo(0));
+    }
+
+    @Test
+    public void retrievingRepositorySizeShouldReturnNumberOfContainedMails() throws Exception {
+        when(mailRepositoryStore.select(URL_MY_REPO)).thenReturn(mailRepository);
+
+        mailRepository.store(FakeMail.builder()
+            .name("name1")
+            .build());
+
+        given()
+            .get(URL_ESCAPED_MY_REPO)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .contentType(ContentType.JSON)
+            .body("size", equalTo(1));
     }
 }

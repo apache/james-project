@@ -20,6 +20,7 @@
 package org.apache.james.webadmin.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -28,9 +29,12 @@ import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.util.streams.Iterators;
 import org.apache.james.util.streams.Limit;
+import org.apache.james.util.streams.Offset;
 import org.apache.james.webadmin.dto.MailKey;
 import org.apache.james.webadmin.dto.MailRepositoryResponse;
 
+import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.github.steveash.guavate.Guavate;
 
 public class MailRepositoryStoreService {
@@ -48,13 +52,22 @@ public class MailRepositoryStoreService {
             .collect(Guavate.toImmutableList());
     }
 
-    public List<MailKey> listMails(String url, long offset, Limit limit) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
-        MailRepository mailRepository = mailRepositoryStore.select(url);
-        return limit.applyOnStream(
-            Iterators.toStream(mailRepository.list())
-                .skip(offset))
-            .map(MailKey::new)
-            .collect(Guavate.toImmutableList());
+    public Optional<List<MailKey>> listMails(String url, Offset offset, Limit limit) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+        Optional<MailRepository> mailRepository = Optional.ofNullable(mailRepositoryStore.select(url));
+        ThrowingFunction<MailRepository, List<MailKey>> list = repository -> list(repository, offset, limit);
+        return mailRepository.map(Throwing.function(list).sneakyThrow());
     }
 
+    private List<MailKey> list(MailRepository mailRepository, Offset offset, Limit limit) throws MessagingException {
+        return limit.applyOnStream(
+                Iterators.toStream(mailRepository.list())
+                    .skip(offset.getOffset()))
+                .map(MailKey::new)
+                .collect(Guavate.toImmutableList());
+    }
+
+    public Optional<Long> size(String url) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+        Optional<MailRepository> mailRepository = Optional.ofNullable(mailRepositoryStore.select(url));
+        return mailRepository.map(Throwing.function(MailRepository::size).sneakyThrow());
+    }
 }

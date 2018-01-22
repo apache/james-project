@@ -17,65 +17,50 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailrepository.memory;
+package org.apache.james.util.streams;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Objects;
+import java.util.Optional;
 
-import org.apache.james.mailrepository.api.MailRepository;
-import org.apache.mailet.Mail;
+import com.google.common.base.Preconditions;
 
-public class MemoryMailRepository implements MailRepository {
+public class Offset {
 
-    private final ConcurrentHashMap<String, Mail> mails;
+    public static Offset from(Optional<Integer> offset) {
+        return offset.map(Offset::from)
+            .orElse(none());
+    }
 
-    public MemoryMailRepository() {
-        mails = new ConcurrentHashMap<>();
+    public static Offset none() {
+        return new Offset(0);
+    }
+
+    public static Offset from(int offset) {
+        Preconditions.checkArgument(offset >= 0, "offset should be positive");
+        return new Offset(offset);
+    }
+
+    private final int offset;
+
+    private Offset(int offset) {
+        this.offset = offset;
+    }
+
+    public int getOffset() {
+        return offset;
     }
 
     @Override
-    public void store(Mail mail) {
-        mails.put(mail.getName(), mail);
-    }
-
-    @Override
-    public Iterator<String> list() {
-        return mails.keySet().iterator();
-    }
-
-    @Override
-    public Mail retrieve(String key) {
-        return mails.get(key);
-    }
-
-    @Override
-    public void remove(Mail mail) {
-        mails.remove(mail.getName());
-    }
-
-    @Override
-    public void remove(Collection<Mail> toRemove) {
-        toRemove.stream().map(Mail::getName).forEach(this::remove);
-    }
-
-    @Override
-    public void remove(String key) {
-        mails.remove(key);
-    }
-
-    @Override
-    public boolean lock(String key) {
+    public final boolean equals(Object o) {
+        if (o instanceof Offset) {
+            Offset other = (Offset) o;
+            return Objects.equals(this.offset, other.offset);
+        }
         return false;
     }
 
     @Override
-    public boolean unlock(String key) {
-        return false;
-    }
-
-    @Override
-    public long size() {
-        return mails.size();
+    public final int hashCode() {
+        return Objects.hash(offset);
     }
 }
