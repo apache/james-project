@@ -36,7 +36,6 @@ import org.apache.james.mailbox.quota.MaxQuotaManager;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
-import com.datastax.driver.core.Statement;
 
 public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
 
@@ -47,8 +46,7 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
     private final PreparedStatement getMaxMessageStatement;
     private final PreparedStatement setDefaultMaxStorageStatement;
     private final PreparedStatement setDefaultMaxMessageStatement;
-    private final Statement getDefaultMaxStorageStatement;
-    private final Statement getDefaultMaxMessageStatement;
+    private final PreparedStatement getDefaultMaxStatement;
 
     @Inject
     public CassandraPerUserMaxQuotaManager(Session session) {
@@ -65,12 +63,9 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
         this.getMaxMessageStatement = session.prepare(select(CassandraMaxQuota.MESSAGE_COUNT)
             .from(CassandraMaxQuota.TABLE_NAME)
             .where(eq(CassandraMaxQuota.QUOTA_ROOT, bindMarker())));
-        this.getDefaultMaxMessageStatement = select(CassandraDefaultMaxQuota.VALUE)
+        this.getDefaultMaxStatement = session.prepare(select(CassandraDefaultMaxQuota.VALUE)
             .from(CassandraDefaultMaxQuota.TABLE_NAME)
-            .where(eq(CassandraDefaultMaxQuota.TYPE, CassandraDefaultMaxQuota.MESSAGE));
-        this.getDefaultMaxStorageStatement = select(CassandraDefaultMaxQuota.VALUE)
-            .from(CassandraDefaultMaxQuota.TABLE_NAME)
-            .where(eq(CassandraDefaultMaxQuota.TYPE, CassandraDefaultMaxQuota.STORAGE));
+            .where(eq(CassandraDefaultMaxQuota.TYPE, bindMarker(CassandraDefaultMaxQuota.TYPE))));
         this.setDefaultMaxMessageStatement = session.prepare(insertInto(CassandraDefaultMaxQuota.TABLE_NAME)
             .value(CassandraDefaultMaxQuota.TYPE, CassandraDefaultMaxQuota.MESSAGE)
             .value(CassandraDefaultMaxQuota.VALUE, bindMarker()));
@@ -101,7 +96,8 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
 
     @Override
     public long getDefaultMaxStorage() throws MailboxException {
-        ResultSet resultSet = session.execute(getDefaultMaxStorageStatement);
+        ResultSet resultSet = session.execute(getDefaultMaxStatement.bind()
+            .setString(CassandraDefaultMaxQuota.TYPE, CassandraDefaultMaxQuota.STORAGE));
         if (resultSet.isExhausted()) {
             return Quota.UNLIMITED;
         }
@@ -110,7 +106,8 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
 
     @Override
     public long getDefaultMaxMessage() throws MailboxException {
-        ResultSet resultSet = session.execute(getDefaultMaxMessageStatement);
+        ResultSet resultSet = session.execute(getDefaultMaxStatement.bind()
+            .setString(CassandraDefaultMaxQuota.TYPE, CassandraDefaultMaxQuota.MESSAGE));
         if (resultSet.isExhausted()) {
             return Quota.UNLIMITED;
         }
