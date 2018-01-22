@@ -150,7 +150,6 @@ public interface MailRepositoryContract {
         testee.store(mail);
     }
 
-
     @Test
     default void retrieveShouldGetStoredMail() throws Exception {
         MailRepository testee = retrieveRepository();
@@ -160,6 +159,35 @@ public interface MailRepositoryContract {
         testee.store(mail);
 
         assertThat(testee.retrieve(key1)).satisfies(actual -> checkMailEquality(actual, mail));
+    }
+
+    @Test
+    default void removeAllShouldRemoveStoredMails() throws Exception {
+        MailRepository testee = retrieveRepository();
+        testee.store(createMail("name"));
+
+        testee.removeAll();
+
+        assertThat(testee.size()).isEqualTo(0L);
+    }
+
+    @Test
+    default void removeAllShouldBeIdempotent() throws Exception {
+        MailRepository testee = retrieveRepository();
+        testee.store(createMail("name"));
+
+        testee.removeAll();
+        testee.removeAll();
+
+        assertThat(testee.size()).isEqualTo(0L);
+    }
+
+    @Test
+    default void removeAllShouldNotFailWhenEmpty() throws Exception {
+        MailRepository testee = retrieveRepository();
+        testee.store(createMail("name"));
+
+        testee.removeAll();
     }
 
     @Test

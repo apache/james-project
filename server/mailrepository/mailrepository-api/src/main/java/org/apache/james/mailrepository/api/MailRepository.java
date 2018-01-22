@@ -90,6 +90,13 @@ public interface MailRepository {
     void remove(String key) throws MessagingException;
 
     /**
+     * Removes all mails from this repository
+     *
+     * @throws MessagingException
+     */
+    void removeAll() throws MessagingException;
+
+    /**
      * @deprecated This method is implementation dependent, it has been moved to org.apache.james.mailrepository.lib.AbstractMailRepository
      */
     @Deprecated
