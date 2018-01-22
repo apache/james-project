@@ -62,7 +62,6 @@ import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.ObjectStore;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.mail.utils.Limit;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.Attachments;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.Properties;
@@ -80,6 +79,7 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
 import org.apache.james.util.CompletableFutureUtil;
 import org.apache.james.util.FluentFutureStream;
 import org.apache.james.util.streams.JamesCollectors;
+import org.apache.james.util.streams.Limit;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;

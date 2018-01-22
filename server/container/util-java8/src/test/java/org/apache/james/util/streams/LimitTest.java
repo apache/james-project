@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.mail.utils;
+package org.apache.james.util.streams;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
