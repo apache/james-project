@@ -24,6 +24,7 @@ import static spark.Spark.halt;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -229,7 +230,7 @@ public class GroupsRoutes implements Routes {
 
     private MailAddress parseMailAddress(String address) {
         try {
-            String decodedAddress = URLDecoder.decode(address, "UTF-8");
+            String decodedAddress = URLDecoder.decode(address, StandardCharsets.UTF_8.displayName());
             return new MailAddress(decodedAddress);
         } catch (AddressException e) {
             throw ErrorResponder.builder()
