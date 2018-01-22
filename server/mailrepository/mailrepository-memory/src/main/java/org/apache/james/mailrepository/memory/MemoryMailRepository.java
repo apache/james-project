@@ -23,6 +23,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.mail.MessagingException;
+
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.mailet.Mail;
 
@@ -72,5 +74,10 @@ public class MemoryMailRepository implements MailRepository {
     @Override
     public boolean unlock(String key) {
         return false;
+    }
+
+    @Override
+    public long size() {
+        return mails.size();
     }
 }

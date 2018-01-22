@@ -96,6 +96,44 @@ public interface MailRepositoryContract {
     MailRepository retrieveRepository() throws Exception;
 
     @Test
+    default void sizeShouldReturnZeroWhenEmpty() throws Exception {
+        MailRepository testee = retrieveRepository();
+        assertThat(testee.size()).isEqualTo(0L);
+    }
+
+    @Test
+    default void sizeShouldReturnMailCount() throws Exception {
+        MailRepository testee = retrieveRepository();
+
+        testee.store(createMail("mail1"));
+        testee.store(createMail("mail2"));
+
+        assertThat(testee.size()).isEqualTo(2L);
+    }
+
+    @Test
+    default void sizeShouldBeIncrementedByOneWhenDuplicates() throws Exception {
+        MailRepository testee = retrieveRepository();
+
+        String key = "mail1";
+        testee.store(createMail(key));
+        testee.store(createMail(key));
+
+        assertThat(testee.size()).isEqualTo(1L);
+    }
+
+    @Test
+    default void sizeShouldBeDecrementedByRemove() throws Exception {
+        MailRepository testee = retrieveRepository();
+
+        String key = "mail1";
+        testee.store(createMail(key));
+        testee.remove(key);
+
+        assertThat(testee.size()).isEqualTo(0L);
+    }
+
+    @Test
     default void storeRegularMailShouldNotFail() throws Exception {
         MailRepository testee = retrieveRepository();
         Mail mail = createMail("mail1");

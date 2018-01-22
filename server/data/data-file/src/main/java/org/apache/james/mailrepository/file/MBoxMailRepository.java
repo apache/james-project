@@ -77,6 +77,7 @@ import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Iterators;
 import com.google.common.hash.Hashing;
 
 /**
@@ -495,8 +496,7 @@ public class MBoxMailRepository implements MailRepository, Configurable {
      * @see org.apache.james.mailrepository.api.MailRepository#list()
      */
     public Iterator<String> list() {
-        loadKeys();
-        ArrayList<String> keys = new ArrayList<>(mList.keySet());
+        ArrayList<String> keys = loadKeysAsArray();
 
         if (!keys.isEmpty()) {
             // find the first message. This is a trick to make sure that if
@@ -510,6 +510,11 @@ public class MBoxMailRepository implements MailRepository, Configurable {
             Collections.sort(keys); // Keys is a HashSet; impose FIFO for apps that need it
         }
         return keys.iterator();
+    }
+
+    private ArrayList<String> loadKeysAsArray() {
+        loadKeys();
+        return new ArrayList<>(mList.keySet());
     }
 
     /**
@@ -689,5 +694,10 @@ public class MBoxMailRepository implements MailRepository, Configurable {
      */
     public boolean unlock(String key) {
         return false;
+    }
+
+    @Override
+    public long size() throws MessagingException {
+        return loadKeysAsArray().size();
     }
 }

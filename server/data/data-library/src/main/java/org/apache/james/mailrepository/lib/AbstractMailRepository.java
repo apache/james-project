@@ -33,6 +33,8 @@ import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Iterators;
+
 /**
  * This class represent an AbstractMailRepository. All MailRepositories should
  * extend this class.
@@ -157,4 +159,8 @@ public abstract class AbstractMailRepository implements MailRepository, Configur
      */
     protected abstract void internalRemove(String key) throws MessagingException;
 
+    @Override
+    public long size() throws MessagingException {
+        return Iterators.size(list());
+    }
 }

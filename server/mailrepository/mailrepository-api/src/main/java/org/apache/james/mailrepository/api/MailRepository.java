@@ -32,6 +32,11 @@ import org.apache.mailet.Mail;
 public interface MailRepository {
 
     /**
+     * @return Number of mails stored in that repository
+     */
+    long size() throws MessagingException;
+
+    /**
      * Stores a message in this repository. 
      * 
      * TODO: Shouldn't this return the key under which it is stored?
