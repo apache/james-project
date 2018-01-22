@@ -267,4 +267,14 @@ public class MailRepositoriesRoutesTest {
             .body("mailKey", containsInAnyOrder("name1", "name2"));
     }
 
+    @Test
+    public void zeroLimitShouldNotBeValid() throws Exception {
+        when()
+            .get(MY_REPO_MAILS + "?limit=0")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("limit can not be equal to zero"));
+    }
 }

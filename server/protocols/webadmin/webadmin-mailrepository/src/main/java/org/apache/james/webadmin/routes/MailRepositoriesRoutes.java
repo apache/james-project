@@ -91,9 +91,9 @@ public class MailRepositoriesRoutes implements Routes {
             required = false,
             paramType = "query parameter",
             dataType = "Integer",
-            defaultValue = "0",
+            defaultValue = "absent",
             example = "?limit=100",
-            value = "If present, fixes the maximal number of key returned in that call.")
+            value = "If present, fixes the maximal number of key returned in that call. Must be more than zero if specified.")
     })
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.OK_200, message = "The list of all mails in a repository", response = List.class),
@@ -103,8 +103,10 @@ public class MailRepositoriesRoutes implements Routes {
     public void defineListMails() {
         service.get(MAIL_REPOSITORIES + "/:encodedUrl/mails", (request, response) -> {
             int offset = asInteger(request, "offset").orElse(NO_OFFSET);
-            Limit limit = Limit.from(asInteger(request, "limit"));
-            String url = URLDecoder.decode(request.params("encodedUrl"), StandardCharsets.UTF_8.displayName());
+            Limit limit = Limit.from(asInteger(request, "limit")
+                .map(value -> keepNotZero(value, "limit")));
+            String encodedUrl = request.params("encodedUrl");
+            String url = URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8.displayName());
             try {
                 return repositoryStoreService.listMails(url, offset, limit);
             } catch (MailRepositoryStore.MailRepositoryStoreException| MessagingException e) {
@@ -153,6 +155,17 @@ public class MailRepositoriesRoutes implements Routes {
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .message(parameterName + " can not be negative")
+                .haltError();
+        }
+        return value;
+    }
+
+    private int keepNotZero(int value, String parameterName) {
+        if (value == 0) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message(parameterName + " can not be equal to zero")
                 .haltError();
         }
         return value;
