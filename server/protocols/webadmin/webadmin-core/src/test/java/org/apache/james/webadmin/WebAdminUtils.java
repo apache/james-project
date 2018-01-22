@@ -19,12 +19,18 @@
 
 package org.apache.james.webadmin;
 
+import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
+import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 
 import com.google.common.collect.ImmutableSet;
+import com.jayway.restassured.builder.RequestSpecBuilder;
+import com.jayway.restassured.http.ContentType;
 
 public class WebAdminUtils {
 
@@ -40,6 +46,14 @@ public class WebAdminUtils {
             ImmutableSet.copyOf(routes),
             new NoAuthenticationFilter(),
             metricFactory);
+    }
+
+    public static RequestSpecBuilder defineRequestSpecification(WebAdminServer webAdminServer) {
+        return new RequestSpecBuilder()
+            .setContentType(ContentType.JSON)
+            .setAccept(ContentType.JSON)
+            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
+            .setPort(webAdminServer.getPort().get().getValue());
     }
 
 }

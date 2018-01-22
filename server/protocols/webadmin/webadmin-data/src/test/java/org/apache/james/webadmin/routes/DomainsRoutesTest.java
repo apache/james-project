@@ -22,8 +22,6 @@ package org.apache.james.webadmin.routes;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.when;
 import static com.jayway.restassured.RestAssured.with;
-import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
-import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,7 +31,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.net.InetAddress;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -52,7 +49,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
@@ -70,11 +66,7 @@ public class DomainsRoutesTest {
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
 
-        RestAssured.requestSpecification = new RequestSpecBuilder()
-            .setContentType(ContentType.JSON)
-            .setAccept(ContentType.JSON)
-            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
-            .setPort(webAdminServer.getPort().get().getValue())
+        RestAssured.requestSpecification = WebAdminUtils.defineRequestSpecification(webAdminServer)
             .setBasePath(DomainsRoutes.DOMAINS)
             .build();
     }

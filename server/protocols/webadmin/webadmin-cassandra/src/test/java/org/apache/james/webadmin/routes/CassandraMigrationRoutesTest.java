@@ -22,8 +22,6 @@ package org.apache.james.webadmin.routes;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.when;
 import static com.jayway.restassured.RestAssured.with;
-import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
-import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -35,7 +33,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -58,7 +55,6 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
 public class CassandraMigrationRoutesTest {
@@ -91,12 +87,9 @@ public class CassandraMigrationRoutesTest {
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
 
-        RestAssured.requestSpecification = new RequestSpecBuilder()
-            .setContentType(ContentType.JSON)
-            .setAccept(ContentType.JSON)
+
+        RestAssured.requestSpecification = WebAdminUtils.defineRequestSpecification(webAdminServer)
             .setBasePath(CassandraMigrationRoutes.VERSION_BASE)
-            .setPort(webAdminServer.getPort().get().getValue())
-            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
             .build();
     }
 

@@ -22,8 +22,6 @@ package org.apache.james.webadmin.routes;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.when;
 import static com.jayway.restassured.RestAssured.with;
-import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
-import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
@@ -46,11 +44,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.builder.RequestSpecBuilder;
-import com.jayway.restassured.http.ContentType;
 
 public class TasksRoutesTest {
 
@@ -68,12 +63,8 @@ public class TasksRoutesTest {
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
 
-        RestAssured.requestSpecification = new RequestSpecBuilder()
-            .setContentType(ContentType.JSON)
-            .setAccept(ContentType.JSON)
+        RestAssured.requestSpecification = WebAdminUtils.defineRequestSpecification(webAdminServer)
             .setBasePath(TasksRoutes.BASE)
-            .setPort(webAdminServer.getPort().get().getValue())
-            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
             .build();
     }
 
