@@ -20,8 +20,8 @@ package org.apache.james.queue.file;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -30,7 +30,7 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * {@link MailQueueFactory} implementation which returns {@link FileMailQueue} instances
@@ -49,8 +49,8 @@ public class FileMailQueueFactory implements MailQueueFactory {
     }
 
     @Override
-    public List<MailQueue> getUsedMailQueues() {
-        return ImmutableList.copyOf(queues.values());
+    public Set<MailQueue> getUsedMailQueues() {
+        return ImmutableSet.copyOf(queues.values());
     }
 
     /**

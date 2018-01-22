@@ -20,9 +20,9 @@
 package org.apache.james.queue.memory;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -44,6 +44,7 @@ import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 public class MemoryMailQueueFactory implements MailQueueFactory {
 
@@ -57,8 +58,8 @@ public class MemoryMailQueueFactory implements MailQueueFactory {
     }
 
     @Override
-    public List<MailQueue> getUsedMailQueues() {
-        return ImmutableList.copyOf(mailQueues.values());
+    public Set<MailQueue> getUsedMailQueues() {
+        return ImmutableSet.copyOf(mailQueues.values());
     }
 
     @Override

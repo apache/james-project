@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -38,7 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * {@link MailQueueFactory} abstract base class which take care of register the
@@ -69,8 +70,8 @@ public abstract class AbstractMailQueueFactory implements MailQueueFactory {
     }
 
     @Override
-    public List<MailQueue> getUsedMailQueues() {
-        return ImmutableList.copyOf(queues.values());
+    public Set<MailQueue> getUsedMailQueues() {
+        return ImmutableSet.copyOf(queues.values());
     }
 
     @PreDestroy
