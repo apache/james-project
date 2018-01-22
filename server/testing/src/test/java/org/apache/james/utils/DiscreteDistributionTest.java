@@ -77,7 +77,7 @@ class DiscreteDistributionTest {
 
     @Test
     void streamOfEvenDistributionMapShouldReturnSameNumberOfEachElement() {
-        DiscreteDistribution<String> testee =DiscreteDistribution.create(
+        DiscreteDistribution<String> testee = DiscreteDistribution.create(
             ImmutableList.of(
                 new DistributionEntry<>("a", 10),
                 new DistributionEntry<>("b", 10)));

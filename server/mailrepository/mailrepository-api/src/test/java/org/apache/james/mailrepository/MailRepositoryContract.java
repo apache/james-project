@@ -24,12 +24,10 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import javax.mail.MessagingException;
