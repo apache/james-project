@@ -31,6 +31,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -358,4 +359,68 @@ public class MailRepositoriesRoutesTest {
             .contentType(ContentType.JSON)
             .body("size", equalTo(1));
     }
+
+    @Test
+    public void retrievingAMailShouldDisplayItsInformation() throws Exception {
+        when(mailRepositoryStore.select(URL_MY_REPO)).thenReturn(mailRepository);
+
+        String name = "name1";
+        String sender = "sender@domain";
+        String recipient1 = "recipient1@domain";
+        String recipient2 = "recipient2@domain";
+        String state = "state";
+        String errorMessage = "Error: why this mail is stored";
+        mailRepository.store(FakeMail.builder()
+            .name(name)
+            .sender(sender)
+            .recipients(recipient1, recipient2)
+            .state(state)
+            .errorMessage(errorMessage)
+            .build());
+
+        when()
+            .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("name", is(name))
+            .body("sender", is(sender))
+            .body("state", is(state))
+            .body("error", is(errorMessage))
+            .body("recipients", containsInAnyOrder(recipient1, recipient2));
+    }
+
+    @Test
+    public void retrievingAMailShouldNotFailWhenOnlyNameProperty() throws Exception {
+        when(mailRepositoryStore.select(URL_MY_REPO)).thenReturn(mailRepository);
+
+        String name = "name1";
+        mailRepository.store(FakeMail.builder()
+            .name(name)
+            .build());
+
+        when()
+            .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("name", is(name))
+            .body("sender", isEmptyOrNullString())
+            .body("state", isEmptyOrNullString())
+            .body("error", isEmptyOrNullString())
+            .body("recipients", hasSize(0));
+    }
+
+    @Test
+    public void retrievingAMailShouldFailWhenUnknown() throws Exception {
+        when(mailRepositoryStore.select(URL_MY_REPO)).thenReturn(mailRepository);
+
+        String name = "name";
+        when()
+            .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .body("statusCode", is(404))
+            .body("type", is(ErrorResponder.ErrorType.NOT_FOUND.getType()))
+            .body("message", is("Could not retrieve " + name));
+    }
+
 }

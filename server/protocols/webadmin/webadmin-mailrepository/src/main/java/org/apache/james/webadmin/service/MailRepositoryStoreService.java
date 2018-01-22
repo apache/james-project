@@ -30,6 +30,7 @@ import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.util.streams.Iterators;
 import org.apache.james.util.streams.Limit;
 import org.apache.james.util.streams.Offset;
+import org.apache.james.webadmin.dto.MailDto;
 import org.apache.james.webadmin.dto.MailKey;
 import org.apache.james.webadmin.dto.MailRepositoryResponse;
 
@@ -66,8 +67,16 @@ public class MailRepositoryStoreService {
                 .collect(Guavate.toImmutableList());
     }
 
+
     public Optional<Long> size(String url) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
         Optional<MailRepository> mailRepository = Optional.ofNullable(mailRepositoryStore.select(url));
         return mailRepository.map(Throwing.function(MailRepository::size).sneakyThrow());
+    }
+
+    public Optional<MailDto> retrieveMail(String url, String mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+        MailRepository mailRepository = mailRepositoryStore.select(url);
+
+        return Optional.ofNullable(mailRepository.retrieve(mailKey))
+            .map(Throwing.function(MailDto::fromMail).sneakyThrow());
     }
 }

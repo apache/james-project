@@ -78,6 +78,8 @@ public class MailRepositoriesRoutes implements Routes {
         defineListMails();
 
         defineGetMailRepository();
+
+        defineGetMail();
     }
 
     @GET
@@ -143,6 +145,35 @@ public class MailRepositoriesRoutes implements Routes {
         service.get(MAIL_REPOSITORIES,
             (request, response) -> repositoryStoreService.listMailRepositories(),
             jsonTransformer);
+    }
+
+    @Path("/{encodedUrl}/mails/{mailKey}")
+    @ApiOperation(value = "Retrieving a specific mail details")
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.OK_200, message = "The list of all mails in a repository", response = List.class),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "Not found - Could not retrieve the given mail.")
+    })
+    public void defineGetMail() {
+        service.get(MAIL_REPOSITORIES + "/:encodedUrl/mails/:mailKey", (request, response) -> {
+            String url = URLDecoder.decode(request.params("encodedUrl"), StandardCharsets.UTF_8.displayName());
+            String mailKey = request.params("mailKey");
+            try {
+                return repositoryStoreService.retrieveMail(url, mailKey)
+                    .orElseThrow(() -> ErrorResponder.builder()
+                        .statusCode(HttpStatus.NOT_FOUND_404)
+                        .type(ErrorResponder.ErrorType.NOT_FOUND)
+                        .message("Could not retrieve " + mailKey)
+                        .haltError());
+            } catch (MailRepositoryStore.MailRepositoryStoreException| MessagingException e) {
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                    .type(ErrorResponder.ErrorType.SERVER_ERROR)
+                    .cause(e)
+                    .message("Error while retrieving mail")
+                    .haltError();
+            }
+        }, jsonTransformer);
     }
 
     @GET
