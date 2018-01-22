@@ -27,6 +27,7 @@ import javax.mail.MessagingException;
 
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
+import org.apache.james.task.Task;
 import org.apache.james.util.streams.Iterators;
 import org.apache.james.util.streams.Limit;
 import org.apache.james.util.streams.Offset;
@@ -83,6 +84,10 @@ public class MailRepositoryStoreService {
     public void deleteMail(String url, String mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
         mailRepositoryStore.select(url)
             .remove(mailKey);
+    }
+
+    public Task createClearMailRepositoryTask(String url) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+        return new ClearMailRepositoryTask(mailRepositoryStore.select(url), url);
     }
 
 }
