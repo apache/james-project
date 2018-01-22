@@ -68,6 +68,7 @@ public class JamesMailetContextTest {
     private MailQueue spoolMailQueue;
 
     @Before
+    @SuppressWarnings("unchecked")
     public void setUp() throws Exception {
         domainList = new MemoryDomainList(DNS_SERVICE);
         HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
@@ -78,7 +79,7 @@ public class JamesMailetContextTest {
         usersRepository = MemoryUsersRepository.withVirtualHosting();
         usersRepository.setDomainList(domainList);
         testee = new JamesMailetContext();
-        MailQueueFactory mailQueueFactory = mock(MailQueueFactory.class);
+        MailQueueFactory<MailQueue> mailQueueFactory = mock(MailQueueFactory.class);
         spoolMailQueue = mock(MailQueue.class);
         when(mailQueueFactory.createQueue(MailQueueFactory.SPOOL)).thenReturn(spoolMailQueue);
         testee.retrieveRootMailQueue(mailQueueFactory);

@@ -33,7 +33,7 @@ public class MailSpool {
     private final MailQueue queue;
 
     @Inject
-    @VisibleForTesting MailSpool(MailQueueFactory queueFactory) {
+    @VisibleForTesting MailSpool(MailQueueFactory<?> queueFactory) {
         queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
     }
 

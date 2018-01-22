@@ -76,7 +76,6 @@ public class MailHeaders extends InternetHeaders implements Serializable, Clonea
      * @param out
      *            the OutputStream to which to write the headers
      */
-    @SuppressWarnings("unchecked")
     public void writeTo(OutputStream out) throws MessagingException {
         MimeMessageUtil.writeHeadersTo(getAllHeaderLines(), out);
     }
@@ -110,7 +109,6 @@ public class MailHeaders extends InternetHeaders implements Serializable, Clonea
      * @see javax.mail.internet.InternetHeaders#addHeader(java.lang.String,
      *      java.lang.String)
      */
-    @SuppressWarnings("unchecked")
     public synchronized void addHeader(String arg0, String arg1) {
         if (RFC2822Headers.RETURN_PATH.equalsIgnoreCase(arg0)) {
             headers.add(0, new InternetHeader(arg0, arg1));
@@ -168,7 +166,6 @@ public class MailHeaders extends InternetHeaders implements Serializable, Clonea
      * 
      * @return size
      */
-    @SuppressWarnings("unchecked")
     public synchronized long getSize() {
         if (size == -1 || modified) {
             long c = 0;

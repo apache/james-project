@@ -63,7 +63,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 
-@SuppressWarnings("deprecation")
 public class JamesMailetContext implements MailetContext, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(JamesMailetContext.class);
 
@@ -82,7 +81,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
     private MailAddress postmaster;
 
     @Inject
-    public void retrieveRootMailQueue(MailQueueFactory mailQueueFactory) {
+    public void retrieveRootMailQueue(MailQueueFactory<?> mailQueueFactory) {
         this.rootMailQueue = mailQueueFactory.createQueue(MailQueueFactory.SPOOL);
     }
 

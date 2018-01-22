@@ -131,7 +131,7 @@ public class RemoteDelivery extends GenericMailet {
 
     private final DNSService dnsServer;
     private final DomainList domainList;
-    private final MailQueueFactory queueFactory;
+    private final MailQueueFactory<?> queueFactory;
     private final MetricFactory metricFactory;
     private final AtomicBoolean isDestroyed;
     private final ThreadState startThreads;
@@ -141,11 +141,11 @@ public class RemoteDelivery extends GenericMailet {
     private ExecutorService executor;
 
     @Inject
-    public RemoteDelivery(DNSService dnsServer, DomainList domainList, MailQueueFactory queueFactory, MetricFactory metricFactory) {
+    public RemoteDelivery(DNSService dnsServer, DomainList domainList, MailQueueFactory<?> queueFactory, MetricFactory metricFactory) {
         this(dnsServer, domainList, queueFactory, metricFactory, ThreadState.START_THREADS);
     }
 
-    public RemoteDelivery(DNSService dnsServer, DomainList domainList, MailQueueFactory queueFactory, MetricFactory metricFactory, ThreadState startThreads) {
+    public RemoteDelivery(DNSService dnsServer, DomainList domainList, MailQueueFactory<?> queueFactory, MetricFactory metricFactory, ThreadState startThreads) {
         this.dnsServer = dnsServer;
         this.domainList = domainList;
         this.queueFactory = queueFactory;

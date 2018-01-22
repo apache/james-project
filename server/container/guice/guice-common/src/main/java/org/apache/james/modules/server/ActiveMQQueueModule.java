@@ -48,7 +48,7 @@ public class ActiveMQQueueModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public MailQueueFactory createActiveMailQueueFactory(ActiveMQMailQueueFactory activeMQMailQueueFactory) {
+    public MailQueueFactory<?> createActiveMailQueueFactory(ActiveMQMailQueueFactory activeMQMailQueueFactory) {
         activeMQMailQueueFactory.setUseJMX(true);
         activeMQMailQueueFactory.init();
         return activeMQMailQueueFactory;

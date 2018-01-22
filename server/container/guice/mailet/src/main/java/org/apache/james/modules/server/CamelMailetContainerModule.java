@@ -86,7 +86,7 @@ public class CamelMailetContainerModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private JamesMailetContext provideMailetContext(MailQueueFactory mailQueueFactory,
+    private JamesMailetContext provideMailetContext(MailQueueFactory<?> mailQueueFactory,
                                                     DNSService dns,
                                                     UsersRepository localusers,
                                                     DomainList domains) {
@@ -105,7 +105,7 @@ public class CamelMailetContainerModule extends AbstractModule {
         private final CamelCompositeProcessor camelCompositeProcessor;
         private final JamesMailSpooler jamesMailSpooler;
         private final JamesMailetContext mailetContext;
-        private final MailQueueFactory mailQueueFactory;
+        private final MailQueueFactory<?> mailQueueFactory;
         private final DefaultProcessorsConfigurationSupplier defaultProcessorsConfigurationSupplier;
         private final Set<TransportProcessorCheck> transportProcessorCheckSet;
 
@@ -114,7 +114,7 @@ public class CamelMailetContainerModule extends AbstractModule {
                                                 CamelCompositeProcessor camelCompositeProcessor,
                                                 JamesMailSpooler jamesMailSpooler,
                                                 JamesMailetContext mailetContext,
-                                                MailQueueFactory mailQueueFactory,
+                                                MailQueueFactory<?> mailQueueFactory,
                                                 Set<TransportProcessorCheck> transportProcessorCheckSet,
                                                 DefaultProcessorsConfigurationSupplier defaultProcessorsConfigurationSupplier) {
             this.configurationProvider = configurationProvider;

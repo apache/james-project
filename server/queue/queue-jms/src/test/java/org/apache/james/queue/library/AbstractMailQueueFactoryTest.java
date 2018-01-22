@@ -19,9 +19,9 @@
 
 package org.apache.james.queue.library;
 
-import static org.mockito.Mockito.any;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -42,7 +42,7 @@ public class AbstractMailQueueFactoryTest {
     private static final String QUEUE_2 = "queue2";
     private static final String QUEUE_3 = "queue3";
 
-    private AbstractMailQueueFactory abstractMailQueueFactory;
+    private AbstractMailQueueFactory<?> abstractMailQueueFactory;
     private MBeanServer mBeanServer;
 
     @Before

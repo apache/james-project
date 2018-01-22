@@ -63,12 +63,12 @@ public class FetchScheduler implements FetchSchedulerMBean, Configurable {
 
     private UsersRepository urepos;
 
-    private MailQueueFactory queueFactory;
+    private MailQueueFactory<?> queueFactory;
 
     private DomainList domainList;
 
     @Inject
-    public void setMailQueueFactory(MailQueueFactory queueFactory) {
+    public void setMailQueueFactory(MailQueueFactory<?> queueFactory) {
         this.queueFactory = queueFactory;
     }
 

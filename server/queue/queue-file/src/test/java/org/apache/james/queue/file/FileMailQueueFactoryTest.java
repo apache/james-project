@@ -28,7 +28,7 @@ import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
-public class FileMailQueueFactoryTest implements MailQueueFactoryContract, ManageableMailQueueFactoryContract {
+public class FileMailQueueFactoryTest implements MailQueueFactoryContract<ManageableMailQueue>, ManageableMailQueueFactoryContract {
     private FileMailQueueFactory mailQueueFactory;
     private MockFileSystem fileSystem;
 
