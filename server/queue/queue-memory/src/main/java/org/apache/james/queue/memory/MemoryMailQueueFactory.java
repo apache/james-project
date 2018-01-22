@@ -58,7 +58,7 @@ public class MemoryMailQueueFactory implements MailQueueFactory {
     }
 
     @Override
-    public Set<MailQueue> getUsedMailQueues() {
+    public Set<MailQueue> listCreatedMailQueues() {
         return ImmutableSet.copyOf(mailQueues.values());
     }
 

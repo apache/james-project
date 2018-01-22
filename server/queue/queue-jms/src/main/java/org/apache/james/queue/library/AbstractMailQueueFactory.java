@@ -70,7 +70,7 @@ public abstract class AbstractMailQueueFactory implements MailQueueFactory {
     }
 
     @Override
-    public Set<MailQueue> getUsedMailQueues() {
+    public Set<MailQueue> listCreatedMailQueues() {
         return ImmutableSet.copyOf(queues.values());
     }
 

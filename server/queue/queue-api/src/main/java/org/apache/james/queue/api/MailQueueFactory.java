@@ -39,5 +39,5 @@ public interface MailQueueFactory {
      */
     MailQueue getQueue(String name);
 
-    Set<MailQueue> getUsedMailQueues();
+    Set<MailQueue> listCreatedMailQueues();
 }
