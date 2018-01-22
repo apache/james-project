@@ -87,7 +87,7 @@ public class MemoryMailQueueFactory implements MailQueueFactory {
         }
 
         @Override
-        public String getMailQueueName() {
+        public String getName() {
             return name;
         }
 

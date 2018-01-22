@@ -54,7 +54,7 @@ public class AbstractMailQueueFactoryTest {
                 return new ManageableMailQueue() {
 
                     @Override
-                    public String getMailQueueName() {
+                    public String getName() {
                         return "name";
                     }
 

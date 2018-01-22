@@ -61,7 +61,7 @@ public class RemoteDeliveryTest {
         }
 
         @Override
-        public String getMailQueueName() {
+        public String getName() {
             return name;
         }
 

@@ -44,7 +44,7 @@ public interface MailQueueFactoryContract {
         mailQueueFactory.getQueue(NAME_2);
 
         assertThat(mailQueueFactory.getUsedMailQueues())
-            .extracting(MailQueue::getMailQueueName)
+            .extracting(MailQueue::getName)
             .containsOnly(NAME_1, NAME_2);
     }
 
@@ -56,7 +56,7 @@ public interface MailQueueFactoryContract {
         mailQueueFactory.getQueue(NAME_1);
 
         assertThat(mailQueueFactory.getUsedMailQueues())
-            .extracting(MailQueue::getMailQueueName)
+            .extracting(MailQueue::getName)
             .containsOnly(NAME_1);
     }
 
