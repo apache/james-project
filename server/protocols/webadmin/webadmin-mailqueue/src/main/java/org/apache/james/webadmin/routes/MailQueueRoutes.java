@@ -33,6 +33,7 @@ import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.util.streams.Iterators;
+import org.apache.james.util.streams.Limit;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.MailQueueDTO;
 import org.apache.james.webadmin.dto.MailQueueItemDTO;
@@ -40,8 +41,6 @@ import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
@@ -53,6 +52,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import spark.HaltException;
 import spark.Request;
 import spark.Service;
 
@@ -64,12 +64,12 @@ public class MailQueueRoutes implements Routes {
 
     @VisibleForTesting static final String BASE_URL = "/mailQueues";
     @VisibleForTesting static final String MAIL_QUEUE_NAME = ":mailQueueName";
-    @VisibleForTesting static final String MESSAGES = "/messages";
+    @VisibleForTesting static final String MAILS = "/mails";
     
     private static final String DELAYED_QUERY_PARAM = "delayed";
+    private static final String LIMIT_QUERY_PARAM = "limit";
+    @VisibleForTesting static final int DEFAULT_LIMIT_VALUE = 100;
     
-    private static final Logger LOGGER = LoggerFactory.getLogger(MailQueueRoutes.class);
-
     private final MailQueueFactory<ManageableMailQueue> mailQueueFactory;
     private final JsonTransformer jsonTransformer;
 
@@ -85,7 +85,7 @@ public class MailQueueRoutes implements Routes {
 
         getMailQueue(service);
         
-        listMessages(service);
+        listMails(service);
     }
 
     @GET
@@ -152,29 +152,44 @@ public class MailQueueRoutes implements Routes {
     }
 
     @GET
-    @Path("/{mailQueueName}/messages")
+    @Path("/{mailQueueName}/mails")
     @ApiImplicitParams({
         @ApiImplicitParam(required = true, dataType = "string", name = "mailQueueName", paramType = "path"),
-        @ApiImplicitParam(required = false, dataType = "boolean", name = DELAYED_QUERY_PARAM, paramType = "query")
+        @ApiImplicitParam(
+                required = false, 
+                dataType = "boolean", 
+                name = DELAYED_QUERY_PARAM, 
+                paramType = "query",
+                example = "?delayed=true",
+                value = "Whether the mails are delayed in the mail queue or not (already sent)."),
+        @ApiImplicitParam(
+                required = false, 
+                dataType = "int", 
+                name = LIMIT_QUERY_PARAM, 
+                paramType = "query",
+                example = "?limit=100",
+                defaultValue = "100",
+                value = "Limits the maximum number of mails returned by this endpoint")
     })
     @ApiOperation(
-        value = "List the messages of the MailQueue"
+        value = "List the mails of the MailQueue"
     )
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
         @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The MailQueue does not exist."),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid request for listing the mails from the mail queue."),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
-    public void listMessages(Service service) {
-        service.get(BASE_URL + SEPARATOR + MAIL_QUEUE_NAME + MESSAGES, 
-                (request, response) -> listMessages(request), 
+    public void listMails(Service service) {
+        service.get(BASE_URL + SEPARATOR + MAIL_QUEUE_NAME + MAILS, 
+                (request, response) -> listMails(request), 
                 jsonTransformer);
     }
 
-    private List<MailQueueItemDTO> listMessages(Request request) {
+    private List<MailQueueItemDTO> listMails(Request request) {
         String mailQueueName = request.params(MAIL_QUEUE_NAME);
         return mailQueueFactory.getQueue(mailQueueName)
-                .map(name -> listMessages(name, isDelayed(request.queryParams(DELAYED_QUERY_PARAM))))
+                .map(name -> listMails(name, isDelayed(request.queryParams(DELAYED_QUERY_PARAM)), limit(request.queryParams(LIMIT_QUERY_PARAM))))
                 .orElseThrow(
                     () -> ErrorResponder.builder()
                         .message(String.format("%s can not be found", mailQueueName))
@@ -188,25 +203,39 @@ public class MailQueueRoutes implements Routes {
                 .map(Boolean::parseBoolean);
     }
 
-    private List<MailQueueItemDTO> listMessages(ManageableMailQueue queue, Optional<Boolean> isDelayed) {
+    @VisibleForTesting Limit limit(String limitAsString) throws HaltException {
         try {
-            return Iterators.toStream(queue.browse())
-                    .map(Throwing.function(MailQueueItemDTO::from))
+            return Optional.ofNullable(limitAsString)
+                    .map(Integer::parseInt)
+                    .map(Limit::limit)
+                    .orElseGet(() -> Limit.from(DEFAULT_LIMIT_VALUE));
+        } catch (IllegalArgumentException e) {
+            throw ErrorResponder.builder()
+                .message(String.format("limit can't be less or equals to zero"))
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.NOT_FOUND)
+                .haltError();
+        }
+    }
+
+    private List<MailQueueItemDTO> listMails(ManageableMailQueue queue, Optional<Boolean> isDelayed, Limit limit) {
+        try {
+            return limit.applyOnStream(Iterators.toStream(queue.browse()))
+                    .map(Throwing.function(MailQueueItemDTO::from).sneakyThrow())
                     .filter(item -> filter(item, isDelayed))
                     .collect(Guavate.toImmutableList());
         } catch (MailQueueException e) {
-            LOGGER.info("Invalid request for getting the mail queue " + queue, e);
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorType.INVALID_ARGUMENT)
-                .message("Invalid request for getting the mail queue " + queue)
+                .message("Invalid request for listing the mails from the mail queue " + queue)
                 .cause(e)
                 .haltError();
         }
     }
 
     private boolean filter(MailQueueItemDTO item, Optional<Boolean> isDelayed) {
-        return isDelayed.map(delayed -> delayed == item.isDelayed())
+        return isDelayed.map(delayed -> delayed == item.getNextDelivery().isPresent())
             .orElse(true);
     }
 }
