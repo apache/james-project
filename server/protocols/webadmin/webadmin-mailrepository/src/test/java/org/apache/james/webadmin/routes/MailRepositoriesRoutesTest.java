@@ -117,7 +117,7 @@ public class MailRepositoriesRoutesTest {
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(1))
             .body("[0].repository", is(URL_MY_REPO))
-            .body("[0].encodedUrl", is(URL_ESCAPED_MY_REPO));
+            .body("[0].id", is(URL_ESCAPED_MY_REPO));
     }
 
     @Test
@@ -328,7 +328,7 @@ public class MailRepositoriesRoutesTest {
             .statusCode(HttpStatus.OK_200)
             .contentType(ContentType.JSON)
             .body("repository", is(URL_MY_REPO))
-            .body("encodedUrl", is(URL_ESCAPED_MY_REPO));
+            .body("id", is(URL_ESCAPED_MY_REPO));
     }
 
     @Test

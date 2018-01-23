@@ -35,7 +35,7 @@ public class MailRepositoryResponse {
         return repository;
     }
 
-    public String getEncodedUrl() throws UnsupportedEncodingException {
+    public String getId() throws UnsupportedEncodingException {
         return URLEncoder.encode(repository, StandardCharsets.UTF_8.displayName());
     }
 }
