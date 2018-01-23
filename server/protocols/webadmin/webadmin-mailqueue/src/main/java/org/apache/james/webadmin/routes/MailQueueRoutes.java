@@ -22,6 +22,7 @@ package org.apache.james.webadmin.routes;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -64,6 +65,9 @@ public class MailQueueRoutes implements Routes {
     @VisibleForTesting static final String BASE_URL = "/mailQueues";
     @VisibleForTesting static final String MAIL_QUEUE_NAME = ":mailQueueName";
     @VisibleForTesting static final String MESSAGES = "/messages";
+    
+    private static final String DELAYED_QUERY_PARAM = "delayed";
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(MailQueueRoutes.class);
 
     private final MailQueueFactory<ManageableMailQueue> mailQueueFactory;
@@ -150,7 +154,8 @@ public class MailQueueRoutes implements Routes {
     @GET
     @Path("/{mailQueueName}/messages")
     @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = "mailQueueName", paramType = "path")
+        @ApiImplicitParam(required = true, dataType = "string", name = "mailQueueName", paramType = "path"),
+        @ApiImplicitParam(required = false, dataType = "boolean", name = DELAYED_QUERY_PARAM, paramType = "query")
     })
     @ApiOperation(
         value = "List the messages of the MailQueue"
@@ -168,19 +173,26 @@ public class MailQueueRoutes implements Routes {
 
     private List<MailQueueItemDTO> listMessages(Request request) {
         String mailQueueName = request.params(MAIL_QUEUE_NAME);
-        return mailQueueFactory.getQueue(mailQueueName).map(this::listMessages)
-            .orElseThrow(
-                () -> ErrorResponder.builder()
-                    .message(String.format("%s can not be found", mailQueueName))
-                    .statusCode(HttpStatus.NOT_FOUND_404)
-                    .type(ErrorResponder.ErrorType.NOT_FOUND)
-                    .haltError());
+        return mailQueueFactory.getQueue(mailQueueName)
+                .map(name -> listMessages(name, isDelayed(request.queryParams(DELAYED_QUERY_PARAM))))
+                .orElseThrow(
+                    () -> ErrorResponder.builder()
+                        .message(String.format("%s can not be found", mailQueueName))
+                        .statusCode(HttpStatus.NOT_FOUND_404)
+                        .type(ErrorResponder.ErrorType.NOT_FOUND)
+                        .haltError());
     }
 
-    private List<MailQueueItemDTO> listMessages(ManageableMailQueue queue) {
+    @VisibleForTesting Optional<Boolean> isDelayed(String delayedAsString) {
+        return Optional.ofNullable(delayedAsString)
+                .map(Boolean::parseBoolean);
+    }
+
+    private List<MailQueueItemDTO> listMessages(ManageableMailQueue queue, Optional<Boolean> isDelayed) {
         try {
             return Iterators.toStream(queue.browse())
                     .map(Throwing.function(MailQueueItemDTO::from))
+                    .filter(item -> filter(item, isDelayed))
                     .collect(Guavate.toImmutableList());
         } catch (MailQueueException e) {
             LOGGER.info("Invalid request for getting the mail queue " + queue, e);
@@ -191,5 +203,10 @@ public class MailQueueRoutes implements Routes {
                 .cause(e)
                 .haltError();
         }
+    }
+
+    private boolean filter(MailQueueItemDTO item, Optional<Boolean> isDelayed) {
+        return isDelayed.map(delayed -> delayed == item.isDelayed())
+            .orElse(true);
     }
 }

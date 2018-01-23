@@ -30,6 +30,7 @@ import static org.hamcrest.Matchers.hasSize;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.metrics.api.NoopMetricFactory;
@@ -44,6 +45,7 @@ import org.apache.mailet.base.test.FakeMail;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.github.steveash.guavate.Guavate;
@@ -214,5 +216,54 @@ public class MailQueueRoutesTest {
             .body(firstMessage + ".sender", equalTo(mail.getSender().asPrettyString()))
             .body(firstMessage + ".recipients", equalTo(expectedRecipients))
             .body(firstMessage + ".delayed", equalTo(false));
+    }
+
+    @Test
+    public void listMessagesShouldReturnEmptyWhenNoDelayedMessagesAndAskFor() throws Exception {
+        MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
+        FakeMail mail = Mails.defaultMail().build();
+        queue.enQueue(mail);
+
+        RestAssured.given()
+            .param("delayed", "true")
+        .when()
+            .get(FIRST_QUEUE + "/messages")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .contentType(ContentType.JSON)
+            .body(".", empty());
+    }
+
+    @Test
+    public void listMessagesShouldReturnCurrentMessagesWhenMessagesAndAskForNotDelayed() throws Exception {
+        MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
+        FakeMail mail = Mails.defaultMail().build();
+        queue.enQueue(mail);
+
+        RestAssured.given()
+            .param("delayed", "false")
+        .when()
+            .get(FIRST_QUEUE + "/messages")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .contentType(ContentType.JSON)
+            .body(".", hasSize(1));
+    }
+
+    @Ignore("MemoryMailQueueFactory doesn't support delay")
+    @Test
+    public void listMessagesShouldReturnDelayedMessagesAndAskFor() throws Exception {
+        MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
+        FakeMail mail = Mails.defaultMail().build();
+        queue.enQueue(mail, 10, TimeUnit.MINUTES);
+
+        RestAssured.given()
+            .param("delayed", "true")
+        .when()
+            .get(FIRST_QUEUE + "/messages")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .contentType(ContentType.JSON)
+            .body(".", hasSize(1));
     }
 }
