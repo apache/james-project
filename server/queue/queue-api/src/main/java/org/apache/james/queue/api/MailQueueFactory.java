@@ -24,7 +24,7 @@ import java.util.Set;
 /**
  * Factory for {@link MailQueue}
  */
-public interface MailQueueFactory {
+public interface MailQueueFactory<T extends MailQueue> {
 
     /**
      * {@link MailQueue} which is used for spooling the messages
@@ -37,7 +37,7 @@ public interface MailQueueFactory {
      * @param name
      * @return queue
      */
-    MailQueue getQueue(String name);
+    T getQueue(String name);
 
-    Set<MailQueue> listCreatedMailQueues();
+    Set<T> listCreatedMailQueues();
 }

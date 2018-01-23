@@ -26,18 +26,18 @@ import java.util.Set;
 import javax.inject.Inject;
 
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
+import org.apache.james.queue.api.ManageableMailQueue;
 
 import com.google.common.collect.ImmutableSet;
 
 /**
  * {@link MailQueueFactory} implementation which returns {@link FileMailQueue} instances
  */
-public class FileMailQueueFactory implements MailQueueFactory {
+public class FileMailQueueFactory implements MailQueueFactory<ManageableMailQueue> {
 
-    private final Map<String, MailQueue> queues = new HashMap<>();
+    private final Map<String, ManageableMailQueue> queues = new HashMap<>();
     private MailQueueItemDecoratorFactory mailQueueActionItemDecoratorFactory;
     private FileSystem fs;
     private boolean sync = true;
@@ -49,7 +49,7 @@ public class FileMailQueueFactory implements MailQueueFactory {
     }
 
     @Override
-    public Set<MailQueue> listCreatedMailQueues() {
+    public Set<ManageableMailQueue> listCreatedMailQueues() {
         return ImmutableSet.copyOf(queues.values());
     }
 
@@ -66,8 +66,8 @@ public class FileMailQueueFactory implements MailQueueFactory {
     }
 
     @Override
-    public MailQueue getQueue(String name) {
-        MailQueue queue = queues.get(name);
+    public ManageableMailQueue getQueue(String name) {
+        ManageableMailQueue queue = queues.get(name);
         if (queue == null) {
             synchronized (queues) {
                 try {

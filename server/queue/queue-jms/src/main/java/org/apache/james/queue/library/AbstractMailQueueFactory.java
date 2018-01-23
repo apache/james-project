@@ -45,12 +45,12 @@ import com.google.common.collect.ImmutableSet;
  * {@link MailQueueFactory} abstract base class which take care of register the
  * {@link MailQueue} implementations via JMX (if possible)
  */
-public abstract class AbstractMailQueueFactory implements MailQueueFactory {
+public abstract class AbstractMailQueueFactory<T extends MailQueue> implements MailQueueFactory<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMailQueueFactory.class);
 
     public static final String MBEAN_NAME_QUEUE_PREFIX = "org.apache.james:type=component,name=queue,queue=";
 
-    protected final Map<String, MailQueue> queues = new HashMap<>();
+    protected final Map<String, T> queues = new HashMap<>();
     private boolean useJMX = true;
     private MBeanServer mbeanServer;
     private final List<String> mbeans = new ArrayList<>();
@@ -70,7 +70,7 @@ public abstract class AbstractMailQueueFactory implements MailQueueFactory {
     }
 
     @Override
-    public Set<MailQueue> listCreatedMailQueues() {
+    public Set<T> listCreatedMailQueues() {
         return ImmutableSet.copyOf(queues.values());
     }
 
@@ -91,9 +91,9 @@ public abstract class AbstractMailQueueFactory implements MailQueueFactory {
     }
 
     @Override
-    public final synchronized MailQueue getQueue(String name) {
+    public final synchronized T getQueue(String name) {
         
-        MailQueue queue = queues.get(name);
+        T queue = queues.get(name);
 
         if (queue == null) {
             queue = createMailQueue(name);

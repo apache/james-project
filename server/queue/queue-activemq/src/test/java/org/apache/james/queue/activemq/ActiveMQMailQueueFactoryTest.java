@@ -26,6 +26,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueFactoryContract;
+import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.jms.BrokerExtension;
 import org.junit.jupiter.api.AfterEach;
@@ -33,12 +34,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(BrokerExtension.class)
-public class ActiveMQMailQueueFactoryTest implements MailQueueFactoryContract {
+public class ActiveMQMailQueueFactoryTest implements MailQueueFactoryContract<ManageableMailQueue> {
 
     private ActiveMQMailQueueFactory mailQueueFactory;
 
     @BeforeEach
-    public void setUp(BrokerService brokerService) throws Exception {
+    public void setUp(BrokerService brokerService) {
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
         RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
         NoopMetricFactory metricFactory = new NoopMetricFactory();
@@ -47,12 +48,12 @@ public class ActiveMQMailQueueFactoryTest implements MailQueueFactoryContract {
     }
 
     @AfterEach
-    public void tearDown() throws Exception {
+    public void tearDown() {
         mailQueueFactory.destroy();
     }
 
     @Override
-    public MailQueueFactory getMailQueueFactory() {
+    public MailQueueFactory<ManageableMailQueue> getMailQueueFactory() {
         return mailQueueFactory;
     }
 }

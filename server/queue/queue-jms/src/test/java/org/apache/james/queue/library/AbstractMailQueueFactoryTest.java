@@ -48,7 +48,7 @@ public class AbstractMailQueueFactoryTest {
     @Before
     public void setUp() {
         mBeanServer = mock(MBeanServer.class);
-        abstractMailQueueFactory = new AbstractMailQueueFactory() {
+        abstractMailQueueFactory = new AbstractMailQueueFactory<MailQueue>() {
             @Override
             protected MailQueue createMailQueue(String name) {
                 return new ManageableMailQueue() {

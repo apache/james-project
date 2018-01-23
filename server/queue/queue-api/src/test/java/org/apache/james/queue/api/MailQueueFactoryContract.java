@@ -23,12 +23,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-public interface MailQueueFactoryContract {
+public interface MailQueueFactoryContract<T extends MailQueue> {
 
     String NAME_1 = "name1";
     String NAME_2 = "name2";
 
-    MailQueueFactory getMailQueueFactory();
+    MailQueueFactory<T> getMailQueueFactory();
 
     @Test
     default void getUsedMailQueuesShouldReturnWhenNoMailQueue() {

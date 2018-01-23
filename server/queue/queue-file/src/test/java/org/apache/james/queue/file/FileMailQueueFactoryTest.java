@@ -42,7 +42,7 @@ public class FileMailQueueFactoryTest implements MailQueueFactoryContract {
     }
 
     @Override
-    public MailQueueFactory getMailQueueFactory() {
+    public MailQueueFactory<ManageableMailQueue> getMailQueueFactory() {
         return mailQueueFactory;
     }
 }
