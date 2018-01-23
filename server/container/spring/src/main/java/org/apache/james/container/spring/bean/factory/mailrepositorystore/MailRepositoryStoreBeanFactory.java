@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.annotation.PostConstruct;
 
@@ -86,6 +87,11 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
             registerRepository(registeredClass);
         }
 
+    }
+
+    @Override
+    public Optional<MailRepository> get(String url) throws MailRepositoryStoreException {
+        return Optional.ofNullable(repositories.get(url));
     }
 
     /**

@@ -22,6 +22,7 @@ package org.apache.james.utils;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -83,6 +84,11 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
             LOGGER.warn("Could not process configuration. Skipping Mail Repository initialization.", e);
             return ImmutableList.of();
         }
+    }
+
+    @Override
+    public Optional<MailRepository> get(String url) throws MailRepositoryStoreException {
+        return Optional.ofNullable(destinationToRepositoryAssociations.get(url));
     }
 
     @Override

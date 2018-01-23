@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.file.FileMailRepository;
 import org.apache.james.modules.server.MailStoreRepositoryModule;
@@ -114,6 +115,21 @@ public class InMemoryMailRepositoryStoreTest {
         repositoryStore.select(url1);
         repositoryStore.select(url1);
         assertThat(repositoryStore.getUrls()).containsExactly(url1);
+    }
+
+    @Test
+    public void getShouldReturnEmptyWhenUrlNotInUse() throws Exception {
+        assertThat(repositoryStore.get("file://repo"))
+            .isEmpty();
+    }
+
+    @Test
+    public void getShouldReturnPreviouslyCreatedMailRepository() throws Exception {
+        String url = "file://repo";
+        MailRepository mailRepository = repositoryStore.select(url);
+
+        assertThat(repositoryStore.get(url))
+            .contains(mailRepository);
     }
 
 }

@@ -118,6 +118,22 @@ public class WebAdminServerIntegrationTest {
     }
 
     @Test
+    public void gettingANonExistingMailRepositoryShouldNotCreateIt() throws Exception {
+        given()
+            .get(MailRepositoriesRoutes.MAIL_REPOSITORIES + "file%3A%2F%2Fvar%2Fmail%2Fcustom%2F");
+
+        when()
+            .get(MailRepositoriesRoutes.MAIL_REPOSITORIES)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("repository", containsInAnyOrder(
+                "file://var/mail/error/",
+                "file://var/mail/relay-denied/",
+                "file://var/mail/spam/",
+                "file://var/mail/address-error/"));
+    }
+
+    @Test
     public void deleteShouldRemoveTheGivenDomain() throws Exception {
         dataProbe.addDomain(DOMAIN);
 

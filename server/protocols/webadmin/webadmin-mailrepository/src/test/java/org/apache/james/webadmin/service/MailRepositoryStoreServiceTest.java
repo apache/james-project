@@ -23,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
+
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.memory.MemoryMailRepository;
 import org.apache.james.util.streams.Limit;
@@ -77,7 +79,7 @@ public class MailRepositoryStoreServiceTest {
 
     @Test
     public void listMailsShouldThrowWhenMailRepositoryStoreThrows() throws Exception {
-        when(mailRepositoryStore.select(FIRST_REPOSITORY))
+        when(mailRepositoryStore.get(FIRST_REPOSITORY))
             .thenThrow(new MailRepositoryStore.MailRepositoryStoreException("message"));
 
         assertThatThrownBy(() -> testee.listMails(FIRST_REPOSITORY, Offset.none(), Limit.unlimited()))
@@ -86,7 +88,7 @@ public class MailRepositoryStoreServiceTest {
 
     @Test
     public void listMailsShouldReturnEmptyWhenMailRepositoryIsEmpty() throws Exception {
-        when(mailRepositoryStore.select(FIRST_REPOSITORY)).thenReturn(repository);
+        when(mailRepositoryStore.get(FIRST_REPOSITORY)).thenReturn(Optional.of(repository));
 
         assertThat(testee.listMails(FIRST_REPOSITORY, Offset.none(), Limit.unlimited()).get())
             .isEmpty();
@@ -94,7 +96,7 @@ public class MailRepositoryStoreServiceTest {
 
     @Test
     public void listMailsShouldReturnContainedMailKeys() throws Exception {
-        when(mailRepositoryStore.select(FIRST_REPOSITORY)).thenReturn(repository);
+        when(mailRepositoryStore.get(FIRST_REPOSITORY)).thenReturn(Optional.of(repository));
 
         repository.store(FakeMail.builder()
             .name(NAME_1)
@@ -109,7 +111,7 @@ public class MailRepositoryStoreServiceTest {
 
     @Test
     public void listMailsShouldApplyLimitAndOffset() throws Exception {
-        when(mailRepositoryStore.select(FIRST_REPOSITORY)).thenReturn(repository);
+        when(mailRepositoryStore.get(FIRST_REPOSITORY)).thenReturn(Optional.of(repository));
 
         repository.store(FakeMail.builder()
             .name(NAME_1)
