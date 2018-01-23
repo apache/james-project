@@ -150,7 +150,7 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
         return factory;
     }
 
-    private static final class MyFileSystem implements FileSystem {
+    public static final class MyFileSystem implements FileSystem {
         private static final Logger LOGGER = LoggerFactory.getLogger(MyFileSystem.class);
 
         @Override
