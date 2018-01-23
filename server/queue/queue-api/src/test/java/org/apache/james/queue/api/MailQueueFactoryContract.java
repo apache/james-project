@@ -38,10 +38,10 @@ public interface MailQueueFactoryContract<T extends MailQueue> {
 
     @Test
     default void getUsedMailQueuesShouldReturnPreviouslyCreatedMailQueues() {
-        MailQueueFactory mailQueueFactory = getMailQueueFactory();
+        MailQueueFactory<T> mailQueueFactory = getMailQueueFactory();
 
-        mailQueueFactory.getQueue(NAME_1);
-        mailQueueFactory.getQueue(NAME_2);
+        mailQueueFactory.createQueue(NAME_1);
+        mailQueueFactory.createQueue(NAME_2);
 
         assertThat(mailQueueFactory.listCreatedMailQueues())
             .extracting(MailQueue::getName)
@@ -50,14 +50,50 @@ public interface MailQueueFactoryContract<T extends MailQueue> {
 
     @Test
     default void getUsedMailQueuesShouldNotReturnDuplicate() {
-        MailQueueFactory mailQueueFactory = getMailQueueFactory();
+        MailQueueFactory<T> mailQueueFactory = getMailQueueFactory();
 
-        mailQueueFactory.getQueue(NAME_1);
-        mailQueueFactory.getQueue(NAME_1);
+        mailQueueFactory.createQueue(NAME_1);
+        mailQueueFactory.createQueue(NAME_1);
 
         assertThat(mailQueueFactory.listCreatedMailQueues())
             .extracting(MailQueue::getName)
             .containsOnly(NAME_1);
     }
+
+    @Test
+    default void getMailQueueShouldReturnEmptyIfNotCreated() {
+        MailQueueFactory<T> mailQueueFactory = getMailQueueFactory();
+
+        assertThat(mailQueueFactory.getQueue(NAME_1)).isEmpty();
+    }
+
+    @Test
+    default void getMailQueueShouldReturnMailQueueIfCreated() {
+        MailQueueFactory<T> mailQueueFactory = getMailQueueFactory();
+
+        mailQueueFactory.createQueue(NAME_1);
+
+        assertThat(mailQueueFactory.getQueue(NAME_1).map(MailQueue::getName)).contains(NAME_1);
+    }
+
+    @Test
+    default void getMailQueueShouldReturnEmptyIfQueueDoesNotExist() {
+        MailQueueFactory<T> mailQueueFactory = getMailQueueFactory();
+
+        mailQueueFactory.createQueue(NAME_1);
+
+        assertThat(mailQueueFactory.getQueue(NAME_2)).isEmpty();
+    }
+
+    @Test
+    default void getMailQueueShouldNotReturnTheSameQueueForTwoDifferentNames() {
+        MailQueueFactory<T> mailQueueFactory = getMailQueueFactory();
+
+        mailQueueFactory.createQueue(NAME_1);
+        mailQueueFactory.createQueue(NAME_2);
+
+        assertThat(mailQueueFactory.getQueue(NAME_1)).isNotEqualTo(mailQueueFactory.getQueue(NAME_2));
+    }
+
 
 }

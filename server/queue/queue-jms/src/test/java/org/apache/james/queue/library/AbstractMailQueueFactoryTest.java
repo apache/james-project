@@ -105,15 +105,15 @@ public class AbstractMailQueueFactoryTest {
 
     @Test
     public void destroyShouldRegisterManageableQueues() throws Exception {
-        abstractMailQueueFactory.getQueue(QUEUE_1);
+        abstractMailQueueFactory.createQueue(QUEUE_1);
         verify(mBeanServer).registerMBean(any(MailQueue.class), eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1)));
     }
 
     @Test
     public void destroyShouldUnregisterAllRegisterQueue() throws Exception {
-        abstractMailQueueFactory.getQueue(QUEUE_1);
-        abstractMailQueueFactory.getQueue(QUEUE_2);
-        abstractMailQueueFactory.getQueue(QUEUE_3);
+        abstractMailQueueFactory.createQueue(QUEUE_1);
+        abstractMailQueueFactory.createQueue(QUEUE_2);
+        abstractMailQueueFactory.createQueue(QUEUE_3);
         abstractMailQueueFactory.destroy();
         verify(mBeanServer).unregisterMBean(eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1)));
         verify(mBeanServer).unregisterMBean(eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_2)));
@@ -122,16 +122,16 @@ public class AbstractMailQueueFactoryTest {
 
     @Test
     public void unregisterMBeanShouldWork() throws Exception {
-        abstractMailQueueFactory.getQueue(QUEUE_1);
+        abstractMailQueueFactory.createQueue(QUEUE_1);
         abstractMailQueueFactory.unregisterMBean(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1);
         verify(mBeanServer).unregisterMBean(eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1)));
     }
 
     @Test
     public void destroyShouldNotBeStoppedByExceptions() throws Exception {
-        abstractMailQueueFactory.getQueue(QUEUE_1);
-        abstractMailQueueFactory.getQueue(QUEUE_2);
-        abstractMailQueueFactory.getQueue(QUEUE_3);
+        abstractMailQueueFactory.createQueue(QUEUE_1);
+        abstractMailQueueFactory.createQueue(QUEUE_2);
+        abstractMailQueueFactory.createQueue(QUEUE_3);
         doThrow(InstanceNotFoundException.class)
             .doNothing()
             .when(mBeanServer)

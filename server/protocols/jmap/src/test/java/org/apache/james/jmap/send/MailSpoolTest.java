@@ -42,7 +42,7 @@ public class MailSpoolTest {
     @Before
     public void setup() {
         MemoryMailQueueFactory mailQueueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
-        myQueue = mailQueueFactory.getQueue(MailQueueFactory.SPOOL);
+        myQueue = mailQueueFactory.createQueue(MailQueueFactory.SPOOL);
 
         mailSpool = new MailSpool(mailQueueFactory);
     }

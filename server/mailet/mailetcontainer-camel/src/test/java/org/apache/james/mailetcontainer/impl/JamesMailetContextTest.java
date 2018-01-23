@@ -80,7 +80,7 @@ public class JamesMailetContextTest {
         testee = new JamesMailetContext();
         MailQueueFactory mailQueueFactory = mock(MailQueueFactory.class);
         spoolMailQueue = mock(MailQueue.class);
-        when(mailQueueFactory.getQueue(MailQueueFactory.SPOOL)).thenReturn(spoolMailQueue);
+        when(mailQueueFactory.createQueue(MailQueueFactory.SPOOL)).thenReturn(spoolMailQueue);
         testee.retrieveRootMailQueue(mailQueueFactory);
         testee.setDomainList(domainList);
         testee.setUsersRepository(usersRepository);

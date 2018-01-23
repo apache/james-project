@@ -49,7 +49,7 @@ public class ActiveMQMailQueueFactory extends JMSMailQueueFactory {
     }
 
     @Override
-    protected MailQueue createMailQueue(String name) {
+    protected ManageableMailQueue createMailQueue(String name) {
         return new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, useBlob, metricFactory);
     }
 }

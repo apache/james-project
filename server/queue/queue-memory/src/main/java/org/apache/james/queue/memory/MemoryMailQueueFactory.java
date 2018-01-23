@@ -63,13 +63,13 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
     }
 
     @Override
-    public MailQueue getQueue(String name) {
-        return Optional.ofNullable(mailQueues.get(name))
-            .orElseGet(() -> tryInsertNewMailQueue(name));
+    public Optional<ManageableMailQueue> getQueue(String name) {
+        return Optional.ofNullable(mailQueues.get(name));
     }
 
-    private MailQueue tryInsertNewMailQueue(String name) {
-        MailQueue newMailQueue = new MemoryMailQueue(name, mailQueueItemDecoratorFactory);
+    @Override
+    public MemoryMailQueueFactory.MemoryMailQueue createQueue(String name) {
+        MemoryMailQueueFactory.MemoryMailQueue newMailQueue = new MemoryMailQueue(name, mailQueueItemDecoratorFactory);
         return Optional.ofNullable(mailQueues.putIfAbsent(name, newMailQueue))
             .orElse(newMailQueue);
     }

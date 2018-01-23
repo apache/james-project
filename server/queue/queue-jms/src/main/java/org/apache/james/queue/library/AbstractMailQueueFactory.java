@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
@@ -91,19 +92,21 @@ public abstract class AbstractMailQueueFactory<T extends MailQueue> implements M
     }
 
     @Override
-    public final synchronized T getQueue(String name) {
-        
-        T queue = queues.get(name);
+    public final synchronized Optional<T> getQueue(String name) {
+        return Optional.ofNullable(queues.get(name));
+    }
 
-        if (queue == null) {
-            queue = createMailQueue(name);
-            if (useJMX) {
-                registerMBean(name, queue);
+    @Override
+    public synchronized T createQueue(String name) {
+        return getQueue(name).orElseGet(() -> createAndRegisterQueue(name));
+    }
 
-            }
-            queues.put(name, queue);
+    private T createAndRegisterQueue(String name) {
+        T queue = createMailQueue(name);
+        if (useJMX) {
+            registerMBean(name, queue);
         }
-
+        queues.put(name, queue);
         return queue;
     }
 
@@ -113,7 +116,7 @@ public abstract class AbstractMailQueueFactory<T extends MailQueue> implements M
      * @param name
      * @return queue
      */
-    protected abstract MailQueue createMailQueue(String name);
+    protected abstract T createMailQueue(String name);
 
     protected synchronized void registerMBean(String queuename, MailQueue queue) {
 

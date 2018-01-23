@@ -45,7 +45,7 @@ public class JMSMailQueueFactory extends AbstractMailQueueFactory<ManageableMail
     }
 
     @Override
-    protected MailQueue createMailQueue(String name) {
+    protected ManageableMailQueue createMailQueue(String name) {
         return new JMSMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, metricFactory);
     }
     

@@ -122,7 +122,7 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
     public void init() {
         LOGGER.info("{} init...", getClass().getName());
 
-        queue = queueFactory.getQueue(MailQueueFactory.SPOOL);
+        queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
 
         LOGGER.info("{} uses {} Thread(s)", getClass().getName(), numThreads);
 

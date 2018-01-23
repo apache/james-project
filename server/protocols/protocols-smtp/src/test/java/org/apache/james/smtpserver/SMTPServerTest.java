@@ -308,7 +308,7 @@ public class SMTPServerTest {
         });
     
         queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
-        queue = (MemoryMailQueueFactory.MemoryMailQueue) queueFactory.getQueue(MailQueueFactory.SPOOL);
+        queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
         chain.put("mailqueuefactory", MailQueueFactory.class, queueFactory);
         chain.put("domainlist", DomainList.class, new SimpleDomainList() {
     

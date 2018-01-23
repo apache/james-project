@@ -21,6 +21,7 @@ package org.apache.james.queue.file;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -66,19 +67,25 @@ public class FileMailQueueFactory implements MailQueueFactory<ManageableMailQueu
     }
 
     @Override
-    public ManageableMailQueue getQueue(String name) {
-        ManageableMailQueue queue = queues.get(name);
-        if (queue == null) {
-            synchronized (queues) {
-                try {
-                    queue = new FileMailQueue(mailQueueActionItemDecoratorFactory, fs.getFile("file://var/store/queue"), name, sync);
-                    queues.put(name, queue);
-                } catch (IOException e) {
-                    throw new RuntimeException("Unable to access queue " + name, e);
-                }
+    public Optional<ManageableMailQueue> getQueue(String name) {
+        return Optional.ofNullable(queues.get(name));
+    }
+
+    @Override
+    public ManageableMailQueue createQueue(String name) {
+        return getQueue(name).orElseGet(() -> createAndRegisterQueue(name));
+    }
+
+    private ManageableMailQueue createAndRegisterQueue(String name) {
+        synchronized (queues) {
+            try {
+                FileMailQueue queue = new FileMailQueue(mailQueueActionItemDecoratorFactory, fs.getFile("file://var/store/queue"), name, sync);
+                queues.put(name, queue);
+                return queue;
+            } catch (IOException e) {
+                throw new RuntimeException("Unable to access queue " + name, e);
             }
         }
-        return queue;
     }
 
 }

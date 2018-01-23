@@ -52,7 +52,7 @@ public class RemoteDeliveryRunningTest {
             mock(MetricFactory.class), RemoteDelivery.ThreadState.START_THREADS);
 
         mailQueue = mock(MailQueue.class);
-        when(mailQueueFactory.getQueue(QUEUE_NAME)).thenReturn(mailQueue);
+        when(mailQueueFactory.createQueue(QUEUE_NAME)).thenReturn(mailQueue);
     }
 
     @Test

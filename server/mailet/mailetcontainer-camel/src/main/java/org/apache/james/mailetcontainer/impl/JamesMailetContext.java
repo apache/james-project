@@ -83,7 +83,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
 
     @Inject
     public void retrieveRootMailQueue(MailQueueFactory mailQueueFactory) {
-        this.rootMailQueue = mailQueueFactory.getQueue(MailQueueFactory.SPOOL);
+        this.rootMailQueue = mailQueueFactory.createQueue(MailQueueFactory.SPOOL);
     }
 
     @Inject

@@ -27,6 +27,7 @@ import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueFactoryContract;
 import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.queue.api.ManageableMailQueueFactoryContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +35,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 
 @ExtendWith(BrokerExtension.class)
-public class JMSMailQueueFactoryTest implements MailQueueFactoryContract<ManageableMailQueue> {
+public class JMSMailQueueFactoryTest implements MailQueueFactoryContract<ManageableMailQueue>, ManageableMailQueueFactoryContract {
 
     private JMSMailQueueFactory mailQueueFactory;
 

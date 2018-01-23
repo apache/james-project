@@ -156,7 +156,7 @@ public class RemoteDelivery extends GenericMailet {
 
     public void init() throws MessagingException {
         configuration = new RemoteDeliveryConfiguration(getMailetConfig(), domainList);
-        queue = queueFactory.getQueue(configuration.getOutGoingQueueName());
+        queue = queueFactory.createQueue(configuration.getOutGoingQueueName());
         try {
             if (configuration.isBindUsed()) {
                 RemoteDeliverySocketFactory.setBindAdress(configuration.getBindAddress());

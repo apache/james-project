@@ -19,6 +19,7 @@
 
 package org.apache.james.queue.api;
 
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -37,7 +38,9 @@ public interface MailQueueFactory<T extends MailQueue> {
      * @param name
      * @return queue
      */
-    T getQueue(String name);
+    Optional<T> getQueue(String name);
+
+    T createQueue(String name);
 
     Set<T> listCreatedMailQueues();
 }

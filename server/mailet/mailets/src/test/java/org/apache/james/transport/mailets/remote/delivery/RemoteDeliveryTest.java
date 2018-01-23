@@ -96,7 +96,7 @@ public class RemoteDeliveryTest {
     public void setUp() {
         MailQueueFactory queueFactory = mock(MailQueueFactory.class);
         mailQueue = new FakeMailQueue("any");
-        when(queueFactory.getQueue(RemoteDeliveryConfiguration.OUTGOING)).thenReturn(mailQueue);
+        when(queueFactory.createQueue(RemoteDeliveryConfiguration.OUTGOING)).thenReturn(mailQueue);
         remoteDelivery = new RemoteDelivery(mock(DNSService.class), mock(DomainList.class), queueFactory, mock(MetricFactory.class), RemoteDelivery.ThreadState.DO_NOT_START_THREADS);
     }
 

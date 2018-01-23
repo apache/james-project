@@ -107,7 +107,7 @@ public class FetchScheduler implements FetchSchedulerMBean, Configurable {
       The scheduler service that is used to trigger fetch tasks.
      */
             ScheduledExecutorService scheduler = new JMXEnabledScheduledThreadPoolExecutor(numThreads, jmxPath, "scheduler");
-            MailQueue queue = queueFactory.getQueue(MailQueueFactory.SPOOL);
+            MailQueue queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
 
             List<HierarchicalConfiguration> fetchConfs = conf.configurationsAt("fetch");
             for (HierarchicalConfiguration fetchConf : fetchConfs) {

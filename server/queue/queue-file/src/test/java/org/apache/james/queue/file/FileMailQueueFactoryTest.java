@@ -22,11 +22,13 @@ package org.apache.james.queue.file;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueFactoryContract;
+import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.queue.api.ManageableMailQueueFactoryContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
-public class FileMailQueueFactoryTest implements MailQueueFactoryContract {
+public class FileMailQueueFactoryTest implements MailQueueFactoryContract, ManageableMailQueueFactoryContract {
     private FileMailQueueFactory mailQueueFactory;
     private MockFileSystem fileSystem;
 
