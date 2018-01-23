@@ -47,7 +47,7 @@ class DiscreteDistributionTest {
                 new DistributionEntry<>("a", 0),
                 new DistributionEntry<>("b", 1)));
 
-        assertThat(testee.generateRandomStream().take(10)).containsOnly("b");
+        assertThat(testee.generateRandomStream().limit(10)).containsOnly("b");
     }
 
     @Test
@@ -72,7 +72,7 @@ class DiscreteDistributionTest {
             ImmutableList.of(
                 new DistributionEntry<>("a", 1)));
 
-        assertThat(testee.generateRandomStream().take(10)).containsOnly("a");
+        assertThat(testee.generateRandomStream().limit(10)).containsOnly("a");
     }
 
     @Test
@@ -82,7 +82,7 @@ class DiscreteDistributionTest {
                 new DistributionEntry<>("a", 10),
                 new DistributionEntry<>("b", 10)));
 
-        Map<String, Long> experimentOutcome = testee.generateRandomStream().take(1_000_000)
+        Map<String, Long> experimentOutcome = testee.generateRandomStream().limit(1_000_000)
             .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
         assertThat(experimentOutcome.get("a")).isCloseTo(experimentOutcome.get("b"), Offset.offset(5_000L));
     }
@@ -94,7 +94,7 @@ class DiscreteDistributionTest {
                 new DistributionEntry<>("a", 20),
                 new DistributionEntry<>("b", 10)));
 
-        Map<String, Long> experimentOutcome = testee.generateRandomStream().take(1_000_000)
+        Map<String, Long> experimentOutcome = testee.generateRandomStream().limit(1_000_000)
             .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
         assertThat(experimentOutcome.get("a")).isCloseTo(experimentOutcome.get("b") * 2, Offset.offset(5_000L));
     }
@@ -107,7 +107,7 @@ class DiscreteDistributionTest {
                 new DistributionEntry<>("b", 10),
                 new DistributionEntry<>("a", 10)));
 
-        Map<String, Long> experimentOutcome = testee.generateRandomStream().take(1_000_000)
+        Map<String, Long> experimentOutcome = testee.generateRandomStream().limit(1_000_000)
             .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
         assertThat(experimentOutcome.get("a")).isCloseTo(experimentOutcome.get("b") * 2, Offset.offset(5_000L));
     }

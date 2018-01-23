@@ -20,14 +20,13 @@
 package org.apache.james.utils;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.commons.math3.distribution.EnumeratedDistribution;
 import org.apache.commons.math3.util.Pair;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-
-import io.vavr.collection.Stream;
 
 public class DiscreteDistribution<T> {
 
@@ -73,7 +72,8 @@ public class DiscreteDistribution<T> {
     }
 
     public Stream<T> generateRandomStream() {
-        return Stream.continually(this::sample);
+        return Stream.iterate(this, i -> i)
+            .map(DiscreteDistribution::sample);
     }
 
     public T sample() {
