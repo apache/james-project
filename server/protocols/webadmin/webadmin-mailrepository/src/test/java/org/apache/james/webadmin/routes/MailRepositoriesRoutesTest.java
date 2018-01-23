@@ -24,6 +24,8 @@ import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
@@ -33,11 +35,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.james.mailrepository.api.MailRepositoryStore;
+import org.apache.james.mailrepository.memory.MemoryMailRepository;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.service.MailRepositoryStoreService;
+import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.mailet.base.test.FakeMail;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
@@ -50,12 +55,17 @@ import com.jayway.restassured.http.ContentType;
 
 public class MailRepositoriesRoutesTest {
 
+    public static final String URL_MY_REPO = "url://myRepo";
+    public static final String URL_ESCAPED_MY_REPO = "url%3A%2F%2FmyRepo";
+    public static final String MY_REPO_MAILS = "url%3A%2F%2FmyRepo/mails";
     private WebAdminServer webAdminServer;
     private MailRepositoryStore mailRepositoryStore;
+    private MemoryMailRepository mailRepository;
 
     @Before
     public void setUp() throws Exception {
         mailRepositoryStore = mock(MailRepositoryStore.class);
+        mailRepository = new MemoryMailRepository();
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new DefaultMetricFactory(),
@@ -96,20 +106,20 @@ public class MailRepositoriesRoutesTest {
     @Test
     public void getMailRepositoriesShouldReturnRepositoryWhenOne() {
         when(mailRepositoryStore.getUrls())
-            .thenReturn(ImmutableList.of("url://myRepo"));
+            .thenReturn(ImmutableList.of(URL_MY_REPO));
 
         when()
             .get()
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(1))
-            .body("[0].repository", is("url://myRepo"))
-            .body("[0].encodedUrl", is("url%3A%2F%2FmyRepo"));
+            .body("[0].repository", is(URL_MY_REPO))
+            .body("[0].encodedUrl", is(URL_ESCAPED_MY_REPO));
     }
 
     @Test
     public void getMailRepositoriesShouldReturnTwoRepositoriesWhenTwo() {
-        ImmutableList<String> myRepositories = ImmutableList.of("url://myRepo", "url://mySecondRepo");
+        ImmutableList<String> myRepositories = ImmutableList.of(URL_MY_REPO, "url://mySecondRepo");
         when(mailRepositoryStore.getUrls())
             .thenReturn(myRepositories);
 
@@ -125,6 +135,136 @@ public class MailRepositoriesRoutesTest {
                 .getList("repository");
 
         assertThat(mailRepositories).containsOnlyElementsOf(myRepositories);
+    }
+
+    @Test
+    public void listingKeysShouldReturnEmptyWhenNoMail() throws Exception {
+        when(mailRepositoryStore.select(URL_MY_REPO)).thenReturn(mailRepository);
+
+        when()
+            .get(MY_REPO_MAILS)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(0));
+    }
+
+    @Test
+    public void listingKeysShouldReturnContainedKeys() throws Exception {
+        when(mailRepositoryStore.select(URL_MY_REPO)).thenReturn(mailRepository);
+
+        mailRepository.store(FakeMail.builder()
+            .name("name1")
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name2")
+            .build());
+
+        when()
+            .get(MY_REPO_MAILS)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(2))
+            .body("mailKey", containsInAnyOrder("name1", "name2"));
+    }
+
+    @Test
+    public void listingKeysShouldApplyLimitAndOffset() throws Exception {
+        when(mailRepositoryStore.select(URL_MY_REPO)).thenReturn(mailRepository);
+
+        mailRepository.store(FakeMail.builder()
+            .name("name1")
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name2")
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name3")
+            .build());
+
+        when()
+            .get(MY_REPO_MAILS + "?offset=1&limit=1")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(1))
+            .body("mailKey", containsInAnyOrder("name2"));
+    }
+
+    @Test
+    public void listingKeysShouldHandleErrorGracefully() throws Exception {
+        when(mailRepositoryStore.select(URL_MY_REPO))
+            .thenThrow(new MailRepositoryStore.MailRepositoryStoreException("message"));
+
+        when()
+            .get(MY_REPO_MAILS)
+        .then()
+            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+            .body("statusCode", is(500))
+            .body("type", is(ErrorResponder.ErrorType.SERVER_ERROR.getType()))
+            .body("message", is("Error while listing keys"))
+            .body("cause", containsString("message"));
+    }
+
+    @Test
+    public void listingKeysShouldReturnErrorOnInvalidOffset() throws Exception {
+        when()
+            .get(MY_REPO_MAILS + "?offset=invalid")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("Can not parse offset"));
+    }
+
+    @Test
+    public void listingKeysShouldReturnErrorOnNegativeOffset() throws Exception {
+        when()
+            .get(MY_REPO_MAILS + "?offset=-1")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("offset can not be negative"));
+    }
+
+    @Test
+    public void listingKeysShouldReturnErrorOnInvalidLimit() throws Exception {
+        when()
+            .get(MY_REPO_MAILS + "?limit=invalid")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("Can not parse limit"));
+    }
+
+    @Test
+    public void listingKeysShouldReturnErrorOnNegativeLimit() throws Exception {
+        when()
+            .get(MY_REPO_MAILS + "?limit=-1")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("limit can not be negative"));
+    }
+
+    @Test
+    public void listingKeysShouldIgnoreZeroedOffset() throws Exception {
+        when(mailRepositoryStore.select(URL_MY_REPO)).thenReturn(mailRepository);
+
+        mailRepository.store(FakeMail.builder()
+            .name("name1")
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name2")
+            .build());
+
+        when()
+            .get(MY_REPO_MAILS + "?offset=0")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(2))
+            .body("mailKey", containsInAnyOrder("name1", "name2"));
     }
 
 }

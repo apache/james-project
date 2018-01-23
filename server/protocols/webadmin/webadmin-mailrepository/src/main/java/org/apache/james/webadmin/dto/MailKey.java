@@ -17,65 +17,34 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util.streams;
+package org.apache.james.webadmin.dto;
 
 import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Stream;
 
-import com.google.common.base.Preconditions;
+public class MailKey {
 
-public class Limit {
+    private final String repository;
 
-    public static Limit from(int limit) {
-        if (limit > 0) {
-            return new Limit(Optional.of(limit));
-        } else {
-            return unlimited();
-        }
+    public MailKey(String mailKey) {
+        this.repository = mailKey;
     }
 
-    public static Limit from(Optional<Integer> limit) {
-        return limit.map(Limit::from)
-            .orElse(unlimited());
-    }
-
-    public static Limit unlimited() {
-        return new Limit(Optional.empty());
-    }
-
-    public static Limit limit(int limit) {
-        Preconditions.checkArgument(limit > 0, "limit should be positive");
-        return new Limit(Optional.of(limit));
-    }
-
-    private final Optional<Integer> limit;
-
-    private Limit(Optional<Integer> limit) {
-        this.limit = limit;
-    }
-
-    public Optional<Integer> getLimit() {
-        return limit;
-    }
-
-    public <T> Stream<T> applyOnStream(Stream<T> stream) {
-        return limit
-            .map(stream::limit)
-            .orElse(stream);
+    public String getMailKey() {
+        return repository;
     }
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof Limit) {
-            Limit other = (Limit) o;
-            return Objects.equals(limit, other.limit);
+        if (o instanceof MailKey) {
+            MailKey mailKey = (MailKey) o;
+
+            return Objects.equals(this.repository, mailKey.repository);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(limit);
+        return Objects.hash(repository);
     }
 }
