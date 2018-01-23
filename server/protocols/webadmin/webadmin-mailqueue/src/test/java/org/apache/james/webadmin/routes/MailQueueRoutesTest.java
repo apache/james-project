@@ -24,11 +24,14 @@ import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.Mails;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
@@ -37,11 +40,13 @@ import org.apache.james.queue.memory.MemoryMailQueueFactory.MemoryMailQueue;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.mailet.base.test.FakeMail;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.github.steveash.guavate.Guavate;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
@@ -162,4 +167,52 @@ public class MailQueueRoutesTest {
             .statusCode(HttpStatus.NOT_FOUND_404);
     }
 
+    @Test
+    public void listMessagesShouldReturnEmptyListWhenNoMessages() {
+        mailQueueFactory.createQueue(FIRST_QUEUE);
+
+        when()
+            .get(FIRST_QUEUE + "/messages")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .contentType(ContentType.JSON)
+            .body(".", empty());
+    }
+
+    @Test
+    public void listMessagesShouldReturnMessagesWhenSome() throws Exception {
+        MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
+        queue.enQueue(Mails.defaultMail().build());
+        queue.enQueue(Mails.defaultMail().build());
+
+        when()
+            .get(FIRST_QUEUE + "/messages")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .contentType(ContentType.JSON)
+            .body(".", hasSize(2));
+    }
+
+    @Test
+    public void listMessagesShouldReturnMessageDetailWhenSome() throws Exception {
+        MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
+        FakeMail mail = Mails.defaultMail().build();
+        queue.enQueue(mail);
+
+        String firstMessage = "[0]";
+        List<String> expectedRecipients = mail.getRecipients().stream()
+                .map(MailAddress::asPrettyString)
+                .collect(Guavate.toImmutableList());
+
+        when()
+            .get(FIRST_QUEUE + "/messages")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .contentType(ContentType.JSON)
+            .body(".", hasSize(1))
+            .body(firstMessage + ".name", equalTo(mail.getName()))
+            .body(firstMessage + ".sender", equalTo(mail.getSender().asPrettyString()))
+            .body(firstMessage + ".recipients", equalTo(expectedRecipients))
+            .body(firstMessage + ".delayed", equalTo(false));
+    }
 }
