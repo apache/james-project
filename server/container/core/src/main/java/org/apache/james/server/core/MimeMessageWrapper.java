@@ -335,7 +335,6 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
             if (headers == null) {
                 loadHeaders();
             }
-            @SuppressWarnings("unchecked")
             Enumeration<String> filteredHeaders = headers.getNonMatchingHeaderLines(ignoreList);
             IOUtils.copy(new InternetHeadersInputStream(filteredHeaders), headerOs);
 

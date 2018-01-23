@@ -91,7 +91,6 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     private final CassandraAttachmentOwnerDAO ownerDAO;
     private final CassandraACLMapper aclMapper;
     private final CassandraUserMailboxRightsDAO userMailboxRightsDAO;
-    private final BlobId.Factory blobIdFactory;
     private final CassandraUtils cassandraUtils;
     private final CassandraConfiguration cassandraConfiguration;
 
@@ -125,7 +124,6 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
         this.attachmentMessageIdDAO = attachmentMessageIdDAO;
         this.aclMapper = aclMapper;
         this.userMailboxRightsDAO = userMailboxRightsDAO;
-        this.blobIdFactory = blobIdFactory;
         this.cassandraUtils = cassandraUtils;
         this.ownerDAO = ownerDAO;
         this.cassandraConfiguration = cassandraConfiguration;

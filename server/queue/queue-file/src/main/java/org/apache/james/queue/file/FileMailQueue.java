@@ -87,7 +87,7 @@ public class FileMailQueue implements ManageableMailQueue {
     }
 
     @Override
-    public String getMailQueueName() {
+    public String getName() {
         return queueName;
     }
 

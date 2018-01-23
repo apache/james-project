@@ -62,7 +62,7 @@ public interface MailQueue {
      */
     int NO_DELAY = -1;
 
-    String getMailQueueName();
+    String getName();
 
     /**
      * Enqueue the Mail to the queue. The given delay and unit are used to

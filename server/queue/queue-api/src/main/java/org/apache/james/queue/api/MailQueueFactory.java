@@ -19,12 +19,13 @@
 
 package org.apache.james.queue.api;
 
-import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Factory for {@link MailQueue}
  */
-public interface MailQueueFactory {
+public interface MailQueueFactory<T extends MailQueue> {
 
     /**
      * {@link MailQueue} which is used for spooling the messages
@@ -37,7 +38,9 @@ public interface MailQueueFactory {
      * @param name
      * @return queue
      */
-    MailQueue getQueue(String name);
+    Optional<T> getQueue(String name);
 
-    List<MailQueue> getUsedMailQueues();
+    T createQueue(String name);
+
+    Set<T> listCreatedMailQueues();
 }

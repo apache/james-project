@@ -36,7 +36,6 @@ import java.util.concurrent.TimeoutException;
 
 import javax.mail.internet.MimeMessage;
 
-
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.junit.ExecutorExtension;
 import org.apache.mailet.Mail;

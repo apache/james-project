@@ -45,14 +45,15 @@ public class RemoteDeliveryRunningTest {
     private CountDownLatch countDownLatch;
 
     @Before
+    @SuppressWarnings("unchecked")
     public void setUp() throws Exception {
         countDownLatch = new CountDownLatch(1);
-        MailQueueFactory mailQueueFactory = mock(MailQueueFactory.class);
+        MailQueueFactory<MailQueue> mailQueueFactory = mock(MailQueueFactory.class);
         remoteDelivery = new RemoteDelivery(mock(DNSService.class), mock(DomainList.class), mailQueueFactory,
             mock(MetricFactory.class), RemoteDelivery.ThreadState.START_THREADS);
 
         mailQueue = mock(MailQueue.class);
-        when(mailQueueFactory.getQueue(QUEUE_NAME)).thenReturn(mailQueue);
+        when(mailQueueFactory.createQueue(QUEUE_NAME)).thenReturn(mailQueue);
     }
 
     @Test

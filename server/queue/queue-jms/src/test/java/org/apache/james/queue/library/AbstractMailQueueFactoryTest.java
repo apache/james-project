@@ -19,9 +19,9 @@
 
 package org.apache.james.queue.library;
 
-import static org.mockito.Mockito.any;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -42,19 +42,19 @@ public class AbstractMailQueueFactoryTest {
     private static final String QUEUE_2 = "queue2";
     private static final String QUEUE_3 = "queue3";
 
-    private AbstractMailQueueFactory abstractMailQueueFactory;
+    private AbstractMailQueueFactory<?> abstractMailQueueFactory;
     private MBeanServer mBeanServer;
 
     @Before
     public void setUp() {
         mBeanServer = mock(MBeanServer.class);
-        abstractMailQueueFactory = new AbstractMailQueueFactory() {
+        abstractMailQueueFactory = new AbstractMailQueueFactory<MailQueue>() {
             @Override
             protected MailQueue createMailQueue(String name) {
                 return new ManageableMailQueue() {
 
                     @Override
-                    public String getMailQueueName() {
+                    public String getName() {
                         return "name";
                     }
 
@@ -105,15 +105,15 @@ public class AbstractMailQueueFactoryTest {
 
     @Test
     public void destroyShouldRegisterManageableQueues() throws Exception {
-        abstractMailQueueFactory.getQueue(QUEUE_1);
+        abstractMailQueueFactory.createQueue(QUEUE_1);
         verify(mBeanServer).registerMBean(any(MailQueue.class), eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1)));
     }
 
     @Test
     public void destroyShouldUnregisterAllRegisterQueue() throws Exception {
-        abstractMailQueueFactory.getQueue(QUEUE_1);
-        abstractMailQueueFactory.getQueue(QUEUE_2);
-        abstractMailQueueFactory.getQueue(QUEUE_3);
+        abstractMailQueueFactory.createQueue(QUEUE_1);
+        abstractMailQueueFactory.createQueue(QUEUE_2);
+        abstractMailQueueFactory.createQueue(QUEUE_3);
         abstractMailQueueFactory.destroy();
         verify(mBeanServer).unregisterMBean(eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1)));
         verify(mBeanServer).unregisterMBean(eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_2)));
@@ -122,16 +122,16 @@ public class AbstractMailQueueFactoryTest {
 
     @Test
     public void unregisterMBeanShouldWork() throws Exception {
-        abstractMailQueueFactory.getQueue(QUEUE_1);
+        abstractMailQueueFactory.createQueue(QUEUE_1);
         abstractMailQueueFactory.unregisterMBean(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1);
         verify(mBeanServer).unregisterMBean(eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1)));
     }
 
     @Test
     public void destroyShouldNotBeStoppedByExceptions() throws Exception {
-        abstractMailQueueFactory.getQueue(QUEUE_1);
-        abstractMailQueueFactory.getQueue(QUEUE_2);
-        abstractMailQueueFactory.getQueue(QUEUE_3);
+        abstractMailQueueFactory.createQueue(QUEUE_1);
+        abstractMailQueueFactory.createQueue(QUEUE_2);
+        abstractMailQueueFactory.createQueue(QUEUE_3);
         doThrow(InstanceNotFoundException.class)
             .doNothing()
             .when(mBeanServer)

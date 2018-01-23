@@ -212,7 +212,6 @@ public class MimeMessageUtil {
      * @return stream the InputStream which holds the headers
      * @throws MessagingException
      */
-    @SuppressWarnings("unchecked")
     public static InputStream getHeadersInputStream(MimeMessage message, String[] ignoreList) throws MessagingException {
         return new InternetHeadersInputStream(message.getNonMatchingHeaderLines(ignoreList));
     }

@@ -36,7 +36,6 @@ public class MailHeadersTest {
                 .getBytes()));
         header.setHeader(RFC2822Headers.RETURN_PATH, "<test@test>");
         header.setHeader(RFC2822Headers.FROM, "<test2@test.de>");
-        @SuppressWarnings("unchecked")
         Enumeration<String> h = header.getAllHeaderLines();
 
         assertEquals(h.nextElement(), "Return-Path: <test@test>");

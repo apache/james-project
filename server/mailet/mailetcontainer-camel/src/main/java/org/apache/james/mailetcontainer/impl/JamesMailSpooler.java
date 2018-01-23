@@ -87,7 +87,7 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
      */
     private MailProcessor mailProcessor;
 
-    private MailQueueFactory queueFactory;
+    private MailQueueFactory<?> queueFactory;
 
     private int numDequeueThreads;
 
@@ -97,7 +97,7 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
     }
 
     @Inject
-    public void setMailQueueFactory(MailQueueFactory queueFactory) {
+    public void setMailQueueFactory(MailQueueFactory<?> queueFactory) {
         this.queueFactory = queueFactory;
     }
 
@@ -122,7 +122,7 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
     public void init() {
         LOGGER.info("{} init...", getClass().getName());
 
-        queue = queueFactory.getQueue(MailQueueFactory.SPOOL);
+        queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
 
         LOGGER.info("{} uses {} Thread(s)", getClass().getName(), numThreads);
 

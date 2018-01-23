@@ -22,15 +22,15 @@ import javax.inject.Inject;
 import javax.jms.ConnectionFactory;
 
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
+import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.library.AbstractMailQueueFactory;
 
 /**
  * {@link MailQueueFactory} implementation which use JMS
  */
-public class JMSMailQueueFactory extends AbstractMailQueueFactory {
+public class JMSMailQueueFactory extends AbstractMailQueueFactory<ManageableMailQueue> {
 
     protected final ConnectionFactory connectionFactory;
     protected final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
@@ -44,7 +44,7 @@ public class JMSMailQueueFactory extends AbstractMailQueueFactory {
     }
 
     @Override
-    protected MailQueue createMailQueue(String name) {
+    protected ManageableMailQueue createMailQueue(String name) {
         return new JMSMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, metricFactory);
     }
     

@@ -106,7 +106,6 @@ public class LogMessage extends GenericMailet {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void logHeaders(MimeMessage message) throws MessagingException {
         if (headers && logger.isInfoEnabled()) {
             logger.info("\n");

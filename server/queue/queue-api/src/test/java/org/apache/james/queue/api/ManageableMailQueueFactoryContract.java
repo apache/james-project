@@ -17,26 +17,29 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.queue.memory;
+package org.apache.james.queue.api;
 
-import org.apache.james.queue.api.MailQueueFactory;
-import org.apache.james.queue.api.MailQueueFactoryContract;
-import org.apache.james.queue.api.ManageableMailQueue;
-import org.apache.james.queue.api.ManageableMailQueueFactoryContract;
-import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
-import org.junit.jupiter.api.BeforeEach;
+import static org.assertj.core.api.Assertions.assertThat;
 
-class MemoryMailQueueFactoryTest implements MailQueueFactoryContract<ManageableMailQueue>, ManageableMailQueueFactoryContract {
+import javax.mail.MessagingException;
 
-    MemoryMailQueueFactory memoryMailQueueFactory;
+import org.junit.jupiter.api.Test;
 
-    @BeforeEach
-    void setup() {
-        memoryMailQueueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
+public interface ManageableMailQueueFactoryContract {
+
+    String NAME_1 = "name1";
+
+    MailQueueFactory<ManageableMailQueue> getMailQueueFactory();
+
+    @Test
+    default void createMailQueueShouldNotConflictIfAlreadyExists() throws MessagingException {
+        MailQueueFactory<ManageableMailQueue> mailQueueFactory = getMailQueueFactory();
+        MailQueue firstCreation = mailQueueFactory.createQueue(NAME_1);
+
+        firstCreation.enQueue(Mails.defaultMail().build());
+
+        ManageableMailQueue secondCreation = mailQueueFactory.createQueue(NAME_1);
+        assertThat(secondCreation.getSize()).isEqualTo(1);
     }
 
-    @Override
-    public MailQueueFactory<ManageableMailQueue> getMailQueueFactory() {
-        return memoryMailQueueFactory;
-    }
 }

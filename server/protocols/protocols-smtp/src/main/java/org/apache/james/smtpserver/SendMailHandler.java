@@ -41,16 +41,16 @@ public class SendMailHandler implements JamesMessageHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(SendMailHandler.class);
 
     private MailQueue queue;
-    private MailQueueFactory queueFactory;
+    private MailQueueFactory<?> queueFactory;
 
     @Inject
-    public void setMailQueueFactory(MailQueueFactory queueFactory) {
+    public void setMailQueueFactory(MailQueueFactory<?> queueFactory) {
         this.queueFactory = queueFactory;
     }
 
     @Override
     public void init(Configuration config) throws ConfigurationException {
-        queue = queueFactory.getQueue(MailQueueFactory.SPOOL);
+        queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
     }
 
     @Override

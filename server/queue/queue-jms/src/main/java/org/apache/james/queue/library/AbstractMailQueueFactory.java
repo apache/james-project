@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -38,18 +40,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * {@link MailQueueFactory} abstract base class which take care of register the
  * {@link MailQueue} implementations via JMX (if possible)
  */
-public abstract class AbstractMailQueueFactory implements MailQueueFactory {
+public abstract class AbstractMailQueueFactory<T extends MailQueue> implements MailQueueFactory<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMailQueueFactory.class);
 
     public static final String MBEAN_NAME_QUEUE_PREFIX = "org.apache.james:type=component,name=queue,queue=";
 
-    protected final Map<String, MailQueue> queues = new HashMap<>();
+    protected final Map<String, T> queues = new HashMap<>();
     private boolean useJMX = true;
     private MBeanServer mbeanServer;
     private final List<String> mbeans = new ArrayList<>();
@@ -69,8 +71,8 @@ public abstract class AbstractMailQueueFactory implements MailQueueFactory {
     }
 
     @Override
-    public List<MailQueue> getUsedMailQueues() {
-        return ImmutableList.copyOf(queues.values());
+    public Set<T> listCreatedMailQueues() {
+        return ImmutableSet.copyOf(queues.values());
     }
 
     @PreDestroy
@@ -90,19 +92,21 @@ public abstract class AbstractMailQueueFactory implements MailQueueFactory {
     }
 
     @Override
-    public final synchronized MailQueue getQueue(String name) {
-        
-        MailQueue queue = queues.get(name);
+    public final synchronized Optional<T> getQueue(String name) {
+        return Optional.ofNullable(queues.get(name));
+    }
 
-        if (queue == null) {
-            queue = createMailQueue(name);
-            if (useJMX) {
-                registerMBean(name, queue);
+    @Override
+    public synchronized T createQueue(String name) {
+        return getQueue(name).orElseGet(() -> createAndRegisterQueue(name));
+    }
 
-            }
-            queues.put(name, queue);
+    private T createAndRegisterQueue(String name) {
+        T queue = createMailQueue(name);
+        if (useJMX) {
+            registerMBean(name, queue);
         }
-
+        queues.put(name, queue);
         return queue;
     }
 
@@ -112,7 +116,7 @@ public abstract class AbstractMailQueueFactory implements MailQueueFactory {
      * @param name
      * @return queue
      */
-    protected abstract MailQueue createMailQueue(String name);
+    protected abstract T createMailQueue(String name);
 
     protected synchronized void registerMBean(String queuename, MailQueue queue) {
 

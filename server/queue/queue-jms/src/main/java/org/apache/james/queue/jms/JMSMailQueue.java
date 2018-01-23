@@ -152,7 +152,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
     }
 
     @Override
-    public String getMailQueueName() {
+    public String getName() {
         return queueName;
     }
 

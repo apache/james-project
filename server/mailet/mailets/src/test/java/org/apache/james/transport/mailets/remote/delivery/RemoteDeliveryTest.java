@@ -61,7 +61,7 @@ public class RemoteDeliveryTest {
         }
 
         @Override
-        public String getMailQueueName() {
+        public String getName() {
             return name;
         }
 
@@ -93,10 +93,11 @@ public class RemoteDeliveryTest {
     private FakeMailQueue mailQueue;
 
     @Before
+    @SuppressWarnings("unchecked")
     public void setUp() {
-        MailQueueFactory queueFactory = mock(MailQueueFactory.class);
+        MailQueueFactory<FakeMailQueue> queueFactory = mock(MailQueueFactory.class);
         mailQueue = new FakeMailQueue("any");
-        when(queueFactory.getQueue(RemoteDeliveryConfiguration.OUTGOING)).thenReturn(mailQueue);
+        when(queueFactory.createQueue(RemoteDeliveryConfiguration.OUTGOING)).thenReturn(mailQueue);
         remoteDelivery = new RemoteDelivery(mock(DNSService.class), mock(DomainList.class), queueFactory, mock(MetricFactory.class), RemoteDelivery.ThreadState.DO_NOT_START_THREADS);
     }
 

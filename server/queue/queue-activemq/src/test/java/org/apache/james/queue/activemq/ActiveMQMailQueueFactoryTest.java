@@ -26,33 +26,80 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueFactoryContract;
+import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.queue.api.ManageableMailQueueFactoryContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.jms.BrokerExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-@ExtendWith(BrokerExtension.class)
-public class ActiveMQMailQueueFactoryTest implements MailQueueFactoryContract {
+public class ActiveMQMailQueueFactoryTest {
 
-    private ActiveMQMailQueueFactory mailQueueFactory;
+    @Nested
+    @ExtendWith(BrokerExtension.class)
+    public static class ActiveMQMailQueueFactoryNoBlobsTest implements MailQueueFactoryContract<ManageableMailQueue>, ManageableMailQueueFactoryContract {
+        ActiveMQMailQueueFactory mailQueueFactory;
 
-    @BeforeEach
-    public void setUp(BrokerService brokerService) throws Exception {
-        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
-        RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
-        NoopMetricFactory metricFactory = new NoopMetricFactory();
-        mailQueueFactory = new ActiveMQMailQueueFactory(connectionFactory, mailQueueItemDecoratorFactory, metricFactory);
-        mailQueueFactory.setUseJMX(false);
+        @BeforeEach
+        public void setUp(BrokerService brokerService) {
+            ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
+            RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
+            NoopMetricFactory metricFactory = new NoopMetricFactory();
+            mailQueueFactory = new ActiveMQMailQueueFactory(connectionFactory, mailQueueItemDecoratorFactory, metricFactory);
+            mailQueueFactory.setUseJMX(false);
+            mailQueueFactory.setUseBlobMessages(false);
+        }
+
+        @AfterEach
+        public void tearDown() {
+            mailQueueFactory.destroy();
+        }
+
+        @Override
+        public MailQueueFactory<ManageableMailQueue> getMailQueueFactory() {
+            return mailQueueFactory;
+        }
     }
 
-    @AfterEach
-    public void tearDown() throws Exception {
-        mailQueueFactory.destroy();
+    @Nested
+    @ExtendWith(BrokerExtension.class)
+    public static class ActiveMQMailQueueFactoryBlobsTest implements MailQueueFactoryContract<ManageableMailQueue>, ManageableMailQueueFactoryContract {
+
+        static final String BASE_DIR = "file://target/james-test";
+
+        ActiveMQMailQueueFactory mailQueueFactory;
+        ActiveMQMailQueueBlobTest.MyFileSystem fileSystem;
+
+        @BeforeEach
+        public void setUp(BrokerService brokerService) {
+            fileSystem = new ActiveMQMailQueueBlobTest.MyFileSystem();
+            ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
+
+
+            FileSystemBlobTransferPolicy policy = new FileSystemBlobTransferPolicy();
+            policy.setFileSystem(fileSystem);
+            policy.setDefaultUploadUrl(BASE_DIR);
+            connectionFactory.setBlobTransferPolicy(policy);
+
+            RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
+            NoopMetricFactory metricFactory = new NoopMetricFactory();
+            mailQueueFactory = new ActiveMQMailQueueFactory(connectionFactory, mailQueueItemDecoratorFactory, metricFactory);
+            mailQueueFactory.setUseJMX(false);
+            mailQueueFactory.setUseBlobMessages(true);
+        }
+
+        @AfterEach
+        public void tearDown() throws Exception {
+            mailQueueFactory.destroy();
+            fileSystem.destroy();
+        }
+
+        @Override
+        public MailQueueFactory<ManageableMailQueue> getMailQueueFactory() {
+            return mailQueueFactory;
+        }
     }
 
-    @Override
-    public MailQueueFactory getMailQueueFactory() {
-        return mailQueueFactory;
-    }
 }

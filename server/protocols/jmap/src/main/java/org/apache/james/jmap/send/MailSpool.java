@@ -33,8 +33,8 @@ public class MailSpool {
     private final MailQueue queue;
 
     @Inject
-    @VisibleForTesting MailSpool(MailQueueFactory queueFactory) {
-        queue = queueFactory.getQueue(MailQueueFactory.SPOOL);
+    @VisibleForTesting MailSpool(MailQueueFactory<?> queueFactory) {
+        queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
     }
 
     public void send(Mail mail, MailMetadata metadata) throws MailQueueException {

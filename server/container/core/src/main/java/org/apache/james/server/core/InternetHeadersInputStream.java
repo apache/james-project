@@ -39,7 +39,6 @@ public class InternetHeadersInputStream extends InputStream {
     private byte[] currLine;
     private int pos = 0;
 
-    @SuppressWarnings("unchecked")
     public InternetHeadersInputStream(InternetHeaders headers) {
         this(headers.getAllHeaderLines());
     }
