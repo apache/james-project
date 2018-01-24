@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.james.core.MailAddress;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.Mails;
+import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory.MemoryMailQueue;
@@ -319,5 +320,187 @@ public class MailQueueRoutesTest {
             .get(FIRST_QUEUE + "/mails")
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400);
+    }
+
+    @Test
+    public void deleteMailsShouldReturnNotFoundWhenMailQueueDoesntExist() {
+        when()
+            .delete(FIRST_QUEUE + "/mails")
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404);
+    }
+
+    @Test
+    public void deleteMailsShouldReturnBadRequestWhenSenderIsInvalid() {
+        mailQueueFactory.createQueue(FIRST_QUEUE);
+
+        given()
+            .param("sender", "123")
+        .when()
+            .delete(FIRST_QUEUE + "/mails")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400);
+    }
+
+    @Test
+    public void deleteMailsShouldReturnBadRequestWhenRecipientIsInvalid() {
+        mailQueueFactory.createQueue(FIRST_QUEUE);
+
+        given()
+            .param("recipient", "123")
+        .when()
+            .delete(FIRST_QUEUE + "/mails")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400);
+    }
+
+    @Test
+    public void deleteMailsShouldReturnNoContentWhenSenderIsValid() {
+        mailQueueFactory.createQueue(FIRST_QUEUE);
+
+        given()
+            .param("sender", "sender@james.org")
+        .when()
+            .delete(FIRST_QUEUE + "/mails")
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+    }
+
+    @Test
+    public void deleteMailsShouldReturnNoContentWhenNameIsValid() {
+        mailQueueFactory.createQueue(FIRST_QUEUE);
+
+        given()
+            .param("name", "mailName")
+        .when()
+            .delete(FIRST_QUEUE + "/mails")
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+    }
+
+    @Test
+    public void deleteMailsShouldReturnNoContentWhenRecipientIsValid() {
+        mailQueueFactory.createQueue(FIRST_QUEUE);
+
+        given()
+            .param("recipient", "recipient@james.org")
+        .when()
+            .delete(FIRST_QUEUE + "/mails")
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+    }
+
+    @Test
+    public void deleteMailsShouldReturnBadRequestWhenNoQueryParameters() {
+        mailQueueFactory.createQueue(FIRST_QUEUE);
+
+        when()
+            .delete(FIRST_QUEUE + "/mails")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400);
+    }
+
+    @Test
+    public void deleteMailsShouldDeleteMailsWhenSenderIsGiven() throws Exception {
+        MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
+        String sender = "sender@james.org";
+        queue.enQueue(Mails.defaultMail()
+                .sender(sender)
+                .build());
+
+        given()
+            .param("sender", sender)
+        .when()
+            .delete(FIRST_QUEUE + "/mails")
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+
+        assertThat(queue.browse()).isEmpty();
+    }
+
+    @Test
+    public void deleteMailsShouldDeleteMailsWhenNameIsGiven() throws Exception {
+        MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
+        String name = "mailName";
+        queue.enQueue(Mails.defaultMail()
+                .name(name)
+                .build());
+
+        given()
+            .param("name", name)
+        .when()
+            .delete(FIRST_QUEUE + "/mails")
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+
+        assertThat(queue.browse()).isEmpty();
+    }
+
+    @Test
+    public void deleteMailsShouldDeleteMailsWhenRecipientIsGiven() throws Exception {
+        MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
+        String recipient = "recipient@james.org";
+        queue.enQueue(Mails.defaultMail()
+                .recipient(recipient)
+                .build());
+
+        given()
+            .param("recipient", recipient)
+        .when()
+            .delete(FIRST_QUEUE + "/mails")
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+
+        assertThat(queue.browse()).isEmpty();
+    }
+
+    @Test
+    public void deleteMailsShouldReturnBadRequestWhenAllParametersAreGiven() throws Exception {
+        mailQueueFactory.createQueue(FIRST_QUEUE);
+        given()
+            .param("sender", "sender@james.org")
+            .param("name", "mailName")
+            .param("recipient", "recipient@james.org")
+        .when()
+            .delete(FIRST_QUEUE + "/mails")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400);
+    }
+
+    @Test
+    public void deleteMailsShouldReturnBadRequestWhenTwoParametersAreGiven() throws Exception {
+        mailQueueFactory.createQueue(FIRST_QUEUE);
+        given()
+            .param("sender", "sender@james.org")
+            .param("name", "mailName")
+        .when()
+            .delete(FIRST_QUEUE + "/mails")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400);
+    }
+
+    @Test
+    public void deleteMailsShouldDeleteMailsWhenTheyAreMatching() throws Exception {
+        MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
+        String recipient = "recipient@james.org";
+        queue.enQueue(Mails.defaultMail()
+                .recipient(recipient)
+                .build());
+        queue.enQueue(Mails.defaultMail().build());
+        queue.enQueue(Mails.defaultMail().build());
+
+        given()
+            .param("recipient", recipient)
+        .when()
+            .delete(FIRST_QUEUE + "/mails")
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+
+        MailAddress deletedRecipientMailAddress = new MailAddress(recipient);
+        assertThat(queue.browse())
+            .hasSize(2)
+            .allSatisfy((ManageableMailQueue.MailQueueItemView item) -> {
+                assertThat(item.getMail().getRecipients()).doesNotContain(deletedRecipientMailAddress);
+            });
     }
 }

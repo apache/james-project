@@ -25,15 +25,19 @@ import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.queue.api.ManageableMailQueue.Type;
 import org.apache.james.util.streams.Iterators;
 import org.apache.james.util.streams.Limit;
+import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.MailQueueDTO;
 import org.apache.james.webadmin.dto.MailQueueItemDTO;
@@ -45,6 +49,7 @@ import org.eclipse.jetty.http.HttpStatus;
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.primitives.Booleans;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -54,6 +59,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import spark.HaltException;
 import spark.Request;
+import spark.Response;
 import spark.Service;
 
 
@@ -69,6 +75,10 @@ public class MailQueueRoutes implements Routes {
     private static final String DELAYED_QUERY_PARAM = "delayed";
     private static final String LIMIT_QUERY_PARAM = "limit";
     @VisibleForTesting static final int DEFAULT_LIMIT_VALUE = 100;
+   
+    private static final String SENDER_QUERY_PARAM = "sender";
+    private static final String NAME_QUERY_PARAM = "name";
+    private static final String RECIPIENT_QUERY_PARAM = "recipient";
     
     private final MailQueueFactory<ManageableMailQueue> mailQueueFactory;
     private final JsonTransformer jsonTransformer;
@@ -85,8 +95,10 @@ public class MailQueueRoutes implements Routes {
         defineListQueues(service);
 
         getMailQueue(service);
-        
+
         listMails(service);
+
+        deleteMails(service);
     }
 
     @GET
@@ -238,5 +250,109 @@ public class MailQueueRoutes implements Routes {
     private boolean filter(MailQueueItemDTO item, Optional<Boolean> isDelayed) {
         return isDelayed.map(delayed -> delayed == item.getNextDelivery().isPresent())
             .orElse(true);
+    }
+
+    @DELETE
+    @Path("/{mailQueueName}/mails")
+    @ApiImplicitParams({
+        @ApiImplicitParam(required = true, dataType = "string", name = "mailQueueName", paramType = "path"),
+        @ApiImplicitParam(
+                required = false, 
+                dataType = "MailAddress", 
+                name = SENDER_QUERY_PARAM, 
+                paramType = "query",
+                example = "?sender=sender@james.org",
+                value = "The sender of the mails to be deleted should be equals to this query parameter."),
+        @ApiImplicitParam(
+                required = false, 
+                dataType = "String", 
+                name = NAME_QUERY_PARAM,
+                paramType = "query",
+                example = "?name=mailName",
+                value = "The name of the mails to be deleted should be equals to this query parameter."),
+        @ApiImplicitParam(
+                required = false, 
+                dataType = "MailAddress", 
+                name = RECIPIENT_QUERY_PARAM, 
+                paramType = "query",
+                example = "?recipient=recipient@james.org",
+                value = "The recipients of the mails to be deleted should contain this query parameter."),
+    })
+    @ApiOperation(
+        value = "Delete mails from the MailQueue"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK, the request is being processed"),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The MailQueue does not exist."),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid request for deleting mails from the mail queue."),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
+    })
+    public void deleteMails(Service service) {
+        service.delete(BASE_URL + SEPARATOR + MAIL_QUEUE_NAME + MAILS, 
+                (request, response) -> deleteMails(request, response));
+    }
+
+    private Object deleteMails(Request request, Response response) {
+        String mailQueueName = request.params(MAIL_QUEUE_NAME);
+        Object bodyResponse = mailQueueFactory.getQueue(mailQueueName)
+            .map(name -> deleteMails(name, 
+                    sender(request.queryParams(SENDER_QUERY_PARAM)),
+                    name(request.queryParams(NAME_QUERY_PARAM)),
+                    recipient(request.queryParams(RECIPIENT_QUERY_PARAM))))
+            .orElseThrow(
+                () -> ErrorResponder.builder()
+                    .message(String.format("%s can not be found", mailQueueName))
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .type(ErrorResponder.ErrorType.NOT_FOUND)
+                    .haltError());
+        response.status(HttpStatus.NO_CONTENT_204);
+        return bodyResponse;
+    }
+
+    private Optional<MailAddress> sender(String senderAsString) throws HaltException {
+        try {
+            return Optional.ofNullable(senderAsString)
+                    .map(Throwing.function((String sender) -> new MailAddress(sender)).sneakyThrow());
+        } catch (Exception e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("'sender' should be a mail address (i.e. sender@james.org)")
+                .cause(e)
+                .haltError();
+        }
+    }
+
+    private Optional<String> name(String nameAsString) {
+        return Optional.ofNullable(nameAsString);
+    }
+
+    private Optional<MailAddress> recipient(String recipientAsString) throws HaltException {
+        try {
+            return Optional.ofNullable(recipientAsString)
+                    .map(Throwing.function((String recipient) -> new MailAddress(recipient)).sneakyThrow());
+        } catch (Exception e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("'recipient' should be a mail address (i.e. recipient@james.org)")
+                .cause(e)
+                .haltError();
+        }
+    }
+
+    private Object deleteMails(ManageableMailQueue queue, Optional<MailAddress> maybeSender, Optional<String> maybeName, Optional<MailAddress> maybeRecipient) {
+        if (Booleans.countTrue(maybeSender.isPresent(), maybeName.isPresent(), maybeRecipient.isPresent()) != 1) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("You should provide one and only one of the query parameters 'sender', 'name' or 'recipient'.")
+                .haltError();
+        }
+        
+        maybeSender.ifPresent(Throwing.consumer((MailAddress sender) -> queue.remove(Type.Sender, sender.asString())).sneakyThrow());
+        maybeName.ifPresent(Throwing.consumer((String name) -> queue.remove(Type.Name, name)).sneakyThrow());
+        maybeRecipient.ifPresent(Throwing.consumer((MailAddress recipient) -> queue.remove(Type.Recipient, recipient.asString())).sneakyThrow());
+        return Constants.EMPTY_BODY;
     }
 }
