@@ -33,10 +33,15 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
 public class PerRecipientHeaders implements Serializable {
+
     private Multimap<MailAddress, Header> headersByRecipient;
 
     public PerRecipientHeaders() {
         headersByRecipient = ArrayListMultimap.create();
+    }
+
+    public Multimap<MailAddress, Header> getHeadersByRecipient() {
+        return ArrayListMultimap.create(headersByRecipient);
     }
 
     public Collection<MailAddress> getRecipientsWithSpecificHeaders() {
