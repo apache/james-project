@@ -59,6 +59,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 
@@ -91,6 +92,7 @@ public class CassandraMailRepositoryMailDAO {
     private final BlobId.Factory blobIdFactory;
     private final CassandraTypesProvider cassandraTypesProvider;
 
+    @Inject
     public CassandraMailRepositoryMailDAO(Session session, BlobId.Factory blobIdFactory,
                                           CassandraTypesProvider cassandraTypesProvider) {
         this.executor = new CassandraAsyncExecutor(session);

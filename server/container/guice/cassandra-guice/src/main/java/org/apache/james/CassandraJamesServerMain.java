@@ -22,6 +22,7 @@ package org.apache.james;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.data.CassandraDomainListModule;
 import org.apache.james.modules.data.CassandraJmapModule;
+import org.apache.james.modules.data.CassandraMailRepositoryModule;
 import org.apache.james.modules.data.CassandraRecipientRewriteTableModule;
 import org.apache.james.modules.data.CassandraSieveRepositoryModule;
 import org.apache.james.modules.data.CassandraUsersRepositoryModule;
@@ -75,6 +76,7 @@ public class CassandraJamesServerMain {
         new CassandraDomainListModule(),
         new CassandraJmapModule(),
         new CassandraMailboxModule(),
+        new CassandraMailRepositoryModule(),
         new CassandraMetricsModule(),
         new CassandraRecipientRewriteTableModule(),
         new CassandraSessionModule(),

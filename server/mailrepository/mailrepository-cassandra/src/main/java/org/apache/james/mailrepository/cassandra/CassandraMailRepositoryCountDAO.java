@@ -32,6 +32,8 @@ import static org.apache.james.mailrepository.cassandra.MailRepositoryTable.REPO
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import javax.inject.Inject;
+
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 
 import com.datastax.driver.core.PreparedStatement;
@@ -45,6 +47,7 @@ public class CassandraMailRepositoryCountDAO {
     private final PreparedStatement decrement;
     private final PreparedStatement select;
 
+    @Inject
     public CassandraMailRepositoryCountDAO(Session session) {
         this.executor = new CassandraAsyncExecutor(session);
 
