@@ -482,37 +482,11 @@ public class MailRepositoriesRoutesTest {
         when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
 
         when()
-            .patch(URL_ESCAPED_MY_REPO + "/mails?action=clear")
+            .delete(URL_ESCAPED_MY_REPO + "/mails")
         .then()
             .statusCode(HttpStatus.CREATED_201)
             .header("Location", is(notNullValue()))
             .body("taskId", is(notNullValue()));
-    }
-
-    @Test
-    public void patchShouldOnlySupportClear() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
-
-        when()
-            .patch(URL_ESCAPED_MY_REPO + "/mails?action=invalid")
-        .then()
-            .statusCode(HttpStatus.BAD_REQUEST_400)
-            .body("statusCode", is(400))
-            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-            .body("message", is("Unknown action invalid"));
-    }
-
-    @Test
-    public void patchShouldRequireAnAction() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
-
-        when()
-            .patch(URL_ESCAPED_MY_REPO + "/mails")
-        .then()
-            .statusCode(HttpStatus.BAD_REQUEST_400)
-            .body("statusCode", is(400))
-            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-            .body("message", is("You need to specify an action. Currently only clear is supported."));
     }
 
     @Test
@@ -529,7 +503,7 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         String taskId = with()
-            .patch(URL_ESCAPED_MY_REPO + "/mails?action=clear")
+            .delete(URL_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
             .get("taskId");
 
@@ -561,7 +535,7 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         String taskId = with()
-            .patch(URL_ESCAPED_MY_REPO + "/mails?action=clear")
+            .delete(URL_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
             .get("taskId");
 
@@ -581,7 +555,7 @@ public class MailRepositoriesRoutesTest {
         when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.empty());
 
         when()
-            .patch(URL_ESCAPED_MY_REPO + "/mails?action=clear")
+            .delete(URL_ESCAPED_MY_REPO + "/mails")
         .then()
             .statusCode(HttpStatus.NOT_FOUND_404)
             .body("statusCode", is(404))

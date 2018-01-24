@@ -55,7 +55,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import io.swagger.jaxrs.PATCH;
 import spark.Request;
 import spark.Service;
 
@@ -246,27 +245,18 @@ public class MailRepositoriesRoutes implements Routes {
         });
     }
 
-    @PATCH
+    @DELETE
     @Path("/{encodedUrl}/mails")
     @ApiOperation(value = "Deleting all mails in that mailRepository")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            required = true,
-            paramType = "query parameter",
-            dataType = "String",
-            example = "?action=clear",
-            value = "Specify the action. Only clear is supported. clear removes all mails from that mail repository.")
-    })
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.CREATED_201, message = "All mails are deleted", response = TaskIdDto.class),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - unknown action")
     })
     public void defineDeleteAll() {
-        service.patch(MAIL_REPOSITORIES + "/:encodedUrl/mails", (request, response) -> {
+        service.delete(MAIL_REPOSITORIES + "/:encodedUrl/mails", (request, response) -> {
             String url = URLDecoder.decode(request.params("encodedUrl"), StandardCharsets.UTF_8.displayName());
             try {
-                ensureSpecifiedClearAction(request);
                 Task task = repositoryStoreService.createClearMailRepositoryTask(url);
                 TaskId taskId = taskManager.submit(task);
                 return TaskIdDto.respond(response, taskId);
@@ -279,24 +269,6 @@ public class MailRepositoriesRoutes implements Routes {
                     .haltError();
             }
         }, jsonTransformer);
-    }
-
-    private void ensureSpecifiedClearAction(Request request) {
-        String action = request.queryParams("action");
-        if (Strings.isNullOrEmpty(action)) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .message("You need to specify an action. Currently only clear is supported.")
-                .haltError();
-        }
-        if (!action.equals("clear")) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .message("Unknown action " + action)
-                .haltError();
-        }
     }
 
     private Optional<Integer> assertPositiveInteger(Request request, String parameterName) {
