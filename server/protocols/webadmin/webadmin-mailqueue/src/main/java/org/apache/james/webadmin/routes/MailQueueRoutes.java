@@ -40,10 +40,13 @@ import org.apache.james.util.streams.Iterators;
 import org.apache.james.util.streams.Limit;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.dto.ForceDelivery;
 import org.apache.james.webadmin.dto.MailQueueDTO;
 import org.apache.james.webadmin.dto.MailQueueItemDTO;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
+import org.apache.james.webadmin.utils.JsonExtractException;
+import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 
@@ -58,6 +61,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.jaxrs.PATCH;
 import spark.HaltException;
 import spark.Request;
 import spark.Response;
@@ -76,19 +80,20 @@ public class MailQueueRoutes implements Routes {
     private static final String DELAYED_QUERY_PARAM = "delayed";
     private static final String LIMIT_QUERY_PARAM = "limit";
     @VisibleForTesting static final int DEFAULT_LIMIT_VALUE = 100;
-   
     private static final String SENDER_QUERY_PARAM = "sender";
     private static final String NAME_QUERY_PARAM = "name";
     private static final String RECIPIENT_QUERY_PARAM = "recipient";
     
     private final MailQueueFactory<ManageableMailQueue> mailQueueFactory;
     private final JsonTransformer jsonTransformer;
+    private final JsonExtractor<ForceDelivery> jsonExtractor;
 
     @Inject
     @SuppressWarnings("unchecked")
     @VisibleForTesting MailQueueRoutes(MailQueueFactory<?> mailQueueFactory, JsonTransformer jsonTransformer) {
         this.mailQueueFactory = (MailQueueFactory<ManageableMailQueue>) mailQueueFactory;
         this.jsonTransformer = jsonTransformer;
+        this.jsonExtractor = new JsonExtractor<>(ForceDelivery.class);
     }
 
     @Override
@@ -100,6 +105,8 @@ public class MailQueueRoutes implements Routes {
         listMails(service);
 
         deleteMails(service);
+
+        forceDelayedMailsDelivery(service);
     }
 
     @GET
@@ -170,16 +177,16 @@ public class MailQueueRoutes implements Routes {
     @ApiImplicitParams({
         @ApiImplicitParam(required = true, dataType = "string", name = "mailQueueName", paramType = "path"),
         @ApiImplicitParam(
-                required = false, 
-                dataType = "boolean", 
-                name = DELAYED_QUERY_PARAM, 
+                required = false,
+                dataType = "boolean",
+                name = DELAYED_QUERY_PARAM,
                 paramType = "query",
                 example = "?delayed=true",
                 value = "Whether the mails are delayed in the mail queue or not (already sent)."),
         @ApiImplicitParam(
-                required = false, 
-                dataType = "int", 
-                name = LIMIT_QUERY_PARAM, 
+                required = false,
+                dataType = "int",
+                name = LIMIT_QUERY_PARAM,
                 paramType = "query",
                 example = "?limit=100",
                 defaultValue = "100",
@@ -195,8 +202,8 @@ public class MailQueueRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void listMails(Service service) {
-        service.get(BASE_URL + SEPARATOR + MAIL_QUEUE_NAME + MAILS, 
-                (request, response) -> listMails(request), 
+        service.get(BASE_URL + SEPARATOR + MAIL_QUEUE_NAME + MAILS,
+                (request, response) -> listMails(request),
                 jsonTransformer);
     }
 
@@ -344,6 +351,79 @@ public class MailQueueRoutes implements Routes {
         }
     }
 
+    @PATCH
+    @Path("/{mailQueueName}/mails")
+    @ApiImplicitParams({
+        @ApiImplicitParam(
+            required = true,
+            dataType = "string",
+            name = "mailQueueName",
+            paramType = "path"),
+        @ApiImplicitParam(
+            required = false,
+            dataType = "boolean",
+            name = DELAYED_QUERY_PARAM,
+            paramType = "query",
+            example = "?delayed=true",
+            value = "Whether the mails are delayed in the mail queue or not (already sent).")
+    })
+    @ApiOperation(
+        value = "Force delayed mails delivery"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK"),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid request for getting the mail queue."),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The MailQueue does not exist."),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
+    })
+    public void forceDelayedMailsDelivery(Service service) {
+        service.patch(BASE_URL + SEPARATOR + MAIL_QUEUE_NAME + MAILS,
+            this::forceDelayedMailsDelivery,
+            jsonTransformer);
+    }
+
+    private Response forceDelayedMailsDelivery(Request request, Response response) throws JsonExtractException, MailQueueException {
+        assertDelayedParamIsTrue(request);
+        assertPayloadContainsDelayedEntry(request);
+        ManageableMailQueue mailQueue = assertMailQueueExists(request);
+
+        mailQueue.flush();
+
+        response.status(HttpStatus.NO_CONTENT_204);
+        return response;
+    }
+
+    private ManageableMailQueue assertMailQueueExists(Request request) {
+        String mailQueueName = request.params(MAIL_QUEUE_NAME);
+        return mailQueueFactory.getQueue(mailQueueName)
+            .orElseThrow(() -> ErrorResponder.builder()
+                .message(String.format("%s can not be found", mailQueueName))
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .type(ErrorType.NOT_FOUND)
+                .haltError());
+    }
+
+    private void assertPayloadContainsDelayedEntry(Request request) {
+        try {
+            if (jsonExtractor.parse(request.body())
+                .getDelayed()
+                .orElse(true)) {
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("This request requires payload to contain delayed attribute set to false")
+                    .haltError();
+            }
+        } catch (JsonExtractException e) {
+            throw ErrorResponder.builder()
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .message("Invalid JSON document: " + e.getMessage())
+                .cause(e)
+                .haltError();
+        }
+    }
+
     private Object deleteMails(ManageableMailQueue queue, Optional<MailAddress> maybeSender, Optional<String> maybeName, Optional<MailAddress> maybeRecipient) {
         if (Booleans.countTrue(maybeSender.isPresent(), maybeName.isPresent(), maybeRecipient.isPresent()) != 1) {
             throw ErrorResponder.builder()
@@ -358,4 +438,15 @@ public class MailQueueRoutes implements Routes {
         maybeRecipient.ifPresent(Throwing.consumer((MailAddress recipient) -> queue.remove(Type.Recipient, recipient.asString())).sneakyThrow());
         return Constants.EMPTY_BODY;
     }
+
+    private void assertDelayedParamIsTrue(Request request) {
+        if (!isDelayed(request.queryParams(DELAYED_QUERY_PARAM)).orElse(false)) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("This request requires delayed param to be set to true")
+                .haltError();
+        }
+    }
+
 }

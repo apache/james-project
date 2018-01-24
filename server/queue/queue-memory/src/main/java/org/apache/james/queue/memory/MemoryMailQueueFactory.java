@@ -19,7 +19,6 @@
 
 package org.apache.james.queue.memory;
 
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Iterator;
 import java.util.Optional;
@@ -257,7 +256,7 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
 
         @Override
         public long getDelay(TimeUnit unit) {
-            return LocalDateTime.now().until(delivery, Temporals.chronoUnit(unit));
+            return ZonedDateTime.now().until(delivery, Temporals.chronoUnit(unit));
         }
 
         @Override
