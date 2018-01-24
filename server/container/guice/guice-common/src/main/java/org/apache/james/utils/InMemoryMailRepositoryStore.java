@@ -122,7 +122,7 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
             return mailRepository;
         }
         mailRepository = retrieveMailRepository(destination);
-        mailRepository = initialiseNewRepository(mailRepository, createRepositoryCombinedConfig(destination));
+        mailRepository = initializeNewRepository(mailRepository, createRepositoryCombinedConfig(destination));
         destinationToRepositoryAssociations.putIfAbsent(destination.url, mailRepository);
         return mailRepository;
     }
@@ -161,7 +161,7 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
         return config;
     }
 
-    private MailRepository initialiseNewRepository(MailRepository mailRepository, CombinedConfiguration config) throws MailRepositoryStoreException {
+    private MailRepository initializeNewRepository(MailRepository mailRepository, CombinedConfiguration config) throws MailRepositoryStoreException {
         try {
             if (mailRepository instanceof Configurable) {
                 ((Configurable) mailRepository).configure(config);
