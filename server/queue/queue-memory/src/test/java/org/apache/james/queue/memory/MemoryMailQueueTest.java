@@ -22,14 +22,14 @@ package org.apache.james.queue.memory;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.queue.api.DelayedManageableMailQueueContract;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.ManageableMailQueue;
-import org.apache.james.queue.api.ManageableMailQueueContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class MemoryMailQueueTest implements ManageableMailQueueContract {
+public class MemoryMailQueueTest implements DelayedManageableMailQueueContract {
 
     private MemoryMailQueueFactory.MemoryMailQueue mailQueue;
 

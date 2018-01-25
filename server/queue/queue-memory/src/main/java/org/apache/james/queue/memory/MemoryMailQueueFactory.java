@@ -19,11 +19,13 @@
 
 package org.apache.james.queue.memory;
 
+import java.time.LocalDateTime;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.DelayQueue;
+import java.util.concurrent.Delayed;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
@@ -39,12 +41,14 @@ import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
+import org.threeten.extra.Temporals;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQueue> {
 
@@ -75,13 +79,13 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
     }
 
     public static class MemoryMailQueue implements ManageableMailQueue {
-        private final LinkedBlockingDeque<MemoryMailQueueItem> mailItems;
+        private final DelayQueue<MemoryMailQueueItem> mailItems;
         private final LinkedBlockingDeque<MemoryMailQueueItem> inProcessingMailItems;
         private final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
         private final String name;
 
         public MemoryMailQueue(String name, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory) {
-            this.mailItems = new LinkedBlockingDeque<>();
+            this.mailItems = new DelayQueue<>();
             this.inProcessingMailItems = new LinkedBlockingDeque<>();
             this.name = name;
             this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
@@ -94,16 +98,17 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
 
         @Override
         public void enQueue(Mail mail, long delay, TimeUnit unit) throws MailQueueException {
-            enQueue(mail);
+            LocalDateTime nextDelivery = LocalDateTime.now().plus(delay, Temporals.chronoUnit(unit));
+            try {
+                mailItems.put(new MemoryMailQueueItem(cloneMail(mail), this, nextDelivery));
+            } catch (MessagingException e) {
+                throw new MailQueueException("Error while copying mail " + mail.getName(), e);
+            }
         }
 
         @Override
         public void enQueue(Mail mail) throws MailQueueException {
-            try {
-                mailItems.addLast(new MemoryMailQueueItem(cloneMail(mail), this));
-            } catch (MessagingException e) {
-                throw new MailQueueException("Error while copying mail " + mail.getName(), e);
-            }
+            enQueue(mail, 0, TimeUnit.SECONDS);
         }
 
         private Mail cloneMail(Mail mail) throws MessagingException {
@@ -118,19 +123,17 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
 
         @Override
         public MailQueueItem deQueue() throws MailQueueException, InterruptedException {
-            while (true) {
-                MemoryMailQueueItem item = mailItems.takeFirst();
-                inProcessingMailItems.add(item);
-                return mailQueueItemDecoratorFactory.decorate(item);
-            }
+            MemoryMailQueueItem item = mailItems.take();
+            inProcessingMailItems.add(item);
+            return mailQueueItemDecoratorFactory.decorate(item);
         }
 
         public Mail getLastMail() throws MailQueueException, InterruptedException {
-            try {
-                return mailItems.getLast().getMail();
-            } catch (NoSuchElementException e) {
+            MemoryMailQueueItem maybeItem = Iterables.getLast(mailItems, null);
+            if (maybeItem == null) {
                 return null;
             }
+            return maybeItem.getMail();
         }
 
         @Override
@@ -140,7 +143,14 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
 
         @Override
         public long flush() throws MailQueueException {
-            return 0;
+            int count = 0;
+            for (MailQueueItem item: mailItems) {
+                if (mailItems.remove(item)) {
+                    enQueue(item.getMail());
+                    count += 1;
+                }
+            }
+            return count;
         }
 
         @Override
@@ -220,13 +230,15 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
         }
     }
 
-    public static class MemoryMailQueueItem implements MailQueue.MailQueueItem {
+    public static class MemoryMailQueueItem implements MailQueue.MailQueueItem, Delayed {
         private final Mail mail;
         private final MemoryMailQueue queue;
+        private final LocalDateTime delivery;
 
-        public MemoryMailQueueItem(Mail mail, MemoryMailQueue queue) {
+        public MemoryMailQueueItem(Mail mail, MemoryMailQueue queue, LocalDateTime delivery) {
             this.mail = mail;
             this.queue = queue;
+            this.delivery = delivery;
         }
 
         @Override
@@ -240,6 +252,16 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
             if (!success) {
                 queue.enQueue(mail);
             }
+        }
+
+        @Override
+        public long getDelay(TimeUnit unit) {
+            return LocalDateTime.now().until(delivery, Temporals.chronoUnit(unit));
+        }
+
+        @Override
+        public int compareTo(Delayed o) {
+            return Math.toIntExact(getDelay(TimeUnit.MILLISECONDS) - o.getDelay(TimeUnit.MILLISECONDS));
         }
     }
 }
