@@ -19,6 +19,7 @@
 
 package org.apache.james.webadmin.routes;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -32,6 +33,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.apache.james.mailrepository.api.MailRepositoryStore;
+import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
@@ -42,6 +44,9 @@ import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.ExtendedMailRepositoryResponse;
 import org.apache.james.webadmin.dto.TaskIdDto;
 import org.apache.james.webadmin.service.MailRepositoryStoreService;
+import org.apache.james.webadmin.service.ReprocessingAllMailsTask;
+import org.apache.james.webadmin.service.ReprocessingOneMailTask;
+import org.apache.james.webadmin.service.ReprocessingService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -55,6 +60,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.jaxrs.PATCH;
 import spark.Request;
 import spark.Service;
 
@@ -67,13 +73,15 @@ public class MailRepositoriesRoutes implements Routes {
 
     private final JsonTransformer jsonTransformer;
     private final MailRepositoryStoreService repositoryStoreService;
+    private final ReprocessingService reprocessingService;
     private final TaskManager taskManager;
     private Service service;
 
     @Inject
-    public MailRepositoriesRoutes(MailRepositoryStoreService repositoryStoreService, JsonTransformer jsonTransformer, TaskManager taskManager) {
+    public MailRepositoriesRoutes(MailRepositoryStoreService repositoryStoreService, JsonTransformer jsonTransformer, ReprocessingService reprocessingService, TaskManager taskManager) {
         this.repositoryStoreService = repositoryStoreService;
         this.jsonTransformer = jsonTransformer;
+        this.reprocessingService = reprocessingService;
         this.taskManager = taskManager;
     }
 
@@ -92,6 +100,10 @@ public class MailRepositoriesRoutes implements Routes {
         defineDeleteMail();
 
         defineDeleteAll();
+
+        defineReprocessAll();
+
+        defineReprocessOne();
     }
 
     @GET
@@ -168,7 +180,7 @@ public class MailRepositoriesRoutes implements Routes {
     })
     public void defineGetMail() {
         service.get(MAIL_REPOSITORIES + "/:encodedUrl/mails/:mailKey", (request, response) -> {
-            String url = URLDecoder.decode(request.params("encodedUrl"), StandardCharsets.UTF_8.displayName());
+            String url = decodedRepositoryUrl(request);
             String mailKey = request.params("mailKey");
             try {
                 return repositoryStoreService.retrieveMail(url, mailKey)
@@ -228,7 +240,7 @@ public class MailRepositoriesRoutes implements Routes {
     })
     public void defineDeleteMail() {
         service.delete(MAIL_REPOSITORIES + "/:encodedUrl/mails/:mailKey", (request, response) -> {
-            String url = URLDecoder.decode(request.params("encodedUrl"), StandardCharsets.UTF_8.displayName());
+            String url = decodedRepositoryUrl(request);
             String mailKey = request.params("mailKey");
             try {
                 response.status(HttpStatus.NO_CONTENT_204);
@@ -255,7 +267,7 @@ public class MailRepositoriesRoutes implements Routes {
     })
     public void defineDeleteAll() {
         service.delete(MAIL_REPOSITORIES + "/:encodedUrl/mails", (request, response) -> {
-            String url = URLDecoder.decode(request.params("encodedUrl"), StandardCharsets.UTF_8.displayName());
+            String url = decodedRepositoryUrl(request);
             try {
                 Task task = repositoryStoreService.createClearMailRepositoryTask(url);
                 TaskId taskId = taskManager.submit(task);
@@ -269,6 +281,125 @@ public class MailRepositoriesRoutes implements Routes {
                     .haltError();
             }
         }, jsonTransformer);
+    }
+
+    @PATCH
+    @Path("/{encodedUrl}/mails")
+    @ApiOperation(value = "Reprocessing all mails in that mailRepository")
+    @ApiImplicitParams({
+        @ApiImplicitParam(
+            required = true,
+            name = "action",
+            paramType = "query parameter",
+            dataType = "String",
+            defaultValue = "none",
+            example = "?action=reprocess",
+            value = "Compulsory. Only supported value is `reprocess`"),
+        @ApiImplicitParam(
+            required = false,
+            name = "queue",
+            paramType = "query parameter",
+            dataType = "String",
+            defaultValue = "spool",
+            example = "?queue=outgoing",
+            value = "Indicates in which queue the mails stored in the repository should be re-enqueued"),
+        @ApiImplicitParam(
+            required = false,
+            paramType = "query parameter",
+            name = "processor",
+            dataType = "String",
+            defaultValue = "absent",
+            example = "?processor=transport",
+            value = "If present, modifies the state property of the mail to allow their processing by a specific mail container processor.")
+    })
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - unknown action")
+    })
+    public void defineReprocessAll() {
+        service.patch(MAIL_REPOSITORIES + "/:encodedUrl/mails", (request, response) -> {
+            Task task = toAllMailReprocessingTask(request);
+            TaskId taskId = taskManager.submit(task);
+            return TaskIdDto.respond(response, taskId);
+        }, jsonTransformer);
+    }
+
+    private Task toAllMailReprocessingTask(Request request) throws UnsupportedEncodingException, MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+        String url = decodedRepositoryUrl(request);
+        enforceActionParameter(request);
+        Optional<String> targetProcessor = Optional.ofNullable(request.queryParams("processor"));
+        String targetQueue = Optional.ofNullable(request.queryParams("queue")).orElse(MailQueueFactory.SPOOL);
+
+        Long repositorySize = repositoryStoreService.size(url).orElse(0L);
+        return new ReprocessingAllMailsTask(reprocessingService, repositorySize, url, targetQueue, targetProcessor);
+    }
+
+    @PATCH
+    @Path("/{encodedUrl}/mails/{key}")
+    @ApiOperation(value = "Reprocessing a single mail in that mailRepository")
+    @ApiImplicitParams({
+        @ApiImplicitParam(
+            required = true,
+            name = "action",
+            paramType = "query parameter",
+            dataType = "String",
+            defaultValue = "none",
+            example = "?action=reprocess",
+            value = "Compulsory. Only supported value is `reprocess`"),
+        @ApiImplicitParam(
+            required = false,
+            name = "queue",
+            paramType = "query parameter",
+            dataType = "String",
+            defaultValue = "spool",
+            example = "?queue=outgoing",
+            value = "Indicates in which queue the mails stored in the repository should be re-enqueued"),
+        @ApiImplicitParam(
+            required = false,
+            paramType = "query parameter",
+            name = "processor",
+            dataType = "String",
+            defaultValue = "absent",
+            example = "?processor=transport",
+            value = "If present, modifies the state property of the mail to allow their processing by a specific mail container processor.")
+    })
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - unknown action")
+    })
+    public void defineReprocessOne() {
+        service.patch(MAIL_REPOSITORIES + "/:encodedUrl/mails/:key", (request, response) -> {
+            Task task = toOneMailReprocessingTask(request);
+            TaskId taskId = taskManager.submit(task);
+            return TaskIdDto.respond(response, taskId);
+        }, jsonTransformer);
+    }
+
+    private Task toOneMailReprocessingTask(Request request) throws UnsupportedEncodingException {
+        String url = decodedRepositoryUrl(request);
+        String key = request.params("key");
+        enforceActionParameter(request);
+        Optional<String> targetProcessor = Optional.ofNullable(request.queryParams("processor"));
+        String targetQueue = Optional.ofNullable(request.queryParams("queue")).orElse(MailQueueFactory.SPOOL);
+
+        return new ReprocessingOneMailTask(reprocessingService, url, targetQueue, key, targetProcessor);
+    }
+
+    private void enforceActionParameter(Request request) {
+        String action = request.queryParams("action");
+        if (!"reprocess".equals(action)) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("action query parameter is mandatory. The only supported value is `reprocess`")
+                .haltError();
+        }
+    }
+
+    private String decodedRepositoryUrl(Request request) throws UnsupportedEncodingException {
+        return URLDecoder.decode(request.params("encodedUrl"), StandardCharsets.UTF_8.displayName());
     }
 
     private Optional<Integer> assertPositiveInteger(Request request, String parameterName) {
