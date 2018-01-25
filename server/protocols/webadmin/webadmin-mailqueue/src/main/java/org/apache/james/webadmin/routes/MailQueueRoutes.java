@@ -21,6 +21,7 @@ package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -248,7 +249,9 @@ public class MailQueueRoutes implements Routes {
     }
 
     private boolean filter(MailQueueItemDTO item, Optional<Boolean> isDelayed) {
-        return isDelayed.map(delayed -> delayed == item.getNextDelivery().isPresent())
+        boolean mailIsDelayed = item.getNextDelivery().map(date -> date.isAfter(ZonedDateTime.now())).orElse(false);
+        return isDelayed
+            .map(delayed -> delayed == mailIsDelayed)
             .orElse(true);
     }
 

@@ -26,9 +26,14 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.security.SecureRandom;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -112,11 +117,11 @@ public class FileMailQueue implements ManageableMailQueue {
 
                     oin = new ObjectInputStream(new FileInputStream(item.getObjectFile()));
                     Mail mail = (Mail) oin.readObject();
-                    Long next = getNextDelivery(mail);
+                    Optional<ZonedDateTime> next = getNextDelivery(mail);
 
                     final String key = mail.getName();
                     keyMappings.put(key, item);
-                    if (next <= System.currentTimeMillis()) {
+                    if (!next.isPresent() || next.get().isBefore(ZonedDateTime.now())) {
 
                         try {
                             inmemoryQueue.put(key);
@@ -128,6 +133,7 @@ public class FileMailQueue implements ManageableMailQueue {
 
                         // Schedule a task which will put the mail in the queue
                         // for processing after a given delay
+                        long nextDeliveryDelay = ZonedDateTime.now().until(next.get(), ChronoUnit.MILLIS);
                         scheduler.schedule(() -> {
                             try {
                                 inmemoryQueue.put(key);
@@ -135,7 +141,7 @@ public class FileMailQueue implements ManageableMailQueue {
                                 Thread.currentThread().interrupt();
                                 throw new RuntimeException("Unable to init", e);
                             }
-                        }, next - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+                        }, nextDeliveryDelay, TimeUnit.MILLISECONDS);
                     }
                 } catch (ClassNotFoundException | IOException e) {
                     LOGGER.error("Unable to load Mail", e);
@@ -153,12 +159,12 @@ public class FileMailQueue implements ManageableMailQueue {
         }
     }
 
-    private Long getNextDelivery(Mail mail) {
+    private Optional<ZonedDateTime> getNextDelivery(Mail mail) {
         Long next = (Long) mail.getAttribute(NEXT_DELIVERY);
         if (next == null) {
-            next = 0L;
+            return Optional.empty();
         }
-        return next;
+        return Optional.of(Instant.ofEpochMilli(next).atZone(ZoneId.systemDefault()));
     }
 
     @Override

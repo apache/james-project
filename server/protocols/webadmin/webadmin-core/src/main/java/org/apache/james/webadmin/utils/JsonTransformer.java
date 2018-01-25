@@ -34,6 +34,7 @@ public class JsonTransformer implements ResponseTransformer {
     public JsonTransformer() {
         objectMapper = new ObjectMapper()
             .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             .registerModule(new Jdk8Module())
             .registerModule(new JavaTimeModule());
     }

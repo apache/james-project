@@ -21,6 +21,9 @@ package org.apache.james.queue.jms;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
@@ -61,6 +64,7 @@ import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.threeten.extra.Temporals;
 
 import com.google.common.base.Throwables;
 
@@ -209,11 +213,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         TimeMetric timeMetric = metricFactory.timer("enqueueMailTime:" + queueName);
         Session session = null;
 
-        long mydelay = 0;
-
-        if (delay > 0) {
-            mydelay = TimeUnit.MILLISECONDS.convert(delay, unit);
-        }
+        long nextDeliveryTimestamp = computeNextDeliveryTimestamp(delay, unit);
 
         try {
 
@@ -225,7 +225,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
                 msgPrio = (Integer) prio;
             }
 
-            Map<String, Object> props = getJMSProperties(mail, mydelay);
+            Map<String, Object> props = getJMSProperties(mail, nextDeliveryTimestamp);
 
             produceMail(session, props, msgPrio, mail);
 
@@ -238,6 +238,16 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             timeMetric.stopAndPublish();
             closeSession(session);
         }
+    }
+
+    public long computeNextDeliveryTimestamp(long delay, TimeUnit unit) {
+        if (delay > 0) {
+            return ZonedDateTime.now()
+                .plus(delay, Temporals.chronoUnit(unit))
+                .toInstant()
+                .toEpochMilli();
+        }
+        return NO_DELAY;
     }
 
     @Override
@@ -282,21 +292,8 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         }
     }
 
-    /**
-     * Get JMS Message properties with values
-     *
-     * @param mail
-     * @param delayInMillis
-     * @throws JMSException
-     * @throws MessagingException
-     */
-    protected Map<String, Object> getJMSProperties(Mail mail, long delayInMillis) throws MessagingException {
+    protected Map<String, Object> getJMSProperties(Mail mail, long nextDelivery) throws MessagingException {
         Map<String, Object> props = new HashMap<>();
-        long nextDelivery = -1;
-        if (delayInMillis > 0) {
-            nextDelivery = System.currentTimeMillis() + delayInMillis;
-
-        }
         props.put(JAMES_NEXT_DELIVERY, nextDelivery);
         props.put(JAMES_MAIL_ERROR_MESSAGE, mail.getErrorMessage());
         props.put(JAMES_MAIL_LAST_UPDATED, mail.getLastUpdated().getTime());
@@ -678,14 +675,18 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
                     while (hasNext()) {
                         try {
                             Message m = messages.nextElement();
-                            return new MailQueueItemView(createMail(m),
-                                m.getLongProperty(JAMES_NEXT_DELIVERY));
+                            return new MailQueueItemView(createMail(m), nextDeliveryDate(m));
                         } catch (MessagingException | JMSException e) {
                             LOGGER.error("Unable to browse queue", e);
                         }
                     }
 
                     throw new NoSuchElementException();
+                }
+
+                private ZonedDateTime nextDeliveryDate(Message m) throws JMSException {
+                    long nextDeliveryTimestamp = m.getLongProperty(JAMES_NEXT_DELIVERY);
+                    return Instant.ofEpochMilli(nextDeliveryTimestamp).atZone(ZoneId.systemDefault());
                 }
 
                 @Override

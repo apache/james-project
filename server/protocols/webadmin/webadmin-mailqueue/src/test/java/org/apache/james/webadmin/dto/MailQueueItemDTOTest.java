@@ -20,7 +20,7 @@ package org.apache.james.webadmin.dto;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.Date;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 import org.apache.james.core.MailAddress;
@@ -53,7 +53,8 @@ public class MailQueueItemDTOTest {
     @Test
     public void fromShouldCreateTheRightObject() throws Exception {
         FakeMail mail = Mails.defaultMail().build();
-        MailQueueItemView mailQueueItemView = new MailQueueItemView(mail, 4);
+        ZonedDateTime date = ZonedDateTime.parse("2018-01-02T11:22:02Z");
+        MailQueueItemView mailQueueItemView = new MailQueueItemView(mail, date);
         MailQueueItemDTO mailQueueItemDTO = MailQueueItemDTO.from(mailQueueItemView);
         List<String> expectedRecipients = mail.getRecipients().stream()
                 .map(MailAddress::asString)
@@ -62,6 +63,6 @@ public class MailQueueItemDTOTest {
         softly.assertThat(mailQueueItemDTO.getName()).isEqualTo(mail.getName());
         softly.assertThat(mailQueueItemDTO.getSender()).isEqualTo(mail.getSender().asString());
         softly.assertThat(mailQueueItemDTO.getRecipients()).isEqualTo(expectedRecipients);
-        softly.assertThat(mailQueueItemDTO.getNextDelivery()).contains(new Date(4));
+        softly.assertThat(mailQueueItemDTO.getNextDelivery()).contains(date);
     }
 }

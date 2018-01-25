@@ -47,7 +47,6 @@ import org.apache.mailet.base.test.FakeMail;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.github.steveash.guavate.Guavate;
@@ -251,7 +250,6 @@ public class MailQueueRoutesTest {
             .body(".", hasSize(1));
     }
 
-    @Ignore("MemoryMailQueueFactory doesn't support delay")
     @Test
     public void listMailsShouldReturnDelayedMailsWhenAskFor() throws Exception {
         MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);

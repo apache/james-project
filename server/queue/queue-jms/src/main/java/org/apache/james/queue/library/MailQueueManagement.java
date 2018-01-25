@@ -19,12 +19,14 @@
 package org.apache.james.queue.library;
 
 import java.io.Serializable;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
@@ -122,7 +124,7 @@ public class MailQueueManagement extends StandardMBean implements MailQueueManag
 
             MailQueueItemView mView = it.next();
             Mail m = mView.getMail();
-            long nextDelivery = mView.getNextDelivery();
+            Optional<ZonedDateTime> nextDelivery = mView.getNextDelivery();
             Map<String, Object> map = new HashMap<>();
             map.put(names[0], m.getName());
             String sender = null;
