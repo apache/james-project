@@ -18,36 +18,31 @@
  ****************************************************************/
 package org.apache.james.mailbox.inmemory.user;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimaps;
 
 public class InMemorySubscriptionMapper extends NonTransactionalMapper implements SubscriptionMapper {
     
-    private static final int INITIAL_SIZE = 64;
-    private final Map<String, List<Subscription>> subscriptionsByUser;
+    private final ListMultimap<String, Subscription> subscriptionsByUser;
     
     public InMemorySubscriptionMapper() {
-        subscriptionsByUser = new ConcurrentHashMap<>(INITIAL_SIZE);
+        subscriptionsByUser = Multimaps.synchronizedListMultimap(ArrayListMultimap.create());
     }
 
     public synchronized void delete(Subscription subscription) {
-        final String user = subscription.getUser();
-        final List<Subscription> subscriptions = subscriptionsByUser.get(user);
-        if (subscriptions != null) {
-            subscriptions.remove(subscription);
-        }
+        subscriptionsByUser.remove(subscription.getUser(), subscription);
     }
 
     public Subscription findMailboxSubscriptionForUser(String user, String mailbox) {
-        final List<Subscription> subscriptions = subscriptionsByUser.get(user);
+        final List<Subscription> subscriptions = ImmutableList.copyOf(subscriptionsByUser.get(user));
         if (subscriptions != null) {
             return subscriptions.stream()
                 .filter(subscription -> subscription.getMailbox().equals(mailbox))
@@ -59,25 +54,14 @@ public class InMemorySubscriptionMapper extends NonTransactionalMapper implement
 
     public List<Subscription> findSubscriptionsForUser(String user) {
         final List<Subscription> subcriptions = subscriptionsByUser.get(user);
-        final List<Subscription> results;
         if (subcriptions == null) {
-            results = ImmutableList.of();
-        } else {
-            results = ImmutableList.copyOf(subcriptions);
+            return ImmutableList.of();
         }
-        return results;
+        return ImmutableList.copyOf(subcriptions);
     }
 
     public synchronized void save(Subscription subscription) {
-        final String user = subscription.getUser();
-        final List<Subscription> subscriptions = subscriptionsByUser.get(user);
-        if (subscriptions == null) {
-            final List<Subscription> newSubscriptions  = new ArrayList<>();
-            newSubscriptions.add(subscription);
-            subscriptionsByUser.put(user, newSubscriptions);
-        } else {
-            subscriptions.add(subscription);
-        }
+        subscriptionsByUser.put(subscription.getUser(), subscription);
     }
     
     public void deleteAll() {
