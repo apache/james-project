@@ -30,5 +30,10 @@
             <!-- Set if the messages should be listed sorted. False by default -->
             <config FIFO="false" CACHEKEYS="true"/>
         </mailrepository>
+        <mailrepository class="org.apache.james.mailrepository.cassandra.CassandraMailRepository">
+            <protocols>
+                <protocol>cassandra</protocol>
+            </protocols>
+        </mailrepository>
     </mailrepositories>
 </mailrepositorystore>

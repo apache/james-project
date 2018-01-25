@@ -27,5 +27,10 @@
             </protocols>
             <config FIFO="false" CACHEKEYS="true"/>
         </mailrepository>
+        <mailrepository class="org.apache.james.mailrepository.cassandra.CassandraMailRepository">
+            <protocols>
+                <protocol>cassandra</protocol>
+            </protocols>
+        </mailrepository>
     </mailrepositories>
 </mailrepositorystore>
