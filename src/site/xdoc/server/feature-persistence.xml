@@ -51,6 +51,24 @@
     </subsection>
   
     <subsection name="Mail Repository Store Persistence">
+
+      <p>Mail repository allow the administrator to store mail being processed in the mailet-container. The mails are typically
+      added by the <strong>ToRepository</strong> mailet. Then for Guice wiring <a href="manage-webadmin.html">webAdmin</a> API allows to read, delete and
+      reprocess these mails.</p>
+
+        <p>
+          Typical use cases might be:
+          <ul>
+            <li>Error management: mails can be stored if an error is encountered during the mail processing, be the error caused by a bug,
+                a configuration mistake, a parsing error, temporary unavailable services. Reprocessing the mails once the problem fixed allows to
+                avoid data loss. Note that you can use mail repositories of different types on the same James server in order to not
+                be dependant from a single data-store.</li>
+            <li>Debugging: MDC context allows to follow mail processing, and isolate logs of a single mail. You can then configure
+                James in order to collect all mails processed in one part of your pipeline, and thus better understand this one.</li>
+            <li>Data collection: Collect spam, suspicious mails and much more. You can then later on analyze them or for instance train
+                your anti-spam system.</li>
+          </ul>
+        </p>
   
       <p>Available Mail Repository Store are defined in mailrepositorystore.xml. 
          Each has an URL prefix (file, db, dbfile,...) that can be used in mailetcontainer.xml 
