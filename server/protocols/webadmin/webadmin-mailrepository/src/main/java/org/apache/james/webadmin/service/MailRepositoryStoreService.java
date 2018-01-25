@@ -92,7 +92,7 @@ public class MailRepositoryStoreService {
         return new ClearMailRepositoryTask(getRepository(url), url);
     }
 
-    private MailRepository getRepository(String url) throws MailRepositoryStore.MailRepositoryStoreException {
+    public MailRepository getRepository(String url) throws MailRepositoryStore.MailRepositoryStoreException {
         return mailRepositoryStore.get(url)
             .orElseThrow(() -> ErrorResponder.builder()
                 .statusCode(HttpStatus.NOT_FOUND_404)
