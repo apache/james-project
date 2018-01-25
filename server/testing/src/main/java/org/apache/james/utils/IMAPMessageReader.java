@@ -72,12 +72,14 @@ public class IMAPMessageReader extends ExternalResource implements Closeable {
             .contains("OK FETCH completed");
     }
 
-    public void awaitMessage(ConditionFactory conditionFactory) throws IOException {
+    public IMAPMessageReader awaitMessage(ConditionFactory conditionFactory) throws IOException {
         conditionFactory.until(this::hasAMessage);
+        return this;
     }
 
-    public void awaitNoMessage(ConditionFactory conditionFactory) throws IOException {
+    public IMAPMessageReader awaitNoMessage(ConditionFactory conditionFactory) throws IOException {
         conditionFactory.until(this::userDoesNotReceiveMessage);
+        return this;
     }
 
     public boolean hasAMessageWithFlags(String flags) throws IOException {

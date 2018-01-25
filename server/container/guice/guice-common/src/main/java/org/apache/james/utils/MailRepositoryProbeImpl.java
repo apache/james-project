@@ -19,11 +19,13 @@
 
 package org.apache.james.utils;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 
-import com.google.common.collect.Iterators;
+import com.google.common.collect.ImmutableList;
 
 public class MailRepositoryProbeImpl implements GuiceProbe {
 
@@ -37,9 +39,14 @@ public class MailRepositoryProbeImpl implements GuiceProbe {
     /**
      * Get the count of email currently stored in a given repository
      */
-    public int getRepositoryMailCount(String url) throws Exception {
-        return Iterators.size(repositoryStore.select(url)
-            .list());
+    public long getRepositoryMailCount(String url) throws Exception {
+        return repositoryStore.select(url).size();
+    }
+
+    public List<String> listMailKeys(String url) throws Exception {
+        return ImmutableList.copyOf(
+            repositoryStore.select(url)
+                .list());
     }
 
 }

@@ -164,8 +164,9 @@ public class SMTPMessageSender extends ExternalResource implements Closeable {
             .contains("250 2.6.0 Message received");
     }
 
-    public void awaitSent(ConditionFactory conditionFactory) {
+    public SMTPMessageSender awaitSent(ConditionFactory conditionFactory) {
         conditionFactory.until(this::messageHasBeenSent);
+        return this;
     }
 
     public void awaitSentFail(ConditionFactory conditionFactory) {
