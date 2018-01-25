@@ -24,7 +24,7 @@ import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
-import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
+import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
@@ -64,7 +64,7 @@ public class SmtpAuthorizedAddressesTest {
 
     @Before
     public void setup() throws Exception {
-        fakeSmtp.awaitStarted(awaitOneMinute);
+        fakeSmtp.awaitStarted(awaitAtMostOneMinute);
     }
 
     private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
@@ -102,9 +102,9 @@ public class SmtpAuthorizedAddressesTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, TO)
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
-        awaitOneMinute.until(() -> fakeSmtp.isReceived(response -> response
+        awaitAtMostOneMinute.until(() -> fakeSmtp.isReceived(response -> response
             .body("", hasSize(1))
             .body("[0].from", equalTo(FROM))
             .body("[0].subject", equalTo("test"))));
@@ -118,7 +118,7 @@ public class SmtpAuthorizedAddressesTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, TO)
-            .awaitSentFail(awaitOneMinute);
+            .awaitSentFail(awaitAtMostOneMinute);
     }
 
     @Test
@@ -130,9 +130,9 @@ public class SmtpAuthorizedAddressesTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, TO)
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
-        awaitOneMinute.until(() -> fakeSmtp.isReceived(response -> response
+        awaitAtMostOneMinute.until(() -> fakeSmtp.isReceived(response -> response
             .body("", hasSize(1))
             .body("[0].from", equalTo(FROM))
             .body("[0].subject", equalTo("test"))));
@@ -146,12 +146,12 @@ public class SmtpAuthorizedAddressesTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(TO, FROM)
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
 }

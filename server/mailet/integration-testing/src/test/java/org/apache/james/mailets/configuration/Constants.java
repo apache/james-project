@@ -34,7 +34,7 @@ public class Constants {
         .with()
         .pollDelay(slowPacedPollInterval)
         .await();
-    public static ConditionFactory awaitOneMinute = calmlyAwait.atMost(ONE_MINUTE);
+    public static ConditionFactory awaitAtMostOneMinute = calmlyAwait.atMost(ONE_MINUTE);
 
     public static final String DEFAULT_DOMAIN = "james.org";
     public static final String LOCALHOST_IP = "127.0.0.1";

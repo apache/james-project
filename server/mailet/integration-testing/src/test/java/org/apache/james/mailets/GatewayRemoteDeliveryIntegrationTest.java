@@ -26,7 +26,7 @@ import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
-import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
+import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -70,7 +70,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
     @Before
     public void setup() throws Exception {
-        fakeSmtp.awaitStarted(awaitOneMinute);
+        fakeSmtp.awaitStarted(awaitAtMostOneMinute);
 
         inMemoryDNSService = new InMemoryDNSService()
             .registerMxRecord(JAMES_ANOTHER_DOMAIN, fakeSmtp.getContainer().getContainerIp());
@@ -99,7 +99,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT);
 
-        awaitOneMinute.until(this::messageIsReceivedByTheSmtpServer);
+        awaitAtMostOneMinute.until(this::messageIsReceivedByTheSmtpServer);
     }
 
     @Test
@@ -118,7 +118,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT);
 
-        awaitOneMinute.until(this::messageIsReceivedByTheSmtpServer);
+        awaitAtMostOneMinute.until(this::messageIsReceivedByTheSmtpServer);
     }
 
     @Test
@@ -137,7 +137,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT);
 
-        awaitOneMinute.until(this::messageIsReceivedByTheSmtpServer);
+        awaitAtMostOneMinute.until(this::messageIsReceivedByTheSmtpServer);
     }
 
     @Test
@@ -156,7 +156,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT);
 
-        awaitOneMinute.until(this::messageIsReceivedByTheSmtpServer);
+        awaitAtMostOneMinute.until(this::messageIsReceivedByTheSmtpServer);
     }
 
     @Test
@@ -180,7 +180,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
         assertThat(fakeSmtp.isReceived(response -> response.body("", hasSize(0))))
             .isTrue();
     }
@@ -205,7 +205,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
     @Test
@@ -234,7 +234,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
     @Test
@@ -256,7 +256,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT);
 
-        awaitOneMinute.until(this::messageIsReceivedByTheSmtpServer);
+        awaitAtMostOneMinute.until(this::messageIsReceivedByTheSmtpServer);
     }
 
     private boolean messageIsReceivedByTheSmtpServer() {

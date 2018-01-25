@@ -25,7 +25,7 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
-import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
+import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.configuration.MailetConfiguration;
@@ -91,7 +91,7 @@ public class BounceIntegrationTest {
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(BOUNCE_RECEIVER, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
     @Test
@@ -116,7 +116,7 @@ public class BounceIntegrationTest {
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(BOUNCE_RECEIVER, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
     @Test
@@ -141,7 +141,7 @@ public class BounceIntegrationTest {
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(BOUNCE_RECEIVER, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
     @Test
@@ -167,7 +167,7 @@ public class BounceIntegrationTest {
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(BOUNCE_RECEIVER, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
     @Test
@@ -193,7 +193,7 @@ public class BounceIntegrationTest {
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(BOUNCE_RECEIVER, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
     @Test
@@ -218,7 +218,7 @@ public class BounceIntegrationTest {
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(BOUNCE_RECEIVER, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
     @Test
@@ -243,7 +243,7 @@ public class BounceIntegrationTest {
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(POSTMASTER, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
     private MailetContainer.Builder generateMailetContainerConfiguration(MailetConfiguration.Builder redirectionMailetConfiguration) {

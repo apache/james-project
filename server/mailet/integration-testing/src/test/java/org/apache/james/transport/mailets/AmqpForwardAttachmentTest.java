@@ -24,7 +24,7 @@ import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
-import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
+import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
@@ -131,12 +131,12 @@ public class AmqpForwardAttachmentTest {
                 .mimeMessage(message)
                 .sender(FROM)
                 .recipient(RECIPIENT))
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
 
         assertThat(amqpRule.readContentAsBytes()).contains(TEST_ATTACHMENT_CONTENT);
     }

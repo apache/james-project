@@ -26,7 +26,7 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
-import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
+import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
@@ -106,12 +106,12 @@ public class SpamAssassinTest {
     public void spamAssassinShouldAppendNewHeaderOnMessage() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(mailWithContent("This is the content"))
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         messageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
 
         assertThat(messageReader.readFirstMessageHeaders())
             .contains(
@@ -123,12 +123,12 @@ public class SpamAssassinTest {
     public void spamAssassinShouldAppendNewHeaderWhichDetectIsSpamWhenSpamMessage() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(mailWithContent(SPAM_CONTENT))
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         messageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
 
         String receivedHeaders = messageReader.readFirstMessageHeaders();
         assertThat(receivedHeaders).contains(SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME + ": YES");
@@ -139,12 +139,12 @@ public class SpamAssassinTest {
     public void spamAssassinShouldAppendNewHeaderWhichNoWhenNonSpamMessage() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(mailWithContent("This is the content"))
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         messageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
 
         String receivedHeaders = messageReader.readFirstMessageHeaders();
         assertThat(receivedHeaders).contains(SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME + ": NO");

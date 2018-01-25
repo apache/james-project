@@ -24,7 +24,7 @@ import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
-import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
+import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
@@ -126,12 +126,12 @@ public class ContactExtractorTest {
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipients(TO, TO2, CC, CC2, BCC, BCC2))
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(TO, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
 
         Optional<String> actual = amqpRule.readContent();
         assertThat(actual).isNotEmpty();

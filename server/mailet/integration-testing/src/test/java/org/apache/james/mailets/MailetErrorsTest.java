@@ -25,7 +25,7 @@ import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.FROM;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
-import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
+import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
@@ -81,7 +81,7 @@ public class MailetErrorsTest {
 
         smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
     }
 
     @Test
@@ -100,7 +100,7 @@ public class MailetErrorsTest {
 
         smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
     }
 
     @Test
@@ -121,7 +121,7 @@ public class MailetErrorsTest {
 
         smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
 
     }
 
@@ -143,7 +143,7 @@ public class MailetErrorsTest {
 
         smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
     }
 
     @Test
@@ -168,7 +168,7 @@ public class MailetErrorsTest {
 
         smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
     }
 
     @Test
@@ -193,7 +193,7 @@ public class MailetErrorsTest {
 
         smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
     }
 
     @Test
@@ -212,7 +212,7 @@ public class MailetErrorsTest {
 
         smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
     }
 
     @Test
@@ -231,7 +231,7 @@ public class MailetErrorsTest {
 
         smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
     }
 
     @Test
@@ -252,7 +252,7 @@ public class MailetErrorsTest {
 
         smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
     }
 
     @Test
@@ -273,7 +273,7 @@ public class MailetErrorsTest {
 
         smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
     }
 
     @Test
@@ -298,7 +298,7 @@ public class MailetErrorsTest {
 
         smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
     }
 
     @Test
@@ -323,7 +323,7 @@ public class MailetErrorsTest {
 
         smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
     }
 
     @Test
@@ -348,7 +348,7 @@ public class MailetErrorsTest {
 
         smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
     }
 
     @Test
@@ -373,7 +373,7 @@ public class MailetErrorsTest {
 
         smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
     }
 
     @Test
@@ -402,7 +402,7 @@ public class MailetErrorsTest {
 
         smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
     }
     
     @Test
@@ -431,7 +431,7 @@ public class MailetErrorsTest {
 
         smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
     }
     
     @Test
@@ -460,7 +460,7 @@ public class MailetErrorsTest {
 
         smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
     }
     
     @Test
@@ -489,7 +489,7 @@ public class MailetErrorsTest {
 
         smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT).sendMessage(FROM, FROM);
 
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
     }
     
     private ProcessorConfiguration.Builder errorProcessor() {

@@ -24,7 +24,7 @@ import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
-import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
+import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
@@ -80,16 +80,16 @@ public class RecipientRewriteTableIntegrationTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT)
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(ANY_AT_JAMES, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(OTHER_AT_JAMES, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
     @Test
@@ -99,12 +99,12 @@ public class RecipientRewriteTableIntegrationTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT)
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitNoMessage(awaitOneMinute);
+            .awaitNoMessage(awaitAtMostOneMinute);
     }
 
     @Test
@@ -118,16 +118,16 @@ public class RecipientRewriteTableIntegrationTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT)
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(localUser, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(OTHER_AT_JAMES, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
     @Test
@@ -137,12 +137,12 @@ public class RecipientRewriteTableIntegrationTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, ANY_AT_JAMES)
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(ANY_AT_ANOTHER_DOMAIN, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
     @Test
@@ -152,12 +152,12 @@ public class RecipientRewriteTableIntegrationTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, ANY_AT_JAMES)
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(ANY_AT_JAMES, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitNoMessage(awaitOneMinute);
+            .awaitNoMessage(awaitAtMostOneMinute);
     }
 
 }

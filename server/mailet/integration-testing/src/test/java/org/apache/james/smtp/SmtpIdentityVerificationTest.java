@@ -23,7 +23,7 @@ import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
-import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
+import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
@@ -74,7 +74,7 @@ public class SmtpIdentityVerificationTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(USER, PASSWORD).sendMessage(USER, USER)
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
     }
 
     @Test
@@ -86,7 +86,7 @@ public class SmtpIdentityVerificationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(ATTACKER, ATTACKER_PASSWORD)
             .sendMessage(USER, USER)
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
     }
 
     @Test
@@ -98,7 +98,7 @@ public class SmtpIdentityVerificationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(ATTACKER, ATTACKER_PASSWORD)
             .sendMessage(USER, USER)
-            .awaitSentFail(awaitOneMinute);
+            .awaitSentFail(awaitAtMostOneMinute);
     }
 
 }

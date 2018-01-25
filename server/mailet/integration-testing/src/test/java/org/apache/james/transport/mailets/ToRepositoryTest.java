@@ -25,7 +25,7 @@ import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
-import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
+import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -99,22 +99,22 @@ public class ToRepositoryTest {
     public void incomingShouldBeStoredInProcessorByDefault() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(RECIPIENT, RECIPIENT)
-            .awaitSent(awaitOneMinute)
+            .awaitSent(awaitAtMostOneMinute)
             .sendMessage(RECIPIENT, RECIPIENT)
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2);
     }
 
     @Test
     public void userShouldBeAbleToAccessReprocessedMails() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(RECIPIENT, RECIPIENT)
-            .awaitSent(awaitOneMinute)
+            .awaitSent(awaitAtMostOneMinute)
             .sendMessage(RECIPIENT, RECIPIENT)
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2);
 
         with()
             .spec(webAdminAPI)
@@ -129,20 +129,20 @@ public class ToRepositoryTest {
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute)
+            .awaitMessage(awaitAtMostOneMinute)
             .hasMessageCount(2);
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 0);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 0);
     }
 
     @Test
     public void userShouldBeAbleToAccessReprocessedMail() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(RECIPIENT, RECIPIENT)
-            .awaitSent(awaitOneMinute)
+            .awaitSent(awaitAtMostOneMinute)
             .sendMessage(RECIPIENT, RECIPIENT)
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2);
         String key = probe.listMailKeys(CUSTOM_REPOSITORY).get(0);
 
         with()
@@ -158,8 +158,8 @@ public class ToRepositoryTest {
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute)
+            .awaitMessage(awaitAtMostOneMinute)
             .hasMessageCount(1);
-        awaitOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
+        awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
     }
 }

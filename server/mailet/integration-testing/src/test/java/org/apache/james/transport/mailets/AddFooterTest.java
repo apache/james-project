@@ -26,7 +26,7 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
-import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
+import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
@@ -91,12 +91,12 @@ public class AddFooterTest {
                     .setSubject("test"))
                 .sender(FROM)
                 .recipient(RECIPIENT))
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
         String processedMessage = imapMessageReader.readFirstMessage();
         assertThat(processedMessage).contains(MATCH_ME);
     }
@@ -116,12 +116,12 @@ public class AddFooterTest {
                     .setSubject("test"))
                 .sender(FROM)
                 .recipient(RECIPIENT))
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
         String processedMessage = imapMessageReader.readFirstMessage();
         assertThat(processedMessage).contains(MATCH_ME);
     }

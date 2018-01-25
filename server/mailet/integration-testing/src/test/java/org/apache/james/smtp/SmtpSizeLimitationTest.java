@@ -23,7 +23,7 @@ import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
-import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
+import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
@@ -73,7 +73,7 @@ public class SmtpSizeLimitationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(USER, PASSWORD)
             .sendMessageWithHeaders(USER, USER, Strings.repeat("Long message", 1024))
-            .awaitSentFail(awaitOneMinute);
+            .awaitSentFail(awaitAtMostOneMinute);
     }
 
     @Test
@@ -85,6 +85,6 @@ public class SmtpSizeLimitationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(USER, PASSWORD)
             .sendMessageWithHeaders(USER, USER,"Short message")
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
     }
 }

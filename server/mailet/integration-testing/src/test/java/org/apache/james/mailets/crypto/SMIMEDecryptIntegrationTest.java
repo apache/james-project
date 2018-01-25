@@ -22,7 +22,7 @@ package org.apache.james.mailets.crypto;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
-import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
+import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.ZonedDateTime;
@@ -100,12 +100,12 @@ public class SMIMEDecryptIntegrationTest {
             .authenticate(FROM, PASSWORD)
             .sendMessageWithHeaders(FROM, FROM,
                 ClassLoaderUtils.getSystemResourceAsString("eml/crypted.eml"))
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
         assertThat(imapMessageReader.readFirstMessage()).containsSequence("Crypted content");
     }
 
@@ -115,12 +115,12 @@ public class SMIMEDecryptIntegrationTest {
             .authenticate(FROM, PASSWORD)
             .sendMessageWithHeaders(FROM, FROM,
                 ClassLoaderUtils.getSystemResourceAsString("eml/crypted_with_attachment.eml"))
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
         assertThat(imapMessageReader.readFirstMessage())
             .containsSequence("Crypted Content with attachment");
     }
@@ -131,12 +131,12 @@ public class SMIMEDecryptIntegrationTest {
             .authenticate(FROM, PASSWORD)
             .sendMessageWithHeaders(FROM, FROM,
                 ClassLoaderUtils.getSystemResourceAsString("eml/bad_crypted.eml"))
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
         assertThat(imapMessageReader.readFirstMessage())
             .containsSequence("MIAGCSqGSIb3DQEHA6CAMIACAQAxggKpMIICpQIBADCBjDCBhjELMAkGA1UE");
     }

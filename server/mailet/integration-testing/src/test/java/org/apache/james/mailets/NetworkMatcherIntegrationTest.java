@@ -24,7 +24,7 @@ import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
-import static org.apache.james.mailets.configuration.Constants.awaitOneMinute;
+import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.MemoryJamesServerMain;
@@ -98,12 +98,12 @@ public class NetworkMatcherIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, FROM)
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
     @Test
@@ -119,12 +119,12 @@ public class NetworkMatcherIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, FROM)
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
     @Test
@@ -140,12 +140,12 @@ public class NetworkMatcherIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, FROM)
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
     @Test
@@ -161,12 +161,12 @@ public class NetworkMatcherIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, FROM)
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
     @Test
@@ -182,12 +182,12 @@ public class NetworkMatcherIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, FROM)
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
     @Test
@@ -203,12 +203,12 @@ public class NetworkMatcherIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, FROM)
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitOneMinute);
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
     @Test
@@ -224,10 +224,10 @@ public class NetworkMatcherIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, FROM)
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         MailRepositoryProbeImpl repositoryProbe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
-        awaitOneMinute.until(() -> repositoryProbe.getRepositoryMailCount(DROPPED_MAILS) == 1);
+        awaitAtMostOneMinute.until(() -> repositoryProbe.getRepositoryMailCount(DROPPED_MAILS) == 1);
         assertThat(
             imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
                 .login(FROM, PASSWORD)
@@ -249,10 +249,10 @@ public class NetworkMatcherIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, FROM)
-            .awaitSent(awaitOneMinute);
+            .awaitSent(awaitAtMostOneMinute);
 
         MailRepositoryProbeImpl repositoryProbe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
-        awaitOneMinute.until(() -> repositoryProbe.getRepositoryMailCount(DROPPED_MAILS) == 1);
+        awaitAtMostOneMinute.until(() -> repositoryProbe.getRepositoryMailCount(DROPPED_MAILS) == 1);
         assertThat(
             imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
                 .login(FROM, PASSWORD)
