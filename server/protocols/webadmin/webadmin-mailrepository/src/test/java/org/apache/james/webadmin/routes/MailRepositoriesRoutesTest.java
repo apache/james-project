@@ -217,8 +217,11 @@ public class MailRepositoriesRoutesTest {
             .name("name3")
             .build());
 
-        when()
-            .get(MY_REPO_MAILS + "?offset=1&limit=1")
+        given()
+            .param("limit", "1")
+            .param("offset", "1")
+        .when()
+            .get(MY_REPO_MAILS)
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(1))
@@ -242,8 +245,10 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void listingKeysShouldReturnErrorOnInvalidOffset() throws Exception {
-        when()
-            .get(MY_REPO_MAILS + "?offset=invalid")
+        given()
+            .param("offset", "invalid")
+        .when()
+            .get(MY_REPO_MAILS)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
@@ -253,8 +258,10 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void listingKeysShouldReturnErrorOnNegativeOffset() throws Exception {
-        when()
-            .get(MY_REPO_MAILS + "?offset=-1")
+        given()
+            .param("offset", "-1")
+        .when()
+            .get(MY_REPO_MAILS)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
@@ -276,8 +283,10 @@ public class MailRepositoriesRoutesTest {
             .name("name3")
             .build());
 
-        when()
-            .get(MY_REPO_MAILS + "?offset=5")
+        given()
+            .param("offset", "5")
+        .when()
+            .get(MY_REPO_MAILS)
             .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(0));
@@ -285,8 +294,10 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void listingKeysShouldReturnErrorOnInvalidLimit() throws Exception {
-        when()
-            .get(MY_REPO_MAILS + "?limit=invalid")
+        given()
+            .param("limit", "invalid")
+        .when()
+            .get(MY_REPO_MAILS)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
@@ -296,8 +307,10 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void listingKeysShouldReturnErrorOnNegativeLimit() throws Exception {
-        when()
-            .get(MY_REPO_MAILS + "?limit=-1")
+        given()
+            .param("limit", "-1")
+        .when()
+            .get(MY_REPO_MAILS)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
@@ -316,8 +329,10 @@ public class MailRepositoriesRoutesTest {
             .name(NAME_2)
             .build());
 
-        when()
-            .get(MY_REPO_MAILS + "?offset=0")
+        given()
+            .param("offset", "0")
+        .when()
+            .get(MY_REPO_MAILS)
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(2))
@@ -326,8 +341,10 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void zeroLimitShouldNotBeValid() throws Exception {
-        when()
-            .get(MY_REPO_MAILS + "?limit=0")
+        given()
+            .param("limit", "0")
+        .when()
+            .get(MY_REPO_MAILS)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
@@ -595,8 +612,10 @@ public class MailRepositoriesRoutesTest {
     public void reprocessingAllTaskShouldCreateATask() throws Exception {
         when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
 
-        when()
-            .patch(URL_ESCAPED_MY_REPO + "/mails?action=reprocess")
+        given()
+            .param("action", "reprocess")
+        .when()
+            .patch(URL_ESCAPED_MY_REPO + "/mails")
         .then()
             .statusCode(HttpStatus.CREATED_201)
             .header("Location", is(notNullValue()))
@@ -607,8 +626,10 @@ public class MailRepositoriesRoutesTest {
     public void reprocessingAllTaskShouldRejectInvalidActions() throws Exception {
         when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
 
-        when()
-            .patch(URL_ESCAPED_MY_REPO + "/mails?action=invalid")
+        given()
+            .param("action", "invalid")
+        .when()
+            .patch(URL_ESCAPED_MY_REPO + "/mails")
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
@@ -640,7 +661,8 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         String taskId = with()
-            .patch(URL_ESCAPED_MY_REPO + "/mails?action=reprocess")
+            .param("action", "reprocess")
+            .patch(URL_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
             .get("taskId");
 
@@ -676,9 +698,10 @@ public class MailRepositoriesRoutesTest {
 
         String transport = "transport";
         String taskId = with()
-            .patch(URL_ESCAPED_MY_REPO + "/mails?action=reprocess" +
-                "&queue=" + CUSTOM_QUEUE +
-                "&processor=" + transport)
+            .param("action", "reprocess")
+            .param("queue", CUSTOM_QUEUE)
+            .param("processor", transport)
+            .patch(URL_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
             .get("taskId");
 
@@ -714,9 +737,10 @@ public class MailRepositoriesRoutesTest {
 
         String transport = "transport";
         String taskId = with()
-            .patch(URL_ESCAPED_MY_REPO + "/mails?action=reprocess" +
-                "&queue=" + CUSTOM_QUEUE +
-                "&processor=" + transport)
+            .param("action", "reprocess")
+            .param("queue", CUSTOM_QUEUE)
+            .param("processor", transport)
+            .patch(URL_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
             .get("taskId");
 
@@ -738,7 +762,8 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         String taskId = with()
-            .patch(URL_ESCAPED_MY_REPO + "/mails?action=reprocess")
+            .param("action", "reprocess")
+            .patch(URL_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
             .get("taskId");
 
@@ -767,7 +792,8 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         String taskId = with()
-            .patch(URL_ESCAPED_MY_REPO + "/mails?action=reprocess")
+            .param("action", "reprocess")
+            .patch(URL_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
             .get("taskId");
 
@@ -797,8 +823,9 @@ public class MailRepositoriesRoutesTest {
 
         String transport = "transport";
         String taskId = with()
-            .patch(URL_ESCAPED_MY_REPO + "/mails?action=reprocess"
-                + "&processor=" + transport)
+            .param("action", "reprocess")
+            .param("processor", transport)
+            .patch(URL_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
             .get("taskId");
 
@@ -823,8 +850,9 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         String taskId = with()
-            .patch(URL_ESCAPED_MY_REPO + "/mails?action=reprocess"
-                + "&queue=" + CUSTOM_QUEUE)
+            .param("action", "reprocess")
+            .param("queue", CUSTOM_QUEUE)
+            .patch(URL_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
             .get("taskId");
 
@@ -846,8 +874,10 @@ public class MailRepositoriesRoutesTest {
             .name(NAME_1)
             .build());
 
-        when()
-            .patch(URL_ESCAPED_MY_REPO + "/mails/name1?action=reprocess")
+        given()
+            .param("action", "reprocess")
+        .when()
+            .patch(URL_ESCAPED_MY_REPO + "/mails/name1")
         .then()
             .statusCode(HttpStatus.CREATED_201)
             .header("Location", is(notNullValue()))
@@ -862,8 +892,10 @@ public class MailRepositoriesRoutesTest {
             .name(NAME_1)
             .build());
 
-        when()
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1 + "?action=invalid")
+        given()
+            .param("action", "invalid")
+        .when()
+            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
@@ -901,7 +933,8 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         String taskId = with()
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1 + "?action=reprocess")
+            .param("action", "reprocess")
+            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1)
             .jsonPath()
             .get("taskId");
 
@@ -936,9 +969,10 @@ public class MailRepositoriesRoutesTest {
 
         String transport = "transport";
         String taskId = with()
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1 + "?action=reprocess" +
-                "&queue=" + CUSTOM_QUEUE +
-                "&processor=" + transport)
+            .param("action", "reprocess")
+            .param("queue", CUSTOM_QUEUE)
+            .param("processor", transport)
+            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1)
             .jsonPath()
             .get("taskId");
 
@@ -973,9 +1007,10 @@ public class MailRepositoriesRoutesTest {
 
         String transport = "transport";
         String taskId = with()
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1 + "?action=reprocess" +
-                "&queue=" + CUSTOM_QUEUE +
-                "&processor=" + transport)
+            .param("action", "reprocess")
+            .param("queue", CUSTOM_QUEUE)
+            .param("processor", transport)
+            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1)
             .jsonPath()
             .get("taskId");
 
@@ -998,7 +1033,8 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         String taskId = with()
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1 + "?action=reprocess")
+            .param("action", "reprocess")
+            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1)
             .jsonPath()
             .get("taskId");
 
@@ -1027,7 +1063,8 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         String taskId = with()
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1 + "?action=reprocess")
+            .param("action", "reprocess")
+            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1)
             .jsonPath()
             .get("taskId");
 
@@ -1057,8 +1094,9 @@ public class MailRepositoriesRoutesTest {
 
         String transport = "transport";
         String taskId = with()
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1 + "?action=reprocess"
-                + "&processor=" + transport)
+            .param("action", "reprocess")
+            .param("processor", transport)
+            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1)
             .jsonPath()
             .get("taskId");
 
@@ -1083,8 +1121,9 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         String taskId = with()
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1 + "?action=reprocess"
-                + "&queue=" + CUSTOM_QUEUE)
+            .param("action", "reprocess")
+            .param("queue", CUSTOM_QUEUE)
+            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1)
             .jsonPath()
             .get("taskId");
 
@@ -1109,8 +1148,9 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         String taskId = with()
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + "unknown" + "?action=reprocess"
-                + "&queue=" + CUSTOM_QUEUE)
+            .param("action", "reprocess")
+            .param("queue", CUSTOM_QUEUE)
+            .patch(URL_ESCAPED_MY_REPO + "/mails/" + "unknown")
             .jsonPath()
             .get("taskId");
 
@@ -1133,8 +1173,9 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         String taskId = with()
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + "unknown" + "?action=reprocess"
-                + "&queue=" + CUSTOM_QUEUE)
+            .param("action", "reprocess")
+            .param("queue", CUSTOM_QUEUE)
+            .patch(URL_ESCAPED_MY_REPO + "/mails/" + "unknown")
             .jsonPath()
             .get("taskId");
 
@@ -1157,8 +1198,9 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         String taskId = with()
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + "unknown" + "?action=reprocess"
-                + "&queue=" + CUSTOM_QUEUE)
+            .param("action", "reprocess")
+            .param("queue", CUSTOM_QUEUE)
+            .patch(URL_ESCAPED_MY_REPO + "/mails/" + "unknown")
             .jsonPath()
             .get("taskId");
 
