@@ -38,6 +38,7 @@ import org.apache.james.repository.api.Initializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
@@ -117,14 +118,17 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
     @Override
     public MailRepository select(String destinationUrl) throws MailRepositoryStoreException {
         Destination destination = Destination.fromUrl(destinationUrl);
-        MailRepository mailRepository = destinationToRepositoryAssociations.get(destination.url);
-        if (mailRepository != null) {
-            return mailRepository;
-        }
-        mailRepository = retrieveMailRepository(destination);
-        mailRepository = initializeNewRepository(mailRepository, createRepositoryCombinedConfig(destination));
-        destinationToRepositoryAssociations.putIfAbsent(destination.url, mailRepository);
-        return mailRepository;
+        return Optional.ofNullable(destinationToRepositoryAssociations.get(destination.url))
+            .orElseGet(Throwing.supplier(
+                () -> createNewMailRepository(destination))
+                .sneakyThrow());
+    }
+
+    private MailRepository createNewMailRepository(Destination destination) throws MailRepositoryStoreException {
+        MailRepository newMailRepository = retrieveMailRepository(destination);
+        newMailRepository = initializeNewRepository(newMailRepository, createRepositoryCombinedConfig(destination));
+        destinationToRepositoryAssociations.putIfAbsent(destination.url, newMailRepository);
+        return newMailRepository;
     }
 
     private void readConfigurationEntry(HierarchicalConfiguration repositoryConfiguration) throws ConfigurationException {
@@ -176,11 +180,9 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
     }
 
     private MailRepository retrieveMailRepository(Destination destination) throws MailRepositoryStoreException {
-        MailRepositoryProvider repositoryProvider = protocolToRepositoryProvider.get(destination.protocol);
-        if (repositoryProvider == null) {
-            throw new MailRepositoryStoreException("No Mail Repository associated with " + destination.protocol);
-        }
-        return repositoryProvider.provide(destination.url);
+        return Optional.ofNullable(protocolToRepositoryProvider.get(destination.protocol))
+            .orElseThrow(() -> new MailRepositoryStoreException("No Mail Repository associated with " + destination.protocol))
+            .provide(destination.url);
     }
 
 }
