@@ -62,7 +62,7 @@ import spark.Service;
 @Produces("application/json")
 public class MailQueueRoutes implements Routes {
 
-    @VisibleForTesting static final String BASE_URL = "/mailQueues";
+    public static final String BASE_URL = "/mailQueues";
     @VisibleForTesting static final String MAIL_QUEUE_NAME = ":mailQueueName";
     @VisibleForTesting static final String MAILS = "/mails";
     
@@ -74,8 +74,9 @@ public class MailQueueRoutes implements Routes {
     private final JsonTransformer jsonTransformer;
 
     @Inject
-    @VisibleForTesting MailQueueRoutes(MailQueueFactory<ManageableMailQueue> mailQueueFactory, JsonTransformer jsonTransformer) {
-        this.mailQueueFactory = mailQueueFactory;
+    @SuppressWarnings("unchecked")
+    @VisibleForTesting MailQueueRoutes(MailQueueFactory<?> mailQueueFactory, JsonTransformer jsonTransformer) {
+        this.mailQueueFactory = (MailQueueFactory<ManageableMailQueue>) mailQueueFactory;
         this.jsonTransformer = jsonTransformer;
     }
 

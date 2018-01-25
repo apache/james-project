@@ -36,6 +36,7 @@ import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.DefaultProcessorsConfigurationProviderModule;
 import org.apache.james.modules.server.ElasticSearchMetricReporterModule;
 import org.apache.james.modules.server.JMXServerModule;
+import org.apache.james.modules.server.MailQueueRoutesModule;
 import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.NoJwtModule;
@@ -52,6 +53,7 @@ public class JPAJamesServerMain {
         new WebAdminServerModule(),
         new DataRoutesModules(),
         new MailboxRoutesModule(),
+        new MailQueueRoutesModule(),
         new MailRepositoriesRoutesModule(),
         new SwaggerRoutesModule());
 

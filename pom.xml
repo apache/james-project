@@ -1425,6 +1425,11 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>james-server-webadmin-mailqueue</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-webadmin-mailrepository</artifactId>
                 <version>${project.version}</version>
             </dependency>

@@ -41,6 +41,7 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.DomainsRoutes;
+import org.apache.james.webadmin.routes.MailQueueRoutes;
 import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
@@ -102,6 +103,14 @@ public class WebAdminServerIntegrationTest {
             .statusCode(HttpStatus.NO_CONTENT_204);
 
         assertThat(dataProbe.listDomains()).contains(DOMAIN);
+    }
+
+    @Test
+    public void mailQueueRoutesShouldBeExposed() throws Exception {
+        when()
+            .get(MailQueueRoutes.BASE_URL)
+        .then()
+            .statusCode(HttpStatus.OK_200);
     }
 
     @Test
