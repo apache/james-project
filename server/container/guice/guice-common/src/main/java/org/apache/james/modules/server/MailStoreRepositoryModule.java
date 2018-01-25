@@ -70,7 +70,7 @@ public class MailStoreRepositoryModule extends AbstractModule {
         }
 
         @Override
-        public MailRepository get() {
+        public MailRepository provide(String url) {
             FileMailRepository fileMailRepository = new FileMailRepository();
             fileMailRepository.setFileSystem(fileSystem);
             return fileMailRepository;

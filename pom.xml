@@ -1233,6 +1233,11 @@
                 <type>test-jar</type>
             </dependency>
             <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-mailrepository-cassandra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-mailrepository-memory</artifactId>
                 <version>${project.version}</version>

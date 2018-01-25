@@ -29,6 +29,12 @@ import java.util.stream.Stream;
 
 public class CompletableFutureUtil {
 
+    public static <T> CompletableFuture<Optional<T>> unwrap(CompletableFuture<Optional<CompletableFuture<T>>> base) {
+        return base.thenCompose(
+            optional -> optional.map(future -> future.thenApply(Optional::of))
+                .orElse(CompletableFuture.completedFuture(Optional.empty())));
+    }
+
     @SafeVarargs
     public static <T> CompletableFuture<Stream<T>> allOfArray(CompletableFuture<T>... futures) {
         return allOf(Stream.of(futures));

@@ -47,6 +47,9 @@
 
 
         <processor state="transport" enableJmx="false">
+            <mailet match="SenderIs=denied@other.com" class="ToProcessor">
+                <processor>sender-denied</processor>
+            </mailet>
             <mailet match="SMTPAuthSuccessful" class="SetMimeHeader">
                 <name>X-UserIsAuth</name>
                 <value>true</value>
@@ -97,6 +100,17 @@
             <mailet match="All" class="ToRepository">
                 <repositoryPath>file://var/mail/relay-denied/</repositoryPath>
                 <notice>Warning: You are sending an e-mail to a remote server. You must be authentified to perform such an operation</notice>
+            </mailet>
+        </processor>
+
+        <processor state="sender-denied" enableJmx="false">
+            <mailet match="All" class="Bounce">
+                <attachment>none</attachment>
+                <passThrough>true</passThrough>
+            </mailet>
+            <mailet match="All" class="ToRepository">
+                <repositoryPath>cassandra://var/mail/sender-denied/</repositoryPath>
+                <notice>Error: You are sending an e-mail by a forbidden sender.</notice>
             </mailet>
         </processor>
 

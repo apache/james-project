@@ -84,6 +84,7 @@
 
         <module>mailrepository/mailrepository-api</module>
         <module>mailrepository/mailrepository-memory</module>
+        <module>mailrepository/mailrepository-cassandra</module>
 
         <module>protocols/fetchmail</module>
         <module>protocols/jmap</module>

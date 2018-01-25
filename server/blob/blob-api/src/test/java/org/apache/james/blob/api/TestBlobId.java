@@ -17,13 +17,49 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.utils;
+package org.apache.james.blob.api;
 
-import org.apache.james.mailrepository.api.MailRepository;
+import java.util.Objects;
 
-public interface MailRepositoryProvider {
+import org.apache.commons.lang3.NotImplementedException;
 
-    String canonicalName();
+public class TestBlobId implements BlobId {
 
-    MailRepository provide(String url);
+    public static class Factory implements BlobId.Factory {
+        @Override
+        public BlobId forPayload(byte[] payload) {
+            throw new NotImplementedException("Use from(String) instead");
+        }
+
+        @Override
+        public BlobId from(String id) {
+            return new TestBlobId(id);
+        }
+    }
+
+    private final String rawValue;
+
+    public TestBlobId(String rawValue) {
+        this.rawValue = rawValue;
+    }
+
+    @Override
+    public String asString() {
+        return rawValue;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof TestBlobId) {
+            TestBlobId that = (TestBlobId) o;
+
+            return Objects.equals(this.rawValue, that.rawValue);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(rawValue);
+    }
 }

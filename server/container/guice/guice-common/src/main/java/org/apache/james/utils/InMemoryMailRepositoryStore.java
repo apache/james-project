@@ -38,10 +38,34 @@ import org.apache.james.repository.api.Initializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configurable {
+
+    public static class Destination {
+
+        public static Destination fromUrl(String destinationUrl) throws MailRepositoryStoreException {
+            return new Destination(destinationUrl, retrieveProtocol(destinationUrl));
+        }
+
+        private static String retrieveProtocol(String destination) throws MailRepositoryStoreException {
+            int protocolSeparatorPosition = destination.indexOf(':');
+            if (protocolSeparatorPosition == -1) {
+                throw new MailRepositoryStoreException("Destination is malformed. Must be a valid URL: " + destination);
+            }
+            return destination.substring(0, protocolSeparatorPosition);
+        }
+
+        private final String url;
+        private final String protocol;
+
+        public Destination(String url, String protocol) {
+            this.url = url;
+            this.protocol = protocol;
+        }
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InMemoryMailRepositoryStore.class);
 
@@ -92,16 +116,19 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
     }
 
     @Override
-    public MailRepository select(String destination) throws MailRepositoryStoreException {
-        MailRepository mailRepository = destinationToRepositoryAssociations.get(destination);
-        if (mailRepository != null) {
-            return mailRepository;
-        }
-        String protocol = retrieveProtocol(destination);
-        mailRepository = retrieveMailRepository(protocol);
-        mailRepository = initialiseNewRepository(mailRepository, createRepositoryCombinedConfig(destination, protocol));
-        destinationToRepositoryAssociations.putIfAbsent(destination, mailRepository);
-        return mailRepository;
+    public MailRepository select(String destinationUrl) throws MailRepositoryStoreException {
+        Destination destination = Destination.fromUrl(destinationUrl);
+        return Optional.ofNullable(destinationToRepositoryAssociations.get(destination.url))
+            .orElseGet(Throwing.supplier(
+                () -> createNewMailRepository(destination))
+                .sneakyThrow());
+    }
+
+    private MailRepository createNewMailRepository(Destination destination) throws MailRepositoryStoreException {
+        MailRepository newMailRepository = retrieveMailRepository(destination);
+        newMailRepository = initializeNewRepository(newMailRepository, createRepositoryCombinedConfig(destination));
+        destinationToRepositoryAssociations.putIfAbsent(destination.url, newMailRepository);
+        return newMailRepository;
     }
 
     private void readConfigurationEntry(HierarchicalConfiguration repositoryConfiguration) throws ConfigurationException {
@@ -126,19 +153,19 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
         }
     }
 
-    private CombinedConfiguration createRepositoryCombinedConfig(String destination, String protocol) {
-        final CombinedConfiguration config = new CombinedConfiguration();
-        HierarchicalConfiguration defaultProtocolConfig = perProtocolMailRepositoryDefaultConfiguration.get(protocol);
+    private CombinedConfiguration createRepositoryCombinedConfig(Destination destination) throws MailRepositoryStoreException {
+        CombinedConfiguration config = new CombinedConfiguration();
+        HierarchicalConfiguration defaultProtocolConfig = perProtocolMailRepositoryDefaultConfiguration.get(destination.protocol);
         if (defaultProtocolConfig != null) {
             config.addConfiguration(defaultProtocolConfig);
         }
         DefaultConfigurationBuilder builder = new DefaultConfigurationBuilder();
-        builder.addProperty("[@destinationURL]", destination);
+        builder.addProperty("[@destinationURL]", destination.url);
         config.addConfiguration(builder);
         return config;
     }
 
-    private MailRepository initialiseNewRepository(MailRepository mailRepository, CombinedConfiguration config) throws MailRepositoryStoreException {
+    private MailRepository initializeNewRepository(MailRepository mailRepository, CombinedConfiguration config) throws MailRepositoryStoreException {
         try {
             if (mailRepository instanceof Configurable) {
                 ((Configurable) mailRepository).configure(config);
@@ -152,20 +179,10 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
         }
     }
 
-    private MailRepository retrieveMailRepository(String protocol) throws MailRepositoryStoreException {
-        MailRepositoryProvider repositoryProvider = protocolToRepositoryProvider.get(protocol);
-        if (repositoryProvider == null) {
-            throw new MailRepositoryStoreException("No Mail Repository associated with " + protocol);
-        }
-        return repositoryProvider.get();
-    }
-
-    private String retrieveProtocol(String destination) throws MailRepositoryStoreException {
-        int protocolSeparatorPosition = destination.indexOf(':');
-        if (protocolSeparatorPosition == -1) {
-            throw new MailRepositoryStoreException("Destination is malformed. Must be a valid URL: " + destination);
-        }
-        return destination.substring(0, protocolSeparatorPosition);
+    private MailRepository retrieveMailRepository(Destination destination) throws MailRepositoryStoreException {
+        return Optional.ofNullable(protocolToRepositoryProvider.get(destination.protocol))
+            .orElseThrow(() -> new MailRepositoryStoreException("No Mail Repository associated with " + destination.protocol))
+            .provide(destination.url);
     }
 
 }

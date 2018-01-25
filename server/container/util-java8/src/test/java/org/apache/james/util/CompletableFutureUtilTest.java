@@ -21,6 +21,7 @@ package org.apache.james.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
@@ -401,5 +402,23 @@ public class CompletableFutureUtilTest {
                 0L)
                 .join())
             .isEqualTo(6L);
+    }
+
+    @Test
+    public void unwrapShouldUnwrapWhenValue() {
+        assertThat(
+            CompletableFutureUtil.unwrap(
+                    CompletableFuture.completedFuture(Optional.of(CompletableFuture.completedFuture(1L))))
+                .join())
+            .isEqualTo(Optional.of(1L));
+    }
+
+    @Test
+    public void unwrapShouldUnwrapWhenEmpty() {
+        assertThat(
+            CompletableFutureUtil.unwrap(
+                    CompletableFuture.completedFuture(Optional.empty()))
+                .join())
+            .isEmpty();
     }
 }

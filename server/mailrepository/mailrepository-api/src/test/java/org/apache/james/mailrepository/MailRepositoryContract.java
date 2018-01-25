@@ -172,6 +172,17 @@ public interface MailRepositoryContract {
     }
 
     @Test
+    default void retrieveShouldReturnNullAfterRemoveAll() throws Exception {
+        MailRepository testee = retrieveRepository();
+        String name = "name";
+        testee.store(createMail(name));
+
+        testee.removeAll();
+
+        assertThat(testee.retrieve(name)).isNull();
+    }
+
+    @Test
     default void removeAllShouldBeIdempotent() throws Exception {
         MailRepository testee = retrieveRepository();
         testee.store(createMail("name"));

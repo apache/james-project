@@ -33,7 +33,9 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.mail.Address;
@@ -45,6 +47,7 @@ import javax.mail.internet.ParseException;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.mailet.Mail;
@@ -58,6 +61,8 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.primitives.Chars;
 
 /**
@@ -94,6 +99,151 @@ public class MailImpl implements Disposable, Mail {
         MailAddress sender = getSender(mimeMessage);
         ImmutableList<MailAddress> recipients = getRecipients(mimeMessage);
         return new MailImpl(name, sender, recipients, mimeMessage);
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+
+        private Optional<MimeMessage> mimeMessage;
+        private List<MailAddress> recipients;
+        private Optional<String> name;
+        private Optional<MailAddress> sender;
+        private Optional<String> state;
+        private Optional<String> errorMessage;
+        private Optional<Date> lastUpdated;
+        private Map<String, Serializable> attributes;
+        private Optional<String> remoteAddr;
+        private Optional<String> remoteHost;
+        private PerRecipientHeaders perRecipientHeaders;
+
+        private Builder() {
+            mimeMessage = Optional.empty();
+            recipients = Lists.newArrayList();
+            name = Optional.empty();
+            sender = Optional.empty();
+            state = Optional.empty();
+            errorMessage = Optional.empty();
+            lastUpdated = Optional.empty();
+            attributes = Maps.newHashMap();
+            remoteAddr = Optional.empty();
+            remoteHost = Optional.empty();
+            perRecipientHeaders = new PerRecipientHeaders();
+        }
+
+        public Builder mimeMessage(MimeMessage mimeMessage) {
+            this.mimeMessage = Optional.ofNullable(mimeMessage);
+            return this;
+        }
+
+        public Builder mimeMessage(MimeMessageBuilder mimeMessage) throws MessagingException {
+            this.mimeMessage = Optional.ofNullable(mimeMessage.build());
+            return this;
+        }
+
+        public Builder recipients() {
+            return this;
+        }
+
+        public Builder recipients(List<MailAddress> recipients) {
+            this.recipients.addAll(recipients);
+            return this;
+        }
+
+        public Builder recipients(MailAddress... recipients) {
+            return recipients(ImmutableList.copyOf(recipients));
+        }
+
+        public Builder recipients(String... recipients) {
+            return recipients(Arrays.stream(recipients)
+                .map(Throwing.function(MailAddress::new))
+                .collect(Guavate.toImmutableList()));
+        }
+
+        public Builder recipient(MailAddress recipient) {
+            return recipients(recipient);
+        }
+
+        public Builder recipient(String recipient) throws AddressException {
+            return recipients(recipient);
+        }
+
+        public Builder name(String name) {
+            this.name = Optional.ofNullable(name);
+            return this;
+        }
+
+        public Builder sender(MailAddress sender) {
+            this.sender = Optional.ofNullable(sender);
+            return this;
+        }
+
+        public Builder sender(String sender) throws AddressException {
+            return sender(new MailAddress(sender));
+        }
+
+        public Builder state(String state) {
+            this.state = Optional.ofNullable(state);
+            return this;
+        }
+
+        public Builder errorMessage(String errorMessage) {
+            this.errorMessage = Optional.ofNullable(errorMessage);
+            return this;
+        }
+
+        public Builder lastUpdated(Date lastUpdated) {
+            this.lastUpdated = Optional.ofNullable(lastUpdated);
+            return this;
+        }
+
+        public Builder attribute(String name, Serializable object) {
+            this.attributes.put(name, object);
+            return this;
+        }
+
+        public Builder attributes(Map<String, Serializable> attributes) {
+            this.attributes.putAll(attributes);
+            return this;
+        }
+
+        public Builder remoteAddr(String remoteAddr) {
+            this.remoteAddr = Optional.ofNullable(remoteAddr);
+            return this;
+        }
+
+        public Builder remoteHost(String remoteHost) {
+            this.remoteHost = Optional.ofNullable(remoteHost);
+            return this;
+        }
+
+        public Builder addHeaderForRecipient(Header header, MailAddress recipient) {
+            this.perRecipientHeaders.addHeaderForRecipient(header, recipient);
+            return this;
+        }
+
+        public Builder addAllHeadersForRecipients(PerRecipientHeaders perRecipientHeaders) {
+            this.perRecipientHeaders.addAll(perRecipientHeaders);
+            return this;
+        }
+
+        public MailImpl build() {
+            MailImpl mail = new MailImpl();
+            mimeMessage.ifPresent(mail::setMessage);
+            name.ifPresent(mail::setName);
+            sender.ifPresent(mail::setSender);
+            mail.setRecipients(recipients);
+            state.ifPresent(mail::setState);
+            errorMessage.ifPresent(mail::setErrorMessage);
+            lastUpdated.ifPresent(mail::setLastUpdated);
+            mail.setAttributesRaw(new HashMap<>(attributes));
+            remoteAddr.ifPresent(mail::setRemoteAddr);
+            remoteHost.ifPresent(mail::setRemoteHost);
+            mail.perRecipientSpecificHeaders.addAll(perRecipientHeaders);
+            return mail;
+        }
     }
 
     private static ImmutableList<MailAddress> getRecipients(MimeMessage mimeMessage) throws MessagingException {
