@@ -1,7 +1,8 @@
 Web administration for JAMES
 ============================
 
-The web administration supports for now the CRUD operations on the domains,the users, their mailboxes and their quotas, as described in the following sections.
+The web administration supports for now the CRUD operations on the domains, the users, their mailboxes and their quotas,
+ managing mail repositories, performing cassandra migrations, and much more, as described in the following sections.
 
 **WARNING**: This API allow authentication only via the use of JWT. If not configured with JWT, an administrator should ensure an attacker can not use this API.
 
@@ -590,6 +591,329 @@ Response codes:
  - 200: Success
  - 400: Group structure or member is not valid
  - 500: Internal error
+
+## Administrating mail repositories
+
+### Listing mail repositories
+
+```
+curl -XGET http://ip:port/mailRepositories
+```
+
+The answer looks like:
+
+```
+[
+    {
+        "repository": "file://var/mail/error/",
+        "id": "file%3A%2F%2Fvar%2Fmail%2Ferror%2F"
+    },
+    {
+        "repository": "file://var/mail/relay-denied/",
+        "id": "file%3A%2F%2Fvar%2Fmail%2Frelay-denied%2F"
+    },
+    {
+        "repository": "file://var/mail/spam/",
+        "id": "file%3A%2F%2Fvar%2Fmail%2Fspam%2F"
+    },
+    {
+        "repository": "file://var/mail/address-error/",
+        "id": "file%3A%2F%2Fvar%2Fmail%2Faddress-error%2F"
+    }
+]
+```
+
+You can use `id`, the encoded URL of the repository, to access it in later requests.
+
+Response codes:
+
+ - 200: The list of mail repositories
+ - 500: Internal error
+
+### Getting additional information for a mail repository
+
+```
+curl -XGET http://ip:port/mailRepositories/encodedUrlOfTheRepository/
+```
+
+Resource name `encodedUrlOfTheRepository` should be the resource id of an existing mail repository. Example:
+
+```
+curl -XGET http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/
+```
+
+The answer looks like:
+
+```
+{
+   "repository": "file://var/mail/error/",
+   "id": "file%3A%2F%2Fvar%2Fmail%2Ferror%2F",
+   "size": 243
+}
+```
+
+Response codes:
+
+ - 200: Additonnal information for that repository
+ - 404: This repository can not be found
+ - 500: Internal error
+
+### Listing mails contained in a mail repository
+
+```
+curl -XGET http://ip:port/mailRepositories/encodedUrlOfTheRepository/mails
+```
+
+Resource name `encodedUrlOfTheRepository` should be the resource id of an existing mail repository. Example:
+
+```
+curl -XGET http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/mails
+```
+
+The answer will contains all mailKey contained in that repository.
+
+```
+[
+    "mail-key-1",
+    "mail-key-2",
+    "mail-key-3"
+]
+```
+
+Note that this can be used to read mail details.
+
+You can pass additional URL parameters to this call in order to limit the output:
+ - A limit: no more elements than the specified limit will be returned. This needs to be strictly positive. If no value is specified, no limit will be applied.
+ - An offset: allow to skip elements. This needs to be positive. Default value is zero.
+
+Example:
+
+```
+curl -XGET http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/mails?limit=100&offset=500
+```
+
+Response codes:
+
+ - 200: The list of mail keys contained in that mail repository
+ - 400: Invalid parameters
+ - 404: This repository can not be found
+ - 500: Internal error
+
+### Reading a mail details
+
+```
+curl -XGET http://ip:port/mailRepositories/encodedUrlOfTheRepository/mails/mailKey
+```
+
+Resource name `encodedUrlOfTheRepository` should be the resource id of an existing mail repository. Resource name `mailKey` should be the key of a mail stored in that repository. Example:
+
+```
+curl -XGET http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/mails/mail-key-1
+```
+
+Response looks like:
+
+```
+{
+    "name": "mail-key-1",
+    "sender": "sender@domain.com",
+    "recipients": ["recipient1@domain.com", "recipient2@domain.com"],
+    "state": "address-error",
+    "error": "A small message explaining what happened to that mail..."
+}
+```
+
+Response codes:
+
+ - 200: Details of the mail
+ - 404: This repository or mail can not be found
+ - 500: Internal error
+
+### Removing a mail from a mail repository
+
+```
+curl -XDELETE http://ip:port/mailRepositories/encodedUrlOfTheRepository/mails/mailKey
+```
+
+Resource name `encodedUrlOfTheRepository` should be the resource id of an existing mail repository. Resource name `mailKey` should be the key of a mail stored in that repository. Example:
+
+```
+curl -XDELETE http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/mails/mail-key-1
+```
+
+Response codes:
+
+ - 204: This mail no longer exists in this repository
+ - 404: This repository can not be found
+ - 500: Internal error
+
+### Removing all mails from a mail repository
+
+
+```
+curl -XDELETE http://ip:port/mailRepositories/encodedUrlOfTheRepository/mails
+```
+
+Resource name `encodedUrlOfTheRepository` should be the resource id of an existing mail repository. Example:
+
+```
+curl -XDELETE http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/mails
+```
+
+The response to that request will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positionned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 404: Could not find that mail repository
+ - 500: Internal error
+
+The scheduled task will have the following type `clearMailRepository` and the following `additionalInformation`:
+
+```
+{
+  "repositoryUrl":"file://var/mail/error/",
+  "initialCount": 243,
+  "remainingCount": 17
+}
+```
+
+### Reprocessing mails from a mail repository
+
+Sometime, you want to re-process emails stored in a mail repository. For instance, you can make a configuration error, or there can be a James bug that makes processing of some mails fail. Those mail will be stored in a mail repository. Once you solved the problem, you can reprocess them.
+
+To reprocess mails from a repository:
+
+```
+curl -XPATCH http://ip:port/mailRepositories/encodedUrlOfTheRepository/mails?action=reprocess
+```
+
+Resource name `encodedUrlOfTheRepository` should be the resource id of an existing mail repository. Example:
+
+For instance:
+
+```
+curl -XPATCH http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/mails?action=reprocess
+```
+
+Additional query paramaters are supported:
+ - `queue` allow you to target the mail queue you want to enqueue the mails in.
+ - `processor` allow you to overwrite the state of the reprocessing mails, and thus select the processors they will start their processing in.
+
+
+For instance:
+
+```
+curl -XPATCH http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/mails?action=reprocess&processor=transport&queue=spool
+```
+
+Note that the `action` query parameter is compulsary and can only take value `reprocess`.
+
+
+The response to that request will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positionned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 404: Could not find that mail repository
+ - 500: Internal error
+
+The scheduled task will have the following type `reprocessingAllTask` and the following `additionalInformation`:
+
+```
+{
+  "repositoryUrl":"file://var/mail/error/",
+  "targetQueue":"spool",
+  "targetProcessor":"transport",
+  "initialCount": 243,
+  "remainingCount": 17
+}
+```
+
+### Reprocessing a specific mail from a mail repository
+
+To reprocess a specific mail from a mail repository:
+
+```
+curl -XPATCH http://ip:port/mailRepositories/encodedUrlOfTheRepository/mails/mailKey?action=reprocess
+```
+
+Resource name `encodedUrlOfTheRepository` should be the resource id of an existing mail repository. Resource name `mailKey` should be the key of a mail stored in that repository. Example:
+
+For instance:
+
+```
+curl -XPATCH http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/mails/name1?action=reprocess
+```
+
+Additional query paramaters are supported:
+ - `queue` allow you to target the mail queue you want to enqueue the mails in.
+ - `processor` allow you to overwrite the state of the reprocessing mails, and thus select the processors they will start their processing in.
+
+
+For instance:
+
+```
+curl -XPATCH http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/mails/name1?action=reprocess&processor=transport&queue=spool
+```
+
+Note that the `action` query parameter is compulsary and can only take value `reprocess`.
+
+
+The response to that request will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positionned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 404: Could not find that mail repository
+ - 500: Internal error
+
+The scheduled task will have the following type `reprocessingOneTask` and the following `additionalInformation`:
+
+```
+{
+  "repositoryUrl":"file://var/mail/error/",
+  "targetQueue":"spool",
+  "targetProcessor":"transport",
+  "mailKey":"name1"
+}
+```
 
 ## Task management
 
