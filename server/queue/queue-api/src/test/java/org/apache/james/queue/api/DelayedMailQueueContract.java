@@ -112,7 +112,7 @@ public interface DelayedMailQueueContract {
 
         getMailQueue().deQueue();
         assertThat(started.elapsed(TimeUnit.MILLISECONDS))
-            .isGreaterThan(unit.toMillis(delay));
+            .isGreaterThanOrEqualTo(unit.toMillis(delay));
     }
 
 }
