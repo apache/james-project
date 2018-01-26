@@ -44,7 +44,7 @@
             </mailet>
             <mailet match="All" class="Bounce"/>
             <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/error/</repositoryPath>
+                <repositoryPath>cassandra://var/mail/error/</repositoryPath>
             </mailet>
         </processor>
 
@@ -111,7 +111,7 @@
                 <metricName>mailetContainerSpam</metricName>
             </mailet>
             <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/spam/</repositoryPath>
+                <repositoryPath>cassandra://var/mail/spam/</repositoryPath>
             </mailet>
         </processor>
 
@@ -123,7 +123,7 @@
                 <attachment>none</attachment>
             </mailet>
             <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/address-error/</repositoryPath>
+                <repositoryPath>cassandra://var/mail/address-error/</repositoryPath>
             </mailet>
         </processor>
 
@@ -135,7 +135,7 @@
                 <attachment>none</attachment>
             </mailet>
             <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/relay-denied/</repositoryPath>
+                <repositoryPath>cassandra://var/mail/relay-denied/</repositoryPath>
                 <notice>Warning: You are sending an e-mail to a remote server. You must be authenticated to perform such an operation</notice>
             </mailet>
         </processor>

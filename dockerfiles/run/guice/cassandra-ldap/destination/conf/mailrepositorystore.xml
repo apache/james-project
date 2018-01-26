@@ -21,15 +21,6 @@
 
 <mailrepositorystore>
     <mailrepositories>
-        <!-- File based repositories.  These repositories store all message data -->
-        <!-- in the file system. -->
-        <mailrepository class="org.apache.james.mailrepository.file.FileMailRepository">
-            <protocols>
-                <protocol>file</protocol>
-            </protocols>
-            <!-- Set if the messages should be listed sorted. False by default -->
-            <config FIFO="false" CACHEKEYS="true"/>
-        </mailrepository>
         <mailrepository class="org.apache.james.mailrepository.cassandra.CassandraMailRepository">
             <protocols>
                 <protocol>cassandra</protocol>
