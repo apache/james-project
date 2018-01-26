@@ -28,6 +28,7 @@ import org.apache.james.modules.server.ActiveMQQueueModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.DefaultProcessorsConfigurationProviderModule;
 import org.apache.james.modules.server.ElasticSearchMetricReporterModule;
+import org.apache.james.modules.server.MailQueueRoutesModule;
 import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
@@ -45,6 +46,7 @@ public class JPAJamesServerMain {
         new WebAdminServerModule(),
         new DataRoutesModules(),
         new MailRepositoriesRoutesModule(),
+        new MailQueueRoutesModule(),
         new NoJwtModule(),
         new DefaultProcessorsConfigurationProviderModule());
     
