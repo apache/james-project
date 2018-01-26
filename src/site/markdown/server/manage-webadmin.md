@@ -915,6 +915,117 @@ The scheduled task will have the following type `reprocessingOneTask` and the fo
 }
 ```
 
+## Administrating mail queues
+
+### Listing mail queues
+
+```
+curl -XGET http://ip:port/mailQueues
+```
+
+The answer looks like:
+
+```
+["outgoing","spool"]
+```
+
+Response codes:
+
+ - 200: The list of mail queuess
+ - 500: Internal error
+
+### Getting a mail queue details
+
+```
+curl -XGET http://ip:port/mailQueues/mailQueueName
+```
+
+Resource name mailQueueName is the name of a mail queue, this command will return the details of the given mail queue. For instance:
+
+```
+{"name":"outgoing","size":0}
+```
+
+Response codes:
+
+ - 200: Success
+ - 400: Mail queue is not valid
+ - 404: The mail queue does not exist
+ - 500: Internal error
+
+### Listing the mails of a mail queue
+
+```
+curl -XGET http://ip:port/mailQueues/mailQueueName/mails
+```
+
+Additional URL query parameters:
+
+ - `limit`: Maximum number of mails returned in a single call. Only strictly positive integer values are accepted. Example:
+ 
+```
+curl -XGET http://ip:port/mailQueues/mailQueueName/mails?limit=100
+```
+
+The answer looks like:
+
+```
+[{
+  "name": "Mail1516976156284-8b3093b9-eebf-4c40-9c26-1450f4fcdc3c-to-test.com",
+  "sender": "user@james.linagora.com",
+  "recipients": ["someone@test.com"],
+  "nextDelivery": "1969-12-31T23:59:59.999Z"
+}]
+```
+
+Response codes:
+
+ - 200: Success
+ - 400: Mail queue is not valid or limit is invalid
+ - 404: The mail queue does not exist
+ - 500: Internal error
+
+### Deleting mails from a mail queue
+
+```
+curl -XDELETE http://ip:port/mailQueues/mailQueueName/mails?sender=senderMailAddress
+```
+
+This request should have exactly one query parameter from the following list:
+* sender: which is a mail address (i.e. sender@james.org)
+* name: which is a string
+* recipient: which is a mail address (i.e. recipient@james.org)
+
+The mails from the given mail queue matching the query parameter will be deleted.
+
+
+Response codes:
+
+ - 204: Success (No content)
+ - 400: Invalid request
+ - 404: The mail queue does not exist
+ - 500: Internal error
+
+### Flushing mails from a mail queue
+
+```
+curl -XPATCH http://ip:port/mailQueues/mailQueueName?delayed=true \
+  -d '{"delayed": false}'
+```
+
+This request should have the query parameter *delayed* set to *true*, in order to indicate only delayed mails are affected.
+The payload should set the `delayed` field to false inorder to remove the delay. This is the only supported combination,
+and it performs a flush.
+
+The mails delayed in the given mail queue will be flushed.
+
+Response codes:
+
+ - 204: Success (No content)
+ - 400: Invalid request
+ - 404: The mail queue does not exist
+ - 500: Internal error
+
 ## Task management
 
 Some webadmin features schedules tasks. The task management API allow to monitor and manage the execution of the following tasks.
