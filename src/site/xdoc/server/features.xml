@@ -213,7 +213,7 @@
                 </tr>
                 <tr>
                     <td>JCR (Jackrabbit) Database Mail Store</td>
-                    <td>Experimental</td>
+                    <td>deprecated</td>
                     <td>yes</td>
                     <td>no</td>
                     <td></td>
