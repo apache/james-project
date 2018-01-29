@@ -9,6 +9,20 @@ This is the parent module for all Apache James artifacts. It contains useful val
 * Maven plugins management section with common plugins used in the project
 * URL's and mailing-lists definitions for the project
 
+=== What is James?
+
+*James* stands for *Java Apache Mail Enterprise Server!*
+
+It has a modular architecture based on a rich set of *modern* and *efficient* components which provides at the end
+*complete, stable, secure and extendable Mail Servers running on the JVM*.
+
+Create your *own personal solution* for emails treatment by assembling the components you need thanks to the Inversion
+of Control mail platform offered and  go further customizing filtering and routing rules using *James Mailet Container*.
+
+Supported protocols are: IMAP, SMTP, JMAP, POP3 and more...
+
+Read more on https://james.apache.org/[our website].
+
 === How to try James
 
 Requirements: docker & docker-compose installed.
@@ -379,4 +393,5 @@ Where:
 Note: A helper script is provided for the generation of packages for a specific git commit. For instance:
 
     $ sh dockerfiles/packaging/guice/cassandra/package.sh 3.0.1 1 c298195e84 $PWD/result
+
 
