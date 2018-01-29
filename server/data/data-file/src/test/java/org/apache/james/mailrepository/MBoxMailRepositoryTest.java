@@ -36,7 +36,14 @@ import org.junit.Test;
  * 
  * NOTE this previously extended AbstractMailRepositoryTest to run all of the
  * common mail repository tests on the MBox implementation.
+ *
+ * @Depracted: See JAMES-2323
+ *
+ * Will be removed in James 3.2.0 upcoming release.
+ *
+ * Use a modern, maintained MailRepository instead. For instead FileMailRepository.
  */
+@Deprecated
 public class MBoxMailRepositoryTest {
 
     protected MailRepository getMailRepository() throws Exception {

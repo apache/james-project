@@ -67,15 +67,6 @@
                <filestore>file://var/dbmail</filestore>
            </config>
        </mailrepository>
- 
-       <!-- The mbox repository is designed for MAIL only; SPOOL performance would be less than ideal-->
-       <mailrepository class="org.apache.james.mailrepository.file.MBoxMailRepository">
-           <protocols>
-               <protocol>mbox</protocol>
-           </protocols>
-           <!-- Set if the messages should be listed sorted. False by default -->
-           <config FIFO="false"/>
-       </mailrepository>
         
        <!-- If you enable this you need to make sure that embedded Jackrabbit instance is started as well. Check the container configuration --> 
        <!--

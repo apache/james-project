@@ -114,8 +114,14 @@ import com.google.common.hash.Hashing;
  * slower (read from disk and parse). Therefore this implementation is best
  * suited to people who wish to use the mbox format for taking data out of James
  * and into something else (IMAP server or mail list displayer)
+ *
+ * @Depracted: See JAMES-2323
+ *
+ * Will be removed in James 3.2.0 upcoming release.
+ *
+ * Use a modern, maintained MailRepository instead. For instead FileMailRepository.
  */
-
+@Deprecated
 public class MBoxMailRepository implements MailRepository, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(MBoxMailRepository.class);
 
