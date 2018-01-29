@@ -67,21 +67,7 @@
                <filestore>file://var/dbmail</filestore>
            </config>
        </mailrepository>
-        
-       <!-- If you enable this you need to make sure that embedded Jackrabbit instance is started as well. Check the container configuration --> 
-       <!--
-       <mailrepository class="org.apache.james.mailrepository.jcr.JCRMailRepository">
-           <protocols>
-               <protocol>jcr</protocol>
-           </protocols>
-           <config>
-               <repository>//localhost/jackrabbit.repository</repository>
-               <username>admin</username>
-               <password>admin</password>
-               <workspace>default</workspace>
-           </config>
-       </mailrepository>
-        -->
+
    </mailrepositories>
    
 </mailrepositorystore>

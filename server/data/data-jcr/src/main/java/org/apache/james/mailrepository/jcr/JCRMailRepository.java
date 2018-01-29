@@ -68,7 +68,14 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Mail repository that is backed by a JCR content repository.
+ *
+ * @Depracted: See JAMES-2323
+ *
+ * Will be removed in James 3.2.0 upcoming release.
+ *
+ * Use a modern, maintained MailRepository instead. For instead FileMailRepository.
  */
+@Deprecated
 public class JCRMailRepository extends AbstractMailRepository implements MailRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(JCRMailRepository.class);
 
