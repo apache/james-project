@@ -149,7 +149,7 @@ public class CassandraMailRepositoryMailDAOTest {
             blobIdBody)
             .join();
 
-        testee.remove(URL, KEY_1);
+        testee.remove(URL, KEY_1).join();
 
         assertThat(testee.read(URL, KEY_1).join())
             .isEmpty();
