@@ -21,21 +21,25 @@ package org.apache.james.transport.mailets.remote.delivery;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
+import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
+import java.util.Objects;
 
-import javax.mail.MessagingException;
-
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.MailPrioritySupport;
-import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
+import org.apache.james.queue.memory.MemoryMailQueueFactory;
 import org.apache.james.transport.mailets.RemoteDelivery;
+import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
@@ -43,62 +47,64 @@ import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.base.Throwables;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableMap;
 
 public class RemoteDeliveryTest {
 
-    public static final String MAIL_NAME = "mail_name";
+    public static class MailProjection {
+        public static MailProjection from(Mail mail) {
+            return new MailProjection(mail.getName(), mail.getRecipients(),
+                Iterators.toStream(mail.getAttributeNames())
+                    .map(name -> Pair.of(name, mail.getAttribute(name)))
+                    .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue)));
+        }
 
-    private static class FakeMailQueue implements MailQueue {
-        private final List<Mail> enqueuedMail;
+        public static MailProjection from(ManageableMailQueue.MailQueueItemView item) {
+            return from(item.getMail());
+        }
+
         private final String name;
+        private final List<MailAddress> recipients;
+        private final Map<String, Serializable> attributes;
 
-        private FakeMailQueue(String name) {
+        public MailProjection(String name, Collection<MailAddress> recipients, Map<String, Serializable> attributes) {
             this.name = name;
-            this.enqueuedMail = Lists.newArrayList();
+            this.recipients = ImmutableList.copyOf(recipients);
+            this.attributes = ImmutableMap.copyOf(attributes);
         }
 
         @Override
-        public String getName() {
-            return name;
-        }
+        public final boolean equals(Object o) {
+            if (o instanceof MailProjection) {
+                MailProjection mailProjection = (MailProjection) o;
 
-        @Override
-        public void enQueue(Mail mail, long delay, TimeUnit unit) throws MailQueueException {
-            enQueue(mail);
-        }
-
-        @Override
-        public void enQueue(Mail mail) throws MailQueueException {
-            try {
-                enqueuedMail.add(FakeMail.fromMail(mail));
-            } catch (MessagingException e) {
-                throw Throwables.propagate(e);
+                return Objects.equals(this.name, mailProjection.name)
+                    && Objects.equals(this.attributes, mailProjection.attributes)
+                    && Objects.equals(this.recipients, mailProjection.recipients);
             }
+            return false;
         }
 
         @Override
-        public MailQueueItem deQueue() throws MailQueueException, InterruptedException {
-            throw new NotImplementedException();
-        }
-
-        public List<Mail> getEnqueuedMail() {
-            return ImmutableList.copyOf(enqueuedMail);
+        public final int hashCode() {
+            return Objects.hash(name, attributes, recipients);
         }
     }
 
+    public static final String MAIL_NAME = "mail_name";
+
     private RemoteDelivery remoteDelivery;
-    private FakeMailQueue mailQueue;
+    private ManageableMailQueue mailQueue;
 
     @Before
     @SuppressWarnings("unchecked")
     public void setUp() {
-        MailQueueFactory<FakeMailQueue> queueFactory = mock(MailQueueFactory.class);
-        mailQueue = new FakeMailQueue("any");
-        when(queueFactory.createQueue(RemoteDeliveryConfiguration.OUTGOING)).thenReturn(mailQueue);
-        remoteDelivery = new RemoteDelivery(mock(DNSService.class), mock(DomainList.class), queueFactory, mock(MetricFactory.class), RemoteDelivery.ThreadState.DO_NOT_START_THREADS);
+        MailQueueFactory<ManageableMailQueue> queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
+        mailQueue = queueFactory.createQueue(RemoteDeliveryConfiguration.OUTGOING);
+        remoteDelivery = new RemoteDelivery(mock(DNSService.class), mock(DomainList.class),
+            queueFactory, new NoopMetricFactory(), RemoteDelivery.ThreadState.DO_NOT_START_THREADS);
     }
 
     @Test
@@ -110,10 +116,14 @@ public class RemoteDeliveryTest {
         Mail mail = FakeMail.builder().name(MAIL_NAME).recipients(MailAddressFixture.ANY_AT_JAMES).build();
         remoteDelivery.service(mail);
 
-        assertThat(mailQueue.getEnqueuedMail()).containsOnly(FakeMail.builder()
-            .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES_APACHE_ORG)
-            .recipient(MailAddressFixture.ANY_AT_JAMES)
-            .build());
+
+        assertThat(mailQueue.browse())
+            .extracting(MailProjection::from)
+            .containsOnly(MailProjection.from(
+                FakeMail.builder()
+                    .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES_APACHE_ORG)
+                    .recipient(MailAddressFixture.ANY_AT_JAMES)
+                    .build()));
     }
 
     @Test
@@ -128,15 +138,18 @@ public class RemoteDeliveryTest {
             .build();
         remoteDelivery.service(mail);
 
-        assertThat(mailQueue.getEnqueuedMail()).containsOnly(
-            FakeMail.builder()
-                .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES_APACHE_ORG)
-                .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES)
-                .build(),
-            FakeMail.builder()
-                .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES2_APACHE_ORG)
-                .recipients(MailAddressFixture.ANY_AT_JAMES2)
-                .build());
+
+        assertThat(mailQueue.browse())
+            .extracting(MailProjection::from)
+            .containsOnly(
+                MailProjection.from(FakeMail.builder()
+                    .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES_APACHE_ORG)
+                    .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES)
+                    .build()),
+                MailProjection.from(FakeMail.builder()
+                    .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES2_APACHE_ORG)
+                    .recipients(MailAddressFixture.ANY_AT_JAMES2)
+                    .build()));
     }
 
     @Test
@@ -152,11 +165,14 @@ public class RemoteDeliveryTest {
             .build();
         remoteDelivery.service(mail);
 
-        assertThat(mailQueue.getEnqueuedMail()).containsOnly(
-            FakeMail.builder()
-                .name(MAIL_NAME)
-                .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2, MailAddressFixture.OTHER_AT_JAMES)
-                .build());
+
+        assertThat(mailQueue.browse())
+            .extracting(MailProjection::from)
+            .containsOnly(
+                MailProjection.from(FakeMail.builder()
+                    .name(MAIL_NAME)
+                    .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2, MailAddressFixture.OTHER_AT_JAMES)
+                    .build()));
     }
 
     @Test
@@ -181,11 +197,14 @@ public class RemoteDeliveryTest {
         Mail mail = FakeMail.builder().name(MAIL_NAME).recipients(MailAddressFixture.ANY_AT_JAMES).build();
         remoteDelivery.service(mail);
 
-        assertThat(mailQueue.getEnqueuedMail()).containsOnly(FakeMail.builder()
-            .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES_APACHE_ORG)
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.HIGH_PRIORITY)
-            .recipient(MailAddressFixture.ANY_AT_JAMES)
-            .build());
+
+        assertThat(mailQueue.browse())
+            .extracting(MailProjection::from)
+            .containsOnly(MailProjection.from(FakeMail.builder()
+                .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES_APACHE_ORG)
+                .attribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.HIGH_PRIORITY)
+                .recipient(MailAddressFixture.ANY_AT_JAMES)
+                .build()));
     }
 
     @Test
@@ -197,7 +216,7 @@ public class RemoteDeliveryTest {
         Mail mail = FakeMail.builder().name(MAIL_NAME).build();
         remoteDelivery.service(mail);
 
-        assertThat(mailQueue.getEnqueuedMail()).isEmpty();
+        assertThat(mailQueue.browse()).isEmpty();
     }
 
     @Test
@@ -210,6 +229,6 @@ public class RemoteDeliveryTest {
         Mail mail = FakeMail.builder().name(MAIL_NAME).build();
         remoteDelivery.service(mail);
 
-        assertThat(mailQueue.getEnqueuedMail()).isEmpty();
+        assertThat(mailQueue.browse()).isEmpty();
     }
 }
