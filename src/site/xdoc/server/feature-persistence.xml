@@ -60,7 +60,7 @@
         found <a href="config-mailrepositorystore.html">here</a>.</p>
         
       <p>Mail Repository Stores are distinguished by how they store data. There are five types of 
-        storage: File, Database, DBFile, MBox and JCR.</p>
+        storage: File, Database, DBFile.</p>
         
     </subsection>
       
