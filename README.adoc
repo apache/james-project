@@ -19,6 +19,24 @@ Supported protocols are: IMAP, SMTP, JMAP, POP3 and more...
 
 Read more on https://james.apache.org/[our website].
 
+== How to contribute?
+
+James is a project that lives from the contributions of its community! Anyone can contribute!
+
+Read the https://james.apache.org/contribute.html[contributing guidelines].
+
+We more than welcome *articles* and *blog posts* about James. Contact us by https://james.apache.org/mail.html[email]
+or on https://gitter.im/apache/james-projec[Gitter] to share your experiences.
+
+*Documentation* is an easy way to get started, and more than wanted! Check out the https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20documentation%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC[~documentation] label on JIRA.
+
+And to get started with *code contributions*, search out the
+https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20newbie%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC[~newbie],
+https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20easyfix%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC[~easyfix],
+https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20feature%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC[~feature] labels on JIRA.
+
+There is many other ways one can help us: packaging, communication, etc ...
+
 == How to try James
 
 Requirements: docker & docker-compose installed.
