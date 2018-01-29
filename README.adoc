@@ -3,6 +3,8 @@ Apache James Project
 
 link:https://gitter.im/apache/james-project[image:https://badges.gitter.im/apache/james-project.svg[Join the chat at link:https://gitter.im/apache/james-project]]
 
+image::james-logo.png[James logo]
+
 This is the parent module for all Apache James artifacts. It contains useful values to be inherited by other Maven projects.
 
 * The list of Apache James contributors, committers and PMC Members
