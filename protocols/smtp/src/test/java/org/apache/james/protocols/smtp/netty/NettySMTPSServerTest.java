@@ -25,6 +25,9 @@ import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.netty.NettyServer;
 import org.apache.james.protocols.smtp.AbstractSMTPSServerTest;
+import org.jboss.netty.util.HashedWheelTimer;
+import org.junit.After;
+import org.junit.Before;
 
 /**
  * Integration tests which use netty implementation
@@ -36,9 +39,21 @@ public class NettySMTPSServerTest extends AbstractSMTPSServerTest {
     private static final String LOCALHOST_IP = "127.0.0.1";
     private static final int RANDOM_PORT = 0;
 
+    private HashedWheelTimer hashedWheelTimer;
+
+    @Before
+    public void setup() {
+        hashedWheelTimer = new HashedWheelTimer();
+    }
+
+    @After
+    public void teardown() {
+        hashedWheelTimer.stop();
+    }
+
     @Override
     protected ProtocolServer createEncryptedServer(Protocol protocol, Encryption enc) {
-        NettyServer server = NettyServer.builder()
+        NettyServer server = new NettyServer.Factory(hashedWheelTimer)
                 .protocol(protocol)
                 .secure(enc)
                 .build();

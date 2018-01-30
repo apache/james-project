@@ -25,12 +25,14 @@ import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.encode.ImapEncoder;
 import org.apache.james.metrics.api.MetricFactory;
+import org.jboss.netty.util.HashedWheelTimer;
 
 public class OioIMAPServerFactory extends IMAPServerFactory {
 
     @Inject
-    public OioIMAPServerFactory(FileSystem fileSystem, ImapDecoder decoder, ImapEncoder encoder, ImapProcessor processor, MetricFactory metricFactory) {
-        super(fileSystem, decoder, encoder, processor, metricFactory);
+    public OioIMAPServerFactory(FileSystem fileSystem, ImapDecoder decoder, ImapEncoder encoder, ImapProcessor processor,
+                                MetricFactory metricFactory, HashedWheelTimer hashedWheelTimer) {
+        super(fileSystem, decoder, encoder, processor, metricFactory, hashedWheelTimer);
     }
 
     @Override

@@ -65,6 +65,7 @@ import org.apache.james.smtpserver.netty.SmtpMetricsImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.mailet.Mail;
+import org.jboss.netty.util.HashedWheelTimer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -162,6 +163,7 @@ public class SMTPServerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(SMTPServerTest.class);
 
     protected SMTPTestConfiguration smtpConfiguration;
+    protected HashedWheelTimer hashedWheelTimer;
     protected final MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
     protected AlterableDNSServer dnsServer;
     protected MockMailRepositoryStore store;
@@ -179,6 +181,7 @@ public class SMTPServerTest {
         // slf4j can't set programmatically any log level. It's just a facade
         // log.setLevel(SimpleLog.LOG_LEVEL_ALL);
         smtpConfiguration = new SMTPTestConfiguration();
+        hashedWheelTimer = new HashedWheelTimer();
         setUpSMTPServer();
     }
 
@@ -193,6 +196,7 @@ public class SMTPServerTest {
         smtpServer = createSMTPServer(smtpMetrics);
         smtpServer.setDnsService(dnsServer);
         smtpServer.setFileSystem(fileSystem);
+        smtpServer.setHashWheelTimer(hashedWheelTimer);
         smtpServer.setProtocolHandlerLoader(chain);
     }
 
@@ -224,7 +228,7 @@ public class SMTPServerTest {
 
         MemoryRecipientRewriteTable rewriteTable = new MemoryRecipientRewriteTable();
         chain.put("recipientrewritetable", RecipientRewriteTable.class, rewriteTable);
-    
+
         queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
         queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
         chain.put("mailqueuefactory", MailQueueFactory.class, queueFactory);
@@ -307,6 +311,7 @@ public class SMTPServerTest {
     @After
     public void tearDown() throws Exception {
         smtpServer.destroy();
+        hashedWheelTimer.stop();
     }
 
     public void verifyLastMail(String sender, String recipient, MimeMessage msg) throws Exception {

@@ -51,6 +51,7 @@
         <module>protocols/jmap</module>
         <module>protocols/lmtp</module>
         <module>protocols/managedsieve</module>
+        <module>protocols/netty</module>
         <module>protocols/pop</module>
         <module>protocols/smtp</module>
         <module>protocols/webadmin</module>

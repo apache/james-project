@@ -25,12 +25,28 @@ import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.netty.NettyServer;
 import org.apache.james.protocols.pop3.AbstractStartTlsPOP3ServerTest;
+import org.jboss.netty.util.HashedWheelTimer;
+import org.junit.After;
+import org.junit.Before;
 
 public class NettyStartTlsPOP3ServerTest extends AbstractStartTlsPOP3ServerTest {
 
+    private HashedWheelTimer hashedWheelTimer;
+
+    @Before
+    public void setup() {
+        hashedWheelTimer = new HashedWheelTimer();
+    }
+
+    @After
+    public void teardown() {
+        hashedWheelTimer.stop();
+    }
+
+
     @Override
     protected ProtocolServer createServer(Protocol protocol, InetSocketAddress address, Encryption enc) {
-        NettyServer server = NettyServer.builder()
+        NettyServer server = new NettyServer.Factory(hashedWheelTimer)
                 .protocol(protocol)
                 .secure(enc)
                 .build();

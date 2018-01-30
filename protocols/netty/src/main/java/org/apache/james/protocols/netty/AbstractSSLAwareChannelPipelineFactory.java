@@ -25,6 +25,7 @@ import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.handler.execution.ExecutionHandler;
 import org.jboss.netty.handler.ssl.SslHandler;
+import org.jboss.netty.util.HashedWheelTimer;
 
 /**
  * Abstract base class for {@link ChannelPipeline} implementations which use TLS 
@@ -37,15 +38,15 @@ public abstract class AbstractSSLAwareChannelPipelineFactory extends AbstractCha
     private String[] enabledCipherSuites = null;
 
     public AbstractSSLAwareChannelPipelineFactory(int timeout,
-            int maxConnections, int maxConnectsPerIp, ChannelGroup group, ExecutionHandler eHandler,
-            ChannelHandlerFactory frameHandlerFactory) {
-        super(timeout, maxConnections, maxConnectsPerIp, group, eHandler, frameHandlerFactory);
+                                                  int maxConnections, int maxConnectsPerIp, ChannelGroup group, ExecutionHandler eHandler,
+                                                  ChannelHandlerFactory frameHandlerFactory, HashedWheelTimer hashedWheelTimer) {
+        super(timeout, maxConnections, maxConnectsPerIp, group, eHandler, frameHandlerFactory, hashedWheelTimer);
     }
 
     public AbstractSSLAwareChannelPipelineFactory(int timeout,
             int maxConnections, int maxConnectsPerIp, ChannelGroup group, String[] enabledCipherSuites, ExecutionHandler eHandler,
-            ChannelHandlerFactory frameHandlerFactory) {
-        this(timeout, maxConnections, maxConnectsPerIp, group, eHandler, frameHandlerFactory);
+            ChannelHandlerFactory frameHandlerFactory, HashedWheelTimer hashedWheelTimer) {
+        this(timeout, maxConnections, maxConnectsPerIp, group, eHandler, frameHandlerFactory, hashedWheelTimer);
         
         // We need to copy the String array becuase of possible security issues.
         // See https://issues.apache.org/jira/browse/PROTOCOLS-18

@@ -81,7 +81,7 @@ public class ValidRcptMXTest {
 
         ValidRcptMX handler = new ValidRcptMX();
         handler.setDNSService(dns);
-        handler.setBannedNetworks(ImmutableList.of(bannedAddress ), dns);
+        handler.setBannedNetworks(ImmutableList.of(bannedAddress), dns);
         int rCode = handler.doRcpt(session, null, mailAddress).getResult();
 
         assertEquals("Reject", rCode, HookReturnCode.DENY);

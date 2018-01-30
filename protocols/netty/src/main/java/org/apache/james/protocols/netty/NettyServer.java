@@ -20,6 +20,7 @@ package org.apache.james.protocols.netty;
 
 import java.util.Optional;
 
+import javax.inject.Inject;
 import javax.net.ssl.SSLContext;
 
 import org.apache.james.protocols.api.Encryption;
@@ -30,6 +31,7 @@ import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.handler.execution.ExecutionHandler;
 import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
+import org.jboss.netty.util.HashedWheelTimer;
 
 import com.google.common.base.Preconditions;
 
@@ -39,32 +41,33 @@ import com.google.common.base.Preconditions;
  */
 public class NettyServer extends AbstractAsyncServer {
 
-    public static Builder builder() {
-        return new Builder();
-    }
+    public static class Factory {
 
-    public static class Builder {
+        private final HashedWheelTimer hashedWheelTimer;
+
         private Protocol protocol;
         private Optional<Encryption> secure;
         private Optional<ChannelHandlerFactory> frameHandlerFactory;
 
-        private Builder() {
+        @Inject
+        public Factory(HashedWheelTimer hashedWheelTimer) {
+            this.hashedWheelTimer = hashedWheelTimer;
             secure = Optional.empty();
             frameHandlerFactory = Optional.empty();
         }
 
-        public Builder protocol(Protocol protocol) {
+        public Factory protocol(Protocol protocol) {
             Preconditions.checkNotNull(protocol, "'protocol' is mandatory");
             this.protocol = protocol;
             return this;
         }
 
-        public Builder secure(Encryption secure) {
+        public Factory secure(Encryption secure) {
             this.secure = Optional.ofNullable(secure);
             return this;
         }
 
-        public Builder frameHandlerFactory(ChannelHandlerFactory frameHandlerFactory) {
+        public Factory frameHandlerFactory(ChannelHandlerFactory frameHandlerFactory) {
             this.frameHandlerFactory = Optional.ofNullable(frameHandlerFactory);
             return this;
         }
@@ -73,14 +76,16 @@ public class NettyServer extends AbstractAsyncServer {
             Preconditions.checkState(protocol != null, "'protocol' is mandatory");
             return new NettyServer(protocol, 
                     secure.orElse(null),
-                    frameHandlerFactory.orElse(new LineDelimiterBasedChannelHandlerFactory(AbstractChannelPipelineFactory.MAX_LINE_LENGTH)));
+                    frameHandlerFactory.orElse(new LineDelimiterBasedChannelHandlerFactory(AbstractChannelPipelineFactory.MAX_LINE_LENGTH)),
+                    hashedWheelTimer);
         }
     }
 
-    protected final Protocol protocol;
     protected final Encryption secure;
+    protected final Protocol protocol;
     private final ChannelHandlerFactory frameHandlerFactory;
-    
+    private final HashedWheelTimer hashedWheelTimer;
+
     private ExecutionHandler eHandler;
     
     private ChannelUpstreamHandler coreHandler;
@@ -89,10 +94,11 @@ public class NettyServer extends AbstractAsyncServer {
 
     private int maxCurConnectionsPerIP;
    
-    private NettyServer(Protocol protocol, Encryption secure, ChannelHandlerFactory frameHandlerFactory) {
+    private NettyServer(Protocol protocol, Encryption secure, ChannelHandlerFactory frameHandlerFactory, HashedWheelTimer hashedWheelTimer) {
         this.protocol = protocol;
         this.secure = secure;
         this.frameHandlerFactory = frameHandlerFactory;
+        this.hashedWheelTimer = hashedWheelTimer;
     }
     
     protected ExecutionHandler createExecutionHandler(int size) {
@@ -151,7 +157,14 @@ public class NettyServer extends AbstractAsyncServer {
     @Override
     protected ChannelPipelineFactory createPipelineFactory(ChannelGroup group) {
 
-        return new AbstractSSLAwareChannelPipelineFactory(getTimeout(), maxCurConnections, maxCurConnectionsPerIP, group, eHandler, getFrameHandlerFactory()) {
+        return new AbstractSSLAwareChannelPipelineFactory(
+            getTimeout(),
+            maxCurConnections,
+            maxCurConnectionsPerIP,
+            group,
+            eHandler,
+            getFrameHandlerFactory(),
+            hashedWheelTimer) {
 
             @Override
             protected ChannelUpstreamHandler createHandler() {

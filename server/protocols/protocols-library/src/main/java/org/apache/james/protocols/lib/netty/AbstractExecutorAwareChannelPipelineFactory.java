@@ -24,6 +24,7 @@ import org.apache.james.protocols.netty.HandlerConstants;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.handler.execution.ExecutionHandler;
+import org.jboss.netty.util.HashedWheelTimer;
 
 /**
  * Abstract base class which should get used if you MAY need an {@link ExecutionHandler}
@@ -32,12 +33,18 @@ import org.jboss.netty.handler.execution.ExecutionHandler;
  */
 public abstract class AbstractExecutorAwareChannelPipelineFactory extends AbstractSSLAwareChannelPipelineFactory {
 
-    public AbstractExecutorAwareChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp, ChannelGroup group, ExecutionHandler eHandler, ChannelHandlerFactory frameHandlerFactory) {
-        super(timeout, maxConnections, maxConnectsPerIp, group, eHandler, frameHandlerFactory);
+    public AbstractExecutorAwareChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp,
+                                                       ChannelGroup group, ExecutionHandler eHandler,
+                                                       ChannelHandlerFactory frameHandlerFactory,
+                                                       HashedWheelTimer hashedWheelTimer) {
+        super(timeout, maxConnections, maxConnectsPerIp, group, eHandler, frameHandlerFactory, hashedWheelTimer);
     }
 
-    public AbstractExecutorAwareChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp, ChannelGroup group, String[] enabledCipherSuites, ExecutionHandler eHandler, ChannelHandlerFactory frameHandlerFactory) {
-        super(timeout, maxConnections, maxConnectsPerIp, group, enabledCipherSuites, eHandler, frameHandlerFactory);
+    public AbstractExecutorAwareChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp,
+                                                       ChannelGroup group, String[] enabledCipherSuites,
+                                                       ExecutionHandler eHandler, ChannelHandlerFactory frameHandlerFactory,
+                                                       HashedWheelTimer hashedWheelTimer) {
+        super(timeout, maxConnections, maxConnectsPerIp, group, enabledCipherSuites, eHandler, frameHandlerFactory, hashedWheelTimer);
     }
     
     @Override

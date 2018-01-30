@@ -1171,6 +1171,11 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>james-server-guice-netty</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-jetty</artifactId>
                 <version>${project.version}</version>
             </dependency>

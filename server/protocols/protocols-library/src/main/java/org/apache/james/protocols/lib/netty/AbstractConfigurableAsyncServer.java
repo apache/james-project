@@ -51,6 +51,7 @@ import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.handler.execution.ExecutionHandler;
+import org.jboss.netty.util.HashedWheelTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,6 +87,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     private String x509Algorithm = defaultX509algorithm;
 
     private FileSystem fileSystem;
+    private HashedWheelTimer timer;
 
     private boolean enabled;
 
@@ -121,6 +123,11 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     @Inject
     public final void setFileSystem(FileSystem filesystem) {
         this.fileSystem = filesystem;
+    }
+
+    @Inject
+    public void setHashWheelTimer(HashedWheelTimer timer) {
+        this.timer = timer;
     }
 
     protected void registerMBean() {
@@ -563,7 +570,8 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     
     @Override
     protected ChannelPipelineFactory createPipelineFactory(ChannelGroup group) {
-        return new AbstractExecutorAwareChannelPipelineFactory(getTimeout(), connectionLimit, connPerIP, group, enabledCipherSuites, getExecutionHandler(), getFrameHandlerFactory()) {
+        return new AbstractExecutorAwareChannelPipelineFactory(getTimeout(), connectionLimit, connPerIP, group,
+            enabledCipherSuites, getExecutionHandler(), getFrameHandlerFactory(), timer) {
             @Override
             protected SSLContext getSSLContext() {
                 if (encryption == null) {

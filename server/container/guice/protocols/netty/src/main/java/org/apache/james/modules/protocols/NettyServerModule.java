@@ -19,17 +19,27 @@
 
 package org.apache.james.modules.protocols;
 
-import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
-import org.apache.james.utils.GuiceProtocolHandlerLoader;
+import javax.annotation.PreDestroy;
+
+import org.jboss.netty.util.HashedWheelTimer;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Singleton;
 
-public class ProtocolHandlerModule extends AbstractModule {
+public class NettyServerModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install(new NettyServerModule());
-        bind(ProtocolHandlerLoader.class).to(GuiceProtocolHandlerLoader.class);
+        bind(HashedWheelTimer.class).to(DisposableHashedWheelTimer.class);
+    }
+
+    @Singleton
+    static class DisposableHashedWheelTimer extends HashedWheelTimer {
+
+        @PreDestroy
+        public void dispose() {
+            stop();
+        }
     }
 
 }

@@ -29,18 +29,22 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
+import org.jboss.netty.util.HashedWheelTimer;
 
 public class LMTPServerFactory extends AbstractServerFactory {
 
     private final ProtocolHandlerLoader loader;
     private final FileSystem fileSystem;
     protected final LMTPMetricsImpl lmtpMetrics;
+    private final HashedWheelTimer hashedWheelTimer;
 
     @Inject
-    public LMTPServerFactory(ProtocolHandlerLoader loader, FileSystem fileSystem, MetricFactory metricFactory) {
+    public LMTPServerFactory(ProtocolHandlerLoader loader, FileSystem fileSystem, MetricFactory metricFactory,
+                             HashedWheelTimer hashedWheelTimer) {
         this.loader = loader;
         this.fileSystem = fileSystem;
         this.lmtpMetrics = new LMTPMetricsImpl(metricFactory);
+        this.hashedWheelTimer = hashedWheelTimer;
     }
 
     protected LMTPServer createServer() {
@@ -55,6 +59,7 @@ public class LMTPServerFactory extends AbstractServerFactory {
         for (HierarchicalConfiguration serverConfig: configs) {
             LMTPServer server = createServer();
             server.setFileSystem(fileSystem);
+            server.setHashWheelTimer(hashedWheelTimer);
             server.setProtocolHandlerLoader(loader);
             server.configure(serverConfig);
             servers.add(server);

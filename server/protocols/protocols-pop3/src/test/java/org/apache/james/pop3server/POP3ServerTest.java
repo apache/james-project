@@ -55,6 +55,7 @@ import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.memory.MemoryUsersRepository;
+import org.jboss.netty.util.HashedWheelTimer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -73,9 +74,11 @@ public class POP3ServerTest {
             + "Subject: test\r\n\r\n"
             + "Body Text POP3ServerTest.setupTestMails\r\n").getBytes();
     private POP3Server pop3Server;
+    private HashedWheelTimer hashedWheelTimer;
 
     @Before
     public void setUp() throws Exception {
+        hashedWheelTimer = new HashedWheelTimer();
         setUpServiceManager();
         setUpPOP3Server();
         pop3Configuration = new POP3TestConfiguration();
@@ -95,6 +98,7 @@ public class POP3ServerTest {
         }
         protocolHandlerChain.dispose();
         pop3Server.destroy();
+        hashedWheelTimer.stop();
     }
 
     @Test
@@ -699,6 +703,7 @@ public class POP3ServerTest {
     protected void setUpPOP3Server() {
         pop3Server = createPOP3Server();
         pop3Server.setFileSystem(fileSystem);
+        pop3Server.setHashWheelTimer(hashedWheelTimer);
         pop3Server.setProtocolHandlerLoader(protocolHandlerChain);
     }
 
