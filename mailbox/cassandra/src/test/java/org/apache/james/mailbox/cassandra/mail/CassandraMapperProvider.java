@@ -96,7 +96,7 @@ public class CassandraMapperProvider implements MapperProvider {
 
     @Override
     public void clearMapper() throws MailboxException {
-        cassandra.clearAllTables();
+        cassandra.close();
     }
 
     @Override
