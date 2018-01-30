@@ -20,7 +20,6 @@ package org.apache.james.backends.cassandra;
 
 import java.util.Optional;
 
-import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -83,16 +82,8 @@ public final class CassandraCluster implements AutoCloseable {
         }
     }
 
-
-
     public Session getConf() {
         return session;
-    }
-
-    @PreDestroy
-    public void clearAllTables() {
-        session.close();
-        cluster.close();
     }
     
     private Optional<Session> tryInitializeSession() {
