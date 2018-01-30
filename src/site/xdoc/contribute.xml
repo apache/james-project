@@ -28,7 +28,8 @@
 
     <section name="Introduction">
       <p>
-        <b>Anyone can contribute</b>
+        James is a project that lives from the contributions of its community.<br/>
+        <b>Anyone can contribute.</b>
         <br />
         That's right, we always want to hear from people with
         contributions to the code,
@@ -42,6 +43,17 @@
         To keep you informed on James issues, subscribe to the relevant 
         <a href="https://james.apache.org/mail.html">mailing lists</a>
         <br />
+      </p>
+    </section>
+
+    <section name="Be involved in the community">
+      <p>
+        An easy start is to be involved in the community.<br/>
+        Share your experiences with James, your needs, your enhancements proposition via the
+        <a href="https://james.apache.org/mail.html">mailing lists</a>, on <a href="https://gitter.im/apache/james-project">
+        gitter</a>, or on our <a href="https://issues.apache.org/jira/browse/JAMES">Bug Tracker</a>.<br/>
+
+        Don't hesitate to write articles and blog posts. Use your preferred media to spread the love!
       </p>
     </section>
 
@@ -81,112 +93,93 @@
         <br />
         Then, you have to click on Create to submit your bug.
       </p>
+
+      <subsection name="Reporting security vulnerabilities">
+        <a class="comm" alt="Security" href="http://www.apache.org/security/">Security</a>: Vulnerabilities should be announced to the Apache Security team.<br/>
+        PMCs will be notified about them, and will work hard to propose fixes as fast as possible.<br/>
+        Specific details about security in James can be found <a class="comm" alt="security in James" href="http://james.apache.org/server/feature-security.html">here</a>.
+
+      </subsection>
+    </section>
+
+    <section name="Documentation">
+      <p>Documentation is an easy way to get on board!
+
+        Check out the <a class="comm" alt="Documentation" href="https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20documentation%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC">~documentation</a> label on JIRA to get some ideas.<br/>
+        Report on JIRA the typo you spots, the information you miss, and any improvement you can think to.<br/>
+        The next step is to contribute the documentation changes via <a class="comm" alt="The website on github"  href="https://github.com/apache/james-project/tree/master/src/site/xdoc">Git</a>.
+      </p>
+      <p>
+        To edit an existing document try to edit the xml version in <code>src/site/xdoc</code>
+        (check it out from GIT) and if you can, submit a patch as for Code Patches.
+      </p>
+      <p>
+        If you want to contribute new files please try to use the markdown format as
+        shown in <code>src/site/markdown</code>.
+      </p>
+      <p>
+        If this means nothing to you please try to contribute HTML or plain
+        text documents without any styling, so that we can get at the words
+        and easily convert them into the right format.
+      </p>
+      <p>
+        If all this seems like unnecessary nonsense, send us whatever you
+        like, we'd still be happy to receive good documentation.
+      </p>
+      <p>
+        Each of the Apache James projects has its own documentation
+        maintained with the automated build. Once a build is done,
+        the documentation can be further committed in the
+        <a href="https://git-wip-us.apache.org/repos/asf/james-site.git">site module</a>
+        which will be automatically published via gitpubsub
+        to <a href="http://james.apache.org">Apache James web site</a>.
+      </p>
+      <p>
+        Further to this documentation, the <a href="http://wiki.apache.org/james/">Apache James wiki</a>
+        is available to any and is useful to share any useful documentation.
+      </p>
     </section>
 
     <section name="How to contribute to the code?">
       <p>
-        Clone the source code of the project from its 
-        <a href="https://github.com/apache/james-project">Github</a>
-        or its <a href="git://git.apache.org/james-project.git">apache git repository</a>
+        Clone the source code of the project from its
+        <a href="git://git.apache.org/james-project.git">apache git repository</a>
+        or its <a href="https://github.com/apache/james-project">Github</a>
         <br />
-        Create your branch and name it with the JIRA ticket number.
-        Create a Pull Request with your branch name 
-        and prefix its different commits with the same name.
-        <br />
-      </p>
-    </section>
-
-    <section name="Code Patches">
-      <p>
-        Patches should be attached to the corresponding JIRA issue.
-        <br />
-        <b>Always</b>
-        use diff -u to generate patches, so we can apply them using
-        'patch'.
-        <br />
-
-         <br />
-        Make sure the patch only contains what is intended, your
-        checkout could be outdated.
-        <br />
-        Make sure it conforms to the code standards, otherwise it may be ignored. It is OK to make a
-        single patch covering several
-        files, but please only one issue at a time.
-        <br />
-        Briefly outline the reason for your patch,
-        the solution your patch implements, why a patch is
-        needed and why your code will solve the problem. Note any bug numbers your
-        patch addresses.
+        Create your branch and name it with the JIRA ticket number.<br />
+        Create a Pull Request with your branch name and prefix its different commits with the same name.
         <br />
       </p>
 
-      <p>
-        The reason for these rules is so that committers can easily see
-        what you are trying to achieve,
-        it is their responsibility to manage the code and review submissions,
-        if you make it easy for them to see what you are doing your
-        patch is more likely to
-        be committed quickly.
-        <br />
-      </p>
-    </section>
+      <p>Alternatively you can create a patch as <a href="#Code_Patches">outlined below</a>, and attach it to the JIRA ticket.</p>
+      <p>A valid commit comment might be:</p>
 
-    <section name="Documentation">
-      <p>
-        While we are glad to accept contributions to documentation
-        from anyone, in almost any format, because its much better than none,
-        please consider these
-        guidelines to help us to assimilate your contribution.
-      </p>
-      <p>
-        To edit an existing document try to edit the xml version in src/site/xdocs
-        (check it out from GIT)
-        and if you can, submit a patch as for Code Patches.
-      </p>
-      <p>
-        If you want to contribute new files please try to use the simple xml
-        format we use.
-      </p>
-      <p>
-        If this means nothing to you please try to contribute HTML or plain
-        text documents without
-        any styling, so that we can get at the words and easily convert them
-        into our XML format.
-      </p>
-      <p>
-        If all this seems like unnecessary nonsense, send us whatever you
-        like, we'd still be
-        happy to receive good documentation.
-      </p>
-      <p>
-        Each of the Apache James projects has its own documentation
-        maintained
-        with the automated build. Once a build is done, the documentation can be
-        further committed in the
-        <a href="https://git-wip-us.apache.org/repos/asf/james-site.git">
-          site module
-        </a>
-        which will be automatically published via gitpubsub
-        to
-        <a href="http://james.apache.org">Apache James web site</a>
-        .
-      </p>
-      <p>
-        Further to this documentation, the
-        <a href="http://wiki.apache.org/james/">
-          Apache James wiki
-        </a>
-        is available to any and is useful to share any
-        useful documentation.
-        .
-      </p>
+        <pre><code>JAMES-2285 My awesome commit title
+
+Here is some more details about what my commit does, and the rationals of the choice I took.</code></pre>
+
+      <subsection name="Contribution proposals">
+        <p>
+        We reference some easy tasks to start with :
+        <a class="comm" alt="Newbie tasks" href="https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20newbie%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC">~newbie</a>
+        <br/> We have a collection of minor fixes awaiting contributions:
+        <a class="comm" alt="Easy fixes" href="https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20easyfix%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC">~easyfix</a>
+        <br/> Challenge yourself with some cool features we thought to:
+        <a class="comm" alt="Cool features" href="https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20feature%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC">~feature</a>
+        <br/>Additional ideas are more than welcome. Don't hesitate to discuss that with us!
+        </p>
+      </subsection>
     </section>
 
     <section name="Coding Standards">
       <p>
+        While we are glad to accept contributions to documentation
+        from anyone, in almost any format, because its much better than none,
+        please consider these guidelines to help us to assimilate your contribution.
+      </p>
+      <p>
         Submissions to the James project must follow the coding
-        conventions
-        outlined in this document. James developers
+        conventions outlined in this document. James developers
         are asked to follow coding conventions already present in the code.
         (For example, if the existing code has the bracket on
         the same line as the if statement, then all subsequent code
@@ -205,28 +198,26 @@
         </strong>
       </p>
       <p>
-        1. Spaces between parentheses are optional. The preference is
-        to exclude
-        extra spaces. Both of these conventions are
-        acceptable:
+        1. Your code should pass our <a href="https://github.com/apache/james-project/blob/master/checkstyle.xml">checkstyle</a>
+        which runs upon <code>mvn clean install</code>.
+      </p>
+      <p>
+        2. Extra spaces between parentheses are not allowed:
       </p>
       <p>
         <source><![CDATA[
   
-  if (foo)
+  if (foo) > Good
   
   or
   
-  if ( foo )
+  if ( foo ) > Bad
         ]]></source>
       </p>
       <p>
-        2. Four spaces.
-        <strong>NO tabs</strong>
-        . Period. The James
-        mailing list receives commit messages that
-        are almost impossible
-        to read if tabs are used.
+        3. Four spaces.<strong>NO tabs</strong>. Period. <br/>
+        The James mailing list receives commit messages that
+        are almost impossible to read if tabs are used.
       </p>
       <p>
         In Emacs-speak, this translates to the following command:
@@ -234,29 +225,19 @@
         (setq-default tab-width 4 indent-tabs-mode nil)
       </p>
       <p>
-        3. Use Unix linefeeds for all .java source code files. Only
-        platform-specific
-        files (e.g. .bat files for Windows) should
+        4. Use Unix linefeeds for all .java source code files. Only
+        platform-specific files (e.g. .bat files for Windows) should
         contain non-Unix linefeeds.
       </p>
-      <p>
-        4. Javadoc
-        <strong>must</strong>
-        exist on all methods. Contributing
-        a missing javadoc for any
-        method, class, variable, etc., will be GREATLY
-        appreciated as
-        this will help to improve the James project.
+      <p>5. Javadoc <strong>MUST</strong>
+        exist on all API methods. Contributing
+        a missing javadoc for any method, class, variable, etc., will
+        be GREATLY appreciated as this will help to improve the James project.
       </p>
+      <p>6. The standard Apache license header <strong>MUST</strong> be placed at the top of every file.</p>
+      <p>7. Your change set <strong>MUST</strong> be covered by tests. We also strongly appreciate integration tests.</p>
       <p>
-        5. The standard Apache boilerplace
-        <strong>MUST</strong>
-        be placed
-        at the top of every file.
-      </p>
-      <p>
-        6.
-        <strong>pom.xml</strong>
+        8. <strong>pom.xml</strong>
 
         <br/>
         We also require the following best practice regarding maven:
@@ -289,6 +270,41 @@
         and
         <a href="downloads/codetemplates.xml">codetemplates.xml</a>
         .
+      </p>
+    </section>
+
+    <section name="Code Patches">
+      <p>
+        Patches should be attached to the corresponding JIRA issue.
+        <br />
+        <b>Always</b>
+        use diff -u to generate patches, so we can apply them using
+        'patch'.
+        <br />
+
+        <br />
+        Make sure the patch only contains what is intended, your
+        checkout could be outdated.
+        <br />
+        Make sure it conforms to the code standards, otherwise it may be ignored. It is OK to make a
+        single patch covering several
+        files, but please only one issue at a time.
+        <br />
+        Briefly outline the reason for your patch,
+        the solution your patch implements, why a patch is
+        needed and why your code will solve the problem. Note any bug numbers your
+        patch addresses.
+        <br />
+      </p>
+
+      <p>
+        The reason for these rules is so that committers can easily see
+        what you are trying to achieve,
+        it is their responsibility to manage the code and review submissions,
+        if you make it easy for them to see what you are doing your
+        patch is more likely to
+        be committed quickly.
+        <br />
       </p>
     </section>
 
