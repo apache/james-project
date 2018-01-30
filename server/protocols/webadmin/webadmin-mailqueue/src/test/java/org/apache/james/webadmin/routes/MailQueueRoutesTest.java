@@ -402,7 +402,7 @@ public class MailQueueRoutesTest {
 
     @Test
     public void forcingDelayedMailsDeliveryShouldReturnNoContent() throws Exception {
-        MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
+        mailQueueFactory.createQueue(FIRST_QUEUE);
 
         given()
             .queryParam("delayed", "true")
@@ -426,7 +426,7 @@ public class MailQueueRoutesTest {
 
     @Test
     public void forcingDelayedMailsDeliveryRequiresDelayedParameter() throws Exception {
-        MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
+        mailQueueFactory.createQueue(FIRST_QUEUE);
 
         given()
             .body("{\"delayed\": \"false\"}")
@@ -438,7 +438,7 @@ public class MailQueueRoutesTest {
 
     @Test
     public void forcingDelayedMailsDeliveryShouldRejectFalseDelayedParam() throws Exception {
-        MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
+        mailQueueFactory.createQueue(FIRST_QUEUE);
 
         given()
             .queryParam("delayed", "false")
@@ -451,7 +451,7 @@ public class MailQueueRoutesTest {
 
     @Test
     public void forcingDelayedMailsDeliveryShouldRejectNonBooleanDelayedParam() throws Exception {
-        MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
+        mailQueueFactory.createQueue(FIRST_QUEUE);
 
         given()
             .queryParam("delayed", "wrong")
@@ -464,7 +464,7 @@ public class MailQueueRoutesTest {
 
     @Test
     public void forcingDelayedMailsDeliveryShouldRejectRequestWithoutBody() throws Exception {
-        MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
+        mailQueueFactory.createQueue(FIRST_QUEUE);
 
         given()
             .queryParam("delayed", "true")
@@ -543,7 +543,7 @@ public class MailQueueRoutesTest {
 
     @Test
     public void forcingDelayedMailsDeliveryShouldRejectRequestWithoutDelayedParameter() throws Exception {
-        MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
+        mailQueueFactory.createQueue(FIRST_QUEUE);
 
         given()
             .queryParam("delayed", "true")
@@ -556,7 +556,7 @@ public class MailQueueRoutesTest {
 
     @Test
     public void forcingDelayedMailsDeliveryShouldAcceptRequestWithUnknownFields() throws Exception {
-        MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
+        mailQueueFactory.createQueue(FIRST_QUEUE);
 
         given()
             .queryParam("delayed", "true")
@@ -572,7 +572,7 @@ public class MailQueueRoutesTest {
 
     @Test
     public void forcingDelayedMailsDeliveryShouldRejectMalformedJsonPayload() throws Exception {
-        MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
+        mailQueueFactory.createQueue(FIRST_QUEUE);
 
         given()
             .queryParam("delayed", "true")
@@ -585,7 +585,7 @@ public class MailQueueRoutesTest {
 
     @Test
     public void forcingDelayedMailsDeliveryShouldRejectTrueDelayedAttribute() throws Exception {
-        MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
+        mailQueueFactory.createQueue(FIRST_QUEUE);
 
         given()
             .queryParam("delayed", "false")
@@ -610,7 +610,7 @@ public class MailQueueRoutesTest {
 
     @Test
     public void forcingDelayedMailsDeliveryShouldRejectStringDelayedAttribute() throws Exception {
-        MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
+        mailQueueFactory.createQueue(FIRST_QUEUE);
 
         given()
             .queryParam("delayed", "false")

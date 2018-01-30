@@ -99,7 +99,6 @@ public class RemoteDeliveryTest {
     private ManageableMailQueue mailQueue;
 
     @Before
-    @SuppressWarnings("unchecked")
     public void setUp() {
         MailQueueFactory<ManageableMailQueue> queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
         mailQueue = queueFactory.createQueue(RemoteDeliveryConfiguration.OUTGOING);

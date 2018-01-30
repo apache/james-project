@@ -53,7 +53,6 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.mailet.HostAddress;
 import org.apache.mailet.LookupException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
@@ -296,13 +295,14 @@ public class JamesMailetContext implements MailetContext, Configurable {
      * @since Mailet API v2.2.0a16-unstable
      */
     @Override
-    public Iterator<HostAddress> getSMTPHostAddresses(String domainName) {
+    @Deprecated
+    public Iterator<org.apache.mailet.HostAddress> getSMTPHostAddresses(String domainName) {
         try {
             return new MXHostAddressIterator(dns.findMXRecords(domainName).iterator(), dns, false);
         } catch (TemporaryResolutionException e) {
             // TODO: We only do this to not break backward compatiblity. Should
             // fixed later
-            return ImmutableSet.<HostAddress>of().iterator();
+            return ImmutableSet.<org.apache.mailet.HostAddress>of().iterator();
         }
     }
 
@@ -334,6 +334,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
     }
 
     @Override
+    @Deprecated
     public void log(LogLevel logLevel, String s) {
         switch (logLevel) {
             case INFO:
@@ -351,6 +352,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
     }
 
     @Override
+    @Deprecated
     public void log(LogLevel logLevel, String s, Throwable throwable) {
         switch (logLevel) {
             case INFO:

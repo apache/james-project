@@ -74,7 +74,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
-@SuppressWarnings("deprecation")
 public class SMTPServerTest {
 
     final class AlterableDNSServer implements DNSService {
