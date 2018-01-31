@@ -130,7 +130,7 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
       <em>or</em><br />
       <code>
       % gpg --import KEYS<br />
-      % gpg --verify james-<i>version</i>.tar.gz.asc
+      % gpg --verify james-<i>version</i>.tar.gz.asc james-<i>version</i>.tar.gz
       </code></p>
     
     </subsection>
