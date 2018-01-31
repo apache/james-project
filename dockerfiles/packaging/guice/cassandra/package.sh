@@ -28,14 +28,22 @@ docker run \
    --volume $PWD:/origin \
    --volume $PWD/dockerfiles/run/guice/cassandra/destination:/cassandra/destination \
    -t james/project -s $SHA1
+docker run \
+   --rm \
+   --volume $PWD/.m2:/root/.m2 \
+   --volume $PWD:/origin \
+   --volume $PWD/dockerfiles/run/guice/cassandra-ldap/destination:/cassandra/destination \
+   -t james/project -s $SHA1
 
 # Build image
 docker build -t james_run dockerfiles/run/guice/cassandra
+docker build -t james_run_ldap dockerfiles/run/guice/cassandra-ldap
 
 # Build packages
 docker build -t build-james-packages \
   --build-arg RELEASE=$RELEASE-$SHA1 \
   --build-arg ITERATION=$ITERATION \
   --build-arg BASE=james_run \
+  --build-arg BASE_LDAP=james_run_ldap \
   dockerfiles/packaging/guice/cassandra
 docker run --rm --name james-packages -v $DIRECTORY:/result build-james-packages

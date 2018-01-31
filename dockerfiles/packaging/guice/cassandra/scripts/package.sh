@@ -23,6 +23,7 @@ fpm -s dir -t deb \
  -C package \
  --deb-systemd james.service \
  --after-install james.postinst \
+ --after-remove james.postremove \
  --provides mail-transport-agent \
  --provides default-mta \
  --iteration $ITERATION \
