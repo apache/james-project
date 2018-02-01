@@ -509,22 +509,22 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
       <code>
   &lt;dependency&gt;
     &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
-    &lt;artifactId&gt;apache-mailet-ai&lt;/artifactId&gt;
+    &lt;artifactId&gt;apache-mailet-crypto&lt;/artifactId&gt;
     &lt;version&gt;3.0.1&lt;/version&gt;
   &lt;/dependency&gt;
       </code>
     </pre>
 
     <p>Direct download link:
-      <a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-ai-3.0.1.jar">(Jar)</a>
-      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-ai-3.0.1.jar.sha1">SHA-1</a>]
-      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-ai-3.0.1.jar.asc">PGP</a>]
+      <a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-crypto-3.0.1.jar">(Jar)</a>
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-crypto-3.0.1.jar.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-crypto-3.0.1.jar.asc">PGP</a>]
     </p>
 
     <p>Sources:
-      <a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-ai-sources-3.0.1.zip">(Zip)</a>
-      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-ai-sources-3.0.1.zip.sha1">SHA-1</a>]
-      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-ai-sources-3.0.1.zip.asc">PGP</a>]
+      <a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-crypto-sources-3.0.1.zip">(Zip)</a>
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-crypto-sources-3.0.1.zip.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-crypto-sources-3.0.1.zip.asc">PGP</a>]
     </p>
     
   </section>
