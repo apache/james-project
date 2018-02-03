@@ -18,11 +18,9 @@
  ****************************************************************/
 package org.apache.james.jmap.model.mailbox;
 
-import java.util.Locale;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.function.BiFunction;
 
 import org.apache.james.jmap.DefaultMailboxes;
 
@@ -35,41 +33,51 @@ import com.google.common.collect.ImmutableList;
 public class Role {
 
     public static final String USER_DEFINED_ROLE_PREFIX = "x-";
+
+    private static final BiFunction<String, String, Boolean> CASE_SENSITIVE_COMPARATOR = (a, b) -> a.equals(b);
+    private static final BiFunction<String, String, Boolean> NON_CASE_SENSITIVE_COMPARATOR = (a, b) -> a.equalsIgnoreCase(b);
+
+    public static final Role INBOX = new Role("inbox", DefaultMailboxes.INBOX, NON_CASE_SENSITIVE_COMPARATOR);
+    public static final Role DRAFTS = new Role("drafts", DefaultMailboxes.DRAFTS, CASE_SENSITIVE_COMPARATOR);
+    public static final Role OUTBOX = new Role("outbox", DefaultMailboxes.OUTBOX, CASE_SENSITIVE_COMPARATOR);
+    public static final Role SENT = new Role("sent", DefaultMailboxes.SENT, CASE_SENSITIVE_COMPARATOR);
+    public static final Role TRASH = new Role("trash", DefaultMailboxes.TRASH, CASE_SENSITIVE_COMPARATOR);
+    public static final Role ARCHIVE = new Role("archive", DefaultMailboxes.ARCHIVE, CASE_SENSITIVE_COMPARATOR);
+    public static final Role SPAM = new Role("spam", DefaultMailboxes.SPAM, CASE_SENSITIVE_COMPARATOR);
+    public static final Role TEMPLATES = new Role("templates", DefaultMailboxes.TEMPLATES, CASE_SENSITIVE_COMPARATOR);
     
-    public static final Role INBOX = new Role("inbox", DefaultMailboxes.INBOX);
-    public static final Role DRAFTS = new Role("drafts", DefaultMailboxes.DRAFTS);
-    public static final Role OUTBOX = new Role("outbox", DefaultMailboxes.OUTBOX);
-    public static final Role SENT = new Role("sent", DefaultMailboxes.SENT);
-    public static final Role TRASH = new Role("trash", DefaultMailboxes.TRASH);
-    public static final Role ARCHIVE = new Role("archive");
-    public static final Role SPAM = new Role("spam");
-    public static final Role TEMPLATES = new Role("templates");
-    
-    private static final Map<String, Role> ROLES = 
-            ImmutableList.<Role>of(INBOX, ARCHIVE, DRAFTS, OUTBOX, SENT, TRASH, SPAM, TEMPLATES)
-                .stream()
-                .collect(Collectors.toMap((Role x) -> x.name.toLowerCase(Locale.US), Function.identity()));
+    private static final List<Role> ROLES = 
+            ImmutableList.<Role>of(INBOX, DRAFTS, OUTBOX, SENT, TRASH, ARCHIVE, SPAM, TEMPLATES);
     
     private final String name;
     private final String defaultMailbox;
+    private final BiFunction<String, String, Boolean> comparator;
 
-    @VisibleForTesting Role(String name, String defaultMailbox) {
+    @VisibleForTesting Role(String name, String defaultMailbox, BiFunction<String, String, Boolean> comparator) {
         this.name = name;
         this.defaultMailbox = defaultMailbox;
+        this.comparator = comparator;
     }
 
     @VisibleForTesting Role(String name) {
         this.name = name;
         this.defaultMailbox = null;
+        this.comparator = NON_CASE_SENSITIVE_COMPARATOR;
     }
 
     public static Optional<Role> from(String name) {
-        Optional<Role> predefinedRole = Optional.ofNullable(ROLES.get(name.toLowerCase(Locale.US)));
+        Optional<Role> predefinedRole = predefinedRole(name);
         if (predefinedRole.isPresent()) {
             return predefinedRole;
         } else {
             return tryBuildCustomRole(name);
         }
+    }
+
+    private static Optional<Role> predefinedRole(String name) {
+        return ROLES.stream()
+                .filter(role -> role.comparator.apply(role.defaultMailbox, name))
+                .findFirst();
     }
 
     private static Optional<Role> tryBuildCustomRole(String name) {
@@ -80,7 +88,7 @@ public class Role {
     }
 
     public boolean isSystemRole() {
-        return ROLES.containsKey(name.toLowerCase(Locale.US));
+        return predefinedRole(defaultMailbox).isPresent();
     }
 
     @JsonValue

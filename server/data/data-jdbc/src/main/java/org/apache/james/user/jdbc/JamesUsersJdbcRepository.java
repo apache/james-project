@@ -19,14 +19,14 @@
 
 package org.apache.james.user.jdbc;
 
-import org.apache.james.user.api.model.User;
-import org.apache.james.user.lib.model.DefaultJamesUser;
-import org.apache.james.user.lib.model.DefaultUser;
-import org.apache.james.core.MailAddress;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import org.apache.james.core.MailAddress;
+import org.apache.james.user.api.model.User;
+import org.apache.james.user.lib.model.DefaultJamesUser;
+import org.apache.james.user.lib.model.DefaultUser;
 
 /**
  * A Jdbc-backed UserRepository which handles User instances of the
@@ -111,9 +111,8 @@ public class JamesUsersJdbcRepository extends AbstractJdbcUsersRepository {
         } else if (user instanceof DefaultUser) {
             DefaultUser aUser = (DefaultUser) user;
             jamesUser = new DefaultJamesUser(aUser.getUserName(), aUser.getHashedPassword(), aUser.getHashAlgorithm());
-        }
-        // Can't handle any other implementations.
-        else {
+        } else {
+            // Can't handle any other implementations.
             throw new RuntimeException("An unknown implementation of User was " + "found. This implementation cannot be " + "persisted to a UsersJDBCRepsitory.");
         }
 

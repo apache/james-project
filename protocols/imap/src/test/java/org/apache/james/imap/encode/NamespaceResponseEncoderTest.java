@@ -151,7 +151,7 @@ public class NamespaceResponseEncoderTest {
                 oneOf(mockComposer).commandName(ImapConstants.NAMESPACE_COMMAND_NAME);
                 oneOf(mockComposer).openParen(); inSequence(sequence);
                 oneOf(mockComposer).openParen(); inSequence(sequence);
-                oneOf(mockComposer).quote(aPrefix + aDeliminator ); inSequence(sequence);
+                oneOf(mockComposer).quote(aPrefix + aDeliminator); inSequence(sequence);
                 oneOf(mockComposer).quote(aDeliminator); inSequence(sequence);
                 oneOf(mockComposer).closeParen(); inSequence(sequence);
                 oneOf(mockComposer).openParen(); inSequence(sequence);

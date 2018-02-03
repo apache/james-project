@@ -27,6 +27,7 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.james.jmap.exceptions.MailboxNotOwnedException;
 import org.apache.james.jmap.exceptions.MailboxParentNotFoundException;
 import org.apache.james.jmap.model.MailboxCreationId;
 import org.apache.james.jmap.model.MailboxFactory;
@@ -50,11 +51,12 @@ import org.apache.james.mailbox.model.MailboxId.Factory;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.fge.lambdas.functions.ThrowingFunction;
+import com.github.fge.lambdas.functions.FunctionChainer;
 import com.google.common.annotations.VisibleForTesting;
 
 public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
@@ -113,7 +115,7 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
             Map<MailboxCreationId, MailboxId> creationIdsToCreatedMailboxId, SetMailboxesResponse.Builder builder) {
         try {
             ensureValidMailboxName(mailboxRequest, mailboxSession);
-            MailboxPath mailboxPath = getMailboxPath(mailboxRequest, creationIdsToCreatedMailboxId, mailboxSession);
+            MailboxPath mailboxPath = computeMailboxPath(mailboxRequest, creationIdsToCreatedMailboxId, mailboxSession);
             Optional<MailboxId> mailboxId = mailboxManager.createMailbox(mailboxPath, mailboxSession);
             Optional<Mailbox> mailbox = mailboxId.flatMap(id -> mailboxFactory.builder()
                     .id(id)
@@ -133,6 +135,11 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
             builder.notCreated(mailboxCreationId, SetError.builder()
                 .type("invalidArguments")
                 .description("The mailbox name length is too long")
+                .build());
+        } catch (MailboxNotOwnedException e) {
+            builder.notCreated(mailboxCreationId, SetError.builder()
+                .type("invalidArguments")
+                .description("The mailbox can not be created with a parent mailbox belonging to another user")
                 .build());
         } catch (MailboxNameException | MailboxParentNotFoundException e) {
             builder.notCreated(mailboxCreationId, SetError.builder()
@@ -163,28 +170,35 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
         }
     }
 
-    private MailboxPath getMailboxPath(MailboxCreateRequest mailboxRequest, Map<MailboxCreationId, MailboxId> creationIdsToCreatedMailboxId, MailboxSession mailboxSession) throws MailboxException {
+    private MailboxPath computeMailboxPath(MailboxCreateRequest mailboxRequest, Map<MailboxCreationId, MailboxId> creationIdsToCreatedMailboxId, MailboxSession mailboxSession) throws MailboxException {
         if (mailboxRequest.getParentId().isPresent()) {
             MailboxCreationId parentId = mailboxRequest.getParentId().get();
-            String parentName = getMailboxNameFromId(parentId, mailboxSession)
-                    .orElseGet(Throwing.supplier(() ->
-                        getMailboxNameFromId(creationIdsToCreatedMailboxId.get(parentId), mailboxSession)
-                            .orElseThrow(() -> new MailboxParentNotFoundException(parentId))
-                    ));
+            MailboxPath parentPath = getMailboxPath(creationIdsToCreatedMailboxId, mailboxSession, parentId);
+
+            assertBelongsToUser(parentPath, mailboxSession);
 
             return MailboxPath.forUser(mailboxSession.getUser().getUserName(),
-                    parentName + mailboxSession.getPathDelimiter() + mailboxRequest.getName());
+                parentPath.getName() + mailboxSession.getPathDelimiter() + mailboxRequest.getName());
         }
         return MailboxPath.forUser(mailboxSession.getUser().getUserName(), mailboxRequest.getName());
     }
 
-    private Optional<String> getMailboxNameFromId(MailboxCreationId creationId, MailboxSession mailboxSession) {
-        ThrowingFunction<? super MailboxId, Optional<String>> toName = parentId -> getMailboxNameFromId(parentId, mailboxSession);
-        return getMailboxIdFromCreationId(creationId)
-                .flatMap(Throwing.function(toName).sneakyThrow());
+    private void assertBelongsToUser(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxNotOwnedException {
+        if (!mailboxPath.belongsTo(mailboxSession)) {
+            throw new MailboxNotOwnedException();
+        }
     }
 
-    private Optional<MailboxId> getMailboxIdFromCreationId(MailboxCreationId creationId) {
+    private MailboxPath getMailboxPath(Map<MailboxCreationId, MailboxId> creationIdsToCreatedMailboxId, MailboxSession mailboxSession, MailboxCreationId parentId) throws MailboxException {
+        Optional<MailboxId> mailboxId = OptionalUtils.or(
+            readCreationIdAsMailboxId(parentId),
+            Optional.ofNullable(creationIdsToCreatedMailboxId.get(parentId)));
+
+        return getMailboxPathFromId(mailboxId, mailboxSession)
+                .orElseThrow(() -> new MailboxParentNotFoundException(parentId));
+    }
+
+    private Optional<MailboxId> readCreationIdAsMailboxId(MailboxCreationId creationId) {
         try {
             return Optional.of(mailboxIdFactory.fromString(creationId.getCreationId()));
         } catch (Exception e) {
@@ -193,15 +207,16 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
     }
 
     @VisibleForTesting
-    Optional<String> getMailboxNameFromId(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
-        if (mailboxId == null) {
-            return Optional.empty();
-        }
-        try {
-            return Optional.of(mailboxManager.getMailbox(mailboxId, mailboxSession).getMailboxPath().getName());
-        } catch (MailboxNotFoundException e) {
-            return Optional.empty();
-        }
+    Optional<MailboxPath> getMailboxPathFromId(Optional<MailboxId> mailboxId, MailboxSession mailboxSession) {
+        FunctionChainer<MailboxId, Optional<MailboxPath>> fromMailboxIdToMailboxPath = Throwing.function(id -> {
+            try {
+                return Optional.of(mailboxManager.getMailbox(id, mailboxSession).getMailboxPath());
+            } catch (MailboxNotFoundException e) {
+                return Optional.empty();
+            }
+        });
+        return mailboxId
+            .flatMap(fromMailboxIdToMailboxPath.sneakyThrow());
     }
 
 }

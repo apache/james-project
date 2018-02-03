@@ -18,53 +18,38 @@
  ****************************************************************/
 package org.apache.james.mailbox.acl;
 
-import java.util.Map;
 import java.util.stream.Stream;
 
 import org.apache.james.mailbox.model.MailboxACL;
 
 public class PositiveUserACLDiff {
+    private final ACLDiff aclDiff;
 
-    public static PositiveUserACLDiff computeDiff(MailboxACL oldACL, MailboxACL newACL) {
-        return new PositiveUserACLDiff(oldACL, newACL);
+    public PositiveUserACLDiff(ACLDiff aclDiff) {
+        this.aclDiff = aclDiff;
     }
 
-    private final MailboxACL oldACL;
-    private final MailboxACL newACL;
-
-    private PositiveUserACLDiff(MailboxACL oldACL, MailboxACL newACL) {
-        this.oldACL = oldACL;
-        this.newACL = newACL;
+    public static PositiveUserACLDiff computeDiff(MailboxACL oldACL, MailboxACL newACL) {
+        return new PositiveUserACLDiff(ACLDiff.computeDiff(oldACL, newACL));
     }
 
     public Stream<MailboxACL.Entry> addedEntries() {
-        Map<MailboxACL.EntryKey, MailboxACL.Rfc4314Rights> oldEntries = oldACL.ofPositiveNameType(MailboxACL.NameType.user);
-
-        return newACL.ofPositiveNameType(MailboxACL.NameType.user)
-            .entrySet()
-            .stream()
-            .filter(entry -> !oldEntries.containsKey(entry.getKey()))
-            .map(entry -> new MailboxACL.Entry(entry.getKey(), entry.getValue()));
+        return aclDiff.addedEntries()
+            .filter(this::hasPositiveUserKey);
     }
 
     public Stream<MailboxACL.Entry> removedEntries() {
-        Map<MailboxACL.EntryKey, MailboxACL.Rfc4314Rights> newEntries = newACL.ofPositiveNameType(MailboxACL.NameType.user);
-
-        return oldACL.ofPositiveNameType(MailboxACL.NameType.user)
-            .entrySet()
-            .stream()
-            .filter(entry -> !newEntries.containsKey(entry.getKey()))
-            .map(entry -> new MailboxACL.Entry(entry.getKey(), entry.getValue()));
+        return aclDiff.removedEntries()
+            .filter(this::hasPositiveUserKey);
     }
 
     public Stream<MailboxACL.Entry> changedEntries() {
-        Map<MailboxACL.EntryKey, MailboxACL.Rfc4314Rights> oldEntries = oldACL.ofPositiveNameType(MailboxACL.NameType.user);
+        return aclDiff.changedEntries()
+            .filter(this::hasPositiveUserKey);
+    }
 
-        return newACL.ofPositiveNameType(MailboxACL.NameType.user)
-            .entrySet()
-            .stream()
-            .filter(entry -> oldEntries.containsKey(entry.getKey())
-                && !oldEntries.get(entry.getKey()).equals(entry.getValue()))
-            .map(entry -> new MailboxACL.Entry(entry.getKey(), entry.getValue()));
+    private boolean hasPositiveUserKey(MailboxACL.Entry entry) {
+        return !entry.getKey().isNegative()
+            && entry.getKey().getNameType().equals(MailboxACL.NameType.user);
     }
 }

@@ -27,12 +27,11 @@ import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
-import java.util.Properties;
 
-import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.mailet.base.test.MimeMessageUtil;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,7 +43,7 @@ public class MimeMessageBodyGeneratorTest {
 
     @Before
     public void setUp() {
-        original = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        original = MimeMessageUtil.defaultMimeMessage();
         htmlTextExtractor = mock(HtmlTextExtractor.class);
         mimeMessageBodyGenerator = new MimeMessageBodyGenerator(htmlTextExtractor);
     }

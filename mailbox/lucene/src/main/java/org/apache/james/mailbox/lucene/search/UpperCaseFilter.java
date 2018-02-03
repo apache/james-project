@@ -42,11 +42,13 @@ public final class UpperCaseFilter extends TokenFilter {
 
             final char[] buffer = termAtt.buffer();
             final int length = termAtt.length();
-            for (int i = 0; i < length; i++)
+            for (int i = 0; i < length; i++) {
                 buffer[i] = Character.toUpperCase(buffer[i]);
+            }
 
             return true;
-        } else
+        } else {
             return false;
+        }
     }
 }

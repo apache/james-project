@@ -30,14 +30,14 @@
 <mailetcontainer enableJmx="true">
  
     <!-- MailAddress used for PostMaster -->
-	<context>
-	    <postmaster>postmaster@localhost</postmaster>
-	</context>
+    <context>
+        <postmaster>postmaster@localhost</postmaster>
+    </context>
 
     <!-- Number of spool threads -->
     <spooler>
-	  <threads>20</threads>
-	</spooler>
+      <threads>20</threads>
+    </spooler>
       
   <processors>
   
@@ -207,11 +207,13 @@ Regards, Postmaster XXX.YYY
        <mailet match="SMTPAuthSuccessful" class="SetMimeHeader">
           <name>X-UserIsAuth</name>
           <value>true</value>
+          <onMailetException>ignore</onMailetException>
        </mailet>
     
        <mailet match="HasMailAttribute=org.apache.james.SMIMECheckSignature" class="SetMimeHeader">
           <name>X-WasSigned</name>
           <value>true</value>
+          <onMailetException>ignore</onMailetException>
        </mailet>
 
        <!-- Add a server-side signature -->
@@ -234,19 +236,19 @@ Regards, Postmaster XXX.YYY
        <!--
 
        <mailet match="IsOverQuota" class="ToProcessor">
-	      <processor>over-quota</processor>
-	    </mailet>
+          <processor>over-quota</processor>
+        </mailet>
          -->
 
        <!--  The RecipientRewriteTable will use the definitions found in recipientrewritetablexml -->
-	     <mailet match="All" class="RecipientRewriteTable" />
-	    
-	     <!-- Place a copy in the user Sent folder -->
-	     <mailet match="SenderIsLocal" class="ToSenderFolder">
-	       <folder>Sent</folder>
-	       <consume>false</consume>
-	     </mailet>
-	
+         <mailet match="All" class="RecipientRewriteTable" />
+
+         <!-- Place a copy in the user Sent folder -->
+         <mailet match="SenderIsLocal" class="ToSenderFolder">
+           <folder>Sent</folder>
+           <consume>false</consume>
+         </mailet>
+
        <!-- Is the recipient is for a local account, deliver it locally -->
        <mailet match="RecipientIsLocal" class="Sieve"/>
        <mailet match="RecipientIsLocal" class="AddDeliveredToHeader"/>
@@ -288,20 +290,13 @@ Regards, Postmaster XXX.YYY
        <!-- Attempt remote delivery using the specified repository for the spool, -->
        <!-- using delay time to retry delivery and the maximum number of retries -->
        <mailet match="All" class="RemoteDelivery">
-          <outgoingQueue>outgoing</outgoingQueue>
+          <outgoing>outgoing</outgoing>
 
           <!-- Delivery Schedule based upon RFC 2821, 4.5.4.1 -->
           <!-- 5 day retry period, with 4 attempts in the first
                  hour, two more within the first 6 hours, and then
                  every 6 hours for the rest of the period.
-                 This format is not yet supported, instead, use a unique
-                 tag with the list of delays in milliseconds separated by commas.
-          <delayTime>5 minutes</delayTime>
-          <delayTime>10 minutes</delayTime>
-          <delayTime>45 minutes</delayTime>
-          <delayTime>2 hours</delayTime>
-          <delayTime>3 hours</delayTime>
-          <delayTime>6 hours</delayTime>
+          <delayTime>4 * 15 minutes, 2 * 3 hours, 18 * 6 hours</delayTime>
           -->
           <delayTime>5000, 100000, 500000</delayTime>
           <maxRetries>25</maxRetries>
@@ -375,11 +370,11 @@ Regards, Postmaster XXX.YYY
      
        <!-- To place the spam messages in the user junk folder, uncomment this matcher/mailet configuration -->
        <!--
-	   <mailet match="RecipientIsLocal" class="ToRecipientFolder">
-	       <folder>Junk</folder>
-	       <consume>false</consume>
-	   </mailet>
-	    -->
+       <mailet match="RecipientIsLocal" class="ToRecipientFolder">
+           <folder>Junk</folder>
+           <consume>false</consume>
+       </mailet>
+        -->
 
        <!-- To destroy all messages, uncomment this matcher/mailet configuration -->
        <!--

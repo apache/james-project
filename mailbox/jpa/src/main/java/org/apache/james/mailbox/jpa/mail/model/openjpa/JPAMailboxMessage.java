@@ -39,8 +39,8 @@ import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 
-@Entity(name="MailboxMessage")
-@Table(name="JAMES_MAIL")
+@Entity(name = "MailboxMessage")
+@Table(name = "JAMES_MAIL")
 public class JPAMailboxMessage extends AbstractJPAMailboxMessage {
 
     /** The value for the body field. Lazy loaded */
@@ -62,7 +62,7 @@ public class JPAMailboxMessage extends AbstractJPAMailboxMessage {
     }
 
     public JPAMailboxMessage(JPAMailbox mailbox, Date internalDate, int size, Flags flags, SharedInputStream content, int bodyStartOctet, PropertyBuilder propertyBuilder) throws MailboxException {
-        super(mailbox, internalDate, flags, size ,bodyStartOctet, propertyBuilder);
+        super(mailbox, internalDate, flags, size, bodyStartOctet, propertyBuilder);
         try {
             int headerEnd = bodyStartOctet;
             if (headerEnd < 0) {
@@ -79,7 +79,7 @@ public class JPAMailboxMessage extends AbstractJPAMailboxMessage {
     /**
      * Create a copy of the given message
      */
-    public JPAMailboxMessage(JPAMailbox mailbox, MessageUid uid, long modSeq, MailboxMessage message) throws MailboxException{
+    public JPAMailboxMessage(JPAMailbox mailbox, MessageUid uid, long modSeq, MailboxMessage message) throws MailboxException {
         super(mailbox, uid, modSeq, message);
         try {
             this.body = IOUtils.toByteArray(message.getBodyContent());

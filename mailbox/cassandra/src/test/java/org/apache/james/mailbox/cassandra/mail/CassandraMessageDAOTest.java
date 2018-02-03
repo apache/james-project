@@ -38,12 +38,13 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.blob.cassandra.CassandraBlobId;
+import org.apache.james.blob.cassandra.CassandraBlobModule;
+import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO.MessageIdAttachmentIds;
-import org.apache.james.mailbox.cassandra.mail.utils.Limit;
-import org.apache.james.mailbox.cassandra.modules.CassandraBlobModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -53,12 +54,12 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.util.streams.Limit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Bytes;
@@ -89,7 +90,9 @@ public class CassandraMessageDAOTest {
         messageIdFactory = new CassandraMessageId.Factory();
         messageId = messageIdFactory.generate();
         CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
-        testee = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), blobsDAO, CassandraUtils.WITH_DEFAULT_CONFIGURATION, new CassandraMessageId.Factory());
+        CassandraBlobId.Factory blobIdFactory = new CassandraBlobId.Factory();
+        testee = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), blobsDAO, blobIdFactory,
+            CassandraUtils.WITH_DEFAULT_CONFIGURATION, new CassandraMessageId.Factory());
 
         messageIds = ImmutableList.of(ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(new ComposedMessageId(MAILBOX_ID, messageId, messageUid))
@@ -140,7 +143,7 @@ public class CassandraMessageDAOTest {
         MessageWithoutAttachment attachmentRepresentation =
             toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Full, Limit.unlimited()));
 
-        assertThat(IOUtils.toString(attachmentRepresentation.getContent(), Charsets.UTF_8))
+        assertThat(IOUtils.toString(attachmentRepresentation.getContent(), StandardCharsets.UTF_8))
             .isEqualTo(CONTENT);
     }
 
@@ -155,9 +158,9 @@ public class CassandraMessageDAOTest {
 
         byte[] expected = Bytes.concat(
             new byte[BODY_START],
-            CONTENT.substring(BODY_START).getBytes(Charsets.UTF_8));
-        assertThat(IOUtils.toString(attachmentRepresentation.getContent(), Charsets.UTF_8))
-            .isEqualTo(IOUtils.toString(new ByteArrayInputStream(expected), Charsets.UTF_8));
+            CONTENT.substring(BODY_START).getBytes(StandardCharsets.UTF_8));
+        assertThat(IOUtils.toString(attachmentRepresentation.getContent(), StandardCharsets.UTF_8))
+            .isEqualTo(IOUtils.toString(new ByteArrayInputStream(expected), StandardCharsets.UTF_8));
     }
 
     @Test
@@ -169,7 +172,7 @@ public class CassandraMessageDAOTest {
         MessageWithoutAttachment attachmentRepresentation =
             toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Headers, Limit.unlimited()));
 
-        assertThat(IOUtils.toString(attachmentRepresentation.getContent(), Charsets.UTF_8))
+        assertThat(IOUtils.toString(attachmentRepresentation.getContent(), StandardCharsets.UTF_8))
             .isEqualTo(CONTENT.substring(0, BODY_START));
     }
 
@@ -181,7 +184,7 @@ public class CassandraMessageDAOTest {
             .internalDate(new Date())
             .bodyStartOctet(bodyStart)
             .size(content.length())
-            .content(new SharedByteArrayInputStream(content.getBytes(Charsets.UTF_8)))
+            .content(new SharedByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)))
             .flags(new Flags())
             .propertyBuilder(propertyBuilder)
             .addAttachments(attachments)

@@ -30,6 +30,8 @@ import org.apache.james.mailbox.model.MessageId;
 
 public interface AttachmentManager {
 
+    boolean exists(AttachmentId attachmentId, MailboxSession session) throws MailboxException;
+
     Attachment getAttachment(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException, AttachmentNotFoundException;
 
     List<Attachment> getAttachments(List<AttachmentId> attachmentIds, MailboxSession mailboxSession) throws MailboxException;

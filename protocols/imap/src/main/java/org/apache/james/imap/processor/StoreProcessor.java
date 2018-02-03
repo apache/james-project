@@ -61,15 +61,13 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
-
 public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreProcessor.class);
 
     /**
      * The {@link ImapCommand} which should be used for the response if some CONDSTORE option is used
      */
-    private final static ImapCommand CONDSTORE_COMMAND = ImapCommand.selectedStateCommand("Conditional STORE");
+    private static final ImapCommand CONDSTORE_COMMAND = ImapCommand.selectedStateCommand("Conditional STORE");
     
     public StoreProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
@@ -94,13 +92,13 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
             final Flags flags = request.getFlags();
             
             if (unchangedSince != -1) {
-            	MetaData metaData = mailbox.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT);
+                MetaData metaData = mailbox.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT);
                 if (metaData.isModSeqPermanent() == false) {
                     // Check if the mailbox did not support modsequences. If so return a tagged bad response.
                     // See RFC4551 3.1.2. NOMODSEQ Response Code 
                     taggedBad(command, tag, responder, HumanReadableText.NO_MOD_SEQ);
                     return;
-                } else if (unchangedSince == 0){
+                } else if (unchangedSince == 0) {
                     Flags.Flag[] systemFlags = flags.getSystemFlags();
                     if (systemFlags != null && systemFlags.length != 0) {
                         // we need to return all sequences as failed when using a UNCHANGEDSINCE 0 and the request specify a SYSTEM flags
@@ -190,7 +188,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                 if (useUids) {
                     List<MessageRange> ranges = MessageRange.toRanges(failed);
                     UidRange[] idRanges = new UidRange[ranges.size()];
-                    for (int i = 0 ; i < ranges.size(); i++) {
+                    for (int i = 0; i < ranges.size(); i++) {
                         MessageRange r = ranges.get(i);
                         if (r.getType() == Type.ONE) {
                             idRanges[i] = new UidRange(r.getUidFrom());
@@ -216,12 +214,10 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                 }
             }
         } catch (MessageRangeException e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Store failed for mailbox " + session.getSelected().getPath() + " because of an invalid sequence-set " + ImmutableList.copyOf(idSet), e);
-            }
+            LOGGER.debug("Store failed for mailbox {} because of an invalid sequence-set {}", session.getSelected().getPath(), idSet, e);
             taggedBad(imapCommand, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            LOGGER.error("Store failed for mailbox " + session.getSelected().getPath() + " and sequence-set " + ImmutableList.copyOf(idSet), e);
+            LOGGER.error("Store failed for mailbox {} and sequence-set {}", session.getSelected().getPath(), idSet, e);
             no(imapCommand, tag, responder, HumanReadableText.SAVE_FAILED);
         }
     }
@@ -283,7 +279,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
             //
             if (unchangedSince != -1 || qresyncEnabled || condstoreEnabled) {
                 MessageResultIterator results = mailbox.getMessages(messageSet, FetchGroupImpl.MINIMAL, mailboxSession);
-                while(results.hasNext()) {
+                while (results.hasNext()) {
                     MessageResult r = results.next();
                     // Store the modseq for the uid for later usage in the response
                     modSeqs.put(r.getUid(),r.getModSeq());
@@ -295,10 +291,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                 final int msn = selected.msn(uid);
 
                 if (msn == SelectedMailbox.NO_SUCH_MESSAGE) {
-                    if(LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("No message found with uid " + uid + " in the uid<->msn mapping for mailbox " + selected.getPath().getFullName(mailboxSession.getPathDelimiter()) +" , this may be because it was deleted by a concurrent session. So skip it..");
-                        
-                    }
+                    LOGGER.debug("No message found with uid {} in the uid<->msn mapping for mailbox {}. This may be because it was deleted by a concurrent session. So skip it..", uid, selected.getPath().getFullName(mailboxSession.getPathDelimiter()));
                     // skip this as it was not found in the mapping
                     // 
                     // See IMAP-346
@@ -330,7 +323,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                 if (silent && (unchangedSince != -1 || qresyncEnabled || condstoreEnabled)) {
                     // We need to return an FETCH response which contains the mod-sequence of the message even if FLAGS.SILENT was used
                     response = new FetchResponse(msn, null, resultUid, modSeqs.get(uid), null, null, null, null, null, null);
-                } else if (!silent && (unchangedSince != -1 || qresyncEnabled || condstoreEnabled)){
+                } else if (!silent && (unchangedSince != -1 || qresyncEnabled || condstoreEnabled)) {
                     //
                     // Use a FETCH response which contains the mod-sequence and the flags
                     response = new FetchResponse(msn, resultFlags, resultUid, modSeqs.get(uid), null, null, null, null, null, null);

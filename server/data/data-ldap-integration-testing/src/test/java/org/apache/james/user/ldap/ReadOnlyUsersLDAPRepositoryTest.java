@@ -177,4 +177,12 @@ public class ReadOnlyUsersLDAPRepositoryTest {
         startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting());
         assertThat(ldapRepository.contains(ldapRepository.getUser(new MailAddress(JAMES_USER_MAIL)))).isTrue();
     }
+
+    @Test
+    public void specialCharacterInUserInputShouldBeSanitized() throws Exception {
+        String patternMatchingMultipleUsers = "j*";
+
+        startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting());
+        assertThat(ldapRepository.test(patternMatchingMultipleUsers, PASSWORD)).isFalse();
+    }
 }

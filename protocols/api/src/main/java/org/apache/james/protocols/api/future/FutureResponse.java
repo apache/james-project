@@ -27,7 +27,7 @@ import org.apache.james.protocols.api.Response;
  * 
  *
  */
-public interface FutureResponse extends Response{
+public interface FutureResponse extends Response {
 
     /**
      * Add a {@link ResponseListener} which will get notified once {@link #isReady()} is true

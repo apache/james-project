@@ -21,13 +21,12 @@
 
 package org.apache.james.transport.matchers;
 
-
 import java.util.Collection;
 
 import javax.mail.MessagingException;
 
-import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
 /**
@@ -41,8 +40,7 @@ import org.apache.mailet.base.GenericMatcher;
  * @version CVS $Revision$ $Date$
  * @since 2.2.0
  **/
-public class HasMailAttribute extends GenericMatcher 
-{
+public class HasMailAttribute extends GenericMatcher {
     
     private String attributeName;
 
@@ -55,12 +53,7 @@ public class HasMailAttribute extends GenericMatcher
         return "Has Mail Attribute Matcher";
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.mailet.base.GenericMatcher#init()
-     */
-    public void init () throws MessagingException
-    {
+    public void init() throws MessagingException {
         attributeName = getCondition();
     }
 
@@ -70,9 +63,8 @@ public class HasMailAttribute extends GenericMatcher
      * set on the mail
      *
      **/
-    public Collection<MailAddress> match (Mail mail) throws MessagingException
-    {
-        if (mail.getAttribute (attributeName) != null) {
+    public Collection<MailAddress> match(Mail mail) throws MessagingException {
+        if (mail.getAttribute(attributeName) != null) {
             return mail.getRecipients();
         } 
         return null;

@@ -107,7 +107,7 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
         return response;
     }
 
-	/**
+    /**
      * Handler method called upon receipt of a MAIL command. Sets up handler to
      * deliver mail as the stated sender.
      * 
@@ -134,7 +134,7 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
      * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
      */
     public Collection<String> getImplCommands() {
-    	return COMMANDS;
+        return COMMANDS;
     }
 
     /**
@@ -216,26 +216,13 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
                         }
                     } else {
                         // Unexpected option attached to the Mail command
-                        if (LOGGER.isDebugEnabled()) {
-                            StringBuilder debugBuffer = new StringBuilder(128)
-                                    .append(
-                                            "MAIL command had unrecognized/unexpected option ")
-                                    .append(mailOptionName).append(
-                                            " with value ").append(
-                                            mailOptionValue);
-                            LOGGER.debug(debugBuffer.toString());
-                        }
+                        LOGGER.debug("MAIL command had unrecognized/unexpected option {} with value {}", mailOptionName, mailOptionValue);
                     }
                 }
             }
             if (session.getConfiguration().useAddressBracketsEnforcement()
                     && (!sender.startsWith("<") || !sender.endsWith(">"))) {
-                if (LOGGER.isInfoEnabled()) {
-                    StringBuilder errorBuffer = new StringBuilder(128).append(
-                            "Error parsing sender address: ").append(sender)
-                            .append(": did not start and end with < >");
-                    LOGGER.info(errorBuffer.toString());
-                }
+                LOGGER.info("Error parsing sender address: {}: did not start and end with < >", sender);
                 return SYNTAX_ERROR;
             }
             MailAddress senderAddress = null;
@@ -259,13 +246,7 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
                 try {
                     senderAddress = new MailAddress(sender);
                 } catch (Exception pe) {
-                    if (LOGGER.isInfoEnabled()) {
-                        StringBuilder errorBuffer = new StringBuilder(256)
-                                .append("Error parsing sender address: ")
-                                .append(sender).append(": ").append(
-                                        pe.getMessage());
-                        LOGGER.info(errorBuffer.toString());
-                    }
+                    LOGGER.info("Error parsing sender address: {}", sender, pe);
                     return SYNTAX_ERROR_ADDRESS;
                 }
             }
@@ -278,9 +259,7 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
         }
         return null;
     }
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler#getHookInterface()
-     */
+    
     protected Class<MailHook> getHookInterface() {
         return MailHook.class;
     }

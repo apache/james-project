@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 
 import org.apache.commons.io.IOUtils;
@@ -42,8 +43,6 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.base.Charsets;
 
 public class MailboxManagementTest {
 
@@ -257,8 +256,8 @@ public class MailboxManagementTest {
                 MessageRange.all(), MessageMapper.FetchType.Full, LIMIT);
         MailboxMessage mailboxMessage = iterator.next();
 
-        assertThat(IOUtils.toString(new FileInputStream(new File(emlpath)), Charsets.UTF_8))
-                .isEqualTo(IOUtils.toString(mailboxMessage.getFullContent(), Charsets.UTF_8));
+        assertThat(IOUtils.toString(new FileInputStream(new File(emlpath)), StandardCharsets.UTF_8))
+                .isEqualTo(IOUtils.toString(mailboxMessage.getFullContent(), StandardCharsets.UTF_8));
     }
 
     @Test
@@ -275,7 +274,7 @@ public class MailboxManagementTest {
         assertThat(iterator.hasNext()).isFalse();
     }
 
-	
+
     @Test(expected = NullPointerException.class)
     public void deleteMailboxShouldThrowOnNullNamespace() {
         mailboxManagerManagement.deleteMailbox(null, "a", "a");

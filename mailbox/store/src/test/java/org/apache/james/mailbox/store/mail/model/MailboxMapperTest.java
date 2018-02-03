@@ -21,7 +21,7 @@ package org.apache.james.mailbox.store.mail.model;
 
 import static org.apache.james.mailbox.store.mail.model.ListMailboxAssert.assertMailboxes;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 
@@ -33,9 +33,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Assume;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 /**
  * Generic purpose tests for your implementation MailboxMapper.
@@ -44,9 +42,9 @@ import org.junit.rules.ExpectedException;
  */
 public abstract class MailboxMapperTest {
     
-    private final static char DELIMITER = '.';
-    private final static char WILDCARD = '%';
-    private final static long UID_VALIDITY = 42;
+    private static final char DELIMITER = '.';
+    private static final char WILDCARD = '%';
+    private static final long UID_VALIDITY = 42;
 
     private MailboxPath benwaInboxPath;
     private Mailbox benwaInboxMailbox;
@@ -77,8 +75,6 @@ public abstract class MailboxMapperTest {
     private MailboxPath bobDifferentNamespacePath;
     private Mailbox bobDifferentNamespaceMailbox;
 
-    @Rule
-    public ExpectedException expected = ExpectedException.none();
     private MailboxMapper mailboxMapper;
     private MapperProvider mapperProvider;
 
@@ -95,30 +91,29 @@ public abstract class MailboxMapperTest {
 
     @Test
     public void findMailboxByPathWhenAbsentShouldFail() throws MailboxException {
-        expected.expect(MailboxNotFoundException.class);
-        mailboxMapper.findMailboxByPath(MailboxPath.forUser("benwa", "INBOX"));
+        assertThatThrownBy(() -> mailboxMapper.findMailboxByPath(MailboxPath.forUser("benwa", "INBOX")))
+            .isInstanceOf(MailboxNotFoundException.class);
     }
 
     @Test
-    public void saveShouldPersistTheMailbox() throws MailboxException{
+    public void saveShouldPersistTheMailbox() throws MailboxException {
         mailboxMapper.save(benwaInboxMailbox);
         MailboxAssert.assertThat(mailboxMapper.findMailboxByPath(benwaInboxPath)).isEqualTo(benwaInboxMailbox);
     }
 
     @Test
-    public void saveShouldThrowWhenMailboxAlreadyExist() throws MailboxException{
-        expected.expect(MailboxExistsException.class);
-
+    public void saveShouldThrowWhenMailboxAlreadyExist() throws MailboxException {
         mailboxMapper.save(benwaInboxMailbox);
 
         SimpleMailbox mailbox = new SimpleMailbox(benwaInboxMailbox);
         mailbox.setMailboxId(null);
 
-        mailboxMapper.save(mailbox);
+        assertThatThrownBy(() -> mailboxMapper.save(mailbox))
+            .isInstanceOf(MailboxExistsException.class);
     }
 
     @Test
-    public void saveWithNullUserShouldPersistTheMailbox() throws MailboxException{
+    public void saveWithNullUserShouldPersistTheMailbox() throws MailboxException {
         mailboxMapper.save(esnDevGroupInboxMailbox);
         MailboxAssert.assertThat(mailboxMapper.findMailboxByPath(esnDevGroupInboxPath)).isEqualTo(esnDevGroupInboxMailbox);
     }
@@ -176,26 +171,20 @@ public abstract class MailboxMapperTest {
     
     @Test
     public void deleteShouldEraseTheGivenMailbox() throws MailboxException {
-        expected.expect(MailboxNotFoundException.class);
-        try {
-            saveAll();
-            mailboxMapper.delete(benwaInboxMailbox);
-        } catch(MailboxException exception) {
-            fail("Error was not thrown by the appropriate method", exception);
-        }
-        mailboxMapper.findMailboxByPath(benwaInboxPath);
+        saveAll();
+        mailboxMapper.delete(benwaInboxMailbox);
+
+        assertThatThrownBy(() -> mailboxMapper.findMailboxByPath(benwaInboxPath))
+            .isInstanceOf(MailboxNotFoundException.class);
     }
 
     @Test
     public void deleteWithNullUserShouldEraseTheGivenMailbox() throws MailboxException {
-        expected.expect(MailboxNotFoundException.class);
-        try {
-            saveAll();
-            mailboxMapper.delete(esnDevGroupJamesMailbox);
-        } catch(MailboxException exception) {
-            fail("Error was not thrown by the appropriate method", exception);
-        }
-        mailboxMapper.findMailboxByPath(esnDevGroupJamesPath);
+        saveAll();
+        mailboxMapper.delete(esnDevGroupJamesMailbox);
+
+        assertThatThrownBy(() -> mailboxMapper.findMailboxByPath(esnDevGroupJamesPath))
+            .isInstanceOf(MailboxNotFoundException.class);
     }
 
     @Test
@@ -253,28 +242,28 @@ public abstract class MailboxMapperTest {
     
     @Test
     public void findMailboxByIdShouldFailWhenAbsent() throws MailboxException {
-        expected.expect(MailboxNotFoundException.class);
         saveAll();
         MailboxId removed = benwaInboxMailbox.getMailboxId();
         mailboxMapper.delete(benwaInboxMailbox);
-        mailboxMapper.findMailboxById(removed);
+        assertThatThrownBy(() -> mailboxMapper.findMailboxById(removed))
+            .isInstanceOf(MailboxNotFoundException.class);
     }
 
     private void initData() {
         benwaInboxPath = MailboxPath.forUser("benwa", "INBOX");
-        benwaWorkPath = MailboxPath.forUser("benwa", "INBOX"+DELIMITER+"work");
-        benwaWorkTodoPath = MailboxPath.forUser("benwa", "INBOX"+DELIMITER+"work"+DELIMITER+"todo");
-        benwaPersoPath = MailboxPath.forUser("benwa", "INBOX"+DELIMITER+"perso");
-        benwaWorkDonePath = MailboxPath.forUser("benwa", "INBOX"+DELIMITER+"work"+DELIMITER+"done");
+        benwaWorkPath = MailboxPath.forUser("benwa", "INBOX" + DELIMITER + "work");
+        benwaWorkTodoPath = MailboxPath.forUser("benwa", "INBOX" + DELIMITER + "work" + DELIMITER + "todo");
+        benwaPersoPath = MailboxPath.forUser("benwa", "INBOX" + DELIMITER + "perso");
+        benwaWorkDonePath = MailboxPath.forUser("benwa", "INBOX" + DELIMITER + "work" + DELIMITER + "done");
         bobInboxPath = MailboxPath.forUser("bob", "INBOX");
         bobyMailboxPath = MailboxPath.forUser("boby", "INBOX.that.is.a.trick");
         bobDifferentNamespacePath = new MailboxPath("#private_bob", "bob", "INBOX.bob");
         esnDevGroupInboxPath = new MailboxPath("#community_ESN_DEV", null, "INBOX");
-        esnDevGroupHublinPath = new MailboxPath("#community_ESN_DEV", null, "INBOX"+DELIMITER+"hublin");
-        esnDevGroupJamesPath = new MailboxPath("#community_ESN_DEV", null, "INBOX"+DELIMITER+"james");
+        esnDevGroupHublinPath = new MailboxPath("#community_ESN_DEV", null, "INBOX" + DELIMITER + "hublin");
+        esnDevGroupJamesPath = new MailboxPath("#community_ESN_DEV", null, "INBOX" + DELIMITER + "james");
         obmTeamGroupInboxPath = new MailboxPath("#community_OBM_Core_Team", null, "INBOX");
-        obmTeamGroupOPushPath = new MailboxPath("#community_OBM_Core_Team", null, "INBOX"+DELIMITER+"OPush");
-        obmTeamGroupRoundCubePath = new MailboxPath("#community_OBM_Core_Team", null, "INBOX"+DELIMITER+"roundCube");
+        obmTeamGroupOPushPath = new MailboxPath("#community_OBM_Core_Team", null, "INBOX" + DELIMITER + "OPush");
+        obmTeamGroupRoundCubePath = new MailboxPath("#community_OBM_Core_Team", null, "INBOX" + DELIMITER + "roundCube");
 
         benwaInboxMailbox = createMailbox(benwaInboxPath);
         benwaWorkMailbox = createMailbox(benwaWorkPath);
@@ -292,7 +281,7 @@ public abstract class MailboxMapperTest {
         bobDifferentNamespaceMailbox = createMailbox(bobDifferentNamespacePath);
     }
 
-    private void saveAll() throws MailboxException{
+    private void saveAll() throws MailboxException {
         mailboxMapper.save(benwaInboxMailbox);
         mailboxMapper.save(benwaWorkMailbox);
         mailboxMapper.save(benwaWorkTodoMailbox);

@@ -218,7 +218,7 @@ public class MIMEMessageConverter {
                 return createMultipartAlternativeBody(newMessage);
             }
         } catch (IOException e) {
-            LOGGER.error("Error while creating textBody \n"+ newMessage.getTextBody().get() +"\n or htmlBody \n" + newMessage.getHtmlBody().get(), e);
+            LOGGER.error("Error while creating textBody \n{}\n or htmlBody \n{}", newMessage.getTextBody().get(), newMessage.getHtmlBody().get(), e);
             throw Throwables.propagate(e);
         }
     }
@@ -227,8 +227,7 @@ public class MIMEMessageConverter {
         if (newMessage.getHtmlBody().isPresent() && newMessage.getTextBody().isPresent()) {
             Multipart body = createMultipartAlternativeBody(newMessage);
             builder.addBodyPart(BodyPartBuilder.create().setBody(body).build());
-        }
-        else {
+        } else {
             addText(builder, newMessage.getTextBody());
             addHtml(builder, newMessage.getHtmlBody());
         }

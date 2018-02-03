@@ -21,6 +21,7 @@ package org.apache.james.mailbox.caching;
 
 import java.util.List;
 
+import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -38,46 +39,46 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public class CachingMailboxMapper implements MailboxMapper {
 
-	private final MailboxMapper underlying;
-	private final MailboxByPathCache cache;
+    private final MailboxMapper underlying;
+    private final MailboxByPathCache cache;
 
-	public CachingMailboxMapper(MailboxMapper underlying, MailboxByPathCache cache) {
-		this.underlying = underlying;
-		this.cache = cache;
-	}
-	
-	@Override
-	public void endRequest() {
-		underlying.endRequest();		
-	}
+    public CachingMailboxMapper(MailboxMapper underlying, MailboxByPathCache cache) {
+        this.underlying = underlying;
+        this.cache = cache;
+    }
 
-	@Override
-	public <T> T execute(Transaction<T> transaction) throws MailboxException {
-		return underlying.execute(transaction);
-	}
+    @Override
+    public void endRequest() {
+        underlying.endRequest();
+    }
 
-	@Override
-	public MailboxId save(Mailbox mailbox) throws MailboxException {
-		invalidate(mailbox);
-		return underlying.save(mailbox);
-	}
+    @Override
+    public <T> T execute(Transaction<T> transaction) throws MailboxException {
+        return underlying.execute(transaction);
+    }
 
-	@Override
-	public void delete(Mailbox mailbox) throws MailboxException {
-		invalidate(mailbox);
-		underlying.delete(mailbox);
-	}
+    @Override
+    public MailboxId save(Mailbox mailbox) throws MailboxException {
+        invalidate(mailbox);
+        return underlying.save(mailbox);
+    }
 
-	@Override
-	public Mailbox findMailboxByPath(MailboxPath mailboxName)
-			throws MailboxException, MailboxNotFoundException {
-		try {
-			return cache.findMailboxByPath(mailboxName, underlying);
-		} catch (MailboxNotFoundException e) {
-			cache.invalidate(mailboxName);
-			throw e;
-		}
-	}
+    @Override
+    public void delete(Mailbox mailbox) throws MailboxException {
+        invalidate(mailbox);
+        underlying.delete(mailbox);
+    }
+
+    @Override
+    public Mailbox findMailboxByPath(MailboxPath mailboxName)
+            throws MailboxException, MailboxNotFoundException {
+        try {
+            return cache.findMailboxByPath(mailboxName, underlying);
+        } catch (MailboxNotFoundException e) {
+            cache.invalidate(mailboxName);
+            throw e;
+        }
+    }
 
     @Override
     public Mailbox findMailboxById(MailboxId mailboxId)
@@ -94,32 +95,37 @@ public class CachingMailboxMapper implements MailboxMapper {
         return underlying.findMailboxWithPathLike(mailboxPath);
     }
 
-	@Override
-	public boolean hasChildren(Mailbox mailbox, char delimiter)
-			throws MailboxException, MailboxNotFoundException {
-		// TODO possible to meaningfully cache it?
-		return underlying.hasChildren(mailbox, delimiter);
-	}
+    @Override
+    public boolean hasChildren(Mailbox mailbox, char delimiter)
+            throws MailboxException, MailboxNotFoundException {
+        // TODO possible to meaningfully cache it?
+        return underlying.hasChildren(mailbox, delimiter);
+    }
 
-	@Override
-	public List<Mailbox> list() throws MailboxException {
-		// TODO possible to meaningfully cache it? is it used at all?
-		return underlying.list();
-	}
+    @Override
+    public List<Mailbox> list() throws MailboxException {
+        // TODO possible to meaningfully cache it? is it used at all?
+        return underlying.list();
+    }
 
-	@Override
-	public void updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
-		mailbox.setACL(mailbox.getACL().apply(mailboxACLCommand));
-	}
+    @Override
+    public ACLDiff updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
+        MailboxACL oldACL = mailbox.getACL();
+        MailboxACL newACL = mailbox.getACL().apply(mailboxACLCommand);
+        mailbox.setACL(newACL);
+        return ACLDiff.computeDiff(oldACL, newACL);
+    }
 
-	@Override
-	public void setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
-		mailbox.setACL(mailboxACL);
-	}
+    @Override
+    public ACLDiff setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+        MailboxACL oldMailboxAcl = mailbox.getACL();
+        mailbox.setACL(mailboxACL);
+        return ACLDiff.computeDiff(oldMailboxAcl, mailboxACL);
+    }
 
-	private void invalidate(Mailbox mailbox) {
-		cache.invalidate(mailbox);
-	}
+    private void invalidate(Mailbox mailbox) {
+        cache.invalidate(mailbox);
+    }
 
     @Override
     public List<Mailbox> findNonPersonalMailboxes(String userName, Right right) throws MailboxException {

@@ -25,8 +25,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
-import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
@@ -72,11 +72,10 @@ public abstract class AbstractFileSystemTest {
         fileSystem = buildFileSystem(rootDirectory.getAbsolutePath());
     }
 
-    @SuppressWarnings("deprecation")
     private void createSubFolderWithAFileIn(String folderName, String fileName, String fileContent) throws IOException {
         File folder = tmpFolder.newFolder(folderName);
         File file = new File(folder.getAbsolutePath() + "/" + fileName);
-        FileUtils.writeStringToFile(file, fileContent, Charsets.UTF_8);
+        FileUtils.writeStringToFile(file, fileContent, StandardCharsets.UTF_8);
     }
 
     @After
@@ -231,7 +230,6 @@ public abstract class AbstractFileSystemTest {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     @Parameters(source = FileToCreateProvider.class)
     public final void createdFilesAsInputStreamShouldBeAvailable(String name, String extension) throws Exception {
@@ -239,14 +237,13 @@ public abstract class AbstractFileSystemTest {
         InputStream inputStream = null;
         try {
             inputStream = fileSystem.getResource("file:" + temp.getAbsolutePath());
-            assertThat(IOUtils.toString(inputStream, Charsets.UTF_8)).isEqualTo("content");
+            assertThat(IOUtils.toString(inputStream, StandardCharsets.UTF_8)).isEqualTo("content");
         } finally {
             IOUtils.closeQuietly(inputStream);
             temp.delete();
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     @Parameters(source = FileToCreateProvider.class)
     public final void createdFilesAsInputStreamShouldBeAvailableWhenAccessedWithTwoSlashes(String name, String extension) throws Exception {
@@ -254,17 +251,16 @@ public abstract class AbstractFileSystemTest {
         InputStream inputStream = null;
         try {
             inputStream = fileSystem.getResource("file://" + temp.getAbsolutePath());
-            assertThat(IOUtils.toString(inputStream, Charsets.UTF_8)).isEqualTo("content");
+            assertThat(IOUtils.toString(inputStream, StandardCharsets.UTF_8)).isEqualTo("content");
         } finally {
             IOUtils.closeQuietly(inputStream);
             temp.delete();
         }
     }
 
-    @SuppressWarnings("deprecation")
     private File createTempFile(String name, String extension) throws IOException {
         File temp = File.createTempFile(name, extension);
-        FileUtils.write(temp, "content", Charsets.UTF_8);
+        FileUtils.write(temp, "content", StandardCharsets.UTF_8);
         return temp;
     }
 

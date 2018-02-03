@@ -20,7 +20,7 @@ package org.apache.james.container.spring.osgi;
 
 import org.apache.james.user.api.UsersRepository;
 
-public class UsersRepositoryTracker extends AbstractBundleTracker{
+public class UsersRepositoryTracker extends AbstractBundleTracker {
 
     
     @Override

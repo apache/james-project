@@ -21,13 +21,10 @@ package org.apache.james.transport.matchers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.mail.internet.MimeMessage;
-
-import org.apache.james.core.MailAddress;
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -52,28 +49,24 @@ public class HasMimeTypeTest {
                 .condition(MIME_TYPES)
                 .build());
 
-        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+        MimeMessageBuilder message = MimeMessageBuilder.mimeMessageBuilder()
             .setMultipartWithBodyParts(
                 MimeMessageBuilder.bodyPartBuilder()
                     .data("simple text")
-                    .disposition("text")
-                    .build(),
+                    .disposition("text"),
                 MimeMessageBuilder.bodyPartBuilder()
                     .filename("text_file.txt")
-                    .disposition("attachment")
-                    .build(),
+                    .disposition("attachment"),
                 MimeMessageBuilder.bodyPartBuilder()
                     .type("application/zip")
                     .filename("zip_file.zip")
-                    .disposition("attachment")
-                    .build())
-            .setSubject("test")
-            .build();
+                    .disposition("attachment"))
+            .setSubject("test");
 
         Mail mail = FakeMail.builder()
             .mimeMessage(message)
-            .sender(new MailAddress(FROM))
-            .recipient(new MailAddress(RECIPIENT))
+            .sender(FROM)
+            .recipient(RECIPIENT)
             .build();
 
         assertThat(matcher.match(mail)).containsAll(mail.getRecipients());
@@ -86,28 +79,24 @@ public class HasMimeTypeTest {
                 .condition(NON_MATCHING_MIME_TYPES)
                 .build());
 
-        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+        MimeMessageBuilder message = MimeMessageBuilder.mimeMessageBuilder()
             .setMultipartWithBodyParts(
                 MimeMessageBuilder.bodyPartBuilder()
                     .data("simple text")
-                    .disposition("text")
-                    .build(),
+                    .disposition("text"),
                 MimeMessageBuilder.bodyPartBuilder()
                     .filename("text_file.txt")
-                    .disposition("attachment")
-                    .build(),
+                    .disposition("attachment"),
                 MimeMessageBuilder.bodyPartBuilder()
                     .type("application/zip")
                     .filename("zip_file.zip")
-                    .disposition("attachment")
-                    .build())
-            .setSubject("test")
-            .build();
+                    .disposition("attachment"))
+            .setSubject("test");
 
         Mail mail = FakeMail.builder()
             .mimeMessage(message)
-            .sender(new MailAddress(FROM))
-            .recipient(new MailAddress(RECIPIENT))
+            .sender(FROM)
+            .recipient(RECIPIENT)
             .build();
 
         assertThat(matcher.match(mail)).isEmpty();
@@ -120,15 +109,14 @@ public class HasMimeTypeTest {
             .condition("text/md, text/html")
             .build());
 
-        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+        MimeMessageBuilder message = MimeMessageBuilder.mimeMessageBuilder()
             .setText("content <b>in</b> <i>HTML</i>", "text/html")
-            .setSubject("test")
-            .build();
+            .setSubject("test");
 
         Mail mail = FakeMail.builder()
             .mimeMessage(message)
-            .sender(new MailAddress(FROM))
-            .recipient(new MailAddress(RECIPIENT))
+            .sender(FROM)
+            .recipient(RECIPIENT)
             .build();
 
         assertThat(matcher.match(mail)).containsExactlyElementsOf(mail.getRecipients());

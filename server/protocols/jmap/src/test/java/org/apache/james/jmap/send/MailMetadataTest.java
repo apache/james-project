@@ -27,12 +27,12 @@ public class MailMetadataTest {
     private static final MessageId MESSAGE_ID = TestMessageId.of(123);
     private static final String USERNAME = "username";
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void constructorShouldThrowWhenNullMessageId() {
         new MailMetadata(null, USERNAME);
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void constructorShouldThrowWhenNullUsername() {
         new MailMetadata(MESSAGE_ID, null);
     }

@@ -22,6 +22,7 @@ package org.apache.james.webadmin.routes;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
 import java.util.List;
+
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -33,7 +34,15 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.utils.ErrorResponder;
+import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.eclipse.jetty.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -41,12 +50,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-
 import spark.Request;
 import spark.Response;
 import spark.Service;
@@ -94,8 +97,9 @@ public class DomainsRoutes implements Routes {
             @ApiImplicitParam(required = true, dataType = "string", name = "domainName", paramType = "path")
     })
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "OK. Domain is removed."),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. Domain is removed."),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+                message = "Internal server error - Something went bad on the server side.")
     })
     public void defineDeleteDomain() {
         service.delete(SPECIFIC_DOMAIN, this::removeDomain);
@@ -108,9 +112,10 @@ public class DomainsRoutes implements Routes {
             @ApiImplicitParam(required = true, dataType = "string", name = "domainName", paramType = "path")
     })
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "OK. New domain is created."),
-            @ApiResponse(code = 400, message = "Invalid request for domain creation"),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. New domain is created."),
+            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid request for domain creation"),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+                message = "Internal server error - Something went bad on the server side.")
     })
     public void defineAddDomain() {
         service.put(SPECIFIC_DOMAIN, this::addDomain);
@@ -123,9 +128,10 @@ public class DomainsRoutes implements Routes {
     })
     @ApiOperation(value = "Testing existence of a domain.")
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "The domain exists", response = String.class),
-            @ApiResponse(code = 404, message = "The domain does not exist."),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "The domain exists", response = String.class),
+            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The domain does not exist."),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+                message = "Internal server error - Something went bad on the server side.")
     })
     public void defineDomainExists() {
         service.get(SPECIFIC_DOMAIN, this::exists);
@@ -134,8 +140,9 @@ public class DomainsRoutes implements Routes {
     @GET
     @ApiOperation(value = "Getting all domains")
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "OK", response = List.class),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK", response = List.class),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+                message = "Internal server error - Something went bad on the server side.")
     })
     public void defineGetDomains() {
         service.get(DOMAINS,
@@ -150,7 +157,7 @@ public class DomainsRoutes implements Routes {
         } catch (DomainListException e) {
             LOGGER.info("{} did not exists", request.params(DOMAIN_NAME));
         }
-        response.status(204);
+        response.status(HttpStatus.NO_CONTENT_204);
         return Constants.EMPTY_BODY;
     }
 
@@ -160,15 +167,26 @@ public class DomainsRoutes implements Routes {
     }
 
     private String addDomain(Request request, Response response) {
+        String domainName = request.params(DOMAIN_NAME);
         try {
-            addDomain(request.params(DOMAIN_NAME));
+            addDomain(domainName);
             response.status(204);
         } catch (DomainListException e) {
-            LOGGER.info("{} already exists", request.params(DOMAIN_NAME));
-            response.status(204);
+            LOGGER.info("{} already exists", domainName);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.NO_CONTENT_204)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message(domainName + " already exists")
+                .cause(e)
+                .haltError();
         } catch (IllegalArgumentException e) {
             LOGGER.info("Invalid request for domain creation");
-            response.status(400);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("Invalid request for domain creation " + domainName)
+                .cause(e)
+                .haltError();
         }
         return Constants.EMPTY_BODY;
     }
@@ -181,10 +199,15 @@ public class DomainsRoutes implements Routes {
     }
 
     private String exists(Request request, Response response) throws DomainListException {
-        if (!domainList.containsDomain(request.params(DOMAIN_NAME))) {
-            response.status(404);
+        String domainName = request.params(DOMAIN_NAME);
+        if (!domainList.containsDomain(domainName)) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("The domain list does not contain: " + domainName)
+                .haltError();
         } else {
-            response.status(204);
+            response.status(HttpStatus.NO_CONTENT_204);
         }
         return Constants.EMPTY_BODY;
     }

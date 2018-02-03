@@ -39,7 +39,7 @@
                         <repository destinationURL="file://target/var/vm/user2_test"
                             type="MAIL"/>
                     </target>
-                </mount>    				   
+                </mount>
             </mounts>
         </factory>
     </mailboxmanager>

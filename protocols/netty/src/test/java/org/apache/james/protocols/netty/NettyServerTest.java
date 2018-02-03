@@ -25,6 +25,9 @@ import javax.net.ssl.SSLContext;
 
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
+import org.jboss.netty.util.HashedWheelTimer;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -34,24 +37,35 @@ public class NettyServerTest {
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
+    private HashedWheelTimer hashedWheelTimer;
+
+    @Before
+    public void setup() {
+        hashedWheelTimer = new HashedWheelTimer();
+    }
+
+    @After
+    public void teardown() {
+        hashedWheelTimer.stop();
+    }
+
     @Test
     public void protocolShouldThrowWhenProtocolIsNull() {
         expectedException.expect(NullPointerException.class);
-        NettyServer.builder()
-            .protocol(null);
+        new NettyServer.Factory(hashedWheelTimer).protocol(null);
     }
 
     @Test
     public void buildShouldThrowWhenProtocolIsNotGiven() {
         expectedException.expect(IllegalStateException.class);
-        NettyServer.builder()
+        new NettyServer.Factory(hashedWheelTimer)
             .build();
     }
 
     @Test
     public void buildShouldWorkWhenProtocolIsGiven() {
         Protocol protocol = mock(Protocol.class);
-        NettyServer.builder()
+        new NettyServer.Factory(hashedWheelTimer)
             .protocol(protocol)
             .build();
     }
@@ -61,7 +75,7 @@ public class NettyServerTest {
         Protocol protocol = mock(Protocol.class);
         Encryption encryption = Encryption.createStartTls(SSLContext.getDefault());
         ChannelHandlerFactory channelHandlerFactory = mock(ChannelHandlerFactory.class);
-        NettyServer.builder()
+        new NettyServer.Factory(hashedWheelTimer)
             .protocol(protocol)
             .secure(encryption)
             .frameHandlerFactory(channelHandlerFactory)

@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.inmemory;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Optional;
 
@@ -43,7 +44,6 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 
 public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSystem {
@@ -59,7 +59,7 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
     private static final MessageId FIRST_MESSAGE_ID = InMemoryMessageId.of(1);
     private static final long ONE_HUNDRED = 100;
     private static final int UID_VALIDITY = 1024;
-    public static final byte[] CONTENT = "Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8);
+    public static final byte[] CONTENT = "Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8);
 
     private final MailboxManager mailboxManager;
     private Optional<MessageId> lastMessageIdUsed;

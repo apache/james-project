@@ -127,14 +127,14 @@ final class PartialFetchBodyElement implements BodyElement {
         /**
          * @see java.io.FilterInputStream#read(byte[])
          */
-        public int read(byte b[]) throws IOException {
+        public int read(byte[] b) throws IOException {
             return read(b, 0, b.length);
         }
 
         /**
          * @see java.io.FilterInputStream#read(byte[], int, int)
          */
-        public int read(byte b[], int off, int len) throws IOException {
+        public int read(byte[] b, int off, int len) throws IOException {
             checkOffset();
 
             if (pos >= length) {

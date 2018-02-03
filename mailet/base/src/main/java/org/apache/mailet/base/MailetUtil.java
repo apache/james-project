@@ -67,16 +67,16 @@ public class MailetUtil {
         String match = "Re:";
         index = subject.indexOf(match, prefixLength);
 
-        while(index > -1) {
+        while (index > -1) {
             subject.replace(index, index + match.length(), "RE:");
             index = subject.indexOf(match, prefixLength);
         }
 
         // Reduce them to one at the beginning
-        match ="RE:";
+        match = "RE:";
         int indexRE = subject.indexOf(match, prefixLength) + match.length();
         index = subject.indexOf(match, indexRE);
-        while(index > 0) {    
+        while (index > 0) {
             subject.delete(index, index + match.length());
             index = subject.indexOf(match, indexRE);
         }
@@ -84,7 +84,7 @@ public class MailetUtil {
         // Reduce blanks
         match = "  ";
         index = subject.indexOf(match, prefixLength);
-        while(index > -1) {
+        while (index > -1) {
             subject.replace(index, index + match.length(), " ");
             index = subject.indexOf(match, prefixLength);
         }
@@ -105,7 +105,7 @@ public class MailetUtil {
         if ("true".equalsIgnoreCase(value)) {
             return Optional.of(true);
         }
-        if ("false".equalsIgnoreCase(value)){
+        if ("false".equalsIgnoreCase(value)) {
             return Optional.of(false);
         }
         return Optional.empty();

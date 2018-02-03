@@ -36,6 +36,7 @@ public final class SearchOperation {
     public SearchKey getSearchKey() {
         return key;
     }
+    
     public List<SearchResultOption> getResultOptions() {
         return options;
     }

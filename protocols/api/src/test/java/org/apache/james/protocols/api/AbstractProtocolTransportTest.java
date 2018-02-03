@@ -44,7 +44,7 @@ import com.github.steveash.guavate.Guavate;
  */
 public class AbstractProtocolTransportTest {
 
-    private final static String US_ASCII = "US-ASCII";
+    private static final String US_ASCII = "US-ASCII";
     
     @Test
     public void testWriteOrder() throws InterruptedException, UnsupportedEncodingException {
@@ -126,6 +126,7 @@ public class AbstractProtocolTransportTest {
 
         }).start();
     }
+    
     private void checkWrittenResponses(List<Response> messages) throws InterruptedException, UnsupportedEncodingException {
         final List<byte[]> writtenMessages = new ArrayList<>();
 
@@ -199,6 +200,7 @@ public class AbstractProtocolTransportTest {
             checkBytesEquals(response.getLines().get(0).toString().getBytes(US_ASCII), writtenMessages.get(i));
         }
     }
+    
     private void checkBytesEquals(byte[] expected, byte[] received) throws UnsupportedEncodingException {
         
         assertEquals("'" + new String(expected, US_ASCII) + "'=>'" + new String(received, US_ASCII) + "'", expected.length, received.length - 2);
@@ -207,7 +209,7 @@ public class AbstractProtocolTransportTest {
         }
     }
     
-    private final static class TestResponse implements Response {
+    private static final class TestResponse implements Response {
 
         private final String msg;
 

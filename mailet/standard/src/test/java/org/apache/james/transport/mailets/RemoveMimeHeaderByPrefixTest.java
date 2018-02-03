@@ -22,14 +22,13 @@ package org.apache.james.transport.mailets;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.transport.mailets.utils.MimeMessageUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -65,9 +64,8 @@ public class RemoveMimeHeaderByPrefixTest {
                 .build();
         mailet.init(mailetConfig);
 
-        Mail mail = createMail(MimeMessageBuilder.mimeMessageBuilder()
-            .addHeader(HEADER_NAME_PREFIX_1, "true")
-            .build());
+        Mail mail = FakeMail.fromMessage(MimeMessageBuilder.mimeMessageBuilder()
+            .addHeader(HEADER_NAME_PREFIX_1, "true"));
 
         mailet.service(mail);
 
@@ -84,10 +82,9 @@ public class RemoveMimeHeaderByPrefixTest {
             .build();
         mailet.init(mailetConfig);
 
-        Mail mail = createMail(MimeMessageBuilder.mimeMessageBuilder()
+        Mail mail = FakeMail.fromMessage(MimeMessageBuilder.mimeMessageBuilder()
             .addHeader(HEADER_NAME_PREFIX_1, "true")
-            .addHeader(HEADER_NAME_PREFIX_2, "true")
-            .build());
+            .addHeader(HEADER_NAME_PREFIX_2, "true"));
 
         mailet.service(mail);
 
@@ -104,10 +101,9 @@ public class RemoveMimeHeaderByPrefixTest {
             .build();
         mailet.init(mailetConfig);
 
-        Mail mail = createMail(MimeMessageBuilder.mimeMessageBuilder()
+        Mail mail = FakeMail.fromMessage(MimeMessageBuilder.mimeMessageBuilder()
             .addHeader(HEADER_NAME_PREFIX_1, "true")
-            .addHeader(HEADER_NAME_NO_PREFIX, "true")
-            .build());
+            .addHeader(HEADER_NAME_NO_PREFIX, "true"));
 
         mailet.service(mail);
 
@@ -125,10 +121,9 @@ public class RemoveMimeHeaderByPrefixTest {
             .build();
         mailet.init(mailetConfig);
 
-        Mail mail = createMail(MimeMessageBuilder.mimeMessageBuilder()
+        Mail mail = FakeMail.fromMessage(MimeMessageBuilder.mimeMessageBuilder()
             .addHeader(PREFIX, "true")
-            .addHeader(HEADER_NAME_NO_PREFIX, "true")
-            .build());
+            .addHeader(HEADER_NAME_NO_PREFIX, "true"));
 
         mailet.service(mail);
 
@@ -156,11 +151,5 @@ public class RemoveMimeHeaderByPrefixTest {
             .setProperty(RemoveMimeHeaderByPrefix.PREFIX, "")
             .build();
         mailet.init(mailetConfig);
-    }
-
-    private Mail createMail(MimeMessage message) throws MessagingException {
-        return FakeMail.builder()
-                .mimeMessage(message)
-                .build();
     }
 }

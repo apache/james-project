@@ -23,7 +23,7 @@ import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 
 
-public class VanishedResponse implements ImapResponseMessage{
+public class VanishedResponse implements ImapResponseMessage {
 
     private final UidRange[] uids;
     private final boolean earlier;

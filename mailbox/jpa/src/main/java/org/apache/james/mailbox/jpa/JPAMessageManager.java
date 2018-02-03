@@ -62,14 +62,14 @@ public class JPAMessageManager extends StoreMessageManager {
                              BatchSizes batchSizes,
                              ImmutableMailboxMessage.Factory immutableMailboxMessageFactory,
                              StoreRightManager storeRightManager) throws MailboxException {
-    	
+
         super(mapperFactory, index, dispatcher, locker, mailbox,
             quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, immutableMailboxMessageFactory, storeRightManager);
     }
     
     @Override
     protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content,
-                                                  final Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachment> attachments) throws MailboxException{
+                                                  final Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachment> attachments) throws MailboxException {
 
         return new JPAMailboxMessage((JPAMailbox) getMailboxEntity(), internalDate, size, flags, content,  bodyStartOctet,  propertyBuilder);
     }

@@ -25,5 +25,6 @@ import com.google.inject.Module;
 
 public interface GuiceModuleTestRule extends TestRule {
     Module getModule();
+
     void await();
 }

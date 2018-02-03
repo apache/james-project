@@ -56,28 +56,28 @@ element.
 <subsection name='Parameters'>
 <table> 
 <tr>
-	<td><strong>Attribute</strong></td> <td><strong>Description</strong></td> <td><strong>Required</strong></td>
+    <td><strong>Attribute</strong></td> <td><strong>Description</strong></td> <td><strong>Required</strong></td>
 </tr> 
 <tr>
-	<td>port</td> 
-	<td>Port number that the scripts should be executed against</td> 
-	<td>Yes</td>
+    <td>port</td>
+    <td>Port number that the scripts should be executed against</td>
+    <td>Yes</td>
 </tr>
 <tr>
-	<td>host</td> 
-	<td>Host name or IP address of the server against which the scripts should be executed</td> 
-	<td>No (Defaults to <code>127.0.0.1</code>)</td>
+    <td>host</td>
+    <td>Host name or IP address of the server against which the scripts should be executed</td>
+    <td>No (Defaults to <code>127.0.0.1</code>)</td>
 </tr> 
 <tr>
-	<td>script</td> 
-	<td>File containing a script to be executed. To execute multiple scripts, 
-	use a <a href='#Any Resource Collection'>Resource Collection</a></td> 
-	<td>When no resource collections elements exist</td>
+    <td>script</td>
+    <td>File containing a script to be executed. To execute multiple scripts,
+    use a <a href='#Any Resource Collection'>Resource Collection</a></td>
+    <td>When no resource collections elements exist</td>
 </tr> 
 <tr>
-	<td>skip</td> 
-	<td>Skips execution of scripts. For simple conditional execution.</td> 
-	<td>No</td>
+    <td>skip</td>
+    <td>Skips execution of scripts. For simple conditional execution.</td>
+    <td>No</td>
 </tr> 
 <tr>
     <td>shabang</td> 
@@ -113,30 +113,30 @@ The port can vary but the host is inherited.
 </p>
 <table> 
 <tr>
-	<td><strong>Attribute</strong></td> <td><strong>Description</strong></td> <td><strong>Required</strong></td>
+    <td><strong>Attribute</strong></td> <td><strong>Description</strong></td> <td><strong>Required</strong></td>
 </tr> 
 <tr>
-	<td>port</td> 
-	<td>Port number that the user addition script should be executed against</td> 
-	<td>Yes</td>
+    <td>port</td>
+    <td>Port number that the user addition script should be executed against</td>
+    <td>Yes</td>
 </tr>
 
 <tr>
-	<td>passwd</td> 
-	<td>Password to be set for user created. Will be passed to the script.</td> 
-	<td>No</td>
+    <td>passwd</td>
+    <td>Password to be set for user created. Will be passed to the script.</td>
+    <td>No</td>
 </tr> 
 
 <tr>
-	<td>user</td> 
-	<td>Name of the user to be created. Will be passed to the script.</td> 
-	<td>No</td>
+    <td>user</td>
+    <td>Name of the user to be created. Will be passed to the script.</td>
+    <td>No</td>
 </tr> 
 
 <tr>
-	<td>script</td> 
-	<td>File containing the user creation script</td> 
-	<td>Either this attribute must be set, or the user addition script </td>
+    <td>script</td>
+    <td>File containing the user creation script</td>
+    <td>Either this attribute must be set, or the user addition script </td>
 </tr> 
 </table>
 <p>

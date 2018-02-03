@@ -38,6 +38,7 @@ public abstract class AbstractSenderAuthIdentifyVerificationRcptHook implements 
             DSNStatus.getStatus(DSNStatus.PERMANENT,
                     DSNStatus.SECURITY_AUTH)
                     + " Incorrect Authentication for Specified Email Address");
+    
     /**
      * @see org.apache.james.protocols.smtp.hook.RcptHook#doRcpt(org.apache.james.protocols.smtp.SMTPSession,
      *      org.apache.mailet.MailAddress, org.apache.mailet.MailAddress)
@@ -48,7 +49,7 @@ public abstract class AbstractSenderAuthIdentifyVerificationRcptHook implements 
             String authUser = (session.getUser()).toLowerCase(Locale.US);
             MailAddress senderAddress = (MailAddress) session.getAttachment(
                     SMTPSession.SENDER, ProtocolSession.State.Transaction);
-            String username= null;
+            String username = null;
 
             if (senderAddress != null) {
                 if (useVirtualHosting()) {

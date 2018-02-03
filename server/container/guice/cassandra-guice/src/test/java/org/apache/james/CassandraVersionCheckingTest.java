@@ -32,6 +32,7 @@ import java.util.concurrent.CompletableFuture;
 
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
+import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -43,9 +44,8 @@ public class CassandraVersionCheckingTest {
 
     private static final String LOCAL_HOST = "127.0.0.1";
     private static final int IMAP_PORT = 1143;
-    private static final int MIN_VERSION = 2;
-    private static final int MAX_VERSION = 4;
-
+    private static final SchemaVersion MIN_VERSION = new SchemaVersion(2);
+    private static final SchemaVersion MAX_VERSION = new SchemaVersion(4);
 
     @ClassRule
     public static DockerCassandraRule cassandra = new DockerCassandraRule();
@@ -92,7 +92,7 @@ public class CassandraVersionCheckingTest {
     @Test
     public void serverShouldStartSuccessfullyWhenBetweenMinAndMaxVersion() throws Exception {
         when(versionDAO.getCurrentSchemaVersion())
-            .thenReturn(CompletableFuture.completedFuture(Optional.of(MIN_VERSION + 1)));
+            .thenReturn(CompletableFuture.completedFuture(Optional.of(MIN_VERSION.next())));
 
         jamesServer = cassandraJmapTestRule.jmapServer(
             cassandra.getModule(),
@@ -122,7 +122,7 @@ public class CassandraVersionCheckingTest {
     @Test
     public void serverShouldNotStartWhenUnderMinVersion() throws Exception {
         when(versionDAO.getCurrentSchemaVersion())
-            .thenReturn(CompletableFuture.completedFuture(Optional.of(MIN_VERSION - 1)));
+            .thenReturn(CompletableFuture.completedFuture(Optional.of(MIN_VERSION.previous())));
 
         jamesServer = cassandraJmapTestRule.jmapServer(
             cassandra.getModule(),
@@ -139,7 +139,7 @@ public class CassandraVersionCheckingTest {
     @Test
     public void serverShouldNotStartWhenAboveMaxVersion() throws Exception {
         when(versionDAO.getCurrentSchemaVersion())
-            .thenReturn(CompletableFuture.completedFuture(Optional.of(MAX_VERSION + 1)));
+            .thenReturn(CompletableFuture.completedFuture(Optional.of(MAX_VERSION.next())));
 
         jamesServer = cassandraJmapTestRule.jmapServer(
             cassandra.getModule(),

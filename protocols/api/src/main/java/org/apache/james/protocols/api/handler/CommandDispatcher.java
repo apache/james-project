@@ -45,14 +45,14 @@ import org.slf4j.LoggerFactory;
  *  A CommandDispatcher is responsible to call the right {@link CommandHandler} for a given Command
  *
  */
-public class CommandDispatcher<Session extends ProtocolSession> implements ExtensibleHandler, LineHandler<Session> {
+public class CommandDispatcher<SessionT extends ProtocolSession> implements ExtensibleHandler, LineHandler<SessionT> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CommandDispatcher.class);
     /**
      * The list of available command handlers
      */
-    private final HashMap<String, List<CommandHandler<Session>>> commandHandlerMap = new HashMap<>();
+    private final HashMap<String, List<CommandHandler<SessionT>>> commandHandlerMap = new HashMap<>();
 
-    private final List<ProtocolHandlerResultHandler<Response, Session>> rHandlers = new ArrayList<>();
+    private final List<ProtocolHandlerResultHandler<Response, SessionT>> rHandlers = new ArrayList<>();
 
     private final Collection<String> mandatoryCommands;
     
@@ -80,9 +80,9 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
      * @param commandName the command name which will be key
      * @param cmdHandler The CommandHandler object
      */
-    protected void addToMap(String commandName, CommandHandler<Session> cmdHandler) {
-        List<CommandHandler<Session>> handlers = commandHandlerMap.get(commandName);
-        if(handlers == null) {
+    protected void addToMap(String commandName, CommandHandler<SessionT> cmdHandler) {
+        List<CommandHandler<SessionT>> handlers = commandHandlerMap.get(commandName);
+        if (handlers == null) {
             handlers = new ArrayList<>();
             commandHandlerMap.put(commandName, handlers);
         }
@@ -97,15 +97,13 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
      * @param session not null
      * @return List of CommandHandlers
      */
-    protected List<CommandHandler<Session>> getCommandHandlers(String command, ProtocolSession session) {
+    protected List<CommandHandler<SessionT>> getCommandHandlers(String command, ProtocolSession session) {
         if (command == null) {
             return null;
         }
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Lookup command handler for command: " + command);
-        }
-        List<CommandHandler<Session>> handlers =  commandHandlerMap.get(command);
-        if(handlers == null) {
+        LOGGER.debug("Lookup command handler for command: {}", command);
+        List<CommandHandler<SessionT>> handlers =  commandHandlerMap.get(command);
+        if (handlers == null) {
             handlers = commandHandlerMap.get(getUnknownCommandHandlerIdentifier());
         }
 
@@ -149,7 +147,7 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
      * (non-Javadoc)
      * @see org.apache.james.protocols.api.handler.LineHandler#onLine(org.apache.james.protocols.api.ProtocolSession, java.nio.ByteBuffer)
      */
-    public Response onLine(Session session, ByteBuffer line) {
+    public Response onLine(SessionT session, ByteBuffer line) {
         
         try {
             
@@ -174,14 +172,12 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
      * @param request
      * @return response
      */
-    protected Response dispatchCommandHandlers(Session session, Request request) {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(getClass().getName() + " received: " + request.getCommand());
-        }
-        List<CommandHandler<Session>> commandHandlers = getCommandHandlers(request.getCommand(), session);
+    protected Response dispatchCommandHandlers(SessionT session, Request request) {
+        LOGGER.debug("{} received: {}", getClass().getName(), request.getCommand());
+        List<CommandHandler<SessionT>> commandHandlers = getCommandHandlers(request.getCommand(), session);
         // fetch the command handlers registered to the command
 
-        for (CommandHandler<Session> commandHandler : commandHandlers) {
+        for (CommandHandler<SessionT> commandHandler : commandHandlers) {
             final long start = System.currentTimeMillis();
             Response response = commandHandler.onCommand(session, request);
             if (response != null) {
@@ -199,7 +195,7 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
         return null;
     }
 
-    private Response executeResultHandlers(final Session session, Response responseFuture, final long executionTime, final CommandHandler<Session> cHandler, final Iterator<ProtocolHandlerResultHandler<Response, Session>> resultHandlers) {
+    private Response executeResultHandlers(final SessionT session, Response responseFuture, final long executionTime, final CommandHandler<SessionT> cHandler, final Iterator<ProtocolHandlerResultHandler<Response, SessionT>> resultHandlers) {
         // Check if the there is a ResultHandler left to execute if not just return the response
         if (resultHandlers.hasNext()) {
             // Special handling of FutureResponse
@@ -227,12 +223,13 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
         }
         return responseFuture;
     }
+    
     /**
      * Parse the line into a {@link Request}
      *
      * @throws Exception
      */
-    protected Request parseRequest(Session session, ByteBuffer buffer) throws Exception {
+    protected Request parseRequest(SessionT session, ByteBuffer buffer) throws Exception {
         String curCommandName;
         String curCommandArgument = null;
         byte[] line;

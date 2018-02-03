@@ -19,9 +19,9 @@
 
 package org.apache.james.mailbox.store.mail.model;
 
-import org.apache.james.mailbox.model.Quota;
-
 import java.io.Serializable;
+
+import org.apache.james.mailbox.model.Quota;
 
 public class SerializableQuota implements Serializable {
 

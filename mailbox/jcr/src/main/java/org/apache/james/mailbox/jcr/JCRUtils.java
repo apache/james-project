@@ -31,7 +31,7 @@ import org.apache.jackrabbit.commons.cnd.CndImporter;
  * Utilities used for JCR 
  *
  */
-public class JCRUtils implements JCRImapConstants{
+public class JCRUtils implements JCRImapConstants {
 
     /**
      * Register the imap CND file in the workspace
@@ -47,7 +47,7 @@ public class JCRUtils implements JCRImapConstants{
             if (username == null) {
                 session = repository.login(workspace);
             } else {
-                char pass[];
+                char[] pass;
                 if (password == null) {
                     pass = new char[0];
                 } else {

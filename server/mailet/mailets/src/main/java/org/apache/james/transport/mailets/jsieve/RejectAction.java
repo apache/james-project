@@ -29,6 +29,7 @@ import javax.mail.Multipart;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.mdn.MDN;
 import org.apache.james.mdn.MDNReport;
 import org.apache.james.mdn.action.mode.DispositionActionMode;
@@ -39,7 +40,6 @@ import org.apache.james.mdn.type.DispositionType;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionReject;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,8 +74,7 @@ public class RejectAction implements MailAction {
      * @param context not null
      * @throws MessagingException
      */
-    public void execute(ActionReject anAction, Mail aMail, ActionContext context) throws MessagingException
-    {
+    public void execute(ActionReject anAction, Mail aMail, ActionContext context) throws MessagingException {
         ActionUtils.detectAndHandleLocalLooping(aMail, context, "reject");
 
         // Create the MDN part
@@ -87,39 +86,35 @@ public class RejectAction implements MailAction {
         humanText.append("\r\n");
         humanText.append(anAction.getMessage());
 
-        String reporting_UA_name = null;
-        try
-        {
-            reporting_UA_name = InetAddress.getLocalHost()
+        String reportingUAName = null;
+        try {
+            reportingUAName = InetAddress.getLocalHost()
                     .getCanonicalHostName();
-        }
-        catch (UnknownHostException ex)
-        {
-            reporting_UA_name = "localhost";
+        } catch (UnknownHostException ex) {
+            reportingUAName = "localhost";
         }
 
-        String reporting_UA_product = context.getServerInfo();
+        String reportingUAProduct = context.getServerInfo();
 
         String[] originalRecipients = aMail.getMessage().getHeader(
                 "Original-Recipient");
-        String original_recipient = null;
-        if (null != originalRecipients && originalRecipients.length > 0)
-        {
-            original_recipient = originalRecipients[0];
+        String originalRecipient = null;
+        if (null != originalRecipients && originalRecipients.length > 0) {
+            originalRecipient = originalRecipients[0];
         }
 
         MailAddress soleRecipient = ActionUtils.getSoleRecipient(aMail);
-        String final_recipient = soleRecipient.asString();
-        String original_message_id = aMail.getMessage().getMessageID();
+        String finalRecipient = soleRecipient.asString();
+        String originalMessageId = aMail.getMessage().getMessageID();
 
         Multipart multipart = MDN.builder()
             .humanReadableText(humanText.toString())
             .report(
                 MDNReport.builder()
-                    .reportingUserAgentField(reporting_UA_name, reporting_UA_product)
-                    .finalRecipientField(final_recipient)
-                    .originalRecipientField(original_recipient)
-                    .originalMessageIdField(original_message_id)
+                    .reportingUserAgentField(reportingUAName, reportingUAProduct)
+                    .finalRecipientField(finalRecipient)
+                    .originalRecipientField(originalRecipient)
+                    .originalMessageIdField(originalMessageId)
                     .dispositionField(Disposition.builder()
                         .actionMode(DispositionActionMode.Automatic)
                         .sendingMode(DispositionSendingMode.Automatic)
@@ -136,17 +131,14 @@ public class RejectAction implements MailAction {
         reply.setContent(multipart);
         reply.saveChanges();
         Address[] recipientAddresses = reply.getAllRecipients();
-        if (null != recipientAddresses)
-        {
+        if (null != recipientAddresses) {
             Collection<MailAddress> recipients = new ArrayList<>(recipientAddresses.length);
             for (Address recipientAddress : recipientAddresses) {
                 recipients.add(new MailAddress(
                         (InternetAddress) recipientAddress));
             }
             context.post(null, recipients, reply);
-        }
-        else
-        {
+        } else {
             LOGGER.info("Unable to send reject MDN. Could not determine the recipient.");
         }
     }

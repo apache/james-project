@@ -25,13 +25,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.FluentFutureStream;
-import org.apache.commons.lang3.tuple.Pair;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
@@ -50,7 +50,7 @@ public class AttachmentLoader {
             Stream<MessageAttachmentRepresentation>>> messageRepresentations, MessageMapper.FetchType fetchType) {
 
         if (fetchType == MessageMapper.FetchType.Body || fetchType == MessageMapper.FetchType.Full) {
-            return FluentFutureStream.<SimpleMailboxMessage> of(
+            return FluentFutureStream.<SimpleMailboxMessage>of(
                 messageRepresentations
                     .map(pair -> getAttachments(pair.getRight().collect(Guavate.toImmutableList()))
                         .thenApply(attachments -> pair.getLeft().toMailboxMessage(attachments))))

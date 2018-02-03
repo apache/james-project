@@ -20,10 +20,10 @@ package org.apache.james.transport.mailets.jsieve;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionFileInto;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,20 +86,12 @@ public class FileIntoAction implements MailAction {
             //TODO: copying this message so many times seems a waste
             context.post(url, aMail);
             delivered = true;
-        }
-        catch (MessagingException ex) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Error while storing mail into. "+destinationMailbox, ex);
-            }
+        } catch (MessagingException ex) {
+            LOGGER.debug("Error while storing mail into {}.", destinationMailbox, ex);
             throw ex;
         }
         if (delivered) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Filed Message ID: "
-                    + aMail.getMessage().getMessageID()
-                    + " into destination: \""
-                    + destinationMailbox + "\"");
-            }
+            LOGGER.debug("Filed Message ID: {} into destination: \"{}\"", aMail.getMessage().getMessageID(), destinationMailbox);
         }
     }
 }

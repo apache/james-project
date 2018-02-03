@@ -31,7 +31,7 @@ import org.apache.james.mailbox.MailboxSession;
 public class MockMailboxSession implements MailboxSession {
     private final User user;
     private final Map<Object, Object> attrs = new HashMap<>();
-    private final static Random RANDOM = new Random();
+    private static final Random RANDOM = new Random();
     private final long sessionId;
     private final SessionType type;
     private boolean open;
@@ -100,9 +100,9 @@ public class MockMailboxSession implements MailboxSession {
         return open;
     }
 
-	public char getPathDelimiter() {
-		return '.';
-	}
+    public char getPathDelimiter() {
+        return '.';
+    }
 
     public SessionType getType() {
         return type;

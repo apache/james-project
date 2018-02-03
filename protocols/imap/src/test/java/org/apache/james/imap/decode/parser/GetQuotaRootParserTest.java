@@ -19,16 +19,16 @@
 
 package org.apache.james.imap.decode.parser;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.imap.message.request.GetQuotaRootRequest;
 import org.apache.james.protocols.imap.DecodingException;
 import org.junit.Test;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * Tests for GetQuotaRootCommandParser

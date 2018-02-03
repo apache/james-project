@@ -21,7 +21,6 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
-
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
@@ -57,7 +56,7 @@ public class MaxRcptHandler implements RcptHook {
      */
     public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
         if ((session.getRcptCount() + 1) > maxRcpt) {
-            LOGGER.info("Maximum recipients of " + maxRcpt + " reached");
+            LOGGER.info("Maximum recipients of {} reached", maxRcpt);
             
             return MAX_RCPT;
         } else {

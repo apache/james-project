@@ -18,9 +18,9 @@
  ****************************************************************/
 package org.apache.james.server.core.filesystem;
 
-import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.filesystem.api.AbstractFileSystemTest;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.server.core.JamesServerResourceLoader;
 
 public class FileSystemImplTest extends AbstractFileSystemTest {
 

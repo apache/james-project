@@ -19,7 +19,7 @@
 
 Feature: Alternative authentication mechanism for getting attachment via a POST request returning a specific authentication token
   As a James user
-  I want to retrieve my attachments without an alternative authentication mechanim
+  I want to retrieve my attachments without an alternative authentication mechanism
 
   Background:
     Given a domain named "domain.tld"

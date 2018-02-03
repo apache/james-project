@@ -34,9 +34,14 @@ import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.AddUserRequest;
 import org.apache.james.webadmin.dto.UserResponse;
 import org.apache.james.webadmin.service.UserService;
+import org.apache.james.webadmin.utils.ErrorResponder;
+import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.eclipse.jetty.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -44,9 +49,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import spark.Request;
 import spark.Response;
 import spark.Service;
@@ -92,9 +94,10 @@ public class UserRoutes implements Routes {
             @ApiImplicitParam(required = true, dataType = "string", name = "username", paramType = "path")
     })
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "OK. User is removed."),
-            @ApiResponse(code = 400, message = "Invalid input user."),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. User is removed."),
+            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid input user."),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+                message = "Internal server error - Something went bad on the server side.")
     })
     public void defineDeleteUser() {
         service.delete(USERS + SEPARATOR + USER_NAME, this::removeUser);
@@ -108,9 +111,10 @@ public class UserRoutes implements Routes {
             @ApiImplicitParam(required = true, dataType = "org.apache.james.webadmin.dto.AddUserRequest", paramType = "body")
     })
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "OK. New user is added."),
-            @ApiResponse(code = 400, message = "Invalid input user."),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. New user is added."),
+            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid input user."),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+                message = "Internal server error - Something went bad on the server side.")
     })
     public void defineCreateUser() {
         service.put(USERS + SEPARATOR + USER_NAME, this::upsertUser);
@@ -119,8 +123,9 @@ public class UserRoutes implements Routes {
     @GET
     @ApiOperation(value = "Getting all users")
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "OK.", response = UserResponse.class),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK.", response = UserResponse.class),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+                message = "Internal server error - Something went bad on the server side.")
     })
     public void defineGetUsers() {
         service.get(USERS,
@@ -132,15 +137,23 @@ public class UserRoutes implements Routes {
         String username = request.params(USER_NAME);
         try {
             userService.removeUser(username);
-            response.status(204);
+            response.status(HttpStatus.NO_CONTENT_204);
             return Constants.EMPTY_BODY;
         } catch (UsersRepositoryException e) {
-            response.status(204);
-            return "The user " + username + " does not exists";
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.NO_CONTENT_204)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("The user " + username + " does not exists")
+                .cause(e)
+                .haltError();
         } catch (IllegalArgumentException e) {
             LOGGER.info("Invalid user path", e);
-            response.status(400);
-            return Constants.EMPTY_BODY;
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("Invalid user path")
+                .cause(e)
+                .haltError();
         }
     }
 
@@ -151,12 +164,20 @@ public class UserRoutes implements Routes {
                 response);
         } catch (JsonExtractException e) {
             LOGGER.info("Error while deserializing addUser request", e);
-            response.status(400);
-            return Constants.EMPTY_BODY;
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("Error while deserializing addUser request")
+                .cause(e)
+                .haltError();
         } catch (IllegalArgumentException e) {
             LOGGER.info("Invalid user path", e);
-            response.status(400);
-            return Constants.EMPTY_BODY;
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("Invalid user path")
+                .cause(e)
+                .haltError();
         }
     }
 

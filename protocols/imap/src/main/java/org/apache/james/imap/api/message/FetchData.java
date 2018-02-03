@@ -175,36 +175,50 @@ public class FetchData {
     }
 
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         final FetchData other = (FetchData) obj;
-        if (body != other.body)
+        if (body != other.body) {
             return false;
+        }
         if (bodyElements == null) {
-            if (other.bodyElements != null)
+            if (other.bodyElements != null) {
                 return false;
-        } else if (!bodyElements.equals(other.bodyElements))
+            }
+        } else if (!bodyElements.equals(other.bodyElements)) {
             return false;
-        if (bodyStructure != other.bodyStructure)
+        }
+        if (bodyStructure != other.bodyStructure) {
             return false;
-        if (envelope != other.envelope)
+        }
+        if (envelope != other.envelope) {
             return false;
-        if (flags != other.flags)
+        }
+        if (flags != other.flags) {
             return false;
-        if (internalDate != other.internalDate)
+        }
+        if (internalDate != other.internalDate) {
             return false;
-        if (setSeen != other.setSeen)
+        }
+        if (setSeen != other.setSeen) {
             return false;
-        if (size != other.size)
+        }
+        if (size != other.size) {
             return false;
-        if (uid != other.uid)
+        }
+        if (uid != other.uid) {
             return false;
-        if (modSeq != other.modSeq) 
+        }
+        if (modSeq != other.modSeq) {
             return false;
+        }
         if (changedSince != other.changedSince) {
             return false;
         }

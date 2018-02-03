@@ -20,7 +20,6 @@ package org.apache.james.mailbox.lucene.search;
 
 import java.io.Reader;
 
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.WhitespaceTokenizer;
@@ -32,9 +31,9 @@ import org.apache.lucene.util.Version;
  * most times exactly what the user would expect. 
  *
  */
-public final class LenientImapSearchAnalyzer extends Analyzer{
+public final class LenientImapSearchAnalyzer extends Analyzer {
 
-    public final static int DEFAULT_MAX_TOKEN_LENGTH = 4;
+    public static final int DEFAULT_MAX_TOKEN_LENGTH = 4;
     
     private final int maxTokenLength;
     

@@ -28,8 +28,8 @@ import java.util.regex.PatternSyntaxException;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
 /**
@@ -44,7 +44,7 @@ import org.apache.mailet.base.GenericMatcher;
  * 
  */
 
-abstract public class GenericRegexMatcher extends GenericMatcher {
+public abstract class GenericRegexMatcher extends GenericMatcher {
     protected Object[][] patterns;
 
     public void compile(Object[][] patterns) throws PatternSyntaxException {
@@ -59,7 +59,7 @@ abstract public class GenericRegexMatcher extends GenericMatcher {
     /**
      * @see org.apache.mailet.GenericMatcher#GenericMatcher()
      */
-    abstract public void init() throws MessagingException;
+    public abstract void init() throws MessagingException;
 
     /**
      * @see org.apache.mailet.GenericMatcher#match(Mail)
@@ -68,17 +68,21 @@ abstract public class GenericRegexMatcher extends GenericMatcher {
         MimeMessage message = mail.getMessage();
 
         //Loop through all the patterns
-        if (patterns != null) for (Object[] pattern1 : patterns) {
-            //Get the header name
-            String headerName = (String) pattern1[0];
-            //Get the patterns for that header
-            Pattern pattern = (Pattern) pattern1[1];
-            //Get the array of header values that match that
-            String headers[] = message.getHeader(headerName);
-            //Loop through the header values
-            if (headers != null) for (String header : headers) {
-                if (pattern.matcher(header).matches()) {
-                    return mail.getRecipients();
+        if (patterns != null) {
+            for (Object[] pattern1 : patterns) {
+                //Get the header name
+                String headerName = (String) pattern1[0];
+                //Get the patterns for that header
+                Pattern pattern = (Pattern) pattern1[1];
+                //Get the array of header values that match that
+                String[] headers = message.getHeader(headerName);
+                //Loop through the header values
+                if (headers != null) {
+                    for (String header : headers) {
+                        if (pattern.matcher(header).matches()) {
+                            return mail.getRecipients();
+                        }
+                    }
                 }
             }
         }

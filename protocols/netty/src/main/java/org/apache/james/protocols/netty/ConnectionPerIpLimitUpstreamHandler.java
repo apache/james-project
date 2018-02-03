@@ -37,7 +37,7 @@ import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
  * TODO: Remove when its committed to NETTY. 
  *       https://jira.jboss.org/jira/browse/NETTY-311
  */
-public class ConnectionPerIpLimitUpstreamHandler extends SimpleChannelUpstreamHandler{
+public class ConnectionPerIpLimitUpstreamHandler extends SimpleChannelUpstreamHandler {
 
     private final ConcurrentMap<String, AtomicInteger> connections = new ConcurrentHashMap<>();
     private volatile int maxConnectionsPerIp = -1;
@@ -70,11 +70,11 @@ public class ConnectionPerIpLimitUpstreamHandler extends SimpleChannelUpstreamHa
             AtomicInteger atomicCount = connections.get(remoteIp);
 
             if (atomicCount == null) {
-            	atomicCount = new AtomicInteger(1);
+                atomicCount = new AtomicInteger(1);
                 AtomicInteger oldAtomicCount = connections.putIfAbsent(remoteIp, atomicCount);
                 // if another thread put a new counter for this ip, we must use the other one.
                 if (oldAtomicCount != null) {
-                	atomicCount = oldAtomicCount;
+                    atomicCount = oldAtomicCount;
                 }
             } else {
                 Integer count = atomicCount.incrementAndGet();
@@ -86,6 +86,7 @@ public class ConnectionPerIpLimitUpstreamHandler extends SimpleChannelUpstreamHa
         
         super.channelOpen(ctx, e);
     }
+    
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         if (maxConnectionsPerIp > 0) {

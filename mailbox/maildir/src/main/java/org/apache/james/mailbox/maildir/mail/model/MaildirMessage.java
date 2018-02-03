@@ -62,8 +62,9 @@ public class MaildirMessage implements Message {
      * Parse message if needed
      */
     private synchronized void parseMessage() {
-        if (parsed)
+        if (parsed) {
             return;
+        }
         SharedFileInputStream tmpMsgIn = null;
         try {
             tmpMsgIn = new SharedFileInputStream(messageName.getFile());

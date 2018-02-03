@@ -87,7 +87,7 @@ public class DockerCassandraRule implements TestRule {
                         .run("echo \"-Xmx1500M\" >> " + JVM_OPTIONS)
                         .build()))
             .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig().withBinds(new Binds(new Bind(tmpFsName, new Volume("/var/lib/cassandra")))))
-            .withCreateContainerCmdModifier(cmd -> cmd.withMemory(2000*1024*1024L))
+            .withCreateContainerCmdModifier(cmd -> cmd.withMemory(2000 * 1024 * 1024L))
             .withExposedPorts(CASSANDRA_PORT)
             .withLogConsumer(this::displayDockerLog)
             .waitingFor(new CassandraWaitStrategy());

@@ -100,4 +100,30 @@ public class SetMailboxesUpdateProcessorTest {
         assertThat(setMailboxesResponse.getUpdated()).isEmpty();
         assertThat(setMailboxesResponse.getNotUpdated()).containsEntry(mailboxId, SetError.builder().type("anErrorOccurred").description("An error occurred when updating the mailbox").build());
     }
+
+    @Test
+    public void requestChangedShouldReturnFalseWhenRequestValueAndStoreValueAreEmpty() throws Exception {
+        assertThat(sut.requestChanged(Optional.<String>empty(), Optional.empty())).isFalse();
+    }
+
+    @Test
+    public void requestChangedShouldReturnFalseWhenEmptyRequestMeansNoChanging() throws Exception {
+        assertThat(sut.requestChanged(Optional.empty(), Optional.of("any"))).isFalse();
+    }
+
+    @Test
+    public void requestChangedShouldReturnTrueWhenEmptyStoreValue() throws Exception {
+        assertThat(sut.requestChanged(Optional.of("any"), Optional.empty())).isTrue();
+    }
+
+    @Test
+    public void requestChangedShouldReturnTrueWhenRequestValueAndStoreValueAreNotTheSame() throws Exception {
+        assertThat(sut.requestChanged(Optional.of("any"), Optional.of("other"))).isTrue();
+    }
+
+    @Test
+    public void requestChangedShouldReturnFalseWhenRequestValueAndStoreValueAreTheSame() throws Exception {
+        assertThat(sut.requestChanged(Optional.of("any"), Optional.of("any"))).isFalse();
+    }
+
 }

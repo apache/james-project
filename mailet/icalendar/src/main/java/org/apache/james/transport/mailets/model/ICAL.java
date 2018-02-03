@@ -19,13 +19,13 @@
 
 package org.apache.james.transport.mailets.model;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.core.MailAddress;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 
 import net.fortuna.ical4j.model.Calendar;
@@ -47,7 +47,7 @@ public class ICAL {
         private Optional<String> recurrenceId = Optional.empty();
 
         public Builder from(Calendar calendar, byte[] originalEvent) {
-            this.ical = new String(originalEvent, Charsets.UTF_8);
+            this.ical = new String(originalEvent, StandardCharsets.UTF_8);
             VEvent vevent = (VEvent) calendar.getComponent("VEVENT");
             this.uid = optionalOf(vevent.getUid());
             this.method = optionalOf(calendar.getMethod());

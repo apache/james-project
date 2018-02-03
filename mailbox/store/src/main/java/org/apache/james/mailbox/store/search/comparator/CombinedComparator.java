@@ -34,7 +34,7 @@ import com.google.common.base.Preconditions;
  * {@link Comparator} which takes a Array of other {@link Comparator}'s and use them to compare two {@link MailboxMessage} instances till one of them
  * return <> 0
  */
-public class CombinedComparator implements Comparator<MailboxMessage>{
+public class CombinedComparator implements Comparator<MailboxMessage> {
 
     public static CombinedComparator create(List<Sort> sorts) {
         Preconditions.checkNotNull(sorts);

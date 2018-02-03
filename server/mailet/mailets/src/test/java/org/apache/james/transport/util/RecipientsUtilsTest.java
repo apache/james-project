@@ -23,15 +23,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
-import java.util.Properties;
 
-import javax.mail.Session;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMessage.RecipientType;
-
+import org.apache.james.core.MailAddress;
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.transport.mailets.redirect.RedirectNotify;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,7 +48,7 @@ public class RecipientsUtilsTest {
     @Test
     public void getRecipientsShouldReturnEmptyWhenMailetRecipientsIsEmpty() throws Exception {
         when(mailet.getRecipients())
-            .thenReturn(ImmutableList.<MailAddress> of());
+            .thenReturn(ImmutableList.<MailAddress>of());
 
         FakeMail fakeMail = FakeMail.defaultFakeMail();
 
@@ -103,15 +99,16 @@ public class RecipientsUtilsTest {
         when(mailet.getRecipients())
             .thenReturn(ImmutableList.of(SpecialAddress.FROM, SpecialAddress.TO));
 
-        MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        mimeMessage.setRecipients(RecipientType.TO, "to@james.org, to2@james.org");
         MailAddress from = new MailAddress("from", "james.org");
         MailAddress to = new MailAddress("to", "james.org");
         MailAddress to2 = new MailAddress("to2", "james.org");
         FakeMail fakeMail = FakeMail.builder()
                 .sender(from)
                 .recipients(to, to2)
-                .mimeMessage(mimeMessage)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .addToRecipient(to.asString(), to2.asString())
+                    .addFrom(from.asString())
+                    .build())
                 .build();
 
         List<MailAddress> recipients = testee.getRecipients(fakeMail);

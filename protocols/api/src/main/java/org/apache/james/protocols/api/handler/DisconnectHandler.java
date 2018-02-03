@@ -29,7 +29,7 @@ import org.apache.james.protocols.api.ProtocolSession;
  *
  * @param <S>
  */
-public interface DisconnectHandler<S extends ProtocolSession> extends ProtocolHandler{
+public interface DisconnectHandler<S extends ProtocolSession> extends ProtocolHandler {
     
     /**
      * Get called on disconnect

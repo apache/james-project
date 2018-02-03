@@ -65,8 +65,8 @@ public class JMXServerModule extends AbstractModule {
     private static final String JMX_COMPONENT_NAME_MAILBOXMANAGERBEAN = "org.apache.james:type=component,name=mailboxmanagerbean";
     private static final String JMX_COMPONENT_MAILBOXCOPIER = "org.apache.james:type=component,name=mailboxcopier";
     private static final String JMX_COMPONENT_REINDEXER = "org.apache.james:type=component,name=reindexerbean";
-    private final static String JMX_COMPONENT_QUOTA = "org.apache.james:type=component,name=quotamanagerbean";
-    private final static String JMX_COMPONENT_SIEVE = "org.apache.james:type=component,name=sievemanagerbean";
+    private static final String JMX_COMPONENT_QUOTA = "org.apache.james:type=component,name=quotamanagerbean";
+    private static final String JMX_COMPONENT_SIEVE = "org.apache.james:type=component,name=sievemanagerbean";
 
     @Override
     protected void configure() {

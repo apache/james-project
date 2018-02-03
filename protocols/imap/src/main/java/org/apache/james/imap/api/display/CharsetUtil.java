@@ -43,7 +43,7 @@ public class CharsetUtil {
 
     // build the sets which holds the charsets and names
     static {
-        Set<String>cNames = new HashSet<>();
+        Set<String> cNames = new HashSet<>();
         Set<Charset> sets = new HashSet<>();
 
         for (Charset charset : Charset.availableCharsets().values()) {
@@ -62,7 +62,7 @@ public class CharsetUtil {
      * 
      * @return supportedCharsetNames
      */
-    public final static Set<String> getAvailableCharsetNames() {
+    public static final Set<String> getAvailableCharsetNames() {
         return charsetNames;
     }
     
@@ -71,7 +71,7 @@ public class CharsetUtil {
      * 
      * @return supportedCharsets
      */
-    public final static Set<Charset> getAvailableCharsets() {
+    public static final Set<Charset> getAvailableCharsets() {
         return charsets;
     }
     

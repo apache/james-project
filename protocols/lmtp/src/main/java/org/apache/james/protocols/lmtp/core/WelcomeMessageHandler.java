@@ -28,7 +28,7 @@ import org.apache.james.protocols.smtp.SMTPSession;
  */
 public class WelcomeMessageHandler extends org.apache.james.protocols.smtp.core.WelcomeMessageHandler {
     
-    private final static String SERVICE_TYPE = "LMTP";
+    private static final String SERVICE_TYPE = "LMTP";
 
     @Override
     protected String getServiceType(SMTPSession session) {

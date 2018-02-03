@@ -37,8 +37,8 @@ public class ProtocolSessionImpl implements ProtocolSession {
     private final Map<String, Object> sessionState;
     private String user;
     protected final ProtocolConfiguration config;
-    private final static Charset CHARSET = Charset.forName("US-ASCII");
-    private final static String DELIMITER = "\r\n";
+    private static final Charset CHARSET = Charset.forName("US-ASCII");
+    private static final String DELIMITER = "\r\n";
     
     public ProtocolSessionImpl(ProtocolTransport transport, ProtocolConfiguration config) {
         this.transport = transport;

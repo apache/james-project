@@ -27,7 +27,7 @@ import com.google.common.base.Objects;
 /**
  * {@link Comparator} which wraps an other {@link Comparator} and reverse it
  */
-public class ReverseComparator implements Comparator<MailboxMessage>{
+public class ReverseComparator implements Comparator<MailboxMessage> {
 
     private final Comparator<MailboxMessage> comparator;
 

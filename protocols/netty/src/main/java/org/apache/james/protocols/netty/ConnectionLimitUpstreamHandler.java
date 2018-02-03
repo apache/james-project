@@ -34,7 +34,7 @@ import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
  * TODO: Remove when its committed to NETTY. 
  *       https://jira.jboss.org/jira/browse/NETTY-311
  */
-public class ConnectionLimitUpstreamHandler extends SimpleChannelUpstreamHandler{
+public class ConnectionLimitUpstreamHandler extends SimpleChannelUpstreamHandler {
 
     private final AtomicInteger connections = new AtomicInteger(0);
     private volatile int maxConnections = -1;

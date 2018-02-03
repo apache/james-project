@@ -19,19 +19,28 @@
 
 package org.apache.james.transport.mailets.redirect;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.Optional;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeUtility;
 
-import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
+import org.apache.james.transport.util.SizeUtils;
+import org.apache.mailet.Mail;
 import org.apache.mailet.base.RFC2822Headers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
 public class NotifyMailetsMessage {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(NotifyMailetsMessage.class);
 
     private static final char LINE_BREAK = '\n';
 
@@ -52,7 +61,8 @@ public class NotifyMailetsMessage {
             .append(LINE_BREAK);
 
         if (message.getSubject() != null) {
-            builder.append("  Subject: " + message.getSubject())
+            builder.append("  Subject: ")
+                .append(safelyDecode(message.getSubject()))
                 .append(LINE_BREAK);
         }
         if (message.getSentDate() != null) {
@@ -78,8 +88,12 @@ public class NotifyMailetsMessage {
         appendAddresses(builder, "To", message.getHeader(RFC2822Headers.TO));
         appendAddresses(builder, "CC", message.getHeader(RFC2822Headers.CC));
 
-        builder.append("  Size (in bytes): " + message.getSize())
-            .append(LINE_BREAK);
+        getMessageSizeEstimation(originalMail).ifPresent(size ->
+            builder
+                .append("  Size: ")
+                .append(SizeUtils.humanReadableSize(size))
+                .append(LINE_BREAK));
+
         if (message.getLineCount() >= 0) {
             builder.append("  Number of lines: " + message.getLineCount())
                 .append(LINE_BREAK);
@@ -88,12 +102,34 @@ public class NotifyMailetsMessage {
         return builder.toString();
     }
 
+    @VisibleForTesting static Optional<Long> getMessageSizeEstimation(Mail mail) {
+        try  {
+            return Optional.of(mail.getMessageSize())
+                .filter(size -> size > 0);
+        } catch (MessagingException e) {
+            LOGGER.debug("Could not estimate mail size", e);
+
+            return Optional.empty();
+        }
+    }
+
+    @VisibleForTesting static String safelyDecode(String text) {
+        try {
+            return MimeUtility.decodeText(text);
+        } catch (UnsupportedEncodingException e) {
+            LOGGER.error("Could not decode following value {}", text, e);
+
+            return text;
+        }
+    }
+
     private void appendAddresses(StringBuilder builder, String title, String[] addresses) {
         if (addresses != null) {
             builder.append("  " + title + ": ")
                 .append(LINE_BREAK);
             for (String address : flatten(addresses)) {
-                builder.append(address + " ")
+                builder.append(safelyDecode(address))
+                    .append(" ")
                     .append(LINE_BREAK);
             }
             builder.append(LINE_BREAK);

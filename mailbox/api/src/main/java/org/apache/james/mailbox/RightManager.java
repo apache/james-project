@@ -53,6 +53,7 @@ public interface RightManager {
      * @throws MailboxException in case of unknown mailbox or unsupported right
      */
     boolean hasRight(MailboxId mailboxId, Right right, MailboxSession session) throws MailboxException;
+
     /**
      * Computes a result suitable for the LISTRIGHTS IMAP command. The result is
      * computed for this mailbox and the given {@code identifier}.
@@ -75,7 +76,9 @@ public interface RightManager {
      * @return result suitable for the LISTRIGHTS IMAP command
      * @throws MailboxException in case of unknown mailbox or unsupported right
      */
-    MailboxACL.Rfc4314Rights[] listRigths(MailboxPath mailboxPath, MailboxACL.EntryKey identifier, MailboxSession session) throws MailboxException;
+    MailboxACL.Rfc4314Rights[] listRights(MailboxPath mailboxPath, MailboxACL.EntryKey identifier, MailboxSession session) throws MailboxException;
+
+    MailboxACL listRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 
     /**
      * Returns the rights applicable to the user who has sent the current

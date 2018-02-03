@@ -27,34 +27,34 @@
 
 <imapservers>
 
-	<!-- IMAP server is enabled by default -->
-	<!-- Disabling blocks will stop them from listening, -->
-	<!-- but does not free as many resources as removing them would -->
-	<imapserver enabled="true">
-	
+    <!-- IMAP server is enabled by default -->
+    <!-- Disabling blocks will stop them from listening, -->
+    <!-- but does not free as many resources as removing them would -->
+    <imapserver enabled="true">
+
        <jmxName>imapserver</jmxName>
 
-	   <!-- Configure this if you want to bind to a specific inetaddress -->
-	   <!-- port 143 is the well-known/IANA registered port for IMAP -->
-	   <!-- port 993 is the well-known/IANA registered port for IMAPS  ie over SSL/TLS -->
-	   <!-- Please NOTE: you should add this IP also to your RemoteAddrNotInNetwork -->
-	   <!-- in order to avoid relay check for locally generated bounces -->    
-	   <bind>0.0.0.0:143</bind>
-	    
-	   <connectionBacklog>200</connectionBacklog>
-	    
-	   <!-- Set to true to use TLS for the Socket.
-	         To use this you need to copy sunjce_provider.jar to /path/james/lib directory.
-	    -->
-	   <tls socketTLS="false" startTLS="false">
-	     <!-- To create a new keystore execute:
-	      keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore
-	       -->
-	     <keystore>file://conf/keystore</keystore>
-	     <secret>yoursecret</secret>
-	     <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
-	   </tls>
-	      
+       <!-- Configure this if you want to bind to a specific inetaddress -->
+       <!-- port 143 is the well-known/IANA registered port for IMAP -->
+       <!-- port 993 is the well-known/IANA registered port for IMAPS  ie over SSL/TLS -->
+       <!-- Please NOTE: you should add this IP also to your RemoteAddrNotInNetwork -->
+       <!-- in order to avoid relay check for locally generated bounces -->
+       <bind>0.0.0.0:143</bind>
+
+       <connectionBacklog>200</connectionBacklog>
+
+       <!-- Set to true to use TLS for the Socket.
+             To use this you need to copy sunjce_provider.jar to /path/james/lib directory.
+        -->
+       <tls socketTLS="false" startTLS="false">
+         <!-- To create a new keystore execute:
+          keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore
+           -->
+         <keystore>file://conf/keystore</keystore>
+         <secret>yoursecret</secret>
+         <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+       </tls>
+
        <!-- This is the name used by the server to identify itself in the IMAP -->
        <!-- protocol.  If autodetect is TRUE, the server will discover its -->
        <!-- own host name and use that in the protocol.  If discovery fails, -->
@@ -72,6 +72,6 @@
        <!-- Set the maximum simultaneous incoming connections per IP for this service -->
        <connectionLimitPerIP>0</connectionLimitPerIP>
 
-	</imapserver>
+    </imapserver>
 
 </imapservers>

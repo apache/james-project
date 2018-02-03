@@ -178,8 +178,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
                                 basePath.getName(),
                                 CharsetUtil.decodeModifiedUTF7(mailboxName),
                                 mailboxSession.getPathDelimiter()))
-                            .build()
-                        , mailboxSession);
+                            .build(), mailboxSession);
             }
 
             for (MailboxMetaData metaData : results) {
@@ -188,7 +187,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
 
             okComplete(command, tag, responder);
         } catch (MailboxException e) {
-            LOGGER.error("List failed for mailboxName " + mailboxName + " and user" + user, e);
+            LOGGER.error("List failed for mailboxName {} and user {}", mailboxName, user, e);
             no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
         }
     }

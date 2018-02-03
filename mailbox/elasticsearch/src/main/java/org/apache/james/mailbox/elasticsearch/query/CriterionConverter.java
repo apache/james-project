@@ -195,22 +195,22 @@ public class CriterionConverter {
     private QueryBuilder convertFlag(SearchQuery.FlagCriterion flagCriterion) {
         SearchQuery.BooleanOperator operator = flagCriterion.getOperator();
         Flags.Flag flag = flagCriterion.getFlag();
-        if (flag.equals(Flags.Flag.DELETED) ) {
+        if (flag.equals(Flags.Flag.DELETED)) {
             return boolQuery().filter(termQuery(JsonMessageConstants.IS_DELETED, operator.isSet()));
         }
-        if (flag.equals(Flags.Flag.ANSWERED) ) {
+        if (flag.equals(Flags.Flag.ANSWERED)) {
             return boolQuery().filter(termQuery(JsonMessageConstants.IS_ANSWERED, operator.isSet()));
         }
-        if (flag.equals(Flags.Flag.DRAFT) ) {
+        if (flag.equals(Flags.Flag.DRAFT)) {
             return boolQuery().filter(termQuery(JsonMessageConstants.IS_DRAFT, operator.isSet()));
         }
-        if (flag.equals(Flags.Flag.SEEN) ) {
+        if (flag.equals(Flags.Flag.SEEN)) {
             return boolQuery().filter(termQuery(JsonMessageConstants.IS_UNREAD, !operator.isSet()));
         }
-        if (flag.equals(Flags.Flag.RECENT) ) {
+        if (flag.equals(Flags.Flag.RECENT)) {
             return boolQuery().filter(termQuery(JsonMessageConstants.IS_RECENT, operator.isSet()));
         }
-        if (flag.equals(Flags.Flag.FLAGGED) ) {
+        if (flag.equals(Flags.Flag.FLAGGED)) {
             return boolQuery().filter(termQuery(JsonMessageConstants.IS_FLAGGED, operator.isSet()));
         }
         throw new RuntimeException("Unknown flag used in Flag search criterion");

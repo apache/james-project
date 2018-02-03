@@ -80,7 +80,7 @@ public class IMAPRequest implements Request {
         StringBuilder sb = new StringBuilder();
         Iterator<ByteBuffer> linesIt = lines.iterator();
         
-        while (linesIt.hasNext()){
+        while (linesIt.hasNext()) {
             ByteBuffer line = linesIt.next();
             byte[] buf;
             if (line.hasArray()) {

@@ -49,10 +49,10 @@ public class SearchResponseEncoder extends AbstractChainedImapEncoder {
         
         // add MODSEQ
         if (highestModSeq != null) {
-        	composer.openParen();
-        	composer.message("MODSEQ");
-        	composer.message(highestModSeq);
-        	composer.closeParen();
+            composer.openParen();
+            composer.message("MODSEQ");
+            composer.message(highestModSeq);
+            composer.closeParen();
         }
         composer.end();
     }

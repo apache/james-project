@@ -53,11 +53,14 @@ public final class StringUtils {
                 // When the number of trailing "\" is odd then there was no separator and this pattern is part of
                 // the previous match.
                 int depth = 1;
-                while (depth < array[i-1].length() && array[i-1].charAt(array[i-1].length() - 1 - depth) == '\\') depth ++;
+                while (depth < array[i - 1].length() && array[i - 1].charAt(array[i - 1].length() - 1 - depth) == '\\') {
+                    depth++;
+                }
                 escaped = depth % 2 == 1;
             }
-            if (!escaped) list.add(array[i]);
-            else {
+            if (!escaped) {
+                list.add(array[i]);
+            } else {
                 String prev = list.remove(list.size() - 1);
                 list.add(prev.substring(0, prev.length() - 1) + pattern + array[i]);
             }
@@ -75,7 +78,7 @@ public final class StringUtils {
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
             StringBuilder sb = new StringBuilder();
-            byte buf[] = message.getBytes();
+            byte[] buf = message.getBytes();
             byte[] md5 = md.digest(buf);
 
             for (byte aMd5 : md5) {
@@ -97,16 +100,23 @@ public final class StringUtils {
      * or null when the text is null
      */
     public static String capitalizeWords(String data) {
-        if (data==null) return null;
+        if (data == null) {
+            return null;
+        }
         StringBuilder res = new StringBuilder();
         char ch;
         char prevCh = '.';
-        for ( int i = 0;  i < data.length();  i++ ) {
+        for (int i = 0;  i < data.length();  i++) {
             ch = data.charAt(i);
-            if ( Character.isLetter(ch)) {
-                if (!Character.isLetter(prevCh) ) res.append( Character.toUpperCase(ch) );
-                else res.append( Character.toLowerCase(ch) );
-            } else res.append( ch );
+            if (Character.isLetter(ch)) {
+                if (!Character.isLetter(prevCh)) {
+                    res.append(Character.toUpperCase(ch));
+                } else {
+                    res.append(Character.toLowerCase(ch));
+                }
+            } else {
+                res.append(ch);
+            }
             prevCh = ch;
         }
         return res.toString();

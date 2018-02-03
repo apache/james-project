@@ -79,13 +79,11 @@ public class OnlyText extends GenericMailet {
                 if (mp.getBodyPart(i).isMimeType("text/plain")) {
                     setContentFromPart(mail.getMessage(), mp.getBodyPart(i), null, false);
                     found = 1;
-                } else if (htmlPart == -1 && mp.getBodyPart(i).isMimeType("text/html"))
+                } else if (htmlPart == -1 && mp.getBodyPart(i).isMimeType("text/html")) {
                     htmlPart = i;
-
-                else if (stringPart == -1 && content instanceof String)
+                } else if (stringPart == -1 && content instanceof String) {
                     stringPart = i;
-
-                else if (content instanceof Multipart) {
+                } else if (content instanceof Multipart) {
                     int[] res = process(mail, (Multipart) content, found, htmlPart, stringPart);
                     found = res[0];
                     htmlPart = res[1];
@@ -123,12 +121,13 @@ public class OnlyText extends GenericMailet {
                 }
 
 
-                if (found < 0 && optionsNotextProcessor != null) mail.setState(optionsNotextProcessor);
+                if (found < 0 && optionsNotextProcessor != null) {
+                    mail.setState(optionsNotextProcessor);
+                }
 
-            } else if (!(content instanceof String) && optionsNotextProcessor != null)
+            } else if (!(content instanceof String) && optionsNotextProcessor != null) {
                 mail.setState(optionsNotextProcessor);
-
-            else if (mail.getMessage().isMimeType("text/html")) {
+            } else if (mail.getMessage().isMimeType("text/html")) {
                 setContentFromPart(mail.getMessage(), mail.getMessage(), html2Text((String) mail.getMessage().getContent()), true);
             }
 
@@ -147,7 +146,9 @@ public class OnlyText extends GenericMailet {
         }
         m.setContent(newText != null ? newText : p.getContent(), contentType);
         String[] h = p.getHeader("Content-Transfer-Encoding");
-        if (h != null && h.length > 0) m.setHeader("Content-Transfer-Encoding", h[0]);
+        if (h != null && h.length > 0) {
+            m.setHeader("Content-Transfer-Encoding", h[0]);
+        }
         m.saveChanges();
     }
 
@@ -167,22 +168,35 @@ public class OnlyText extends GenericMailet {
         for (int i = 0; i < data.length(); i++) {
             char c = data.charAt(i);
 
-            if (c == '&' && lastAmp == -1) lastAmp = buffer.length();
-            else if (c == ';' && (lastAmp > -1)) { // && (lastAmp > (buffer.length() - 7))) { // max: &#xxxx;
-                if (charMap.containsKey(buffer.toString())) res.append(charMap.get(buffer.toString()));
-                else res.append("&").append(buffer.toString()).append(";");
+            if (c == '&' && lastAmp == -1) {
+                lastAmp = buffer.length();
+            } else if (c == ';' && (lastAmp > -1)) { // && (lastAmp > (buffer.length() - 7))) { // max: &#xxxx;
+                if (charMap.containsKey(buffer.toString())) {
+                    res.append(charMap.get(buffer.toString()));
+                } else {
+                    res.append("&").append(buffer.toString()).append(";");
+                }
                 lastAmp = -1;
                 buffer = new StringBuffer();
-            } else if (lastAmp == -1) res.append(c);
-            else buffer.append(c);
+            } else if (lastAmp == -1) {
+                res.append(c);
+            } else {
+                buffer.append(c);
+            }
         }
         return res.toString();
     }
 
     private void initEntityTable() {
-        for (int index = 11; index < 32; index++) charMap.put("#0" + index, String.valueOf((char) index));
-        for (int index = 32; index < 128; index++) charMap.put("#" + index, String.valueOf((char) index));
-        for (int index = 128; index < 256; index++) charMap.put("#" + index, String.valueOf((char) index));
+        for (int index = 11; index < 32; index++) {
+            charMap.put("#0" + index, String.valueOf((char) index));
+        }
+        for (int index = 32; index < 128; index++) {
+            charMap.put("#" + index, String.valueOf((char) index));
+        }
+        for (int index = 128; index < 256; index++) {
+            charMap.put("#" + index, String.valueOf((char) index));
+        }
 
         // A complete reference is here:
         // http://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references
@@ -199,106 +213,101 @@ public class OnlyText extends GenericMailet {
         charMap.put("nbsp", " ");
         charMap.put("quot", "\"");
 
-        charMap.put("iexcl", "\u00A1");
-        charMap.put("cent", "\u00A2");
-        charMap.put("pound", "\u00A3");
-        charMap.put("curren", "\u00A4");
-        charMap.put("yen", "\u00A5");
-        charMap.put("brvbar", "\u00A6");
-        charMap.put("sect", "\u00A7");
-        charMap.put("uml", "\u00A8");
-        charMap.put("copy", "\u00A9");
-        charMap.put("ordf", "\u00AA");
-        charMap.put("laquo", "\u00AB");
-        charMap.put("not", "\u00AC");
-        charMap.put("shy", "\u00AD");
-        charMap.put("reg", "\u00AE");
-        charMap.put("macr", "\u00AF");
-        charMap.put("deg", "\u00B0");
-        charMap.put("plusmn", "\u00B1");
-        charMap.put("sup2", "\u00B2");
-        charMap.put("sup3", "\u00B3");
-
-        charMap.put("acute", "\u00B4");
-        charMap.put("micro", "\u00B5");
-        charMap.put("para", "\u00B6");
-        charMap.put("middot", "\u00B7");
-        charMap.put("cedil", "\u00B8");
-        charMap.put("sup1", "\u00B9");
-        charMap.put("ordm", "\u00BA");
-        charMap.put("raquo", "\u00BB");
-        charMap.put("frac14", "\u00BC");
-        charMap.put("frac12", "\u00BD");
-        charMap.put("frac34", "\u00BE");
-        charMap.put("iquest", "\u00BF");
-
-        charMap.put("Agrave", "\u00C0");
-        charMap.put("Aacute", "\u00C1");
-        charMap.put("Acirc", "\u00C2");
-        charMap.put("Atilde", "\u00C3");
-        charMap.put("Auml", "\u00C4");
-        charMap.put("Aring", "\u00C5");
-        charMap.put("AElig", "\u00C6");
-        charMap.put("Ccedil", "\u00C7");
-        charMap.put("Egrave", "\u00C8");
-        charMap.put("Eacute", "\u00C9");
-        charMap.put("Ecirc", "\u00CA");
-        charMap.put("Euml", "\u00CB");
-        charMap.put("Igrave", "\u00CC");
-        charMap.put("Iacute", "\u00CD");
-        charMap.put("Icirc", "\u00CE");
-        charMap.put("Iuml", "\u00CF");
-
-        charMap.put("ETH", "\u00D0");
-        charMap.put("Ntilde", "\u00D1");
-        charMap.put("Ograve", "\u00D2");
-        charMap.put("Oacute", "\u00D3");
-        charMap.put("Ocirc", "\u00D4");
-        charMap.put("Otilde", "\u00D5");
-        charMap.put("Ouml", "\u00D6");
-        charMap.put("times", "\u00D7");
-        charMap.put("Oslash", "\u00D8");
-        charMap.put("Ugrave", "\u00D9");
-        charMap.put("Uacute", "\u00DA");
-        charMap.put("Ucirc", "\u00DB");
-        charMap.put("Uuml", "\u00DC");
-        charMap.put("Yacute", "\u00DD");
-        charMap.put("THORN", "\u00DE");
-        charMap.put("szlig", "\u00DF");
-
-        charMap.put("agrave", "\u00E0");
-        charMap.put("aacute", "\u00E1");
-        charMap.put("acirc", "\u00E2");
-        charMap.put("atilde", "\u00E3");
-        charMap.put("auml", "\u00E4");
-        charMap.put("aring", "\u00E5");
-        charMap.put("aelig", "\u00E6");
-        charMap.put("ccedil", "\u00E7");
-        charMap.put("egrave", "\u00E8");
-        charMap.put("eacute", "\u00E9");
-        charMap.put("ecirc", "\u00EA");
-        charMap.put("euml", "\u00EB");
-        charMap.put("igrave", "\u00EC");
-        charMap.put("iacute", "\u00ED");
-        charMap.put("icirc", "\u00EE");
-        charMap.put("iuml", "\u00EF");
-
-        charMap.put("eth", "\u00F0");
-        charMap.put("ntilde", "\u00F1");
-        charMap.put("ograve", "\u00F2");
-        charMap.put("oacute", "\u00F3");
-        charMap.put("ocirc", "\u00F4");
-        charMap.put("otilde", "\u00F5");
-        charMap.put("ouml", "\u00F6");
-        charMap.put("divid", "\u00F7");
-        charMap.put("oslash", "\u00F8");
-        charMap.put("ugrave", "\u00F9");
-        charMap.put("uacute", "\u00FA");
-        charMap.put("ucirc", "\u00FB");
-        charMap.put("uuml", "\u00FC");
-        charMap.put("yacute", "\u00FD");
-        charMap.put("thorn", "\u00FE");
-        charMap.put("yuml", "\u00FF");
-        charMap.put("euro", "\u0080");
+        charMap.put("Ouml", "Ö");
+        charMap.put("Oacute", "Ó");
+        charMap.put("iquest", "¿");
+        charMap.put("yuml", "ÿ");
+        charMap.put("cent", "¢");
+        charMap.put("deg", "°");
+        charMap.put("aacute", "á");
+        charMap.put("uuml", "ü");
+        charMap.put("Otilde", "Õ");
+        charMap.put("Iacute", "Í");
+        charMap.put("frac12", "½");
+        charMap.put("atilde", "ã");
+        charMap.put("ordf", "ª");
+        charMap.put("sup2", "²");
+        charMap.put("sup3", "³");
+        charMap.put("frac14", "¼");
+        charMap.put("ucirc", "û");
+        charMap.put("brvbar", "¦");
+        charMap.put("reg", "®");
+        charMap.put("sup1", "¹");
+        charMap.put("THORN", "Þ");
+        charMap.put("ordm", "º");
+        charMap.put("eth", "ð");
+        charMap.put("Acirc", "Â");
+        charMap.put("aring", "å");
+        charMap.put("Uacute", "Ú");
+        charMap.put("oslash", "ø");
+        charMap.put("eacute", "é");
+        charMap.put("agrave", "à");
+        charMap.put("Ecirc", "Ê");
+        charMap.put("laquo", "«");
+        charMap.put("Igrave", "Ì");
+        charMap.put("Agrave", "À");
+        charMap.put("macr", "¯");
+        charMap.put("Ucirc", "Û");
+        charMap.put("igrave", "ì");
+        charMap.put("ouml", "ö");
+        charMap.put("iexcl", "¡");
+        charMap.put("otilde", "õ");
+        charMap.put("ugrave", "ù");
+        charMap.put("Aring", "Å");
+        charMap.put("Ograve", "Ò");
+        charMap.put("Ugrave", "Ù");
+        charMap.put("ograve", "ò");
+        charMap.put("acute", "´");
+        charMap.put("ecirc", "ê");
+        charMap.put("euro", "€");
+        charMap.put("uacute", "ú");
+        charMap.put("shy", "\\u00AD");
+        charMap.put("cedil", "¸");
+        charMap.put("raquo", "»");
+        charMap.put("Atilde", "Ã");
+        charMap.put("Iuml", "Ï");
+        charMap.put("iacute", "í");
+        charMap.put("ocirc", "ô");
+        charMap.put("curren", "¤");
+        charMap.put("frac34", "¾");
+        charMap.put("Euml", "Ë");
+        charMap.put("szlig", "ß");
+        charMap.put("pound", "£");
+        charMap.put("not", "¬");
+        charMap.put("AElig", "Æ");
+        charMap.put("times", "×");
+        charMap.put("Aacute", "Á");
+        charMap.put("Icirc", "Î");
+        charMap.put("para", "¶");
+        charMap.put("uml", "¨");
+        charMap.put("oacute", "ó");
+        charMap.put("copy", "©");
+        charMap.put("Eacute", "É");
+        charMap.put("Oslash", "Ø");
+        charMap.put("divid", "÷");
+        charMap.put("aelig", "æ");
+        charMap.put("euml", "ë");
+        charMap.put("Ocirc", "Ô");
+        charMap.put("yen", "¥");
+        charMap.put("ntilde", "ñ");
+        charMap.put("Ntilde", "Ñ");
+        charMap.put("thorn", "þ");
+        charMap.put("yacute", "ý");
+        charMap.put("Auml", "Ä");
+        charMap.put("Yacute", "Ý");
+        charMap.put("ccedil", "ç");
+        charMap.put("micro", "µ");
+        charMap.put("Ccedil", "Ç");
+        charMap.put("sect", "§");
+        charMap.put("icirc", "î");
+        charMap.put("middot", "·");
+        charMap.put("Uuml", "Ü");
+        charMap.put("ETH", "Ð");
+        charMap.put("egrave", "è");
+        charMap.put("iuml", "ï");
+        charMap.put("plusmn", "±");
+        charMap.put("acirc", "â");
+        charMap.put("auml", "ä");
+        charMap.put("Egrave", "È");
     }
 }

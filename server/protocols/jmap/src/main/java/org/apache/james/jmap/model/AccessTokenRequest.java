@@ -32,7 +32,7 @@ public class AccessTokenRequest {
         return new Builder();
     }
 
-    @JsonPOJOBuilder(withPrefix="")
+    @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
 
         private ContinuationToken token;

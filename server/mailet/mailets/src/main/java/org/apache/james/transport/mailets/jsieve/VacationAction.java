@@ -25,10 +25,10 @@ import java.util.Set;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.optional.ActionVacation;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.joda.time.Days;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,15 +80,15 @@ public class VacationAction implements MailAction {
         try {
             return new MailAddress(address);
         } catch (AddressException e) {
-            LOGGER.warn("Mail address " + address + " was not well formatted : " + e.getLocalizedMessage());
+            LOGGER.warn("Mail address {} was not well formatted : {}", address, e.getLocalizedMessage());
             return null;
         }
     }
 
     private boolean isMailingList(Mail mail) throws MessagingException {
-        Enumeration<?> enumeration = mail.getMessage().getAllHeaderLines();
+        Enumeration<String> enumeration = mail.getMessage().getAllHeaderLines();
         while (enumeration.hasMoreElements()) {
-            String headerName = (String) enumeration.nextElement();
+            String headerName = enumeration.nextElement();
             if (headerName.startsWith("List-")) {
                 return true;
             }

@@ -29,22 +29,22 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ProtocolResponseTest {
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void newInstanceShouldThrowWhenMethodIsNull() {
         new ProtocolResponse(null, new ObjectNode(JsonNodeFactory.instance), ClientId.of("id"));
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void newInstanceShouldThrowWhenMethodIsEmpty() {
         new ProtocolResponse(Method.Response.name(""), new ObjectNode(JsonNodeFactory.instance), ClientId.of("id"));
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void newInstanceShouldThrowWhenResultsIsNull() {
         new ProtocolResponse(Method.Response.name("method"), null, ClientId.of("id"));
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void newInstanceShouldThrowWhenClientIdIsNull() {
         new ProtocolResponse(Method.Response.name("method"), new ObjectNode(new JsonNodeFactory(false)).putObject("{}"), null);
     }

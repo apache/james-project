@@ -21,13 +21,13 @@ package org.apache.james.imap.decode;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.base.Charsets;
-import org.apache.james.protocols.imap.DecodingException;
-import org.junit.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+
+import org.apache.james.protocols.imap.DecodingException;
+import org.junit.Test;
 
 public class ImapRequestLineReaderTest {
 
@@ -37,7 +37,7 @@ public class ImapRequestLineReaderTest {
 
     @Test
     public void nextNonSpaceCharShouldReturnTheFirstCharacter() throws Exception {
-        inputStream = new ByteArrayInputStream(("anyString \n").getBytes(Charsets.US_ASCII));
+        inputStream = new ByteArrayInputStream(("anyString \n").getBytes(StandardCharsets.US_ASCII));
         lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
         assertThat(lineReader.nextNonSpaceChar()).isEqualTo('a');
@@ -45,7 +45,7 @@ public class ImapRequestLineReaderTest {
 
     @Test
     public void nextNonSpaceCharShouldIgnoreTheSpaceAndReturnTheFirstNonSpaceCharacter() throws Exception {
-        inputStream = new ByteArrayInputStream(("    anyString \n").getBytes(Charsets.US_ASCII));
+        inputStream = new ByteArrayInputStream(("    anyString \n").getBytes(StandardCharsets.US_ASCII));
         lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
         assertThat(lineReader.nextNonSpaceChar()).isEqualTo('a');
@@ -53,7 +53,7 @@ public class ImapRequestLineReaderTest {
 
     @Test(expected = DecodingException.class)
     public void nextNonSpaceCharShouldThrowExceptionWhenNotFound() throws Exception {
-        inputStream = new ByteArrayInputStream(("    ").getBytes(Charsets.US_ASCII));
+        inputStream = new ByteArrayInputStream(("    ").getBytes(StandardCharsets.US_ASCII));
         lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
         lineReader.nextNonSpaceChar();

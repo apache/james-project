@@ -28,12 +28,12 @@ import javax.mail.internet.ParseException;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.core.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -370,9 +370,7 @@ class ParsedConfiguration {
             setMarkMaxMessageSizeExceededSeen(maxmessagesize.getBoolean("[@markseen]"));
         }
 
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.info("Configured FetchMail fetch task " + getFetchTaskName());
-        }
+        LOGGER.info("Configured FetchMail fetch task {}", getFetchTaskName());
     }
 
     /**

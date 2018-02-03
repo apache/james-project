@@ -90,19 +90,19 @@ public class BayesianAnalyzer {
      * Number of "interesting" tokens to use to compute overall spamminess
      * probability.
      */
-    private final static int MAX_INTERESTING_TOKENS = 15;
+    private static final int MAX_INTERESTING_TOKENS = 15;
 
     /**
      * Minimum probability distance from 0.5 to consider a token "interesting"
      * to use to compute overall spamminess probability.
      */
-    private final static double INTERESTINGNESS_THRESHOLD = 0.46;
+    private static final double INTERESTINGNESS_THRESHOLD = 0.46;
 
     /**
      * Default token probability to use when a token has not been encountered
      * before.
      */
-    final static double DEFAULT_TOKEN_PROBABILITY = 0.4;
+    static final double DEFAULT_TOKEN_PROBABILITY = 0.4;
 
     /** Map of ham tokens and their occurrences. */
     private Map<String, Integer> hamTokenCounts = new HashMap<>();
@@ -502,8 +502,7 @@ public class BayesianAnalyzer {
 
             // System.out.println(tps);
 
-            double theDoubleValue = DEFAULT_TOKEN_PROBABILITY; // initialize it
-                                                               // to the default
+            double theDoubleValue = DEFAULT_TOKEN_PROBABILITY; // initialize it to the default
             Double theDoubleObject = workCorpus.get(tps.token);
             // if either the original token or a degeneration was found use the
             // double value, otherwise use the default

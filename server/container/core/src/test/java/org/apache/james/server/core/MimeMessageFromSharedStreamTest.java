@@ -19,18 +19,15 @@
 
 package org.apache.james.server.core;
 
-import javax.mail.util.SharedByteArrayInputStream;
-
-import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
-import java.util.Properties;
+import org.apache.mailet.base.test.MimeMessageUtil;
 
 public class MimeMessageFromSharedStreamTest extends MimeMessageFromStreamTest {
 
     @Override
     protected MimeMessage getMessageFromSources(String sources) throws Exception {
-        return new MimeMessage(Session.getDefaultInstance(new Properties()), new SharedByteArrayInputStream(sources.getBytes()));
+        return MimeMessageUtil.mimeMessageFromString(sources);
     }
 
 }

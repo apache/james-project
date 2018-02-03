@@ -105,7 +105,7 @@ public class CoreProcessor implements CoreCommands {
 
     private String computeCapabilityEntryString(Map.Entry<Capabilities, String> entry) {
         return "\"" + entry.getKey().toString() + "\"" +
-            ( entry.getValue() == null ? "" : " \"" + entry.getValue() + "\"" );
+            (entry.getValue() == null ? "" : " \"" + entry.getValue() + "\"");
     }
 
     @Override
@@ -197,7 +197,7 @@ public class CoreProcessor implements CoreCommands {
 
     @Override
     public String noop(String tag) {
-        if(Strings.isNullOrEmpty(tag)) {
+        if (Strings.isNullOrEmpty(tag)) {
             return "OK \"NOOP completed\"";
         }
         return "OK " + taggify(tag) + " \"DONE\"";

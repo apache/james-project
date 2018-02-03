@@ -38,8 +38,8 @@ public class MailboxMessageAppenderOnCyrusHost implements MailboxMessageAppender
     public void fillMailbox(MailboxPath mailboxPath) {
         String mailboxName = hostSystem.createMailboxStringFromMailboxPath(mailboxPath);
         ProtocolSession protocolSession = hostSystem.logAndGetAdminProtocolSession(new ProtocolSession());
-        protocolSession.CL(String.format("a001 SETACL %s %s %s", mailboxName, "cyrus", "lrswipkxtecda"));
-        protocolSession.SL("a001 OK .*", LOCATION);
+        protocolSession.cl(String.format("a001 SETACL %s %s %s", mailboxName, "cyrus", "lrswipkxtecda"));
+        protocolSession.sl("a001 OK .*", LOCATION);
         appendMessage(protocolSession, "a002", mailboxName, "");
         appendMessage(protocolSession, "a003", mailboxName, "\\Seen");
         appendMessage(protocolSession, "a004", mailboxName, "\\Flagged");
@@ -48,19 +48,19 @@ public class MailboxMessageAppenderOnCyrusHost implements MailboxMessageAppender
     }
 
     private void appendMessage(ProtocolSession protocolSession, String commandId, String mailbox,  String flagString) {
-        protocolSession.CL(String.format("%s APPEND %s (%s) {310}", commandId, mailbox, flagString));
-        protocolSession.SL("\\+ go ahead", LOCATION);
-        protocolSession.CL("Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)");
-        protocolSession.CL("From: Fred Foobar <foobar@Blurdybloop.COM>");
-        protocolSession.CL("Subject: afternoon meeting 2");
-        protocolSession.CL("To: mooch@owatagu.siam.edu");
-        protocolSession.CL("Message-Id: <B27397-0100000@Blurdybloop.COM>");
-        protocolSession.CL("MIME-Version: 1.0");
-        protocolSession.CL("Content-Type: TEXT/PLAIN; CHARSET=US-ASCII");
-        protocolSession.CL("");
-        protocolSession.CL("Hello Joe, could we change that to 4:00pm tomorrow?");
-        protocolSession.CL("");
-        protocolSession.SL(String.format("%s OK.*", commandId), LOCATION);
+        protocolSession.cl(String.format("%s APPEND %s (%s) {310}", commandId, mailbox, flagString));
+        protocolSession.sl("\\+ go ahead", LOCATION);
+        protocolSession.cl("Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)");
+        protocolSession.cl("From: Fred Foobar <foobar@Blurdybloop.COM>");
+        protocolSession.cl("Subject: afternoon meeting 2");
+        protocolSession.cl("To: mooch@owatagu.siam.edu");
+        protocolSession.cl("Message-Id: <B27397-0100000@Blurdybloop.COM>");
+        protocolSession.cl("MIME-Version: 1.0");
+        protocolSession.cl("Content-Type: TEXT/PLAIN; CHARSET=US-ASCII");
+        protocolSession.cl("");
+        protocolSession.cl("Hello Joe, could we change that to 4:00pm tomorrow?");
+        protocolSession.cl("");
+        protocolSession.sl(String.format("%s OK.*", commandId), LOCATION);
     }
 
 }

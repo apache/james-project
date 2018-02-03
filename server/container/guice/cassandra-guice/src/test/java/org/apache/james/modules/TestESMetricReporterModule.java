@@ -28,7 +28,7 @@ import org.apache.james.metrics.es.ESReporterConfiguration;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 
-public class TestESMetricReporterModule extends AbstractModule{
+public class TestESMetricReporterModule extends AbstractModule {
 
     private static final String LOCALHOST = "localhost";
     private static final int DEFAULT_ES_HTTP_PORT = 9200;
@@ -45,7 +45,7 @@ public class TestESMetricReporterModule extends AbstractModule{
             .enabled()
             .onHost(LOCALHOST, DEFAULT_ES_HTTP_PORT)
             .onIndex(METRICS_INDEX)
-            .periodInSecond(1l)
+            .periodInSecond(1L)
             .build();
     }
 }

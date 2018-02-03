@@ -80,6 +80,7 @@ public class ListeningCurrentQuotaUpdaterTest {
         testee.event(expunged);
         verify(mockedCurrentQuotaManager).decrease(QUOTA_ROOT, 2, 2 * SIZE);
     }
+    
     @Test
     public void emptyExpungedEventShouldNotTriggerDecrease() throws Exception {
         MailboxListener.Expunged expunged = mock(MailboxListener.Expunged.class);

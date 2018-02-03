@@ -24,12 +24,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -61,8 +61,7 @@ public class HasHeaderWithPrefixTest {
 
         Mail mail = FakeMail.builder()
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
-                .addHeader(HEADER_NAME_PREFIX_1, "true")
-                .build())
+                .addHeader(HEADER_NAME_PREFIX_1, "true"))
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES2)
             .build();
 
@@ -80,8 +79,7 @@ public class HasHeaderWithPrefixTest {
 
         Mail mail = FakeMail.builder()
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
-                .addHeader(PREFIX, "true")
-                .build())
+                .addHeader(PREFIX, "true"))
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES2)
             .build();
 
@@ -99,8 +97,7 @@ public class HasHeaderWithPrefixTest {
 
         Mail mail = FakeMail.builder()
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
-                .addHeader(HEADER_NAME_NO_PREFIX, "true")
-                .build())
+                .addHeader(HEADER_NAME_NO_PREFIX, "true"))
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES2)
             .build();
 
@@ -119,8 +116,7 @@ public class HasHeaderWithPrefixTest {
         Mail mail = FakeMail.builder()
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addHeader(HEADER_NAME_PREFIX_1, "true")
-                .addHeader(HEADER_NAME_NO_PREFIX, "true")
-                .build())
+                .addHeader(HEADER_NAME_NO_PREFIX, "true"))
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES2)
             .build();
 

@@ -21,9 +21,7 @@ package org.apache.james.imap.message.response;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
-/**
- * Quota Root Response
- */
+
 public class QuotaRootResponse implements ImapResponseMessage {
     private final String quotaRoot;
 
@@ -32,7 +30,7 @@ public class QuotaRootResponse implements ImapResponseMessage {
     public QuotaRootResponse(String mailboxName, String quotaRoot) {
         super();
         this.mailboxName = mailboxName;
-        this.quotaRoot= quotaRoot;
+        this.quotaRoot = quotaRoot;
     }
 
     @Override

@@ -19,8 +19,8 @@
 
 package org.apache.james.imap.api.message.response;
 
-import static org.junit.Assert.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
@@ -38,7 +38,7 @@ public class StatusResponseTest  {
     }
 
     @Test
-    public void ResponseCodeShouldBuildTheLongestEntryForMetadata() throws Exception {
+    public void responseCodeShouldBuildTheLongestEntryForMetadata() throws Exception {
         assertThat(StatusResponse.ResponseCode.longestMetadataEntry(1024).getCode()).isEqualTo("METADATA LONGENTRIES");
         assertThat(StatusResponse.ResponseCode.longestMetadataEntry(1024).getNumber()).isEqualTo(1024);
     }

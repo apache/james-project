@@ -23,10 +23,10 @@ import java.util.Comparator;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.SearchUtil;
 
-public class BaseSubjectComparator extends AbstractHeaderComparator{
+public class BaseSubjectComparator extends AbstractHeaderComparator {
 
-    public final static Comparator<MailboxMessage> BASESUBJECT = new BaseSubjectComparator();
-    private final static String SUBJECT = "subject";
+    public static final Comparator<MailboxMessage> BASESUBJECT = new BaseSubjectComparator();
+    private static final String SUBJECT = "subject";
     
     @Override
     public int compare(MailboxMessage o1, MailboxMessage o2) {

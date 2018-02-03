@@ -65,7 +65,7 @@ public class OpenJPAMessageManager extends JPAMessageManager {
                                  QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser,
                                  MessageId.Factory messageIdFactory, BatchSizes batchSizes,
                                  ImmutableMailboxMessage.Factory immutableMailboxMessageFactory, StoreRightManager storeRightManager) throws MailboxException {
-    	
+
         super(mapperFactory,  index, dispatcher, locker, mailbox, quotaManager, quotaRootResolver,
             messageParser, messageIdFactory, batchSizes, immutableMailboxMessageFactory, storeRightManager);
         this.feature = f;

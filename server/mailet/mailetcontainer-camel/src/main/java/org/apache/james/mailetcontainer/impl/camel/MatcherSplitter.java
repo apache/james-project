@@ -20,7 +20,6 @@
 package org.apache.james.mailetcontainer.impl.camel;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -32,18 +31,18 @@ import org.apache.camel.Body;
 import org.apache.camel.ExchangeProperty;
 import org.apache.camel.Handler;
 import org.apache.camel.InOnly;
-import org.apache.james.server.core.MailImpl;
+import org.apache.james.core.MailAddress;
 import org.apache.james.mailetcontainer.impl.ProcessorUtil;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.MDCBuilder;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.Matcher;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -52,20 +51,21 @@ import com.google.common.collect.ImmutableList;
  */
 @InOnly
 public class MatcherSplitter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MatcherSplitter.class);
 
     /** Headername which is used to indicate that the matcher matched */
-    public final static String MATCHER_MATCHED_ATTRIBUTE = "matched";
+    public static final String MATCHER_MATCHED_ATTRIBUTE = "matched";
 
     /** Headername under which the matcher is stored */
-    public final static String MATCHER_PROPERTY = "matcher";
+    public static final String MATCHER_PROPERTY = "matcher";
 
-    public final static String ON_MATCH_EXCEPTION_PROPERTY = "onMatchException";
+    public static final String ON_MATCH_EXCEPTION_PROPERTY = "onMatchException";
 
-    public final static String LOGGER_PROPERTY = "logger";
+    public static final String LOGGER_PROPERTY = "logger";
 
-    public final static String MAILETCONTAINER_PROPERTY = "container";
+    public static final String MAILETCONTAINER_PROPERTY = "container";
 
-    public final static String METRIC_FACTORY = "metricFactory";
+    public static final String METRIC_FACTORY = "metricFactory";
 
     /**
      * Generate a List of MailMessage instances for the give @Body. This is done
@@ -89,7 +89,7 @@ public class MatcherSplitter {
         Collection<MailAddress> matchedRcpts = null;
         Collection<MailAddress> origRcpts = new ArrayList<>(mail.getRecipients());
         long start = System.currentTimeMillis();
-        MessagingException ex = null;
+        Exception ex = null;
         TimeMetric timeMetric = metricFactory.timer(matcher.getClass().getSimpleName());
 
         try {
@@ -120,25 +120,25 @@ public class MatcherSplitter {
                     ProcessorUtil.verifyMailAddresses(matchedRcpts);
                 }
 
-            } catch (MessagingException me) {
+            } catch (Exception me) {
                 ex = me;
                 if (onMatchException == null) {
                     onMatchException = Mail.ERROR;
                 } else {
                     onMatchException = onMatchException.trim().toLowerCase(Locale.US);
                 }
-                if (onMatchException.compareTo("nomatch") == 0) {
+                if (onMatchException.equalsIgnoreCase("nomatch")) {
                     // In case the matcher returned null, create an empty
                     // Collection
+                    LOGGER.warn("Encountered error while executing matcher {}. Matching none.", matcher, ex);
                     matchedRcpts = new ArrayList<>(0);
-                } else if (onMatchException.compareTo("matchall") == 0) {
+                } else if (onMatchException.equalsIgnoreCase("matchall")) {
+                    LOGGER.warn("Encountered error while executing matcher {}. matching all.", matcher, ex);
                     matchedRcpts = mail.getRecipients();
                     // no need to verify addresses
                 } else {
                     ProcessorUtil.handleException(me, mail, matcher.getMatcherConfig().getMatcherName(), onMatchException, logger);
                 }
-            } catch (IOException e) {
-                throw Throwables.propagate(e);
             }
 
             // check if the matcher matched
@@ -157,7 +157,7 @@ public class MatcherSplitter {
                 } else {
                     mail.setRecipients(rcpts);
 
-                    Mail newMail = new MailImpl(mail);
+                    Mail newMail = MailImpl.duplicate(mail);
                     newMail.setRecipients(matchedRcpts);
 
                     // Set a header because the matcher matched. This can be

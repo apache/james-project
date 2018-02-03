@@ -42,7 +42,7 @@ public class MessageMetaDataUtils {
         if (uidList == null || number > uidList.size()) {
             return null;
         } else {
-            return uidList.get(number -1);
+            return uidList.get(number - 1);
         }
     }
 
@@ -53,7 +53,7 @@ public class MessageMetaDataUtils {
      * @return
      */
     public static boolean isRFC1939Compatible(String uid) {
-    	if (uid == null) {
+        if (uid == null) {
             return false;
         }
 

@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import javax.mail.Flags;
@@ -46,12 +47,11 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 
 public class CassandraMessageIdManagerTestSystem extends MessageIdManagerTestSystem {
 
-    private static final byte[] MESSAGE_CONTENT = "subject: any\n\nbody".getBytes(Charsets.UTF_8);
+    private static final byte[] MESSAGE_CONTENT = "subject: any\n\nbody".getBytes(StandardCharsets.UTF_8);
 
     public static MessageIdManagerTestSystem createTestingData(CassandraCluster cassandra, QuotaManager quotaManager, MailboxEventDispatcher dispatcher) throws Exception {
         CassandraMailboxSessionMapperFactory mapperFactory = CassandraTestSystemFixture.createMapperFactory(cassandra);

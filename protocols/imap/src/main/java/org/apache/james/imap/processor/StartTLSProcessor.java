@@ -37,7 +37,7 @@ import com.google.common.collect.ImmutableList;
  * Processing STARTLS commands
  */
 public class StartTLSProcessor extends AbstractChainedProcessor<StartTLSRequest> implements CapabilityImplementingProcessor {
-    private final static List<String> STARTTLS_CAP = ImmutableList.of(ImapConstants.SUPPORTS_STARTTLS);
+    private static final List<String> STARTTLS_CAP = ImmutableList.of(ImapConstants.SUPPORTS_STARTTLS);
     private final StatusResponseFactory factory;
 
     public StartTLSProcessor(ImapProcessor next, StatusResponseFactory factory) {

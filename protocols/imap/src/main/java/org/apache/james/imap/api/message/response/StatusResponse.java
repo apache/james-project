@@ -162,8 +162,9 @@ public interface StatusResponse extends ImapResponseMessage {
         }
         
         private static String formatRanges(IdRange[] ranges) {
-            if (ranges == null || ranges.length == 0)
+            if (ranges == null || ranges.length == 0) {
                 return "*";
+            }
             StringBuilder rangeBuilder = new StringBuilder();
             for (int i = 0; i < ranges.length; i++) {
                 rangeBuilder.append(ranges[i].getFormattedString());
@@ -317,6 +318,7 @@ public interface StatusResponse extends ImapResponseMessage {
         public static ResponseCode longestMetadataEntry(long entryLong) {
             return new ResponseCode("METADATA LONGENTRIES", entryLong);
         }
+        
         /**
          * Create a RFC4551 <code>NOMODSEQ</code> response code
          * 
@@ -345,7 +347,7 @@ public interface StatusResponse extends ImapResponseMessage {
             return new ResponseCode(buffer.toString());
         }
 
-        public final static int NO_NUMBER = -1;
+        public static final int NO_NUMBER = -1;
         
         private final String code;
 
@@ -415,25 +417,33 @@ public interface StatusResponse extends ImapResponseMessage {
         }
 
         public boolean equals(Object obj) {
-            if (this == obj)
+            if (this == obj) {
                 return true;
-            if (obj == null)
+            }
+            if (obj == null) {
                 return false;
-            if (getClass() != obj.getClass())
+            }
+            if (getClass() != obj.getClass()) {
                 return false;
+            }
             final ResponseCode other = (ResponseCode) obj;
             if (code == null) {
-                if (other.code != null)
+                if (other.code != null) {
                     return false;
-            } else if (!code.equals(other.code))
+                }
+            } else if (!code.equals(other.code)) {
                 return false;
-            if (number != other.number)
+            }
+            if (number != other.number) {
                 return false;
+            }
             if (parameters == null) {
-                if (other.parameters != null)
+                if (other.parameters != null) {
                     return false;
-            } else if (!parameters.equals(other.parameters))
+                }
+            } else if (!parameters.equals(other.parameters)) {
                 return false;
+            }
             return true;
         }
 

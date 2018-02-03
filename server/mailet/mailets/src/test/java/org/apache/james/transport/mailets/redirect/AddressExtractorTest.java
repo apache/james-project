@@ -22,8 +22,10 @@ package org.apache.james.transport.mailets.redirect;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
 import java.util.List;
 import java.util.Optional;
+
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
@@ -99,7 +101,7 @@ public class AddressExtractorTest {
     @Test
     public void extractShouldReturnEmptyWhenAddressListIsAbsent() throws Exception {
         List<MailAddress> extract = AddressExtractor.withContext(mailetContext)
-                .allowedSpecials(ImmutableList.<String> of())
+                .allowedSpecials(ImmutableList.<String>of())
                 .extract(Optional.empty());
 
         assertThat(extract).isEmpty();;
@@ -108,7 +110,7 @@ public class AddressExtractorTest {
     @Test
     public void extractShouldReturnListWhenParsingSucceed() throws Exception {
         List<MailAddress> extract = AddressExtractor.withContext(mailetContext)
-                .allowedSpecials(ImmutableList.<String> of())
+                .allowedSpecials(ImmutableList.<String>of())
                 .extract(Optional.of("user@james.org, user2@james.org"));
 
         assertThat(extract).containsOnly(new MailAddress("user", "james.org"),
@@ -118,7 +120,7 @@ public class AddressExtractorTest {
     @Test
     public void extractShouldReturnSpecialAddressesWhenAddressesAreSpecial() throws Exception {
         List<MailAddress> extract = AddressExtractor.withContext(mailetContext)
-                .allowedSpecials(ImmutableList.<String> of("postmaster", "to"))
+                .allowedSpecials(ImmutableList.<String>of("postmaster", "to"))
                 .extract(Optional.of("postmaster, to"));
 
         assertThat(extract).containsOnly(new MailAddress("postmaster", "james.org"),
@@ -129,14 +131,14 @@ public class AddressExtractorTest {
     public void extractShouldThrowWhenParsingFail() throws Exception {
         expectedException.expect(MessagingException.class);
         AddressExtractor.withContext(mailetContext)
-            .allowedSpecials(ImmutableList.<String> of())
+            .allowedSpecials(ImmutableList.<String>of())
             .extract(Optional.of("user@james@org"));
     }
 
     @Test
     public void getSpecialAddressShouldReturnAbsentWhenAddressIsNull() throws Exception {
         Optional<MailAddress> specialAddress = AddressExtractor.withContext(mailetContext)
-                .allowedSpecials(ImmutableList.<String> of())
+                .allowedSpecials(ImmutableList.<String>of())
                 .getSpecialAddress(null);
         assertThat(specialAddress).isEmpty();
     }
@@ -144,7 +146,7 @@ public class AddressExtractorTest {
     @Test
     public void getSpecialAddressShouldReturnAbsentWhenAddressIsEmpty() throws Exception {
         Optional<MailAddress> specialAddress = AddressExtractor.withContext(mailetContext)
-                .allowedSpecials(ImmutableList.<String> of())
+                .allowedSpecials(ImmutableList.<String>of())
                 .getSpecialAddress("");
         assertThat(specialAddress).isEmpty();
     }
@@ -152,7 +154,7 @@ public class AddressExtractorTest {
     @Test
     public void getSpecialAddressShouldReturnAbsentWhenAddressIsNotSpecial() throws Exception {
         Optional<MailAddress> specialAddress = AddressExtractor.withContext(mailetContext)
-                .allowedSpecials(ImmutableList.<String> of())
+                .allowedSpecials(ImmutableList.<String>of())
                 .getSpecialAddress("user@james.org");
         assertThat(specialAddress).isEmpty();
     }
@@ -241,7 +243,7 @@ public class AddressExtractorTest {
     public void getSpecialAddressShouldThrowWhenSpecialAddressNotAllowed() throws Exception {
         expectedException.expect(MessagingException.class);
         AddressExtractor.withContext(mailetContext)
-            .allowedSpecials(ImmutableList.<String> of("notallowed"))
+            .allowedSpecials(ImmutableList.<String>of("notallowed"))
             .getSpecialAddress("postmaster");
     }
 }

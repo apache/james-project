@@ -85,9 +85,8 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
              */
             if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Lookup, mailboxSession)) {
                 no(command, tag, responder, HumanReadableText.MAILBOX_NOT_FOUND);
-            }
-            /* RFC 4314 section 4. */
-            else if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Administer, mailboxSession)) {
+            } else if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Administer, mailboxSession)) {
+                /* RFC 4314 section 4. */
                 Object[] params = new Object[] {
                         MailboxACL.Right.Administer.toString(),
                         command.getName(),
@@ -95,8 +94,7 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
                 };
                 HumanReadableText text = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
                 no(command, tag, responder, text);
-            }
-            else {
+            } else {
                 MetaData metaData = messageManager.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT);
                 ACLResponse aclResponse = new ACLResponse(mailboxName, metaData.getACL());
                 responder.respond(aclResponse);
@@ -107,7 +105,7 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
         } catch (MailboxNotFoundException e) {
             no(command, tag, responder, HumanReadableText.MAILBOX_NOT_FOUND);
         } catch (MailboxException e) {
-            LOGGER.error(command.getName() +" failed for mailbox " + mailboxName, e);
+            LOGGER.error("{} failed for mailbox {}", command.getName(), mailboxName, e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
 

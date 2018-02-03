@@ -98,7 +98,7 @@ public class JMXServer {
             PropertiesConfiguration configuration = getPropertiesConfiguration();
             String address = configuration.getString("jmx.address", "localhost");
             int port = configuration.getInt("jmx.port", 9999);
-            String serviceURL = "service:jmx:rmi://" + address + "/jndi/rmi://" + address+ ":" + port +"/jmxrmi";
+            String serviceURL = "service:jmx:rmi://" + address + "/jndi/rmi://" + address + ":" + port + "/jmxrmi";
             restrictingRMISocketFactory = new RestrictingRMISocketFactory(address);
             LocateRegistry.createRegistry(port, restrictingRMISocketFactory, restrictingRMISocketFactory);
 

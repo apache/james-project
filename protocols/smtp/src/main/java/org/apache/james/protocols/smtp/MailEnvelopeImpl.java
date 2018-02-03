@@ -33,7 +33,7 @@ import org.apache.james.core.MailAddress;
  * 
  *
  */
-public class MailEnvelopeImpl implements MailEnvelope{
+public class MailEnvelopeImpl implements MailEnvelope {
 
     private List<MailAddress> recipients;
 
@@ -45,8 +45,9 @@ public class MailEnvelopeImpl implements MailEnvelope{
      * @see org.apache.james.protocols.smtp.MailEnvelope#getSize()
      */
     public long getSize() {
-        if (outputStream == null)
+        if (outputStream == null) {
             return -1;
+        }
         return outputStream.size();
     }
 

@@ -28,7 +28,7 @@ import org.apache.james.sieverepository.api.SieveRepositoryManagementMBean;
 
 public class JmxSieveProbe implements SieveProbe, JmxProbe {
     
-    private final static String SIEVEMANAGER_OBJECT_NAME = "org.apache.james:type=component,name=sievemanagerbean";
+    private static final String SIEVEMANAGER_OBJECT_NAME = "org.apache.james:type=component,name=sievemanagerbean";
     
     private SieveRepositoryManagementMBean sieveRepositoryManagement;
     

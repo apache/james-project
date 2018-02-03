@@ -57,13 +57,13 @@ public class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManager
         mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
         Authenticator noAuthenticator = null;
         Authorizator noAuthorizator = null;
+        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
         MessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         GroupMembershipResolver groupMembershipResolver = null;
         UnionMailboxACLResolver aclResolver = new UnionMailboxACLResolver();
-        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, aclResolver, groupMembershipResolver);
+        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, aclResolver, groupMembershipResolver, mailboxEventDispatcher);
 
-        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
         mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, noAuthenticator, noAuthorizator, new NoMailboxPathLocker(),
                 new MessageParser(), messageIdFactory, mailboxEventDispatcher, delegatingListener, annotationManager, storeRightManager);

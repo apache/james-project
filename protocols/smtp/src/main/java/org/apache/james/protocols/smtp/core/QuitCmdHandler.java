@@ -47,6 +47,7 @@ public class QuitCmdHandler extends AbstractHookableCmdHandler<QuitHook> {
     private static final Collection<String> COMMANDS = ImmutableSet.of("QUIT");
 
     private static final Response SYNTAX_ERROR;
+    
     static {
         SMTPResponse response = new SMTPResponse(
                 SMTPRetCode.SYNTAX_ERROR_COMMAND_UNRECOGNIZED, DSNStatus
@@ -102,7 +103,7 @@ public class QuitCmdHandler extends AbstractHookableCmdHandler<QuitHook> {
      * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
      */
     public Collection<String> getImplCommands() {
-    	return COMMANDS;
+        return COMMANDS;
     }
 
     /**

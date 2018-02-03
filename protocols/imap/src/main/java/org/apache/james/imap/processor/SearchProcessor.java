@@ -72,8 +72,8 @@ import com.google.common.collect.ImmutableList;
 public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchProcessor.class);
 
-    protected final static String SEARCH_MODSEQ = "SEARCH_MODSEQ";
-    private final static List<String> CAPS = ImmutableList.of("WITHIN", "ESEARCH", "SEARCHRES");
+    protected static final String SEARCH_MODSEQ = "SEARCH_MODSEQ";
+    private static final List<String> CAPS = ImmutableList.of("WITHIN", "ESEARCH", "SEARCHRES");
     
     public SearchProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
@@ -118,7 +118,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             // See RFC4551: 3.4. MODSEQ Search Criterion in SEARCH
             final Long highestModSeq;
             if (session.getAttribute(SEARCH_MODSEQ) != null) {
-                MetaData metaData = mailbox.getMetaData(false, msession , MessageManager.MetaData.FetchGroup.NO_COUNT);
+                MetaData metaData = mailbox.getMetaData(false, msession, MessageManager.MetaData.FetchGroup.NO_COUNT);
                 highestModSeq = findHighestModSeq(msession, mailbox, MessageRange.toRanges(uids), metaData.getHighestModSeq());
                 
                 // Enable CONDSTORE as this is a CONDSTORE enabling command
@@ -165,7 +165,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
 
                     if (ids.length > 0) {
                         min = ids[0];
-                        max = ids[ids.length -1];
+                        max = ids[ids.length - 1];
                     } 
                    
                     
@@ -202,12 +202,10 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             unsolicitedResponses(session, responder, omitExpunged, useUids);
             okComplete(command, tag, responder);
         } catch (MessageRangeException e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Search failed in mailbox " + session.getSelected().getPath() + " because of an invalid sequence-set ", e);
-            }
+            LOGGER.debug("Search failed in mailbox {} because of an invalid sequence-set ", session.getSelected().getPath(), e);
             taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            LOGGER.error("Search failed in mailbox " + session.getSelected().getPath(), e);
+            LOGGER.error("Search failed in mailbox {}", session.getSelected().getPath(), e);
             no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
             
             if (resultOptions.contains(SearchResultOption.SAVE)) {
@@ -240,9 +238,9 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         
         // Reverse loop over the ranges as its more likely that we find a match at the end
         int size = ranges.size();
-        for (int i = size -1 ; i > 0; i--) {
+        for (int i = size - 1; i > 0; i--) {
             MessageResultIterator results = mailbox.getMessages(ranges.get(i), FetchGroupImpl.MINIMAL, session);
-            while(results.hasNext()) {
+            while (results.hasNext()) {
                 long modSeq = results.next().getModSeq();
                 if (highestModSeq == null || modSeq > highestModSeq) {
                     highestModSeq = modSeq;
@@ -371,6 +369,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             return SearchQuery.all();
         }
     }
+    
     private Date createWithinDate(SearchKey key) {
         long seconds = key.getSeconds();
         long res = System.currentTimeMillis() - seconds * 1000;

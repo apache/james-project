@@ -30,7 +30,7 @@ public class JamesWelcomeMessageHandler extends WelcomeMessageHandler {
     /**
      * SMTP Server identification string used in SMTP headers
      */
-    private final static String SERVICE_TYPE = "JAMES SMTP Server";
+    private static final String SERVICE_TYPE = "JAMES SMTP Server";
 
     @Override
     protected String getServiceType(SMTPSession session) {

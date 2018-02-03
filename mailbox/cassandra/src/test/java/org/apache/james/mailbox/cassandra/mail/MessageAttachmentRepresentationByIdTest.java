@@ -31,13 +31,13 @@ import org.junit.Test;
 
 public class MessageAttachmentRepresentationByIdTest {
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenAttachmentIsNotGiven() {
         org.apache.james.mailbox.model.MessageAttachment.builder()
             .build();
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void builderShouldThrowWhenAttachmentIsNull() {
         org.apache.james.mailbox.model.MessageAttachment.builder()
             .attachment(null);

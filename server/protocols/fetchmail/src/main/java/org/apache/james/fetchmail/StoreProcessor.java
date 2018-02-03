@@ -53,29 +53,24 @@ public class StoreProcessor extends ProcessorAbstract {
         Store store = null;
         Folder folder;
 
-        StringBuilder logMessageBuffer = new StringBuilder("Starting fetching mail from server '");
-        logMessageBuffer.append(getHost());
-        logMessageBuffer.append("' for user '");
-        logMessageBuffer.append(getUser());
-        logMessageBuffer.append("' in folder '");
-        logMessageBuffer.append(getJavaMailFolderName());
-        logMessageBuffer.append("'");
-        LOGGER.info(logMessageBuffer.toString());
+        LOGGER.info("Starting fetching mail from server '{}' for user '{}' in folder '{}'", getHost(), getUser(), getJavaMailFolderName());
 
         try {
             // Get a Store object
             store = getSession().getStore(getJavaMailProviderName());
 
             // Connect
-            if (getHost() != null || getUser() != null || getPassword() != null)
+            if (getHost() != null || getUser() != null || getPassword() != null) {
                 store.connect(getHost(), getUser(), getPassword());
-            else
+            } else {
                 store.connect();
+            }
 
             // Get the Folder
             folder = store.getFolder(getJavaMailFolderName());
-            if (folder == null)
-                LOGGER.error(getFetchTaskName() + " No default folder");
+            if (folder == null) {
+                LOGGER.error("{} No default folder", getFetchTaskName());
+            }
 
             // Process the Folder
             new FolderProcessor(folder, getAccount()).process();
@@ -84,19 +79,13 @@ public class StoreProcessor extends ProcessorAbstract {
             LOGGER.error("A MessagingException has terminated processing of this Folder", ex);
         } finally {
             try {
-                if (null != store && store.isConnected())
+                if (null != store && store.isConnected()) {
                     store.close();
+                }
             } catch (MessagingException ex) {
                 LOGGER.error("A MessagingException occured while closing the Store", ex);
             }
-            logMessageBuffer = new StringBuilder("Finished fetching mail from server '");
-            logMessageBuffer.append(getHost());
-            logMessageBuffer.append("' for user '");
-            logMessageBuffer.append(getUser());
-            logMessageBuffer.append("' in folder '");
-            logMessageBuffer.append(getJavaMailFolderName());
-            logMessageBuffer.append("'");
-            LOGGER.info(logMessageBuffer.toString());
+            LOGGER.info("Finished fetching mail from server '{}' for user '{}' in folder '{}'", getHost(), getUser(), getJavaMailFolderName());
         }
     }
 

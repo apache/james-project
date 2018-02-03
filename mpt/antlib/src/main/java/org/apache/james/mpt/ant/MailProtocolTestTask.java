@@ -201,11 +201,11 @@ public class MailProtocolTestTask extends Task implements Monitor {
             throw new BuildException("Scripts can be specified either by the script attribute or as resource collections but not both."); 
         }
         
-        for(AddUser user: users) {
+        for (AddUser user: users) {
             user.validate();
         }
         
-        if(skip) {
+        if (skip) {
             log("Skipping excution");
         } else if (errorProperty == null) {
             doExecute();

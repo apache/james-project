@@ -39,4 +39,16 @@ public class OptionalUtils {
         return optional.map(Stream::of)
             .orElse(Stream.of());
     }
+
+    public static <T> Optional<T> or(Optional<T> optional1, Optional<T> optional2) {
+        return optional1.map(Optional::of)
+            .filter(Optional::isPresent)
+            .orElse(optional2);
+    }
+
+    public static <T> boolean containsDifferent(Optional<T> requestValue, T storeValue) {
+        return requestValue
+            .filter(value -> !value.equals(storeValue))
+            .isPresent();
+    }
 }

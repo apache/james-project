@@ -43,7 +43,7 @@ public class ExtensionField implements Field {
 
     @Override
     public String formattedValue() {
-        return fieldName + ": " +rawValue;
+        return fieldName + ": " + rawValue;
     }
 
     @Override

@@ -61,8 +61,11 @@ public abstract class AbstractMailboxManagerAttachmentTest {
     private AttachmentMapper attachmentMapper;
 
     protected abstract MailboxManager getMailboxManager();
+    
     protected abstract MailboxManager getParseFailingMailboxManager();
+    
     protected abstract MailboxSessionMapperFactory getMailboxSessionMapperFactory();
+    
     protected abstract AttachmentMapperFactory getAttachmentMapperFactory();
     
     public void setUp() throws Exception {

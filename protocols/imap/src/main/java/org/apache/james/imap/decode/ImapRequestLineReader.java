@@ -189,7 +189,7 @@ public abstract class ImapRequestLineReader {
      * Reads an argument of type "atom" from the request.
      */
     public String atom() throws DecodingException {
-        return consumeWord(new ATOM_CHARValidator(), true);
+        return consumeWord(new AtomCharValidator(), true);
     }
 
     /**
@@ -277,6 +277,7 @@ public abstract class ImapRequestLineReader {
             return mailbox;
         }
     }
+    
     /**
      * Reads one <code>date</code> argument from the request.
      * 
@@ -356,6 +357,7 @@ public abstract class ImapRequestLineReader {
         }
         return atom.toString();
     }
+    
     private static boolean isWhitespace(char next) {
         return (next == ' ' || next == '\n' || next == '\r' || next == '\t');
     }
@@ -376,11 +378,12 @@ public abstract class ImapRequestLineReader {
             FastByteArrayOutputStream out = new FastByteArrayOutputStream();
             InputStream in = null;
             try {
-            	in = consumeLiteral(false);
-            	byte[] buf = new byte[ 0xFFFF ]; 
+                in = consumeLiteral(false);
+                byte[] buf = new byte[ 0xFFFF ];
                 
-            	for (int len; (len = in.read(buf)) != -1; ) 
-                    out.write( buf, 0, len ); 
+                for (int len; (len = in.read(buf)) != -1; ) {
+                    out.write(buf, 0, len);
+                }
                 
                 final byte[] bytes = out.toByteArray();
                 final ByteBuffer buffer = ByteBuffer.wrap(bytes);
@@ -389,13 +392,13 @@ public abstract class ImapRequestLineReader {
             } catch (IOException e) {
                 throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding", e);
             } finally {
-            	if (in != null) {
-            		try {
-            			in.close();
-            		} catch (IOException e) {
-            			// ignore on close
-            		}
-            	}
+                if (in != null) {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        // ignore on close
+                    }
+                }
                 try {
                     out.close();
                 } catch (IOException e) {
@@ -598,6 +601,8 @@ public abstract class ImapRequestLineReader {
         case ')':
             if (stopOnParen) {
                 return currentTotal;
+            } else {
+                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Expected a digit but was " + next);
             }
         default:
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Expected a digit but was " + next);
@@ -728,6 +733,7 @@ public abstract class ImapRequestLineReader {
         }
         return next;
     }
+    
     /**
      * Parse a range which use a ":" as delimiter
      * 
@@ -817,8 +823,9 @@ public abstract class ImapRequestLineReader {
             return Long.MAX_VALUE;
         } else {
             long number = Long.parseLong(value);
-            if (number < ImapConstants.MIN_NZ_NUMBER || number > ImapConstants.MAX_NZ_NUMBER)
+            if (number < ImapConstants.MIN_NZ_NUMBER || number > ImapConstants.MAX_NZ_NUMBER) {
                 throw new DecodingException(HumanReadableText.INVALID_MESSAGESET, "Invalid message set. Numbers must be unsigned 32-bit Integers");
+            }
             return number;
 
         }
@@ -844,7 +851,7 @@ public abstract class ImapRequestLineReader {
         }
     }
 
-    public static class ATOM_CHARValidator implements CharacterValidator {
+    public static class AtomCharValidator implements CharacterValidator {
         public boolean isValid(char chr) {
             return (isCHAR(chr) && !isAtomSpecial(chr) && !isListWildcard(chr) && !isQuotedSpecial(chr));
         }
@@ -854,10 +861,11 @@ public abstract class ImapRequestLineReader {
         }
     }
 
-    public static class TagCharValidator extends ATOM_CHARValidator {
+    public static class TagCharValidator extends AtomCharValidator {
         public boolean isValid(char chr) {
-            if (chr == '+')
+            if (chr == '+') {
                 return false;
+            }
             return super.isValid(chr);
         }
     }

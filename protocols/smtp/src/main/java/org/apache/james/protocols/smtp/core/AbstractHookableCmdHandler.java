@@ -49,11 +49,11 @@ import com.google.common.base.Throwables;
  * Abstract class which Handle hook-aware CommanHandler.
  * 
  */
-public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.protocols.smtp.hook.Hook> implements CommandHandler<SMTPSession>, ExtensibleHandler {
+public abstract class AbstractHookableCmdHandler<HookT extends org.apache.james.protocols.smtp.hook.Hook> implements CommandHandler<SMTPSession>, ExtensibleHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractHookableCmdHandler.class);
 
     private final MetricFactory metricFactory;
-    private List<Hook> hooks;
+    private List<HookT> hooks;
     private List<HookResultHook> rHooks;
 
     @Inject
@@ -109,13 +109,13 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
      */
     private Response processHooks(SMTPSession session, String command,
             String parameters) {
-        List<Hook> hooks = getHooks();
+        List<HookT> hooks = getHooks();
         if (hooks != null) {
             int count = hooks.size();
             int i = 0;
             while (i < count) {
-                Hook rawHook = hooks.get(i);
-                LOGGER.debug("executing hook " + rawHook.getClass().getName());
+                HookT rawHook = hooks.get(i);
+                LOGGER.debug("executing hook {}", rawHook.getClass().getName());
                 long start = System.currentTimeMillis();
 
                 HookResult hRes = callHook(rawHook, session, parameters);
@@ -123,7 +123,7 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
 
                 if (rHooks != null) {
                     for (HookResultHook rHook : rHooks) {
-                        LOGGER.debug("executing hook " + rHook);
+                        LOGGER.debug("executing hook {}", rHook);
                         hRes = rHook.onHookResult(session, hRes, executionTime, rawHook);
                     }
                 }
@@ -180,7 +180,7 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
      * @param parameters the parameters
      * @return the HookResult, will be calculated using HookResultToSMTPResponse.
      */
-    protected abstract HookResult callHook(Hook rawHook, SMTPSession session, String parameters);
+    protected abstract HookResult callHook(HookT rawHook, SMTPSession session, String parameters);
 
     /**
      * Convert the HookResult to SMTPResponse using default values. Should be override for using own values
@@ -194,11 +194,13 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
             String smtpRetCode = result.getSmtpRetCode();
             String smtpDesc = result.getSmtpDescription();
     
-            if ((rCode &HookReturnCode.DENY) == HookReturnCode.DENY) {
-                if (smtpRetCode == null)
+            if ((rCode & HookReturnCode.DENY) == HookReturnCode.DENY) {
+                if (smtpRetCode == null) {
                     smtpRetCode = SMTPRetCode.TRANSACTION_FAILED;
-                if (smtpDesc == null)
+                }
+                if (smtpDesc == null) {
                     smtpDesc = "Email rejected";
+                }
     
                 SMTPResponse response =  new SMTPResponse(smtpRetCode, smtpDesc);
                 if ((rCode & HookReturnCode.DISCONNECT) == HookReturnCode.DISCONNECT) {
@@ -206,10 +208,12 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
                 }
                 return response;
             } else if ((rCode & HookReturnCode.DENYSOFT) == HookReturnCode.DENYSOFT) {
-                if (smtpRetCode == null)
+                if (smtpRetCode == null) {
                     smtpRetCode = SMTPRetCode.LOCAL_ERROR;
-                if (smtpDesc == null)
+                }
+                if (smtpDesc == null) {
                     smtpDesc = "Temporary problem. Please try again later";
+                }
     
                 SMTPResponse response = new SMTPResponse(smtpRetCode, smtpDesc);
                 if ((rCode & HookReturnCode.DISCONNECT) == HookReturnCode.DISCONNECT) {
@@ -217,10 +221,12 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
                 }
                 return response;
             } else if ((rCode & HookReturnCode.OK) == HookReturnCode.OK) {
-                if (smtpRetCode == null)
+                if (smtpRetCode == null) {
                     smtpRetCode = SMTPRetCode.MAIL_OK;
-                if (smtpDesc == null)
+                }
+                if (smtpDesc == null) {
                     smtpDesc = "Command accepted";
+                }
     
                 SMTPResponse response = new SMTPResponse(smtpRetCode, smtpDesc);
                 if ((rCode & HookReturnCode.DISCONNECT) == HookReturnCode.DISCONNECT) {
@@ -228,10 +234,12 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
                 }
                 return response;
             } else if ((rCode & HookReturnCode.DISCONNECT) == HookReturnCode.DISCONNECT) {
-                if (smtpRetCode == null)
+                if (smtpRetCode == null) {
                     smtpRetCode = SMTPRetCode.TRANSACTION_FAILED;
-                if (smtpDesc == null)
+                }
+                if (smtpDesc == null) {
                     smtpDesc = "Server disconnected";
+                }
 
                 SMTPResponse response =  new SMTPResponse(smtpRetCode, smtpDesc);
                 response.setEndSession(true);
@@ -284,16 +292,16 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
      * 
      * @return interface
      */
-    protected abstract Class<Hook> getHookInterface();
+    protected abstract Class<HookT> getHookInterface();
 
     /**
      * @see org.apache.james.protocols.api.handler.ExtensibleHandler#wireExtensions(java.lang.Class,
      *      java.util.List)
      */
     @SuppressWarnings("unchecked")
-	public void wireExtensions(Class<?> interfaceName, List<?> extension) {
+    public void wireExtensions(Class<?> interfaceName, List<?> extension) {
         if (getHookInterface().equals(interfaceName)) {
-            this.hooks = (List<Hook>) extension;
+            this.hooks = (List<HookT>) extension;
         } else if (HookResultHook.class.equals(interfaceName)) {
             this.rHooks = (List<HookResultHook>) extension;
         }
@@ -305,7 +313,7 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
      * 
      * @return list containing all hooks for the cmd handler
      */
-    protected List<Hook> getHooks() {
+    protected List<HookT> getHooks() {
         return hooks;
     }
 

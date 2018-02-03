@@ -18,7 +18,12 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeUtility;
 

@@ -36,6 +36,7 @@ import org.apache.james.mailbox.hbase.HBaseId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+
 /**
  * ModSeqProvider implementation for HBase.
  * 

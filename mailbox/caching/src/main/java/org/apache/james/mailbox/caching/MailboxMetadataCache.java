@@ -14,23 +14,21 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
  */
 public interface MailboxMetadataCache {
 
-	long countMessagesInMailbox(Mailbox mailbox,
-	                            MessageMapper underlying) throws MailboxException;
+    long countMessagesInMailbox(Mailbox mailbox,
+                                MessageMapper underlying) throws MailboxException;
 
-	long countUnseenMessagesInMailbox(Mailbox mailbox,
-	                                    MessageMapper underlying) throws MailboxException;
+    long countUnseenMessagesInMailbox(Mailbox mailbox,
+                                        MessageMapper underlying) throws MailboxException;
 
-	MessageUid findFirstUnseenMessageUid(Mailbox mailbox,
-	                                        MessageMapper underlying) throws MailboxException;
+    MessageUid findFirstUnseenMessageUid(Mailbox mailbox,
+                                            MessageMapper underlying) throws MailboxException;
 
-	Optional<MessageUid> getLastUid(Mailbox mailbox,
-	                                MessageMapper underlying) throws MailboxException;
+    Optional<MessageUid> getLastUid(Mailbox mailbox,
+                                    MessageMapper underlying) throws MailboxException;
 
-	long getHighestModSeq(Mailbox mailbox,
-	                        MessageMapper underlying) throws MailboxException;
+    long getHighestModSeq(Mailbox mailbox,
+                            MessageMapper underlying) throws MailboxException;
 
-	void invalidate(Mailbox mailbox);
-
-//	public abstract void invalidate(MailboxPath mailboxPath);
+    void invalidate(Mailbox mailbox);
 
 }

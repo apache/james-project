@@ -38,7 +38,7 @@ import org.apache.james.mailbox.store.user.model.Subscription;
     name = "JAMES_SUBSCRIPTION",
     uniqueConstraints = 
         @UniqueConstraint(
-                columnNames={
+                columnNames = {
                         "USER_NAME", 
                         "MAILBOX_NAME"})
 )
@@ -109,15 +109,19 @@ public class JPASubscription implements Subscription {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         final JPASubscription other = (JPASubscription) obj;
-        if (id != other.id)
+        if (id != other.id) {
             return false;
+        }
         return true;
     }
 

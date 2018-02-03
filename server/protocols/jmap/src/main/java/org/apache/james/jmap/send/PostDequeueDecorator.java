@@ -21,6 +21,9 @@ package org.apache.james.jmap.send;
 import java.io.Serializable;
 import java.util.List;
 
+import javax.mail.Flags;
+import javax.mail.Flags.Flag;
+
 import org.apache.james.jmap.exceptions.MailboxRoleNotFoundException;
 import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.jmap.send.exception.MailShouldBeInOutboxException;
@@ -28,6 +31,7 @@ import org.apache.james.jmap.utils.SystemMailboxesProvider;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MailboxId;
@@ -78,10 +82,10 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
             if (getMail().getAttribute(IS_DELIVERED) == null) {
                 try {
                     MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
-                    moveFromOutboxToSent(messageId, mailboxSession);
+                    moveFromOutboxToSentWithSeenFlag(messageId, mailboxSession);
                     getMail().setAttribute(IS_DELIVERED, IS_DELIVERED);
                 } catch (MailShouldBeInOutboxException e) {
-                    LOG.info("Message does not exist on Outbox anymore, it could have already been sent {}", e);
+                    LOG.info("Message does not exist on Outbox anymore, it could have already been sent", e);
                 } catch (MailboxException e) {
                     throw new MailQueueException(e.getMessage(), e);
                 }
@@ -96,26 +100,29 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
 
     private boolean checkMessageIdAttribute() {
         Serializable messageId = getMail().getAttribute(MailMetadata.MAIL_METADATA_MESSAGE_ID_ATTRIBUTE);
-        if (messageId == null || ! (messageId instanceof String)) {
-            return false;
+        if (messageId instanceof String) {
+            try {
+                messageIdFactory.fromString((String) messageId);
+                return true;
+            } catch (Exception e) {
+                LOG.error("Invalid messageId: {}", messageId, e);
+            }
+        } else if (messageId != null) {
+            LOG.error("Non-String messageId {} has type {}", messageId, messageId.getClass());
         }
-        try {
-            messageIdFactory.fromString((String) messageId);
-        } catch (Exception e) {
-            LOG.error("Invalid messageId: " + messageId, e);
-            return false;
-        }
-        return true;
+        return false;
     }
 
     private boolean checkUsernameAttribute() {
         Serializable username = getMail().getAttribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE);
-        return (username != null && username instanceof String);
+        return (username instanceof String);
     }
 
-    private void moveFromOutboxToSent(MessageId messageId, MailboxSession mailboxSession) throws MailQueueException, MailboxException {
+    private void moveFromOutboxToSentWithSeenFlag(MessageId messageId, MailboxSession mailboxSession) throws MailQueueException, MailboxException {
         assertMessageBelongsToOutbox(messageId, mailboxSession);
-        messageIdManager.setInMailboxes(messageId, ImmutableList.of(getSentMailboxId(mailboxSession)), mailboxSession);
+        MailboxId sentMailboxId = getSentMailboxId(mailboxSession);
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(sentMailboxId), mailboxSession);
+        messageIdManager.setFlags(new Flags(Flag.SEEN), MessageManager.FlagsUpdateMode.ADD, messageId, ImmutableList.of(sentMailboxId), mailboxSession);
     }
 
     private void assertMessageBelongsToOutbox(MessageId messageId, MailboxSession mailboxSession) throws MailboxException, MailShouldBeInOutboxException {

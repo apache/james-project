@@ -71,14 +71,14 @@ public final class HBaseClusterSingleton {
             Process process = Runtime.getRuntime().exec("/bin/sh -c umask");
             BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
             int rc = process.waitFor();
-            if(rc == 0) {
+            if (rc == 0) {
                 String umask = br.readLine();
 
                 int umaskBits = Integer.parseInt(umask, 8);
                 int permBits = 0777 & ~umaskBits;
                 String perms = Integer.toString(permBits, 8);
                 
-                LOG.info("Setting dfs.datanode.data.dir.perm to " + perms);
+                LOG.info("Setting dfs.datanode.data.dir.perm to {}", perms);
                 htu.getConfiguration().set("dfs.datanode.data.dir.perm", perms);
             } else {
                 LOG.warn("Failed running umask command in a shell, nonzero return value");
@@ -90,13 +90,11 @@ public final class HBaseClusterSingleton {
         
         htu.getConfiguration().setBoolean("dfs.support.append", true);
         htu.getConfiguration().setInt("zookeeper.session.timeout", 20000);
-//        htu.getConfiguration().setInt("hbase.client.retries.number", 2);
         try {
             hbaseCluster = htu.startMiniCluster();
             LOG.info("After cluster start-up.");
             hbaseCluster.waitForActiveAndReadyMaster();
             LOG.info("After active and ready.");
-//            ensureTables();
             conf = hbaseCluster.getConfiguration();
         } catch (Exception ex) {
             throw new RuntimeException("Minicluster not starting.");

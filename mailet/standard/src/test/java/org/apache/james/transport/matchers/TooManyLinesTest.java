@@ -26,9 +26,9 @@ import java.util.Collection;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -117,9 +117,7 @@ public class TooManyLinesTest {
         FakeMail fakeMail = FakeMail.builder()
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .setMultipartWithBodyParts(MimeMessageBuilder.bodyPartBuilder()
-                    .data("content")
-                    .build())
-                .build())
+                    .data("content")))
             .build();
 
         Collection<MailAddress> result = testee.match(fakeMail);
@@ -133,10 +131,9 @@ public class TooManyLinesTest {
 
         FakeMail fakeMail = FakeMail.builder()
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
-                .setMultipartWithBodyParts(MimeMessageBuilder.bodyPartBuilder()
-                    .data("1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11")
-                    .build())
-                .build())
+                .setMultipartWithBodyParts(
+                    MimeMessageBuilder.bodyPartBuilder()
+                        .data("1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11")))
             .build();
 
         Collection<MailAddress> result = testee.match(fakeMail);

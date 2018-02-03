@@ -26,9 +26,9 @@ import java.util.Map;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 import org.apache.mailet.Experimental;
-import org.apache.james.core.MailAddress;
 
 /**
  * <p>

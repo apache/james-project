@@ -54,13 +54,13 @@ public abstract class AbstractFileRepository implements Repository, Configurable
 
     protected static final char[] HEX_DIGITS = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
-    protected String m_extension;
+    protected String extension;
 
-    protected String m_name;
+    protected String name;
 
-    protected FilenameFilter m_filter;
+    protected FilenameFilter filter;
 
-    protected File m_baseDirectory;
+    protected File baseDirectory;
 
     private FileSystem fileSystem;
 
@@ -79,43 +79,43 @@ public abstract class AbstractFileRepository implements Repository, Configurable
 
     @PostConstruct
     public void init() throws Exception {
-        LOGGER.info("Init " + getClass().getName() + " Store");
+        LOGGER.info("Init {} Store", getClass().getName());
         setDestination(destination);
 
         File directory;
 
         try {
-            directory = m_baseDirectory.getCanonicalFile();
+            directory = baseDirectory.getCanonicalFile();
         } catch (IOException ioe) {
-            throw new ConfigurationException("Unable to form canonical representation of " + m_baseDirectory);
+            throw new ConfigurationException("Unable to form canonical representation of " + baseDirectory);
         }
 
-        m_name = "Repository";
-        String m_postfix = getExtensionDecorator();
-        m_extension = "." + m_name + m_postfix;
-        m_filter = new ExtensionFileFilter(m_extension);
+        name = "Repository";
+        String postfix = getExtensionDecorator();
+        extension = "." + name + postfix;
+        filter = new ExtensionFileFilter(extension);
         // m_filter = new NumberedRepositoryFileFilter(getExtensionDecorator());
 
         FileUtils.forceMkdir(directory);
 
-        LOGGER.info(getClass().getName() + " opened in " + m_baseDirectory);
+        LOGGER.info("{} opened in {}", getClass().getName(), baseDirectory);
 
         // We will look for all numbered repository files in this
         // directory and rename them to non-numbered repositories,
         // logging all the way.
 
-        FilenameFilter num_filter = new NumberedRepositoryFileFilter(getExtensionDecorator());
-        final String[] names = directory.list(num_filter);
+        FilenameFilter numFilter = new NumberedRepositoryFileFilter(getExtensionDecorator());
+        final String[] names = directory.list(numFilter);
 
         for (String origFilename : names) {
             // This needs to handle (skip over) the possible repository
             // numbers
-            int pos = origFilename.length() - m_postfix.length();
+            int pos = origFilename.length() - postfix.length();
             while (pos >= 1 && Character.isDigit(origFilename.charAt(pos - 1))) {
                 pos--;
             }
-            pos -= ".".length() + m_name.length();
-            String newFilename = origFilename.substring(0, pos) + m_extension;
+            pos -= ".".length() + name.length();
+            String newFilename = origFilename.substring(0, pos) + extension;
 
             File origFile = new File(directory, origFilename);
             File newFile = new File(directory, newFilename);
@@ -145,7 +145,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
         }
 
         try {
-            m_baseDirectory = fileSystem.getFile(destination);
+            baseDirectory = fileSystem.getFile(destination);
         } catch (FileNotFoundException e) {
             throw new ConfigurationException("Unable to acces destination " + destination, e);
         }
@@ -177,7 +177,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
         child.setFileSystem(fileSystem);
 
         try {
-            child.setDestination(m_baseDirectory.getAbsolutePath() + File.pathSeparatorChar + childName + File.pathSeparator);
+            child.setDestination(baseDirectory.getAbsolutePath() + File.pathSeparatorChar + childName + File.pathSeparator);
         } catch (ConfigurationException ce) {
             throw new RuntimeException("Cannot set destination for child child " + "repository " + childName + " : " + ce);
         }
@@ -188,8 +188,8 @@ public abstract class AbstractFileRepository implements Repository, Configurable
             throw new RuntimeException("Cannot initialize child " + "repository " + childName + " : " + e);
         }
 
-        if (DEBUG) {
-            LOGGER.debug("Child repository of " + m_name + " created in " + m_baseDirectory + File.pathSeparatorChar + childName + File.pathSeparator);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Child repository of " + name + " created in " + baseDirectory + File.pathSeparatorChar + childName + File.pathSeparator);
         }
 
         return child;
@@ -257,6 +257,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
             throw new RuntimeException("Exception caught while removing" + " an object: " + e);
         }
     }
+    
     /**
      * 
      * Indicates if the given key is associated to a contained object
@@ -268,8 +269,9 @@ public abstract class AbstractFileRepository implements Repository, Configurable
     public synchronized boolean containsKey(String key) {
         try {
             final File file = getFile(key);
-            if (DEBUG)
-                LOGGER.debug("checking key " + key);
+            if (DEBUG) {
+                LOGGER.debug("checking key {}", key);
+            }
             return file.exists();
         } catch (Exception e) {
             throw new RuntimeException("Exception caught while searching " + "an object: " + e);
@@ -280,8 +282,8 @@ public abstract class AbstractFileRepository implements Repository, Configurable
      * Returns the list of used keys.
      */
     public Iterator<String> list() {
-        final File storeDir = new File(m_baseDirectory.getAbsolutePath());
-        final String[] names = storeDir.list(m_filter);
+        final File storeDir = new File(baseDirectory.getAbsolutePath());
+        final String[] names = storeDir.list(filter);
 
         return Arrays.stream(names)
             .map(this::decode)
@@ -311,10 +313,10 @@ public abstract class AbstractFileRepository implements Repository, Configurable
         }
 
         StringBuilder result = new StringBuilder();
-        result.append(m_baseDirectory.getAbsolutePath());
+        result.append(baseDirectory.getAbsolutePath());
         result.append(File.separator);
         result.append(buffer);
-        result.append(m_extension);
+        result.append(extension);
         return result.toString();
     }
 
@@ -328,7 +330,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
      * @return key a String which can be used to retrieve the filename
      */
     protected String decode(String filename) {
-        filename = filename.substring(0, filename.length() - m_extension.length());
+        filename = filename.substring(0, filename.length() - extension.length());
         final int size = filename.length();
         final byte[] bytes = new byte[size >>> 1];
 

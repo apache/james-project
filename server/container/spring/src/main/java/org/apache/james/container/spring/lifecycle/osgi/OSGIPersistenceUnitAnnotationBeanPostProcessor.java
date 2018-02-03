@@ -24,7 +24,7 @@ import javax.persistence.PersistenceUnit;
 /**
  * Inject the {@link EntityManagerFactory} if an method is marked with the {@link PersistenceUnit} annotation
  */
-public class OSGIPersistenceUnitAnnotationBeanPostProcessor extends AbstractOSGIAnnotationBeanPostProcessor<PersistenceUnit>{
+public class OSGIPersistenceUnitAnnotationBeanPostProcessor extends AbstractOSGIAnnotationBeanPostProcessor<PersistenceUnit> {
 
     @Override
     protected Class<PersistenceUnit> getAnnotation() {

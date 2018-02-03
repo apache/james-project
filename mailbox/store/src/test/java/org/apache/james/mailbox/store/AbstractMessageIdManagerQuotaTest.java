@@ -60,7 +60,9 @@ public abstract class AbstractMessageIdManagerQuotaTest {
     protected abstract MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, CurrentQuotaManager currentQuotaManager) throws Exception;
 
     protected abstract MaxQuotaManager createMaxQuotaManager();
+    
     protected abstract CurrentQuotaManager createCurrentQuotaManager();
+    
     protected abstract QuotaManager createQuotaManager(MaxQuotaManager maxQuotaManager, CurrentQuotaManager currentQuotaManager);
 
     @Before

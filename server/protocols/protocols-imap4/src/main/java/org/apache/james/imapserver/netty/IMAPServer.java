@@ -77,10 +77,10 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     private int timeout;
     private int literalSizeLimit;
 
-    public final static int DEFAULT_MAX_LINE_LENGTH = 65536; // Use a big default
-    public final static int DEFAULT_IN_MEMORY_SIZE_LIMIT = 10485760; // Use 10MB as default
-    public final static int DEFAULT_TIMEOUT = 30 * 60; // default timeout is 30 seconds
-    public final static int DEFAULT_LITERAL_SIZE_LIMIT = 0;
+    public static final int DEFAULT_MAX_LINE_LENGTH = 65536; // Use a big default
+    public static final int DEFAULT_IN_MEMORY_SIZE_LIMIT = 10485760; // Use 10MB as default
+    public static final int DEFAULT_TIMEOUT = 30 * 60; // default timeout is 30 seconds
+    public static final int DEFAULT_LITERAL_SIZE_LIMIT = 0;
 
     public IMAPServer(ImapDecoder decoder, ImapEncoder encoder, ImapProcessor processor, ImapMetrics imapMetrics) {
         this.processor = processor;
@@ -156,12 +156,12 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             private final ChannelGroupHandler groupHandler = new ChannelGroupHandler(group);
             private final HashedWheelTimer timer = new HashedWheelTimer();
             
-            private final TimeUnit TIMEOUT_UNIT = TimeUnit.SECONDS;
+            private final TimeUnit timeoutUnit = TimeUnit.SECONDS;
 
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline pipeline = pipeline();
                 pipeline.addLast(GROUP_HANDLER, groupHandler);
-                pipeline.addLast("idleHandler", new IdleStateHandler(timer, 0, 0, timeout, TIMEOUT_UNIT));
+                pipeline.addLast("idleHandler", new IdleStateHandler(timer, 0, 0, timeout, timeoutUnit));
                 pipeline.addLast(TIMEOUT_HANDLER, new ImapIdleStateHandler());
                 pipeline.addLast(CONNECTION_LIMIT_HANDLER, new ConnectionLimitUpstreamHandler(IMAPServer.this.connectionLimit));
 
@@ -208,7 +208,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     protected ChannelUpstreamHandler createCoreHandler() {
         ImapChannelUpstreamHandler coreHandler;
         Encryption secure = getEncryption();
-        if (secure!= null && secure.isStartTLS()) {
+        if (secure != null && secure.isStartTLS()) {
            coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, compress, plainAuthDisallowed, secure.getContext(), getEnabledCipherSuites(), imapMetrics);
         } else {
            coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, compress, plainAuthDisallowed, imapMetrics);
@@ -225,7 +225,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
 
     @Override
     protected ChannelHandlerFactory createFrameHandlerFactory() {
-        return new SwitchableLineDelimiterBasedFrameDecoderFactory(maxLineLength);
+        return new SwitchableLineBasedFrameDecoderFactory(maxLineLength);
     }
 
 }

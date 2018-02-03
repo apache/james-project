@@ -24,7 +24,7 @@ import org.jboss.netty.handler.timeout.IdleState;
 import org.jboss.netty.handler.timeout.IdleStateAwareChannelHandler;
 import org.jboss.netty.handler.timeout.IdleStateEvent;
 
-public class ImapHeartbeatHandler extends IdleStateAwareChannelHandler{
+public class ImapHeartbeatHandler extends IdleStateAwareChannelHandler {
 
     @Override
     public void channelIdle(ChannelHandlerContext ctx, IdleStateEvent e) throws Exception {

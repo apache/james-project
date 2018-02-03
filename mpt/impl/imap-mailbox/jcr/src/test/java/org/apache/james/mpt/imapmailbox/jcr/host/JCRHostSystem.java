@@ -95,9 +95,9 @@ public class JCRHostSystem extends JamesImapHostSystem {
             GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
             MessageParser messageParser = new MessageParser();
 
-            StoreRightManager storeRightManager = new StoreRightManager(mf, aclResolver, groupMembershipResolver);
             DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
             MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
+            StoreRightManager storeRightManager = new StoreRightManager(mf, aclResolver, groupMembershipResolver, mailboxEventDispatcher);
             StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mf, storeRightManager);
             mailboxManager = new JCRMailboxManager(mf, authenticator, authorizator, new JVMMailboxPathLocker(), messageParser,
                     new DefaultMessageId.Factory(), mailboxEventDispatcher, delegatingListener,
@@ -143,17 +143,19 @@ public class JCRHostSystem extends JamesImapHostSystem {
         shutdownRepository();
     }
     
-    private void shutdownRepository() throws Exception{
+    private void shutdownRepository() throws Exception {
         if (repository != null) {
             repository.shutdown();
             repository = null;
         }
     }
     
-    private void delete(File home) throws Exception{
+    private void delete(File home) throws Exception {
         if (home.exists()) {
             File[] files = home.listFiles();
-            if (files == null) return;
+            if (files == null) {
+                return;
+            }
             for (File f : files) {
                 if (f.isDirectory()) {
                     delete(f);

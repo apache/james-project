@@ -30,14 +30,13 @@
       <p>This documents explains how to configure Mail processing. Mails pass through the MailetContainer. The
           MailetContainer is a Matchers (condition for executing a mailet) and Mailets (execution units that perform
           actions based on incoming mail) pipeline arranged into processors (List of mailet/matcher pairs allowing
-          better logical organisation).</p>
+          better logical organisation). You can read more about these concepts on <a href="feature-mailetcontainer.html">the mailet container feature description</a>.</p>
 
-      <p>Apache James Server includes a number of pre-packaged <a href="dev-provided-mailets.html">Mailets and Matchers</a>.</p>
+      <p>Apache James Server includes a number of pre-packaged <a href="dev-provided-mailets.html">Mailets and Matchers</a>.
+      Futhermore, you can write and use with James your own <a href="dev-extend-matcher.html">custom matchers</a> and
+      <a href="dev-extend-mailet.html">custom mailets</a>.</p>
 
       <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/mailetcontainer.xml">mailetcontainer.xml</a> in GIT to get some examples and hints.</p>
-
-      <p>This configuration block is defined by the <strong>mailserver</strong> tag.  All administrators 
-      need to adjust the <strong>mailserver</strong> block upon installation.</p>
 
       <dl>
         <dt><strong>context.postmaster</strong></dt>
@@ -76,6 +75,28 @@
       would be passed to the matcher.  The Mailet of the pair will be an instance of ToProcessor, and it will be passed the (name, value) 
       pair of ("processor", "spam").</p>
     
+    </subsection>
+
+    <subsection name="Error handling">
+      <p>If an exception is encountered during the execution of a mailet or a matcher, the default behaviour is to
+      process the mail using the <strong>error</strong> processor.</p>
+
+      <p>The <strong>onMailetException</strong> property allows you to override this behaviour. You can specify another
+          processor than the <strong>error</strong> one for handling the errors of this mailet. The <strong>ignore</strong> special value also
+      allows to continue processing and ignore the error.</p>
+
+      <p>Moreover, the <strong>onMatcherException</strong> allows you to override matcher error handling. You can
+          specify another processor than the <strong>error</strong> one for handling the errors of this mailet. The <strong>matchall</strong>
+          special value also allows you to match all recipients when there is an error. The <strong>nomatch</strong>
+          special value also allows you to match no recipients when there is an error.</p>
+
+      <p>Here is a short example to illustrate this:</p>
+
+      <pre><code>&lt;mailet match=RecipientIsLocal class="LocalDelivery"&gt;
+    &lt;onMailetException&gt;deliveryError&lt;/onMailetException&gt;
+    &lt;onMatcherException&gt;nomatch&lt;/onMatcherException&gt;
+&lt;/mailet&gt;
+      </code></pre>
     </subsection>
   
   </section>

@@ -24,10 +24,12 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
@@ -37,7 +39,6 @@ import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,7 +76,7 @@ public class RecipientRewriteTableProcessor {
         this.mailetContext = mailetContext;
     }
 
-    public void processMail(Mail mail) throws MessagingException{
+    public void processMail(Mail mail) throws MessagingException {
         ImmutableList<RrtExecutionResult> mappingDatas = toMappingDatas(mail);
 
         ImmutableSet<MailAddress> newRecipients = getRecipientsByCondition(mappingDatas, mappingData -> !mappingData.isError());
@@ -188,9 +189,9 @@ public class RecipientRewriteTableProcessor {
         if (!remoteAddress.isEmpty()) {
             try {
                 mailetContext.sendMail(sender, remoteAddress, message);
-                LOGGER.info("Mail for " + recipient + " forwarded to " + remoteAddress);
+                LOGGER.info("Mail for {} forwarded to {}", recipient, remoteAddress);
             } catch (MessagingException ex) {
-                LOGGER.warn("Error forwarding mail to " + remoteAddress);
+                LOGGER.warn("Error forwarding mail to {}", remoteAddress);
             }
         }
     }

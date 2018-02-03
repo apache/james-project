@@ -28,6 +28,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+
 import java.util.Optional;
 import java.util.Set;
 
@@ -54,13 +55,13 @@ import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.NoopMetricFactory;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockitoAnnotations;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 public class GetAnnotationProcessorTest {
     private static final String TAG = "TAG";
@@ -85,7 +86,7 @@ public class GetAnnotationProcessorTest {
     private ImapSession mockImapSession;
     private MailboxSession mailboxSession;
 
-    private Set<MailboxAnnotationKey> KEYS;
+    private Set<MailboxAnnotationKey> keys;
     private StatusResponse statusResponse;
 
     private GetAnnotationRequest.Builder annotationRequestBuilder;
@@ -104,7 +105,7 @@ public class GetAnnotationProcessorTest {
 
         mailboxSession = new MockMailboxSession("username");
         inbox = MailboxPath.inbox(mailboxSession);
-        KEYS = ImmutableSet.of(PRIVATE_KEY);
+        keys = ImmutableSet.of(PRIVATE_KEY);
         annotationRequestBuilder = GetAnnotationRequest.builder()
             .tag(TAG)
             .command(ImapCommand.anyStateCommand("Name"))
@@ -176,9 +177,9 @@ public class GetAnnotationProcessorTest {
 
     @Test
     public void processShouldGetAnnotationsByKeysAndReturnCompleteResponse() throws Exception {
-        processor.process(annotationRequestBuilder.keys(KEYS).build(), mockResponder, mockImapSession);
+        processor.process(annotationRequestBuilder.keys(keys).build(), mockResponder, mockImapSession);
 
-        verify(mockMailboxManager, times(1)).getAnnotationsByKeys(eq(inbox), eq(mailboxSession), eq(KEYS));
+        verify(mockMailboxManager, times(1)).getAnnotationsByKeys(eq(inbox), eq(mailboxSession), eq(keys));
         verify(mockStatusResponseFactory, times(1)).taggedOk(any(String.class), any(ImapCommand.class), humanTextCaptor.capture());
         verify(mockResponder, times(2)).respond(captorAnnotationResponse.capture());
         verifyNoMoreInteractions(mockResponder);
@@ -253,11 +254,11 @@ public class GetAnnotationProcessorTest {
 
     @Test
     public void processShouldGetAnnotationsByOneDepthAndReturnCompleteResponseWithTruncateDataByMaxsize() throws Exception {
-        when(mockMailboxManager.getAnnotationsByKeysWithOneDepth(inbox, mailboxSession, KEYS)).thenReturn(ImmutableList.of(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION));
+        when(mockMailboxManager.getAnnotationsByKeysWithOneDepth(inbox, mailboxSession, keys)).thenReturn(ImmutableList.of(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION));
 
-        processor.process(annotationRequestBuilder.maxsize(Optional.of(14)).depth(Depth.ONE).keys(KEYS).build(), mockResponder, mockImapSession);
+        processor.process(annotationRequestBuilder.maxsize(Optional.of(14)).depth(Depth.ONE).keys(keys).build(), mockResponder, mockImapSession);
 
-        verify(mockMailboxManager, times(1)).getAnnotationsByKeysWithOneDepth(eq(inbox), eq(mailboxSession), eq(KEYS));
+        verify(mockMailboxManager, times(1)).getAnnotationsByKeysWithOneDepth(eq(inbox), eq(mailboxSession), eq(keys));
         verify(mockStatusResponseFactory, times(1)).taggedOk(any(String.class),
             any(ImapCommand.class),
             humanTextCaptor.capture(),
@@ -289,11 +290,11 @@ public class GetAnnotationProcessorTest {
 
     @Test
     public void processShouldGetAnnotationsByInfinityDepthAndReturnCompleteResponseWithTruncateDataByMaxsize() throws Exception {
-        when(mockMailboxManager.getAnnotationsByKeysWithAllDepth(inbox, mailboxSession, KEYS)).thenReturn(ImmutableList.of(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION));
+        when(mockMailboxManager.getAnnotationsByKeysWithAllDepth(inbox, mailboxSession, keys)).thenReturn(ImmutableList.of(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION));
 
-        processor.process(annotationRequestBuilder.maxsize(Optional.of(14)).depth(Depth.INFINITY).keys(KEYS).build(), mockResponder, mockImapSession);
+        processor.process(annotationRequestBuilder.maxsize(Optional.of(14)).depth(Depth.INFINITY).keys(keys).build(), mockResponder, mockImapSession);
 
-        verify(mockMailboxManager, times(1)).getAnnotationsByKeysWithAllDepth(eq(inbox), eq(mailboxSession), eq(KEYS));
+        verify(mockMailboxManager, times(1)).getAnnotationsByKeysWithAllDepth(eq(inbox), eq(mailboxSession), eq(keys));
         verify(mockStatusResponseFactory, times(1)).taggedOk(any(String.class),
             any(ImapCommand.class),
             humanTextCaptor.capture(),
@@ -308,9 +309,9 @@ public class GetAnnotationProcessorTest {
 
     @Test
     public void processShouldGetAnnotationsByInfinityDepthAndReturnCompleteResponse() throws Exception {
-        when(mockMailboxManager.getAnnotationsByKeysWithAllDepth(inbox, mailboxSession, KEYS)).thenReturn(ImmutableList.of(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION));
+        when(mockMailboxManager.getAnnotationsByKeysWithAllDepth(inbox, mailboxSession, keys)).thenReturn(ImmutableList.of(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION));
 
-        processor.process(annotationRequestBuilder.depth(Depth.INFINITY).keys(KEYS).build(), mockResponder, mockImapSession);
+        processor.process(annotationRequestBuilder.depth(Depth.INFINITY).keys(keys).build(), mockResponder, mockImapSession);
 
         verify(mockStatusResponseFactory, times(1)).taggedOk(any(String.class),
             any(ImapCommand.class),

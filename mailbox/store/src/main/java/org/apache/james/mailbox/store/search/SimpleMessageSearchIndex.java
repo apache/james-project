@@ -28,7 +28,6 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import com.github.fge.lambdas.Throwing;
 import org.apache.james.mailbox.MailboxManager.MessageCapabilities;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.mailbox.MailboxSession;
@@ -51,6 +50,7 @@ import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -94,17 +94,17 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
      *      first UidCriterion found
      *      null - if not found
      */
-  	private static UidCriterion findConjugatedUidCriterion(List<Criterion> crits) {
-		for (Criterion crit : crits) {
-			if (crit instanceof UidCriterion) {
-				return (UidCriterion) crit;
-			} else if (crit instanceof ConjunctionCriterion) {
-				return findConjugatedUidCriterion(((ConjunctionCriterion) crit)
-						.getCriteria());
-			}
-		}
-		return null;
-	}
+    private static UidCriterion findConjugatedUidCriterion(List<Criterion> crits) {
+        for (Criterion crit : crits) {
+            if (crit instanceof UidCriterion) {
+                return (UidCriterion) crit;
+            } else if (crit instanceof ConjunctionCriterion) {
+                return findConjugatedUidCriterion(((ConjunctionCriterion) crit)
+                        .getCriteria());
+            }
+        }
+        return null;
+    }
     
     @Override
     public Iterator<MessageUid> search(MailboxSession session, final Mailbox mailbox, SearchQuery query) throws MailboxException {
@@ -133,11 +133,11 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
                 }
             }
         } else {
-        	// we have to fetch all messages
+            // we have to fetch all messages
             Iterator<MailboxMessage> messages = mapper.findInMailbox(mailbox, MessageRange.all(), FetchType.Full, -1);
-            while(messages.hasNext()) {
-            	MailboxMessage m = messages.next();
-            	hitSet.add(m);
+            while (messages.hasNext()) {
+                MailboxMessage m = messages.next();
+                hitSet.add(m);
             }
         }
         return ImmutableList.copyOf(new MessageSearches(hitSet.iterator(), query, textExtractor).iterator());

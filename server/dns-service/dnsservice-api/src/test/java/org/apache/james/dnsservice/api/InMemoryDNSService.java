@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.net.InetAddresses;
@@ -50,27 +51,43 @@ public class InMemoryDNSService implements DNSService {
         return new DNSRecord(addresses, mxRecords, txtRecords);
     }
 
-    public void registerRecord(String hostname, InetAddress address, String mxRecord) {
+    public InMemoryDNSService registerRecord(String hostname, InetAddress address, String mxRecord) {
         Collection<String> emptyTxtRecords = ImmutableList.of();
         registerRecord(hostname, ImmutableList.of(address), ImmutableList.of(mxRecord), emptyTxtRecords);
+        return this;
     }
 
-    public void registerRecord(String hostname, List<InetAddress> addresses, Collection<String> mxRecords, Collection<String> txtRecords ){
+    public InMemoryDNSService registerMxRecord(String hostname, String ip) throws UnknownHostException {
+        InetAddress containerIp = InetAddress.getByName(ip);
+        registerRecord(hostname, containerIp, hostname);
+        return this;
+    }
+
+    public InMemoryDNSService registerRecord(String hostname, List<InetAddress> addresses, Collection<String> mxRecords, Collection<String> txtRecords) {
         records.put(hostname, dnsRecordFor(mxRecords, txtRecords, addresses));
+        return this;
     }
 
-    public void dropRecord(String hostname){
+    public void dropRecord(String hostname) {
         records.remove(hostname);
     }
 
     @Override
     public Collection<String> findMXRecords(String hostname) throws TemporaryResolutionException {
-        return hostRecord(hostname).mxRecords;
+        try {
+            return hostRecord(hostname).mxRecords;
+        } catch (UnknownHostException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     @Override
     public Collection<String> findTXTRecords(String hostname) {
-        return hostRecord(hostname).txtRecords;
+        try {
+            return hostRecord(hostname).txtRecords;
+        } catch (UnknownHostException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     @Override
@@ -83,7 +100,7 @@ public class InMemoryDNSService implements DNSService {
         return hostRecord(host).addresses.get(0);
     }
 
-    private DNSRecord hostRecord(final String host) {
+    private DNSRecord hostRecord(final String host) throws UnknownHostException {
         Predicate<? super Entry<String, DNSRecord>> filterByKey = entry -> entry.getKey().equals(host);
         return getDNSEntry(filterByKey).getValue();
     }
@@ -97,17 +114,21 @@ public class InMemoryDNSService implements DNSService {
     public String getHostName(final InetAddress addr) {
         Predicate<? super Entry<String, DNSRecord>> filterByValue = entry -> entry.getValue().contains(addr);
 
-        return getDNSEntry(filterByValue).getKey();
+        try {
+            return getDNSEntry(filterByValue).getKey();
+        } catch (UnknownHostException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
-    private Entry<String, DNSRecord> getDNSEntry(Predicate<? super Entry<String, DNSRecord>> filter) {
+    private Entry<String, DNSRecord> getDNSEntry(Predicate<? super Entry<String, DNSRecord>> filter) throws UnknownHostException {
         return records.entrySet().stream()
             .filter(filter)
             .findFirst()
-            .get();
+            .orElseThrow(() -> new UnknownHostException());
     }
 
-    private static class DNSRecord {
+    public static class DNSRecord {
 
         final Collection<String> mxRecords;
         final Collection<String> txtRecords;
@@ -119,7 +140,7 @@ public class InMemoryDNSService implements DNSService {
             this.txtRecords = txtRecords;
         }
 
-        public boolean contains(InetAddress address){
+        public boolean contains(InetAddress address) {
             return addresses.contains(address);
         }
     }

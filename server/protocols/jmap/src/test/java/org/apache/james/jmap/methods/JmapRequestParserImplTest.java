@@ -38,11 +38,11 @@ public class JmapRequestParserImplTest {
         testee = new JmapRequestParserImpl(new ObjectMapperFactory(new InMemoryId.Factory(), new InMemoryMessageId.Factory()));
     }
     
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void extractJmapRequestShouldThrowWhenNullRequestClass() throws Exception {
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("unknwonMethod"),
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{\"id\": \"id\"}"),
-                new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
+                new ObjectNode(new JsonNodeFactory(false)).textNode("#1")};
 
         testee.extractJmapRequest(ProtocolRequest.deserialize(nodes), null);
     }
@@ -53,7 +53,7 @@ public class JmapRequestParserImplTest {
         parameters.put("id", "myId");
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("unknwonMethod"),
                 parameters,
-                new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
+                new ObjectNode(new JsonNodeFactory(false)).textNode("#1")};
 
         testee.extractJmapRequest(ProtocolRequest.deserialize(nodes), RequestClass.class);
     }
@@ -63,7 +63,7 @@ public class JmapRequestParserImplTest {
         ObjectNode parameters = new ObjectNode(new JsonNodeFactory(false));
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("unknwonMethod"),
                 parameters,
-                new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
+                new ObjectNode(new JsonNodeFactory(false)).textNode("#1")};
 
         testee.extractJmapRequest(ProtocolRequest.deserialize(nodes), RequestClass.class);
     }

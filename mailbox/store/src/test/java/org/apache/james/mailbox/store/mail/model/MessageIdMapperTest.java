@@ -59,9 +59,9 @@ public abstract class MessageIdMapperTest {
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
-    private final static char DELIMITER = '.';
+    private static final char DELIMITER = '.';
     private static final int BODY_START = 16;
-    private final static long UID_VALIDITY = 42;
+    private static final long UID_VALIDITY = 42;
 
     private MessageMapper messageMapper;
     private MailboxMapper mailboxMapper;
@@ -100,7 +100,7 @@ public abstract class MessageIdMapperTest {
 
     @Test
     public void findShouldReturnEmptyWhenIdListIsEmpty() throws MailboxException {
-        assertThat(sut.find(ImmutableList.<MessageId> of(), FetchType.Full)).isEmpty();
+        assertThat(sut.find(ImmutableList.<MessageId>of(), FetchType.Full)).isEmpty();
     }
 
     @Test
@@ -315,7 +315,7 @@ public abstract class MessageIdMapperTest {
         sut.save(message1InOtherMailbox);
 
         MessageId messageId = message1.getMessageId();
-        sut.delete(messageId, ImmutableList.<MailboxId> of());
+        sut.delete(messageId, ImmutableList.<MailboxId>of());
 
         List<MailboxId> mailboxes = sut.findMailboxes(messageId);
         assertThat(mailboxes).containsOnly(benwaInboxMailbox.getMailboxId(), benwaWorkMailbox.getMailboxId());
@@ -464,7 +464,7 @@ public abstract class MessageIdMapperTest {
 
         MessageId messageId = message1.getMessageId();
         Flags newFlags = new Flags(Flag.ANSWERED);
-        Map<MailboxId, UpdatedFlags> flags = sut.setFlags(messageId, ImmutableList.<MailboxId> of(), newFlags, FlagsUpdateMode.REMOVE);
+        Map<MailboxId, UpdatedFlags> flags = sut.setFlags(messageId, ImmutableList.<MailboxId>of(), newFlags, FlagsUpdateMode.REMOVE);
 
         assertThat(flags).isEmpty();
     }
@@ -559,7 +559,7 @@ public abstract class MessageIdMapperTest {
 
         MessageId messageId = message1.getMessageId();
         Flags newFlags = new Flags(Flag.ANSWERED);
-        sut.setFlags(messageId, ImmutableList.<MailboxId> of(), newFlags, FlagsUpdateMode.REMOVE);
+        sut.setFlags(messageId, ImmutableList.<MailboxId>of(), newFlags, FlagsUpdateMode.REMOVE);
 
         List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), MessageMapper.FetchType.Body);
         assertThat(messages).hasSize(1);
@@ -592,7 +592,7 @@ public abstract class MessageIdMapperTest {
 
         MessageId messageId = message1.getMessageId();
         Flags newFlags = new Flags(Flag.ANSWERED);
-        sut.setFlags(messageId, ImmutableList.<MailboxId> of(), newFlags, FlagsUpdateMode.REMOVE);
+        sut.setFlags(messageId, ImmutableList.<MailboxId>of(), newFlags, FlagsUpdateMode.REMOVE);
 
         List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), MessageMapper.FetchType.Body);
         assertThat(messages).hasSize(1);

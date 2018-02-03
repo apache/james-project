@@ -79,23 +79,23 @@ public class Keywords {
         }
 
         public Keywords fromSet(Set<Keyword> setKeywords) {
-            validator.orElse(keywords -> {})
+            validator.orElse(keywords -> { })
                 .validate(setKeywords);
 
             return new Keywords(setKeywords.stream()
-                .filter(filter.orElse(keyword -> true))
-                .collect(Guavate.toImmutableSet()));
+                    .filter(filter.orElse(keyword -> true))
+                    .collect(Guavate.toImmutableSet()));
         }
 
         public Keywords from(Keyword... keywords) {
             return fromSet(Arrays.stream(keywords)
-                .collect(Guavate.toImmutableSet()));
+                    .collect(Guavate.toImmutableSet()));
         }
 
         public Keywords fromList(List<String> keywords) {
             return fromSet(keywords.stream()
-                .map(Keyword::new)
-                .collect(Guavate.toImmutableSet()));
+                    .map(Keyword::new)
+                    .collect(Guavate.toImmutableSet()));
         }
 
         @VisibleForTesting
@@ -111,34 +111,13 @@ public class Keywords {
             return fromSet(setKeywords);
         }
 
-        @VisibleForTesting
-        Keywords fromOldKeyword(OldKeyword oldKeyword) {
-            ImmutableSet.Builder<Keyword> builder = ImmutableSet.builder();
-            if (oldKeyword.isAnswered().orElse(false)) {
-                builder.add(Keyword.ANSWERED);
-            }
-            if (oldKeyword.isDraft().orElse(false)) {
-                builder.add(Keyword.DRAFT);
-            }
-            if (oldKeyword.isFlagged().orElse(false)) {
-                builder.add(Keyword.FLAGGED);
-            }
-            if (oldKeyword.isUnread().isPresent() && oldKeyword.isUnread().get() == false) {
-                builder.add(Keyword.SEEN);
-            }
-            if (oldKeyword.isForwarded().orElse(false)) {
-                builder.add(Keyword.FORWARDED);
-            }
-            return fromSet(builder.build());
-        }
-
         public Keywords fromFlags(Flags flags) {
             return fromSet(Stream.concat(
-                    Stream.of(flags.getUserFlags())
-                        .flatMap(this::asKeyword),
-                    Stream.of(flags.getSystemFlags())
-                        .map(Keyword::fromFlag))
-                .collect(Guavate.toImmutableSet()));
+                        Stream.of(flags.getUserFlags())
+                            .flatMap(this::asKeyword),
+                        Stream.of(flags.getSystemFlags())
+                            .map(Keyword::fromFlag))
+                    .collect(Guavate.toImmutableSet()));
         }
 
         private Stream<Keyword> asKeyword(String flagName) {
@@ -148,15 +127,6 @@ public class Keywords {
                 LOGGER.warn("Fail to parse {} flag", flagName);
                 return Stream.of();
             }
-        }
-
-        public Optional<Keywords> fromMapOrOldKeyword(Optional<Map<String, Boolean>> mapKeyword, Optional<OldKeyword> oldKeyword) {
-            Preconditions.checkArgument(!(mapKeyword.isPresent() && oldKeyword.isPresent()), "Does not support keyword and is* at the same time");
-
-            Keywords keywords = mapKeyword.map(this::fromMap)
-                .orElse(oldKeyword.map(this::fromOldKeyword)
-                    .orElse(null));
-            return Optional.ofNullable(keywords);
         }
     }
 

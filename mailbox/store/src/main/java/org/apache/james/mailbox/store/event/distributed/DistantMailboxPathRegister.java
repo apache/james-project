@@ -64,7 +64,7 @@ public class DistantMailboxPathRegister implements MailboxPathRegister {
             @Override
             public void run() {
                 Set<Map.Entry<MailboxPath, Long>> snapshot = ImmutableSet.copyOf(registeredMailboxPathCount.entrySet());
-                for(Map.Entry<MailboxPath, Long> entry : snapshot) {
+                for (Map.Entry<MailboxPath, Long> entry : snapshot) {
                     if (entry.getValue() > 0) {
                         mapper.doRegister(entry.getKey(), topic);
                     }
@@ -94,7 +94,7 @@ public class DistantMailboxPathRegister implements MailboxPathRegister {
         int count = 0;
         boolean success = false;
         while (count < maxRetry && !success) {
-            count ++;
+            count++;
             success = tryRegister(path);
         }
         if (!success) {
@@ -107,7 +107,7 @@ public class DistantMailboxPathRegister implements MailboxPathRegister {
         int count = 0;
         boolean success = false;
         while (count < maxRetry && !success) {
-            count ++;
+            count++;
             success = tryUnregister(path);
         }
         if (!success) {

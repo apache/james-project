@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.dto;
 
+import org.apache.james.backends.cassandra.versions.SchemaVersion;
+
 import com.google.common.base.Preconditions;
 
 public class CassandraVersionRequest {
@@ -30,11 +32,11 @@ public class CassandraVersionRequest {
     private final int value;
 
     private CassandraVersionRequest(int value) {
-        Preconditions.checkArgument(value >= 0);
+        Preconditions.checkArgument(value > 0);
         this.value = value;
     }
 
-    public int getValue() {
-        return value;
+    public SchemaVersion getValue() {
+        return new SchemaVersion(value);
     }
 }

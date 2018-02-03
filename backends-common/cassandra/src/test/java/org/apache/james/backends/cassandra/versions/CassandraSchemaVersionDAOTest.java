@@ -59,7 +59,7 @@ public class CassandraSchemaVersionDAOTest {
 
     @Test
     public void getCurrentSchemaVersionShouldReturnVersionPresentInTheTable() {
-        int version = 42;
+        SchemaVersion version = new SchemaVersion(42);
 
         testee.updateVersion(version).join();
 
@@ -68,11 +68,11 @@ public class CassandraSchemaVersionDAOTest {
 
     @Test
     public void getCurrentSchemaVersionShouldBeIdempotent() {
-        int version = 42;
+        SchemaVersion version = new SchemaVersion(42);
 
-        testee.updateVersion(version + 1).join();
+        testee.updateVersion(version.next()).join();
         testee.updateVersion(version).join();
 
-        assertThat(testee.getCurrentSchemaVersion().join()).contains(version + 1);
+        assertThat(testee.getCurrentSchemaVersion().join()).contains(version.next());
     }
 }

@@ -28,6 +28,7 @@ import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.RightManager;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.extractor.TextExtractor;
@@ -49,6 +50,7 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreAttachmentManager;
 import org.apache.james.mailbox.store.StoreBlobManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
+import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
@@ -99,6 +101,7 @@ public class MemoryMailboxModule extends AbstractModule {
 
         bind(MessageSearchIndex.class).to(SimpleMessageSearchIndex.class);
         bind(TextExtractor.class).to(JsoupTextExtractor.class);
+        bind(RightManager.class).to(StoreRightManager.class);
 
         bind(StoreBlobManager.class).in(Scopes.SINGLETON);
         bind(InMemoryMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
@@ -113,13 +116,16 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(StoreMessageIdManager.class).in(Scopes.SINGLETON);
         bind(MailboxEventDispatcher.class).in(Scopes.SINGLETON);
         bind(StoreAttachmentManager.class).in(Scopes.SINGLETON);
+        bind(StoreRightManager.class).in(Scopes.SINGLETON);
 
         Multibinder.newSetBinder(binder(), MailboxManagerDefinition.class)
             .addBinding()
             .to(MemoryMailboxManagerDefinition.class);
     }
 
-    @Provides @Named(Names.MAILBOXMANAGER_NAME) @Singleton
+    @Provides
+    @Named(Names.MAILBOXMANAGER_NAME)
+    @Singleton
     public MailboxManager provideMailboxManager(InMemoryMailboxManager mailboxManager, ListeningCurrentQuotaUpdater quotaUpdater,
                                                 QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) throws MailboxException {
         mailboxManager.setQuotaRootResolver(quotaRootResolver);

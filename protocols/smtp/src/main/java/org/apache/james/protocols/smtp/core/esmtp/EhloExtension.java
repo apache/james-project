@@ -19,9 +19,9 @@
 
 package org.apache.james.protocols.smtp.core.esmtp;
 
-import org.apache.james.protocols.smtp.SMTPSession;
-
 import java.util.List;
+
+import org.apache.james.protocols.smtp.SMTPSession;
 
 /**
  * Must be implemented by handlers that add new ESMTP EHLO keyworkds

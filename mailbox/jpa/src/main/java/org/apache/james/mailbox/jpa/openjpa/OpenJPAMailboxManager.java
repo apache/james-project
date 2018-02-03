@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.jpa.openjpa;
 
-
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxSession;

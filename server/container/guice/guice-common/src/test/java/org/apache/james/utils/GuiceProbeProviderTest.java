@@ -45,6 +45,7 @@ public class GuiceProbeProviderTest {
 
         guiceProbeProvider.getProbe(null);
     }
+    
     @Test
     public void getProbeShouldThrowRuntimeExceptionWhenEmpty() {
         expectedException.expect(RuntimeException.class);

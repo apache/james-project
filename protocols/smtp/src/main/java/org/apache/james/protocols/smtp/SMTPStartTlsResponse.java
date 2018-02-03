@@ -30,7 +30,7 @@ import org.apache.james.protocols.api.StartTlsResponse;
  * 
  *
  */
-public class SMTPStartTlsResponse extends SMTPResponse implements StartTlsResponse{
+public class SMTPStartTlsResponse extends SMTPResponse implements StartTlsResponse {
 
     public SMTPStartTlsResponse(String code, CharSequence description) {
         super(code, description);

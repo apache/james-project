@@ -25,13 +25,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.modules.MailboxProbeImpl;
-
-import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Joiner;
 
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
@@ -43,48 +37,58 @@ public class GetMessageListMethodStepdefs {
     private static final String ARGUMENTS = "[0][1]";
     private final MainStepdefs mainStepdefs;
     private final HttpClient httpClient;
-    private final GetMessagesMethodStepdefs messagesMethodStepdefs;
+    private final MessageIdStepdefs messageIdStepdefs;
+    private final UserStepdefs userStepdefs;
 
     @Inject
-    private GetMessageListMethodStepdefs(MainStepdefs mainStepdefs, HttpClient httpClient, GetMessagesMethodStepdefs messagesMethodStepdefs) {
+    private GetMessageListMethodStepdefs(MainStepdefs mainStepdefs, HttpClient httpClient, MessageIdStepdefs messageIdStepdefs, UserStepdefs userStepdefs) {
         this.mainStepdefs = mainStepdefs;
         this.httpClient = httpClient;
-        this.messagesMethodStepdefs = messagesMethodStepdefs;
+        this.messageIdStepdefs = messageIdStepdefs;
+        this.userStepdefs = userStepdefs;
     }
 
     @When("^\"([^\"]*)\" asks for message list in mailboxes \"([^\"]*)\" with flag \"([^\"]*)\"$")
-    public void getMessageList(String username, List<String> mailboxes, String flag) throws Exception {
-        String mailboxIds = Joiner.on("\",\"")
-            .join(mailboxes.stream()
-                .map(mailbox -> mainStepdefs.jmapServer
-                    .getProbe(MailboxProbeImpl.class)
-                    .getMailbox(MailboxConstants.USER_NAMESPACE, username, mailbox)
-                    .getMailboxId()
-                    .serialize())
-                .collect(Guavate.toImmutableList()));
-
+    public void getMessageListWithFlag(String username, List<String> mailboxes, String flag) throws Exception {
         httpClient.post(String.format(
                 "[[\"getMessageList\", {\"filter\":{" +
                 "    \"inMailboxes\":[\"%s\"]," +
                 "    \"hasKeyword\":\"%s\"" +
                 "}}, \"#0\"]]",
-            mailboxIds,
+            mainStepdefs.getMailboxIds(username, mailboxes),
             flag));
+    }
+
+    @When("^\"([^\"]*)\" asks for message list in (?:mailboxes|mailbox) \"([^\"]*)\"$")
+    public void getMessageList(String username, List<String> mailboxes) throws Exception {
+        getMessageListFromMailboxIds(mainStepdefs.getMailboxIds(username, mailboxes));
+    }
+
+    @When("^\"([^\"]*)\" asks for message list in delegated (?:mailboxes|mailbox) \"([^\"]*)\" from \"([^\"]*)\"$")
+    public void getMessageListFromDelegated(String sharee, List<String> mailboxes, String sharer) throws Exception {
+        userStepdefs.execWithUser(sharee, () ->
+            getMessageListFromMailboxIds(mainStepdefs.getMailboxIds(sharer, mailboxes)));
+    }
+
+    private void getMessageListFromMailboxIds(String mailboxIds) throws Exception {
+        httpClient.post(String.format(
+            "[[\"getMessageList\", {\"filter\":{" +
+                "    \"inMailboxes\":[\"%s\"]" +
+                "}}, \"#0\"]]",
+            mailboxIds));
     }
 
     @When("^\"([^\"]*)\" asks for message list in mailbox \"([^\"]*)\" with flag \"([^\"]*)\"$")
     public void getMessageList(String username, String mailbox, String flag) throws Exception {
-        MailboxId mailboxId = mainStepdefs.jmapServer
-            .getProbe(MailboxProbeImpl.class)
-            .getMailbox(MailboxConstants.USER_NAMESPACE, username, mailbox)
-            .getMailboxId();
 
         httpClient.post(String.format(
                 "[[\"getMessageList\", {\"filter\":{" +
                 "    \"inMailboxes\":[\"%s\"]," +
                 "    \"hasKeyword\":\"%s\"" +
                 "}}, \"#0\"]]",
-            mailboxId.serialize(),
+            mainStepdefs
+                .getMailboxId(username, mailbox)
+                .serialize(),
             flag));
     }
 
@@ -98,20 +102,20 @@ public class GetMessageListMethodStepdefs {
     }
 
     @Then("^the message list is empty$")
-    public void assertEmpty() throws Exception {
+    public void assertEmpty() {
         assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
         assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".messageIds")).isEmpty();
     }
 
     @Then("^the message list has size (\\d+)")
-    public void assertSize(int size) throws Exception {
+    public void assertSize(int size) {
         assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
         assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".messageIds")).hasSize(size);
     }
 
     @Then("^the message list contains \"([^\"]*)\"")
-    public void assertContains(String messsage) throws Exception {
-        MessageId messageId = messagesMethodStepdefs.getMessageId(messsage);
+    public void assertContains(String message) {
+        MessageId messageId = messageIdStepdefs.getMessageId(message);
         assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
         assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".messageIds")).contains(messageId.serialize());
     }

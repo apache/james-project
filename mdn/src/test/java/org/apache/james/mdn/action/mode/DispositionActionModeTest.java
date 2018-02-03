@@ -41,6 +41,7 @@ public class DispositionActionModeTest {
         assertThat(DispositionActionMode.fromString(DispositionActionMode.Manual.getValue()))
             .contains(DispositionActionMode.Manual);
     }
+    
     @Test
     public void fromStringShouldNotBeCaseSensitive() {
         assertThat(DispositionActionMode.fromString("autoMatic-action"))

@@ -33,7 +33,7 @@ import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
 /**
  * {@link OrderedMemoryAwareThreadPoolExecutor} subclass which expose statistics via JMX
  */
-public class JMXEnabledOrderedMemoryAwareThreadPoolExecutor extends OrderedMemoryAwareThreadPoolExecutor implements JMXEnabledOrderedMemoryAwareThreadPoolExecutorMBean{
+public class JMXEnabledOrderedMemoryAwareThreadPoolExecutor extends OrderedMemoryAwareThreadPoolExecutor implements JMXEnabledOrderedMemoryAwareThreadPoolExecutorMBean {
 
     private final String jmxPath;
     private final List<Runnable> inProgress = Collections.synchronizedList(new ArrayList<Runnable>());

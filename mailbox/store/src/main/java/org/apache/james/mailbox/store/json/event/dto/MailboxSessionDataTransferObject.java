@@ -85,7 +85,7 @@ public class MailboxSessionDataTransferObject {
     }
 
     private MailboxSession.SessionType retrieveSessionType() {
-        switch(this.sessionType) {
+        switch (this.sessionType) {
             case 0:
                 return MailboxSession.SessionType.User;
             case 1:
@@ -97,7 +97,7 @@ public class MailboxSessionDataTransferObject {
     }
 
     private int extractSessionType(MailboxSession session) {
-        switch(session.getType()) {
+        switch (session.getType()) {
             case User:
                 return 0;
             case System:

@@ -55,5 +55,9 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mpt-imapmailbox-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blob-cassandra</artifactId>
+        </dependency>
     </dependencies>
 </project>

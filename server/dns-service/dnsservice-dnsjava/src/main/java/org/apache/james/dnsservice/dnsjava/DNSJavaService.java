@@ -133,7 +133,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             if (serversArray != null) {
                 for (String aServersArray : serversArray) {
                     dnsServers.add(aServersArray);
-                    LOGGER.info("Adding autodiscovered server " + aServersArray);
+                    LOGGER.info("Adding autodiscovered server {}", aServersArray);
                 }
             }
             Name[] systemSearchPath = ResolverConfig.getCurrentConfig().searchPath();
@@ -142,7 +142,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             }
             if (LOGGER.isInfoEnabled()) {
                 for (Name searchPath : sPaths) {
-                    LOGGER.info("Adding autodiscovered search path " + searchPath.toString());
+                    LOGGER.info("Adding autodiscovered search path " + searchPath);
                 }
             }
         }
@@ -258,7 +258,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
      * @throws TemporaryResolutionException get thrown on temporary problems
      */
     private List<String> findMXRecordsRaw(String hostname) throws TemporaryResolutionException {
-        Record answers[] = lookup(hostname, Type.MX, "MX");
+        Record[] answers = lookup(hostname, Type.MX, "MX");
         List<String> servers = new ArrayList<>();
         if (answers == null) {
             return servers;
@@ -307,7 +307,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                 Collections.shuffle(samePrio);
                 servers.addAll(samePrio);
             }
-            LOGGER.debug("Found MX record " + mxRecord);
+            LOGGER.debug("Found MX record {}", mxRecord);
         }
         return servers;
     }
@@ -323,8 +323,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             // If we found no results, we'll add the original domain name if
             // it's a valid DNS entry
             if (servers.size() == 0) {
-                StringBuffer logBuffer = new StringBuffer(128).append("Couldn't resolve MX records for domain ").append(hostname).append(".");
-                LOGGER.info(logBuffer.toString());
+                LOGGER.info("Couldn't resolve MX records for domain {}.", hostname);
                 try {
                     getByName(hostname);
                     servers.add(hostname);
@@ -332,8 +331,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                     // The original domain name is not a valid host,
                     // so we can't add it to the server list. In this
                     // case we return an empty list of servers
-                    logBuffer = new StringBuffer(128).append("Couldn't resolve IP address for host ").append(hostname).append(".");
-                    LOGGER.error(logBuffer.toString(), uhe);
+                    LOGGER.error("Couldn't resolve IP address for host {}.", hostname, uhe);
                 }
             }
             timeMetric.stopAndPublish();
@@ -377,7 +375,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             // return rawDNSLookup(name, false, type, typeDesc);
         } catch (TextParseException tpe) {
             // TODO: Figure out how to handle this correctly.
-            LOGGER.error("Couldn't parse name " + namestr, tpe);
+            LOGGER.error("Couldn't parse name {}", namestr, tpe);
             return null;
         }
     }
@@ -424,9 +422,9 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
     private static String allowIPLiteral(String host) {
         if ((host.charAt(host.length() - 1) == '.')) {
-            String possible_ip_literal = host.substring(0, host.length() - 1);
-            if (org.xbill.DNS.Address.isDottedQuad(possible_ip_literal)) {
-                host = possible_ip_literal;
+            String possibleIpLiteral = host.substring(0, host.length() - 1);
+            if (org.xbill.DNS.Address.isDottedQuad(possibleIpLiteral)) {
+                host = possibleIpLiteral;
             }
         }
         return host;
@@ -450,8 +448,9 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             if (records != null && records.length >= 1) {
                 ARecord a = (ARecord) records[0];
                 return InetAddress.getByAddress(name, a.getAddress().getAddress());
-            } else
+            } else {
                 throw e;
+            }
         } finally {
             timeMetric.stopAndPublish();
         }
@@ -479,8 +478,9 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                     addrs[i] = InetAddress.getByAddress(name, a.getAddress().getAddress());
                 }
                 return ImmutableList.copyOf(addrs);
-            } else
+            } else {
                 throw e;
+            }
         } finally {
             timeMetric.stopAndPublish();
         }

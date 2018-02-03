@@ -75,7 +75,7 @@ public class HookResultLogger implements HookResultHook {
             info = true;
         }
         if ((result & HookReturnCode.DISCONNECT) == HookReturnCode.DISCONNECT) {
-            if(match) {
+            if (match) {
                 sb.append("|");
             }
             sb.append("DISCONNECT");
@@ -84,9 +84,9 @@ public class HookResultLogger implements HookResultHook {
         sb.append(")");
 
         if (info) {
-            LOGGER.info(sb.toString());
+            LOGGER.info("{}", sb);
         } else {
-            LOGGER.debug(sb.toString());
+            LOGGER.debug("{}", sb);
         }
         return hResult;
     }

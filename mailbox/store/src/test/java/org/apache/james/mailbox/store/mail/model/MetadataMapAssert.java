@@ -36,14 +36,14 @@ public class MetadataMapAssert extends AbstractAssert<MetadataMapAssert, Map<Mes
     }
 
     public MetadataMapAssert hasSize(int expectedSize) {
-        if(actual.size() != expectedSize) {
+        if (actual.size() != expectedSize) {
             failWithMessage("Expecting size to be <%s> but is <%s>", expectedSize, actual.size());
         }
         return this;
     }
 
     public MetadataMapAssert containsMetadataForMessages(MailboxMessage... messages) {
-        for(MailboxMessage message : messages) {
+        for (MailboxMessage message : messages) {
             if (! actual.get(message.getUid()).getUid().equals(message.getUid())) {
                 failWithMessage("Expected UID stored in MessageMetadata to be <%s> but was <%s>", actual.get(message.getUid()).getUid(), message.getUid());
             }

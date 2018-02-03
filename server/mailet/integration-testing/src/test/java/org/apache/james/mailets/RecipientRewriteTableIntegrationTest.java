@@ -19,71 +19,53 @@
 
 package org.apache.james.mailets;
 
-import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.mailets.configuration.CommonProcessors;
-import org.apache.james.mailets.configuration.MailetContainer;
-import org.apache.james.utils.SMTPMessageSender;
-import org.apache.james.modules.MailboxProbeImpl;
+import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
+import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
+import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
+import static org.apache.james.mailets.configuration.Constants.PASSWORD;
+import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
+import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
+
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.SMTPMessageSender;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
-
 public class RecipientRewriteTableIntegrationTest {
-    private static final String LOCALHOST_IP = "127.0.0.1";
-    private static final int IMAP_PORT = 1143;
-    private static final int SMTP_PORT = 1025;
-    private static final String PASSWORD = "secret";
-
-    private static final String JAMES_APACHE_ORG = "james.org";
     private static final String JAMES_ANOTHER_DOMAIN = "james.com";
 
-    private static final String FROM = "fromUser@" + JAMES_APACHE_ORG;
-    private static final String RECIPIENT = "touser@" + JAMES_APACHE_ORG;
-
-    private static final String ANY_AT_JAMES = "any@" + JAMES_APACHE_ORG;
-    private static final String OTHER_AT_JAMES = "other@" + JAMES_APACHE_ORG;
-
+    private static final String FROM = "fromUser@" + DEFAULT_DOMAIN;
+    private static final String RECIPIENT = "touser@" + DEFAULT_DOMAIN;
+    private static final String ANY_AT_JAMES = "any@" + DEFAULT_DOMAIN;
+    private static final String OTHER_AT_JAMES = "other@" + DEFAULT_DOMAIN;
     private static final String ANY_AT_ANOTHER_DOMAIN = "any@" + JAMES_ANOTHER_DOMAIN;
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @Rule
+    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
+    @Rule
+    public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
-    private ConditionFactory calmlyAwait;
     private DataProbe dataProbe;
-
 
     @Before
     public void setup() throws Exception {
-        MailetContainer mailetContainer = MailetContainer.builder()
-            .postmaster("postmaster@" + JAMES_APACHE_ORG)
-            .threads(5)
-            .addProcessor(CommonProcessors.root())
-            .addProcessor(CommonProcessors.error())
-            .addProcessor(CommonProcessors.transport())
-            .addProcessor(CommonProcessors.spam())
-            .addProcessor(CommonProcessors.localAddressError())
-            .addProcessor(CommonProcessors.relayDenied())
-            .addProcessor(CommonProcessors.bounces())
-            .addProcessor(CommonProcessors.sieveManagerCheck())
-            .build();
+        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder);
 
-        jamesServer = new TemporaryJamesServer(temporaryFolder, mailetContainer);
-        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-
-        dataProbe.addDomain(JAMES_APACHE_ORG);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addDomain(JAMES_ANOTHER_DOMAIN);
+
+        dataProbe.addUser(RECIPIENT, PASSWORD);
+        dataProbe.addUser(ANY_AT_JAMES, PASSWORD);
+        dataProbe.addUser(OTHER_AT_JAMES, PASSWORD);
     }
 
     @After
@@ -93,99 +75,89 @@ public class RecipientRewriteTableIntegrationTest {
 
     @Test
     public void rrtServiceShouldDeliverEmailToMappingRecipients() throws Exception {
-        dataProbe.addUser(FROM, PASSWORD);
+        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, ANY_AT_JAMES);
+        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, OTHER_AT_JAMES);
 
-        createUserInbox(ANY_AT_JAMES);
-        createUserInbox(OTHER_AT_JAMES);
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT)
+            .awaitSent(awaitAtMostOneMinute);
 
-        dataProbe.addAddressMapping("touser", JAMES_APACHE_ORG, ANY_AT_JAMES);
-        dataProbe.addAddressMapping("touser", JAMES_APACHE_ORG, OTHER_AT_JAMES);
-
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(ANY_AT_JAMES, PASSWORD));
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(OTHER_AT_JAMES, PASSWORD));
-        }
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(ANY_AT_JAMES, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(OTHER_AT_JAMES, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
     @Test
     public void rrtServiceShouldNotDeliverEmailToRecipientWhenHaveMappingRecipients() throws Exception {
-        dataProbe.addUser(FROM, PASSWORD);
+        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, ANY_AT_JAMES);
+        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, OTHER_AT_JAMES);
 
-        createUserInbox(RECIPIENT);
-        createUserInbox(ANY_AT_JAMES);
-        createUserInbox(OTHER_AT_JAMES);
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT)
+            .awaitSent(awaitAtMostOneMinute);
 
-        dataProbe.addAddressMapping("touser", JAMES_APACHE_ORG, ANY_AT_JAMES);
-        dataProbe.addAddressMapping("touser", JAMES_APACHE_ORG, OTHER_AT_JAMES);
-
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userDoesNotReceiveMessage(RECIPIENT, PASSWORD));
-        }
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(RECIPIENT, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitNoMessage(awaitAtMostOneMinute);
     }
 
     @Test
     public void rrtServiceShouldDeliverEmailToRecipientOnLocalWhenMappingContainsNonDomain() throws Exception {
         String nonDomainUser = "nondomain";
         String localUser = nonDomainUser + "@" + dataProbe.getDefaultDomain();
+        dataProbe.addUser(localUser, PASSWORD);
 
-        dataProbe.addUser(FROM, PASSWORD);
+        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, nonDomainUser);
+        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, OTHER_AT_JAMES);
 
-        createUserInbox(localUser);
-        createUserInbox(OTHER_AT_JAMES);
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT)
+            .awaitSent(awaitAtMostOneMinute);
 
-        dataProbe.addAddressMapping("touser", JAMES_APACHE_ORG, nonDomainUser);
-        dataProbe.addAddressMapping("touser", JAMES_APACHE_ORG, OTHER_AT_JAMES);
-
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(FROM, RECIPIENT);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(OTHER_AT_JAMES, PASSWORD));
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(localUser, PASSWORD));
-        }
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(localUser, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(OTHER_AT_JAMES, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
     @Test
     public void messageShouldRedirectToTheSameUserWhenDomainMapping() throws Exception {
-        dataProbe.addDomainAliasMapping(JAMES_APACHE_ORG, JAMES_ANOTHER_DOMAIN);
+        dataProbe.addDomainAliasMapping(DEFAULT_DOMAIN, JAMES_ANOTHER_DOMAIN);
+        dataProbe.addUser(ANY_AT_ANOTHER_DOMAIN, PASSWORD);
 
-        createUserInbox(ANY_AT_JAMES);
-        createUserInbox(ANY_AT_ANOTHER_DOMAIN);
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, ANY_AT_JAMES)
+            .awaitSent(awaitAtMostOneMinute);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(FROM, ANY_AT_JAMES);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(ANY_AT_ANOTHER_DOMAIN, PASSWORD));
-        }
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(ANY_AT_ANOTHER_DOMAIN, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
     }
 
     @Test
     public void messageShouldNotSendToRecipientWhenDomainMapping() throws Exception {
-        dataProbe.addDomainAliasMapping(JAMES_APACHE_ORG, JAMES_ANOTHER_DOMAIN);
+        dataProbe.addDomainAliasMapping(DEFAULT_DOMAIN, JAMES_ANOTHER_DOMAIN);
+        dataProbe.addUser(ANY_AT_ANOTHER_DOMAIN, PASSWORD);
 
-        createUserInbox(ANY_AT_JAMES);
-        createUserInbox(ANY_AT_ANOTHER_DOMAIN);
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, ANY_AT_JAMES)
+            .awaitSent(awaitAtMostOneMinute);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(FROM, ANY_AT_JAMES);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userDoesNotReceiveMessage(ANY_AT_JAMES, PASSWORD));
-        }
-    }
-
-    private void createUserInbox(String username) throws Exception {
-        dataProbe.addUser(username, PASSWORD);
-        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "INBOX");
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(ANY_AT_JAMES, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitNoMessage(awaitAtMostOneMinute);
     }
 
 }

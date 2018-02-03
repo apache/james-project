@@ -18,9 +18,11 @@
  ****************************************************************/
 package org.apache.james.dnsservice.library.netmatcher;
 
-import java.net.UnknownHostException;
-import org.apache.james.dnsservice.api.mock.DNSFixture;
 import static org.junit.Assert.assertEquals;
+
+import java.net.UnknownHostException;
+
+import org.apache.james.dnsservice.api.mock.DNSFixture;
 import org.junit.Test;
 
 /**

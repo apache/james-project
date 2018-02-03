@@ -31,6 +31,7 @@ import java.util.Enumeration;
 import java.util.UUID;
 
 import javax.activation.DataHandler;
+import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetHeaders;
@@ -52,7 +53,7 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
      * System property which tells JAMES if it should copy a message in memory
      * or via a temporary file. Default is the file
      */
-    public final static String USE_MEMORY_COPY = "james.message.usememorycopy";
+    public static final String USE_MEMORY_COPY = "james.message.usememorycopy";
 
     /**
      * Can provide an input stream to the data
@@ -168,8 +169,9 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
      */
     @Override
     protected void updateMessageID() throws MessagingException {
-        if (getMessageID() == null)
+        if (getMessageID() == null) {
             super.updateMessageID();
+        }
     }
 
     /**
@@ -310,11 +312,11 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
                 } else {
                     // The headers was modified so we need to call saveChanges() just to be sure
                     // See JAMES-1320
-                    if (!saved)
+                    if (!saved) {
                         saveChanges();
+                    }
                     myHeaders = headers;
                 }
-                @SuppressWarnings("unchecked")
                 Enumeration<String> filteredHeaders = myHeaders.getNonMatchingHeaderLines(ignoreList);
                 IOUtils.copy(new InternetHeadersInputStream(filteredHeaders), headerOs);
                 IOUtils.copy(in, bodyOs);
@@ -324,15 +326,15 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
         } else {
             // save the changes as the message was modified
             // See JAMES-1320
-            if (!saved)
+            if (!saved) {
                 saveChanges();
+            }
 
             // MimeMessageUtil.writeToInternal(this, headerOs, bodyOs,
             // ignoreList);
             if (headers == null) {
                 loadHeaders();
             }
-            @SuppressWarnings("unchecked")
             Enumeration<String> filteredHeaders = headers.getNonMatchingHeaderLines(ignoreList);
             IOUtils.copy(new InternetHeadersInputStream(filteredHeaders), headerOs);
 
@@ -450,34 +452,30 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
         return headers.getHeader(name, delimiter);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration<String> getAllHeaders() throws MessagingException {
+    public Enumeration<Header> getAllHeaders() throws MessagingException {
         if (headers == null) {
             loadHeaders();
         }
         return headers.getAllHeaders();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration<String> getMatchingHeaders(String[] names) throws MessagingException {
+    public Enumeration<Header> getMatchingHeaders(String[] names) throws MessagingException {
         if (headers == null) {
             loadHeaders();
         }
         return headers.getMatchingHeaders(names);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration<String> getNonMatchingHeaders(String[] names) throws MessagingException {
+    public Enumeration<Header> getNonMatchingHeaders(String[] names) throws MessagingException {
         if (headers == null) {
             loadHeaders();
         }
         return headers.getNonMatchingHeaders(names);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Enumeration<String> getAllHeaderLines() throws MessagingException {
         if (headers == null) {
@@ -486,7 +484,6 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
         return headers.getAllHeaderLines();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Enumeration<String> getMatchingHeaderLines(String[] names) throws MessagingException {
         if (headers == null) {
@@ -495,7 +492,6 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
         return headers.getMatchingHeaderLines(names);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Enumeration<String> getNonMatchingHeaderLines(String[] names) throws MessagingException {
         if (headers == null) {

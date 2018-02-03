@@ -77,8 +77,7 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
 
         try {
             addProtocolLinesFromStream(is, session, fileName);
-        }
-        finally {
+        } finally {
             IOUtils.closeQuietly(is);
         }
     }
@@ -104,54 +103,49 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
             while ((next = reader.readLine()) != null) {
                 String location = fileName + ":" + lineNumber;
                 if (SERVER_CONTINUATION_TAG.equals(next)) {
-                    session.CONT(sessionNumber);
-                }
-                else if (next.startsWith(CLIENT_TAG)) {
+                    session.cont(sessionNumber);
+                } else if (next.startsWith(CLIENT_TAG)) {
                     String clientMsg = "";
                     if (next.length() > 3) {
                         clientMsg = next.substring(3);
                     }
-                    session.CL(sessionNumber, clientMsg);
+                    session.cl(sessionNumber, clientMsg);
                     lastClientMsg = clientMsg;
-                }
-                else if (next.startsWith(SERVER_TAG)) {
+                } else if (next.startsWith(SERVER_TAG)) {
                     String serverMsg = "";
                     if (next.length() > 3) {
                         serverMsg = next.substring(3);
                     }
-                    session.SL(sessionNumber, serverMsg, location, lastClientMsg);
-                }
-                else if (next.startsWith(WAIT)) {
+                    session.sl(sessionNumber, serverMsg, location, lastClientMsg);
+                } else if (next.startsWith(WAIT)) {
                     if (next.length() > 5) {
-                        session.WAIT(sessionNumber, Long.valueOf(next.substring(5)));
+                        session.wait(sessionNumber, Long.valueOf(next.substring(5)));
                     } else {
                         throw new Exception("Invalid line length on WAIT instruction : " + next);
                     }
-                }
-                else if (next.startsWith(LOG)) {
+                } else if (next.startsWith(LOG)) {
                     String logInstruction = next.substring(4);
                     if (logInstruction.startsWith(DEBUG)) {
-                        session.LOG(sessionNumber, ProtocolSession.LolLevel.Debug, logInstruction.substring(6));
+                        session.log(sessionNumber, ProtocolSession.LolLevel.Debug, logInstruction.substring(6));
                     } else if (logInstruction.startsWith(INFO)) {
-                        session.LOG(sessionNumber, ProtocolSession.LolLevel.Info, logInstruction.substring(5));
+                        session.log(sessionNumber, ProtocolSession.LolLevel.Info, logInstruction.substring(5));
                     } else if (logInstruction.startsWith(WARN)) {
-                        session.LOG(sessionNumber, ProtocolSession.LolLevel.Warn, logInstruction.substring(5));
+                        session.log(sessionNumber, ProtocolSession.LolLevel.Warn, logInstruction.substring(5));
                     } else if (logInstruction.startsWith(ERR)) {
-                        session.LOG(sessionNumber, ProtocolSession.LolLevel.Err, logInstruction.substring(4));
+                        session.log(sessionNumber, ProtocolSession.LolLevel.Err, logInstruction.substring(4));
                     } else {
                         throw new Exception("Unrecognized log level for " + next);
                     }
-                }
-                else if (next.startsWith(REINIT)) {
-                    session.REINIT(sessionNumber);
-                }
-                else if (next.startsWith(OPEN_UNORDERED_BLOCK_TAG)) {
+                } else if (next.startsWith(REINIT)) {
+                    session.reinit(sessionNumber);
+                } else if (next.startsWith(OPEN_UNORDERED_BLOCK_TAG)) {
                     List<String> unorderedLines = new ArrayList<>(5);
                     next = reader.readLine();
 
-                    if (next == null)
+                    if (next == null) {
                         throw new Exception("Readline doesn't contain any data, but must not be 'null' (linenumber="
-                                + lineNumber);
+                            + lineNumber);
+                    }
 
                     while (!next.startsWith(CLOSE_UNORDERED_BLOCK_TAG)) {
                         if (!next.startsWith(SERVER_TAG)) {
@@ -162,31 +156,28 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
                         next = reader.readLine();
                         lineNumber++;
 
-                        if (next == null)
+                        if (next == null) {
                             throw new Exception(
-                                    "Readline doesn't contain any data, but must not be 'null' (linenumber="
-                                            + lineNumber);
+                                "Readline doesn't contain any data, but must not be 'null' (linenumber="
+                                    + lineNumber);
+                        }
 
                     }
 
-                    session.SUB(sessionNumber, unorderedLines, location, lastClientMsg);
-                }
-                else if (next.startsWith(COMMENT_TAG) || next.trim().length() == 0) {
+                    session.sub(sessionNumber, unorderedLines, location, lastClientMsg);
+                } else if (next.startsWith(COMMENT_TAG) || next.trim().length() == 0) {
                     // ignore these lines.
-                }
-                else if (next.startsWith(SESSION_TAG)) {
+                } else if (next.startsWith(SESSION_TAG)) {
                     String number = next.substring(SESSION_TAG.length()).trim();
                     if (number.length() == 0) {
                         throw new Exception("No session number specified");
                     }
                     sessionNumber = Integer.parseInt(number);
-                }
-                else if (next.startsWith(TIMER)) {
+                } else if (next.startsWith(TIMER)) {
                     TimerCommand timerCommand = TimerCommand.from(next.substring(TIMER_COMMAND_START, TIMER_COMMAND_END));
                     String timerName = next.substring(TIMER_COMMAND_END + 1);
-                    session.TIMER(timerCommand, timerName);
-                }
-                else {
+                    session.timer(timerCommand, timerName);
+                } else {
                     String prefix = next;
                     if (next.length() > 3) {
                         prefix = next.substring(0, 3);
@@ -195,8 +186,7 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
                 }
                 lineNumber++;
             }
-        }
-        finally {
+        } finally {
             IOUtils.closeQuietly(reader);
         }
     }

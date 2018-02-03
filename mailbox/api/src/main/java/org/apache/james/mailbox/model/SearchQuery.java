@@ -791,8 +791,9 @@ public class SearchQuery implements Serializable {
      * @param sorts
      */
     public void setSorts(List<Sort> sorts) {
-        if (sorts == null || sorts.isEmpty())
+        if (sorts == null || sorts.isEmpty()) {
             throw new IllegalArgumentException("There must be at least one Sort");
+        }
         this.sorts = sorts;
     }
 
@@ -991,7 +992,7 @@ public class SearchQuery implements Serializable {
     /**
      * Marker superclass for criteria.
      */
-    public static abstract class Criterion implements Serializable {
+    public abstract static class Criterion implements Serializable {
         private static final long serialVersionUID = 1L;
 
     }
@@ -1931,15 +1932,19 @@ public class SearchQuery implements Serializable {
 
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
+            if (this == obj) {
                 return true;
-            if (obj == null)
+            }
+            if (obj == null) {
                 return false;
-            if (getClass() != obj.getClass())
+            }
+            if (getClass() != obj.getClass()) {
                 return false;
+            }
             final InOperator other = (InOperator) obj;
-            if (!Arrays.equals(range, other.range))
+            if (!Arrays.equals(range, other.range)) {
                 return false;
+            }
             return true;
         }
 

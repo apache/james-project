@@ -28,7 +28,7 @@ import org.apache.james.imap.message.response.ExistsResponse;
 
 public class ExistsResponseEncoder extends AbstractChainedImapEncoder {
    
-	public static final String EXISTS = "EXISTS";
+    public static final String EXISTS = "EXISTS";
 
     public ExistsResponseEncoder(ImapEncoder next) {
         super(next);

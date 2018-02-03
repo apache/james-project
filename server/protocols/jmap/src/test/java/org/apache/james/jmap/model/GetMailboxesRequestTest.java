@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableList;
 
 public class GetMailboxesRequestTest {
 
-    @Test(expected=NotImplementedException.class)
+    @Test(expected = NotImplementedException.class)
     public void builderShouldThrowWhenAccountId() {
         GetMailboxesRequest.builder().accountId("1");
     }

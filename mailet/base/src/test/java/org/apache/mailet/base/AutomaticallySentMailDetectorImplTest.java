@@ -21,7 +21,6 @@ package org.apache.mailet.base;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.ByteArrayInputStream;
 import java.util.Collections;
 import java.util.Properties;
 
@@ -32,9 +31,9 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
-import org.apache.james.core.MailAddress;
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.MimeMessageBuilder;
+import org.apache.mailet.base.test.MimeMessageUtil;
 import org.junit.Test;
 
 public class AutomaticallySentMailDetectorImplTest {
@@ -54,7 +53,8 @@ public class AutomaticallySentMailDetectorImplTest {
             new AutomaticallySentMailDetectorImpl()
                 .isAutomaticallySent(FakeMail.builder()
                     .sender(MailAddressFixture.ANY_AT_JAMES)
-                    .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties()), new ByteArrayInputStream("".getBytes())))
+                    .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                        .setText("any"))
                     .build()))
             .isFalse();
     }
@@ -62,7 +62,7 @@ public class AutomaticallySentMailDetectorImplTest {
     @Test
     public void ownerIsAMailingListPrefix() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
-                .sender(new MailAddress("owner-list@any.com"))
+                .sender("owner-list@any.com")
                 .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMailingList(fakeMail)).isTrue();
@@ -71,7 +71,7 @@ public class AutomaticallySentMailDetectorImplTest {
     @Test
     public void requestIsAMailingListPrefix() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
-                .sender(new MailAddress("list-request@any.com"))
+                .sender("list-request@any.com")
                 .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMailingList(fakeMail)).isTrue();
@@ -80,7 +80,7 @@ public class AutomaticallySentMailDetectorImplTest {
     @Test
     public void mailerDaemonIsReserved() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
-                .sender(new MailAddress("MAILER-DAEMON@any.com"))
+                .sender("MAILER-DAEMON@any.com")
                 .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMailingList(fakeMail)).isTrue();
@@ -89,7 +89,7 @@ public class AutomaticallySentMailDetectorImplTest {
     @Test
     public void listservIsReserved() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
-                .sender(new MailAddress("LISTSERV@any.com"))
+                .sender("LISTSERV@any.com")
                 .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMailingList(fakeMail)).isTrue();
@@ -98,7 +98,7 @@ public class AutomaticallySentMailDetectorImplTest {
     @Test
     public void majordomoIsReserved() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
-                .sender(new MailAddress("majordomo@any.com"))
+                .sender("majordomo@any.com")
                 .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMailingList(fakeMail)).isTrue();
@@ -106,47 +106,43 @@ public class AutomaticallySentMailDetectorImplTest {
 
     @Test
     public void listIdShouldBeDetected() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setHeader("List-Id", "any");
         FakeMail fakeMail = FakeMail.builder()
-                .sender(new MailAddress("any@any.com"))
-                .mimeMessage(message)
-                .build();
+            .sender("any@any.com")
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader("List-Id", "any"))
+            .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMailingList(fakeMail)).isTrue();
     }
 
     @Test
     public void listHelpShouldBeDetected() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setHeader("List-Help", "any");
         FakeMail fakeMail = FakeMail.builder()
-                .sender(new MailAddress("any@any.com"))
-                .mimeMessage(message)
-                .build();
+            .sender("any@any.com")
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader("List-Help", "any"))
+            .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMailingList(fakeMail)).isTrue();
     }
 
     @Test
     public void listSubscribeShouldBeDetected() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setHeader("List-Subscribe", "any");
         FakeMail fakeMail = FakeMail.builder()
-                .sender(new MailAddress("any@any.com"))
-                .mimeMessage(message)
-                .build();
+            .sender("any@any.com")
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader("List-Subscribe", "any"))
+            .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMailingList(fakeMail)).isTrue();
     }
 
     @Test
     public void listUnsubscribeShouldBeDetected() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setHeader("List-Unsubscribe", "any");
         FakeMail fakeMail = FakeMail.builder()
-                .sender(new MailAddress("any@any.com"))
-                .mimeMessage(message)
+                .sender("any@any.com")
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .addHeader("List-Unsubscribe", "any"))
                 .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMailingList(fakeMail)).isTrue();
@@ -154,36 +150,35 @@ public class AutomaticallySentMailDetectorImplTest {
 
     @Test
     public void listPostShouldBeDetected() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setHeader("List-Post", "any");
         FakeMail fakeMail = FakeMail.builder()
-                .sender(new MailAddress("any@any.com"))
-                .mimeMessage(message)
-                .build();
+            .sender("any@any.com")
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader("List-Post", "any"))
+            .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMailingList(fakeMail)).isTrue();
     }
 
     @Test
     public void listOwnerShouldBeDetected() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setHeader("List-Owner", "any");
         FakeMail fakeMail = FakeMail.builder()
-                .sender(new MailAddress("any@any.com"))
-                .mimeMessage(message)
-                .build();
+            .sender("any@any.com")
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader("List-Owner", "any"))
+            .build();
+
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMailingList(fakeMail)).isTrue();
     }
 
     @Test
     public void listArchiveShouldBeDetected() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setHeader("List-Archive", "any");
         FakeMail fakeMail = FakeMail.builder()
-                .sender(new MailAddress("any@any.com"))
-                .mimeMessage(message)
-                .build();
+            .sender("any@any.com")
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader("List-Archive", "any"))
+            .build();
+
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMailingList(fakeMail)).isTrue();
     }
@@ -191,8 +186,8 @@ public class AutomaticallySentMailDetectorImplTest {
     @Test
     public void normalMailShouldNotBeIdentifiedAsMailingList() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
-                .sender(new MailAddress("any@any.com"))
-                .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties())))
+                .sender("any@any.com")
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
                 .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isMailingList(fakeMail)).isFalse();
@@ -201,7 +196,7 @@ public class AutomaticallySentMailDetectorImplTest {
     @Test
     public void isAutoSubmittedShouldNotMatchNonAutoSubmittedMails() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
-                .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties())))
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
                 .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isAutoSubmitted(fakeMail)).isFalse();
@@ -209,11 +204,10 @@ public class AutomaticallySentMailDetectorImplTest {
 
     @Test
     public void isAutoSubmittedShouldBeDetected() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setHeader("Auto-Submitted", "auto-replied");
         FakeMail fakeMail = FakeMail.builder()
-                .sender(new MailAddress("any@any.com"))
-                .mimeMessage(message)
+                .sender("any@any.com")
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .addHeader("Auto-Submitted", "auto-replied"))
                 .build();
 
         assertThat(new AutomaticallySentMailDetectorImpl().isAutoSubmitted(fakeMail)).isTrue();
@@ -235,7 +229,7 @@ public class AutomaticallySentMailDetectorImplTest {
         message.setContent(multipart);
         
         FakeMail fakeMail = FakeMail.builder()
-                .sender(new MailAddress("any@any.com"))
+                .sender("any@any.com")
                 .mimeMessage(message)
                 .build();
 
@@ -244,7 +238,7 @@ public class AutomaticallySentMailDetectorImplTest {
 
     @Test
     public void isMdnSentAutomaticallyShouldNotFilterManuallySentMdn() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        MimeMessage message = MimeMessageUtil.defaultMimeMessage();
         MimeMultipart multipart = new MimeMultipart();
         MimeBodyPart scriptPart = new MimeBodyPart();
         scriptPart.setDataHandler(
@@ -258,7 +252,7 @@ public class AutomaticallySentMailDetectorImplTest {
         message.setContent(multipart);
         
         FakeMail fakeMail = FakeMail.builder()
-                .sender(new MailAddress("any@any.com"))
+                .sender("any@any.com")
                 .mimeMessage(message)
                 .build();
 
@@ -267,7 +261,7 @@ public class AutomaticallySentMailDetectorImplTest {
 
     @Test
     public void isMdnSentAutomaticallyShouldManageItsMimeType() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        MimeMessage message = MimeMessageUtil.defaultMimeMessage();
         MimeMultipart multipart = new MimeMultipart();
         MimeBodyPart scriptPart = new MimeBodyPart();
         scriptPart.setDataHandler(
@@ -281,7 +275,7 @@ public class AutomaticallySentMailDetectorImplTest {
         message.setContent(multipart);
         
         FakeMail fakeMail = FakeMail.builder()
-                .sender(new MailAddress("any@any.com"))
+                .sender("any@any.com")
                 .mimeMessage(message)
                 .build();
 
@@ -292,13 +286,11 @@ public class AutomaticallySentMailDetectorImplTest {
     public void isMdnSentAutomaticallyShouldNotThrowOnBodyPartsWithManyLines() throws Exception {
         int mime4jDefaultMaxHeaderCount = 1000;
         int headerCount = mime4jDefaultMaxHeaderCount + 10;
-        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+        MimeMessageBuilder message = MimeMessageBuilder.mimeMessageBuilder()
             .addHeaders()
             .setMultipartWithBodyParts(MimeMessageBuilder.bodyPartBuilder()
                 .addHeaders(Collections.nCopies(headerCount, new MimeMessageBuilder.Header("name", "value")))
-                .data("The body part have 1010 headers, which overpass MIME4J default limits")
-                .build())
-            .build();
+                .data("The body part have 1010 headers, which overpass MIME4J default limits"));
 
         FakeMail fakeMail = FakeMail.builder()
             .sender(MailAddressFixture.ANY_AT_JAMES)

@@ -30,6 +30,8 @@ import static org.mockito.Mockito.when;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.acl.GroupMembershipResolver;
+import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.DifferentDomainException;
@@ -43,6 +45,7 @@ import org.apache.james.mailbox.model.MailboxACL.ACLCommand;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
@@ -54,7 +57,8 @@ public class StoreRightManagerTest {
     private static final long UID_VALIDITY = 3421L;
     private StoreRightManager storeRightManager;
     private MockMailboxSession aliceSession;
-
+    private MailboxACLResolver mailboxAclResolver;
+    private GroupMembershipResolver groupMembershipResolver;
     private MailboxMapper mockedMailboxMapper;
 
     @Before
@@ -62,12 +66,16 @@ public class StoreRightManagerTest {
         aliceSession = new MockMailboxSession(MailboxFixture.ALICE);
         MailboxSessionMapperFactory mockedMapperFactory = mock(MailboxSessionMapperFactory.class);
         mockedMailboxMapper = mock(MailboxMapper.class);
+        mailboxAclResolver = new UnionMailboxACLResolver();
+        groupMembershipResolver = new SimpleGroupMembershipResolver();
+        MailboxEventDispatcher dispatcher = mock(MailboxEventDispatcher.class);
         when(mockedMapperFactory.getMailboxMapper(aliceSession))
             .thenReturn(mockedMailboxMapper);
 
         storeRightManager = new StoreRightManager(mockedMapperFactory,
-            new UnionMailboxACLResolver(),
-            new SimpleGroupMembershipResolver());
+                                                  mailboxAclResolver,
+                                                  groupMembershipResolver,
+                                                  dispatcher);
     }
 
     @Test

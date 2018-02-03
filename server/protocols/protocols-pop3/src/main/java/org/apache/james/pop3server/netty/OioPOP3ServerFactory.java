@@ -19,7 +19,7 @@
 
 package org.apache.james.pop3server.netty;
 
-public class OioPOP3ServerFactory extends POP3ServerFactory{
+public class OioPOP3ServerFactory extends POP3ServerFactory {
 
     @Override
     protected POP3Server createServer() {

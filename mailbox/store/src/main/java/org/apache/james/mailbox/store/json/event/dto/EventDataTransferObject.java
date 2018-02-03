@@ -19,12 +19,13 @@
 
 package org.apache.james.mailbox.store.json.event.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.james.mailbox.MessageUid;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class EventDataTransferObject {
 

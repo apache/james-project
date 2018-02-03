@@ -20,7 +20,7 @@
 package org.apache.james.mailbox.store.quota;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -76,34 +76,26 @@ public class QuotaCheckerTest {
         assertThat(quotaChecker.tryAddition(90, 900)).isTrue();
     }
 
-    @Test(expected = OverQuotaException.class)
+    @Test
     public void quotaCheckerShouldThrowOnExceededMessages() throws MailboxException {
-        QuotaChecker quotaChecker;
-        try {
-            when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
-            when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(QuotaImpl.quota(10, 100));
-            when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(QuotaImpl.quota(100, 1000));
-            quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
-        } catch(Exception e) {
-            fail("Exception caught : ", e);
-            return;
-        }
-        quotaChecker.tryAddition(91, 899);
+        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
+        when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(QuotaImpl.quota(10, 100));
+        when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(QuotaImpl.quota(100, 1000));
+        QuotaChecker quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
+
+        assertThatThrownBy(() -> quotaChecker.tryAddition(91, 899))
+            .isInstanceOf(OverQuotaException.class);
     }
 
-    @Test(expected = OverQuotaException.class)
+    @Test
     public void quotaCheckerShouldThrowOnExceededStorage() throws MailboxException {
-        QuotaChecker quotaChecker;
-        try {
-            when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
-            when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(QuotaImpl.quota(10, 100));
-            when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(QuotaImpl.quota(100, 1000));
-            quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
-        } catch(Exception e) {
-            fail("Exception caught : ", e);
-            return;
-        }
-        quotaChecker.tryAddition(89, 901);
+        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
+        when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(QuotaImpl.quota(10, 100));
+        when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(QuotaImpl.quota(100, 1000));
+        QuotaChecker quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
+
+        assertThatThrownBy(() -> quotaChecker.tryAddition(89, 901))
+            .isInstanceOf(OverQuotaException.class);
     }
 
 }

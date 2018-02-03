@@ -28,6 +28,7 @@ import javax.inject.Inject;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -149,4 +150,7 @@ public class MailboxEventDispatcher {
         listener.event(eventFactory.mailboxAdded(session, mailbox));
     }
 
+    public void aclUpdated(MailboxSession session, MailboxPath mailboxPath, ACLDiff aclDiff) {
+        listener.event(eventFactory.aclUpdated(session, mailboxPath, aclDiff));
+    }
 }

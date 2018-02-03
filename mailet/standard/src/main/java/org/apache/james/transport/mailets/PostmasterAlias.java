@@ -17,26 +17,24 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
 package org.apache.james.transport.mailets;
 
 import java.util.Collection;
-import java.util.Vector;
+import java.util.stream.Stream;
 
 import javax.mail.MessagingException;
 
-import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
-import org.apache.mailet.MailetContext;
+import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+
+import com.github.steveash.guavate.Guavate;
 
 /**
  * Rewrites recipient addresses to make sure email for the postmaster is
  * always handled.  This mailet is silently inserted at the top of the root
  * spool processor.  All recipients mapped to postmaster@<servernames> are
  * changed to the postmaster account as specified in the server conf.
- *
  */
 public class PostmasterAlias extends GenericMailet {
 
@@ -49,28 +47,26 @@ public class PostmasterAlias extends GenericMailet {
      * @throws MessagingException if an error is encountered while modifying the message
      */
     public void service(Mail mail) throws MessagingException {
-        Collection<MailAddress> recipients = mail.getRecipients();
-        Collection<MailAddress> recipientsToRemove = null;
-        MailetContext mailetContext = getMailetContext();
-        boolean postmasterAddressed = false;
+        Collection<MailAddress> postmasterAliases = mail.getRecipients()
+            .stream()
+            .filter(this::isPostmasterAlias)
+            .collect(Guavate.toImmutableList());
 
-        for (MailAddress addr : recipients) {
-            if (addr.getLocalPart().equalsIgnoreCase("postmaster") &&
-                    mailetContext.isLocalServer(addr.getDomain()) && !mailetContext.isLocalEmail(addr)) {
-                //Should remove this address... we want to replace it with
-                //  the server's postmaster address
-                if (recipientsToRemove == null) {
-                    recipientsToRemove = new Vector<>();
-                }
-                recipientsToRemove.add(addr);
-                //Flag this as having found the postmaster
-                postmasterAddressed = true;
-            }
+        if (!postmasterAliases.isEmpty()) {
+            mail.setRecipients(
+                Stream.concat(
+                    mail.getRecipients()
+                        .stream()
+                        .filter(address -> !postmasterAliases.contains(address)),
+                    Stream.of(getMailetContext().getPostmaster()))
+                .collect(Guavate.toImmutableSet()));
         }
-        if (postmasterAddressed) {
-            recipients.removeAll(recipientsToRemove);
-            recipients.add(getMailetContext().getPostmaster());
-        }
+    }
+
+    private boolean isPostmasterAlias(MailAddress addr) {
+        return addr.getLocalPart().equalsIgnoreCase("postmaster")
+            && getMailetContext().isLocalServer(addr.getDomain())
+            && !getMailetContext().isLocalEmail(addr);
     }
 
     /**

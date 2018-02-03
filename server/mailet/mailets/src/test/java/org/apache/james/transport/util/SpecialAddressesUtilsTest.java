@@ -21,21 +21,22 @@ package org.apache.james.transport.util;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
-import javax.mail.Session;
+
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.transport.mailets.redirect.RedirectNotify;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.MailAddressFixture;
-import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.MimeMessageUtil;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -69,7 +70,7 @@ public class SpecialAddressesUtilsTest {
         FakeMail mail = FakeMail.builder()
                 .build();
 
-        Collection<MailAddress> addresses = testee.replaceSpecialAddresses(mail, ImmutableList.<MailAddress> of());
+        Collection<MailAddress> addresses = testee.replaceSpecialAddresses(mail, ImmutableList.<MailAddress>of());
 
         assertThat(addresses).isEmpty();
     }
@@ -124,8 +125,7 @@ public class SpecialAddressesUtilsTest {
 
     @Test
     public void replaceMailAddressesShouldReturnEmptyWhenAddressesMatchReplyToAndReplyToIsNull() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        FakeMail mail = FakeMail.from(message);
+        FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder());
 
         Collection<MailAddress> addresses = testee.replaceSpecialAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO));
 
@@ -134,7 +134,7 @@ public class SpecialAddressesUtilsTest {
 
     @Test
     public void replaceMailAddressesShouldReturnReplyToWhenAddressesMatchReplyTo() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        MimeMessage message = MimeMessageUtil.defaultMimeMessage();
         message.setReplyTo(InternetAddress.parse(MailAddressFixture.ANY_AT_JAMES.toString() + ", " + MailAddressFixture.OTHER_AT_JAMES.toString()));
         FakeMail mail = FakeMail.from(message);
 
@@ -151,7 +151,7 @@ public class SpecialAddressesUtilsTest {
         MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         FakeMail mail = FakeMail.builder()
                 .sender(sender)
-                .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties())))
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
                 .build();
 
         Collection<MailAddress> addresses = testee.replaceSpecialAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO));
@@ -255,7 +255,7 @@ public class SpecialAddressesUtilsTest {
         FakeMail mail = FakeMail.builder()
                 .build();
 
-        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.<InternetAddress> of());
+        List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.<InternetAddress>of());
 
         assertThat(addresses).isEmpty();
     }
@@ -290,9 +290,8 @@ public class SpecialAddressesUtilsTest {
     public void replaceInternetAddressesShouldReturnFromWhenAddressesMatchFrom() throws Exception {
         MailAddress from = MailAddressFixture.ANY_AT_JAMES;
         MailAddress from2 = MailAddressFixture.OTHER_AT_JAMES;
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.addFrom(new InternetAddress[] { from.toInternetAddress(), from2.toInternetAddress() });
-        FakeMail mail = FakeMail.from(message);
+        FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder()
+            .addFrom(from.toInternetAddress(), from2.toInternetAddress()));
 
         List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.FROM.toInternetAddress()));
 
@@ -303,7 +302,7 @@ public class SpecialAddressesUtilsTest {
     public void replaceInternetAddressesShouldReturnSenderWhenAddressesMatchFromAndNoFrom() throws Exception {
         MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         FakeMail mail = FakeMail.builder()
-                .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties())))
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
                 .sender(sender)
                 .build();
 
@@ -324,8 +323,7 @@ public class SpecialAddressesUtilsTest {
 
     @Test
     public void replaceInternetAddressesShouldReturnEmptyWhenAddressesMatchReplyToAndReplyToIsNull() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        FakeMail mail = FakeMail.from(message);
+        FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder());
 
         List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO.toInternetAddress()));
 
@@ -334,7 +332,7 @@ public class SpecialAddressesUtilsTest {
 
     @Test
     public void replaceInternetAddressesShouldReturnReplyToWhenAddressesMatchReplyTo() throws Exception {
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        MimeMessage message = MimeMessageUtil.defaultMimeMessage();
         message.setReplyTo(InternetAddress.parse(MailAddressFixture.ANY_AT_JAMES.toString() + ", " + MailAddressFixture.OTHER_AT_JAMES.toString()));
         FakeMail mail = FakeMail.from(message);
 
@@ -351,7 +349,7 @@ public class SpecialAddressesUtilsTest {
         MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         FakeMail mail = FakeMail.builder()
                 .sender(sender)
-                .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties())))
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
                 .build();
 
         List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO.toInternetAddress()));
@@ -385,9 +383,8 @@ public class SpecialAddressesUtilsTest {
     public void replaceInternetAddressesShouldReturnToWhenAddressesMatchRecipients() throws Exception {
         MailAddress to = MailAddressFixture.ANY_AT_JAMES;
         MailAddress to2 = MailAddressFixture.OTHER_AT_JAMES;
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.addHeader(RFC2822Headers.TO, MailAddressFixture.ANY_AT_JAMES.toString() + ", " + MailAddressFixture.OTHER_AT_JAMES.toString());
-        FakeMail mail = FakeMail.from(message);
+        FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder()
+            .addToRecipient(to.asString(), to2.asString()));
 
         List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.RECIPIENTS.toInternetAddress()));
 
@@ -398,9 +395,8 @@ public class SpecialAddressesUtilsTest {
     public void replaceInternetAddressesShouldReturnToWhenAddressesMatchTo() throws Exception {
         MailAddress to = MailAddressFixture.ANY_AT_JAMES;
         MailAddress to2 = MailAddressFixture.OTHER_AT_JAMES;
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.addHeader(RFC2822Headers.TO, MailAddressFixture.ANY_AT_JAMES.toString() + ", " + MailAddressFixture.OTHER_AT_JAMES);
-        FakeMail mail = FakeMail.from(message);
+        FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder()
+            .addToRecipient(to.asString(), to2.asString()));
 
         List<MailAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.TO.toInternetAddress()));
 

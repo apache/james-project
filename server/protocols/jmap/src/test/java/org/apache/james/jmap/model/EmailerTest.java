@@ -26,27 +26,27 @@ import org.junit.Test;
 
 public class EmailerTest {
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenNameIsNull() {
         Emailer.builder().build();
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenEmailIsNull() {
         Emailer.builder().build();
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenNameIsEmpty() {
         Emailer.builder().name("").email("email@domain").build();
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenEmailIsEmpty() {
         Emailer.builder().name("name").email("").build();
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenEmailWithoutArobase() {
         Emailer.builder().name("name").email("email.without.arobase").build();
     }

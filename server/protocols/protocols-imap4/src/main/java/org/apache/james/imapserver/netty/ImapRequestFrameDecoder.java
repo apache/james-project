@@ -51,10 +51,10 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
     private final ImapDecoder decoder;
     private final int inMemorySizeLimit;
     private final int literalSizeLimit;
-    private final static String NEEDED_DATA = "NEEDED_DATA";
-    private final static String STORED_DATA = "STORED_DATA";
-    private final static String WRITTEN_DATA = "WRITTEN_DATA";
-    private final static String OUTPUT_STREAM = "OUTPUT_STREAM";
+    private static final String NEEDED_DATA = "NEEDED_DATA";
+    private static final String STORED_DATA = "STORED_DATA";
+    private static final String WRITTEN_DATA = "WRITTEN_DATA";
+    private static final String OUTPUT_STREAM = "OUTPUT_STREAM";
 
     public ImapRequestFrameDecoder(ImapDecoder decoder, int inMemorySizeLimit, int literalSizeLimit) {
         this.decoder = decoder;
@@ -175,12 +175,12 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
                 
                 // Code portion commented further to JAMES-1436.
                 // TODO Remove if no negative feedback on JAMES-1436.
-//                ChannelHandler handler = (ChannelHandler) attachment.remove(FRAMER);
-//                if (handler != null) {
-//                    channel.getPipeline().addFirst(FRAMER, handler);
-//                }
+                //ChannelHandler handler = (ChannelHandler) attachment.remove(FRAMER);
+                //if (handler != null) {
+                //    channel.getPipeline().addFirst(FRAMER, handler);
+                //}
                 
-                ((SwitchableDelimiterBasedFrameDecoder) channel.getPipeline().get(FRAMER)).enableFraming();
+                ((SwitchableLineBasedFrameDecoder) channel.getPipeline().get(FRAMER)).enableFraming();
                 
                 attachment.clear();
                 return message;
@@ -196,11 +196,11 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
                 
                 // Code portion commented further to JAMES-1436.
                 // TODO Remove if no negative feedback on JAMES-1436.
-//                ChannelHandler handler = channel.getPipeline().remove(FRAMER);
-//                attachment.put(FRAMER, handler);
+                //ChannelHandler handler = channel.getPipeline().remove(FRAMER);
+                //attachment.put(FRAMER, handler);
 
                 // SwitchableDelimiterBasedFrameDecoder added further to JAMES-1436.
-                final SwitchableDelimiterBasedFrameDecoder framer = (SwitchableDelimiterBasedFrameDecoder) pipeline.get(FRAMER);
+                final SwitchableLineBasedFrameDecoder framer = (SwitchableLineBasedFrameDecoder) pipeline.get(FRAMER);
                 framer.disableFraming(framerContext);
                 
                 buffer.resetReaderIndex();

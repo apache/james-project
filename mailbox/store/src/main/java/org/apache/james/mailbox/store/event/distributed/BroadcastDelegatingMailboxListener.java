@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 
 public class BroadcastDelegatingMailboxListener implements DistributedDelegatingMailboxListener {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(BroadcastDelegatingMailboxListener.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(BroadcastDelegatingMailboxListener.class);
 
     private final MailboxListenerRegistry mailboxListenerRegistry;
     private final Publisher publisher;

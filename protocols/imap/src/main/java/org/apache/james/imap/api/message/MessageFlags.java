@@ -50,6 +50,7 @@ public class MessageFlags {
 
     
     public static final Flags ALL_FLAGS = new Flags();
+    
     static {
         ALL_FLAGS.add(Flags.Flag.ANSWERED);
         ALL_FLAGS.add(Flags.Flag.DELETED);

@@ -32,7 +32,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
  * 
  *
  */
-public abstract class AbstractLockingModSeqProvider implements ModSeqProvider{
+public abstract class AbstractLockingModSeqProvider implements ModSeqProvider {
 
     private final MailboxPathLocker locker;
 

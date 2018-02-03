@@ -30,7 +30,7 @@ import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.junit.After;
 import org.junit.Before;
 
-public class JPASubscriptionManagerTest extends AbstractSubscriptionManagerTest{
+public class JPASubscriptionManagerTest extends AbstractSubscriptionManagerTest {
 
     private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
     

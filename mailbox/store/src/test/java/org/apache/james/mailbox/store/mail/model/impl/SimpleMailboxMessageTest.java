@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -44,11 +45,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 
 public class SimpleMailboxMessageTest {
-    private static final Charset MESSAGE_CHARSET = Charsets.UTF_8;
+    private static final Charset MESSAGE_CHARSET = StandardCharsets.UTF_8;
     private static final String MESSAGE_CONTENT = "Simple message content without special characters";
     public static final SharedByteArrayInputStream CONTENT_STREAM = new SharedByteArrayInputStream(MESSAGE_CONTENT.getBytes(MESSAGE_CHARSET));
     private static final String MESSAGE_CONTENT_SPECIAL_CHAR = "Simple message content with special characters: \"'(§è!çà$*`";
@@ -56,8 +56,8 @@ public class SimpleMailboxMessageTest {
     public static final int BODY_START_OCTET = 0;
     public static final MessageId MESSAGE_ID = new TestMessageId.Factory().generate();
     public static final int SIZE = 1000;
-    private SimpleMailboxMessage MESSAGE;
-    private SimpleMailboxMessage MESSAGE_SPECIAL_CHAR;
+    private SimpleMailboxMessage message;
+    private SimpleMailboxMessage messageSpecialChar;
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -67,19 +67,19 @@ public class SimpleMailboxMessageTest {
 
     @Before
     public void setUp() {
-        MESSAGE = buildMessage(MESSAGE_CONTENT);
-        MESSAGE_SPECIAL_CHAR = buildMessage(MESSAGE_CONTENT_SPECIAL_CHAR);
+        this.message = buildMessage(MESSAGE_CONTENT);
+        this.messageSpecialChar = buildMessage(MESSAGE_CONTENT_SPECIAL_CHAR);
     }
 
     @Test
     public void testSize() {
-        assertThat(MESSAGE.getFullContentOctets()).isEqualTo(MESSAGE_CONTENT.length());
+        assertThat(message.getFullContentOctets()).isEqualTo(MESSAGE_CONTENT.length());
     }
 
     @Test
     public void testInputStreamSize() throws IOException {
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-            byteArrayOutputStream.write(MESSAGE.getFullContent());
+            byteArrayOutputStream.write(message.getFullContent());
             assertThat(byteArrayOutputStream.size()).isEqualTo(MESSAGE_CONTENT.getBytes(MESSAGE_CHARSET).length);
         }
     }
@@ -87,21 +87,21 @@ public class SimpleMailboxMessageTest {
     @Test
     public void testInputStreamSizeSpecialCharacters() throws IOException {
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-            byteArrayOutputStream.write(MESSAGE_SPECIAL_CHAR.getFullContent());
+            byteArrayOutputStream.write(messageSpecialChar.getFullContent());
             assertThat(byteArrayOutputStream.size()).isEqualTo(MESSAGE_CONTENT_SPECIAL_CHAR.getBytes(MESSAGE_CHARSET).length);
         }
     }
 
     @Test
     public void testFullContent() throws IOException {
-        assertThat(new String(IOUtils.toByteArray(MESSAGE.getFullContent()), MESSAGE_CHARSET)).isEqualTo(MESSAGE_CONTENT);
-        assertThat(new String(IOUtils.toByteArray(MESSAGE_SPECIAL_CHAR.getFullContent()), MESSAGE_CHARSET)).isEqualTo(MESSAGE_CONTENT_SPECIAL_CHAR);
+        assertThat(new String(IOUtils.toByteArray(message.getFullContent()), MESSAGE_CHARSET)).isEqualTo(MESSAGE_CONTENT);
+        assertThat(new String(IOUtils.toByteArray(messageSpecialChar.getFullContent()), MESSAGE_CHARSET)).isEqualTo(MESSAGE_CONTENT_SPECIAL_CHAR);
     }
 
     @Test
     public void simpleMessageShouldReturnTheSameUserFlagsThatThoseProvided() {
-        MESSAGE.setFlags(new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("mozzarela", "parmesan", "coppa", "limonchello").build());
-        assertThat(MESSAGE.createUserFlags()).containsOnly("mozzarela", "parmesan", "coppa", "limonchello");
+        message.setFlags(new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("mozzarela", "parmesan", "coppa", "limonchello").build());
+        assertThat(message.createUserFlags()).containsOnly("mozzarela", "parmesan", "coppa", "limonchello");
     }
 
     @Test
@@ -127,8 +127,8 @@ public class SimpleMailboxMessageTest {
         assertThat(copy.getMessage())
             .isEqualToIgnoringGivenFields(original.getMessage(), "content")
             .isNotSameAs(original.getMessage());
-        assertThat(IOUtils.toString(copy.getMessage().getFullContent(), Charsets.UTF_8))
-            .isEqualTo(IOUtils.toString(original.getMessage().getFullContent(), Charsets.UTF_8));
+        assertThat(IOUtils.toString(copy.getMessage().getFullContent(), StandardCharsets.UTF_8))
+            .isEqualTo(IOUtils.toString(original.getMessage().getFullContent(), StandardCharsets.UTF_8));
         assertThat(SimpleMailboxMessage.copy(TEST_ID, original).getTextualLineCount()).isEqualTo(textualLineCount);
         assertThat(SimpleMailboxMessage.copy(TEST_ID, original).getMediaType()).isEqualTo(text);
         assertThat(SimpleMailboxMessage.copy(TEST_ID, original).getSubType()).isEqualTo(plain);
@@ -192,7 +192,7 @@ public class SimpleMailboxMessageTest {
         MessageUid uid = MessageUid.of(45);
         MessageAttachment messageAttachment = MessageAttachment.builder()
             .attachment(Attachment.builder()
-                .bytes("".getBytes(Charsets.UTF_8))
+                .bytes("".getBytes(StandardCharsets.UTF_8))
                 .type("type")
                 .build())
             .name("name")
@@ -217,7 +217,7 @@ public class SimpleMailboxMessageTest {
         soft.assertThat(message.getInternalDate()).isEqualTo(internalDate);
         soft.assertThat(message.getHeaderOctets()).isEqualTo(BODY_START_OCTET);
         soft.assertThat(message.getFullContentOctets()).isEqualTo(SIZE);
-        soft.assertThat(IOUtils.toString(message.getFullContent(), Charsets.UTF_8)).isEqualTo(MESSAGE_CONTENT);
+        soft.assertThat(IOUtils.toString(message.getFullContent(), StandardCharsets.UTF_8)).isEqualTo(MESSAGE_CONTENT);
         soft.assertThat(message.createFlags()).isEqualTo(flags);
         soft.assertThat(message.getProperties()).isEqualTo(propertyBuilder.toProperties());
         soft.assertThat(message.getUid()).isEqualTo(uid);

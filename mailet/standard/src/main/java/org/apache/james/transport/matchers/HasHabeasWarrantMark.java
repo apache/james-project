@@ -26,9 +26,9 @@ import java.util.Collection;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,8 +71,7 @@ import org.slf4j.LoggerFactory;
  * </pre>
  */
 @Experimental
-public class HasHabeasWarrantMark extends GenericMatcher
-{
+public class HasHabeasWarrantMark extends GenericMatcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(HasHabeasWarrantMark.class);
 
     public static final String[][] warrantMark =
@@ -88,12 +87,11 @@ public class HasHabeasWarrantMark extends GenericMatcher
         { "X-Habeas-SWE-9", "mark in spam to <http://www.habeas.com/report/>." }, 
     };
 
-    public Collection<MailAddress> match(Mail mail) throws MessagingException
-    {
+    public Collection<MailAddress> match(Mail mail) throws MessagingException {
         MimeMessage message = mail.getMessage();
 
         //Loop through all the patterns
-        for (String[] aWarrantMark : warrantMark)
+        for (String[] aWarrantMark : warrantMark) {
             try {
                 String headerName = aWarrantMark[0];                      //Get the header name
                 String requiredValue = aWarrantMark[1];                   //Get the required value
@@ -105,11 +103,14 @@ public class HasHabeasWarrantMark extends GenericMatcher
                 // others if they want to detect and report potentially
                 // forged headers.
 
-                if (!(requiredValue.equals(headerValue))) return null;
+                if (!(requiredValue.equals(headerValue))) {
+                    return null;
+                }
             } catch (Exception e) {
-                LOGGER.info(e.toString());
+                LOGGER.info("Caught an exception while reading message", e);
                 return null;            //if we get an exception, don't validate the mark
             }
+        }
 
         // If we get here, all headers are present and match.
         return mail.getRecipients();
@@ -124,8 +125,7 @@ public class HasHabeasWarrantMark extends GenericMatcher
      * @return a String containing matcher information
      */
 
-    public String getMatcherInfo()
-    {
+    public String getMatcherInfo() {
         return "Habeas Warrant Mark Matcher (see http://www.habeas.com for details).";
     }
 }

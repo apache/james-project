@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
-import org.apache.james.mailbox.acl.PositiveUserACLChanged;
+import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -63,9 +63,10 @@ public class CassandraUserMailboxRightsDAOTest {
 
     @Test
     public void saveShouldInsertNewEntry() throws Exception {
-        testee.update(MAILBOX_ID, new PositiveUserACLChanged(
+        testee.update(MAILBOX_ID, ACLDiff.computeDiff(
             MailboxACL.EMPTY,
-            new MailboxACL(new Entry(ENTRY_KEY, RIGHTS)))).join();
+            new MailboxACL(new Entry(ENTRY_KEY, RIGHTS))))
+            .join();
 
         assertThat(testee.retrieve(USER_NAME, MAILBOX_ID).join())
             .contains(RIGHTS);
@@ -73,13 +74,15 @@ public class CassandraUserMailboxRightsDAOTest {
 
     @Test
     public void saveOnSecondShouldOverwrite() throws Exception {
-        testee.update(MAILBOX_ID, new PositiveUserACLChanged(
+        testee.update(MAILBOX_ID, ACLDiff.computeDiff(
             MailboxACL.EMPTY,
-            new MailboxACL(new Entry(ENTRY_KEY, RIGHTS)))).join();
+            new MailboxACL(new Entry(ENTRY_KEY, RIGHTS))))
+            .join();
 
-        testee.update(MAILBOX_ID, new PositiveUserACLChanged(
+        testee.update(MAILBOX_ID, ACLDiff.computeDiff(
             new MailboxACL(new Entry(ENTRY_KEY, RIGHTS)),
-            new MailboxACL(new Entry(ENTRY_KEY, OTHER_RIGHTS)))).join();
+            new MailboxACL(new Entry(ENTRY_KEY, OTHER_RIGHTS))))
+            .join();
 
         assertThat(testee.retrieve(USER_NAME, MAILBOX_ID).join())
             .contains(OTHER_RIGHTS);
@@ -93,14 +96,16 @@ public class CassandraUserMailboxRightsDAOTest {
 
     @Test
     public void deleteShouldDeleteWhenExisting() throws Exception {
-        testee.update(MAILBOX_ID, new PositiveUserACLChanged(
+        testee.update(MAILBOX_ID, ACLDiff.computeDiff(
             MailboxACL.EMPTY,
-            new MailboxACL(new Entry(ENTRY_KEY, RIGHTS)))).join();
+            new MailboxACL(new Entry(ENTRY_KEY, RIGHTS))))
+            .join();
 
 
-        testee.update(MAILBOX_ID, new PositiveUserACLChanged(
+        testee.update(MAILBOX_ID, ACLDiff.computeDiff(
             new MailboxACL(new Entry(ENTRY_KEY, RIGHTS)),
-            MailboxACL.EMPTY)).join();
+            MailboxACL.EMPTY))
+            .join();
 
         assertThat(testee.retrieve(USER_NAME, MAILBOX_ID).join())
             .isEmpty();

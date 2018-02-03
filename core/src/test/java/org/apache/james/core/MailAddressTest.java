@@ -23,16 +23,16 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
 import org.apache.james.core.MailAddress;
+import org.assertj.core.api.Assertions;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class MailAddressTest {
 
-    private static final String
-            GOOD_LOCAL_PART = "\"quoted@local part\"",
-            GOOD_QUOTED_LOCAL_PART = "\"quoted@local part\"@james.apache.org",
-            GOOD_ADDRESS = "server-dev@james.apache.org",
-            GOOD_DOMAIN = "james.apache.org";
+    private static final String GOOD_LOCAL_PART = "\"quoted@local part\"";
+    private static final String GOOD_QUOTED_LOCAL_PART = "\"quoted@local part\"@james.apache.org";
+    private static final String GOOD_ADDRESS = "server-dev@james.apache.org";
+    private static final String GOOD_DOMAIN = "james.apache.org";
 
     private static final String[] GOOD_ADDRESSES = {
             GOOD_ADDRESS,
@@ -109,11 +109,8 @@ public class MailAddressTest {
         }
 
         for (String badAddress : BAD_ADDRESSES) {
-            try {
-                a = new MailAddress(badAddress);
-                Assert.fail(badAddress);
-            } catch (AddressException ignore) {
-            }
+            Assertions.assertThatThrownBy(() -> new MailAddress(badAddress))
+                .isInstanceOf(AddressException.class);
         }
     }
 

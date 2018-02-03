@@ -144,37 +144,50 @@ public class BodyFetchElement {
     }
 
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         final BodyFetchElement other = (BodyFetchElement) obj;
         if (fieldNames == null) {
-            if (other.fieldNames != null)
+            if (other.fieldNames != null) {
                 return false;
-        } else if (!fieldNames.equals(other.fieldNames))
+            }
+        } else if (!fieldNames.equals(other.fieldNames)) {
             return false;
+        }
         if (firstOctet == null) {
-            if (other.firstOctet != null)
+            if (other.firstOctet != null) {
                 return false;
-        } else if (!firstOctet.equals(other.firstOctet))
+            }
+        } else if (!firstOctet.equals(other.firstOctet)) {
             return false;
+        }
         if (name == null) {
-            if (other.name != null)
+            if (other.name != null) {
                 return false;
-        } else if (!name.equals(other.name))
+            }
+        } else if (!name.equals(other.name)) {
             return false;
+        }
         if (numberOfOctets == null) {
-            if (other.numberOfOctets != null)
+            if (other.numberOfOctets != null) {
                 return false;
-        } else if (!numberOfOctets.equals(other.numberOfOctets))
+            }
+        } else if (!numberOfOctets.equals(other.numberOfOctets)) {
             return false;
-        if (!Arrays.equals(path, other.path))
+        }
+        if (!Arrays.equals(path, other.path)) {
             return false;
-        if (sectionType != other.sectionType)
+        }
+        if (sectionType != other.sectionType) {
             return false;
+        }
         return true;
     }
 

@@ -105,12 +105,4 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
-    <profiles>
-        <profile>
-            <id>lucene</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-        </profile>
-    </profiles>
 </project>

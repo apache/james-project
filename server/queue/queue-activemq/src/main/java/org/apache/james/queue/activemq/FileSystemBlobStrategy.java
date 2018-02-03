@@ -25,6 +25,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.security.SecureRandom;
 
 import javax.jms.JMSException;
 
@@ -47,6 +48,7 @@ public class FileSystemBlobStrategy implements BlobUploadStrategy, BlobDownloadS
     private final BlobTransferPolicy policy;
     private final int splitCount;
     private final Object lock = new Object();
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     public FileSystemBlobStrategy(BlobTransferPolicy policy, FileSystem fileSystem, int splitCount) {
         this.fileSystem = fileSystem;
@@ -126,7 +128,7 @@ public class FileSystemBlobStrategy implements BlobUploadStrategy, BlobDownloadS
         // we use the JMS Message ID as filename so we are safe in the case
         // we try to stream from and to the same mail
         String filename = message.getJMSMessageID().replaceAll("[:\\\\/*?|<>]", "_");
-        int i = (int) (Math.random() * splitCount + 1);
+        int i = RANDOM.nextInt(splitCount) + 1;
 
         String queueUrl = policy.getUploadUrl() + "/" + i;
 

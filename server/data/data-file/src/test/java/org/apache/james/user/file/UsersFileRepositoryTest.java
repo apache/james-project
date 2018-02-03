@@ -44,7 +44,7 @@ import org.junit.Test;
 public class UsersFileRepositoryTest extends AbstractUsersRepositoryTest {
     
     private static final String TARGET_REPOSITORY_FOLDER = "target/var/users";
-	private File targetRepositoryFolder;
+    private File targetRepositoryFolder;
 
     @Before
     @Override

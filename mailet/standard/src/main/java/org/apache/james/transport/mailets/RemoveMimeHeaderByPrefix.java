@@ -66,7 +66,7 @@ public class RemoveMimeHeaderByPrefix extends GenericMailet {
     @Override
     public void service(Mail mail) throws MessagingException {
         List<String> headerNamesToRemove = headerNamesStartingByPrefix(mail);
-        for(String headerName: headerNamesToRemove) {
+        for (String headerName: headerNamesToRemove) {
             mail.getMessage().removeHeader(headerName);
         }
         if (!headerNamesToRemove.isEmpty()) {

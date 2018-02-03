@@ -73,7 +73,7 @@ public class StoreMessageResultIterator implements MessageResultIterator {
         this.batchSizes = batchSizes;
         this.type = range.getType();
         this.ftype = getFetchType(group);
-        LOGGER.debug("batchSizes used: " + batchSizes);
+        LOGGER.debug("batchSizes used: {}", batchSizes);
     }
 
     /**
@@ -96,7 +96,7 @@ public class StoreMessageResultIterator implements MessageResultIterator {
         if (group.getPartContentDescriptors().size() > 0) {
             full = true;
         }
-        if ((content & FetchGroup.BODY_CONTENT ) > 0 ) {
+        if ((content & FetchGroup.BODY_CONTENT) > 0) {
             body = true;
             content -= FetchGroup.BODY_CONTENT;
         }
@@ -126,8 +126,9 @@ public class StoreMessageResultIterator implements MessageResultIterator {
 
     @Override
     public boolean hasNext() {
-        if (cursor.compareTo(to) > 0) 
-          return false;
+        if (cursor.compareTo(to) > 0) {
+            return false;
+        }
 
         if (next == null || !next.hasNext()) {
             try {

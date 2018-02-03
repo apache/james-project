@@ -18,20 +18,20 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.quota;
 
+import org.apache.james.mailbox.model.Quota;
+
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
-import org.apache.james.mailbox.model.Quota;
+public final class QuotaImpl implements Quota {
 
-public final class QuotaImpl implements Quota{
-
-    private final static Quota UNLIMITED_QUOTA = new QuotaImpl(UNKNOWN, UNLIMITED);
+    private static final Quota UNLIMITED_QUOTA = new QuotaImpl(UNKNOWN, UNLIMITED);
 
     public static Quota unlimited() {
         return UNLIMITED_QUOTA;
     }
 
-    public static Quota quota(long used , long max) {
+    public static Quota quota(long used, long max) {
         return new QuotaImpl(used, max);
     }
 

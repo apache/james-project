@@ -55,6 +55,7 @@ import com.nurkiewicz.asyncretry.function.RetryCallable;
 @Singleton
 public class ResilientClusterProvider implements Provider<Cluster> {
 
+    public static final String CASSANDRA_KEYSPACE = "cassandra.keyspace";
     private static final int DEFAULT_CONNECTION_MAX_RETRIES = 10;
     private static final int DEFAULT_CONNECTION_MIN_DELAY = 5000;
     private static final long CASSANDRA_HIGHEST_TRACKABLE_LATENCY_MILLIS = TimeUnit.SECONDS.toMillis(10);
@@ -96,7 +97,7 @@ public class ResilientClusterProvider implements Provider<Cluster> {
             try {
                 return ClusterWithKeyspaceCreatedFactory
                     .config(cluster,
-                            configuration.getString("cassandra.keyspace", DEFAULT_KEYSPACE))
+                            configuration.getString(CASSANDRA_KEYSPACE, DEFAULT_KEYSPACE))
                     .replicationFactor(configuration.getInt("cassandra.replication.factor", DEFAULT_REPLICATION_FACTOR))
                     .clusterWithInitializedKeyspace();
             } catch (Exception e) {

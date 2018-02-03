@@ -40,7 +40,7 @@ import com.google.common.collect.ImmutableSet;
   */
 public class ExpnCmdHandler implements CommandHandler<SMTPSession> {
 
-    private static final Response NOT_SUPPORTED = new SMTPResponse(SMTPRetCode.UNIMPLEMENTED_COMMAND, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.SYSTEM_NOT_CAPABLE)+" EXPN is not supported").immutable();
+    private static final Response NOT_SUPPORTED = new SMTPResponse(SMTPRetCode.UNIMPLEMENTED_COMMAND, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.SYSTEM_NOT_CAPABLE) + " EXPN is not supported").immutable();
     /**
      * The name of the command handled by the command handler
      */
@@ -60,7 +60,7 @@ public class ExpnCmdHandler implements CommandHandler<SMTPSession> {
      * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
      */
     public Collection<String> getImplCommands() {
-    	return COMMANDS;
+        return COMMANDS;
     }
 
     @Override

@@ -28,7 +28,7 @@ import org.testcontainers.shaded.com.google.common.base.Preconditions;
 
 public class ContainerLifecycleConfiguration {
 
-    public static Builder builder() {
+    public static Builder withDefaultIterationsBetweenRestart() {
         return new Builder();
     }
 

@@ -47,16 +47,18 @@
       to a local repository, or handling remote delivery.  Both the Matcher and Mailet APIs are 
       public, allowing James users to write their own custom matchers and mailets.  James 
       comes with a large set of pre-built matchers and mailets.</p>
-      
-      <p>Matchers and mailets are used in pairs.  At each stage in processing a message is checked 
+
+      <p>Matchers and mailets are used in pairs.  At each stage in processing a message is checked
       against a matcher.  The matcher will attempt to match the mail message.  The match is not simply
-      a yes or no issue.  Instead, the match method returns a collection of matched recipients.  If the 
+      a yes or no issue.  Instead, the match method returns a collection of matched recipients.  If the
       this collection of matched recipients is empty, the mailet is not invoked.  If the collection of
-      matched recipients is the entire set of original recipients, the mail is then processed by the 
+      matched recipients is the entire set of original recipients, the mail is then processed by the
       associated mailet.  Finally, if the matcher only matches a proper subset of the original recipients,
       the original mail is duplicated.  The recipients for one message are set to the matched recipients,
       and that message is processed by the mailet.  The recipients for the other mail are set to the
       non-matching recipients, and that message is not processed by the mailet.</p>
+
+        <p>Note that you can specify per mailet and per matcher specific <a href="config-mailetcontainer.html#Error_handling">error handling logic.</a></p>
     
     </subsection>
 
@@ -89,8 +91,8 @@
     
       <p>More on configuration of the SpoolManager can be found <a href="config-mailetcontainer.html">here</a>.</p>
     
-      <p>Much of the power of James lies in the SpoolManager component.  Custom matchers and 
-      mailets can be easily developed to address an administrator's particular needs.  The 
+      <p>Much of the power of James lies in the SpoolManager component.  <a href="dev-extend-matcher.html">Custom matchers</a> and
+      <a href="dev-extend-mailet.html">custom mailets</a> can be easily developed to address an administrator's particular needs.  The
       processor tree can easily be configured to sort, filter, and deliver mail based on any 
       number of criteria.  Mail administrators new to James should spend some time learning how 
       to configure the SpoolManager to meet their needs.</p>
@@ -120,12 +122,9 @@
         <p>The Mailet API is currently in its second revision.  Although, the Mailet API is expected to undergo substantial changes in the near future, it is our aim that existing Mailets that abided purely by the prior Mailet API interfaces will continue to run with the revised specification.</p>
     
         <p>The Javadoc for the Mailet API can be found <a href="http://james.apache.org/mailet/api/apidocs/">here</a>.</p>
-    
-        <p>James bundles a number of Matchers and Mailets in its distribution.  Descriptions of provided matchers 
-        can be found <a href="dev-provided-matchers.html">here</a>, while descriptions of provided mailets can be found 
-        <a href="dev-provided-mailets.html">here</a>.</p>
 
-        <p>You can retrieve the full list of mailets and matchers packaged in James <a href="dev-provided-mailets.html">here</a></p>
+        <p>James bundles a number of Matchers and Mailets in its distribution. You can retrieve the full list of mailets
+            and matchers packaged in James <a href="dev-provided-mailets.html">here</a></p>
 
         <p>You can read more on mailets on following web sites:</p>
     

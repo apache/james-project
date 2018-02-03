@@ -26,7 +26,7 @@ import org.apache.james.mailbox.model.MailboxPath;
  * 
  *
  */
-public class ReadOnlyException extends MailboxException{
+public class ReadOnlyException extends MailboxException {
 
 
     /**

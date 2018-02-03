@@ -110,20 +110,26 @@ public class NamespaceResponse implements ImapResponseMessage {
 
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
+            if (this == obj) {
                 return true;
-            if (obj == null)
+            }
+            if (obj == null) {
                 return false;
-            if (getClass() != obj.getClass())
+            }
+            if (getClass() != obj.getClass()) {
                 return false;
+            }
             final Namespace other = (Namespace) obj;
-            if (delimiter != other.delimiter)
+            if (delimiter != other.delimiter) {
                 return false;
+            }
             if (prefix == null) {
-                if (other.prefix != null)
+                if (other.prefix != null) {
                     return false;
-            } else if (!prefix.equals(other.prefix))
+                }
+            } else if (!prefix.equals(other.prefix)) {
                 return false;
+            }
             return true;
         }
 
@@ -145,28 +151,37 @@ public class NamespaceResponse implements ImapResponseMessage {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         final NamespaceResponse other = (NamespaceResponse) obj;
         if (personal == null) {
-            if (other.personal != null)
+            if (other.personal != null) {
                 return false;
-        } else if (!personal.equals(other.personal))
+            }
+        } else if (!personal.equals(other.personal)) {
             return false;
+        }
         if (shared == null) {
-            if (other.shared != null)
+            if (other.shared != null) {
                 return false;
-        } else if (!shared.equals(other.shared))
+            }
+        } else if (!shared.equals(other.shared)) {
             return false;
+        }
         if (users == null) {
-            if (other.users != null)
+            if (other.users != null) {
                 return false;
-        } else if (!users.equals(other.users))
+            }
+        } else if (!users.equals(other.users)) {
             return false;
+        }
         return true;
     }
 

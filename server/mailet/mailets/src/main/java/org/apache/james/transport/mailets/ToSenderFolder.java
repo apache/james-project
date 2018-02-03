@@ -22,13 +22,13 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.mail.MessagingException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.transport.mailets.delivery.MailboxAppender;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,7 +86,7 @@ public class ToSenderFolder extends GenericMailet {
 
         mailboxAppender.append(mail.getMessage(), username, folder);
 
-        LOGGER.error("Local delivery with ToSenderFolder mailet for mail " + mail.getName() + " with sender " + sender.toString() + " in folder " + folder);
+        LOGGER.error("Local delivery with ToSenderFolder mailet for mail {} with sender {} in folder {}", mail.getName(), sender, folder);
     }
 
     private String retrieveUser(MailAddress sender) throws MessagingException {

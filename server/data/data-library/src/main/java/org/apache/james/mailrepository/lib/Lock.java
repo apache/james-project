@@ -71,7 +71,9 @@ public class Lock {
             if (null == theLock) {
                 locks.put(key, getCallerId());
                 return true;
-            } else return getCallerId() == theLock;
+            } else {
+                return getCallerId() == theLock;
+            }
         }
     }
 

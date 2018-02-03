@@ -20,7 +20,6 @@
 
 package org.apache.james.protocols.api.utils;
 
-
 import java.security.KeyStore;
 import java.security.Security;
 

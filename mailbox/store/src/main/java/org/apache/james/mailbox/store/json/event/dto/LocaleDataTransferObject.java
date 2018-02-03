@@ -19,10 +19,10 @@
 
 package org.apache.james.mailbox.store.json.event.dto;
 
+import java.util.Locale;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.Locale;
 
 public class LocaleDataTransferObject {
     @JsonProperty()

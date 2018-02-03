@@ -8,7 +8,7 @@
   "License"); you may not use this file except in compliance
   with the License.  You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+    https://www.apache.org/licenses/LICENSE-2.0
 
   Unless required by applicable law or agreed to in writing,
   software distributed under the License is distributed on an
@@ -41,8 +41,8 @@ functions with asymmetric algorithms. The form and manner of this Apache Softwar
 under the License Exception ENC Technology Software Unrestricted (TSU) exception (see the BIS Export Administration Regulations, Section 740.13) 
 for both object code and source code.
 </p><p>
-More specific details are included below. Export control information for the <a href='http://www.apache.org' rel='tag'>Apache Software Foundation</a> 
-is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
+More specific details are included below. Export control information for the <a href='https://www.apache.org' rel='tag'>Apache Software Foundation</a>
+is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
 </p>
       </div>
     </div>
@@ -56,7 +56,7 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
     
     <p>Only current recommended releases are available on the main
        distribution site and its mirrors.  Older releases are available from
-       the <a href="http://archive.apache.org/dist/james/">archive download
+       the <a href="https://archive.apache.org/dist/james/">archive download
        site.</a></p>
     
     <ul>
@@ -70,14 +70,12 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
       <li><a href='#Apache_Crypto_Mailets'>Apache James Crypto Mailets</a></li>
       <li><a href='#Apache_James_Protocols'>Apache James Protocols</a></li>
       <li><a href='#Apache_MPT'>Apache James MPT</a></li>
-      <li>Apache James IMAP 0.3 is available from the James Maven repositories (*)</li>
-      <li>Apache James Mailbox 0.4 is available from the James Maven repositories (*)</li>
+      <li><a href='#Apache_HUPA'>Apache James Hupa</a></li>
       <li>Apache MailetDoc Plugin for Maven is available from the standard Maven repositories (*)</li>
-      <li>Apache James Hupa is available from the James Maven repositories (*)</li>
     </ul>
  
     <p>(*) James maven repositories can be found on 
-    <a href="http://repo1.maven.org/maven2/org/apache/james/">http://repo1.maven.org/maven2/org/apache/james/</a>.</p>
+    <a href="https://repo1.maven.org/maven2/org/apache/james/">https://repo1.maven.org/maven2/org/apache/james/</a>.</p>
   
     <subsection name="Mirror">
     
@@ -103,7 +101,7 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
       <input type="submit" value="Change" />     
       </form>
       
-      <p>You may also consult the <a href="http://www.apache.org/mirrors/">complete
+      <p>You may also consult the <a href="https://www.apache.org/mirrors/">complete
       list of mirrors</a>.</p>
       
       </subsection>
@@ -113,10 +111,10 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
       files using the PGP or MD5 signatures.</p>
       
       <p>The PGP signatures can be verified using PGP or GPG.  First
-      download the <a href="http://www.apache.org/dist/james/KEYS">KEYS</a>
+      download the <a href="https://www.apache.org/dist/james/KEYS">KEYS</a>
       as well as the <code>asc</code> signature file for the particular
       distribution.  Make sure you get these files from the <a
-      href="http://www.apache.org/dist/james/">main distribution
+      href="https://www.apache.org/dist/james/">main distribution
       directory</a>, rather than from a mirror. Then verify the signatures
       using</p>
       
@@ -132,7 +130,7 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
       <em>or</em><br />
       <code>
       % gpg --import KEYS<br />
-      % gpg --verify james-<i>version</i>.tar.gz.asc
+      % gpg --verify james-<i>version</i>.tar.gz.asc james-<i>version</i>.tar.gz
       </code></p>
     
     </subsection>
@@ -160,11 +158,17 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
       </div>
 
       <ul>
-        <li>Source code <a href="https://github.com/apache/james-project/releases/tag/james-project-3.0.1">on GitHub</a></li>
+        <li>Source code (ZIP Format):
+          <a href="https://www.apache.org/dist/james/server/james-server-sources-3.0.1.zip">apache-james-3.0.1-app.zip</a>
+          [<a href="https://www.apache.org/dist/james/server/james-server-sources-3.0.1.zip.md5">MD5</a>]
+          [<a href="https://www.apache.org/dist/james/server/james-server-sources-3.0.1.zip.sha1">SHA-1</a>]
+          [<a href="https://www.apache.org/dist/james/server/james-server-sources-3.0.1.zip.asc">PGP</a>]</li>
 
         <li>Binary (ZIP Format): <a
-                href="http://www.apache.org/dist/james/server/james-server-app-3.0.1-app.zip">apache-james-3.0.1-app.zip</a> [<a
-                href="http://www.apache.org/dist/james/server/james-server-app-3.0.1-app.zip.md5.sig">PGP</a>]</li>
+                href="https://www.apache.org/dist/james/server/james-server-app-3.0.1-app.zip">apache-james-3.0.1-app.zip</a> [<a
+                href="https://www.apache.org/dist/james/server/james-server-app-3.0.1-app.zip.md5">MD5</a>] [<a
+                href="https://www.apache.org/dist/james/server/james-server-app-3.0.1-app.zip.sha1">SHA-1</a>] [<a
+                href="https://www.apache.org/dist/james/server/james-server-app-3.0.1-app.zip.sig">PGP</a>]</li>
 
       </ul>
 
@@ -174,7 +178,7 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
     
       <p>This release has many enhancements and bug fixes over the previous
       release.  See the <a
-      href="http://james.apache.org/server/2/release-notes.html">Release Notes</a>
+      href="https://james.apache.org/server/2/release-notes.html">Release Notes</a>
       for a detailed list of changes.  Some of the earlier defects could
       turn a James mail server into an Open Relay and allow files to be written on disk.  All users of James Server are urged to upgrade to version v2.3.2.1 as soon as
       possible.</p>
@@ -188,35 +192,43 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
           </p>
           <ul>
             <li><code>bcmail</code> by "The Legion of the Bouncy
-              Castle" <a href='http://www.bouncycastle.org'>http://www.bouncycastle.org</a>,</li>
-            <li>and the <a href='http://www.java.com/'>Java Runtime Environment</a>.</li>
+              Castle" <a href='https://www.bouncycastle.org'>https://www.bouncycastle.org</a>,</li>
+            <li>and the <a href='https://www.java.com/'>Java Runtime Environment</a>.</li>
           </ul>
         </div>
       </div>
               
       <ul>
       
-        <li>Binary (Unix TAR): <a
-            href="[preferred]/james/server/james-binary-2.3.2.1.tar.gz">james-binary-2.3.2.1.tar.gz</a> [<a
-            href="http://www.apache.org/dist/james/server/james-binary-2.3.2.1.tar.gz.asc">PGP</a>]</li>
+        <li>Binary (Unix TAR): <a href="[preferred]/james/server/james-binary-2.3.2.1.tar.gz">james-binary-2.3.2.1.tar.gz</a>
+          [<a href="https://www.apache.org/dist/james/server/james-binary-2.3.2.1.tar.gz.md5">MD5</a>]
+          [<a href="https://www.apache.org/dist/james/server/james-binary-2.3.2.1.tar.gz.sha1">SHA-1</a>]
+          [<a href="https://www.apache.org/dist/james/server/james-binary-2.3.2.1.tar.gz.asc">PGP</a>]
+        </li>
       
-        <li>Binary (ZIP Format): <a
-            href="[preferred]/james/server/james-binary-2.3.2.1.zip">james-binary-2.3.2.1.zip</a> [<a
-            href="http://www.apache.org/dist/james/server/james-binary-2.3.2.1.zip.asc">PGP</a>]</li>
+        <li>Binary (ZIP Format): <a href="[preferred]/james/server/james-binary-2.3.2.1.zip">james-binary-2.3.2.1.zip</a>
+          [<a href="https://www.apache.org/dist/james/server/james-binary-2.3.2.1.zip.md5">MD5</a>]
+          [<a href="https://www.apache.org/dist/james/server/james-binary-2.3.2.1.zip.sha1">SHA-1</a>]
+          [<a href="https://www.apache.org/dist/james/server/james-binary-2.3.2.1.zip.asc">PGP</a>]
+        </li>
       
-        <li>Source (Unix TAR): <a
-            href="[preferred]/james/server/james-2.3.2.1-src.tar.gz">james-2.3.2.1-src.tar.gz</a> [<a
-            href="http://www.apache.org/dist/james/server/james-2.3.2.1-src.tar.gz.asc">PGP</a>]</li>
+        <li>Source (Unix TAR): <a href="[preferred]/james/server/james-2.3.2.1-src.tar.gz">james-2.3.2.1-src.tar.gz</a>
+          [<a href="https://www.apache.org/dist/james/server/james-2.3.2.1-src.tar.gz.md5">MD5</a>]
+          [<a href="https://www.apache.org/dist/james/server/james-2.3.2.1-src.tar.gz.sha1">SHA-1</a>]
+          [<a href="https://www.apache.org/dist/james/server/james-2.3.2.1-src.tar.gz.asc">PGP</a>]
+        </li>
       
-          <li>Source (ZIP Format): <a
-              href="[preferred]/james/server/james-2.3.2.1-src.zip">james-2.3.2.1-src.zip</a> [<a
-              href="http://www.apache.org/dist/james/server/james-2.3.2.1-src.zip.asc">PGP</a>]</li>
+          <li>Source (ZIP Format): <a href="[preferred]/james/server/james-2.3.2.1-src.zip">james-2.3.2.1-src.zip</a>
+            [<a href="https://www.apache.org/dist/james/server/james-2.3.2.1-src.zip.md5">MD5</a>]
+            [<a href="https://www.apache.org/dist/james/server/james-2.3.2.1-src.zip.sha1">SHA-1</a>]
+            [<a href="https://www.apache.org/dist/james/server/james-2.3.2.1-src.zip.asc">PGP</a>]
+          </li>
       
       </ul>
     
     <subsection name="Earlier Releases">
     
-      <p>Are now <a href='http://archive.apache.org/dist/james/server'>archived</a></p>
+      <p>Are now <a href='https://archive.apache.org/dist/james/server'>archived</a></p>
 
     </subsection>
 
@@ -226,223 +238,283 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
 
   <section name="Apache Mime4J">
   
-    <p>Apache Mime4J 0.7.2 is the latest stable version:</p>
-    <ul>
-    
-    <li>Binary (Unix TAR): <a
-    href="[preferred]/james/mime4j/0.7.2/apache-mime4j-0.7.2-bin.tar.gz">apache-mime4j-0.7.2-bin.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/mime4j/0.7.2/apache-mime4j-0.7.2-bin.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/mime4j/0.7.2/apache-mime4j-0.7.2-bin.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Binary (ZIP Format): <a
-    href="[preferred]/james/mime4j/0.7.2/apache-mime4j-0.7.2-bin.zip">apache-mime4j-0.7.2-bin.zip</a> [<a
-    href="http://www.apache.org/dist/james/mime4j/0.7.2/apache-mime4j-0.7.2-bin.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/mime4j/0.7.2/apache-mime4j-0.7.2-bin.zip.md5">MD5</a>]</li>
-    
-    <li>Source (ZIP Format): <a
-    href="[preferred]/james/mime4j/0.7.2/apache-mime4j-project-0.7.2-source-release.zip">apache-mime4j-0.7.2-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/mime4j/0.7.2/apache-mime4j-project-0.7.2-source-release.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/mime4j/0.7.2/apache-mime4j-project-0.7.2-source-release.zip.md5">MD5</a>]</li>
-    
-    <li><a
-    href="[preferred]/james/mime4j/">Other Files</a> (javadoc.jar, sha1 checksums...)</li>
-    
-    </ul>
+    <p>Apache Mime4J 0.8.1 is the latest stable version.</p>
+
+    <p>You can directly use the core library with maven:</p>
+
+    <pre>
+      <code>
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-mime4j-core&lt;/artifactId&gt;
+    &lt;version&gt;0.8.1&lt;/version&gt;
+  &lt;/dependency&gt;
+     </code>
+    </pre>
+
+    <p>Direct download link:
+      <a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-core-0.8.1.jar">(Jar)</a>
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-core-0.8.1.jar.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-core-0.8.1.jar.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-core-0.8.1.jar.asc">PGP</a>]
+      </p>
+
+    <p>In order to use Mime-4j DOM:</p>
+
+    <pre>
+      <code>
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-mime4j-dom&lt;/artifactId&gt;
+    &lt;version&gt;0.8.1&lt;/version&gt;
+  &lt;/dependency&gt;
+     </code>
+    </pre>
+
+    <p>Direct download link:
+      <a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-dom-0.8.1.jar">(Jar)</a>
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-dom-0.8.1.jar.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-dom-0.8.1.jar.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-dom-0.8.1.jar.asc">PGP</a>]
+    </p>
+
+    <p>An aggregator project is also available:</p>
+
+    <pre>
+      <code>
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-mime4j&lt;/artifactId&gt;
+    &lt;version&gt;0.8.1&lt;/version&gt;
+  &lt;/dependency&gt;
+     </code>
+    </pre>
+
+    <p>Direct download link:
+      <a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-0.8.1-bin.zip">(Zip)</a>
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-0.8.1-bin.zip.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-0.8.1-bin.zip.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-0.8.1-bin.zip.asc">PGP</a>]
+    </p>
+
+    <p>Sources:
+      <a href="https://www.apache.org/dist/james/mime4j/0.8.1/james-mime4j-sources-0.8.1.zip">(Zip)</a>
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/james-mime4j-sources-0.8.1.zip.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/james-mime4j-sources-0.8.1.zip.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/james-mime4j-sources-0.8.1.zip.asc">PGP</a>]
+    </p>
   
   </section>
 
   <section name="Apache jSPF">
   
-    <p>Apache James jSPF 1.0.0 is the latest jSPF stable version:</p>
-    <ul>
-    
-    <li>Binary (ZIP Format): <a
-    href="[preferred]/james/jspf/1.0.0/apache-jspf-1.0.0-bin.zip">apache-jspf-1.0.0-bin.zip</a> [<a
-    href="http://www.apache.org/dist/james/jspf/1.0.0/apache-jspf-1.0.0-bin.zip.asc">PGP</a>]</li>
-    
-    <li>Binary (Unix TAR.GZ): <a
-    href="[preferred]/james/jspf/1.0.0/apache-jspf-1.0.0-bin.tar.gz">apache-jspf-1.0.0-bin.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/jspf/1.0.0/apache-jspf-1.0.0-bin.tar.gz.asc">PGP</a>]</li>
-    
-    <li>Source (Unix TAR.GZ): <a
-    href="[preferred]/james/jspf/1.0.0/apache-jspf-1.0.0-src.tar.gz">apache-jspf-1.0.0-src.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/jspf/1.0.0/apache-jspf-1.0.0-src.tar.gz.asc">PGP</a>]</li>
-    
-    <li>Source (ZIP Format): <a
-    href="[preferred]/james/jspf/1.0.0/apache-jspf-1.0.0-src.zip">apache-jspf-1.0.0-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/jspf/1.0.0/apache-jspf-1.0.0-src.zip.asc">PGP</a>]</li>
-    
-    <li><a href="[preferred]/james/jspf/1.0.0/">Other Binaries</a></li>
-    
-    </ul>
+    <p>Apache James jSPF 1.0.1 is the latest jSPF stable version.</p>
+
+    <p>You can directly use it with maven:</p>
+
+    <pre>
+      <code>
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james.jspf&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-jspf&lt;/artifactId&gt;
+    &lt;version&gt;1.0.1&lt;/version&gt;
+  &lt;/dependency&gt;
+      </code>
+    </pre>
+
+    <p>Direct download link:
+      <a href="https://www.apache.org/dist/james/jspf/1.0.1/apache-jspf-1.0.1-bin.zip">(Zip)</a>
+      [<a href="https://www.apache.org/dist/james/jspf/1.0.1/apache-jspf-1.0.1-bin.zip.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/jspf/1.0.1/apache-jspf-1.0.1-bin.zip.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/jspf/1.0.1/apache-jspf-1.0.1-bin.zip.asc">PGP</a>]
+    </p>
+
+    <p>Sources:
+      <a href="https://www.apache.org/dist/james/jspf/1.0.1/apache-jspf-sources-1.0.1.zip">(Zip)</a>
+      [<a href="https://www.apache.org/dist/james/jspf/1.0.1/apache-jspf-sources-1.0.1.zip.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/jspf/1.0.1/apache-jspf-sources-1.0.1.zip.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/jspf/1.0.1/apache-jspf-sources-1.0.1.zip.asc">PGP</a>]
+    </p>
   
   </section>
   
   <section name="Apache jDKIM">
   
-    <p>Apache James jDKIM 0.2 is the latest jDKIM stable version:</p>
-    <ul>
-    
-    <li>Binary (ZIP Format): <a
-    href="[preferred]/james/jdkim/apache-jdkim-0.2-bin.zip">apache-jdkim-0.2-bin.zip</a> [<a
-    href="http://www.apache.org/dist/james/jdkim/apache-jdkim-0.2-bin.zip.asc">PGP</a>]</li>
-    
-    <li>Binary (Unix TAR.GZ): <a
-    href="[preferred]/james/jdkim/apache-jdkim-0.2-bin.tar.gz">apache-jdkim-0.2-bin.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/jdkim/apache-jdkim-0.2-bin.tar.gz.asc">PGP</a>]</li>
-    
-    <li>Source (ZIP Format): <a
-    href="[preferred]/james/jdkim/apache-jdkim-project-0.2-source-release.zip">apache-jdkim-project-0.2-source-release.zip</a> [<a
-    href="http://www.apache.org/dist/james/jdkim/apache-jdkim-project-0.2-source-release.zip.asc">PGP</a>]</li>
-    
-    </ul>
+    <p>Apache James jDKIM 0.2 is the latest jDKIM stable version.</p>
+
+    <p>You can directly use it with maven:</p>
+
+    <pre>
+      <code>
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james.jdkim&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-jdkim&lt;/artifactId&gt;
+    &lt;version&gt;0.2&lt;/version&gt;
+  &lt;/dependency&gt;
+      </code>
+    </pre>
+
+    <p>Direct download link:
+      <a href="https://www.apache.org/dist/james/jdkim/apache-jdkim-0.2-bin.zip">(Zip)</a>
+      [<a href="https://www.apache.org/dist/james/jdkim/apache-jdkim-0.2-bin.zip.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/jdkim/apache-jdkim-0.2-bin.zip.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/jdkim/apache-jdkim-0.2-bin.zip.asc">PGP</a>]
+    </p>
+
+    <p>Sources:
+      <a href="https://www.apache.org/dist/james/jdkim/apache-jdkim-project-0.2-source-release.zip">(Zip)</a>
+      [<a href="https://www.apache.org/dist/james/jdkim/apache-jdkim-project-0.2-source-release.zip.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/jdkim/apache-jdkim-project-0.2-source-release.zip.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/jdkim/apache-jdkim-project-0.2-source-release.zip.asc">PGP</a>]
+    </p>
   
   </section>
   
   <section name="Apache JSieve">
   
-    <p>Apache JSieve 0.5 is the latest stable version:</p>
-    <ul>
-    
-    <li>Binary (Unix TAR): <a
-    href="[preferred]/james/jsieve/0.5/apache-jsieve-all-0.5-bin.tar.gz">apache-jsieve-all-0.5-bin.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-bin.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-bin.tar.gz.asc.md5">MD5</a>]</li>
-    
-    <li>Binary (ZIP Format): <a
-    href="[preferred]/james/jsieve/0.5/apache-jsieve-all-0.5-bin.zip">apache-jsieve-all-0.5-bin.zip</a> [<a
-    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-bin.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-bin.zip.asc.md5">MD5</a>]</li>
-    
-    <li>Source (Unix TAR): <a
-    href="[preferred]/james/jsieve/0.5/apache-jsieve-all-0.5-src.tar.gz">apache-jsieve-all-0.5-src.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-src.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-src.tar.gz.asc.md5">MD5</a>]</li>
-    
-    <li>Source (ZIP Format): <a
-    href="[preferred]/james/jsieve/0.5/apache-jsieve-all-0.5-src.zip">apache-jsieve-all-0.5-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-src.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-src.zip.asc.md5">MD5</a>]</li>
-    
-    </ul>
+    <p>Apache JSieve 0.7 is the latest stable version.</p>
+
+    <p>You can directly use it with maven:</p>
+
+    <pre>
+      <code>
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-jsieve-core&lt;/artifactId&gt;
+    &lt;version&gt;0.7&lt;/version&gt;
+  &lt;/dependency&gt;
+      </code>
+    </pre>
+
+    <p>Direct download link:
+      <a href="https://www.apache.org/dist/james/jsieve/0.7/apache-jsieve-core-0.7.jar">(Jar)</a>
+      [<a href="https://www.apache.org/dist/james/jsieve/0.7/apache-jsieve-core-0.7.jar.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/jsieve/0.7/apache-jsieve-core-0.7.jar.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/jsieve/0.7/apache-jsieve-core-0.7.jar.asc">PGP</a>]
+    </p>
+
+    <p>Sources:
+      <a href="https://www.apache.org/dist/james/jsieve/0.7/apache-jsieve-sources-0.7.zip">(Zip)</a>
+      [<a href="https://www.apache.org/dist/james/jsieve/0.7/apache-jsieve-sources-0.7.zip.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/jsieve/0.7/apache-jsieve-sources-0.7.zip.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/jsieve/0.7/apache-jsieve-sources-0.7.zip.asc">PGP</a>]
+    </p>
+
+    <p>An aggregator project is also available:</p>
+
+    <pre>
+      <code>
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-jsieve-all&lt;/artifactId&gt;
+    &lt;version&gt;0.7&lt;/version&gt;
+  &lt;/dependency&gt;
+      </code>
+    </pre>
+
+    <p>Direct download link:
+      <a href="https://www.apache.org/dist/james/jsieve/0.7/apache-jsieve-0.7-all.tar.gz">(Tar Gz)</a>
+      [<a href="https://www.apache.org/dist/james/jsieve/0.7/apache-jsieve-0.7-all.tar.gz.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/jsieve/0.7/apache-jsieve-0.7-all.tar.gz.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/jsieve/0.7/apache-jsieve-0.7-all.tar.gz.asc">PGP</a>]
+    </p>
+
   
   </section>
 
   <section name="Apache Mailet">
   
-    <p>Apache Mailet 2.4 is the latest stable version:</p>
-    <ul>
-    
-    <li>Binary (Unix TAR): <a
-    href="[preferred]/james/apache-mailet/2.4/apache-mailet-2.4.tar.gz">apache-mailet-2.4.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Binary (ZIP Format): <a
-    href="[preferred]/james/apache-mailet/2.4/apache-mailet-2.4.zip">apache-mailet-2.4.zip</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4.zip.md5">MD5</a>]</li>
-    
-    <li>Source (Unix TAR): <a
-    href="[preferred]/james/apache-mailet/2.4/apache-mailet-2.4-src.tar.gz">apache-mailet-2.4-src.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4-src.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4-src.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Source (ZIP Format): <a
-    href="[preferred]/james/apache-mailet/2.4/apache-mailet-2.4-src.zip">apache-mailet-2.4-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4-src.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4-src.zip.md5">MD5</a>]</li>
-    
-    <li><abbr title='Java ARchive'>JAR</abbr> library only: <a
-    href="[preferred]/james/apache-mailet/2.4/apache-mailet-2.4.jar">apache-mailet-2.4.jar</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4.jar.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4.jar.md5">MD5</a>]</li>
-    
-    </ul>
+    <p>Apache Mailet 3.0.1 is the latest stable version. You can use the mailet API using this maven dependency:</p>
+
+    <pre>
+      <code>
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-mailet-api&lt;/artifactId&gt;
+    &lt;version&gt;3.0.1&lt;/version&gt;
+  &lt;/dependency&gt;
+      </code>
+    </pre>
+
+    <p>Direct download link:
+      <a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-api-3.0.1.jar">(Jar)</a>
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-api-3.0.1.jar.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-api-3.0.1.jar.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-api-3.0.1.jar.asc">PGP</a>]
+    </p>
+
+    <p>Sources:
+      <a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-api-sources-3.0.1.zip">(Zip)</a>
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-api-sources-3.0.1.zip.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-api-sources-3.0.1.zip.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-api-sources-3.0.1.zip.asc">PGP</a>]
+    </p>
     
   </section>
 
   <section name="Apache Mailet Base">
-  
-    <p>Apache Mailet Base 1.1 is the latest stable version:</p>
-    <ul>
-    
-    <li>Binary (Unix TAR): <a
-    href="[preferred]/james/apache-mailet-base/1.1/apache-mailet-base-1.1-bin.tar.gz">apache-mailet-base-1.1.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1-bin.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1-bin.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Binary (ZIP Format): <a
-    href="[preferred]/james/apache-mailet-base/1.1/apache-mailet-base-1.1-bin.zip">apache-mailet-base-1.1.zip</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1-bin.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1-bin.zip.md5">MD5</a>]</li>
-    
-    <li>Source (Unix TAR): <a
-    href="[preferred]/james/apache-mailet-base/1.1/apache-mailet-base-1.1-src.tar.gz">apache-mailet-base-1.1-src.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1-src.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1-src.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Source (ZIP Format): <a
-    href="[preferred]/james/apache-mailet-base/1.1/apache-mailet-base-1.1-src.zip">apache-mailet-base-1.1-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1-src.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1-src.zip.md5">MD5</a>]</li>
-    
-    <li>Source (Jar Format): <a
-    href="[preferred]/james/apache-mailet-base/1.1/apache-mailet-base-1.1-sources.jar">apache-mailet-base-1.1-sources.jar</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1-sources.jar.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1-sources.jar.md5">MD5</a>]</li>
-    
-    <li><abbr title='Java ARchive'>JAR</abbr> library only: <a
-    href="[preferred]/james/apache-mailet-base/1.1/apache-mailet-base-1.1.jar">apache-mailet-base-1.1.jar</a> [<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1.jar.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-mailet-base/1.1/apache-mailet-base-1.1.jar.md5">MD5</a>]</li>
-    
-    </ul>
-  
+
+    <p>Apache Mailet Base 3.0.1 is the latest stable version. You can use Mailet Base content using this maven dependency:</p>
+
+    <pre>
+      <code>
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-mailet-base&lt;/artifactId&gt;
+    &lt;version&gt;3.0.1&lt;/version&gt;
+  &lt;/dependency&gt;
+      </code>
+    </pre>
+
+    <p>Direct download link:
+      <a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-base-3.0.1.jar">(Jar)</a>
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-base-3.0.1.jar.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-base-3.0.1.jar.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-base-3.0.1.jar.asc">PGP</a>]
+    </p>
+
+    <p>Sources:
+      <a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-base-sources-3.0.1.zip">(Zip)</a>
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-base-sources-3.0.1.zip.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-base-sources-3.0.1.zip.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-base-sources-3.0.1.zip.asc">PGP</a>]
+    </p>
+
   </section>
 
   <section name="Apache Mailet Standard">
-  
-    <p>Apache Mailet Standard 1.0 is the latest stable version:</p>
-    <ul>
-    
-    <li>Binary (Unix TAR): <a
-    href="[preferred]/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-bin.tar.gz">apache-standard-mailets-1.0.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-bin.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-bin.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Binary (ZIP Format): <a
-    href="[preferred]/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-bin.zip">apache-standard-mailets-1.0.zip</a> [<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-bin.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-bin.zip.md5">MD5</a>]</li>
-    
-    <li>Source (Unix TAR): <a
-    href="[preferred]/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-src.tar.gz">apache-standard-mailets-1.0-src.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-src.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-src.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Source (ZIP Format): <a
-    href="[preferred]/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-src.zip">apache-standard-mailets-1.0-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-src.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-src.zip.md5">MD5</a>]</li>
-    
-    <li>Source (Jar Format): <a
-    href="[preferred]/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-sources.jar">apache-standard-mailets-1.0-sources.jar</a> [<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-sources.jar.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0-sources.jar.md5">MD5</a>]</li>
-    
-    <li><abbr title='Java ARchive'>JAR</abbr> library only: <a
-    href="[preferred]/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0.jar">apache-standard-mailets-1.0.jar</a> [<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0.jar.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-standard-mailets/1.0/apache-standard-mailets-1.0.jar.md5">MD5</a>]</li>
-    
-    </ul>
-  
+
+    <p>Apache Mailet Standard 3.0.1 is the latest stable version. You can use mailet Standard content using this maven dependency:</p>
+
+    <pre>
+      <code>
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-mailet-standard&lt;/artifactId&gt;
+    &lt;version&gt;3.0.1&lt;/version&gt;
+  &lt;/dependency&gt;
+      </code>
+    </pre>
+
+    <p>Direct download link:
+      <a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-standard-3.0.1.jar">(Jar)</a>
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-standard-3.0.1.jar.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-standard-3.0.1.jar.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-standard-3.0.1.jar.asc">PGP</a>]
+    </p>
+
+    <p>Sources:
+      <a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-standard-sources-3.0.1.zip">(Zip)</a>
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-standard-sources-3.0.1.zip.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-standard-sources-3.0.1.zip.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-standard-sources-3.0.1.zip.asc">PGP</a>]
+    </p>
+
   </section>
 
   <section name="Apache Crypto Mailets">
   
-    <p>Apache Crypto Mailets 1.0 is the latest stable version:</p>
+    <p>Apache Crypto Mailets 3.0.1 is the latest stable version.</p>
     
   <div class="ui-widget">
     <div class="ui-priority-secondary ui-corner-all apache-james-crypto-notice">
@@ -457,57 +529,48 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
       </ul>
     </div>
   </div>
-    <ul>
-    
-    <li>Binary (Unix TAR): <a
-    href="[preferred]/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-bin.tar.gz">apache-crypto-mailets-1.0.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-bin.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-bin.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Binary (ZIP Format): <a
-    href="[preferred]/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-bin.zip">apache-crypto-mailets-1.0.zip</a> [<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-bin.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-bin.zip.md5">MD5</a>]</li>
-    
-    <li>Source (Unix TAR): <a
-    href="[preferred]/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-src.tar.gz">apache-crypto-mailets-1.0-src.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-src.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-src.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Source (ZIP Format): <a
-    href="[preferred]/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-src.zip">apache-crypto-mailets-1.0-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-src.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-src.zip.md5">MD5</a>]</li>
-    
-    <li>Source (Jar Format): <a
-    href="[preferred]/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-sources.jar">apache-crypto-mailets-1.0-sources.jar</a> [<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-sources.jar.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0-sources.jar.md5">MD5</a>]</li>
-    
-    <li><abbr title='Java ARchive'>JAR</abbr> library only: <a
-    href="[preferred]/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0.jar">apache-crypto-mailets-1.0.jar</a> [<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0.jar.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-crypto-mailets/1.0/apache-crypto-mailets-1.0.jar.md5">MD5</a>]</li>
-    
-    </ul>
+
+    <p>You can use Mailet AI content using this maven dependency:</p>
+
+    <pre>
+      <code>
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-mailet-crypto&lt;/artifactId&gt;
+    &lt;version&gt;3.0.1&lt;/version&gt;
+  &lt;/dependency&gt;
+      </code>
+    </pre>
+
+    <p>Direct download link:
+      <a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-crypto-3.0.1.jar">(Jar)</a>
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-crypto-3.0.1.jar.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-crypto-3.0.1.jar.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-mailet-crypto-3.0.1.jar.asc">PGP</a>]
+    </p>
+
+    <p>Sources:
+      <a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-crypto-sources-3.0.1.zip">(Zip)</a>
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-crypto-sources-3.0.1.zip.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-crypto-sources-3.0.1.zip.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/mailets/3.0.1/apache-james-mailet-crypto-sources-3.0.1.zip.asc">PGP</a>]
+    </p>
     
   </section>
 
   <section name="Apache James Protocols">
   
-    <p>Apache James Protocols 1.6.2 is the latest stable version:</p>
+    <p>Apache James Protocols 3.0.1 is the latest stable version.</p>
+
     <ul>
-    <li>Source (Unix TAR): <a
-    href="[preferred]/james/protocols/1.6.3/protocols-1.6.2-source-release.tar.gz">protocols-1.6.2-source-release.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/protocols/1.6.3/protocols-1.6.2-source-release.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/protocols/1.6.3/protocols-1.6.2-source-release.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Source (ZIP Format): <a
-    href="[preferred]/james/protocols/1.6.3/protocols-1.6.2-source-release.zip">protocols-1.6.2-source-release.zip</a> [<a
-    href="http://www.apache.org/dist/james/protocols/1.6.3/protocols-1.6.2-source-release.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/protocols/1.6.3/protocols-1.6.2-source-release.zip.md5">MD5</a>]</li>
-    <li>Jars (including source and javadocs) for the modules are distributed through the standard 
-    <a href='http://maven.apache.org'>Maven</a> repositories on <a href="http://repo1.maven.org/maven2/org/apache/james/protocols">http://repo1.maven.org/maven2/org/apache/james/protocols</a>.</li>
+      You can get the James implementation of various protocols using maven:
+      <li><a href="https://mvnrepository.com/artifact/org.apache.james.protocols/protocols-api/3.0.1">API</a></li>
+      <li><a href="https://mvnrepository.com/artifact/org.apache.james.protocols/protocols-netty/3.0.1">NETTY</a></li>
+      <li><a href="https://mvnrepository.com/artifact/org.apache.james.protocols/protocols-smtp/3.0.1">SMTP</a></li>
+      <li><a href="https://mvnrepository.com/artifact/org.apache.james.protocols/protocols-lmtp/3.0.1">LMTP</a></li>
+      <li><a href="https://mvnrepository.com/artifact/org.apache.james.protocols/protocols-imap/3.0.1">IMAP</a></li>
+      <li><a href="https://mvnrepository.com/artifact/org.apache.james.protocols/protocols-pop3/3.0.1">POP3</a></li>
+      <li><a href="https://mvnrepository.com/artifact/org.apache.james.protocols/protocols-managesieve/3.0.1">MANAGESIEVE</a></li>
     </ul>
   
   </section>
@@ -517,28 +580,21 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
     <p>Apache MPT 0.1 is the latest stable version:</p>
     <ul>
     
-    <li>Binary (Unix TAR): <a
-    href="[preferred]/james/mpt/0.1/apache-james-mpt-0.1-bin.tar.gz">apache-james-mpt-0.1.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-bin.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-bin.tar.gz.md5">MD5</a>]</li>
+    <li>Source (Unix TAR):
+      <a href="https://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-src.tar.gz">apache-james-mpt-0.1-src.tar.gz</a>
+      [<a href="https://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-src.tar.gz.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-src.tar.gz.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-src.tar.gz.asc">PGP</a>]
+    </li>
     
-    <li>Binary (ZIP Format): <a
-    href="[preferred]/james/mpt/0.1/apache-james-mpt-0.1-bin.zip">apache-james-mpt-0.1.zip</a> [<a
-    href="http://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-bin.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-bin.zip.md5">MD5</a>]</li>
-    
-    <li>Source (Unix TAR): <a
-    href="[preferred]/james/mpt/0.1/apache-james-mpt-0.1-src.tar.gz">apache-james-mpt-0.1-src.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-src.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-src.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Source (ZIP Format): <a
-    href="[preferred]/james/mpt/0.1/apache-james-mpt-0.1-src.zip">apache-james-mpt-0.1-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-src.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-src.zip.md5">MD5</a>]</li>
+    <li>Source (ZIP Format): <a href="https://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-src.zip">apache-james-mpt-0.1-src.zip</a>
+      [<a href="https://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-src.zip.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-src.zip.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-src.zip.asc">PGP</a>]
+    </li>
     
     <li>Jars (including source and javadocs) for the modules are distributed through the standard 
-    <a href='http://maven.apache.org'>Maven</a> repositories on <a href="http://repo1.maven.org/maven2/org/apache/james/">http://repo1.maven.org/maven2/org/apache/james/</a>.</li>
+    <a href='https://maven.apache.org'>Maven</a> repositories on <a href="https://repo1.maven.org/maven2/org/apache/james/">https://repo1.maven.org/maven2/org/apache/james/</a>.</li>
     </ul>
   
   </section>
@@ -548,18 +604,19 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
     <p>Apache HUPA 0.0.2 is the latest stable version:</p>
     <ul>
     
-    <li>Binary (Java WAR): <a
-    href="http://repo1.maven.org/maven2/org/apache/james/hupa/hupa/0.0.2/hupa-0.0.2.war">hupa-0.0.2.war</a> [<a
-    href="http://repo1.maven.org/maven2/org/apache/james/hupa/hupa/0.0.2/hupa-0.0.2.war.asc">PGP</a>][<a
-    href="http://repo1.maven.org/maven2/org/apache/james/hupa/hupa/0.0.2/hupa-0.0.2.war.asc.md5">MD5</a>]</li>
+    <li>Binary (Java WAR): <a href="https://repo1.maven.org/maven2/org/apache/james/hupa/hupa/0.0.2/hupa-0.0.2.war">hupa-0.0.2.war</a>
+      [<a href="https://repo1.maven.org/maven2/org/apache/james/hupa/hupa/0.0.2/hupa-0.0.2.war.asc.md5">MD5</a>]
+      [<a href="https://repo1.maven.org/maven2/org/apache/james/hupa/hupa/0.0.2/hupa-0.0.2.war.asc">PGP</a>]
+    </li>
     
     <li>Source (ZIP Format): <a
-    href="http://repo1.maven.org/maven2/org/apache/james/hupa/hupa-parent/0.0.2/hupa-parent-0.0.2-source-release.zip">hupa-parent-0.0.2-source-release.zip</a> [<a
-    href="http://repo1.maven.org/maven2/org/apache/james/hupa/hupa-parent/0.0.2/hupa-parent-0.0.2-source-release.zip.asc">PGP</a>][<a
-    href="http://repo1.maven.org/maven2/org/apache/james/hupa/hupa-parent/0.0.2/hupa-parent-0.0.2.pom.asc.md5">MD5</a>]</li>
+    href="https://repo1.maven.org/maven2/org/apache/james/hupa/hupa-parent/0.0.2/hupa-parent-0.0.2-source-release.zip">hupa-parent-0.0.2-source-release.zip</a>
+      [<a href="https://repo1.maven.org/maven2/org/apache/james/hupa/hupa-parent/0.0.2/hupa-parent-0.0.2.pom.asc.md5">MD5</a>]
+      [<a href="https://repo1.maven.org/maven2/org/apache/james/hupa/hupa-parent/0.0.2/hupa-parent-0.0.2-source-release.zip.asc">PGP</a>]
+    </li>
     
     <li>Jars (including source and javadocs) for the modules are distributed through the standard 
-    <a href='http://maven.apache.org'>Maven</a> repositories on <a href="http://repo1.maven.org/maven2/org/apache/james/hupa">http://repo1.maven.org/maven2/org/apache/james/hupa</a>.</li>
+    <a href='https://maven.apache.org'>Maven</a> repositories on <a href="https://repo1.maven.org/maven2/org/apache/james/hupa">https://repo1.maven.org/maven2/org/apache/james/hupa</a>.</li>
     </ul>
   
   </section>

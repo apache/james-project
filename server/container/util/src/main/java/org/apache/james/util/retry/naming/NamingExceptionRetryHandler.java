@@ -34,7 +34,7 @@ import org.apache.james.util.retry.api.RetrySchedule;
  * @see org.apache.james.user.ldap.ExceptionRetryHandler
  * 
  */
-abstract public class NamingExceptionRetryHandler extends ExceptionRetryHandler {
+public abstract class NamingExceptionRetryHandler extends ExceptionRetryHandler {
 
     /**
      * Creates a new instance of NamingExceptionRetryHandler.
@@ -70,8 +70,7 @@ abstract public class NamingExceptionRetryHandler extends ExceptionRetryHandler 
         postFailure(((NamingException) ex), retryCount);        
     }
 
-    public void postFailure(NamingException ex, int retryCount)
-    {
+    public void postFailure(NamingException ex, int retryCount) {
         // no-op
     }
 }

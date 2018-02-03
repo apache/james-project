@@ -51,7 +51,7 @@ public class JwtTokenVerifier {
             }
             return true;
         } catch (JwtException e) {
-            LOGGER.info("Failed Jwt verification");
+            LOGGER.info("Failed Jwt verification", e);
             return false;
         }
     }
@@ -72,7 +72,7 @@ public class JwtTokenVerifier {
                 .parseClaimsJws(token);
             return true;
         } catch (JwtException e) {
-            LOGGER.info("Jwt validation failed for claim " + attributeName + " to " + expectedValue, e);
+            LOGGER.info("Jwt validation failed for claim {} to {}", attributeName, expectedValue, e);
             return false;
         }
     }

@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
@@ -36,6 +37,8 @@ import javax.mail.internet.MimeMessage.RecipientType;
 import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.core.MailAddress;
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.api.SyntaxException;
 import org.apache.james.sieverepository.api.ScriptSummary;
@@ -43,15 +46,12 @@ import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 
 public class ManageSieveMailetTestCase {
@@ -476,8 +476,8 @@ public class ManageSieveMailetTestCase {
     private Mail createUnauthenticatedMail(MimeMessage message) throws Exception {
         return FakeMail.builder()
                 .mimeMessage(message)
-                .sender(new MailAddress(USER))
-                .recipient(new MailAddress(SIEVE_LOCALHOST))
+                .sender(USER)
+                .recipient(SIEVE_LOCALHOST)
                 .build();
     }
 
@@ -505,8 +505,7 @@ public class ManageSieveMailetTestCase {
                     .data(scriptContent)
                     .disposition(MimeBodyPart.ATTACHMENT)
                     .filename(SCRIPT_NAME)
-                    .addHeader("Content-Type", "application/sieve; charset=UTF-8")
-                    .build())
+                    .addHeader("Content-Type", "application/sieve; charset=UTF-8"))
             .build();
     }
 
@@ -514,11 +513,11 @@ public class ManageSieveMailetTestCase {
         MimeMessage result = verifyHeaders(subject);
         MimeMultipart multipart = (MimeMultipart) result.getContent();
         assertThat(multipart.getCount()).isEqualTo(contents.length);
-        for(int i = 0; i < contents.length; i++) {
+        for (int i = 0; i < contents.length; i++) {
             if (multipart.getBodyPart(i).getContent() instanceof String) {
                 assertThat(((String) multipart.getBodyPart(i).getContent()).trim()).isEqualTo(contents[i]);
             } else {
-                assertThat(IOUtils.toString((ByteArrayInputStream) multipart.getBodyPart(i).getContent(), Charsets.UTF_8).trim()).isEqualTo(contents[i]);
+                assertThat(IOUtils.toString((ByteArrayInputStream) multipart.getBodyPart(i).getContent(), StandardCharsets.UTF_8).trim()).isEqualTo(contents[i]);
             }
         }
     }

@@ -24,7 +24,6 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
-import org.apache.mailet.base.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +46,7 @@ public class ProcessRedirectNotify {
 
         // duplicates the Mail object, to be able to modify the new mail keeping
         // the original untouched
-        MailImpl newMail = new MailImpl(originalMail);
+        MailImpl newMail = MailImpl.duplicate(originalMail);
         try {
             MailModifier mailModifier = MailModifier.builder()
                     .mailet(mailet)
@@ -58,8 +57,8 @@ public class ProcessRedirectNotify {
             mailModifier.setRemoteHost();
 
             if (mailet.getInitParameters().isDebug()) {
-                LOGGER.debug("New mail - sender: " + newMail.getSender() + ", recipients: " + StringUtils.arrayToString(newMail.getRecipients().toArray()) + ", name: " + newMail.getName() + ", remoteHost: " + newMail.getRemoteHost() + ", remoteAddr: " + newMail.getRemoteAddr() + ", state: " + newMail.getState()
-                        + ", lastUpdated: " + newMail.getLastUpdated() + ", errorMessage: " + newMail.getErrorMessage());
+                LOGGER.debug("New mail - sender: {}, recipients: {}, name: {}, remoteHost: {}, remoteAddr: {}, state: {}, lastUpdated: {}, errorMessage: {}",
+                        newMail.getSender(), newMail.getRecipients(), newMail.getName(), newMail.getRemoteHost(), newMail.getRemoteAddr(), newMail.getState(), newMail.getLastUpdated(), newMail.getErrorMessage());
             }
 
             // Create the message
@@ -143,9 +142,9 @@ public class ProcessRedirectNotify {
         }
 
         protected void updateHeaders() throws MessagingException {
-            if (getMessageID() == null)
+            if (getMessageID() == null) {
                 super.updateHeaders();
-            else {
+            } else {
                 modified = false;
             }
         }

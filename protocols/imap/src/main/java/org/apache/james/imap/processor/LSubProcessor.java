@@ -68,7 +68,7 @@ public class LSubProcessor extends AbstractSubscriptionProcessor<LsubRequest> {
 
             okComplete(command, tag, responder);
         } catch (MailboxException e) {
-            LOGGER.error("LSub failed for reference " + referenceName + " and pattern " + mailboxPattern, e);
+            LOGGER.error("LSub failed for reference {} and pattern {}", referenceName, mailboxPattern, e);
             no(command, tag, responder, HumanReadableText.GENERIC_LSUB_FAILURE);
         }
     }

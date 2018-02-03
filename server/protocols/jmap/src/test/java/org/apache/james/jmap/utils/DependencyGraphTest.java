@@ -114,7 +114,7 @@ public class DependencyGraphTest {
         assertThat(actual).extracting(Commit::getMessage).containsExactly("A", "B", "C", "E", "D", "F", "G");
     }
     
-    @Test(expected=CycleDetectedException.class)
+    @Test(expected = CycleDetectedException.class)
     public void getBuildChainOnTreeWithLoopShouldFail() {
         //Given
         Commit a = new Commit("A");
@@ -128,7 +128,7 @@ public class DependencyGraphTest {
         testee.getBuildChain();
     }
     
-    @Test(expected=CycleDetectedException.class)
+    @Test(expected = CycleDetectedException.class)
     public void getBuildChainOnTreeWithComplexLoopShouldFail() {
         // a - b
         // c - d - e - f

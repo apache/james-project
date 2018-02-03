@@ -19,10 +19,10 @@
 
 package org.apache.james.jmap.api.access;
 
-import org.apache.james.jmap.api.access.exceptions.NotAnAccessTokenException;
-
 import java.util.Objects;
 import java.util.UUID;
+
+import org.apache.james.jmap.api.access.exceptions.NotAnAccessTokenException;
 
 public class AccessToken {
 

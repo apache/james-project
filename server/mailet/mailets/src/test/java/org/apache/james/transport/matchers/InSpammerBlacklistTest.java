@@ -28,10 +28,10 @@ import java.util.Collection;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.mock.MockDNSService;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Test;
@@ -39,8 +39,8 @@ import org.junit.Test;
 public class InSpammerBlacklistTest {
 
     private InSpammerBlacklist matcher;
-    private final static String BLACKLIST = "my.black.list.";
-    private final static StringBuffer LISTED_HOST = new StringBuffer("111.222.111.222");
+    private static final String BLACKLIST = "my.black.list.";
+    private static final StringBuffer LISTED_HOST = new StringBuffer("111.222.111.222");
 
     private DNSService setUpDNSServer() {
         return new MockDNSService() {
@@ -59,7 +59,7 @@ public class InSpammerBlacklistTest {
     private Mail createMail(String remoteAddr) throws MessagingException {
         return FakeMail.builder()
                 .remoteAddr(remoteAddr)
-                .recipient(new MailAddress("test@email"))
+                .recipient("test@email")
                 .build();
 
     }

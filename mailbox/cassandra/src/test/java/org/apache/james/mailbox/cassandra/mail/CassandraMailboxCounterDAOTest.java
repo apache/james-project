@@ -53,7 +53,6 @@ public class CassandraMailboxCounterDAOTest {
 
     @After
     public void tearDown() {
-        cassandra.clearAllTables();
         cassandra.close();
     }
 

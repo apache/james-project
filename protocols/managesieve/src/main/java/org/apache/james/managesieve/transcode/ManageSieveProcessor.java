@@ -20,12 +20,12 @@
 
 package org.apache.james.managesieve.transcode;
 
+import javax.inject.Inject;
+
 import org.apache.james.managesieve.api.ManageSieveException;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
-
-import javax.inject.Inject;
 
 public class ManageSieveProcessor {
 
@@ -67,10 +67,10 @@ public class ManageSieveProcessor {
             command = request;
         }
         if (command.endsWith("\n")) {
-            command = command.substring(0, command.length()-1);
+            command = command.substring(0, command.length() - 1);
         }
         if (command.endsWith("\r")) {
-            command = command.substring(0, command.length()-1);
+            command = command.substring(0, command.length() - 1);
         }
         return command;
     }

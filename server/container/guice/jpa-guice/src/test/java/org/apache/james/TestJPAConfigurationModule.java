@@ -39,7 +39,7 @@ public class TestJPAConfigurationModule extends AbstractModule {
 
     @Provides
     @Singleton
-    JPAConfiguration provideConfiguration() throws FileNotFoundException, ConfigurationException{
+    JPAConfiguration provideConfiguration() throws FileNotFoundException, ConfigurationException {
         return JPAConfiguration.builder()
                 .driverName(JDBC_EMBEDDED_DRIVER)
                 .driverURL(JDBC_EMBEDDED_URL)

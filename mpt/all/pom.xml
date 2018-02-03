@@ -72,7 +72,7 @@ MPT is a functional test framework specialised for the ASCII line-base protocols
                         <goals>
                             <goal>single</goal>
                         </goals>
-			<phase>package</phase>
+            <phase>package</phase>
                     </execution>
                 </executions>
             </plugin>

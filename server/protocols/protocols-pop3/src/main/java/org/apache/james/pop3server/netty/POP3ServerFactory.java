@@ -10,12 +10,14 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
+import org.jboss.netty.util.HashedWheelTimer;
 
-public class POP3ServerFactory extends AbstractServerFactory{
+public class POP3ServerFactory extends AbstractServerFactory {
 
     private ProtocolHandlerLoader loader;
     private FileSystem fileSystem;
-    
+    private HashedWheelTimer hashedWheelTimer;
+
     @Inject
     public void setProtocolHandlerLoader(ProtocolHandlerLoader loader) {
         this.loader = loader;
@@ -26,12 +28,17 @@ public class POP3ServerFactory extends AbstractServerFactory{
         this.fileSystem = filesystem;
     }
 
+    @Inject
+    public void setHashedWheelTimer(HashedWheelTimer hashedWheelTimer) {
+        this.hashedWheelTimer = hashedWheelTimer;
+    }
+
     protected POP3Server createServer() {
        return new POP3Server();
     }
     
     @Override
-    protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration config) throws Exception{
+    protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration config) throws Exception {
 
         List<AbstractConfigurableAsyncServer> servers = new ArrayList<>();
         List<HierarchicalConfiguration> configs = config.configurationsAt("pop3server");
@@ -40,6 +47,7 @@ public class POP3ServerFactory extends AbstractServerFactory{
             POP3Server server = createServer();
             server.setProtocolHandlerLoader(loader);
             server.setFileSystem(fileSystem);
+            server.setHashWheelTimer(hashedWheelTimer);
             server.configure(serverConfig);
             servers.add(server);
         }

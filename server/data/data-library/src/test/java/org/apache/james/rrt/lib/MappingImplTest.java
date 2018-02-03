@@ -27,23 +27,23 @@ import org.junit.Test;
 
 public class MappingImplTest {
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void addressFactoryMethodShouldThrowOnNull() {
         assertThat(MappingImpl.address(null));
     }
     
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void regexFactoryMethodShouldThrowOnNull() {
         assertThat(MappingImpl.regex(null));
     }
     
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void domainFactoryMethodShouldThrowOnNull() {
         assertThat(MappingImpl.domain(null));
     }
     
     
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void errorFactoryMethodShouldThrowOnNull() {
         assertThat(MappingImpl.error(null));
     }
@@ -78,7 +78,7 @@ public class MappingImplTest {
         assertThat(MappingImpl.address("abc@d").appendDomain("domain")).isEqualTo(MappingImpl.address("abc@d@domain"));
     }
     
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void appendDomainShouldThrowWhenNullDomain() {
         MappingImpl.address("abc@d").appendDomain(null);
     }
@@ -113,7 +113,7 @@ public class MappingImplTest {
         assertThat(MappingImpl.domain("abc").getType()).isEqualTo(Mapping.Type.Domain);
     }
     
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void getErrorMessageShouldThrowWhenMappingIsNotAnError() {
         MappingImpl.domain("toto").getErrorMessage();
     }

@@ -58,6 +58,10 @@ public class FakeMailetConfig implements MailetConfig {
             return this;
         }
 
+        public Builder mailetContext(FakeMailContext.Builder mailetContext) {
+            return mailetContext(mailetContext.build());
+        }
+
         public Builder setProperty(String key, String value) {
             this.properties.setProperty(key, value);
             return this;

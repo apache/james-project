@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
-public abstract class AbstractAuthProcessor<M extends ImapRequest> extends AbstractMailboxProcessor<M>{
+public abstract class AbstractAuthProcessor<M extends ImapRequest> extends AbstractMailboxProcessor<M> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractAuthProcessor.class);
 
     private static final String ATTRIBUTE_NUMBER_OF_FAILURES = "org.apache.james.imap.processor.imap4rev1.NUMBER_OF_FAILURES";
@@ -111,19 +111,13 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
                 manageFailureCount(session, tag, command, responder, failed);
             }
         } catch (UserDoesNotExistException e) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("User " + authenticationAttempt.getAuthenticationId() + " does not exist", e);
-            }
+            LOGGER.info("User {} does not exist", authenticationAttempt.getAuthenticationId(), e);
             no(command, tag, responder, HumanReadableText.USER_DOES_NOT_EXIST);
         } catch (NotAdminException e) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("User " + authenticationAttempt.getDelegateUserName() + " is not an admin", e);
-            }
+            LOGGER.info("User {} is not an admin", authenticationAttempt.getDelegateUserName(), e);
             no(command, tag, responder, HumanReadableText.NOT_AN_ADMIN);
         } catch (MailboxException e) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Login failed", e);
-            }
+            LOGGER.info("Login failed", e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }
@@ -131,13 +125,11 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
     private void provisionInbox(ImapSession session, MailboxManager mailboxManager, MailboxSession mailboxSession) throws MailboxException {
         final MailboxPath inboxPath = PathConverter.forSession(session).buildFullPath(MailboxConstants.INBOX);
         if (mailboxManager.mailboxExists(inboxPath, mailboxSession)) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("INBOX exists. No need to create it.");
-            }
+            LOGGER.debug("INBOX exists. No need to create it.");
         } else {
             try {
                 Optional<MailboxId> mailboxId = mailboxManager.createMailbox(inboxPath, mailboxSession);
-                LOGGER.info("Provisioning INBOX. " + mailboxId + " created.");
+                LOGGER.info("Provisioning INBOX. {} created.", mailboxId);
             } catch (MailboxExistsException e) {
                 LOGGER.warn("Mailbox INBOX created by concurrent call. Safe to ignore this exception.");
             }
@@ -156,9 +148,7 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
             session.setAttribute(ATTRIBUTE_NUMBER_OF_FAILURES, failures);
             no(command, tag, responder, failed);
         } else {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Too many authentication failures. Closing connection.");
-            }
+            LOGGER.info("Too many authentication failures. Closing connection.");
             bye(responder, HumanReadableText.TOO_MANY_FAILURES);
             session.logout();
         }

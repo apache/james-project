@@ -47,8 +47,7 @@ public class DomainListManagement extends StandardMBean implements DomainListMan
     public void addDomain(String domain) throws Exception {
         try {
             domainList.addDomain(domain);
-        }
-        catch (DomainListException e) {
+        } catch (DomainListException e) {
             throw new Exception(e.getMessage());
         }
     }
@@ -57,8 +56,7 @@ public class DomainListManagement extends StandardMBean implements DomainListMan
     public boolean containsDomain(String domain) throws Exception {
         try {
             return domainList.containsDomain(domain);
-        }
-        catch (DomainListException e) {
+        } catch (DomainListException e) {
             throw new Exception(e.getMessage());
         }
     }
@@ -67,8 +65,7 @@ public class DomainListManagement extends StandardMBean implements DomainListMan
     public List<String> getDomains() throws Exception {
         try {
             return ImmutableList.copyOf(domainList.getDomains());
-        }
-        catch (DomainListException e) {
+        } catch (DomainListException e) {
             throw new Exception(e.getMessage());
         }
     }
@@ -77,8 +74,7 @@ public class DomainListManagement extends StandardMBean implements DomainListMan
     public void removeDomain(String domain) throws Exception {
         try {
             domainList.removeDomain(domain);
-        }
-        catch (DomainListException e) {
+        } catch (DomainListException e) {
             throw new Exception(e.getMessage());
         }
     }
@@ -87,8 +83,7 @@ public class DomainListManagement extends StandardMBean implements DomainListMan
     public String getDefaultDomain() throws Exception {
         try {
             return domainList.getDefaultDomain();
-        }
-        catch (DomainListException e) {
+        } catch (DomainListException e) {
             throw new Exception(e.getMessage());
         }
 

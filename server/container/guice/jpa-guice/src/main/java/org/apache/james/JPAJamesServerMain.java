@@ -36,6 +36,8 @@ import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.DefaultProcessorsConfigurationProviderModule;
 import org.apache.james.modules.server.ElasticSearchMetricReporterModule;
 import org.apache.james.modules.server.JMXServerModule;
+import org.apache.james.modules.server.MailQueueRoutesModule;
+import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
@@ -47,22 +49,24 @@ import com.google.inject.util.Modules;
 
 public class JPAJamesServerMain {
 
-    public static final Module webadmin = Modules.combine(
+    public static final Module WEBADMIN = Modules.combine(
         new WebAdminServerModule(),
         new DataRoutesModules(),
         new MailboxRoutesModule(),
+        new MailQueueRoutesModule(),
+        new MailRepositoriesRoutesModule(),
         new SwaggerRoutesModule());
 
-    public static final Module protocols = Modules.combine(
+    public static final Module PROTOCOLS = Modules.combine(
         new IMAPServerModule(),
         new LMTPServerModule(),
         new ManageSieveServerModule(),
         new POP3ServerModule(),
         new ProtocolHandlerModule(),
         new SMTPServerModule(),
-        webadmin);
+        WEBADMIN);
     
-    public static final Module jpaServerModule = Modules.combine(
+    public static final Module JPA_SERVER_MODULE = Modules.combine(
         new ActiveMQQueueModule(),
         new DefaultProcessorsConfigurationProviderModule(),
         new ElasticSearchMetricReporterModule(),
@@ -76,7 +80,7 @@ public class JPAJamesServerMain {
 
     public static void main(String[] args) throws Exception {
         GuiceJamesServer server = new GuiceJamesServer()
-                    .combineWith(jpaServerModule, protocols, 
+                    .combineWith(JPA_SERVER_MODULE, PROTOCOLS,
                             new JMXServerModule(), 
                             new LuceneSearchMailboxModule());
         server.start();

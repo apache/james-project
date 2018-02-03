@@ -23,7 +23,7 @@ import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.handler.LineHandler;
 
-public interface IMAPSession extends ProtocolSession{
+public interface IMAPSession extends ProtocolSession {
 
     /**
      * Pop the last command handler 

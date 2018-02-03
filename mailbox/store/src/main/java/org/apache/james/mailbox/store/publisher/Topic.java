@@ -35,7 +35,9 @@ public class Topic {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         Topic topic = (Topic) o;
         return Objects.equal(this.value, topic.value);
     }

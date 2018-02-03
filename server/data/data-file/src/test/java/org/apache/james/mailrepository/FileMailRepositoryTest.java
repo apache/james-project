@@ -23,26 +23,87 @@ import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.file.FileMailRepository;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 
-public class FileMailRepositoryTest extends AbstractMailRepositoryTest {
+public class FileMailRepositoryTest {
 
-    /**
-     * @return
-     * @throws ServiceException
-     * @throws ConfigurationException
-     * @throws Exception
-     */
-    @Override
-    protected MailRepository getMailRepository() throws Exception {
-        MockFileSystem fs = new MockFileSystem();
-        FileMailRepository mr = new FileMailRepository();
-        mr.setFileSystem(fs);
-        DefaultConfigurationBuilder defaultConfiguration = new DefaultConfigurationBuilder();
-        defaultConfiguration.addProperty("[@destinationURL]", "file://target/var/mr");
-        defaultConfiguration.addProperty("[@type]", "MAIL");
-        mr.configure(defaultConfiguration);
-        mr.init();
-        return mr;
+    public abstract class GenericFileMailRepositoryTest implements MailRepositoryContract {
+        private FileMailRepository mailRepository;
+        private MockFileSystem filesystem;
+
+        @BeforeEach
+        void init() throws Exception {
+            filesystem = new MockFileSystem();
+            mailRepository = new FileMailRepository();
+            mailRepository.setFileSystem(filesystem);
+            mailRepository.configure(getConfiguration());
+            mailRepository.init();
+        }
+
+        protected DefaultConfigurationBuilder getConfiguration() {
+            DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
+            configuration.addProperty("[@destinationURL]", "file://target/var/mailRepository");
+            return withConfigurationOptions(configuration);
+        }
+
+        protected abstract DefaultConfigurationBuilder withConfigurationOptions(DefaultConfigurationBuilder configuration);
+
+        @AfterEach
+        void tearDown() {
+            filesystem.clear();
+        }
+
+        @Override
+        public MailRepository retrieveRepository() {
+            return mailRepository;
+        }
+    }
+
+    @Nested
+    @DisplayName("Default configuration")
+    public class DefaultFileMailRepositoryTest extends GenericFileMailRepositoryTest {
+
+        protected DefaultConfigurationBuilder withConfigurationOptions(DefaultConfigurationBuilder configuration) {
+            configuration.addProperty("[@FIFO]", "false");
+            configuration.addProperty("[@CACHEKEYS]", "true");
+            return configuration;
+        }
+    }
+
+    @Nested
+    @DisplayName("No cache configuration")
+    public class NoCacheFileMailRepositoryTest extends GenericFileMailRepositoryTest {
+
+        protected DefaultConfigurationBuilder withConfigurationOptions(DefaultConfigurationBuilder configuration) {
+            configuration.addProperty("[@FIFO]", "false");
+            configuration.addProperty("[@CACHEKEYS]", "false");
+            return configuration;
+        }
+    }
+
+    @Nested
+    @DisplayName("Fifo configuration")
+    public class FifoFileMailRepositoryTest extends GenericFileMailRepositoryTest {
+
+        protected DefaultConfigurationBuilder withConfigurationOptions(DefaultConfigurationBuilder configuration) {
+            configuration.addProperty("[@FIFO]", "true");
+            configuration.addProperty("[@CACHEKEYS]", "true");
+            return configuration;
+        }
+    }
+
+    @Nested
+    @DisplayName("Fifo no cache configuration")
+    public class FifoNoCacheFileMailRepositoryTest extends GenericFileMailRepositoryTest {
+
+        protected DefaultConfigurationBuilder withConfigurationOptions(DefaultConfigurationBuilder configuration) {
+            configuration.addProperty("[@FIFO]", "true");
+            configuration.addProperty("[@CACHEKEYS]", "false");
+            return configuration;
+        }
     }
 
 }

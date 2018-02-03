@@ -35,6 +35,7 @@ import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMailboxesRequest;
 import org.apache.james.jmap.model.GetMailboxesResponse;
 import org.apache.james.jmap.model.MailboxFactory;
+import org.apache.james.jmap.model.Number;
 import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.jmap.model.mailbox.SortOrder;
@@ -138,7 +139,7 @@ public class GetMailboxesMethodTest {
                 .extracting(GetMailboxesResponse.class::cast)
                 .flatExtracting(GetMailboxesResponse::getList)
                 .extracting(Mailbox::getId, Mailbox::getName, Mailbox::getUnreadMessages)
-                .containsOnly(Tuple.tuple(InMemoryId.of(1), mailboxPath.getName(), 2L));
+                .containsOnly(Tuple.tuple(InMemoryId.of(1), mailboxPath.getName(), Number.fromLong(2L)));
     }
 
     @Test
@@ -232,13 +233,13 @@ public class GetMailboxesMethodTest {
     public void getMailboxesShouldReturnMailboxesWithSortOrder() throws Exception {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME);
         mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "INBOX"), mailboxSession);
-        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "ARCHIVE"), mailboxSession);
-        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "DRAFTS"), mailboxSession);
-        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "OUTBOX"), mailboxSession);
-        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "SENT"), mailboxSession);
-        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "TRASH"), mailboxSession);
-        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "SPAM"), mailboxSession);
-        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "TEMPLATES"), mailboxSession);
+        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Archive"), mailboxSession);
+        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Drafts"), mailboxSession);
+        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Outbox"), mailboxSession);
+        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Sent"), mailboxSession);
+        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Trash"), mailboxSession);
+        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Spam"), mailboxSession);
+        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Templates"), mailboxSession);
 
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
@@ -254,13 +255,13 @@ public class GetMailboxesMethodTest {
                 .extracting(Mailbox::getName, Mailbox::getSortOrder)
                 .containsExactly(
                         Tuple.tuple("INBOX", SortOrder.of(10)),
-                        Tuple.tuple("ARCHIVE", SortOrder.of(20)),
-                        Tuple.tuple("DRAFTS", SortOrder.of(30)),
-                        Tuple.tuple("OUTBOX", SortOrder.of(40)),
-                        Tuple.tuple("SENT", SortOrder.of(50)),
-                        Tuple.tuple("TRASH", SortOrder.of(60)),
-                        Tuple.tuple("SPAM", SortOrder.of(70)),
-                        Tuple.tuple("TEMPLATES", SortOrder.of(80)));
+                        Tuple.tuple("Archive", SortOrder.of(20)),
+                        Tuple.tuple("Drafts", SortOrder.of(30)),
+                        Tuple.tuple("Outbox", SortOrder.of(40)),
+                        Tuple.tuple("Sent", SortOrder.of(50)),
+                        Tuple.tuple("Trash", SortOrder.of(60)),
+                        Tuple.tuple("Spam", SortOrder.of(70)),
+                        Tuple.tuple("Templates", SortOrder.of(80)));
     }
 
     @Test
@@ -281,7 +282,7 @@ public class GetMailboxesMethodTest {
                 .extracting(GetMailboxesResponse.class::cast)
                 .flatExtracting(GetMailboxesResponse::getList)
                 .extracting(Mailbox::getTotalMessages, Mailbox::getUnreadMessages)
-                .containsOnly(Tuple.tuple(0L, 0L));
+                .containsOnly(Tuple.tuple(Number.ZERO, Number.ZERO));
     }
 
     @Test
@@ -305,7 +306,7 @@ public class GetMailboxesMethodTest {
                 .extracting(GetMailboxesResponse.class::cast)
                 .flatExtracting(GetMailboxesResponse::getList)
                 .extracting(Mailbox::getTotalMessages)
-                .containsExactly(2L);
+                .containsExactly(Number.fromLong(2L));
     }
 
     @Test
@@ -317,8 +318,8 @@ public class GetMailboxesMethodTest {
         Flags defaultUnseenFlag = new Flags();
         Flags readMessageFlag = new Flags();
         readMessageFlag.add(Flags.Flag.SEEN);
-        messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, defaultUnseenFlag );
-        messageManager.appendMessage(new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, defaultUnseenFlag );
+        messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, defaultUnseenFlag);
+        messageManager.appendMessage(new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, defaultUnseenFlag);
         messageManager.appendMessage(new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, readMessageFlag);
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
@@ -332,20 +333,20 @@ public class GetMailboxesMethodTest {
                 .extracting(GetMailboxesResponse.class::cast)
                 .flatExtracting(GetMailboxesResponse::getList)
                 .extracting(Mailbox::getUnreadMessages)
-                .containsExactly(2L);
+                .containsExactly(Number.fromLong(2L));
     }
 
     @Test
     public void getMailboxesShouldReturnMailboxesWithRoles() throws Exception {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME);
         mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "INBOX"), mailboxSession);
-        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "ARCHIVE"), mailboxSession);
-        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "DRAFTS"), mailboxSession);
-        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "OUTBOX"), mailboxSession);
-        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "SENT"), mailboxSession);
-        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "TRASH"), mailboxSession);
-        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "SPAM"), mailboxSession);
-        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "TEMPLATES"), mailboxSession);
+        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Archive"), mailboxSession);
+        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Drafts"), mailboxSession);
+        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Outbox"), mailboxSession);
+        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Sent"), mailboxSession);
+        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Trash"), mailboxSession);
+        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Spam"), mailboxSession);
+        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Templates"), mailboxSession);
         mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "WITHOUT ROLE"), mailboxSession);
         
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
@@ -362,13 +363,13 @@ public class GetMailboxesMethodTest {
                 .extracting(Mailbox::getName, Mailbox::getRole)
                 .containsOnly(
                         Tuple.tuple("INBOX", Optional.of(Role.INBOX)),
-                        Tuple.tuple("ARCHIVE", Optional.of(Role.ARCHIVE)),
-                        Tuple.tuple("DRAFTS", Optional.of(Role.DRAFTS)),
-                        Tuple.tuple("OUTBOX", Optional.of(Role.OUTBOX)),
-                        Tuple.tuple("SENT", Optional.of(Role.SENT)),
-                        Tuple.tuple("TRASH", Optional.of(Role.TRASH)),
-                        Tuple.tuple("SPAM", Optional.of(Role.SPAM)),
-                        Tuple.tuple("TEMPLATES", Optional.of(Role.TEMPLATES)),
+                        Tuple.tuple("Archive", Optional.of(Role.ARCHIVE)),
+                        Tuple.tuple("Drafts", Optional.of(Role.DRAFTS)),
+                        Tuple.tuple("Outbox", Optional.of(Role.OUTBOX)),
+                        Tuple.tuple("Sent", Optional.of(Role.SENT)),
+                        Tuple.tuple("Trash", Optional.of(Role.TRASH)),
+                        Tuple.tuple("Spam", Optional.of(Role.SPAM)),
+                        Tuple.tuple("Templates", Optional.of(Role.TEMPLATES)),
                         Tuple.tuple("WITHOUT ROLE", Optional.empty()));
     }
 }

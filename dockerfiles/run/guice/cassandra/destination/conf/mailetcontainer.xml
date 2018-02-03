@@ -44,7 +44,7 @@
             </mailet>
             <mailet match="All" class="Bounce"/>
             <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/error/</repositoryPath>
+                <repositoryPath>cassandra://var/mail/error/</repositoryPath>
             </mailet>
         </processor>
 
@@ -52,13 +52,16 @@
             <mailet match="SMTPAuthSuccessful" class="SetMimeHeader">
                 <name>X-UserIsAuth</name>
                 <value>true</value>
+                <onMailetException>ignore</onMailetException>
             </mailet>
             <mailet match="HasMailAttribute=org.apache.james.SMIMECheckSignature" class="SetMimeHeader">
                 <name>X-WasSigned</name>
                 <value>true</value>
+                <onMailetException>ignore</onMailetException>
             </mailet>
             <mailet match="All" class="RemoveMimeHeader">
                 <name>bcc</name>
+                <onMailetException>ignore</onMailetException>
             </mailet>
             <mailet match="All" class="RecipientRewriteTable" />
             <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet"/>
@@ -71,6 +74,9 @@
             </mailet>
 
             <mailet match="SMTPAuthSuccessful" class="SetMailAttribute">
+                <RelayAllowed>true</RelayAllowed>
+            </mailet>
+            <mailet match="SMTPIsAuthNetwork" class="SetMailAttribute">
                 <RelayAllowed>true</RelayAllowed>
             </mailet>
             <mailet match="SentByMailet" class="SetMailAttribute">
@@ -105,7 +111,7 @@
                 <metricName>mailetContainerSpam</metricName>
             </mailet>
             <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/spam/</repositoryPath>
+                <repositoryPath>cassandra://var/mail/spam/</repositoryPath>
             </mailet>
         </processor>
 
@@ -117,7 +123,7 @@
                 <attachment>none</attachment>
             </mailet>
             <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/address-error/</repositoryPath>
+                <repositoryPath>cassandra://var/mail/address-error/</repositoryPath>
             </mailet>
         </processor>
 
@@ -129,7 +135,7 @@
                 <attachment>none</attachment>
             </mailet>
             <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/relay-denied/</repositoryPath>
+                <repositoryPath>cassandra://var/mail/relay-denied/</repositoryPath>
                 <notice>Warning: You are sending an e-mail to a remote server. You must be authenticated to perform such an operation</notice>
             </mailet>
         </processor>

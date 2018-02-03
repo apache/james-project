@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+
 import javax.annotation.PostConstruct;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
@@ -39,6 +40,11 @@ import javax.naming.directory.SearchResult;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.lang.StringUtils;
+import org.apache.directory.api.ldap.model.filter.FilterEncoder;
+import org.apache.james.core.MailAddress;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -47,10 +53,6 @@ import org.apache.james.user.ldap.api.LdapConstants;
 import org.apache.james.util.retry.DoublingRetrySchedule;
 import org.apache.james.util.retry.api.RetrySchedule;
 import org.apache.james.util.retry.naming.ldap.RetryingLdapContext;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.lang.StringUtils;
-import org.apache.james.core.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -454,8 +456,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         };
     }
 
-    protected Properties getContextEnvironment()
-    {
+    protected Properties getContextEnvironment() {
         final Properties props = new Properties();
         props.put(Context.INITIAL_CONTEXT_FACTORY, INITIAL_CONTEXT_FACTORY);
         props.put(Context.PROVIDER_URL, null == ldapHost ? "" : ldapHost);
@@ -468,12 +469,10 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         }
         // The following properties are specific to com.sun.jndi.ldap.LdapCtxFactory
         props.put(PROPERTY_NAME_CONNECTION_POOL, Boolean.toString(useConnectionPool));
-        if (connectionTimeout > -1)
-        {
+        if (connectionTimeout > -1) {
             props.put(PROPERTY_NAME_CONNECT_TIMEOUT, Integer.toString(connectionTimeout));
         }
-        if (readTimeout > -1)
-        {
+        if (readTimeout > -1) {
             props.put(PROPERTY_NAME_READ_TIMEOUT, Integer.toString(readTimeout));
         }
         return props;
@@ -562,7 +561,6 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         return results;
     }
 
-
     /**
      * For a given name, this method makes ldap search in userBase with filter {@link #userIdAttribute}=name and objectClass={@link #userObjectClass}
      * and builds {@link User} based on search result.
@@ -576,36 +574,36 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      *             Propagated by the underlying LDAP communication layer.
      */
     private ReadOnlyLDAPUser searchAndBuildUser(String name) throws NamingException {
-      SearchControls sc = new SearchControls();
-      sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
-      sc.setReturningAttributes(new String[] { userIdAttribute });
-      sc.setCountLimit(1);
+        SearchControls sc = new SearchControls();
+        sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
+        sc.setReturningAttributes(new String[] { userIdAttribute });
+        sc.setCountLimit(1);
 
-      StringBuilder builderFilter = new StringBuilder("(&(");
-      builderFilter.append(userIdAttribute).append("=").append(name).append(")")
-                   .append("(objectClass=").append(userObjectClass).append(")");
+        String filterTemplate = "(&({0}={1})(objectClass={2})" +
+            StringUtils.defaultString(filter, "") +
+            ")";
 
-     if(StringUtils.isNotEmpty(filter)){
-    	 builderFilter.append(filter).append(")");
-    	 }
-     else{
-    	 builderFilter.append(")");
-     }
+        String sanitizedFilter = FilterEncoder.format(
+            filterTemplate,
+            userIdAttribute,
+            name,
+            userObjectClass);
 
-      NamingEnumeration<SearchResult> sr = ldapContext.search(userBase, builderFilter.toString(),
-          sc);
+        NamingEnumeration<SearchResult> sr = ldapContext.search(userBase, sanitizedFilter, sc);
 
-      if (!sr.hasMore())
+        if (!sr.hasMore()) {
+            return null;
+        }
+
+        SearchResult r = sr.next();
+        Attribute userName = r.getAttributes().get(userIdAttribute);
+
+        if (!restriction.isActivated()
+            || userInGroupsMembershipList(r.getNameInNamespace(), restriction.getGroupMembershipLists(ldapContext))) {
+            return new ReadOnlyLDAPUser(userName.get().toString(), r.getNameInNamespace(), ldapContext);
+        }
+
         return null;
-
-      SearchResult r = sr.next();
-      Attribute userName = r.getAttributes().get(userIdAttribute);
-
-      if (!restriction.isActivated()
-          || userInGroupsMembershipList(r.getNameInNamespace(), restriction.getGroupMembershipLists(ldapContext)))
-        return new ReadOnlyLDAPUser(userName.get().toString(), r.getNameInNamespace(), ldapContext);
-
-      return null;
     }
 
     /**
@@ -740,8 +738,9 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
             String userDN;
             while (userDNIterator.hasNext()) {
                 userDN = userDNIterator.next();
-                if (userInGroupsMembershipList(userDN, groupMembershipList))
+                if (userInGroupsMembershipList(userDN, groupMembershipList)) {
                     validUserDNs.add(userDN);
+                }
             }
         } else {
             validUserDNs = userDNs;

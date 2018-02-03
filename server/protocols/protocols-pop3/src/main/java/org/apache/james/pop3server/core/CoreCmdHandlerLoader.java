@@ -44,26 +44,26 @@ import org.apache.james.protocols.pop3.core.WelcomeMessageHandler;
 
 public class CoreCmdHandlerLoader implements HandlersPackage {
 
-    private final static String CAPACMDHANDLER = CapaCmdHandler.class.getName();
-    private final static String USERCMDHANDLER = UserCmdHandler.class.getName();
-    private final static String PASSCMDHANDLER = PassCmdHandler.class.getName();
-    private final static String LISTCMDHANDLER = ListCmdHandler.class.getName();
-    private final static String UIDLCMDHANDLER = UidlCmdHandler.class.getName();
-    private final static String RSETCMDHANDLER = RsetCmdHandler.class.getName();
-    private final static String DELECMDHANDLER = DeleCmdHandler.class.getName();
-    private final static String NOOPCMDHANDLER = NoopCmdHandler.class.getName();
-    private final static String RETRSCMDHANDLER = RetrCmdHandler.class.getName();
-    private final static String TOPCMDHANDLER = TopCmdHandler.class.getName();
-    private final static String STATCMDHANDLER = StatCmdHandler.class.getName();
-    private final static String QUITCMDHANDLER = QuitCmdHandler.class.getName();
-    private final static String WELCOMEMESSAGEHANDLER = WelcomeMessageHandler.class.getName();
-    private final static String UNKOWNCMDHANDLER = UnknownCmdHandler.class.getName();
-    private final static String STLSCMDHANDLER = StlsCmdHandler.class.getName();
+    private static final String CAPACMDHANDLER = CapaCmdHandler.class.getName();
+    private static final String USERCMDHANDLER = UserCmdHandler.class.getName();
+    private static final String PASSCMDHANDLER = PassCmdHandler.class.getName();
+    private static final String LISTCMDHANDLER = ListCmdHandler.class.getName();
+    private static final String UIDLCMDHANDLER = UidlCmdHandler.class.getName();
+    private static final String RSETCMDHANDLER = RsetCmdHandler.class.getName();
+    private static final String DELECMDHANDLER = DeleCmdHandler.class.getName();
+    private static final String NOOPCMDHANDLER = NoopCmdHandler.class.getName();
+    private static final String RETRSCMDHANDLER = RetrCmdHandler.class.getName();
+    private static final String TOPCMDHANDLER = TopCmdHandler.class.getName();
+    private static final String STATCMDHANDLER = StatCmdHandler.class.getName();
+    private static final String QUITCMDHANDLER = QuitCmdHandler.class.getName();
+    private static final String WELCOMEMESSAGEHANDLER = WelcomeMessageHandler.class.getName();
+    private static final String UNKOWNCMDHANDLER = UnknownCmdHandler.class.getName();
+    private static final String STLSCMDHANDLER = StlsCmdHandler.class.getName();
 
-    private final static String COMMANDDISPATCHER = CommandDispatcher.class.getName();
+    private static final String COMMANDDISPATCHER = CommandDispatcher.class.getName();
 
     // logging stuff
-    private final static String COMMANDHANDLERRESULTLOGGER = CommandHandlerResultLogger.class.getName();
+    private static final String COMMANDHANDLERRESULTLOGGER = CommandHandlerResultLogger.class.getName();
 
 
     private final List<String> commands = new LinkedList<>();

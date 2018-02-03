@@ -32,14 +32,14 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.ParseException;
 
-import org.apache.james.server.core.MailImpl;
+import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
+import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
 @Experimental
 public abstract class AbstractRecipientRewriteTable extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRecipientRewriteTable.class);
-    static private final String MARKER = "org.apache.james.transport.mailets.AbstractRecipientRewriteTable.mapped";
+    private static final String MARKER = "org.apache.james.transport.mailets.AbstractRecipientRewriteTable.mapped";
     private DNSService dns;
     private DomainList domainList;
 
@@ -119,8 +119,9 @@ public abstract class AbstractRecipientRewriteTable extends GenericMailet {
                             } catch (PatternSyntaxException e) {
                                 LOGGER.error("Exception during regexMap processing: ", e);
                             }
-                            if (targetAddress == null)
+                            if (targetAddress == null) {
                                 continue;
+                            }
                         }
 
                         try {
@@ -176,7 +177,7 @@ public abstract class AbstractRecipientRewriteTable extends GenericMailet {
 
             // duplicates the Mail object, to be able to modify the new mail
             // keeping the original untouched
-            MailImpl newMail = new MailImpl(mail);
+            MailImpl newMail = MailImpl.duplicate(mail);
             try {
                 try {
                     newMail.setRemoteAddr(dns.getLocalHost().getHostAddress());
@@ -237,7 +238,7 @@ public abstract class AbstractRecipientRewriteTable extends GenericMailet {
             @SuppressWarnings("unused")
             Integer code = Integer.valueOf(error.substring("error:".length(), msgPos));
         } catch (NumberFormatException e) {
-            LOGGER.error("Cannot send DSN.  Exception parsing DSN code from: " + error, e);
+            LOGGER.error("Cannot send DSN.  Exception parsing DSN code from: {}", error, e);
             return;
         }
         @SuppressWarnings("unused")

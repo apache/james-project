@@ -49,7 +49,7 @@ import org.apache.james.protocols.pop3.core.WelcomeMessageHandler;
  * 
  *
  */
-public class POP3ProtocolHandlerChain extends ProtocolHandlerChainImpl{
+public class POP3ProtocolHandlerChain extends ProtocolHandlerChainImpl {
 
     public POP3ProtocolHandlerChain() {
         super();

@@ -22,15 +22,15 @@ package org.apache.james.transport.mailets;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
 import java.net.UnknownHostException;
 import java.util.Collection;
-import java.util.Properties;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.MimeMessage;
 
-import org.apache.james.dnsservice.api.DNSService;
+import javax.mail.MessagingException;
+
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.dnsservice.api.DNSService;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
@@ -206,13 +206,12 @@ public class ForwardTest {
                 .build();
         forward.init(mailetConfig);
 
-        MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
         String expectedSubject = "My subject";
-        mimeMessage.setSubject(expectedSubject);
         FakeMail mail = FakeMail.builder()
                 .name(MAILET_NAME)
                 .sender(MailAddressFixture.ANY_AT_JAMES)
-                .mimeMessage(mimeMessage)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setSubject("My subject"))
                 .build();
 
         forward.service(mail);

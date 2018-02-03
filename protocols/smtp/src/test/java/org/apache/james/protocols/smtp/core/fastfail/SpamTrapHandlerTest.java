@@ -81,7 +81,7 @@ public class SpamTrapHandlerTest {
             // Wait for the blockTime to exceed
             Thread.sleep(blockTime);
         } catch (InterruptedException e) {
-            fail("Failed to sleep for " + blockTime +" ms");
+            fail("Failed to sleep for " + blockTime + " ms");
         }
     
         result = handler.doRcpt(setUpSMTPSession(ip),null,new MailAddress(RECIP1)).getResult();

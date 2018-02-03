@@ -28,6 +28,7 @@ import org.apache.james.mailbox.model.MailboxPath;
  */
 public interface Mailbox {
     void setMailboxId(MailboxId id);
+    
     /**
      * Gets the unique mailbox ID.
      * @return mailbox id

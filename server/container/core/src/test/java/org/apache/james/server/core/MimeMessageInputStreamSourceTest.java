@@ -30,8 +30,8 @@ import org.junit.Test;
 
 public class MimeMessageInputStreamSourceTest {
 
-    private static final int _1M = 1024*1024;
-    private static final int _10KB = 10*1024;
+    private static final int _1M = 1024 * 1024;
+    private static final int _10KB = 10 * 1024;
     private MimeMessageInputStreamSource testee;
 
     @After

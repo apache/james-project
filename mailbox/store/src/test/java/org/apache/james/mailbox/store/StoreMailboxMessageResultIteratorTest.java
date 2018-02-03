@@ -198,7 +198,7 @@ public class StoreMailboxMessageResultIteratorTest {
         StoreMessageResultIterator it = new StoreMessageResultIterator(new TestMessageMapper(MessageRange.all()), null, range, batchSize, new TestFetchGroup());
 
         assertThat(it).extracting(input -> input.getUid().asLong())
-            .containsExactly(1l, 2l, 3l, 4l, 5l, 6l, 7l, 8l, 9l, 10l);
+            .containsExactly(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L);
     }
 
     @Test
@@ -209,7 +209,7 @@ public class StoreMailboxMessageResultIteratorTest {
         assertThat(iterator.next()).isNotNull();
     }
     
-    @Test(expected=NoSuchElementException.class)
+    @Test(expected = NoSuchElementException.class)
     public void nextShouldThrowWhenNoElement() {
         MessageRange messages = MessageUid.of(1).toRange();
         MessageRange findRange = MessageUid.of(2).toRange();

@@ -18,22 +18,24 @@
  ****************************************************************/
 package org.apache.james.server.core;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.ByteArrayInputStream;
 import java.util.Enumeration;
+
 import javax.mail.MessagingException;
+
 import org.apache.mailet.base.RFC2822Headers;
-import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 public class MailHeadersTest {
 
     @Test
     public void testHeadersOrder() throws MessagingException {
-        MailHeaders header = new MailHeaders(new ByteArrayInputStream((RFC2822Headers.SUBJECT + ": testsubject\r\n").
-                getBytes()));
+        MailHeaders header = new MailHeaders(new ByteArrayInputStream((RFC2822Headers.SUBJECT + ": testsubject\r\n")
+                .getBytes()));
         header.setHeader(RFC2822Headers.RETURN_PATH, "<test@test>");
         header.setHeader(RFC2822Headers.FROM, "<test2@test.de>");
-        @SuppressWarnings("unchecked")
         Enumeration<String> h = header.getAllHeaderLines();
 
         assertEquals(h.nextElement(), "Return-Path: <test@test>");

@@ -20,6 +20,7 @@ package org.apache.james.smtpserver.mock.mailet;
 
 import java.util.Iterator;
 import java.util.Properties;
+
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetContext;
 

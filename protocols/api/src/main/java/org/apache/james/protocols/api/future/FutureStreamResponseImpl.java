@@ -29,7 +29,7 @@ import org.apache.james.protocols.api.StreamResponse;
  * 
  *
  */
-public class FutureStreamResponseImpl extends FutureResponseImpl implements StreamResponse{
+public class FutureStreamResponseImpl extends FutureResponseImpl implements StreamResponse {
 
     /**
      * Set the {@link StreamResponse} to wrap. If a non {@link StreamResponse} is set this implementation will throw an {@link IllegalArgumentException}

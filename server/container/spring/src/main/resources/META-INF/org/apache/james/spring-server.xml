@@ -98,6 +98,8 @@
     ===========================================================================
     -->
 
+    <bean class="org.jboss.netty.util.HashedWheelTimer"/>
+
     <!-- SMTP Server -->
     <import resource="classpath:META-INF/spring/smtpserver-context.xml"/>
 

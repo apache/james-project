@@ -33,8 +33,8 @@ import org.junit.Test;
 public abstract class ListingWithSharingTest implements ImapTestConstants {
     public static final String OTHER_USER_NAME = "Boby";
     public static final String OTHER_USER_PASSWORD = "password";
-    public static final MailboxPath OTHER_USER_SHARED_MAILBOX = MailboxPath.forUser( OTHER_USER_NAME, "sharedMailbox");
-    public static final MailboxPath OTHER_USER_SHARED_MAILBOX_CHILD = MailboxPath.forUser( OTHER_USER_NAME, "sharedMailbox.child");
+    public static final MailboxPath OTHER_USER_SHARED_MAILBOX = MailboxPath.forUser(OTHER_USER_NAME, "sharedMailbox");
+    public static final MailboxPath OTHER_USER_SHARED_MAILBOX_CHILD = MailboxPath.forUser(OTHER_USER_NAME, "sharedMailbox.child");
 
     protected abstract ImapHostSystem createImapHostSystem();
 

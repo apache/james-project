@@ -55,7 +55,7 @@ public class MessageResultImpl implements MessageResult {
 
     private MimeDescriptor mimeDescriptor;
 
-	private final MailboxMessage message;
+    private final MailboxMessage message;
 
     private HeadersImpl headers;
     private Content fullContent;
@@ -152,7 +152,7 @@ public class MessageResultImpl implements MessageResult {
     public String toString() {
         final String TAB = " ";
 
-        return "MessageResultImpl ( " + "uid = " + getUid() + TAB + "flags = " + getFlags() + TAB + "size = " + getSize() + TAB + "internalDate = " + getInternalDate()+ ")";
+        return "MessageResultImpl ( " + "uid = " + getUid() + TAB + "flags = " + getFlags() + TAB + "size = " + getSize() + TAB + "internalDate = " + getInternalDate() + ")";
     }
 
     /**
@@ -379,7 +379,7 @@ public class MessageResultImpl implements MessageResult {
         }
 
         @Override
-        public boolean equals (Object obj) {
+        public boolean equals(Object obj) {
             if (this == obj) {
                 return true;
             }

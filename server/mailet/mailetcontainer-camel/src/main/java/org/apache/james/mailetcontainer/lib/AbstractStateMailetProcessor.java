@@ -33,6 +33,7 @@ import javax.management.NotCompliantMBeanException;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.MailAddress;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.mailetcontainer.api.MailetLoader;
@@ -43,7 +44,6 @@ import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.mailetcontainer.impl.jmx.JMXStateMailetProcessorListener;
 import org.apache.james.mailetcontainer.impl.matchers.CompositeMatcher;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetContext;
@@ -99,10 +99,12 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
      */
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
         this.state = config.getString("[@state]", null);
-        if (state == null)
+        if (state == null) {
             throw new ConfigurationException("Processor state attribute must be configured");
-        if (state.equals(Mail.GHOST))
+        }
+        if (state.equals(Mail.GHOST)) {
             throw new ConfigurationException("Processor state of " + Mail.GHOST + " is reserved for internal use, choose a different one");
+        }
 
         this.enableJmx = config.getBoolean("[@enableJmx]", true);
         this.config = config;
@@ -138,14 +140,10 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
         for (MatcherMailetPair pair : pairs) {
             Mailet mailet = pair.getMailet();
             Matcher matcher = pair.getMatcher();
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Shutdown matcher " + matcher.getMatcherInfo());
-            }
+            LOGGER.debug("Shutdown matcher {}", matcher.getMatcherInfo());
             matcher.destroy();
 
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Shutdown mailet " + mailet.getMailetInfo());
-            }
+            LOGGER.debug("Shutdown mailet {}", mailet.getMailetInfo());
             mailet.destroy();
 
         }
@@ -283,14 +281,16 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
                 }
                 matcher = new MatcherInverter(m);
             }
-            if (matcher == null)
+            if (matcher == null) {
                 throw new ConfigurationException("Unable to load matcher instance");
+            }
             matchers.add(matcher);
             if (compName != null) {
                 // check if there is already a composite Matcher with the name
                 // registered in the processor
-                if (compMap.containsKey(compName))
+                if (compMap.containsKey(compName)) {
                     throw new ConfigurationException("CompositeMatcher with name " + compName + " is already defined in processor " + state);
+                }
                 compMap.put(compName, matcher);
             }
         }
@@ -347,35 +347,23 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
                 }
 
                 // The matcher itself should log that it's been inited.
-                if (LOGGER.isInfoEnabled()) {
-                    String infoBuffer = "Matcher " + matcherName + " instantiated.";
-                    LOGGER.info(infoBuffer.toString());
-                }
+                LOGGER.info("Matcher {} instantiated.", matcherName);
             } catch (MessagingException ex) {
                 // **** Do better job printing out exception
-                if (LOGGER.isErrorEnabled()) {
-                    String errorBuffer = "Unable to init matcher " + matcherName + ": " + ex.toString();
-                    LOGGER.error(errorBuffer.toString(), ex);
-                    if (ex.getNextException() != null) {
-                        LOGGER.error("Caused by nested exception: ", ex.getNextException());
-                    }
+                LOGGER.error("Unable to init matcher {}", matcherName, ex);
+                if (ex.getNextException() != null) {
+                    LOGGER.error("Caused by nested exception: ", ex.getNextException());
                 }
                 throw new ConfigurationException("Unable to init matcher " + matcherName, ex);
             }
             try {
                 mailet = mailetLoader.getMailet(createMailetConfig(mailetClassName, c));
-                if (LOGGER.isInfoEnabled()) {
-                    String infoBuffer = "Mailet " + mailetClassName + " instantiated.";
-                    LOGGER.info(infoBuffer.toString());
-                }
+                LOGGER.info("Mailet {} instantiated.", mailetClassName);
             } catch (MessagingException ex) {
                 // **** Do better job printing out exception
-                if (LOGGER.isErrorEnabled()) {
-                    String errorBuffer = "Unable to init mailet " + mailetClassName + ": " + ex.toString();
-                    LOGGER.error(errorBuffer.toString(), ex);
-                    if (ex.getNextException() != null) {
-                        LOGGER.error("Caused by nested exception: ", ex.getNextException());
-                    }
+                LOGGER.error("Unable to init mailet {}", mailetClassName, ex);
+                if (ex.getNextException() != null) {
+                    LOGGER.error("Caused by nested exception: ", ex.getNextException());
                 }
                 throw new ConfigurationException("Unable to init mailet " + mailetClassName, ex);
             }
@@ -453,9 +441,9 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
          * @param processTime
          *            in ms
          * @param e
-         *            or null if no {@link MessagingException} was thrown
+         *            or null if no Exception was thrown
          */
-        void afterMailet(Mailet m, String mailName, String state, long processTime, MessagingException e);
+        void afterMailet(Mailet m, String mailName, String state, long processTime, Exception e);
 
         /**
          * Get called after each {@link Matcher} call was complete
@@ -467,9 +455,9 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
          * @param processTime
          *            in ms
          * @param e
-         *            or null if no {@link MessagingException} was thrown
+         *            or null if no Exception was thrown
          */
-        void afterMatcher(Matcher m, String mailName, Collection<MailAddress> recipients, Collection<MailAddress> matches, long processTime, MessagingException e);
+        void afterMatcher(Matcher m, String mailName, Collection<MailAddress> recipients, Collection<MailAddress> matches, long processTime, Exception e);
 
     }
 

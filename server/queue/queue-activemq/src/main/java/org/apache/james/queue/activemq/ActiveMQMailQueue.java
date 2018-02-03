@@ -40,13 +40,13 @@ import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.BlobMessage;
 import org.apache.activemq.command.ActiveMQBlobMessage;
 import org.apache.activemq.util.JMSExceptionSupport;
-import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
-import org.apache.james.server.core.MimeMessageInputStream;
-import org.apache.james.server.core.MimeMessageSource;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.jms.JMSMailQueue;
+import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
+import org.apache.james.server.core.MimeMessageInputStream;
+import org.apache.james.server.core.MimeMessageSource;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,7 +124,7 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
                     mail.setAttribute(JAMES_QUEUE_NAME, queueName);
                 } catch (MalformedURLException e) {
                     // Ignore on error
-                    LOGGER.debug("Unable to get url from blobmessage for mail " + mail.getName());
+                    LOGGER.debug("Unable to get url from blobmessage for mail {}", mail.getName());
                 }
                 MimeMessageSource source = new MimeMessageBlobMessageSource(blobMessage);
                 mail.setMessage(new MimeMessageCopyOnWriteProxy(source));
@@ -243,7 +243,7 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
                     // https://issues.apache.org/activemq/browse/AMQ-3018
                     ((ActiveMQBlobMessage) m).deleteFile();
                 } catch (Exception e) {
-                    LOGGER.error("Unable to delete blob file for message " + m, e);
+                    LOGGER.error("Unable to delete blob file for message {}", m, e);
                 }
             }
         }

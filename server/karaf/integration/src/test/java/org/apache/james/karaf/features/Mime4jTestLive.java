@@ -2,7 +2,7 @@ package org.apache.james.karaf.features;
 
 import org.junit.Test;
 
-public class Mime4jTestLive extends KarafLiveTestSupport{
+public class Mime4jTestLive extends KarafLiveTestSupport {
 
     @Test
     public void testInstallApacheMime4jFeature() throws Exception {

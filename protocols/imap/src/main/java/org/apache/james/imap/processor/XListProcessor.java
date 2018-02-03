@@ -45,7 +45,7 @@ import com.google.common.collect.ImmutableList;
  */
 public class XListProcessor extends ListProcessor implements CapabilityImplementingProcessor {
 
-    private final static List<String> XLIST_CAPS = ImmutableList.of(SUPPORTS_XLIST);
+    private static final List<String> XLIST_CAPS = ImmutableList.of(SUPPORTS_XLIST);
     private final MailboxTyper mailboxTyper;
 
     // some interface

@@ -32,11 +32,11 @@ import org.apache.james.mailbox.MailboxSession.User;
  *
  */
 public class MailboxSessionJCRRepository {
-    private final static String JCR_SESSION = "JCR_SESSION";
+    private static final String JCR_SESSION = "JCR_SESSION";
     private final Repository repository;
     private final String workspace;
     
-    public MailboxSessionJCRRepository(Repository repository ,String workspace) {
+    public MailboxSessionJCRRepository(Repository repository, String workspace) {
         this.repository = repository;
         this.workspace = workspace;
     }
@@ -79,13 +79,16 @@ public class MailboxSessionJCRRepository {
      * @param mSession
      */
     public void logout(MailboxSession mSession) {
-        if (mSession == null) return;
+        if (mSession == null) {
+            return;
+        }
         
         Session session = (Session) mSession.getAttributes().remove(JCR_SESSION);
 
         if (session != null) {
-            if (session.isLive())
+            if (session.isLive()) {
                 session.logout();
+            }
             session = null;
         }
     }

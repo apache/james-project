@@ -21,13 +21,14 @@
 
 package org.apache.james.transport.matchers;
 
-import org.apache.mailet.base.GenericMatcher;
-import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
-
-import javax.mail.MessagingException;
 import java.util.Collection;
 import java.util.Locale;
+
+import javax.mail.MessagingException;
+
+import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMatcher;
 
 /**
  * Checks whether the message (entire message, not just content) is greater

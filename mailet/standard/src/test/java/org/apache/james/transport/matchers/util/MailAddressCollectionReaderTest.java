@@ -21,8 +21,8 @@ package org.apache.james.transport.matchers.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.transport.matchers.utils.MailAddressCollectionReader;
 import org.apache.james.core.MailAddress;
+import org.apache.james.transport.matchers.utils.MailAddressCollectionReader;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

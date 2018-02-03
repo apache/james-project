@@ -50,8 +50,7 @@ import com.google.common.collect.ImmutableSet;
 public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> implements
         CommandHandler<SMTPSession> {
     private static final Logger LOGGER = LoggerFactory.getLogger(RcptCmdHandler.class);
-    public static final String CURRENT_RECIPIENT = "CURRENT_RECIPIENT"; // Current
-                                                                        // recipient
+    public static final String CURRENT_RECIPIENT = "CURRENT_RECIPIENT"; 
     private static final Collection<String> COMMANDS = ImmutableSet.of("RCPT");
     private static final Response MAIL_NEEDED = new SMTPResponse(SMTPRetCode.BAD_SEQUENCE, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_OTHER) + " Need MAIL before RCPT").immutable();
     private static final Response SYNTAX_ERROR_ARGS = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_SYNTAX) + " Usage: RCPT TO:<recipient>").immutable();
@@ -144,13 +143,7 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
         }
         if (session.getConfiguration().useAddressBracketsEnforcement()
                 && (!recipient.startsWith("<") || !recipient.endsWith(">"))) {
-            if (LOGGER.isInfoEnabled()) {
-                StringBuilder errorBuffer = new StringBuilder(192).append(
-                        "Error parsing recipient address: ").append(
-                        "Address did not start and end with < >").append(
-                        getContext(session, null, recipient));
-                LOGGER.info(errorBuffer.toString());
-            }
+            LOGGER.info("Error parsing recipient address: Address did not start and end with < >{}", getContext(session, null, recipient));
             return SYNTAX_ERROR_DELIVERY;
         }
         MailAddress recipientAddress = null;
@@ -170,13 +163,7 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
         try {
             recipientAddress = new MailAddress(recipient);
         } catch (Exception pe) {
-            if (LOGGER.isInfoEnabled()) {
-                StringBuilder errorBuffer = new StringBuilder(192).append(
-                        "Error parsing recipient address: ").append(
-                        getContext(session, recipientAddress, recipient))
-                        .append(pe.getMessage());
-                LOGGER.info(errorBuffer.toString());
-            }
+            LOGGER.info("Error parsing recipient address{}", getContext(session, recipientAddress, recipient), pe);
             /*
              * from RFC2822; 553 Requested action not taken: mailbox name
              * not allowed (e.g., mailbox syntax incorrect)
@@ -199,16 +186,7 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
                     rcptOptionValue = rcptOption.substring(equalIndex + 1);
                 }
                 // Unexpected option attached to the RCPT command
-                if (LOGGER.isDebugEnabled()) {
-                    StringBuilder debugBuffer = new StringBuilder(128)
-                            .append(
-                                    "RCPT command had unrecognized/unexpected option ")
-                            .append(rcptOptionName).append(" with value ")
-                            .append(rcptOptionValue).append(
-                                    getContext(session, recipientAddress,
-                                            recipient));
-                    LOGGER.debug(debugBuffer.toString());
-                }
+                LOGGER.debug("RCPT command had unrecognized/unexpected option {} with value {}{}", rcptOptionName, rcptOptionValue, getContext(session, recipientAddress, recipient));
 
                 return new SMTPResponse(
                         SMTPRetCode.PARAMETER_NOT_IMPLEMENTED,
@@ -226,12 +204,13 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
     private String getContext(SMTPSession session, MailAddress recipientAddress, String recipient) {
         StringBuilder sb = new StringBuilder(128);
         if (null != recipientAddress) {
-            sb.append(" [to:" + recipientAddress.toString() + "]");
+            sb.append(" [to:").append(recipientAddress.asString()).append(']');
         } else if (null != recipient) {
-            sb.append(" [to:" + recipient + "]");
+            sb.append(" [to:").append(recipient).append(']');
         }
         if (null != session.getAttachment(SMTPSession.SENDER, State.Transaction)) {
-            sb.append(" [from:" + ((MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction)).toString() + "]");
+            MailAddress mailAddress = (MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction);
+            sb.append(" [from:").append(mailAddress.asString()).append(']');
         }
         return sb.toString();
     }
@@ -240,7 +219,7 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
      * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
      */
     public Collection<String> getImplCommands() {
-    	return COMMANDS;
+        return COMMANDS;
     }
 
     /**
@@ -261,6 +240,6 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
     }
 
     protected String getDefaultDomain() {
-    	return "localhost";
+        return "localhost";
     }
 }

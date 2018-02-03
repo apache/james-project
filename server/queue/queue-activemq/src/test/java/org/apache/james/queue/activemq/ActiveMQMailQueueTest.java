@@ -18,65 +18,107 @@
  ****************************************************************/
 package org.apache.james.queue.activemq;
 
-import java.util.Arrays;
+import java.util.concurrent.ExecutorService;
 
 import javax.jms.ConnectionFactory;
 
-import org.apache.activemq.broker.BrokerPlugin;
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.plugin.StatisticsBrokerPlugin;
 import org.apache.james.metrics.api.NoopMetricFactory;
-import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
-import org.apache.james.queue.jms.AbstractJMSMailQueueTest;
-import org.apache.james.queue.jms.JMSMailQueue;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.apache.james.queue.api.DelayedManageableMailQueueContract;
+import org.apache.james.queue.api.DelayedPriorityMailQueueContract;
+import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.queue.api.PriorityManageableMailQueueContract;
+import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
+import org.apache.james.queue.jms.BrokerExtension;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-public abstract class ActiveMQMailQueueTest extends AbstractJMSMailQueueTest {
+@ExtendWith(BrokerExtension.class)
+@Tag(BrokerExtension.STATISTICS)
+public class ActiveMQMailQueueTest implements DelayedManageableMailQueueContract, DelayedPriorityMailQueueContract, PriorityManageableMailQueueContract {
 
-    private static BrokerService brokerService;
+    static final boolean USE_BLOB = true;
 
-    @BeforeClass
-    public static void setupBroker() throws Exception {
-        brokerService = createBroker();
-        brokerService.start();
+    ActiveMQMailQueue mailQueue;
+
+    @BeforeEach
+    public void setUp(BrokerService broker) throws Exception {
+        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
+        RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
+        NoopMetricFactory metricFactory = new NoopMetricFactory();
+        String queueName = BrokerExtension.generateRandomQueueName(broker);
+        mailQueue = new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, !USE_BLOB, metricFactory);
     }
 
-    @AfterClass
-    public static void tearDownBroker() throws Exception {
-        if (brokerService != null) {
-            brokerService.stop();
-        }
-    }
-
-    protected static BrokerService createBroker() throws Exception {
-        BrokerService broker = new BrokerService();
-        broker.setPersistent(false);
-        broker.setUseJmx(false);
-        broker.addConnector("tcp://127.0.0.1:61616");
-
-        // Enable priority support
-        PolicyMap pMap = new PolicyMap();
-        PolicyEntry entry = new PolicyEntry();
-        entry.setPrioritizedMessages(true);
-        entry.setQueue(QUEUE_NAME);
-        pMap.setPolicyEntries(Arrays.asList(entry));
-        broker.setDestinationPolicy(pMap);
-        // Enable statistics
-        broker.setPlugins(new BrokerPlugin[]{new StatisticsBrokerPlugin()});
-        broker.setEnableStatistics(true);
-
-        return broker;
+    @AfterEach
+    public void tearDown() throws Exception {
+        mailQueue.dispose();
     }
 
     @Override
-    protected JMSMailQueue createQueue(ConnectionFactory factory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queueName) {
-        return new ActiveMQMailQueue(factory, mailQueueItemDecoratorFactory, queueName, useBlobMessages(), new NoopMetricFactory());
+    public MailQueue getMailQueue() {
+        return mailQueue;
     }
 
-    protected boolean useBlobMessages() {
-        return false;
+    @Override
+    public ManageableMailQueue getManageableMailQueue() {
+        return mailQueue;
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2295 Disabled as test was dead-locking")
+    public void dequeueCanBeChainedBeforeAck() {
+
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2295 Disabled as test was dead-locking")
+    public void dequeueCouldBeInterleavingWithOutOfOrderAck() {
+
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2301 Per recipients headers are not attached to the message.")
+    public void queueShouldPreservePerRecipientHeaders() {
+
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2296 Not handled by JMS mailqueue. Only single recipient per-recipient removal works")
+    public void removeByRecipientShouldRemoveSpecificEmailWhenMultipleRecipients() {
+
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2308 Flushing JMS mail queue randomly re-order them" +
+        "Random test failing around 1% of the time")
+    public void flushShouldPreserveBrowseOrder() {
+
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2309 Long overflow in JMS delays")
+    public void enqueueWithVeryLongDelayShouldDelayMail(ExecutorService executorService) {
+
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2312 JMS clear mailqueue can ommit some messages" +
+        "Random test failing around 1% of the time")
+    public void clearShouldRemoveAllElements() {
+
     }
 }

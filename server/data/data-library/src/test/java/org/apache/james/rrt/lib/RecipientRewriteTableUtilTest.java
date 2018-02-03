@@ -18,11 +18,10 @@
  ****************************************************************/
 package org.apache.james.rrt.lib;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.core.MailAddress;
 import org.junit.Test;
-
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class RecipientRewriteTableUtilTest {
 

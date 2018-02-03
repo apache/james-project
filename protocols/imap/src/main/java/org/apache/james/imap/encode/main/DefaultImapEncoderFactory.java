@@ -36,16 +36,16 @@ import org.apache.james.imap.encode.ImapEncoderFactory;
 import org.apache.james.imap.encode.LSubResponseEncoder;
 import org.apache.james.imap.encode.ListResponseEncoder;
 import org.apache.james.imap.encode.ListRightsResponseEncoder;
+import org.apache.james.imap.encode.MailboxStatusResponseEncoder;
 import org.apache.james.imap.encode.MyRightsResponseEncoder;
 import org.apache.james.imap.encode.NamespaceResponseEncoder;
+import org.apache.james.imap.encode.QuotaResponseEncoder;
+import org.apache.james.imap.encode.QuotaRootResponseEncoder;
 import org.apache.james.imap.encode.RecentResponseEncoder;
-import org.apache.james.imap.encode.MailboxStatusResponseEncoder;
 import org.apache.james.imap.encode.SearchResponseEncoder;
 import org.apache.james.imap.encode.StatusResponseEncoder;
 import org.apache.james.imap.encode.VanishedResponseEncoder;
 import org.apache.james.imap.encode.XListResponseEncoder;
-import org.apache.james.imap.encode.QuotaResponseEncoder;
-import org.apache.james.imap.encode.QuotaRootResponseEncoder;
 import org.apache.james.imap.encode.base.EndImapEncoder;
 
 /**

@@ -41,17 +41,17 @@ import java.util.Arrays;
  * </pre>
  */
 public class ExtensionFileFilter implements FilenameFilter {
-    private final String[] m_extensions;
+    private final String[] extensions;
 
     public ExtensionFileFilter(String[] extensions) {
-        m_extensions = extensions;
+        this.extensions = extensions;
     }
 
     public ExtensionFileFilter(String extension) {
-        m_extensions = new String[] { extension };
+        extensions = new String[] { extension };
     }
 
     public boolean accept(File file, String name) {
-        return Arrays.stream(m_extensions).anyMatch(name::endsWith);
+        return Arrays.stream(extensions).anyMatch(name::endsWith);
     }
 }

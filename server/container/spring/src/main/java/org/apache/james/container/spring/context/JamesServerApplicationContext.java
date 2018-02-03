@@ -34,7 +34,7 @@ public class JamesServerApplicationContext extends ClassPathXmlApplicationContex
      * The resourceloader to use. This must be defined as static, otherwise it
      * will fail to startup..
      */
-    private final static JamesResourceLoader resourceLoader = new DefaultJamesResourceLoader(new JamesServerResourceLoader("../"));
+    private static final JamesResourceLoader resourceLoader = new DefaultJamesResourceLoader(new JamesServerResourceLoader("../"));
 
     public JamesServerApplicationContext(String[] configs) {
         super(configs);

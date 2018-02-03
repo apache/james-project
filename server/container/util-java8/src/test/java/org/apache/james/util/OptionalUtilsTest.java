@@ -83,4 +83,61 @@ public class OptionalUtilsTest {
                 .collect(Guavate.toImmutableList()))
             .containsExactly(value);
     }
+
+    @Test
+    public void orShouldReturnEmptyWhenBothEmpty() {
+        assertThat(
+            OptionalUtils.or(
+                Optional.empty(),
+                Optional.empty()))
+            .isEmpty();
+    }
+
+    @Test
+    public void orShouldReturnFirstValueWhenOnlyFirstValue() {
+        assertThat(
+            OptionalUtils.or(
+                Optional.of(18),
+                Optional.empty()))
+            .contains(18);
+    }
+
+    @Test
+    public void orShouldReturnSecondValueWhenOnlySecondValue() {
+        assertThat(
+            OptionalUtils.or(
+                Optional.empty(),
+                Optional.of(18)))
+            .contains(18);
+    }
+
+    @Test
+    public void orShouldReturnFirstValueWhenBothValues() {
+        assertThat(
+            OptionalUtils.or(
+                Optional.of(1),
+                Optional.of(2)))
+            .contains(1);
+    }
+
+    @Test
+    public void containsDifferentShouldReturnTrueWhenNullStoreValue() throws Exception {
+        assertThat(OptionalUtils.containsDifferent(Optional.of("any"), null)).isTrue();
+    }
+
+    @Test
+    public void containsDifferentShouldReturnFalseWhenEmpty() throws Exception {
+        assertThat(OptionalUtils.containsDifferent(Optional.empty(), "any")).isFalse();
+    }
+
+    @Test
+    public void containsDifferentShouldReturnFalseWhenSameValue() throws Exception {
+        assertThat(OptionalUtils.containsDifferent(Optional.of("any"), "any")).isFalse();
+    }
+
+    @Test
+    public void containsDifferentShouldReturnTrueWhenDifferentValue() throws Exception {
+        assertThat(OptionalUtils.containsDifferent(Optional.of("any"), "other")).isTrue();
+    }
+
 }

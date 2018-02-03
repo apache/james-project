@@ -28,6 +28,8 @@ import org.apache.james.modules.server.ActiveMQQueueModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.DefaultProcessorsConfigurationProviderModule;
 import org.apache.james.modules.server.ElasticSearchMetricReporterModule;
+import org.apache.james.modules.server.MailQueueRoutesModule;
+import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.WebAdminServerModule;
@@ -38,15 +40,17 @@ import com.google.inject.util.Modules;
 
 public class JPAJamesServerMain {
 
-    public static final Module protocols = Modules.combine(
+    public static final Module PROTOCOLS = Modules.combine(
         new ProtocolHandlerModule(),
         new SMTPServerModule(),
         new WebAdminServerModule(),
         new DataRoutesModules(),
+        new MailRepositoriesRoutesModule(),
+        new MailQueueRoutesModule(),
         new NoJwtModule(),
         new DefaultProcessorsConfigurationProviderModule());
     
-    public static final Module jpaServerModule = Modules.combine(
+    public static final Module JPA_SERVER_MODULE = Modules.combine(
         new JPADataModule(),
         (binder) -> binder.bind(EntityManagerFactory.class).toProvider(OpenJPAPersistence::getEntityManagerFactory),
         new ActiveMQQueueModule(),
@@ -55,7 +59,7 @@ public class JPAJamesServerMain {
 
     public static void main(String[] args) throws Exception {
         GuiceJamesServer server = new GuiceJamesServer()
-                    .combineWith(jpaServerModule, protocols);
+                    .combineWith(JPA_SERVER_MODULE, PROTOCOLS);
         server.start();
     }
 

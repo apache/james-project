@@ -19,18 +19,17 @@
 
 package org.apache.james.transport.mailets;
 
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
-import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -190,8 +189,7 @@ public class MailAttributesListToMimeHeadersTest {
         String firstValue = "first value";
         FakeMail mail = FakeMail.builder()
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
-                .addHeader(HEADER_NAME1, firstValue)
-                .build())
+                .addHeader(HEADER_NAME1, firstValue))
             .attribute(MAIL_ATTRIBUTE_NAME1, MAIL_ATTRIBUTE_VALUE1)
             .build();
 
@@ -212,7 +210,7 @@ public class MailAttributesListToMimeHeadersTest {
         mailet.init(mailetConfig);
 
         FakeMail mail = FakeMail.builder()
-            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder().build())
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
             .attribute(MAIL_ATTRIBUTE_NAME1, 3L)
             .attribute(MAIL_ATTRIBUTE_NAME2, MAIL_ATTRIBUTE_VALUE2)
             .build();
@@ -235,7 +233,7 @@ public class MailAttributesListToMimeHeadersTest {
 
         String value = "value";
         FakeMail mail = FakeMail.builder()
-            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder().build())
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
             .attribute(MAIL_ATTRIBUTE_NAME1, ImmutableList.of(3L, value))
             .build();
 

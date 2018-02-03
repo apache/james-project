@@ -35,14 +35,14 @@ import org.apache.james.protocols.smtp.SMTPSession;
  * 
  *
  */
-public abstract class AbstractAddHeadersFilter extends SeparatingDataLineFilter{
+public abstract class AbstractAddHeadersFilter extends SeparatingDataLineFilter {
 
     private static final AtomicInteger COUNTER = new AtomicInteger(0);
     
     private final String headersPrefixAdded = "HEADERS_PREFIX_ADDED" + COUNTER.incrementAndGet();
     private final String headersSuffixAdded = "HEADERS_SUFFIX_ADDED" + COUNTER.incrementAndGet();
 
-    enum Location{
+    enum Location {
         Prefix,
         Suffix
     }
@@ -99,7 +99,7 @@ public abstract class AbstractAddHeadersFilter extends SeparatingDataLineFilter{
      */
     protected abstract Collection<Header> headers(SMTPSession session);
     
-    public final static class Header {
+    public static final class Header {
         public static final String MULTI_LINE_PREFIX = "          ";
         
         public final String name;

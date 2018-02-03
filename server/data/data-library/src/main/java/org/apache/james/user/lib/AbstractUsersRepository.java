@@ -20,17 +20,18 @@
 package org.apache.james.user.lib;
 
 import java.util.Optional;
+
 import javax.inject.Inject;
 
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.james.core.MailAddress;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -79,7 +80,6 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
                 try {
                     if (!domainList.containsDomain(domain)) {
                         throw new UsersRepositoryException("Domain does not exist in DomainList");
-                    } else {
                     }
                 } catch (DomainListException e) {
                     throw new UsersRepositoryException("Unable to query DomainList", e);

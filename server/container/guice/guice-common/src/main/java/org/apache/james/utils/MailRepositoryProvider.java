@@ -19,11 +19,11 @@
 
 package org.apache.james.utils;
 
-import javax.inject.Provider;
-
 import org.apache.james.mailrepository.api.MailRepository;
 
-public interface MailRepositoryProvider extends Provider<MailRepository> {
+public interface MailRepositoryProvider {
 
     String canonicalName();
+
+    MailRepository provide(String url);
 }

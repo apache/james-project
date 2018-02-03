@@ -31,7 +31,7 @@ import org.apache.commons.net.smtp.SMTPSClient;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
 
-public abstract class AbstractLMTPSServerTest extends AbstractLMTPServerTest{
+public abstract class AbstractLMTPSServerTest extends AbstractLMTPServerTest {
 
     @Override
     protected SMTPClient createClient() {
@@ -41,7 +41,7 @@ public abstract class AbstractLMTPSServerTest extends AbstractLMTPServerTest{
         return client;
     }
 
-    protected final class LMTPSClient extends SMTPSClient implements LMTPClient{
+    protected final class LMTPSClient extends SMTPSClient implements LMTPClient {
 
         private final List<Integer> replies = new ArrayList<>();
         private int rcptCount = 0;
@@ -78,8 +78,7 @@ public abstract class AbstractLMTPSServerTest extends AbstractLMTPServerTest{
             return sendCommand("LHLO", hostname);
         }
 
-        public int[] getReplies() throws IOException
-        {
+        public int[] getReplies() throws IOException {
             int[] codes = new int[replies.size()];
             for (int i = 0; i < codes.length; i++) {
                 codes[i] = replies.remove(0);
@@ -88,8 +87,7 @@ public abstract class AbstractLMTPSServerTest extends AbstractLMTPServerTest{
         }
         
         @Override
-        public boolean completePendingCommand() throws IOException
-        {
+        public boolean completePendingCommand() throws IOException {
             for (int i = 0; i < rcptCount; i++) {
                 replies.add(getReply());
             }

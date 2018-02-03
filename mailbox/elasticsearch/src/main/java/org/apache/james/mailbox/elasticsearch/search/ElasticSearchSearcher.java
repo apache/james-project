@@ -26,8 +26,8 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.james.backends.es.ElasticSearchConstants;
 import org.apache.james.backends.es.AliasName;
+import org.apache.james.backends.es.ElasticSearchConstants;
 import org.apache.james.backends.es.TypeName;
 import org.apache.james.backends.es.search.ScrollIterable;
 import org.apache.james.mailbox.MessageUid;
@@ -131,7 +131,7 @@ public class ElasticSearchSearcher {
                     mailboxIdFactory.fromString(mailboxId.getValue()),
                     MessageUid.of(uidAsNumber.longValue())));
         } else {
-            LOGGER.warn("Can not extract UID, MessageID and/or MailboxId for search result " + hit.getId());
+            LOGGER.warn("Can not extract UID, MessageID and/or MailboxId for search result {}", hit.getId());
             return Optional.empty();
         }
     }

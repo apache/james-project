@@ -48,7 +48,7 @@ import com.google.common.collect.ImmutableList;
 
 public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequest> implements CapabilityImplementingProcessor {
 
-    private final static List<String> CAPS;
+    private static final List<String> CAPS;
     
     static {
         List<String> caps = new ArrayList<>();

@@ -20,7 +20,6 @@
 package org.apache.james.jmap.mailet;
 
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 
 import javax.mail.Header;
@@ -83,9 +82,8 @@ public class TextCalendarBodyToAttachment extends GenericMailet {
         mimeMessage.saveChanges();
     }
 
-    @SuppressWarnings("unchecked")
     private List<Header> getContentHeadersFromMimeMessage(MimeMessage mimeMessage) throws MessagingException {
-        return Collections.list((Enumeration<Header>) mimeMessage.getAllHeaders())
+        return Collections.list(mimeMessage.getAllHeaders())
             .stream()
             .filter(header -> header.getName().startsWith(CONTENT_HEADER_PREFIX))
             .collect(Guavate.toImmutableList());

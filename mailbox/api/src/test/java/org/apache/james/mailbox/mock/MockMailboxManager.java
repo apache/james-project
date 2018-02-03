@@ -105,9 +105,9 @@ public class MockMailboxManager {
 
         MailboxPath mailboxPath = null;
         
-        for (int i=0; i < DOMAIN_COUNT; i++) {
+        for (int i = 0; i < DOMAIN_COUNT; i++) {
 
-            for (int j=0; j < USER_COUNT; j++) {
+            for (int j = 0; j < USER_COUNT; j++) {
                 
                 String user = "user" + j + "@localhost" + i;
                 
@@ -117,13 +117,13 @@ public class MockMailboxManager {
                 mailboxPath = MailboxPath.forUser(user, folderName);
                 createMailbox(mailboxSession, mailboxPath);
                 
-                for (int k=0; k < SUB_MAILBOXES_COUNT; k++) {
+                for (int k = 0; k < SUB_MAILBOXES_COUNT; k++) {
                     
                     String subFolderName = folderName + ".SUB_FOLDER_" + k;
                     mailboxPath = MailboxPath.forUser(user, subFolderName);
                     createMailbox(mailboxSession, mailboxPath);
                     
-                    for (int l=0; l < SUB_SUB_MAILBOXES_COUNT; l++) {
+                    for (int l = 0; l < SUB_SUB_MAILBOXES_COUNT; l++) {
 
                         String subSubfolderName = subFolderName + ".SUBSUB_FOLDER_" + l;
                         mailboxPath = MailboxPath.forUser(user, subSubfolderName);
@@ -151,7 +151,7 @@ public class MockMailboxManager {
         getMockMailboxManager().startProcessingRequest(mailboxSession);
         getMockMailboxManager().createMailbox(mailboxPath, mailboxSession);
         MessageManager messageManager = getMockMailboxManager().getMailbox(mailboxPath, mailboxSession);
-        for (int j=0; j < MESSAGE_PER_MAILBOX_COUNT; j++) {
+        for (int j = 0; j < MESSAGE_PER_MAILBOX_COUNT; j++) {
             messageManager.appendMessage(new ByteArrayInputStream(MockMail.MAIL_TEXT_PLAIN.getBytes("UTF-8")), 
                     Calendar.getInstance().getTime(), 
                     mailboxSession, 

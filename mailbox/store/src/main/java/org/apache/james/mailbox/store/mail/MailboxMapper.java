@@ -20,6 +20,7 @@ package org.apache.james.mailbox.store.mail;
 
 import java.util.List;
 
+import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -112,7 +113,7 @@ public interface MailboxMapper extends Mapper {
      * @param mailbox Mailbox for whom we want to update ACL
      * @param mailboxACLCommand Update to perform
      */
-    void updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException;
+    ACLDiff updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException;
 
     /**
      * Reset the ACL of the stored mailbox.
@@ -120,7 +121,7 @@ public interface MailboxMapper extends Mapper {
      * @param mailbox Mailbox for whom we want to update ACL
      * @param mailboxACL New value of the ACL for this mailbox
      */
-    void setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException;
+    ACLDiff setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException;
 
     /**
      * Return a unmodifable {@link List} of all {@link Mailbox} 

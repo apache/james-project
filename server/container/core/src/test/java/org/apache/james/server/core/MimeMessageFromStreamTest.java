@@ -19,11 +19,11 @@
 
 package org.apache.james.server.core;
 
-import javax.mail.Session;
-import javax.mail.internet.MimeMessage;
-
 import java.io.ByteArrayInputStream;
 import java.util.Properties;
+
+import javax.mail.Session;
+import javax.mail.internet.MimeMessage;
 
 public class MimeMessageFromStreamTest extends MimeMessageTest {
 
@@ -44,11 +44,6 @@ public class MimeMessageFromStreamTest extends MimeMessageTest {
     @Override
     protected MimeMessage getMessageWithBadReturnPath() throws Exception {
         return getMessageFromSources(getMessageWithBadReturnPathSource());
-    }
-
-    @Override
-    protected MimeMessage getMissingEncodingAddHeaderMessage() throws Exception {
-        return getMessageFromSources(getMissingEncodingAddHeaderSource());
     }
 
     @Override

@@ -72,7 +72,6 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.quota.QuotaChecker;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
-import org.apache.james.mailbox.store.streaming.BodyOffsetInputStream;
 import org.apache.james.mailbox.store.streaming.CountingInputStream;
 import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.message.DefaultBodyDescriptorBuilder;
@@ -82,6 +81,7 @@ import org.apache.james.mime4j.stream.EntityState;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.stream.MimeTokenStream;
 import org.apache.james.mime4j.stream.RecursionMode;
+import org.apache.james.util.BodyOffsetInputStream;
 import org.apache.james.util.IteratorWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,13 +110,19 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         .setMaxLineLen(-1)
         .build();
 
+    private static final MailboxCounters ZERO_MAILBOX_COUNTERS = MailboxCounters.builder()
+        .count(0)
+        .unseen(0)
+        .build();
+
     /**
      * The minimal Permanent flags the {@link MessageManager} must support. <br>
      * 
      * <strong>Be sure this static instance will never get modifed
      * later!</strong>
      */
-    protected final static Flags MINIMAL_PERMANET_FLAGS;
+    protected static final Flags MINIMAL_PERMANET_FLAGS;
+
     static {
         MINIMAL_PERMANET_FLAGS = new Flags();
         MINIMAL_PERMANET_FLAGS.add(Flags.Flag.ANSWERED);
@@ -232,7 +238,10 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
     @Override
     public MailboxCounters getMailboxCounters(MailboxSession mailboxSession) throws MailboxException {
-        return mapperFactory.createMessageMapper(mailboxSession).getMailboxCounters(mailbox);
+        if (storeRightManager.hasRight(mailbox, MailboxACL.Right.Read, mailboxSession)) {
+            return mapperFactory.createMessageMapper(mailboxSession).getMailboxCounters(mailbox);
+        }
+        return ZERO_MAILBOX_COUNTERS;
     }
 
     /**
@@ -440,7 +449,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         try {
             return messageParser.retrieveAttachments(contentIn);
         } catch (Exception e) {
-            LOG.warn("Error while parsing mail's attachments: " + e.getMessage(), e);
+            LOG.warn("Error while parsing mail's attachments: {}", e.getMessage(), e);
             return ImmutableList.of();
         }
     }
@@ -463,17 +472,21 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
     @Override
     public MetaData getMetaData(boolean resetRecent, MailboxSession mailboxSession, MetaData.FetchGroup fetchGroup) throws MailboxException {
-
-        final List<MessageUid> recent;
-        final Flags permanentFlags = getPermanentFlags(mailboxSession);
-        final long uidValidity = getMailboxEntity().getUidValidity();
+        MailboxACL resolvedAcl = storeRightManager.getResolvedMailboxACL(mailbox, mailboxSession);
+        boolean hasReadRight = storeRightManager.hasRight(mailbox, MailboxACL.Right.Read, mailboxSession);
+        if (!hasReadRight) {
+            return MailboxMetaData.sensibleInformationFree(resolvedAcl, getMailboxEntity().getUidValidity(), isWriteable(mailboxSession), isModSeqPermanent(mailboxSession));
+        }
+        List<MessageUid> recent;
+        Flags permanentFlags = getPermanentFlags(mailboxSession);
+        long uidValidity = getMailboxEntity().getUidValidity();
         MessageUid uidNext = mapperFactory.getMessageMapper(mailboxSession).getLastUid(mailbox)
                 .map(MessageUid::next)
                 .orElse(MessageUid.MIN_VALUE);
-        final long highestModSeq = mapperFactory.getMessageMapper(mailboxSession).getHighestModSeq(mailbox);
-        final long messageCount;
-        final long unseenCount;
-        final MessageUid firstUnseen;
+        long highestModSeq = mapperFactory.getMessageMapper(mailboxSession).getHighestModSeq(mailbox);
+        long messageCount;
+        long unseenCount;
+        MessageUid firstUnseen;
         switch (fetchGroup) {
         case UNSEEN_COUNT:
             unseenCount = countUnseenMessagesInMailbox(mailboxSession);
@@ -507,7 +520,6 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             recent = new ArrayList<>();
             break;
         }
-        MailboxACL resolvedAcl = storeRightManager.getResolvedMailboxACL(mailbox, mailboxSession);
         return new MailboxMetaData(recent, permanentFlags, uidValidity, uidNext, highestModSeq, messageCount, unseenCount, firstUnseen, isWriteable(mailboxSession), isModSeqPermanent(mailboxSession), resolvedAcl);
     }
 
@@ -722,7 +734,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             movedRows.add(data);
         }
         return new MoveResult(movedRows.iterator(), originalRowsCopy.iterator());
-	}
+    }
 
 
     private SortedMap<MessageUid, MessageMetaData> copy(MessageRange set, StoreMessageManager to, MailboxSession session) throws MailboxException {
@@ -731,7 +743,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         SortedMap<MessageUid, MessageMetaData> copiedUids = collectMetadata(to.copy(originalRows, session));
 
         ImmutableMap.Builder<MessageUid, MailboxMessage> messagesMap = ImmutableMap.builder();
-        for(MailboxMessage message: originalRows.getEntriesSeen()) {
+        for (MailboxMessage message: originalRows.getEntriesSeen()) {
             messagesMap.put(message.getUid(), immutableMailboxMessageFactory.from(to.getMailboxEntity().getMailboxId(), message));
         }
         dispatcher.added(session, copiedUids, to.getMailboxEntity(), messagesMap.build());
@@ -746,7 +758,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         SortedMap<MessageUid, MessageMetaData> moveUids = collectMetadata(moveResult.getMovedMessages());
 
         ImmutableMap.Builder<MessageUid, MailboxMessage> messagesMap = ImmutableMap.builder();
-        for(MailboxMessage message: originalRows.getEntriesSeen()) {
+        for (MailboxMessage message: originalRows.getEntriesSeen()) {
             messagesMap.put(message.getUid(), immutableMailboxMessageFactory.from(to.getMailboxEntity().getMailboxId(), message));
         }
         dispatcher.added(session, moveUids, to.getMailboxEntity(), messagesMap.build());
@@ -767,13 +779,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         }
         return copiedMessages;
     }
-    /**
-     * Return the count of unseen messages
-     * 
-     * @param session
-     * @return count of unseen messages
-     * @throws MailboxException
-     */
+
     protected long countUnseenMessagesInMailbox(MailboxSession session) throws MailboxException {
         MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
         return messageMapper.countUnseenMessagesInMailbox(getMailboxEntity());

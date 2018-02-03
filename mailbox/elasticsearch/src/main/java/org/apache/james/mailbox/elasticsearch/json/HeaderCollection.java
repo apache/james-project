@@ -71,7 +71,9 @@ public class HeaderCollection {
             String headerName = field.getName().toLowerCase(Locale.US);
             String sanitizedValue = MimeUtil.unscrambleHeaderValue(field.getBody());
 
-            headers.put(headerName, sanitizedValue);
+            if (!headerName.contains(".")) {
+                headers.put(headerName, sanitizedValue);
+            }
             handleSpecificHeader(headerName, sanitizedValue);
             return this;
         }
@@ -111,7 +113,7 @@ public class HeaderCollection {
                 .parseAddressList(headerValue)
                 .stream()
                 .flatMap(this::convertAddressToMailboxStream)
-                .map((mailbox) -> new EMailer(SearchUtil.getDisplayAddress(mailbox) , mailbox.getAddress()))
+                .map((mailbox) -> new EMailer(SearchUtil.getDisplayAddress(mailbox), mailbox.getAddress()))
                 .collect(Collectors.toCollection(() -> getAddressSet(headerName)));
         }
 

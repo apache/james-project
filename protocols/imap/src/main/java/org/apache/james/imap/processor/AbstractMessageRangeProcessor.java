@@ -44,8 +44,6 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
-
 public abstract class AbstractMessageRangeProcessor<M extends AbstractMessageRangeRequest> extends AbstractMailboxProcessor<M> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMessageRangeProcessor.class);
 
@@ -54,13 +52,13 @@ public abstract class AbstractMessageRangeProcessor<M extends AbstractMessageRan
         super(acceptableClass, next, mailboxManager, factory, metricFactory);
     }
 
-    abstract protected List<MessageRange> process(final MailboxPath targetMailbox,
-                                         final SelectedMailbox currentMailbox,
-                                         final MailboxSession mailboxSession,
-                                         final MailboxManager mailboxManager,
-                                         MessageRange messageSet) throws MailboxException;
+    protected abstract List<MessageRange> process(final MailboxPath targetMailbox,
+                                                  final SelectedMailbox currentMailbox,
+                                                  final MailboxSession mailboxSession,
+                                                  final MailboxManager mailboxManager,
+                                                  MessageRange messageSet) throws MailboxException;
 
-    abstract protected String getOperationName();
+    protected abstract String getOperationName();
 
     @Override
     protected void doProcess(M request, ImapSession session, String tag, ImapCommand command, Responder responder) {
@@ -108,12 +106,12 @@ public abstract class AbstractMessageRangeProcessor<M extends AbstractMessageRan
                 okComplete(command, tag, StatusResponse.ResponseCode.copyUid(uidValidity, idSet, resultUids), responder);
             }
         } catch (MessageRangeException e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(getOperationName() + " failed from mailbox " + currentMailbox.getPath() + " to " + targetMailbox + " for invalid sequence-set " + ImmutableList.copyOf(idSet), e);
-            }
+            LOGGER.debug("{} failed from mailbox {} to {} for invalid sequence-set {}",
+                    getOperationName(), currentMailbox.getPath(), targetMailbox, idSet, e);
             taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            LOGGER.error(getOperationName() + " failed from mailbox " + currentMailbox.getPath() + " to " + targetMailbox + " for sequence-set " + ImmutableList.copyOf(idSet), e);
+            LOGGER.error("{} failed from mailbox {} to {} for sequence-set {}",
+                    getOperationName(), currentMailbox.getPath(), targetMailbox, idSet, e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

@@ -24,15 +24,16 @@ import java.util.Optional;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.james.server.core.JamesServerResourceLoader;
-import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.modules.server.AsyncTasksExecutorModule;
 import org.apache.james.modules.server.ConfigurationProviderModule;
 import org.apache.james.modules.server.DNSServiceModule;
 import org.apache.james.modules.server.DropWizardMetricsModule;
+import org.apache.james.modules.server.TaskManagerModule;
 import org.apache.james.onami.lifecycle.PreDestroyModule;
+import org.apache.james.server.core.JamesServerResourceLoader;
+import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.GuiceProbe;
 
@@ -56,6 +57,7 @@ public class CommonServicesModule extends AbstractModule {
         install(new DNSServiceModule());
         install(new AsyncTasksExecutorModule());
         install(new DropWizardMetricsModule());
+        install(new TaskManagerModule());
 
         bind(FileSystemImpl.class).in(Scopes.SINGLETON);
 
@@ -63,12 +65,15 @@ public class CommonServicesModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(DataProbeImpl.class);
     }
 
-    @Provides @Singleton @Named(CONFIGURATION_PATH)
+    @Provides
+    @Singleton
+    @Named(CONFIGURATION_PATH)
     public String configurationPath() {
         return FileSystem.FILE_PROTOCOL_AND_CONF;
     }
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     public JamesDirectoriesProvider directories() throws MissingArgumentException {
         String rootDirectory = Optional
                 .ofNullable(System.getProperty("working.directory"))

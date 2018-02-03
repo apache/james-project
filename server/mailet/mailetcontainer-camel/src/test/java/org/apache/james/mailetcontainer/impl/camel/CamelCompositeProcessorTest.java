@@ -20,12 +20,12 @@ package org.apache.james.mailetcontainer.impl.camel;
 
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.james.mailetcontainer.api.mock.MockMailetContext;
 import org.apache.james.mailetcontainer.api.mock.MockMailetLoader;
 import org.apache.james.mailetcontainer.api.mock.MockMatcherLoader;
 import org.apache.james.mailetcontainer.lib.AbstractStateCompositeProcessor;
 import org.apache.james.mailetcontainer.lib.AbstractStateCompositeProcessorTest;
 import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.mailet.base.test.FakeMailContext;
 
 public class CamelCompositeProcessorTest extends AbstractStateCompositeProcessorTest {
 
@@ -36,7 +36,7 @@ public class CamelCompositeProcessorTest extends AbstractStateCompositeProcessor
             processor.setCamelContext(new DefaultCamelContext());
             processor.setMailetLoader(new MockMailetLoader());
             processor.setMatcherLoader(new MockMatcherLoader());
-            processor.setMailetContext(new MockMailetContext());
+            processor.setMailetContext(FakeMailContext.defaultContext());
             processor.configure(config);
             processor.init();
             return processor;

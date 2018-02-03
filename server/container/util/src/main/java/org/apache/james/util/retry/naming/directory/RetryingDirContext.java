@@ -42,7 +42,7 @@ import org.apache.james.util.retry.naming.RetryingContext;
  * @see org.apache.james.util.retry.api.ExceptionRetryingProxy
  * @see javax.naming.directory.DirContext
  */
-abstract public class RetryingDirContext extends RetryingContext implements DirContext {
+public abstract class RetryingDirContext extends RetryingContext implements DirContext {
 
 
     /**

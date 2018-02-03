@@ -47,7 +47,7 @@ public class ByteImapResponseWriter implements ImapConstants, ImapResponseWriter
     }
     
     public String getString() throws Exception {
-    	return new String(getBytes());
+        return new String(getBytes());
     }
     
     public void clear() {

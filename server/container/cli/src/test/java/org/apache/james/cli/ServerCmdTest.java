@@ -20,7 +20,7 @@
 package org.apache.james.cli;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.easymock.EasyMock.createControl;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
@@ -31,7 +31,6 @@ import java.util.HashMap;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.apache.james.cli.exceptions.InvalidArgumentNumberException;
-import org.apache.james.cli.exceptions.InvalidPortException;
 import org.apache.james.cli.exceptions.MissingCommandException;
 import org.apache.james.cli.exceptions.UnrecognizedCommandException;
 import org.apache.james.cli.type.CmdType;
@@ -118,7 +117,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTDOMAINS.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(dataProbe.listDomains()).andReturn(ImmutableList.<String> of());
+        expect(dataProbe.listDomains()).andReturn(ImmutableList.<String>of());
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -348,7 +347,7 @@ public class ServerCmdTest {
         testee.executeCommandLine(commandLine);
         control.verify();
     }
-	
+
     @Test
     public void listUserMailboxesMappingsCommandShouldWork() throws Exception {
         String user = "user@domain";
@@ -827,8 +826,8 @@ public class ServerCmdTest {
             control.verify();
         }
     }
-	
-	
+
+
     @Test(expected = InvalidArgumentNumberException.class)
     public void importEmlFileToMailboxCommandShouldThrowOnMissingArguments() throws Exception {
         String user = "user@domain";
@@ -1139,7 +1138,7 @@ public class ServerCmdTest {
             control.verify();
         }
     }
-	
+
     @Test(expected = InvalidArgumentNumberException.class)
     public void listUserMailboxesMappingsCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
@@ -1358,43 +1357,31 @@ public class ServerCmdTest {
         assertThat(ServerCmd.getPort(commandLine)).isEqualTo(9999);
     }
 
-    @Test(expected = InvalidPortException.class)
+    @Test
     public void getPortShouldThrowOnNullPortValueOption() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "0", "command", "arg1", "arg2", "arg3" };
-        CommandLine commandLine;
-        try {
-            commandLine = ServerCmd.parseCommandLine(arguments);
-        } catch (Exception e) {
-            fail("Exception received", e);
-            return;
-        }
-        ServerCmd.getPort(commandLine);
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        assertThatThrownBy(() -> ServerCmd.getPort(commandLine))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = InvalidPortException.class)
+    @Test
     public void getPortShouldThrowOnNegativePortValueOption() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "-1", "command", "arg1", "arg2", "arg3" };
-        CommandLine commandLine;
-        try {
-            commandLine = ServerCmd.parseCommandLine(arguments);
-        } catch (Exception e) {
-            fail("Exception received", e);
-            return;
-        }
-        ServerCmd.getPort(commandLine);
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        assertThatThrownBy(() -> ServerCmd.getPort(commandLine))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = InvalidPortException.class)
+    @Test
     public void getPortShouldThrowOnTooHighPortValueOption() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "99999", "command", "arg1", "arg2", "arg3" };
-        CommandLine commandLine;
-        try {
-            commandLine = ServerCmd.parseCommandLine(arguments);
-        } catch (Exception e) {
-            fail("Exception received", e);
-            return;
-        }
-        ServerCmd.getPort(commandLine);
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        assertThatThrownBy(() -> ServerCmd.getPort(commandLine))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
 }

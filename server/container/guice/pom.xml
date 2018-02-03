@@ -51,12 +51,15 @@
         <module>protocols/jmap</module>
         <module>protocols/lmtp</module>
         <module>protocols/managedsieve</module>
+        <module>protocols/netty</module>
         <module>protocols/pop</module>
         <module>protocols/smtp</module>
         <module>protocols/webadmin</module>
         <module>protocols/webadmin-cassandra</module>
         <module>protocols/webadmin-data</module>
         <module>protocols/webadmin-mailbox</module>
+        <module>protocols/webadmin-mailqueue</module>
+        <module>protocols/webadmin-mailrepository</module>
         <module>protocols/webadmin-swagger</module>
     </modules>
 
@@ -141,6 +144,16 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-guice-webadmin-mailbox</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>james-server-guice-webadmin-mailqueue</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>james-server-guice-webadmin-mailrepository</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

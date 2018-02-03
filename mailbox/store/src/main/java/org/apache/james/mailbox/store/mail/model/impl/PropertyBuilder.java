@@ -39,6 +39,7 @@ import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_CONTE
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_MEDIA_TYPE_NAME;
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_MIME_TYPE_SPACE;
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_SUB_TYPE_NAME;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -136,9 +137,8 @@ public class PropertyBuilder {
      * @param localName not null
      * @param value null to remove property
      */
-    public void setProperty(String namespace, String localName, String value)
-    {
-        for (Iterator<SimpleProperty> it= properties.iterator();it.hasNext();) {
+    public void setProperty(String namespace, String localName, String value) {
+        for (Iterator<SimpleProperty> it = properties.iterator();it.hasNext();) {
             final SimpleProperty property = it.next();
             if (property.isNamed(namespace, localName)) {
                 it.remove();
@@ -156,16 +156,15 @@ public class PropertyBuilder {
      * @param localName not null
      * @param values null to remove property
      */
-    public void setProperty(String namespace, String localName, List<String> values)
-    {
-        for (Iterator<SimpleProperty> it= properties.iterator();it.hasNext();) {
+    public void setProperty(String namespace, String localName, List<String> values) {
+        for (Iterator<SimpleProperty> it = properties.iterator();it.hasNext();) {
             final SimpleProperty property = it.next();
             if (property.isNamed(namespace, localName)) {
                 it.remove();
             }
         }
-        if (values !=null) {
-            for(String value:values) {
+        if (values != null) {
+            for (String value:values) {
                 properties.add(new SimpleProperty(namespace, localName, value));
             }
         }
@@ -194,7 +193,7 @@ public class PropertyBuilder {
      * @param valuesByLocalName not null
      */
     public void setProperties(String namespace, Map<String,String> valuesByLocalName) {
-        for (Iterator<SimpleProperty> it= properties.iterator();it.hasNext();) {
+        for (Iterator<SimpleProperty> it = properties.iterator();it.hasNext();) {
             final SimpleProperty property = it.next();
             if (property.isInSpace(namespace)) {
                 it.remove();
@@ -475,8 +474,7 @@ public class PropertyBuilder {
      * @return a <code>String</code> representation 
      * of this object.
      */
-    public String toString()
-    {
+    public String toString() {
         return "PropertyBuilder ( "
         + " textualLineCount = " + this.textualLineCount
         + " properties = " + this.properties

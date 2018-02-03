@@ -25,7 +25,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.Cid;
@@ -35,7 +35,6 @@ import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.Body;
 import org.apache.james.mime4j.dom.Entity;
 import org.apache.james.mime4j.dom.Message;
-import org.apache.james.mime4j.dom.MessageWriter;
 import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.dom.field.ContentDispositionField;
 import org.apache.james.mime4j.dom.field.ContentIdField;
@@ -49,6 +48,7 @@ import org.apache.james.mime4j.util.MimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class MessageParser {
@@ -68,6 +68,7 @@ public class MessageParser {
     private static final List<String> ATTACHMENT_CONTENT_DISPOSITIONS = ImmutableList.of(
             ContentDispositionField.DISPOSITION_TYPE_ATTACHMENT.toLowerCase(Locale.US),
             ContentDispositionField.DISPOSITION_TYPE_INLINE.toLowerCase(Locale.US));
+    private static final ImmutableList<String> ATTACHMENT_CONTENT_TYPES = ImmutableList.of("application/pgp-signature");
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageParser.class);
 
     private final Cid.CidParser cidParser;
@@ -85,15 +86,14 @@ public class MessageParser {
         Message message = defaultMessageBuilder.parseMessage(fullContent);
         Body body = message.getBody();
         try {
-            Optional<ContentDispositionField> contentDisposition = readHeader(message, CONTENT_DISPOSITION, ContentDispositionField.class);
-
-            if (isMessageWithOnlyOneAttachment(contentDisposition)) {
-                return ImmutableList.of(retrieveAttachment(new DefaultMessageWriter(), message));
+            if (isAttachment(message, Context.BODY)) {
+                return ImmutableList.of(retrieveAttachment(message));
             }
 
             if (body instanceof Multipart) {
-                Multipart multipartBody = (Multipart)body;
-                return listAttachments(multipartBody, Context.fromSubType(multipartBody.getSubType()));
+                Multipart multipartBody = (Multipart) body;
+                return listAttachments(multipartBody, Context.fromSubType(multipartBody.getSubType()))
+                    .collect(Guavate.toImmutableList());
             } else {
                 return ImmutableList.of();
             }
@@ -102,42 +102,39 @@ public class MessageParser {
         }
     }
 
-    private boolean isMessageWithOnlyOneAttachment(Optional<ContentDispositionField> contentDisposition) {
-        return contentDisposition.isPresent() && contentDisposition.get().isAttachment();
+    private Stream<MessageAttachment> listAttachments(Multipart multipart, Context context) {
+        return multipart.getBodyParts()
+            .stream()
+            .flatMap(entity -> listAttachments(entity, context));
     }
 
-    private List<MessageAttachment> listAttachments(Multipart multipart, Context context) throws IOException {
-        ImmutableList.Builder<MessageAttachment> attachments = ImmutableList.builder();
-        MessageWriter messageWriter = new DefaultMessageWriter();
-        for (Entity entity : multipart.getBodyParts()) {
-            if (isMultipart(entity)) {
-                attachments.addAll(listAttachments((Multipart) entity.getBody(), Context.fromEntity(entity)));
-            } else {
-                if (isAttachment(entity, context)) {
-                    try {
-                        attachments.add(retrieveAttachment(messageWriter, entity));
-                    } catch (IllegalStateException e) {
-                        LOGGER.error("The attachment is not well-formed: " + e.getCause());
-                    } catch (IOException e) {
-                        LOGGER.error("There is error on retrieve attachment: " + e.getCause());
-                    }
-                }
+    private Stream<MessageAttachment> listAttachments(Entity entity, Context context) {
+        if (isMultipart(entity)) {
+            return listAttachments((Multipart) entity.getBody(), Context.fromEntity(entity));
+        }
+        if (isAttachment(entity, context)) {
+            try {
+                return Stream.of(retrieveAttachment(entity));
+            } catch (IllegalStateException e) {
+                LOGGER.warn("The attachment is not well-formed", e);
+            } catch (IOException e) {
+                LOGGER.warn("There is an error when retrieving attachment", e);
             }
         }
-        return attachments.build();
+        return Stream.empty();
     }
 
-    private MessageAttachment retrieveAttachment(MessageWriter messageWriter, Entity entity) throws IOException {
+    private MessageAttachment retrieveAttachment(Entity entity) throws IOException {
         Optional<ContentTypeField> contentTypeField = getContentTypeField(entity);
         Optional<ContentDispositionField> contentDispositionField = getContentDispositionField(entity);
         Optional<String> contentType = contentType(contentTypeField);
         Optional<String> name = name(contentTypeField, contentDispositionField);
         Optional<Cid> cid = cid(readHeader(entity, CONTENT_ID, ContentIdField.class));
-        boolean isInline = isInline(readHeader(entity, CONTENT_DISPOSITION, ContentDispositionField.class));
+        boolean isInline = isInline(readHeader(entity, CONTENT_DISPOSITION, ContentDispositionField.class)) && cid.isPresent();
 
         return MessageAttachment.builder()
                 .attachment(Attachment.builder()
-                    .bytes(getBytes(messageWriter, entity.getBody()))
+                    .bytes(getBytes(entity.getBody()))
                     .type(contentType.orElse(DEFAULT_CONTENT_TYPE))
                     .build())
                 .name(name.orElse(null))
@@ -179,15 +176,8 @@ public class MessageParser {
     }
 
     private Optional<Cid> cid(Optional<ContentIdField> contentIdField) {
-        if (!contentIdField.isPresent()) {
-            return Optional.empty();
-        }
-        return contentIdField.map(toCid())
-            .get();
-    }
-
-    private Function<ContentIdField, Optional<Cid>> toCid() {
-        return contentIdField -> cidParser.parse(contentIdField.getId());
+        return contentIdField.map(ContentIdField::getId)
+            .flatMap(cidParser::parse);
     }
 
     private boolean isMultipart(Entity entity) {
@@ -203,24 +193,34 @@ public class MessageParser {
         if (context == Context.BODY && isTextPart(part)) {
             return false;
         }
-        return Optional.ofNullable(part.getDispositionType())
-                .map(dispositionType -> ATTACHMENT_CONTENT_DISPOSITIONS.contains(
-                    dispositionType.toLowerCase(Locale.US)))
-            .orElse(false);
+        return attachmentDispositionCriterion(part) || attachmentContentTypeCriterion(part);
     }
 
     private boolean isTextPart(Entity part) {
-        Optional<ContentTypeField> contentTypeField = getContentTypeField(part);
-        if (contentTypeField.isPresent()) {
-            String mediaType = contentTypeField.get().getMediaType();
-            if (mediaType != null && mediaType.equals(TEXT_MEDIA_TYPE)) {
-                return true;
-            }
-        }
-        return false;
+        return getContentTypeField(part)
+            .map(ContentTypeField::getMediaType)
+            .map(TEXT_MEDIA_TYPE::equals)
+            .orElse(false);
     }
 
-    private byte[] getBytes(MessageWriter messageWriter, Body body) throws IOException {
+    private Boolean attachmentContentTypeCriterion(Entity part) {
+        return getContentTypeField(part)
+            .map(ContentTypeField::getMimeType)
+            .map(dispositionType -> dispositionType.toLowerCase(Locale.US))
+            .map(ATTACHMENT_CONTENT_TYPES::contains)
+            .orElse(false);
+    }
+
+    private Boolean attachmentDispositionCriterion(Entity part) {
+        return getContentDispositionField(part)
+            .map(ContentDispositionField::getDispositionType)
+            .map(dispositionType -> dispositionType.toLowerCase(Locale.US))
+            .map(ATTACHMENT_CONTENT_DISPOSITIONS::contains)
+            .orElse(false);
+    }
+
+    private byte[] getBytes(Body body) throws IOException {
+        DefaultMessageWriter messageWriter = new DefaultMessageWriter();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         messageWriter.writeBody(body, out);
         return out.toByteArray();

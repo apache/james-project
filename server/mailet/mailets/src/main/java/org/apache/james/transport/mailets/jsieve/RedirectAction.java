@@ -24,10 +24,10 @@ import java.util.Collection;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 
+import org.apache.james.core.MailAddress;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionRedirect;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,18 +56,13 @@ public class RedirectAction implements MailAction {
      * @param context not null
      * @throws MessagingException
      */
-    public void execute(ActionRedirect anAction, Mail aMail, ActionContext context) throws MessagingException
-    {
+    public void execute(ActionRedirect anAction, Mail aMail, ActionContext context) throws MessagingException {
         ActionUtils.detectAndHandleLocalLooping(aMail, context, "redirect");
         Collection<MailAddress> recipients = new ArrayList<>(1);
         recipients.add(new MailAddress(new InternetAddress(anAction.getAddress())));
         MailAddress sender = aMail.getSender();
         context.post(sender, recipients, aMail.getMessage());
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Redirected Message ID: "
-                + aMail.getMessage().getMessageID() + " to \""
-                + anAction.getAddress() + "\"");
-        }
+        LOGGER.debug("Redirected Message ID: {} to \"{}\"", aMail.getMessage().getMessageID(), anAction.getAddress());
         DiscardAction.removeRecipient(aMail, context);
     }
 }

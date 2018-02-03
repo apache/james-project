@@ -46,19 +46,27 @@ public final class HookResult {
         boolean match = false;
 
         if ((result & HookReturnCode.DECLINED) == HookReturnCode.DECLINED) {
-            if (match == true) throw new IllegalArgumentException();
+            if (match == true) {
+                throw new IllegalArgumentException();
+            }
             match = true;
         }
         if ((result & HookReturnCode.OK) == HookReturnCode.OK) {
-            if (match == true) throw new IllegalArgumentException();
+            if (match == true) {
+                throw new IllegalArgumentException();
+            }
             match = true;
         }
         if ((result & HookReturnCode.DENY) == HookReturnCode.DENY) {
-            if (match == true) throw new IllegalArgumentException();
+            if (match == true) {
+                throw new IllegalArgumentException();
+            }
             match = true;
         }
         if ((result & HookReturnCode.DENYSOFT) == HookReturnCode.DENYSOFT) {
-            if (match == true) throw new IllegalArgumentException();
+            if (match == true) {
+                throw new IllegalArgumentException();
+            }
             match = true;
         }
         this.result = result;

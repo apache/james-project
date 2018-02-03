@@ -21,10 +21,11 @@ package org.apache.james.protocols.pop3.core;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
 import junit.framework.TestCase;
 
 
-public abstract class AbstractInputStreamTest extends TestCase{
+public abstract class AbstractInputStreamTest extends TestCase {
 
     protected void checkRead(InputStream in, String expected) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();

@@ -20,17 +20,24 @@
 package org.apache.james.mailrepository.api;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface MailRepositoryStore {
 
     /**
-     * Select the {@link MailRepository} for the given url
+     * Select the {@link MailRepository} for the given url. Repository will be created if it does not exist already.
      * 
      * @param url
      * @return repository
      * @throws MailRepositoryStoreException
      */
     MailRepository select(String url) throws MailRepositoryStoreException;
+
+    /**
+     * Returns the {@link MailRepository} for the given url.
+     * This mail repository will not be created if it does not exist.
+     */
+    Optional<MailRepository> get(String url) throws MailRepositoryStoreException;
 
     /**
      * Return a {@link List} which contains all urls of the selected

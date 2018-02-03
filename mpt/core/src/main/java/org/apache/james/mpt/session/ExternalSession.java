@@ -74,8 +74,7 @@ public final class ExternalSession implements Session {
             monitor.note("<-" + buffer.toString());
             result = shabang;
             first = false;
-        }
-        else {
+        } else {
             result = buffer.toString();
             monitor.note("<-" + result);
         }
@@ -85,8 +84,9 @@ public final class ExternalSession implements Session {
     private void readlineInto(StringBuffer buffer) throws Exception {
         monitor.debug("[Reading line]");
         readBuffer.flip();
-        while (oneFromLine(buffer))
+        while (oneFromLine(buffer)) {
             ;
+        }
         // May have partial read
         readBuffer.compact();
         monitor.debug("[Done]");
@@ -100,20 +100,17 @@ public final class ExternalSession implements Session {
                 monitor.debug("[LF]");
                 // Reached end of the line
                 result = false;
-            }
-            else if (next == '\r') {
+            } else if (next == '\r') {
                 // CRLF line endings so drop
                 monitor.debug("[CR]");
                 result = true;
-            }
-            else {
+            } else {
                 // Load buffer
                 monitor.debug(next);
                 buffer.append(next);
                 result = true;
             }
-        }
-        else {
+        } else {
             monitor.debug("[Reading into buffer]");
             readBuffer.clear();
             result = tryReadFromSocket();

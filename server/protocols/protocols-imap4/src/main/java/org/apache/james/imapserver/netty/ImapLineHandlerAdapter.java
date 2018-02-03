@@ -44,7 +44,7 @@ public class ImapLineHandlerAdapter extends SimpleChannelUpstreamHandler {
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
         ChannelBuffer buf = (ChannelBuffer) e.getMessage();
-        byte data[];
+        byte[] data;
         if (buf.hasArray()) {
             data = buf.array();
         } else {

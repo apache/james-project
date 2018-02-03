@@ -21,11 +21,13 @@ package org.apache.james.lmtpserver.netty;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
+import org.jboss.netty.util.HashedWheelTimer;
 
-public class OioLMTPServerFactory extends LMTPServerFactory{
+public class OioLMTPServerFactory extends LMTPServerFactory {
 
-    public OioLMTPServerFactory(ProtocolHandlerLoader loader, FileSystem fileSystem, MetricFactory metricFactory) {
-        super(loader, fileSystem, metricFactory);
+    public OioLMTPServerFactory(ProtocolHandlerLoader loader, FileSystem fileSystem, MetricFactory metricFactory,
+                                HashedWheelTimer hashedWheelTimer) {
+        super(loader, fileSystem, metricFactory, hashedWheelTimer);
     }
 
     @Override

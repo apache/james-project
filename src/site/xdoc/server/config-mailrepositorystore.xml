@@ -33,8 +33,8 @@
     
       <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/mailrepositorystore.xml">mailrepositorystore.xml</a> in GIT to get some examples and hints.</p>
 
-      <p>Mail Repository Stores are distinguished by where they store data.  There are five types of 
-        storage: File, Database, DBFile, MBox and JCR.</p>
+      <p>Mail Repository Stores are distinguished by where they store data.  There are several types of
+        storage: File, Database, Cassandra, DBFile, MBox and JCR.</p>
         
     </subsection>
         
@@ -88,19 +88,28 @@
     </subsection>
     
     <subsection name="MBox Repositories">
+
+     <p>Warning: deprecated. This feature will be removed as part of James release 3.2.0 unless it is maintained.
+         See https://issues.apache.org/jira/browse/JAMES-2323. Use File Repositories instead.</p>
     
      <p>The MBox file format repository.</p>
 
     </subsection>
 
     <subsection name="JCR Repositories">
-    
+
+      <p>Warning: deprecated. This feature will be removed as part of James release 3.2.0 unless it is maintained.
+        See https://issues.apache.org/jira/browse/JAMES-2323. Use File Repositories instead.</p>
+
       <p>Store mails in a JCR (Java Content Repository) based implementation.</p>
     
       <p>If you enable this you need to make sure that embedded Jackrabbit instance is started as well. Check the container configuration</p>
         
     </subsection>
-  
+
+    <subsection name="CassandraMailRepository">
+      <p>Cassandra Guice wiring allows to use the <code>cassandra://</code> protocol for your ToRepository mailets.</p>
+    </subsection>
   </section>
 
 </body>

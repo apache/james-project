@@ -23,11 +23,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
-import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,14 +39,14 @@ public class MailAttributesToMimeHeadersTest {
     
     private Mailet mailet;
 
-    private final String HEADER_NAME1 = "JUNIT";
-    private final String HEADER_NAME2 = "JUNIT2";
+    private static final String HEADER_NAME1 = "JUNIT";
+    private static final String HEADER_NAME2 = "JUNIT2";
 
-    private final String MAIL_ATTRIBUTE_VALUE1 = "test1";
-    private final String MAIL_ATTRIBUTE_VALUE2 = "test2";
+    private static final String MAIL_ATTRIBUTE_VALUE1 = "test1";
+    private static final String MAIL_ATTRIBUTE_VALUE2 = "test2";
 
-    private final String MAIL_ATTRIBUTE_NAME1 = "org.apache.james.test";
-    private final String MAIL_ATTRIBUTE_NAME2 = "org.apache.james.test2";
+    private static final String MAIL_ATTRIBUTE_NAME1 = "org.apache.james.test";
+    private static final String MAIL_ATTRIBUTE_NAME2 = "org.apache.james.test2";
 
     @Before
     public void setup() {

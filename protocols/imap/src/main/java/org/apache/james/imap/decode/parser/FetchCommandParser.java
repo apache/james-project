@@ -38,8 +38,8 @@ import org.apache.james.protocols.imap.DecodingException;
  * Parse FETCH commands
  */
 public class FetchCommandParser extends AbstractUidCommandParser {
-    private final static byte[] CHANGEDSINCE = "CHANGEDSINCE".getBytes();
-    private final static byte[] VANISHED = "VANISHED".getBytes();
+    private static final byte[] CHANGEDSINCE = "CHANGEDSINCE".getBytes();
+    private static final byte[] VANISHED = "VANISHED".getBytes();
 
     public FetchCommandParser() {
         super(ImapCommand.selectedStateCommand(ImapConstants.FETCH_COMMAND_NAME));
@@ -103,6 +103,7 @@ public class FetchCommandParser extends AbstractUidCommandParser {
                         }
                     });
                     fetch.setVanished(true);
+                    break;
                 default:
                     break;
                 }

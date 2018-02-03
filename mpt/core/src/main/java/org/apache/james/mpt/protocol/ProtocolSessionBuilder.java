@@ -185,20 +185,20 @@ public class ProtocolSessionBuilder {
             line = substituteVariables(line);
             String location = scriptName + ":" + lineNumber;
             if (SERVER_CONTINUATION_TAG.equals(line)) {
-                session.CONT(sessionNumber);
+                session.cont(sessionNumber);
             } else if (line.startsWith(CLIENT_TAG)) {
                 String clientMsg = "";
                 if (line.length() > 3) {
                     clientMsg = line.substring(3);
                 }
-                session.CL(sessionNumber, clientMsg);
+                session.cl(sessionNumber, clientMsg);
                 lastClientMsg = clientMsg;
             } else if (line.startsWith(SERVER_TAG)) {
                 String serverMsg = "";
                 if (line.length() > 3) {
                     serverMsg = line.substring(3);
                 }
-                session.SL(sessionNumber, serverMsg, location, lastClientMsg);
+                session.sl(sessionNumber, serverMsg, location, lastClientMsg);
             } else if (line.startsWith(OPEN_UNORDERED_BLOCK_TAG)) {
                 List<String> unorderedLines = new ArrayList<>(5);
                 line = reader.readLine();
@@ -214,7 +214,7 @@ public class ProtocolSessionBuilder {
                     lineNumber++;
                 }
 
-                session.SUB(sessionNumber, unorderedLines, location,
+                session.sub(sessionNumber, unorderedLines, location,
                         lastClientMsg);
             } else if (line.startsWith(COMMENT_TAG)
                     || line.trim().length() == 0) {
@@ -255,7 +255,7 @@ public class ProtocolSessionBuilder {
                 if (end < 0) {
                     break;
                 }
-                final String name = buffer.substring(start+2, end);
+                final String name = buffer.substring(start + 2, end);
                 final String value = variables.getProperty(name);
                 if (value != null) {
                     buffer.replace(start, end + 1, value);

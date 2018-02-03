@@ -103,7 +103,7 @@ all. <b>Do not send mail to this list with James software problems</b>
         <p> This is the public list for the Mailet API subproject, discussing all <a href="http://james.apache.org/mailet/index.html">Mailet API</a> design and implementation related topics. Questions about using Mailets and their configuration should be addressed to the server-user list.</p>
       </subsection>
     </section>
-	
+
     <section name="How to unsubscribe your old email address">
         <p>
         First, find out the particular email adress to which ezmlm is sending.

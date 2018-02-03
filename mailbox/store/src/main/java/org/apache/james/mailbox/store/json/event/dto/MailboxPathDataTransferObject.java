@@ -19,9 +19,10 @@
 
 package org.apache.james.mailbox.store.json.event.dto;
 
+import org.apache.james.mailbox.model.MailboxPath;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.james.mailbox.model.MailboxPath;
 
 public class MailboxPathDataTransferObject {
     @JsonProperty()

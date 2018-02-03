@@ -88,7 +88,8 @@ public class Host {
     private static int getPortFromConfPart(List<String> parts, Optional<Integer> defaultPort) {
         if (parts.size() == 2) {
             return Integer.valueOf(parts.get(1));
-        } if (parts.size() == 1) {
+        }
+        if (parts.size() == 1) {
             return defaultPort.orElseThrow(() -> new IllegalArgumentException("Host do not have port part but no default port provided"));
         }
         throw new RuntimeException("A host should be either a hostname or a hostname and a port separated by a ':'");
@@ -101,7 +102,7 @@ public class Host {
     Host(String hostName, int port) {
         Preconditions.checkNotNull(hostName, "Hostname could not be null");
         Preconditions.checkArgument(!Strings.isNullOrEmpty(hostName), "Hostname could not be empty");
-        Preconditions.checkArgument(port > 0 && port <= 65535, "Port should be between 0 and 65535");
+        Port.assertValid(port);
         this.hostName = hostName;
         this.port = port;
     }

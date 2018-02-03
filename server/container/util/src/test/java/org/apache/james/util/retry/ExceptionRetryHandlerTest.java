@@ -38,51 +38,51 @@ import org.junit.Test;
  */
 public class ExceptionRetryHandlerTest {
 
-    private Class<?>[] _exceptionClasses = null;
-    private ExceptionRetryingProxy _proxy = null;
-    private RetrySchedule _schedule = null;
+    private Class<?>[] exceptionClasses = null;
+    private ExceptionRetryingProxy proxy = null;
+    private RetrySchedule schedule = null;
 
     /**
      * @see junit.framework.TestCase#setUp()
      */
     @Before
     public void setUp() throws Exception {
-	_exceptionClasses = new Class<?>[]{Exception.class};
-	_proxy = new TestRetryingProxy();
-	_schedule = new TestRetrySchedule();
+    exceptionClasses = new Class<?>[]{Exception.class};
+    proxy = new TestRetryingProxy();
+    schedule = new TestRetrySchedule();
     }
 
     private class TestRetryingProxy implements ExceptionRetryingProxy {
 
-	/**
+    /**
      */
-	@Override
-	public Context getDelegate() {
-	    return null;
-	}
+    @Override
+    public Context getDelegate() {
+        return null;
+    }
 
-	/**
+    /**
      */
-	@Override
-	public Context newDelegate() throws Exception {
-	    return null;
-	}
+    @Override
+    public Context newDelegate() throws Exception {
+        return null;
+    }
 
-	/**
+    /**
      */
-	@Override
-	public void resetDelegate() throws Exception {
-	}
+    @Override
+    public void resetDelegate() throws Exception {
+    }
     }
 
     private class TestRetrySchedule implements RetrySchedule {
 
-	/**
+    /**
      */
-	@Override
-	public long getInterval(int index) {
-	    return index;
-	}
+    @Override
+    public long getInterval(int index) {
+        return index;
+    }
     }
 
     /**
@@ -90,14 +90,14 @@ public class ExceptionRetryHandlerTest {
      */
     @Test
     public final void testExceptionRetryHandler() {
-	assertTrue(RetryHandler.class.isAssignableFrom(new ExceptionRetryHandler(
-		_exceptionClasses, _proxy, _schedule, 0) {
+    assertTrue(RetryHandler.class.isAssignableFrom(new ExceptionRetryHandler(
+        exceptionClasses, proxy, schedule, 0) {
 
-	    @Override
-	    public Object operation() throws Exception {
-		return null;
-	    }
-	}.getClass()));
+        @Override
+        public Object operation() throws Exception {
+        return null;
+        }
+    }.getClass()));
     }
 
     /**
@@ -106,29 +106,29 @@ public class ExceptionRetryHandlerTest {
      */
     @Test
     public final void testPerform() throws Exception {
-	Object result = new ExceptionRetryHandler(
-		_exceptionClasses, _proxy, _schedule, 0) {
+    Object result = new ExceptionRetryHandler(
+        exceptionClasses, proxy, schedule, 0) {
 
-	    @Override
-	    public Object operation() throws Exception {
-		return "Hi!";
-	    }
-	}.perform();
-	assertEquals("Hi!", result);
+        @Override
+        public Object operation() throws Exception {
+        return "Hi!";
+        }
+    }.perform();
+    assertEquals("Hi!", result);
 
-	try {
-	    new ExceptionRetryHandler(
-		    _exceptionClasses, _proxy, _schedule, 0) {
+    try {
+        new ExceptionRetryHandler(
+            exceptionClasses, proxy, schedule, 0) {
 
-		@Override
-		public Object operation() throws Exception {
-		    throw new Exception();
-		}
-	    }.perform();
-	} catch (Exception ex) {
-	    // no-op
-	}
-	assertEquals("Hi!", result);
+        @Override
+        public Object operation() throws Exception {
+            throw new Exception();
+        }
+        }.perform();
+    } catch (Exception ex) {
+        // no-op
+    }
+    assertEquals("Hi!", result);
     }
 
     /**
@@ -136,27 +136,27 @@ public class ExceptionRetryHandlerTest {
      */
     @Test
     public final void testPostFailure() {
-	final List<Exception> results = new ArrayList<>();
-	RetryHandler handler = new ExceptionRetryHandler(
-		_exceptionClasses, _proxy, _schedule, 7) {
+    final List<Exception> results = new ArrayList<>();
+    RetryHandler handler = new ExceptionRetryHandler(
+        exceptionClasses, proxy, schedule, 7) {
 
-	    @Override
-	    public void postFailure(Exception ex, int retryCount) {
-		super.postFailure(ex, retryCount);
-		results.add(ex);
-	    }
+        @Override
+        public void postFailure(Exception ex, int retryCount) {
+        super.postFailure(ex, retryCount);
+        results.add(ex);
+        }
 
-	    @Override
-	    public Object operation() throws Exception {
-		throw new Exception();
-	    }
-	};
-	try {
-	    handler.perform();
-	} catch (Exception ex) {
-	    // no-op
-	}
-	assertEquals(7, results.size());
+        @Override
+        public Object operation() throws Exception {
+        throw new Exception();
+        }
+    };
+    try {
+        handler.perform();
+    } catch (Exception ex) {
+        // no-op
+    }
+    assertEquals(7, results.size());
     }
 
     /**
@@ -165,15 +165,15 @@ public class ExceptionRetryHandlerTest {
      */
     @Test
     public final void testOperation() throws Exception {
-	RetryHandler handler = new ExceptionRetryHandler(
-		_exceptionClasses, _proxy, _schedule, 0) {
+    RetryHandler handler = new ExceptionRetryHandler(
+        exceptionClasses, proxy, schedule, 0) {
 
-	    @Override
-	    public Object operation() throws Exception {
-		return "Hi!";
-	    }
-	};
-	assertEquals("Hi!", handler.operation());
+        @Override
+        public Object operation() throws Exception {
+        return "Hi!";
+        }
+    };
+    assertEquals("Hi!", handler.operation());
     }
 
     /**
@@ -181,14 +181,14 @@ public class ExceptionRetryHandlerTest {
      */
     @Test
     public final void testGetRetryInterval() {
-	ExceptionRetryHandler handler = new ExceptionRetryHandler(
-		_exceptionClasses, _proxy, _schedule, 0) {
+    ExceptionRetryHandler handler = new ExceptionRetryHandler(
+        exceptionClasses, proxy, schedule, 0) {
 
-	    @Override
-	    public Object operation() throws Exception {
-		return null;
-	    }
-	};
-	assertEquals(8, handler.getRetryInterval(8));
+        @Override
+        public Object operation() throws Exception {
+        return null;
+        }
+    };
+    assertEquals(8, handler.getRetryInterval(8));
     }
 }

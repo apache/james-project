@@ -91,7 +91,7 @@ public class MailboxCopierTest {
      */
     @Test
     public void testMailboxCopy() throws MailboxException, IOException {
-    	 if (srcMemMailboxManager instanceof StoreMailboxManager) {
+         if (srcMemMailboxManager instanceof StoreMailboxManager) {
              ((StoreMailboxManager) srcMemMailboxManager).init();
          }
          if (dstMemMailboxManager instanceof StoreMailboxManager) {
@@ -119,7 +119,6 @@ public class MailboxCopierTest {
      * @throws BadCredentialsException 
      */
     private void assertMailboxManagerSize(MailboxManager mailboxManager, int multiplicationFactor) throws BadCredentialsException, MailboxException {
-        
         MailboxSession mailboxSession = mailboxManager.createSystemSession("manager");
         mailboxManager.startProcessingRequest(mailboxSession);
 
@@ -128,8 +127,10 @@ public class MailboxCopierTest {
         assertThat(mailboxPathList).hasSize(MockMailboxManager.EXPECTED_MAILBOXES_COUNT);
         
         for (MailboxPath mailboxPath: mailboxPathList) {
-            MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
-            assertThat(messageManager.getMetaData(false, mailboxSession, FetchGroup.NO_UNSEEN).getMessageCount()).isEqualTo(MockMailboxManager.MESSAGE_PER_MAILBOX_COUNT * multiplicationFactor);
+            MailboxSession userSession = mailboxManager.createSystemSession(mailboxPath.getUser());
+            mailboxManager.startProcessingRequest(mailboxSession);
+            MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, userSession);
+            assertThat(messageManager.getMetaData(false, userSession, FetchGroup.NO_UNSEEN).getMessageCount()).isEqualTo(MockMailboxManager.MESSAGE_PER_MAILBOX_COUNT * multiplicationFactor);
         }
         
         mailboxManager.endProcessingRequest(mailboxSession);

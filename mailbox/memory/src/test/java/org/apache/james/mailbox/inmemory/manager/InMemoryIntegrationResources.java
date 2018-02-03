@@ -60,7 +60,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
     private DefaultQuotaRootResolver quotaRootResolver;
 
     @Override
-    public StoreMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver) throws MailboxException {
+    public InMemoryMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver) throws MailboxException {
         return createMailboxManager(groupMembershipResolver,
             ((storeRightManager, inMemoryMailboxSessionMapperFactory) ->
                 new StoreMailboxAnnotationManager(
@@ -68,7 +68,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
                     storeRightManager)));
     }
 
-    public StoreMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver,
+    public InMemoryMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver,
                                                     int limitAnnotationCount, int limitAnnotationSize) throws MailboxException {
         return createMailboxManager(groupMembershipResolver,
             ((storeRightManager, inMemoryMailboxSessionMapperFactory) ->
@@ -79,19 +79,20 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
                  limitAnnotationSize)));
     }
 
-    private StoreMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver,
+    private InMemoryMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver,
                                                     BiFunction<StoreRightManager, InMemoryMailboxSessionMapperFactory, StoreMailboxAnnotationManager> annotationManagerBiFunction) throws MailboxException {
         FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
         fakeAuthenticator.addUser(ManagerTestResources.USER, ManagerTestResources.USER_PASS);
         fakeAuthenticator.addUser(ManagerTestResources.OTHER_USER, ManagerTestResources.OTHER_USER_PASS);
         InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
-        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), groupMembershipResolver);
+        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
+        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(),
+                                                                    groupMembershipResolver, mailboxEventDispatcher);
         StoreMailboxAnnotationManager annotationManager = annotationManagerBiFunction
             .apply(storeRightManager, mailboxSessionMapperFactory);
 
-        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
-        StoreMailboxManager manager = new InMemoryMailboxManager(
+        InMemoryMailboxManager manager = new InMemoryMailboxManager(
             mailboxSessionMapperFactory,
             fakeAuthenticator,
             FakeAuthorizator.defaultReject(),
@@ -109,11 +110,11 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
     public StoreMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver,
                                                     Authenticator authenticator, Authorizator authorizator) throws MailboxException {
         InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
-        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), groupMembershipResolver);
-        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
-
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
         MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
+        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), groupMembershipResolver, mailboxEventDispatcher);
+        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
+
         StoreMailboxManager manager = new InMemoryMailboxManager(
             mailboxSessionMapperFactory,
             authenticator,

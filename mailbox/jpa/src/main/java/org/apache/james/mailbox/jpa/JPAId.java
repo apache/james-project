@@ -65,15 +65,19 @@ public class JPAId implements MailboxId, Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         JPAId other = (JPAId) obj;
-        if (value != other.value)
+        if (value != other.value) {
             return false;
+        }
         return true;
     }
     

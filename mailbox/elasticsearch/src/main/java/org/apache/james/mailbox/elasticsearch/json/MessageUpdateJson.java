@@ -3,6 +3,7 @@
 package org.apache.james.mailbox.elasticsearch.json;
 
 import javax.mail.Flags;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MessageUpdateJson {

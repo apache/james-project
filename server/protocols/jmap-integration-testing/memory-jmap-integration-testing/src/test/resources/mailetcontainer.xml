@@ -61,6 +61,9 @@
             <mailet match="SMTPAuthSuccessful" class="SetMailAttribute">
                 <RelayAllowed>true</RelayAllowed>
             </mailet>
+            <mailet match="SMTPIsAuthNetwork" class="SetMailAttribute">
+                <RelayAllowed>true</RelayAllowed>
+            </mailet>
             <mailet match="SentByMailet" class="SetMailAttribute">
                 <RelayAllowed>true</RelayAllowed>
             </mailet>

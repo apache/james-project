@@ -20,8 +20,8 @@ package org.apache.james.protocols.smtp.core;
 
 import java.nio.ByteBuffer;
 
-import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.ProtocolSession.State;
+import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.smtp.SMTPSession;
 
@@ -44,7 +44,7 @@ import org.apache.james.protocols.smtp.SMTPSession;
  * 
  *
  */
-public abstract class SeparatingDataLineFilter implements DataLineFilter{
+public abstract class SeparatingDataLineFilter implements DataLineFilter {
 
     private static final String HEADERS_COMPLETE = "HEADERS_COMPLETE";
     
@@ -54,7 +54,7 @@ public abstract class SeparatingDataLineFilter implements DataLineFilter{
      */
     public final Response onLine(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
         if (session.getAttachment(HEADERS_COMPLETE, State.Transaction) == null) {
-            if (line.remaining() == 2 ) {
+            if (line.remaining() == 2) {
                 if (line.get() == '\r' && line.get() == '\n') {
                     line.rewind();
                     Response response = onSeparatorLine(session, line, next);

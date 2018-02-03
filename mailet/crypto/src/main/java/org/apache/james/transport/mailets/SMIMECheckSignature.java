@@ -120,13 +120,19 @@ public class SMIMECheckSignature extends GenericMailet {
         MailetConfig config = getMailetConfig();
 
         String stripSignatureConf = config.getInitParameter("strip");
-        if (stripSignatureConf != null) stripSignature = Boolean.valueOf(stripSignatureConf);
+        if (stripSignatureConf != null) {
+            stripSignature = Boolean.valueOf(stripSignatureConf);
+        }
         
         String onlyTrustedConf = config.getInitParameter("onlyTrusted");
-        if (onlyTrustedConf != null) onlyTrusted = Boolean.valueOf(onlyTrustedConf);
+        if (onlyTrustedConf != null) {
+            onlyTrusted = Boolean.valueOf(onlyTrustedConf);
+        }
         
         String mailAttributeConf = config.getInitParameter("mailAttribute");
-        if (mailAttributeConf != null) mailAttribute = mailAttributeConf;
+        if (mailAttributeConf != null) {
+            mailAttribute = mailAttributeConf;
+        }
         
         
         String type = config.getInitParameter("keyStoreType");
@@ -134,8 +140,9 @@ public class SMIMECheckSignature extends GenericMailet {
         String password = config.getInitParameter("keyStorePassword");
         
         try {
-            if (file != null) trustedCertificateStore = new KeyStoreHolder(file, password, type);
-            else {
+            if (file != null) {
+                trustedCertificateStore = new KeyStoreHolder(file, password, type);
+            } else {
                 LOGGER.info("No trusted store path specified, using default store.");
                 trustedCertificateStore = new KeyStoreHolder(password);
             }
@@ -144,9 +151,7 @@ public class SMIMECheckSignature extends GenericMailet {
         }
 
     }
-    /**
-     * @see org.apache.mailet.Matcher#match(org.apache.mailet.Mail)
-     */
+
     public void service(Mail mail) throws MessagingException {
         // I extract the MimeMessage from the mail object and I check if the
         // mime type of the mail is one of the mime types that can contain a
@@ -154,22 +159,29 @@ public class SMIMECheckSignature extends GenericMailet {
         MimeMessage message = mail.getMessage();
 
         // strippedMessage will contain the signed content of the message 
-        MimeBodyPart strippedMessage =null;
+        MimeBodyPart strippedMessage = null;
         
-        List<SMIMESignerInfo> signers=null;
+        List<SMIMESignerInfo> signers = null;
         
         try {
             Object obj = message.getContent();
             SMIMESigned signed;
-            if (obj instanceof MimeMultipart) signed = new SMIMESigned((MimeMultipart)message.getContent());
-            else if (obj instanceof SMIMESigned) signed = (SMIMESigned) obj;                
-            else if (obj instanceof byte[]) signed = new SMIMESigned(message);
-            else signed = null;
+            if (obj instanceof MimeMultipart) {
+                signed = new SMIMESigned((MimeMultipart) message.getContent());
+            } else if (obj instanceof SMIMESigned) {
+                signed = (SMIMESigned) obj;
+            } else if (obj instanceof byte[]) {
+                signed = new SMIMESigned(message);
+            } else {
+                signed = null;
+            }
             
             if (signed != null) {
                 signers = trustedCertificateStore.verifySignatures(signed);
                 strippedMessage = signed.getContent();
-            } else LOGGER.info("Content not identified as signed");
+            } else {
+                LOGGER.info("Content not identified as signed");
+            }
             
             // These errors are logged but they don't cause the 
             // message to change its state. The message 

@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Abstract class <code>LoggingRetryHandler</code> implements logging of failures 
  */
-abstract public class LoggingRetryHandler extends NamingExceptionRetryHandler {
+public abstract class LoggingRetryHandler extends NamingExceptionRetryHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggingRetryHandler.class);
 
     /**
@@ -50,9 +50,7 @@ abstract public class LoggingRetryHandler extends NamingExceptionRetryHandler {
     @Override
     public void postFailure(NamingException ex, int retryCount) {
         super.postFailure(ex, retryCount);
-        LOGGER.info(
-                "Retry failure: " + ex.getLocalizedMessage() + "\n Retrying in " + getRetryInterval(retryCount) / 1000 + " seconds"
-                );
+        LOGGER.info("Retry failure. Retrying in {} seconds", getRetryInterval(retryCount) / 1000, ex);
     }
 
 }

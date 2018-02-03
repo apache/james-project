@@ -24,7 +24,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 
 
-public abstract class AbstractMailboxPathLocker implements MailboxPathLocker{
+public abstract class AbstractMailboxPathLocker implements MailboxPathLocker {
 
     @Override
     public <T> T executeWithLock(MailboxSession session, MailboxPath path, LockAwareExecution<T> execution) throws MailboxException {

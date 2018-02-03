@@ -22,10 +22,11 @@ package org.apache.james.mailetcontainer.impl.matchers;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
+
 import javax.mail.MessagingException;
 
-import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
 
 import com.google.common.collect.Lists;

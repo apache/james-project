@@ -20,13 +20,13 @@
 
 package org.apache.james.sieverepository.lib;
 
-import org.apache.james.sieverepository.api.SieveRepository;
-import org.apache.james.sieverepository.api.SieveRepositoryManagementMBean;
-import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
-
 import javax.inject.Inject;
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
+
+import org.apache.james.sieverepository.api.SieveRepository;
+import org.apache.james.sieverepository.api.SieveRepositoryManagementMBean;
+import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
 
 public class SieveRepositoryManagement extends StandardMBean implements SieveRepositoryManagementMBean {
 

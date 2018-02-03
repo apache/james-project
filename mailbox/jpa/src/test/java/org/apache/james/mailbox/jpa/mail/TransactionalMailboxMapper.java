@@ -22,6 +22,7 @@ package org.apache.james.mailbox.jpa.mail;
 import java.util.List;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -80,13 +81,13 @@ public class TransactionalMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public void updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
-        wrapped.updateACL(mailbox, mailboxACLCommand);
+    public ACLDiff updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
+        return wrapped.updateACL(mailbox, mailboxACLCommand);
     }
 
     @Override
-    public void setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
-        wrapped.setACL(mailbox, mailboxACL);
+    public ACLDiff setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+        return wrapped.setACL(mailbox, mailboxACL);
     }
 
     @Override

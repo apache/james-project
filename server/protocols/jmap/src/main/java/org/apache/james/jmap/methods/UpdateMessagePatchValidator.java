@@ -68,7 +68,7 @@ public class UpdateMessagePatchValidator implements Validator<ObjectNode> {
     }
 
     private Optional<String> firstFieldFrom(List<JsonMappingException.Reference> references) {
-        if(references == null) {
+        if (references == null) {
             throw new IllegalArgumentException("references");
         }
         return references.stream()

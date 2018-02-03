@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets.jsieve;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+
 import javax.activation.DataHandler;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
@@ -31,8 +32,8 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
-import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -135,7 +136,7 @@ public class VacationReply {
             try {
                 return new MailAddress(address);
             } catch (AddressException e) {
-                LOGGER.warn("Mail address " + address + " was not well formatted : " + e.getLocalizedMessage());
+                LOGGER.warn("Mail address {} was not well formatted : {}", address, e.getLocalizedMessage());
                 return null;
             }
         }

@@ -213,7 +213,7 @@ public class BayesianAnalysisFeeder extends GenericMailet {
         if (maxSizeParam != null) {
             setMaxSize(Integer.parseInt(maxSizeParam));
         }
-        LOGGER.debug("maxSize: " + getMaxSize());
+        LOGGER.debug("maxSize: {}", getMaxSize());
 
         initDb();
 
@@ -254,7 +254,7 @@ public class BayesianAnalysisFeeder extends GenericMailet {
             String messageId = message.getMessageID();
 
             if (message.getSize() > getMaxSize()) {
-                LOGGER.debug(messageId + " Feeding HAM/SPAM ignored because message size > " + getMaxSize() + ": " + message.getSize());
+                LOGGER.debug("{} Feeding HAM/SPAM ignored because message size > {}: {}", messageId, getMaxSize(), message.getSize());
                 return;
             }
 
@@ -279,14 +279,14 @@ public class BayesianAnalysisFeeder extends GenericMailet {
                 analyzer.clear();
 
                 if ("ham".equalsIgnoreCase(feedType)) {
-                    LOGGER.debug(messageId + " Feeding HAM");
+                    LOGGER.debug("{} Feeding HAM", messageId);
                     // Process the stream as ham (not spam).
                     analyzer.addHam(br);
 
                     // Update storage statistics.
                     analyzer.updateHamTokens(conn);
                 } else {
-                    LOGGER.debug(messageId + " Feeding SPAM");
+                    LOGGER.debug("{} Feeding SPAM", messageId);
                     // Process the stream as spam.
                     analyzer.addSpam(br);
 
@@ -298,7 +298,7 @@ public class BayesianAnalysisFeeder extends GenericMailet {
                 if (conn != null && dbUpdated && !conn.getAutoCommit()) {
                     conn.commit();
                     dbUpdated = false;
-                    LOGGER.debug(messageId + " Training ended successfully");
+                    LOGGER.debug("{} Training ended successfully", messageId);
                     JDBCBayesianAnalyzer.touchLastDatabaseUpdateTime();
                 }
 
@@ -325,11 +325,10 @@ public class BayesianAnalysisFeeder extends GenericMailet {
     }
 
     private void clearAllHeaders(MimeMessage message) throws javax.mail.MessagingException {
-        @SuppressWarnings("rawtypes")
-        Enumeration headers = message.getAllHeaders();
+        Enumeration<Header> headers = message.getAllHeaders();
 
         while (headers.hasMoreElements()) {
-            Header header = (Header) headers.nextElement();
+            Header header = headers.nextElement();
             try {
                 message.removeHeader(header.getName());
             } catch (javax.mail.MessagingException me) {

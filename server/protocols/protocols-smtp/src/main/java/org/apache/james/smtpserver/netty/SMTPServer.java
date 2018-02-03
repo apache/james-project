@@ -32,7 +32,7 @@ import org.apache.james.protocols.lib.handler.HandlersPackage;
 import org.apache.james.protocols.lib.netty.AbstractProtocolAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
-import org.apache.james.protocols.smtp.AllButStartTlsLineDelimiterChannelHandlerFactory;
+import org.apache.james.protocols.smtp.AllButStartTlsLineChannelHandlerFactory;
 import org.apache.james.protocols.smtp.SMTPConfiguration;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.smtpserver.CoreCmdHandlerLoader;
@@ -51,9 +51,9 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     /**
      * Whether authentication is required to use this SMTP server.
      */
-    private final static int AUTH_DISABLED = 0;
-    private final static int AUTH_REQUIRED = 1;
-    private final static int AUTH_ANNOUNCE = 2;
+    private static final int AUTH_DISABLED = 0;
+    private static final int AUTH_REQUIRED = 1;
+    private static final int AUTH_ANNOUNCE = 2;
     private int authRequired = AUTH_DISABLED;
     
     /**
@@ -130,12 +130,13 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         super.doConfigure(configuration);
         if (isEnabled()) {
             String authRequiredString = configuration.getString("authRequired", "false").trim().toLowerCase(Locale.US);
-            if (authRequiredString.equals("true"))
+            if (authRequiredString.equals("true")) {
                 authRequired = AUTH_REQUIRED;
-            else if (authRequiredString.equals("announce"))
+            } else if (authRequiredString.equals("announce")) {
                 authRequired = AUTH_ANNOUNCE;
-            else
+            } else {
                 authRequired = AUTH_DISABLED;
+            }
             if (authRequired != AUTH_DISABLED) {
                 LOGGER.info("This SMTP server requires authentication.");
             } else {
@@ -162,22 +163,23 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
           
             if (authorizedNetworks != null) {
-                LOGGER.info("Authorized addresses: " + authorizedNetworks.toString());
+                LOGGER.info("Authorized addresses: {}", authorizedNetworks);
             }
 
             // get the message size limit from the conf file and multiply
             // by 1024, to put it in bytes
             maxMessageSize = configuration.getLong("maxmessagesize", maxMessageSize) * 1024;
             if (maxMessageSize > 0) {
-                LOGGER.info("The maximum allowed message size is " + maxMessageSize + " bytes.");
+                LOGGER.info("The maximum allowed message size is {} bytes.", maxMessageSize);
             } else {
                 LOGGER.info("No maximum message size is enforced for this server.");
             }
 
             heloEhloEnforcement = configuration.getBoolean("heloEhloEnforcement", true);
 
-            if (authRequiredString.equals("true"))
+            if (authRequiredString.equals("true")) {
                 authRequired = AUTH_REQUIRED;
+            }
 
             // get the smtpGreeting
             smtpGreeting = configuration.getString("smtpGreeting", null);
@@ -260,8 +262,9 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
          * @see org.apache.james.protocols.smtp.SMTPConfiguration#isAuthRequired(java.lang.String)
          */
         public boolean isAuthRequired(String remoteIP) {
-            if (SMTPServer.this.authRequired == AUTH_ANNOUNCE)
+            if (SMTPServer.this.authRequired == AUTH_ANNOUNCE) {
                 return true;
+            }
             boolean authRequired = SMTPServer.this.authRequired != AUTH_DISABLED;
             if (authorizedNetworks != null) {
                 authRequired = authRequired && !SMTPServer.this.authorizedNetworks.matchInetNetwork(remoteIP);
@@ -368,7 +371,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
     @Override
     protected ChannelHandlerFactory createFrameHandlerFactory() {
-        return new AllButStartTlsLineDelimiterChannelHandlerFactory(AbstractChannelPipelineFactory.MAX_LINE_LENGTH);
+        return new AllButStartTlsLineChannelHandlerFactory(AbstractChannelPipelineFactory.MAX_LINE_LENGTH);
     }
 
 }

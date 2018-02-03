@@ -28,18 +28,19 @@ import org.junit.Test;
 public class RoleTest {
 
     @Test
-    public void fromShouldReturnInbox() {
-        assertThat(Role.from("inbox")).isEqualTo(Optional.of(Role.INBOX));
-    }
-
-    @Test
     public void fromShouldReturnEmptyWhenUnknownValue() {
         assertThat(Role.from("jjjj")).isEqualTo(Optional.empty());
     }
 
     @Test
-    public void fromShouldReturnInboxWhenContainsUppercaseValue() {
-        assertThat(Role.from("InBox")).isEqualTo(Optional.of(Role.INBOX));
+    public void fromShouldReturnSomethingWhenXPrefixedRole() {
+        assertThat(Role.from("x-client-specific-role")).isEqualTo(Optional.of(new Role("x-client-specific-role")));
+    }
+
+    @Test
+    public void isSystemRoleShouldReturnFalseWhenXPrefixedRole() {
+        Role role = Role.from("x-client-specific-role").get();
+        assertThat(role.isSystemRole()).isFalse();
     }
 
     @Test
@@ -51,11 +52,6 @@ public class RoleTest {
         } finally {
             Locale.setDefault(previousLocale);
         }
-    }
-
-    @Test
-    public void fromShouldReturnSomethingWhenXPrefixedRole() {
-        assertThat(Role.from("x-client-specific-role")).isEqualTo(Optional.of(new Role("x-client-specific-role")));
     }
 
     @Test
@@ -102,5 +98,65 @@ public class RoleTest {
     public void isSystemRoleShouldBeFalseWhenUserDefinedRole() {
         Role userRole = Role.from(Role.USER_DEFINED_ROLE_PREFIX + "myRole").get();
         assertThat(userRole.isSystemRole()).isFalse();
+    }
+
+    @Test
+    public void theINBOXMailboxNameShouldBeASystemMailbox() {
+        Role role = Role.from("INBOX").get();
+        assertThat(role.isSystemRole()).isTrue();
+    }
+
+    @Test
+    public void theInBoXMailboxNameShouldBeASystemMailbox() {
+        Role role = Role.from("InBoX").get();
+        assertThat(role.isSystemRole()).isTrue();
+    }
+
+    @Test
+    public void theDraftsMailboxNameShouldBeASystemMailbox() {
+        Role role = Role.from("Drafts").get();
+        assertThat(role.isSystemRole()).isTrue();
+    }
+
+    @Test
+    public void theDrAfTsMailboxNameShouldNotBeASystemMailbox() {
+        Optional<Role> role = Role.from("DrAfTs");
+        assertThat(role).isEmpty();
+    }
+
+    @Test
+    public void theOutboxMailboxNameShouldBeASystemMailbox() {
+        Role role = Role.from("Outbox").get();
+        assertThat(role.isSystemRole()).isTrue();
+    }
+
+    @Test
+    public void theOuTbOxMailboxNameShouldNotBeASystemMailbox() {
+        Optional<Role> role = Role.from("OuTbOx");
+        assertThat(role).isEmpty();
+    }
+
+    @Test
+    public void theSentMailboxNameShouldBeASystemMailbox() {
+        Role role = Role.from("Sent").get();
+        assertThat(role.isSystemRole()).isTrue();
+    }
+
+    @Test
+    public void theSeNtMailboxNameShouldNotBeASystemMailbox() {
+        Optional<Role> role = Role.from("SeNt");
+        assertThat(role).isEmpty();
+    }
+
+    @Test
+    public void theTrashMailboxNameShouldBeASystemMailbox() {
+        Role role = Role.from("Trash").get();
+        assertThat(role.isSystemRole()).isTrue();
+    }
+
+    @Test
+    public void theTrAsHMailboxNameShouldNotBeASystemMailbox() {
+        Optional<Role> role = Role.from("TrAsH");
+        assertThat(role).isEmpty();
     }
 }

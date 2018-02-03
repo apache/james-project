@@ -1,0 +1,10 @@
+#! /bin/sh -e
+
+ln -s /etc/james /var/lib/james/conf
+
+update-alternatives --install /usr/share/james/james-server.jar james /usr/share/james/james-ldap-server.jar 10
+update-alternatives --install /usr/share/james/james-server.jar james /usr/share/james/james-withoutldap-server.jar 20
+
+
+systemctl enable james
+

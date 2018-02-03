@@ -24,7 +24,7 @@ import com.datastax.driver.core.Session;
 
 public class ClusterWithKeyspaceCreatedFactory {
 
-    private final static int DEFAULT_REPLICATION_FACTOR = 1;
+    private static final int DEFAULT_REPLICATION_FACTOR = 1;
     
     public static Configuration config(Cluster cluster, String keyspace) {
         return new Configuration(cluster, keyspace);

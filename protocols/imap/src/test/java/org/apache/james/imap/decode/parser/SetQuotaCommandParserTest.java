@@ -19,17 +19,17 @@
 
 package org.apache.james.imap.decode.parser;
 
-import org.apache.james.imap.api.ImapCommand;
-import org.apache.james.imap.decode.ImapRequestStreamLineReader;
-import org.apache.james.imap.message.request.SetQuotaRequest;
-import org.apache.james.protocols.imap.DecodingException;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.decode.ImapRequestStreamLineReader;
+import org.apache.james.imap.message.request.SetQuotaRequest;
+import org.apache.james.protocols.imap.DecodingException;
+import org.junit.Test;
 
 /**
  * SETQUOTA command parser test...

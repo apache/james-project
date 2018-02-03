@@ -99,7 +99,7 @@ public class UpdatedFlags {
         if (isChanged(oldFlags, newFlags, Flags.Flag.ANSWERED)) {
             modifiedFlags.add(Flags.Flag.ANSWERED);
         }
-        if(isChanged(oldFlags, newFlags, Flags.Flag.DELETED)) {
+        if (isChanged(oldFlags, newFlags, Flags.Flag.DELETED)) {
             modifiedFlags.add(Flags.Flag.DELETED);
         }
         if (isChanged(oldFlags, newFlags, Flags.Flag.DRAFT)) {
@@ -130,6 +130,7 @@ public class UpdatedFlags {
             }
         }
     }
+    
     private static boolean isChanged(Flags original, Flags updated, Flags.Flag flag) {
         return original != null && updated != null && (original.contains(flag) ^ updated.contains(flag));
     }

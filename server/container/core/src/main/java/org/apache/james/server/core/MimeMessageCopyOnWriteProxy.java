@@ -19,26 +19,27 @@
 
 package org.apache.james.server.core;
 
-import javax.activation.DataHandler;
-import javax.mail.Address;
-import javax.mail.Flags;
-import javax.mail.Folder;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.Session;
-import javax.mail.Flags.Flag;
-import javax.mail.internet.MimeMessage;
-import javax.mail.search.SearchTerm;
-
-import org.apache.james.lifecycle.api.Disposable;
-import org.apache.james.lifecycle.api.LifecycleUtil;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
 import java.util.Enumeration;
+
+import javax.activation.DataHandler;
+import javax.mail.Address;
+import javax.mail.Flags;
+import javax.mail.Flags.Flag;
+import javax.mail.Folder;
+import javax.mail.Header;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.Session;
+import javax.mail.internet.MimeMessage;
+import javax.mail.search.SearchTerm;
+
+import org.apache.james.lifecycle.api.Disposable;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 
 /**
  * This object wraps a "possibly shared" MimeMessage tracking copies and
@@ -284,37 +285,31 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
         return getWrappedMessage().getHeader(name, delimiter);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration<String> getAllHeaders() throws MessagingException {
+    public Enumeration<Header> getAllHeaders() throws MessagingException {
         return getWrappedMessage().getAllHeaders();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration<String> getMatchingHeaders(String[] names) throws MessagingException {
+    public Enumeration<Header> getMatchingHeaders(String[] names) throws MessagingException {
         return getWrappedMessage().getMatchingHeaders(names);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration<String> getNonMatchingHeaders(String[] names) throws MessagingException {
+    public Enumeration<Header> getNonMatchingHeaders(String[] names) throws MessagingException {
         return getWrappedMessage().getNonMatchingHeaders(names);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Enumeration<String> getAllHeaderLines() throws MessagingException {
         return getWrappedMessage().getAllHeaderLines();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Enumeration<String> getMatchingHeaderLines(String[] names) throws MessagingException {
         return getWrappedMessage().getMatchingHeaderLines(names);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Enumeration<String> getNonMatchingHeaderLines(String[] names) throws MessagingException {
         return getWrappedMessage().getNonMatchingHeaderLines(names);

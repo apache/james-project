@@ -18,8 +18,9 @@
  ****************************************************************/
 package org.apache.james.mpt.imapmailbox.external.james.host;
 
-import com.google.inject.Singleton;
 import org.apache.james.mpt.api.UserAdder;
+
+import com.google.inject.Singleton;
 
 @Singleton
 public class ExternalJamesUserAdder implements UserAdder {

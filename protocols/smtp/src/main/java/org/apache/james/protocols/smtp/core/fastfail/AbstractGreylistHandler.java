@@ -54,6 +54,7 @@ public abstract class AbstractGreylistHandler implements RcptHook {
             + " Temporary rejected: Reconnect to fast. Please try again later");
     private static final HookResult TEMPORARY_REJECT = new HookResult(HookReturnCode.DENYSOFT, SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.NETWORK_DIR_SERVER) 
             + " Temporary rejected: Please try again later");
+
     public void setUnseenLifeTime(long unseenLifeTime) {
         this.unseenLifeTime = unseenLifeTime;
     }
@@ -71,8 +72,12 @@ public abstract class AbstractGreylistHandler implements RcptHook {
         String recip = "";
         String sender = "";
 
-        if (recipAddress != null) recip = recipAddress.toString();
-        if (senderAddress != null) sender = senderAddress.toString();
+        if (recipAddress != null) {
+            recip = recipAddress.toString();
+        }
+        if (senderAddress != null) {
+            sender = senderAddress.toString();
+        }
     
         long time = System.currentTimeMillis();
         String ipAddress = session.getRemoteAddress().getAddress().getHostAddress();
@@ -89,7 +94,7 @@ public abstract class AbstractGreylistHandler implements RcptHook {
                 count = Integer.parseInt(data.next());
             }
             
-            LOGGER.debug("Triplet " + ipAddress + " | " + sender + " | " + recip  +" -> TimeStamp: " + createTimeStamp);
+            LOGGER.debug("Triplet {} | {} | {} -> TimeStamp: {}", ipAddress, sender, recip, createTimeStamp);
 
 
             // if the timestamp is bigger as 0 we have allready a triplet stored
@@ -100,14 +105,14 @@ public abstract class AbstractGreylistHandler implements RcptHook {
                     return TO_FAST;
                 } else {
                     
-                    LOGGER.debug("Update triplet " + ipAddress + " | " + sender + " | " + recip + " -> timestamp: " + time);
+                    LOGGER.debug("Update triplet {} | {} | {} -> timestamp: {}", ipAddress, sender, recip, time);
                     
                     // update the triplet..
                     updateTriplet(ipAddress, sender, recip, count, time);
 
                 }
             } else {
-                LOGGER.debug("New triplet " + ipAddress + " | " + sender + " | " + recip );
+                LOGGER.debug("New triplet {} | {} | {}", ipAddress, sender, recip);
            
                 // insert a new triplet
                 insertTriplet(ipAddress, sender, recip, count, time);
@@ -128,7 +133,7 @@ public abstract class AbstractGreylistHandler implements RcptHook {
 
         } catch (Exception e) {
             // just log the exception
-            LOGGER.error("Error on greylist method: " + e.getMessage());
+            LOGGER.error("Error on greylist method: {}", e.getMessage());
         }
         return HookResult.declined();
     }
@@ -212,7 +217,7 @@ public abstract class AbstractGreylistHandler implements RcptHook {
         if (!session.isRelayingAllowed()) {
             return doGreyListCheck(session, sender,rcpt);
         } else {
-            LOGGER.info("IpAddress " + session.getRemoteAddress().getAddress().getHostAddress() + " is allowed to send. Skip greylisting.");
+            LOGGER.info("IpAddress {} is allowed to send. Skip greylisting.", session.getRemoteAddress().getAddress().getHostAddress());
         }
         return HookResult.declined();
     }

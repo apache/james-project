@@ -53,7 +53,7 @@ public class CassandraAsyncExecutor {
 
     public CompletableFuture<Void> executeVoid(Statement statement) {
         return FutureConverter.toCompletableFuture(session.executeAsync(statement))
-            .thenAccept(result -> {});
+            .thenAccept(result -> { });
     }
 
     public CompletableFuture<Optional<Row>> executeSingleRow(Statement statement) {

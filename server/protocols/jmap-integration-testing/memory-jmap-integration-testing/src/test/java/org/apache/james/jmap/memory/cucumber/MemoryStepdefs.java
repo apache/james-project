@@ -25,6 +25,7 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJamesServerMain;
+import org.apache.james.jmap.methods.integration.cucumber.ImapStepdefs;
 import org.apache.james.jmap.methods.integration.cucumber.MainStepdefs;
 import org.apache.james.jmap.servers.MemoryJmapServerModule;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
@@ -39,11 +40,13 @@ import cucumber.runtime.java.guice.ScenarioScoped;
 public class MemoryStepdefs {
 
     private final MainStepdefs mainStepdefs;
+    private final ImapStepdefs imapStepdefs;
     private final TemporaryFolder temporaryFolder;
 
     @Inject
-    private MemoryStepdefs(MainStepdefs mainStepdefs) {
+    private MemoryStepdefs(MainStepdefs mainStepdefs, ImapStepdefs imapStepdefs) {
         this.mainStepdefs = mainStepdefs;
+        this.imapStepdefs = imapStepdefs;
         this.temporaryFolder = new TemporaryFolder();
     }
 
@@ -52,15 +55,16 @@ public class MemoryStepdefs {
         temporaryFolder.create();
         mainStepdefs.messageIdFactory = new InMemoryMessageId.Factory();
         mainStepdefs.jmapServer = new GuiceJamesServer()
-                .combineWith(MemoryJamesServerMain.inMemoryServerModule)
+                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
                 .overrideWith(new MemoryJmapServerModule(temporaryFolder),
-                		(binder) -> binder.bind(MessageId.Factory.class).toInstance(mainStepdefs.messageIdFactory))
+                        (binder) -> binder.bind(MessageId.Factory.class).toInstance(mainStepdefs.messageIdFactory))
                 .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class));
         mainStepdefs.init();
     }
 
     @After
     public void tearDown() {
+        imapStepdefs.closeConnections();
         mainStepdefs.tearDown();
         temporaryFolder.delete();
     }

@@ -33,8 +33,6 @@ import javax.mail.internet.MimeMessage;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -48,7 +46,6 @@ import org.slf4j.LoggerFactory;
  */
 @Experimental
 public class ClassifyBounce extends GenericMailet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ClassifyBounce.class);
 
     /**
      * The name of the header to be added.
@@ -73,18 +70,14 @@ public class ClassifyBounce extends GenericMailet {
      * @param mail the mail being processed
      * @throws MessagingException if an error arises during message processing
      */
-    public void service(Mail mail) {
-        try {
-            MimeMessage message = mail.getMessage();
-            Classifier classifier = new Classifier(message);
-            String classification = classifier.getClassification();
-            //if ( !classification.equals("Normal") ) {
-            message.setHeader(headerName, classification);
-            message.saveChanges();
-            //}
-        } catch (MessagingException me) {
-            LOGGER.error("Error classifying message: ", me);
-        }
+    public void service(Mail mail) throws MessagingException {
+        MimeMessage message = mail.getMessage();
+        Classifier classifier = new Classifier(message);
+        String classification = classifier.getClassification();
+        //if ( !classification.equals("Normal") ) {
+        message.setHeader(headerName, classification);
+        message.saveChanges();
+        //}
     }
 
     /**
@@ -209,15 +202,6 @@ public class ClassifyBounce extends GenericMailet {
             if (o instanceof String) {
                 s = (String) o;
             }
-
-//          else {
-//              if (m.isMimeType("text/html")) {
-//                  s = m.getContent().toString();
-//              }
-//              if (m.isMimeType("text/plain")) {
-//                  s = m.getContent().toString();
-//              }   
-//          }
 
             return s;
         }
@@ -383,10 +367,10 @@ public class ClassifyBounce extends GenericMailet {
         private final String subject;
         private final String text;
 
-        public final static int TYPE_NORMAL = 1;
-        public final static int TYPE_OUT_OF_OFFICE = 3;
-        public final static int TYPE_DELIVERY_FAILURE = 4;
-        public final static int TYPE_MAILBOX_FULL = 5;
+        public static final int TYPE_NORMAL = 1;
+        public static final int TYPE_OUT_OF_OFFICE = 3;
+        public static final int TYPE_DELIVERY_FAILURE = 4;
+        public static final int TYPE_MAILBOX_FULL = 5;
 
     }
 

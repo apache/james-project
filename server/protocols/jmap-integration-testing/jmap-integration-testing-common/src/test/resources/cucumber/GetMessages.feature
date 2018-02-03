@@ -23,8 +23,6 @@ Feature: GetMessages method
   Background:
     Given a domain named "domain.tld"
     And a user "alice@domain.tld"
-    And a user "bob@domain.tld"
-    And a user "cedric@domain.tld"
     And "alice@domain.tld" has a mailbox "INBOX"
 
   Scenario: Retrieving a message in several mailboxes should return a single message in these mailboxes
@@ -35,30 +33,6 @@ Feature: GetMessages method
     And the list should contain 1 message
     And the id of the message is "m1"
     And the message is in "custom,INBOX" mailboxes
-
-  Scenario: Retrieving a message in a mailbox delegated to me
-    Given "alice@domain.tld" has a mailbox "shared"
-    And "alice@domain.tld" shares her mailbox "shared" with "bob@domain.tld" with "lr" rights
-    And "alice@domain.tld" has a message "m1" in "shared" mailbox with subject "my test subject", content "testmail"
-    When "bob@domain.tld" ask for messages "m1"
-    Then no error is returned
-    And the list should contain 1 message
-    And the id of the message is "m1"
-
-  Scenario: Retrieving a message in a mailbox delegated to someone else
-    Given "alice@domain.tld" has a mailbox "shared"
-    And "alice@domain.tld" shares her mailbox "shared" with "bob@domain.tld" with "lr" rights
-    And "alice@domain.tld" has a message "m1" in "shared" mailbox with subject "my test subject", content "testmail"
-    When "cedric@domain.tld" ask for messages "m1"
-    Then no error is returned
-    And the list of messages is empty
-
-  Scenario: Retrieving a message in a mailbox not delegated to me
-    Given "alice@domain.tld" has a mailbox "notShared"
-    And "alice@domain.tld" has a message "m1" in "notShared" mailbox with subject "my test subject", content "testmail"
-    When "bob@domain.tld" ask for messages "m1"
-    Then no error is returned
-    And the list should contain 0 message
 
   Scenario: Retrieving messages with a non null accountId should return a NotSupported error
     When "alice@domain.tld" ask for messages using its accountId
@@ -210,9 +184,9 @@ Feature: GetMessages method
     And the list should contain 1 message
     And the hasAttachment of the message is "true"
     And the list of attachments of the message contains 2 attachments
-    And the preview of the message is "html\n"
+    And the preview of the message is "html  tiramisu"
     And the property "textBody" of the message is null
-    And the htmlBody of the message is "<b>html</b>\n"
+    And the htmlBody of the message is "<b>html tiramisu</b>\n"
 
   Scenario: Retrieving message should return attachments and text body when some attachments and text message
     Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with two attachments in text
@@ -302,9 +276,9 @@ Feature: GetMessages method
     And the list of attachments of the message contains 1 attachments
     And the first attachment is:
       |key      | value                                     |
-      |type     |"application/pdf"                               |
+      |type     |"application/pdf"                          |
       |cid      |null                                       |
-      |isInline |true                                      |
+      |isInline |false                                      |
 
   Scenario: Retrieving message with inline attachment and blank CID should convert that inlined attachment to normal attachment
     Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with inline attachment and blank CID
@@ -317,7 +291,7 @@ Feature: GetMessages method
         |key      | value            |
         |type     |"application/pdf" |
         |cid      |null              |
-        |isInline |true              |
+        |isInline |false             |
 
   Scenario: Preview should be computed even when HTML body contains many tags without content
     Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with HTML body with many empty tags
@@ -364,7 +338,7 @@ Feature: GetMessages method
             |"text/html; charset=iso-8859-1"                    |quoted-printable   |"Dans le cadre du stage effectu=E9 Mlle 2017, =E0 sign=E9e d=E8s que possible, =E0, tr=E8s, journ=E9e.."    |effectué, à, signée dès, très, journée                                                                        |
 
   Scenario Outline: Retrieving message should display keywords as jmap flag
-    Given "alice@domain.tld" has a message "m1" in the "inbox" mailbox with flags <flags>
+    Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with flags <flags>
     When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
@@ -375,7 +349,7 @@ Feature: GetMessages method
             |"$Flagged,$Answered,$Draft"    |$Flagged,$Answered,$Draft      |
 
   Scenario Outline: GetMessages should filter invalid keywords
-    Given "alice@domain.tld" has a message "m1" in the "inbox" mailbox with flags <flags>
+    Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with flags <flags>
     When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
@@ -386,7 +360,7 @@ Feature: GetMessages method
       |"$Draft,@ert,t^a,op§,$user_flag"    |$Draft,$user_flag      |
 
   Scenario Outline: Retrieving message should display keywords without unsupported jmap flag
-    Given "alice@domain.tld" has a message "m1" in the "inbox" mailbox with flags <flags>
+    Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with flags <flags>
     When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
@@ -397,7 +371,7 @@ Feature: GetMessages method
             |"$Flagged,$Answered,$Deleted,$Recent"  |$Flagged,$Answered      |
 
   Scenario Outline: Retrieving message should display keywords with custom user jmap flag
-    Given "alice@domain.tld" has a message "m1" in the "inbox" mailbox with flags <flags>
+    Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with flags <flags>
     When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
@@ -408,15 +382,43 @@ Feature: GetMessages method
             |"$Flagged,$Forwarded"    |$Forwarded,$Flagged     |
 
   Scenario: Retrieving message should include true isForwarded property when set
-    Given "alice@domain.tld" has a message "m1" in the "inbox" mailbox with flags "$Forwarded"
+    Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with flags "$Forwarded"
     When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the isForwarded property of the message is "true"
 
   Scenario: Retrieving message should include false isForwarded property when not set
-    Given "alice@domain.tld" has a message "m1" in the "inbox" mailbox with flags "$Answered"
+    Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with flags "$Answered"
     When "alice@domain.tld" ask for messages "m1"
     Then no error is returned
     And the list should contain 1 message
     And the isForwarded property of the message is "false"
+
+  Scenario: Retrieving message should be possible when message with inlined attachment but without content disposition
+    Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with inlined attachments without content disposition
+    When "alice@domain.tld" ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the hasAttachment of the message is "true"
+    And the list of attachments of the message contains 1 attachments
+    And the first attachment is:
+      |key      | value                        |
+      |type     |"application/octet-stream"    |
+      |cid      |null                          |
+      |name     |"encrypted.asc"               |
+      |isInline |false                         |
+
+  Scenario: Retrieving message should be possible when message with inlined attachment but without content ID
+    Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with inlined image without content ID
+    When "alice@domain.tld" ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the hasAttachment of the message is "true"
+    And the list of attachments of the message contains 1 attachments
+    And the first attachment is:
+    |key      | value                        |
+    |type     |"image/jpeg"                  |
+    |cid      |null                          |
+    |name     |"IMG_6112.JPG"                |
+    |isInline |false                         |

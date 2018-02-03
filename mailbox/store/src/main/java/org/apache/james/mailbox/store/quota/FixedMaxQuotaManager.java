@@ -2,9 +2,9 @@ package org.apache.james.mailbox.store.quota;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedOperationException;
-import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.quota.MaxQuotaManager;
 
 /**
  * {@link MaxQuotaManager} which use the same quota for all users.

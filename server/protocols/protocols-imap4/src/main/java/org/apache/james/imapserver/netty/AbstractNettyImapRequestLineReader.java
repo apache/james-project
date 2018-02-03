@@ -43,8 +43,9 @@ public abstract class AbstractNettyImapRequestLineReader extends ImapRequestLine
         // only write the request out if this is not a retry to process the
         // request..
 
-        if (!retry)
+        if (!retry) {
             channel.write(cRequest);
+        }
     }
 
 }

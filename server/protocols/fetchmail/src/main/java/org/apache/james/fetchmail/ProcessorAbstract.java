@@ -25,10 +25,10 @@ import java.util.Set;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.core.MailAddress;
 
 /**
  * <p>
@@ -49,7 +49,7 @@ import org.apache.james.core.MailAddress;
  * information about the environment for the processor.
  * </p>
  */
-abstract public class ProcessorAbstract {
+public abstract class ProcessorAbstract {
     /**
      * The prefix to place in front of any mail attributes used by this
      * Processor.
@@ -463,7 +463,7 @@ abstract public class ProcessorAbstract {
     /**
      * Process the mail elements of the receiver
      */
-    abstract public void process() throws MessagingException;
+    public abstract void process() throws MessagingException;
 
     /**
      * Returns the blacklist.

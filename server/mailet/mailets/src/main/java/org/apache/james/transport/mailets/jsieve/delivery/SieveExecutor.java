@@ -25,6 +25,7 @@ import java.io.IOException;
 import javax.mail.MessagingException;
 
 import org.apache.commons.logging.Log;
+import org.apache.james.core.MailAddress;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.transport.mailets.jsieve.ActionDispatcher;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
@@ -36,7 +37,6 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.parser.generated.ParseException;
 import org.apache.jsieve.parser.generated.TokenMgrError;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,10 +124,10 @@ public class SieveExecutor {
             sieveMessageEvaluate(recipient, aMail, userSieveInformation);
             return true;
         } catch (ScriptNotFoundException e) {
-            LOGGER.info("Can not locate SIEVE script for user " + recipient.asPrettyString());
+            LOGGER.info("Can not locate SIEVE script for user {}", recipient.asPrettyString());
             return false;
         } catch (Exception ex) {
-            LOGGER.error("Cannot evaluate Sieve script for user " + recipient.asPrettyString(), ex);
+            LOGGER.error("Cannot evaluate Sieve script for user {}", recipient.asPrettyString(), ex);
             return false;
         }
     }
@@ -137,8 +137,10 @@ public class SieveExecutor {
             SieveMailAdapter aMailAdapter = new SieveMailAdapter(aMail,
                 mailetContext, actionDispatcher, sievePoster, userSieveInformation.getScriptActivationDate(),
                 userSieveInformation.getScriptInterpretationDate(), recipient);
-            // This logging operation is potentially costly
-            LOGGER.debug("Evaluating " + aMailAdapter.toString() + " against \"" + recipient.asPrettyString() + "\"");
+            if (LOGGER.isDebugEnabled()) {
+                // This logging operation is potentially costly
+                LOGGER.debug("Evaluating " + aMailAdapter.toString() + " against \"" + recipient.asPrettyString() + "\"");
+            }
             factory.evaluate(aMailAdapter, factory.parse(userSieveInformation.getScriptContent()));
         } catch (SieveException | ParseException ex) {
             handleFailure(recipient, aMail, ex);

@@ -40,6 +40,7 @@ public class MailboxAnnotationTest {
 
         assertThat(mailboxAnnotation.size()).isEqualTo(0);
     }
+    
     @Test(expected = NullPointerException.class)
     public void newInstanceShouldThrowsExceptionWithNullKey() throws Exception {
         MailboxAnnotation.newInstance(null, null);

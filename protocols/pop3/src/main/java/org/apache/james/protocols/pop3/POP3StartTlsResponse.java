@@ -29,7 +29,7 @@ import org.apache.james.protocols.api.StartTlsResponse;
  * 
  *
  */
-public class POP3StartTlsResponse extends POP3Response implements StartTlsResponse{
+public class POP3StartTlsResponse extends POP3Response implements StartTlsResponse {
 
     public POP3StartTlsResponse(String code, CharSequence description) {
         super(code, description);

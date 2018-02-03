@@ -62,7 +62,7 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
             } else if (event instanceof Expunged) {
                 handleExpungedEvent((Expunged) event, quotaRoot);
             }
-        } catch(MailboxException e) {
+        } catch (MailboxException e) {
             LOGGER.error("Error while updating quotas", e);
         }
     }

@@ -20,9 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-
-import java.util.Optional;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -30,7 +28,6 @@ import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAO.CassandraIdAndPath;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
@@ -41,12 +38,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class CassandraMailboxMapperTest {
     
-    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMailboxMapperTest.class);
     private static final int UID_VALIDITY = 52;
     private static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("user", "name");
 
@@ -83,16 +77,13 @@ public class CassandraMailboxMapperTest {
         testee.save(new SimpleMailbox(MAILBOX_PATH, UID_VALIDITY));
         Mailbox mailbox = testee.findMailboxByPath(MAILBOX_PATH);
 
-        try {
-            SimpleMailbox newMailbox = new SimpleMailbox(tooLongMailboxPath(mailbox.generateAssociatedPath()), UID_VALIDITY, mailbox.getMailboxId());
-            testee.save(newMailbox);
-            fail("TooLongMailboxNameException expected");
-        } catch (TooLongMailboxNameException e) {
-            LOGGER.info("Ignored error", e);
-        }
+        SimpleMailbox newMailbox = new SimpleMailbox(tooLongMailboxPath(mailbox.generateAssociatedPath()), UID_VALIDITY, mailbox.getMailboxId());
+        assertThatThrownBy(() ->
+            testee.save(newMailbox))
+            .isInstanceOf(TooLongMailboxNameException.class);
 
-        Optional<CassandraIdAndPath> cassandraIdAndPath = mailboxPathDAO.retrieveId(MAILBOX_PATH).get();
-        assertThat(cassandraIdAndPath.isPresent()).isTrue();
+        assertThat(mailboxPathDAO.retrieveId(MAILBOX_PATH).join())
+            .isPresent();
     }
 
     private MailboxPath tooLongMailboxPath(MailboxPath fromMailboxPath) {

@@ -21,6 +21,7 @@ package org.apache.james.transport.mailets.utils;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Optional;
+
 import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -77,7 +78,6 @@ public class MimeMessageUtils {
      * headers
      */
     public String getMessageHeaders() throws MessagingException {
-        @SuppressWarnings("unchecked")
         Enumeration<String> heads = message.getAllHeaderLines();
         StringBuilder headBuffer = new StringBuilder(1024);
         while (heads.hasMoreElements()) {
@@ -88,10 +88,9 @@ public class MimeMessageUtils {
 
     public List<Header> toHeaderList() throws MessagingException {
         ImmutableList.Builder<Header> headers = ImmutableList.builder();
-        @SuppressWarnings("unchecked")
         Enumeration<Header> allHeaders = message.getAllHeaders();
-        for (Enumeration<Header> e = allHeaders; e.hasMoreElements();) {
-            headers.add(e.nextElement());
+        while (allHeaders.hasMoreElements()) {
+            headers.add(allHeaders.nextElement());
         }
         return headers.build();
     }

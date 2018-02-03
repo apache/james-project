@@ -29,7 +29,7 @@ import org.jboss.netty.util.Timer;
  * idle timeout. Be aware that this handle is not thread safe so it can't be shared across pipelines
  *
  */
-public class TimeoutHandler extends IdleStateHandler{
+public class TimeoutHandler extends IdleStateHandler {
 
     public TimeoutHandler(Timer timer, int readerIdleTimeSeconds) {
         super(timer, readerIdleTimeSeconds, 0, 0);

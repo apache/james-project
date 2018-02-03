@@ -19,6 +19,7 @@
 
 package org.apache.james.mdn;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -29,7 +30,6 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 
 public class MDN {
@@ -100,7 +100,7 @@ public class MDN {
 
     public BodyPart computeHumanReadablePart() throws MessagingException {
         MimeBodyPart textPart = new MimeBodyPart();
-        textPart.setText(humanReadableText, Charsets.UTF_8.displayName());
+        textPart.setText(humanReadableText, StandardCharsets.UTF_8.displayName());
         textPart.setDisposition(MimeMessage.INLINE);
         return textPart;
     }

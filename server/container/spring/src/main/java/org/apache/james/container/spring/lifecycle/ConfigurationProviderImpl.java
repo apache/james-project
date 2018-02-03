@@ -96,10 +96,8 @@ public class ConfigurationProviderImpl implements ConfigurationProvider, Resourc
         // Simply return the configuration if it is already loaded.
         if (conf != null) {
             return conf;
-        }
-
-        // Load the configuration.
-        else {
+        } else {
+            // Load the configuration.
 
             // Compute resourceName and configPart (if any, configPart can
             // remain null).

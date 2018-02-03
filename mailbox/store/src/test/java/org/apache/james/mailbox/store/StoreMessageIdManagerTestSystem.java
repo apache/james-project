@@ -61,7 +61,7 @@ public class StoreMessageIdManagerTestSystem extends MessageIdManagerTestSystem 
     }
 
     @Override
-    public Mailbox createMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException{
+    public Mailbox createMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
         return mapperFactory.createMailboxMapper(session).findMailboxByPath(mailboxPath);
     }
 

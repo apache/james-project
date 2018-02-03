@@ -24,7 +24,7 @@ import org.apache.james.imap.api.ImapCommand;
  * A {@link AuthenticateRequest} which also contains the initialClientResponse as stated in RFC4959
  *
  */
-public class IRAuthenticateRequest extends AuthenticateRequest{
+public class IRAuthenticateRequest extends AuthenticateRequest {
 
     private final String initialClientResponse;
 

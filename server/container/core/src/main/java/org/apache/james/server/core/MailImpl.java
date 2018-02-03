@@ -28,19 +28,26 @@ import java.io.ObjectOutputStream;
 import java.io.OptionalDataException;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
+import javax.mail.Address;
 import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.ParseException;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.mailet.Mail;
@@ -49,7 +56,14 @@ import org.apache.mailet.PerRecipientHeaders.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.primitives.Chars;
 
 /**
  * <p>
@@ -70,6 +84,226 @@ import com.google.common.base.Preconditions;
  * </p>
  */
 public class MailImpl implements Disposable, Mail {
+
+    /**
+     * Create a copy of the input mail and assign it a new name
+     *
+     * @param mail original mail
+     * @throws MessagingException when the message is not clonable
+     */
+    public static MailImpl duplicate(Mail mail) throws MessagingException {
+        return new MailImpl(mail, deriveNewName(mail.getName()));
+    }
+
+    public static MailImpl fromMimeMessage(String name, MimeMessage mimeMessage) throws MessagingException {
+        MailAddress sender = getSender(mimeMessage);
+        ImmutableList<MailAddress> recipients = getRecipients(mimeMessage);
+        return new MailImpl(name, sender, recipients, mimeMessage);
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+
+        private Optional<MimeMessage> mimeMessage;
+        private List<MailAddress> recipients;
+        private Optional<String> name;
+        private Optional<MailAddress> sender;
+        private Optional<String> state;
+        private Optional<String> errorMessage;
+        private Optional<Date> lastUpdated;
+        private Map<String, Serializable> attributes;
+        private Optional<String> remoteAddr;
+        private Optional<String> remoteHost;
+        private PerRecipientHeaders perRecipientHeaders;
+
+        private Builder() {
+            mimeMessage = Optional.empty();
+            recipients = Lists.newArrayList();
+            name = Optional.empty();
+            sender = Optional.empty();
+            state = Optional.empty();
+            errorMessage = Optional.empty();
+            lastUpdated = Optional.empty();
+            attributes = Maps.newHashMap();
+            remoteAddr = Optional.empty();
+            remoteHost = Optional.empty();
+            perRecipientHeaders = new PerRecipientHeaders();
+        }
+
+        public Builder mimeMessage(MimeMessage mimeMessage) {
+            this.mimeMessage = Optional.ofNullable(mimeMessage);
+            return this;
+        }
+
+        public Builder mimeMessage(MimeMessageBuilder mimeMessage) throws MessagingException {
+            this.mimeMessage = Optional.ofNullable(mimeMessage.build());
+            return this;
+        }
+
+        public Builder recipients() {
+            return this;
+        }
+
+        public Builder recipients(List<MailAddress> recipients) {
+            this.recipients.addAll(recipients);
+            return this;
+        }
+
+        public Builder recipients(MailAddress... recipients) {
+            return recipients(ImmutableList.copyOf(recipients));
+        }
+
+        public Builder recipients(String... recipients) {
+            return recipients(Arrays.stream(recipients)
+                .map(Throwing.function(MailAddress::new))
+                .collect(Guavate.toImmutableList()));
+        }
+
+        public Builder recipient(MailAddress recipient) {
+            return recipients(recipient);
+        }
+
+        public Builder recipient(String recipient) throws AddressException {
+            return recipients(recipient);
+        }
+
+        public Builder name(String name) {
+            this.name = Optional.ofNullable(name);
+            return this;
+        }
+
+        public Builder sender(MailAddress sender) {
+            this.sender = Optional.ofNullable(sender);
+            return this;
+        }
+
+        public Builder sender(String sender) throws AddressException {
+            return sender(new MailAddress(sender));
+        }
+
+        public Builder state(String state) {
+            this.state = Optional.ofNullable(state);
+            return this;
+        }
+
+        public Builder errorMessage(String errorMessage) {
+            this.errorMessage = Optional.ofNullable(errorMessage);
+            return this;
+        }
+
+        public Builder lastUpdated(Date lastUpdated) {
+            this.lastUpdated = Optional.ofNullable(lastUpdated);
+            return this;
+        }
+
+        public Builder attribute(String name, Serializable object) {
+            this.attributes.put(name, object);
+            return this;
+        }
+
+        public Builder attributes(Map<String, Serializable> attributes) {
+            this.attributes.putAll(attributes);
+            return this;
+        }
+
+        public Builder remoteAddr(String remoteAddr) {
+            this.remoteAddr = Optional.ofNullable(remoteAddr);
+            return this;
+        }
+
+        public Builder remoteHost(String remoteHost) {
+            this.remoteHost = Optional.ofNullable(remoteHost);
+            return this;
+        }
+
+        public Builder addHeaderForRecipient(Header header, MailAddress recipient) {
+            this.perRecipientHeaders.addHeaderForRecipient(header, recipient);
+            return this;
+        }
+
+        public Builder addAllHeadersForRecipients(PerRecipientHeaders perRecipientHeaders) {
+            this.perRecipientHeaders.addAll(perRecipientHeaders);
+            return this;
+        }
+
+        public MailImpl build() {
+            MailImpl mail = new MailImpl();
+            mimeMessage.ifPresent(mail::setMessage);
+            name.ifPresent(mail::setName);
+            sender.ifPresent(mail::setSender);
+            mail.setRecipients(recipients);
+            state.ifPresent(mail::setState);
+            errorMessage.ifPresent(mail::setErrorMessage);
+            lastUpdated.ifPresent(mail::setLastUpdated);
+            mail.setAttributesRaw(new HashMap<>(attributes));
+            remoteAddr.ifPresent(mail::setRemoteAddr);
+            remoteHost.ifPresent(mail::setRemoteHost);
+            mail.perRecipientSpecificHeaders.addAll(perRecipientHeaders);
+            return mail;
+        }
+    }
+
+    private static ImmutableList<MailAddress> getRecipients(MimeMessage mimeMessage) throws MessagingException {
+        return Arrays.stream(mimeMessage.getAllRecipients())
+            .map(Throwing.function(MailImpl::castToMailAddress).sneakyThrow())
+            .collect(Guavate.toImmutableList());
+    }
+
+    private static MailAddress getSender(MimeMessage mimeMessage) throws MessagingException {
+        Address[] sender = mimeMessage.getFrom();
+        Preconditions.checkArgument(sender.length == 1);
+        return castToMailAddress(sender[0]);
+    }
+
+    private static MailAddress castToMailAddress(Address address) throws AddressException {
+        Preconditions.checkArgument(address instanceof InternetAddress);
+        return new MailAddress((InternetAddress) address);
+    }
+
+    /**
+     * Create a unique new primary key name for the given MailObject.
+     * Detect if this has been called more than 8 times recursively
+     *
+     * @param currentName the mail to use as the basis for the new mail name
+     * @return a new name
+     */
+    @VisibleForTesting static String deriveNewName(String currentName) throws MessagingException {
+        char separator = '!';
+        int loopThreshold = 7;
+        int suffixLength = 9;
+        int suffixMaxLength = loopThreshold * suffixLength;
+        int nameMaxLength = suffixMaxLength + 13;
+
+        detectPossibleLoop(currentName, loopThreshold, separator);
+
+        // Checking if the original mail name is too long, perhaps because of a
+        // loop caused by a configuration error.
+        // it could cause a "null pointer exception" in AvalonMailRepository
+        // much harder to understand.
+        String newName = currentName + generateRandomSuffix(suffixLength, separator);
+        return stripFirstCharsIfNeeded(nameMaxLength, newName);
+    }
+
+    private static String stripFirstCharsIfNeeded(int nameMaxLength, String newName) {
+        return newName.substring(Math.max(0, newName.length() - nameMaxLength));
+    }
+
+    private static String generateRandomSuffix(int suffixLength, char separator) {
+        return "-" + separator + RandomStringUtils.randomNumeric(suffixLength - 2);
+    }
+
+    private static void detectPossibleLoop(String currentName, int loopThreshold, char separator) throws MessagingException {
+        long occurrences = currentName.chars().filter(c -> Chars.saturatedCast(c) == separator).count();
+
+        // It looks like a configuration loop. It's better to stop.
+        if (occurrences > loopThreshold) {
+            throw new MessagingException("Unable to create a new message name: too long. Possible loop in config.xml.");
+        }
+    }
+
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MailImpl.class);
 
@@ -131,6 +365,7 @@ public class MailImpl implements Disposable, Mail {
         setState(Mail.DEFAULT);
         attributes = new HashMap<>();
         perRecipientSpecificHeaders = new PerRecipientHeaders();
+        this.recipients = null;
     }
 
     /**
@@ -143,38 +378,22 @@ public class MailImpl implements Disposable, Mail {
      */
     public MailImpl(String name, MailAddress sender, Collection<MailAddress> recipients) {
         this();
-        this.name = name;
-        this.sender = sender;
-        this.recipients = null;
+        setName(name);
+        setSender(sender);
 
         // Copy the recipient list
         if (recipients != null) {
-            this.recipients = new ArrayList<>();
-            this.recipients.addAll(recipients);
+            setRecipients(recipients);
         }
     }
 
-    /**
-     * Create a copy of the input mail and assign it a new name
-     *
-     * @param mail original mail
-     * @throws MessagingException when the message is not clonable
-     */
-    public MailImpl(Mail mail) throws MessagingException {
-        this(mail, newName(mail));
-    }
-
-    /**
-     * @param mail
-     * @param newName
-     * @throws MessagingException
-     */
     @SuppressWarnings("unchecked")
-    public MailImpl(Mail mail, String newName) throws MessagingException {
+    private MailImpl(Mail mail, String newName) throws MessagingException {
         this(newName, mail.getSender(), mail.getRecipients(), mail.getMessage());
         setRemoteHost(mail.getRemoteHost());
         setRemoteAddr(mail.getRemoteAddr());
         setLastUpdated(mail.getLastUpdated());
+        setErrorMessage(mail.getErrorMessage());
         try {
             if (mail instanceof MailImpl) {
                 setAttributesRaw((HashMap<String, Object>) cloneSerializableObject(((MailImpl) mail).getAttributesRaw()));
@@ -217,24 +436,10 @@ public class MailImpl implements Disposable, Mail {
     /**
      * A constructor that creates a MailImpl with the specified name, sender,
      * recipients, and MimeMessage.
-     *
-     * @param name       the name of the MailImpl
-     * @param sender     the sender for this MailImpl
-     * @param recipients the collection of recipients of this MailImpl
-     * @param message    the MimeMessage associated with this MailImpl
      */
     public MailImpl(String name, MailAddress sender, Collection<MailAddress> recipients, MimeMessage message) {
         this(name, sender, recipients);
         this.setMessage(new MimeMessageCopyOnWriteProxy(message));
-    }
-
-    /**
-     * Duplicate the MailImpl.
-     *
-     * @return a MailImpl that is a duplicate of this one
-     */
-    public Mail duplicate() {
-        return duplicate(name);
     }
 
     /**
@@ -244,7 +449,7 @@ public class MailImpl implements Disposable, Mail {
      * @param newName the name for the duplicated mail
      * @return a MailImpl that is a duplicate of this one with a different name
      */
-    public Mail duplicate(String newName) {
+    @VisibleForTesting Mail duplicate(String newName) {
         try {
             return new MailImpl(this, newName);
         } catch (MessagingException me) {
@@ -253,101 +458,51 @@ public class MailImpl implements Disposable, Mail {
         return null;
     }
 
-    /**
-     * Get the error message associated with this MailImpl.
-     *
-     * @return the error message associated with this MailImpl
-     */
     @Override
     public String getErrorMessage() {
         return errorMessage;
     }
 
-    /**
-     * Get the MimeMessage associated with this MailImpl.
-     *
-     * @return the MimeMessage associated with this MailImpl
-     */
     @Override
     public MimeMessage getMessage() throws MessagingException {
         return message;
     }
 
-    /**
-     * Set the name of this MailImpl.
-     *
-     * @param name the name of this MailImpl
-     */
     @Override
     public void setName(String name) {
         this.name = name;
     }
 
-    /**
-     * Get the name of this MailImpl.
-     *
-     * @return the name of this MailImpl
-     */
     @Override
     public String getName() {
         return name;
     }
 
-    /**
-     * Get the recipients of this MailImpl.
-     *
-     * @return the recipients of this MailImpl
-     */
     @Override
     public Collection<MailAddress> getRecipients() {
         return recipients;
     }
 
-    /**
-     * Get the sender of this MailImpl.
-     *
-     * @return the sender of this MailImpl
-     */
     @Override
     public MailAddress getSender() {
         return sender;
     }
 
-    /**
-     * Get the state of this MailImpl.
-     *
-     * @return the state of this MailImpl
-     */
     @Override
     public String getState() {
         return state;
     }
 
-    /**
-     * Get the remote host associated with this MailImpl.
-     *
-     * @return the remote host associated with this MailImpl
-     */
     @Override
     public String getRemoteHost() {
         return remoteHost;
     }
 
-    /**
-     * Get the remote address associated with this MailImpl.
-     *
-     * @return the remote address associated with this MailImpl
-     */
     @Override
     public String getRemoteAddr() {
         return remoteAddr;
     }
 
-    /**
-     * Get the last updated time for this MailImpl.
-     *
-     * @return the last updated time for this MailImpl
-     */
     @Override
     public Date getLastUpdated() {
         return lastUpdated;
@@ -372,11 +527,6 @@ public class MailImpl implements Disposable, Mail {
         return MimeMessageUtil.getMessageSize(message);
     }
 
-    /**
-     * Set the error message associated with this MailImpl.
-     *
-     * @param msg the new error message associated with this MailImpl
-     */
     @Override
     public void setErrorMessage(String msg) {
         this.errorMessage = msg;
@@ -405,57 +555,27 @@ public class MailImpl implements Disposable, Mail {
         }
     }
 
-    /**
-     * Set the recipients for this MailImpl.
-     *
-     * @param recipients the recipients for this MailImpl
-     */
     @Override
     public void setRecipients(Collection<MailAddress> recipients) {
-        this.recipients = recipients;
+        this.recipients = ImmutableList.copyOf(recipients);
     }
 
-    /**
-     * Set the sender of this MailImpl.
-     *
-     * @param sender the sender of this MailImpl
-     */
     public void setSender(MailAddress sender) {
         this.sender = sender;
     }
 
-    /**
-     * Set the state of this MailImpl.
-     *
-     * @param state the state of this MailImpl
-     */
     public void setState(String state) {
         this.state = state;
     }
 
-    /**
-     * Set the remote address associated with this MailImpl.
-     *
-     * @param remoteHost the new remote host associated with this MailImpl
-     */
     public void setRemoteHost(String remoteHost) {
         this.remoteHost = remoteHost;
     }
 
-    /**
-     * Set the remote address associated with this MailImpl.
-     *
-     * @param remoteAddr the new remote address associated with this MailImpl
-     */
     public void setRemoteAddr(String remoteAddr) {
         this.remoteAddr = remoteAddr;
     }
 
-    /**
-     * Set the date this mail was last updated.
-     *
-     * @param lastUpdated the date the mail was last updated
-     */
     public void setLastUpdated(Date lastUpdated) {
         // Make a defensive copy to ensure that the date
         // doesn't get changed external to the class
@@ -524,6 +644,7 @@ public class MailImpl implements Disposable, Mail {
                 throw ode;
             }
         }
+        perRecipientSpecificHeaders = (PerRecipientHeaders) in.readObject();
     }
 
     /**
@@ -542,6 +663,7 @@ public class MailImpl implements Disposable, Mail {
         out.writeObject(remoteAddr);
         out.writeObject(lastUpdated);
         out.writeObject(attributes);
+        out.writeObject(perRecipientSpecificHeaders);
     }
 
     @Override
@@ -635,44 +757,6 @@ public class MailImpl implements Disposable, Mail {
         return in.readObject();
     }
 
-    private static final java.util.Random random = new java.util.Random(); // Used
-    // to
-    // generate
-    // new
-    // mail
-    // names
-
-    /**
-     * Create a unique new primary key name for the given MailObject.
-     *
-     * @param mail the mail to use as the basis for the new mail name
-     * @return a new name
-     */
-    public static String newName(Mail mail) throws MessagingException {
-        String oldName = mail.getName();
-
-        // Checking if the original mail name is too long, perhaps because of a
-        // loop caused by a configuration error.
-        // it could cause a "null pointer exception" in AvalonMailRepository
-        // much
-        // harder to understand.
-        if (oldName.length() > 76) {
-            int count = 0;
-            int index = 0;
-            while ((index = oldName.indexOf('!', index + 1)) >= 0) {
-                count++;
-            }
-            // It looks like a configuration loop. It's better to stop.
-            if (count > 7) {
-                throw new MessagingException("Unable to create a new message name: too long." + " Possible loop in config.xml.");
-            } else {
-                oldName = oldName.substring(0, 76);
-            }
-        }
-
-        return oldName + "-!" + random.nextInt(1048576);
-    }
-
     /**
      * Generate a new identifier/name for a mail being processed by this server.
      *
@@ -690,5 +774,9 @@ public class MailImpl implements Disposable, Mail {
     @Override
     public void addSpecificHeaderForRecipient(Header header, MailAddress recipient) {
         perRecipientSpecificHeaders.addHeaderForRecipient(header, recipient);
+    }
+
+    public void addAllSpecificHeaderForRecipient(PerRecipientHeaders perRecipientHeaders) {
+        perRecipientSpecificHeaders.addAll(perRecipientHeaders);
     }
 }

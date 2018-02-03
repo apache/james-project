@@ -40,8 +40,10 @@ public class PartialFetchBodyElementTest {
     public void setUp() throws Exception {
         mockBodyElement = mockery.mock(BodyElement.class);
         mockery.checking(new Expectations() {{
-            oneOf(mockBodyElement).getName();will(returnValue("Name"));
-        }});
+                    oneOf(mockBodyElement).getName();will(returnValue("Name"));
+                }
+            }
+        );
     }
 
     @Test
@@ -51,8 +53,10 @@ public class PartialFetchBodyElementTest {
         PartialFetchBodyElement element = new PartialFetchBodyElement(
                 mockBodyElement, 0, NUMBER_OF_OCTETS);
         mockery.checking(new Expectations() {{
-            oneOf(mockBodyElement).size();will(returnValue(new Long(moreThanNumberOfOctets)));
-        }});
+                    oneOf(mockBodyElement).size();will(returnValue(new Long(moreThanNumberOfOctets)));
+                }
+            }
+        );
         assertEquals(
                 "Size is more than number of octets so should be number of octets",
                 NUMBER_OF_OCTETS, element.size());
@@ -65,8 +69,10 @@ public class PartialFetchBodyElementTest {
         PartialFetchBodyElement element = new PartialFetchBodyElement(
                 mockBodyElement, 0, NUMBER_OF_OCTETS);
         mockery.checking(new Expectations() {{
-            oneOf(mockBodyElement).size();will(returnValue(new Long(lessThanNumberOfOctets)));
-        }});
+                    oneOf(mockBodyElement).size();will(returnValue(new Long(lessThanNumberOfOctets)));
+                }
+            }
+        );
         assertEquals("Size is less than number of octets so should be size",
                 lessThanNumberOfOctets, element.size());
     }
@@ -78,8 +84,10 @@ public class PartialFetchBodyElementTest {
         PartialFetchBodyElement element = new PartialFetchBodyElement(
                 mockBodyElement, 10, NUMBER_OF_OCTETS);
         mockery.checking(new Expectations() {{
-            oneOf(mockBodyElement).size();will(returnValue(new Long(size)));
-        }});
+                    oneOf(mockBodyElement).size();will(returnValue(new Long(size)));
+                }
+            }
+        );
         assertEquals("Size is less than number of octets so should be size",
                 50, element.size());
     }
@@ -91,8 +99,10 @@ public class PartialFetchBodyElementTest {
         PartialFetchBodyElement element = new PartialFetchBodyElement(
                 mockBodyElement, 10, NUMBER_OF_OCTETS);
         mockery.checking(new Expectations() {{
-            oneOf(mockBodyElement).size();will(returnValue(new Long(size)));
-        }});
+                    oneOf(mockBodyElement).size();will(returnValue(new Long(size)));
+                }
+            }
+        );
         assertEquals("Size is less than number of octets so should be size",
                 90, element.size());
     }
@@ -103,8 +113,10 @@ public class PartialFetchBodyElementTest {
         PartialFetchBodyElement element = new PartialFetchBodyElement(
                 mockBodyElement, 1000, NUMBER_OF_OCTETS);
         mockery.checking(new Expectations() {{
-            oneOf(mockBodyElement).size();will(returnValue(new Long(size)));
-        }});
+                    oneOf(mockBodyElement).size();will(returnValue(new Long(size)));
+                }
+            }
+        );
         assertEquals("Size is less than number of octets so should be size", 0,
                 element.size());
     }
@@ -116,8 +128,10 @@ public class PartialFetchBodyElementTest {
         PartialFetchBodyElement element = new PartialFetchBodyElement(
                 mockBodyElement, 1000, NUMBER_OF_OCTETS);
         mockery.checking(new Expectations() {{
-            oneOf(mockBodyElement).size();will(returnValue(new Long(size)));
-        }});
+                    oneOf(mockBodyElement).size();will(returnValue(new Long(size)));
+                }
+            }
+        );
         assertEquals("Content size is less than start. Size should be zero.",
                 NUMBER_OF_OCTETS, element.size());
     }

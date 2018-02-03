@@ -75,7 +75,7 @@ public class MaildirHostSystem extends JamesImapHostSystem {
 
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
         MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
-        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, aclResolver, groupMembershipResolver);
+        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, aclResolver, groupMembershipResolver, mailboxEventDispatcher);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
         mailboxManager = new StoreMailboxManager(mailboxSessionMapperFactory, authenticator, authorizator, locker,
             messageParser, new DefaultMessageId.Factory(), annotationManager,
@@ -100,9 +100,9 @@ public class MaildirHostSystem extends JamesImapHostSystem {
     public void afterTest() throws Exception {
         resetUserMetaData();
         try {
-        	FileUtils.deleteDirectory(new File(MAILDIR_HOME));
+            FileUtils.deleteDirectory(new File(MAILDIR_HOME));
         } catch (Exception e) {
-        	e.printStackTrace();
+            e.printStackTrace();
         }
     }
     

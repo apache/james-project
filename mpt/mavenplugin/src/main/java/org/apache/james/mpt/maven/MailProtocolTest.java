@@ -37,7 +37,7 @@ import org.apache.james.mpt.user.ScriptedUserAdder;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 
-public class MailProtocolTest implements Monitor{
+public class MailProtocolTest implements Monitor {
 
    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
 
@@ -52,23 +52,23 @@ public class MailProtocolTest implements Monitor{
    private AddUser[] addUsers;
 
    public void setScriptFile(File scriptFile) {
-	   this.scriptFile = scriptFile;
+       this.scriptFile = scriptFile;
    }
    
    public void setPort(Integer port) {
-	   this.port = port;
+       this.port = port;
    }
    
    public void setHost(String host) {
-	   this.host = host;
+       this.host = host;
    }
    
    public void setShabang(String shabang) {
-	   this.shabang = shabang;
+       this.shabang = shabang;
    }
    
    public void setAddUser(AddUser[] addUsers) {
-	   this.addUsers = addUsers;
+       this.addUsers = addUsers;
    }
    
 
@@ -91,106 +91,102 @@ public class MailProtocolTest implements Monitor{
    }
 
    
-   /*
-    * (non-Javadoc)
-    * @see org.apache.maven.plugin.AbstractMojo#execute()
-    */
-	public void execute() throws MojoExecutionException, MojoFailureException {
-		validate();
+    public void execute() throws MojoExecutionException, MojoFailureException {
+        validate();
 
 
-		for (AddUser addUser : addUsers) {
-			try {
+        for (AddUser addUser : addUsers) {
+            try {
 
-				final Reader reader;
-				if (addUser.getScriptText() != null) {
-					reader = new StringReader(addUser.getScriptText());
-				} else {
-					reader = new FileReader(addUser.getScriptFile());
-				}
-				final ScriptedUserAdder adder = new ScriptedUserAdder(addUser.getHost(), addUser.getPort(), this);
-				adder.addUser(addUser.getUser(), addUser.getPasswd(), reader);
-			} catch (Exception e) {
-				//getLog().error("Unable to add user", e);
-				throw new MojoFailureException("User addition failed: \n" + e.getMessage());
-			}
-		}
+                final Reader reader;
+                if (addUser.getScriptText() != null) {
+                    reader = new StringReader(addUser.getScriptText());
+                } else {
+                    reader = new FileReader(addUser.getScriptFile());
+                }
+                final ScriptedUserAdder adder = new ScriptedUserAdder(addUser.getHost(), addUser.getPort(), this);
+                adder.addUser(addUser.getUser(), addUser.getPasswd(), reader);
+            } catch (Exception e) {
+                //getLog().error("Unable to add user", e);
+                throw new MojoFailureException("User addition failed: \n" + e.getMessage());
+            }
+        }
        final Runner runner = new Runner();
        InputStream inputStream;
-		try {
-			inputStream = new FileInputStream(scriptFile);
+        try {
+            inputStream = new FileInputStream(scriptFile);
 
-			final ExternalHostSystem hostSystem = new ExternalHostSystem(SUPPORTED_FEATURES, host, port, this, shabang, null);
-		    final ProtocolSessionBuilder builder = new ProtocolSessionBuilder();
-		     
-	        builder.addProtocolLines(scriptFile.getName(), inputStream, runner.getTestElements());
-			runner.runSessions(hostSystem);
+            final ExternalHostSystem hostSystem = new ExternalHostSystem(SUPPORTED_FEATURES, host, port, this, shabang, null);
+            final ProtocolSessionBuilder builder = new ProtocolSessionBuilder();
 
-		} catch (IOException e1) {
+            builder.addProtocolLines(scriptFile.getName(), inputStream, runner.getTestElements());
+            runner.runSessions(hostSystem);
+
+        } catch (IOException e1) {
            throw new MojoExecutionException("Cannot load script " + scriptFile.getName(), e1);
        } catch (Exception e) {
            throw new MojoExecutionException("[FAILURE] in script " + scriptFile.getName() + "\n" + e.getMessage(), e);
        }
       
-	}
+    }
 
-	/**
-	 * Validate if the configured parameters are valid
-	 * 
-	 * @throws MojoFailureException
-	 */
-	private void validate() throws MojoFailureException {
-		if (port <= 0) {
+    /**
+     * Validate if the configured parameters are valid
+     *
+     * @throws MojoFailureException
+     */
+    private void validate() throws MojoFailureException {
+        if (port <= 0) {
            throw new MojoFailureException("'port' configuration must be set.");
-		}
-		
-		if (scriptFile.exists() == false ) {
+        }
+
+        if (scriptFile.exists() == false) {
            throw new MojoFailureException("'scriptFile' not exists");
-		}
+        }
 
-		for (AddUser addUser : addUsers) {
+        for (AddUser addUser : addUsers) {
 
-			if (addUser.getScriptText() == null && addUser.getScriptFile() == null) {
-				throw new MojoFailureException("AddUser must contain the text of the script or a scriptFile");
-			}
+            if (addUser.getScriptText() == null && addUser.getScriptFile() == null) {
+                throw new MojoFailureException("AddUser must contain the text of the script or a scriptFile");
+            }
 
-			if (addUser.getPort() <= 0) {
-				throw new MojoFailureException("'port' attribute must be set on AddUser to the port against which the script should run.");
-			}
+            if (addUser.getPort() <= 0) {
+                throw new MojoFailureException("'port' attribute must be set on AddUser to the port against which the script should run.");
+            }
 
-			if (addUser.getHost() == null) {
-				throw new MojoFailureException("'host' attribute must be set on AddUser to the host against which the script should run.");
-			}
-		}
-		
-	}
-	
-	
-	/*
-	 * (non-Javadoc)
-	 * @see org.apache.james.mpt.Monitor#debug(char)
-	 */
-	public void debug(char character) {
-		//getLog().debug("'" + character + "'");
-		// do nothing by default
-	}
+            if (addUser.getHost() == null) {
+                throw new MojoFailureException("'host' attribute must be set on AddUser to the host against which the script should run.");
+            }
+        }
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.apache.james.mpt.Monitor#debug(java.lang.String)
-	 */
-	public void debug(String message) {
-		//getLog().debug(message);
-		// do nothing by default
+    }
 
-	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.apache.james.mpt.Monitor#note(java.lang.String)
-	 */
-	public void note(String message) {
-		//getLog().debug(message);
-		System.out.println(message);
-	}
+    /*
+     * (non-Javadoc)
+     * @see org.apache.james.mpt.Monitor#debug(char)
+     */
+    public void debug(char character) {
+        //getLog().debug("'" + character + "'");
+        // do nothing by default
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see org.apache.james.mpt.Monitor#debug(java.lang.String)
+     */
+    public void debug(String message) {
+        //getLog().debug(message);
+        // do nothing by default
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see org.apache.james.mpt.Monitor#note(java.lang.String)
+     */
+    public void note(String message) {
+        //getLog().debug(message);
+        System.out.println(message);
+    }
 }

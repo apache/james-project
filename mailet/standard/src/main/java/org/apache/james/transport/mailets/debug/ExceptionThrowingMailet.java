@@ -21,11 +21,11 @@
 
 package org.apache.james.transport.mailets.debug;
 
-import org.apache.mailet.base.GenericMailet;
+import javax.mail.MessagingException;
+
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
-
-import javax.mail.MessagingException;
+import org.apache.mailet.base.GenericMailet;
 
 /**
  * Debugging purpose Mailet. Just throws an exception.

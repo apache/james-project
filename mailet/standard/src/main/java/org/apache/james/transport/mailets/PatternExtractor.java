@@ -108,7 +108,7 @@ public class PatternExtractor {
     }
 
     public List<ReplacingPattern> getPatternsFromFileList(String filepar) throws MailetException, IOException {
-        ImmutableList.Builder<ReplacingPattern> patternList= ImmutableList.builder();
+        ImmutableList.Builder<ReplacingPattern> patternList = ImmutableList.builder();
         for (String file : Splitter.on(",").split(filepar)) {
             FileNameWithCharset fileNameWithCharset = FileNameWithCharset.from(file);
             Optional<? extends InputStream> inputStream = retrieveInputStream(fileNameWithCharset.getFileName());
@@ -160,7 +160,7 @@ public class PatternExtractor {
     }
 
     private List<ReplacingPattern> getPatternsFromStream(InputStream stream, Charset charset) throws MailetException, IOException {
-        ImmutableList.Builder<ReplacingPattern> patternList= ImmutableList.builder();
+        ImmutableList.Builder<ReplacingPattern> patternList = ImmutableList.builder();
         for (String line: IOUtils.readLines(stream, charset)) {
             line = line.trim();
             if (!isComment(line)) {

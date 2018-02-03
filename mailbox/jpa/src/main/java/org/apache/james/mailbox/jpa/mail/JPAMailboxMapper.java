@@ -27,6 +27,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
 
+import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -64,12 +65,14 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
         try {
             getEntityManager().getTransaction().commit();
         } catch (PersistenceException e) {
-            if (e instanceof EntityExistsException)
+            if (e instanceof EntityExistsException) {
                 throw new MailboxExistsException(lastMailboxName);
+            }
             if (e instanceof RollbackException) {
                 Throwable t = e.getCause();
-                if (t != null && t instanceof EntityExistsException)
+                if (t != null && t instanceof EntityExistsException) {
                     throw new MailboxExistsException(lastMailboxName);
+                }
             }
             throw new MailboxException("Commit of transaction failed", e);
         }
@@ -93,7 +96,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
             }
             return mailbox.getMailboxId();
         } catch (PersistenceException e) {
-            throw new MailboxException("Save of mailbox " + mailbox.getName() +" failed", e);
+            throw new MailboxException("Save of mailbox " + mailbox.getName() + " failed", e);
         } 
     }
 
@@ -211,10 +214,10 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
         return numberOfChildMailboxes != null && numberOfChildMailboxes > 0;
     }
 
-	/**
+    /**
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#list()
      */
-    public List<Mailbox> list() throws MailboxException{
+    public List<Mailbox> list() throws MailboxException {
         try {
             return getEntityManager().createNamedQuery("listMailboxes", Mailbox.class).getResultList();
         } catch (PersistenceException e) {
@@ -223,13 +226,18 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     }
 
     @Override
-    public void updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
-        mailbox.setACL(mailbox.getACL().apply(mailboxACLCommand));
+    public ACLDiff updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) throws MailboxException {
+        MailboxACL oldACL = mailbox.getACL();
+        MailboxACL newACL = mailbox.getACL().apply(mailboxACLCommand);
+        mailbox.setACL(newACL);
+        return ACLDiff.computeDiff(oldACL, newACL);
     }
 
     @Override
-    public void setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+    public ACLDiff setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
+        MailboxACL oldMailboxAcl = mailbox.getACL();
         mailbox.setACL(mailboxACL);
+        return ACLDiff.computeDiff(oldMailboxAcl, mailboxACL);
     }
 
     @Override

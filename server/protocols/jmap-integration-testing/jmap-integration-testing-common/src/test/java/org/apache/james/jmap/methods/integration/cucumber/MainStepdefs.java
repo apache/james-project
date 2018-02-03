@@ -19,8 +19,15 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Stream;
+
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.probe.ACLProbe;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
@@ -31,7 +38,9 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.apache.james.utils.MessageIdProbe;
 
-import com.google.common.base.Charsets;
+import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 
 import cucumber.runtime.java.guice.ScenarioScoped;
 
@@ -43,7 +52,7 @@ public class MainStepdefs {
     public MailboxProbe mailboxProbe;
     public ACLProbe aclProbe;
     public MessageIdProbe messageIdProbe;
-    public Runnable awaitMethod = () -> {};
+    public Runnable awaitMethod = () -> { };
     public MessageId.Factory messageIdFactory;
     
     public void init() throws Exception {
@@ -60,11 +69,35 @@ public class MainStepdefs {
                 .setScheme("http")
                 .setHost("localhost")
                 .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
-                .setCharset(Charsets.UTF_8);
+                .setCharset(StandardCharsets.UTF_8);
     }
     
     public void tearDown() {
         jmapServer.stop();
     }
 
+    public MailboxId getMailboxId(String username, String mailbox) {
+        return getMailboxId(MailboxConstants.USER_NAMESPACE, username, mailbox);
+    }
+
+    public MailboxId getMailboxId(String namespace, String username, String mailbox) {
+        return mailboxProbe
+            .getMailbox(namespace, username, mailbox)
+            .getMailboxId();
+    }
+    
+    public String getMailboxIds(String username, List<String> mailboxes) {
+        return Joiner.on("\",\"")
+            .join(getMailboxIdsList(username, mailboxes.stream()));
+    }
+
+    public ImmutableList<String> getMailboxIdsList(String username, Stream<String> mailboxes) {
+        return mailboxes.map(mailbox -> getMailboxId(username, mailbox)
+                .serialize())
+            .collect(Guavate.toImmutableList());
+    }
+
+    public ImmutableList<String> getMailboxIdsList(String username, Collection<String> mailboxes) {
+        return getMailboxIdsList(username, mailboxes.stream());
+    }
 }

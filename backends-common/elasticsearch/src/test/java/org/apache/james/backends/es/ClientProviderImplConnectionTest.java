@@ -21,7 +21,7 @@ package org.apache.james.backends.es;
 
 import java.util.concurrent.TimeUnit;
 
-import org.apache.james.util.streams.SwarmGenericContainer;
+import org.apache.james.util.docker.SwarmGenericContainer;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.Ignore;
@@ -61,7 +61,7 @@ public class ClientProviderImplConnectionTest {
         Awaitility.await()
             .atMost(1, TimeUnit.MINUTES)
             .pollInterval(5, TimeUnit.SECONDS)
-            .until(() ->isConnected(
+            .until(() -> isConnected(
                 ClientProviderImpl.fromHostsString(
                     es1.getContainerIp() + ":" + ES_APPLICATIVE_PORT + ","
                     + es2.getContainerIp() + ":" + ES_APPLICATIVE_PORT)));

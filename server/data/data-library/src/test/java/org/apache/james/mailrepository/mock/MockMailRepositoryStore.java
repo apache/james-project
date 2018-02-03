@@ -23,31 +23,32 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 
 public class MockMailRepositoryStore implements MailRepositoryStore {
 
-    final Map<String, MailRepository> m_storedObjectMap = new HashMap<>();
+    final Map<String, MailRepository> storedObjectMap = new HashMap<>();
 
     public void add(String url, MailRepository obj) {
-        m_storedObjectMap.put(url, obj);
+        storedObjectMap.put(url, obj);
     }
 
     @Override
     public MailRepository select(String url) throws MailRepositoryStoreException {
-        return get(url);
+        return storedObjectMap.get(url);
     }
 
-    private MailRepository get(String key) {
-        System.out.println(key);
-        return m_storedObjectMap.get(key);
+    @Override
+    public Optional<MailRepository> get(String url) throws MailRepositoryStoreException {
+        return Optional.ofNullable(storedObjectMap.get(url));
     }
 
     @Override
     public List<String> getUrls() {
-        return new ArrayList<>(m_storedObjectMap.keySet());
+        return new ArrayList<>(storedObjectMap.keySet());
     }
 
 }

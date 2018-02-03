@@ -19,18 +19,6 @@
 
 package org.apache.james.mailbox.kafka;
 
-import kafka.consumer.ConsumerConfig;
-import kafka.consumer.KafkaStream;
-import kafka.javaapi.consumer.ConsumerConnector;
-import kafka.message.MessageAndMetadata;
-import org.apache.james.mailbox.store.publisher.MessageConsumer;
-import org.apache.james.mailbox.store.publisher.MessageReceiver;
-import org.apache.james.mailbox.store.publisher.Topic;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,26 +26,40 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+
+import org.apache.james.mailbox.store.publisher.MessageConsumer;
+import org.apache.james.mailbox.store.publisher.MessageReceiver;
+import org.apache.james.mailbox.store.publisher.Topic;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import kafka.consumer.ConsumerConfig;
+import kafka.consumer.KafkaStream;
+import kafka.javaapi.consumer.ConsumerConnector;
+import kafka.message.MessageAndMetadata;
+
 public class KafkaMessageConsumer implements MessageConsumer {
 
     private class Consumer implements Runnable {
 
-        private final KafkaStream<byte[], byte[]> m_stream;
+        private final KafkaStream<byte[], byte[]> stream;
 
-        public Consumer(KafkaStream<byte[], byte[]> a_stream) {
-            m_stream = a_stream;
+        public Consumer(KafkaStream<byte[], byte[]> stream) {
+            this.stream = stream;
         }
 
         public void run() {
-            for (MessageAndMetadata<byte[], byte[]> aM_stream : m_stream) {
-                messageReceiver.receiveSerializedEvent(aM_stream.message());
+            for (MessageAndMetadata<byte[], byte[]> message : stream) {
+                messageReceiver.receiveSerializedEvent(message.message());
             }
         }
     }
 
     private static final String ZK_SESSION_TIMEOUT = "400";
     private static final String ZK_SYNC_TIME = "200";
-    private static final String AUTO_COMMIT8INTERVAL_MS ="1000";
+    private static final String AUTO_COMMIT8INTERVAL_MS = "1000";
     private static final Logger LOG = LoggerFactory.getLogger(KafkaMessageConsumer.class);
 
     private final ConsumerConnector consumer;
@@ -86,14 +88,18 @@ public class KafkaMessageConsumer implements MessageConsumer {
 
     @PreDestroy
     public void destroy() {
-        if (consumer != null) consumer.shutdown();
-        if (executor != null) executor.shutdown();
+        if (consumer != null) {
+            consumer.shutdown();
+        }
+        if (executor != null) {
+            executor.shutdown();
+        }
         this.isInitialized = false;
     }
 
     @PostConstruct
     public void init(Topic topic) {
-        if(!isInitialized) {
+        if (!isInitialized) {
             this.isInitialized = true;
             List<KafkaStream<byte[], byte[]>> streams = getKafkaStreams(topic.getValue());
             executor = Executors.newFixedThreadPool(numberOfTread);

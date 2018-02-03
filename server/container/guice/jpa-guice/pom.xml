@@ -113,6 +113,14 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-guice-webadmin-mailqueue</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-guice-webadmin-mailrepository</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-guice-webadmin-swagger</artifactId>
         </dependency>
         <dependency>
@@ -225,12 +233,4 @@
         </plugins>
     </build>
 
-    <profiles>
-        <profile>
-            <id>jpa</id>
-            <properties>
-                <jpa.includes>**/*.java</jpa.includes>
-            </properties>
-        </profile>
-    </profiles>
 </project>

@@ -43,18 +43,18 @@ import org.apache.james.mime4j.util.MimeUtil;
  */
 public class SearchUtil {
 
-    private final static String FWD_PARENS = "(fwd)";
-    private final static String SUBJ_FWD_HDR = "[fwd:";
-    private final static String SUBJ_FWD_TRL = "]";
-    private final static String RE = "re";
-    private final static String FWD = "fwd";
-    private final static String FW = "fw";
-    private final static char WS = ' ';
-    private final static char OPEN_SQUARE_BRACKED = '[';
-    private final static char CLOSE_SQUARE_BRACKED = ']';
-    private final static char COLON = ':';
+    private static final String FWD_PARENS = "(fwd)";
+    private static final String SUBJ_FWD_HDR = "[fwd:";
+    private static final String SUBJ_FWD_TRL = "]";
+    private static final String RE = "re";
+    private static final String FWD = "fwd";
+    private static final String FW = "fw";
+    private static final char WS = ' ';
+    private static final char OPEN_SQUARE_BRACKED = '[';
+    private static final char CLOSE_SQUARE_BRACKED = ']';
+    private static final char COLON = ':';
     
-    private final static Charset UTF8 = Charset.forName("UTF8");
+    private static final Charset UTF8 = Charset.forName("UTF8");
 
     
     /**
@@ -93,7 +93,7 @@ public class SearchUtil {
         if (display == null || display.length() < 1) {
             String localPart = mailbox.getLocalPart();
             String domainPart = mailbox.getDomain();
-            if (domainPart != null && domainPart.length() > 0 ) {
+            if (domainPart != null && domainPart.length() > 0) {
                 return localPart + "@" + domainPart;
             } else {
                 return localPart;
@@ -331,7 +331,7 @@ public class SearchUtil {
      */
     private static String removeSubjectBlob(String subject) {
         String subj = subject;
-        while(subj.charAt(0) == OPEN_SQUARE_BRACKED) {
+        while (subj.charAt(0) == OPEN_SQUARE_BRACKED) {
             int length = subj.length();
             subj = removeBlob(subject);
             int i = 0;
@@ -425,8 +425,8 @@ public class SearchUtil {
         int subStringEnd = decodedSubject.length();
 
         int originalSize = decodedSubject.length();
-        int curPos = originalSize -1;
-        while(true) {
+        int curPos = originalSize - 1;
+        while (true) {
             char c = decodedSubject.charAt(curPos--);
             if (c == WS) {
                 subStringEnd--;
@@ -456,7 +456,7 @@ public class SearchUtil {
         for (int a = 0; a < subject.length(); a++) {
             char c = subject.charAt(a);
             lastChar = c;
-            if (( a != 0  && c == OPEN_SQUARE_BRACKED) || c == CLOSE_SQUARE_BRACKED) {
+            if ((a != 0  && c == OPEN_SQUARE_BRACKED) || c == CLOSE_SQUARE_BRACKED) {
                 break;
             }
             i++;

@@ -350,8 +350,9 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
         Query query = getEntityManager().createNamedQuery("findMessagesInMailboxAfterUID")
                 .setParameter("idParam", mailboxId.getRawId()).setParameter("uidParam", from.asLong());
 
-        if (batchSize > 0)
+        if (batchSize > 0) {
             query.setMaxResults(batchSize);
+        }
 
         return query.getResultList();
     }
@@ -370,8 +371,9 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
                 .setParameter("idParam", mailboxId.getRawId()).setParameter("fromParam", from.asLong())
                 .setParameter("toParam", to.asLong());
 
-        if (batchSize > 0)
+        if (batchSize > 0) {
             query.setMaxResults(batchSize);
+        }
 
         return query.getResultList();
     }
@@ -380,8 +382,9 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     private List<MailboxMessage> findMessagesInMailbox(JPAId mailboxId, int batchSize) {
         Query query = getEntityManager().createNamedQuery("findMessagesInMailbox").setParameter("idParam",
                 mailboxId.getRawId());
-        if (batchSize > 0)
+        if (batchSize > 0) {
             query.setMaxResults(batchSize);
+        }
         return query.getResultList();
     }
 

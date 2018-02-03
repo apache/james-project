@@ -21,6 +21,8 @@ package org.apache.james.cli.utils;
 
 import org.apache.james.mailbox.model.Quota;
 
+import com.google.common.math.LongMath;
+
 /**
  * This class is an helper for parsing integer input that may contain units.
  */
@@ -51,14 +53,14 @@ public class ValueWithUnit {
         this.value = value;
     }
 
-    public static ValueWithUnit parse(String providedLongWithUnitString) throws Exception{
-        if(providedLongWithUnitString.equalsIgnoreCase(UNKNOWN)) {
+    public static ValueWithUnit parse(String providedLongWithUnitString) throws Exception {
+        if (providedLongWithUnitString.equalsIgnoreCase(UNKNOWN)) {
             return new ValueWithUnit(Unit.NoUnit, Quota.UNKNOWN);
         }
-        if(providedLongWithUnitString.equalsIgnoreCase(UNLIMITED)) {
+        if (providedLongWithUnitString.equalsIgnoreCase(UNLIMITED)) {
             return new ValueWithUnit(Unit.NoUnit, Quota.UNLIMITED);
         }
-        char lastChar = providedLongWithUnitString.charAt(providedLongWithUnitString.length()-1);
+        char lastChar = providedLongWithUnitString.charAt(providedLongWithUnitString.length() - 1);
         Unit unit = getUnit(lastChar);
         String argWithoutUnit = removeLastCharIfNeeded(providedLongWithUnitString, unit);
         return new ValueWithUnit(unit, Long.parseLong(argWithoutUnit));
@@ -75,26 +77,26 @@ public class ValueWithUnit {
     public long getConvertedValue() {
         switch (unit) {
             case G:
-                value *= base;
+                return value * LongMath.pow(base, 3);
             case M:
-                value *= base;
+                return value * LongMath.pow(base, 2);
             case K:
-                value *= base;
+                return value * LongMath.pow(base, 1);
             default:
                 return value;
         }
     }
 
     private static String removeLastCharIfNeeded(String providedLongWithUnitString, Unit unit) {
-        if(unit != Unit.NoUnit) {
-            return providedLongWithUnitString.substring(0, providedLongWithUnitString.length()-1);
+        if (unit != Unit.NoUnit) {
+            return providedLongWithUnitString.substring(0, providedLongWithUnitString.length() - 1);
         } else {
             return providedLongWithUnitString;
         }
     }
 
-    private static Unit getUnit(char lastChar) throws Exception{
-        switch(lastChar) {
+    private static Unit getUnit(char lastChar) throws Exception {
+        switch (lastChar) {
             case 'K' :
             case 'k' :
                 return Unit.K;

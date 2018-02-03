@@ -27,9 +27,9 @@ import java.util.Locale;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -153,7 +153,7 @@ public class IsInWhiteList extends AbstractSQLWhitelistMatcher {
             }
 
             try {
-                    // check for wildcard domain entries on both
+                // check for wildcard domain entries on both
                 selectStmt = conn.prepareStatement(selectByPK);
     
                 selectStmt.setString(1, "*");

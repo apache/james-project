@@ -34,6 +34,7 @@ import javax.mail.internet.InternetAddress;
 import org.apache.james.jmap.methods.ValidationResult;
 import org.apache.james.jmap.model.MessageProperties.MessageProperty;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.util.OptionalUtils;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
@@ -59,11 +60,7 @@ public class CreationMessage {
     public static class Builder {
         private ImmutableList<String> mailboxIds;
         private String inReplyToMessageId;
-        private Optional<Boolean> isUnread = Optional.empty();
-        private Optional<Boolean> isFlagged = Optional.empty();
-        private Optional<Boolean> isAnswered = Optional.empty();
-        private Optional<Boolean> isDraft = Optional.empty();
-        private Optional<Boolean> isForwarded = Optional.empty();
+        private final OldKeyword.Builder oldKeywordBuilder;
         private final ImmutableMap.Builder<String, String> headers;
         private Optional<DraftEmailer> from = Optional.empty();
         private final ImmutableList.Builder<DraftEmailer> to;
@@ -86,6 +83,7 @@ public class CreationMessage {
             attachments = ImmutableList.builder();
             attachedMessages = ImmutableMap.builder();
             headers = ImmutableMap.builder();
+            oldKeywordBuilder = OldKeyword.builder();
         }
 
         public Builder mailboxId(String... mailboxIds) {
@@ -104,27 +102,27 @@ public class CreationMessage {
         }
 
         public Builder isUnread(Optional<Boolean> isUnread) {
-            this.isUnread = isUnread;
+            oldKeywordBuilder.isUnread(isUnread);
             return this;
         }
 
         public Builder isFlagged(Optional<Boolean> isFlagged) {
-            this.isFlagged = isFlagged;
+            oldKeywordBuilder.isFlagged(isFlagged);
             return this;
         }
 
         public Builder isAnswered(Optional<Boolean> isAnswered) {
-            this.isAnswered = isAnswered;
+            oldKeywordBuilder.isAnswered(isAnswered);
             return this;
         }
 
         public Builder isDraft(Optional<Boolean> isDraft) {
-            this.isDraft = isDraft;
+            oldKeywordBuilder.isDraft(isDraft);
             return this;
         }
 
         public Builder isForwarded(Optional<Boolean> isForwarded) {
-            this.isForwarded = isForwarded;
+            oldKeywordBuilder.isForwarded(isForwarded);
             return this;
         }
 
@@ -158,7 +156,7 @@ public class CreationMessage {
             return this;
         }
 
-        public Builder subject (String subject) {
+        public Builder subject(String subject) {
             this.subject = Strings.nullToEmpty(subject);
             return this;
         }
@@ -204,11 +202,9 @@ public class CreationMessage {
         }
 
         private static Predicate<BlobId> inAttachments(ImmutableList<Attachment> attachments) {
-            return (key) -> {
-                return attachments.stream()
-                    .map(Attachment::getBlobId)
-                    .anyMatch(blobId -> blobId.equals(key));
-            };
+            return (key) -> attachments.stream()
+                .map(Attachment::getBlobId)
+                .anyMatch(blobId -> blobId.equals(key));
         }
 
         public CreationMessage build() {
@@ -218,25 +214,32 @@ public class CreationMessage {
             ImmutableMap<BlobId, SubMessage> attachedMessages = this.attachedMessages.build();
             Preconditions.checkState(areAttachedMessagesKeysInAttachments(attachments, attachedMessages), "'attachedMessages' keys must be in 'attachments'");
 
-            Optional<Keywords> creationKeywords = Keywords.factory()
-                .throwOnImapNonExposedKeywords()
-                .fromMapOrOldKeyword(keywords, getOldKeywords());
-
             if (date == null) {
                 date = ZonedDateTime.now();
             }
 
+            Optional<Keywords> maybeKeywords = creationKeywords();
+            Optional<OldKeyword> oldKeywords = oldKeywordBuilder.computeOldKeyword();
+
             return new CreationMessage(mailboxIds, Optional.ofNullable(inReplyToMessageId), headers.build(), from,
                     to.build(), cc.build(), bcc.build(), replyTo.build(), subject, date, Optional.ofNullable(textBody), Optional.ofNullable(htmlBody),
-                    attachments, attachedMessages, creationKeywords);
+                    attachments, attachedMessages, computeKeywords(maybeKeywords, oldKeywords));
         }
 
-        private Optional<OldKeyword> getOldKeywords() {
-            if (isAnswered.isPresent() || isFlagged.isPresent() || isUnread.isPresent() || isDraft.isPresent() || isForwarded.isPresent()) {
-                return Optional.of(new OldKeyword(isUnread, isFlagged, isAnswered, isDraft, isForwarded));
-            }
-            return Optional.empty();
+        private Optional<Keywords> creationKeywords() {
+            return keywords.map(map -> Keywords.factory()
+                    .throwOnImapNonExposedKeywords()
+                    .fromMap(map));
         }
+
+        public Keywords computeKeywords(Optional<Keywords> keywords, Optional<OldKeyword> oldKeywords) {
+            Preconditions.checkArgument(!(keywords.isPresent() && oldKeywords.isPresent()), "Does not support keyword and is* at the same time");
+            return OptionalUtils
+                .or(keywords,
+                    oldKeywords.map(OldKeyword::asKeywords))
+                .orElse(Keywords.DEFAULT_VALUE);
+        }
+
     }
 
     private final ImmutableList<String> mailboxIds;
@@ -253,12 +256,12 @@ public class CreationMessage {
     private final Optional<String> htmlBody;
     private final ImmutableList<Attachment> attachments;
     private final ImmutableMap<BlobId, SubMessage> attachedMessages;
-    private final Optional<Keywords> keywords;
+    private final Keywords keywords;
 
     @VisibleForTesting
     CreationMessage(ImmutableList<String> mailboxIds, Optional<String> inReplyToMessageId, ImmutableMap<String, String> headers, Optional<DraftEmailer> from,
                     ImmutableList<DraftEmailer> to, ImmutableList<DraftEmailer> cc, ImmutableList<DraftEmailer> bcc, ImmutableList<DraftEmailer> replyTo, String subject, ZonedDateTime date, Optional<String> textBody, Optional<String> htmlBody, ImmutableList<Attachment> attachments,
-                    ImmutableMap<BlobId, SubMessage> attachedMessages, Optional<Keywords> keywords) {
+                    ImmutableMap<BlobId, SubMessage> attachedMessages, Keywords keywords) {
         this.mailboxIds = mailboxIds;
         this.inReplyToMessageId = inReplyToMessageId;
         this.headers = headers;
@@ -274,6 +277,10 @@ public class CreationMessage {
         this.attachments = attachments;
         this.attachedMessages = attachedMessages;
         this.keywords = keywords;
+    }
+
+    public Keywords getKeywords() {
+        return keywords;
     }
 
     public ImmutableList<String> getMailboxIds() {
@@ -336,8 +343,8 @@ public class CreationMessage {
         return validate().isEmpty();
     }
 
-    public Optional<Keywords> getKeywords() {
-        return keywords;
+    public boolean isDraft() {
+        return keywords.contains(Keyword.DRAFT);
     }
 
     public List<ValidationResult> validate() {
@@ -369,6 +376,11 @@ public class CreationMessage {
 
     public boolean isIn(MessageManager mailbox) {
         return mailboxIds.contains(mailbox.getId().serialize());
+    }
+
+    public boolean isOnlyIn(MessageManager mailbox) {
+        return isIn(mailbox)
+            && mailboxIds.size() == 1;
     }
     
     @JsonDeserialize(builder = DraftEmailer.Builder.class)
@@ -431,7 +443,7 @@ public class CreationMessage {
             if (o instanceof DraftEmailer) {
                 DraftEmailer otherEMailer = (DraftEmailer) o;
                 return Objects.equals(name, otherEMailer.name)
-                        && Objects.equals(email.orElse("<unset>"), otherEMailer.email.orElse("<unset>") );
+                        && Objects.equals(email.orElse("<unset>"), otherEMailer.email.orElse("<unset>"));
             }
             return false;
         }

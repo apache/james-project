@@ -130,7 +130,7 @@ public class StoreMailboxManagerAnnotationTest {
     @Test
     public void getAllAnnotationsShouldReturnEmptyForNonStoredAnnotation() throws Exception {
         when(mailboxMapper.findMailboxByPath(eq(mailboxPath))).thenReturn(mailbox);
-        when(annotationMapper.getAllAnnotations(eq(mailboxId))).thenReturn(Collections.<MailboxAnnotation> emptyList());
+        when(annotationMapper.getAllAnnotations(eq(mailboxId))).thenReturn(Collections.<MailboxAnnotation>emptyList());
 
         assertThat(annotationManager.getAllAnnotations(mailboxPath, session)).isEmpty();
     }

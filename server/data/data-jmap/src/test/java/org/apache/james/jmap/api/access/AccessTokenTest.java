@@ -26,7 +26,7 @@ import org.junit.Test;
 
 public class AccessTokenTest {
 
-    @Test(expected=NotAnAccessTokenException.class)
+    @Test(expected = NotAnAccessTokenException.class)
     public void fromStringShouldThrowWhenNotAnUUID() throws NotAnAccessTokenException {
         AccessToken.fromString("bad");
     }

@@ -78,7 +78,8 @@ public abstract class Tokenizer {
     private String nextToken(Reader reader) throws java.io.IOException {
         StringBuilder token = new StringBuilder();
         int i;
-        char ch, ch2;
+        char ch;
+        char ch2;
         boolean previousWasDigit = false;
         boolean tokenCharFound = false;
 
@@ -97,9 +98,7 @@ public abstract class Tokenizer {
                 }
             }
 
-            if (Character.isLetter(ch) || ch == '-' || ch == '$' || ch == '\u20AC' // the
-                                                                                   // EURO
-                                                                                   // symbol
+            if (Character.isLetter(ch) || ch == '-' || ch == '$' || ch == '€'
                     || ch == '!' || ch == '\'') {
                 tokenCharFound = true;
                 previousWasDigit = false;

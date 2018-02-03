@@ -30,12 +30,12 @@ import javax.persistence.Table;
 
 import com.google.common.base.Objects;
 
-@Entity(name="MailboxAnnotation")
-@Table(name="JAMES_MAILBOX_ANNOTATION")
+@Entity(name = "MailboxAnnotation")
+@Table(name = "JAMES_MAILBOX_ANNOTATION")
 @NamedQueries({
     @NamedQuery(name = "retrieveAllAnnotations", query = "SELECT annotation FROM MailboxAnnotation annotation WHERE annotation.mailboxId = :idParam"),
     @NamedQuery(name = "retrieveByKey", query = "SELECT annotation FROM MailboxAnnotation annotation WHERE annotation.mailboxId = :idParam AND annotation.key = :keyParam"),
-    @NamedQuery(name= "countAnnotationsInMailbox", query = "SELECT COUNT(annotation) FROM MailboxAnnotation annotation WHERE annotation.mailboxId = :idParam"),
+    @NamedQuery(name = "countAnnotationsInMailbox", query = "SELECT COUNT(annotation) FROM MailboxAnnotation annotation WHERE annotation.mailboxId = :idParam"),
     @NamedQuery(name = "retrieveByKeyLike", query = "SELECT annotation FROM MailboxAnnotation annotation WHERE annotation.mailboxId = :idParam AND annotation.key LIKE :keyParam")})
 @IdClass(JPAMailboxAnnotationId.class)
 public class JPAMailboxAnnotation {

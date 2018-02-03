@@ -47,9 +47,9 @@ public class ListingEncodingUtils {
 
     private static void writeDelimiter(ImapResponseComposer composer, char hierarchyDelimiter) throws IOException {
         if (hierarchyDelimiter == Character.UNASSIGNED) {
-        	composer.nil();
+            composer.nil();
         } else {
-        	composer.quote(Character.toString(hierarchyDelimiter));
+            composer.quote(Character.toString(hierarchyDelimiter));
         }
     }
 

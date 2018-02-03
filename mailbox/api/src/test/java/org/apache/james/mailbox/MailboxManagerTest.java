@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +36,7 @@ import org.apache.james.mailbox.mock.MockMailboxManager;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
+import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -42,6 +44,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
@@ -61,8 +64,8 @@ import com.google.common.collect.ImmutableSet;
  */
 public abstract class MailboxManagerTest {
 
-    public final static String USER_1 = "USER_1";
-    public final static String USER_2 = "USER_2";
+    public static final String USER_1 = "USER_1";
+    public static final String USER_2 = "USER_2";
     private static final int DEFAULT_MAXIMUM_LIMIT = 256;
 
     private static final MailboxAnnotationKey PRIVATE_KEY = new MailboxAnnotationKey("/private/comment");
@@ -80,6 +83,9 @@ public abstract class MailboxManagerTest {
 
     @Rule
     public ExpectedException expected = ExpectedException.none();
+
+    @Rule
+    public JUnitSoftAssertions softly = new JUnitSoftAssertions();
 
     private MailboxManager mailboxManager;
     private MailboxSession session;
@@ -858,5 +864,103 @@ public abstract class MailboxManagerTest {
 
         assertThat(mailboxManager.search(mailboxQuery, session2))
             .isEmpty();
+    }
+
+    @Test
+    public void getMailboxCountersShouldReturnDefaultValueWhenNoReadRight() throws MailboxException {
+        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+        MailboxSession session1 = mailboxManager.createSystemSession(USER_1);
+        MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
+        MailboxPath inbox1 = MailboxPath.inbox(session1);
+        mailboxManager.createMailbox(inbox1, session1);
+        mailboxManager.setRights(inbox1,
+            MailboxACL.EMPTY.apply(MailboxACL.command()
+                .forUser(USER_2)
+                .rights(MailboxACL.Right.Lookup)
+                .asAddition()),
+            session1);
+        ByteArrayInputStream message = new ByteArrayInputStream("Subject: any\n\nbdy".getBytes(StandardCharsets.UTF_8));
+        boolean isRecent = true;
+        mailboxManager.getMailbox(inbox1, session1)
+            .appendMessage(message, new Date(), session1, isRecent, new Flags());
+
+        MailboxCounters mailboxCounters = mailboxManager.getMailbox(inbox1, session2)
+            .getMailboxCounters(session2);
+
+        assertThat(mailboxCounters)
+            .isEqualTo(MailboxCounters.builder()
+                .count(0)
+                .unseen(0)
+                .build());
+    }
+
+    @Test
+    public void getMailboxCountersShouldReturnStoredValueWhenReadRight() throws MailboxException {
+        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+        MailboxSession session1 = mailboxManager.createSystemSession(USER_1);
+        MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
+        MailboxPath inbox1 = MailboxPath.inbox(session1);
+        mailboxManager.createMailbox(inbox1, session1);
+        mailboxManager.setRights(inbox1,
+            MailboxACL.EMPTY.apply(MailboxACL.command()
+                .forUser(USER_2)
+                .rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read)
+                .asAddition()),
+            session1);
+        ByteArrayInputStream message = new ByteArrayInputStream("Subject: any\n\nbdy".getBytes(StandardCharsets.UTF_8));
+        boolean isRecent = true;
+        mailboxManager.getMailbox(inbox1, session1)
+            .appendMessage(message, new Date(), session1, isRecent, new Flags());
+
+        MailboxCounters mailboxCounters = mailboxManager.getMailbox(inbox1, session2)
+            .getMailboxCounters(session2);
+
+        assertThat(mailboxCounters)
+            .isEqualTo(MailboxCounters.builder()
+                .count(1)
+                .unseen(1)
+                .build());
+    }
+
+    @Test
+    public void getMetaDataShouldReturnDefaultValueWhenNoReadRight() throws MailboxException {
+        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+        MailboxSession session1 = mailboxManager.createSystemSession(USER_1);
+        MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
+        MailboxPath inbox1 = MailboxPath.inbox(session1);
+        mailboxManager.createMailbox(inbox1, session1);
+        mailboxManager.setRights(inbox1,
+            MailboxACL.EMPTY.apply(MailboxACL.command()
+                .forUser(USER_2)
+                .rights(MailboxACL.Right.Lookup)
+                .asAddition()),
+            session1);
+        ByteArrayInputStream message = new ByteArrayInputStream("Subject: any\n\nbdy".getBytes(StandardCharsets.UTF_8));
+        boolean isRecent = true;
+        mailboxManager.getMailbox(inbox1, session1)
+            .appendMessage(message, new Date(), session1, isRecent, new Flags());
+
+        boolean resetRecent = false;
+        MessageManager.MetaData metaData = mailboxManager.getMailbox(inbox1, session2)
+            .getMetaData(resetRecent, session2, MessageManager.MetaData.FetchGroup.UNSEEN_COUNT);
+
+        softly.assertThat(metaData)
+            .extracting(MessageManager.MetaData::getHighestModSeq)
+            .contains(0L);
+        softly.assertThat(metaData)
+            .extracting(MessageManager.MetaData::getUidNext)
+            .contains(MessageUid.MIN_VALUE);
+        softly.assertThat(metaData)
+            .extracting(MessageManager.MetaData::getMessageCount)
+            .contains(0L);
+        softly.assertThat(metaData)
+            .extracting(MessageManager.MetaData::getUnseenCount)
+            .contains(0L);
+        softly.assertThat(metaData)
+            .extracting(MessageManager.MetaData::getRecent)
+            .contains(ImmutableList.of());
+        softly.assertThat(metaData)
+            .extracting(MessageManager.MetaData::getPermanentFlags)
+            .contains(new Flags());
     }
 }

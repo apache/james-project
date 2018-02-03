@@ -1,0 +1,9 @@
+#! /bin/sh -e
+ 
+#Workaround waiting for https://github.com/jordansissel/fpm/issues/1163 to be released
+systemctl stop james
+systemctl disable james
+rm /etc/systemd/system/james.service
+
+update-alternatives --remove james /usr/share/james/james-ldap-server.jar
+update-alternatives --remove james /usr/share/james/james-withoutldap-server.jar

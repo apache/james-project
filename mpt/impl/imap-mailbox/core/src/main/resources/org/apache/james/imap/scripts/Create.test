@@ -31,6 +31,10 @@ S: 13 OK CREATE completed.
 # Create quoted
 C: 14 CREATE "Pepe juan"
 S: 14 OK CREATE completed.
+
+C: 15 CREATE ..
+S: 15 BAD CREATE failed. Illegal arguments.
+
 #
 # RFC3501@6.3.3p2
 # When mailbox name is suffixed with hierarchy separator

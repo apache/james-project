@@ -50,7 +50,7 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
     private static final Logger LOGGER = LoggerFactory.getLogger(JDBCBayesianAnalyzer.class);
 
     /** Public object representing a lock on database activity. */
-    public final static String DATABASE_LOCK = "database lock";
+    public static final String DATABASE_LOCK = "database lock";
 
     /**
      * The JDBCUtil helper class
@@ -161,7 +161,7 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
                 }
             }
             // Verbose.
-            LOGGER.debug("Ham tokens count: " + ham.size());
+            LOGGER.debug("Ham tokens count: {}", ham.size());
 
             rs.close();
             pstmt.close();
@@ -181,7 +181,7 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
             }
 
             // Verbose.
-            LOGGER.error("Spam tokens count: " + spam.size());
+            LOGGER.error("Spam tokens count: {}", spam.size());
 
             rs.close();
             pstmt.close();
@@ -263,48 +263,26 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
     }
 
     private void setMessageCount(Connection conn, String sqlStatement, int count) throws java.sql.SQLException {
-        PreparedStatement init = null;
-        PreparedStatement update = null;
-
-        try {
-            // set the ham/spam message counts.
-            init = conn.prepareStatement(sqlQueries.getSqlString("initializeMessageCounts", true));
-            update = conn.prepareStatement(sqlStatement);
-
+        // set the ham/spam message counts.
+        try (PreparedStatement init = conn.prepareStatement(sqlQueries.getSqlString("initializeMessageCounts", true));
+            PreparedStatement update = conn.prepareStatement(sqlStatement)) {
+            
             update.setInt(1, count);
-
             if (update.executeUpdate() == 0) {
                 init.executeUpdate();
                 update.executeUpdate();
-            }
-
-        } finally {
-            if (init != null) {
-                try {
-                    init.close();
-                } catch (java.sql.SQLException ignore) {
-                }
-            }
-            if (update != null) {
-                try {
-                    update.close();
-                } catch (java.sql.SQLException ignore) {
-                }
             }
         }
     }
 
     private void updateTokens(Connection conn, Map<String, Integer> tokens, String insertSqlStatement, String updateSqlStatement) throws java.sql.SQLException {
-        PreparedStatement insert = null;
-        PreparedStatement update = null;
-
-        try {
+        
+        try (
             // Used to insert new token entries.
-            insert = conn.prepareStatement(insertSqlStatement);
-
+            PreparedStatement insert = conn.prepareStatement(insertSqlStatement);
             // Used to update existing token entries.
-            update = conn.prepareStatement(updateSqlStatement);
-
+            PreparedStatement update = conn.prepareStatement(updateSqlStatement)) {
+            
             for (Map.Entry<String, Integer> entry : tokens.entrySet()) {
                 update.setInt(1, entry.getValue());
                 update.setString(2, entry.getKey());
@@ -318,24 +296,6 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
 
                     insert.executeUpdate();
                 }
-            }
-        } finally {
-            if (insert != null) {
-                try {
-                    insert.close();
-                } catch (java.sql.SQLException ignore) {
-                }
-
-                insert = null;
-            }
-
-            if (update != null) {
-                try {
-                    update.close();
-                } catch (java.sql.SQLException ignore) {
-                }
-
-                update = null;
             }
         }
     }
@@ -402,9 +362,7 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
             createStatement = conn.prepareStatement(sqlQueries.getSqlString(createSqlStringName, true));
             createStatement.execute();
 
-            StringBuffer logBuffer;
-            logBuffer = new StringBuffer(64).append("Created table '").append(tableName).append("' using sqlResources string '").append(createSqlStringName).append("'.");
-            LOGGER.error(logBuffer.toString());
+            LOGGER.error("Created table '{}' using sqlResources string '{}'.", tableName, createSqlStringName);
 
         } finally {
             theJDBCUtil.closeJDBCStatement(createStatement);
@@ -414,21 +372,10 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
     }
 
     private void deleteData(Connection conn, String deleteSqlStatement) throws SQLException {
-        PreparedStatement delete = null;
-
-        try {
-            // Used to delete ham tokens
-            delete = conn.prepareStatement(deleteSqlStatement);
+        try (// Used to delete ham tokens
+                PreparedStatement delete = conn.prepareStatement(deleteSqlStatement);
+                ) {
             delete.executeUpdate();
-        } finally {
-            if (delete != null) {
-                try {
-                    delete.close();
-                } catch (java.sql.SQLException ignore) {
-                }
-
-                delete = null;
-            }
         }
     }
 }

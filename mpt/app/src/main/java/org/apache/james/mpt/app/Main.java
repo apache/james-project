@@ -62,7 +62,7 @@ public class Main {
             
         } catch (ParseException e) {
             System.out.println(e.getMessage());
-            new HelpFormatter().printHelp( "mpt", options );
+            new HelpFormatter().printHelp("mpt", options);
             System.exit(-1);
         }
         

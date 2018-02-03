@@ -26,7 +26,7 @@ import java.io.Closeable;
  *
  * For instance you can send information to a message queue like Kafka or perform a POST on a restful API
  */
-public interface Publisher extends Closeable{
+public interface Publisher extends Closeable {
 
     void publish(Topic topic, byte[] message);
 

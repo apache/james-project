@@ -51,10 +51,12 @@ public class UsersRepositoryManagement extends StandardMBean implements UsersRep
 
     private JamesUser getJamesUser(String userName) throws UsersRepositoryException {
         User baseuser = usersRepository.getUserByName(userName);
-        if (baseuser == null)
+        if (baseuser == null) {
             throw new IllegalArgumentException("user not found: " + userName);
-        if (!(baseuser instanceof JamesUser))
+        }
+        if (!(baseuser instanceof JamesUser)) {
             throw new IllegalArgumentException("user is not of type JamesUser: " + userName);
+        }
 
         return (JamesUser) baseuser;
     }
@@ -113,8 +115,9 @@ public class UsersRepositoryManagement extends StandardMBean implements UsersRep
     public void setPassword(String userName, String password) throws Exception {
         try {
             User user = usersRepository.getUserByName(userName);
-            if (user == null)
+            if (user == null) {
                 throw new UsersRepositoryException("user not found: " + userName);
+            }
             if (!user.setPassword(password)) {
                 throw new UsersRepositoryException("Unable to update password for user " + user);
             }

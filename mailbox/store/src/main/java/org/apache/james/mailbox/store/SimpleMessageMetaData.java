@@ -31,7 +31,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import com.google.common.base.Objects;
 
 
-public class SimpleMessageMetaData implements MessageMetaData{
+public class SimpleMessageMetaData implements MessageMetaData {
     private final MessageUid uid;
     private final Flags flags;
     private final long size;
@@ -79,7 +79,7 @@ public class SimpleMessageMetaData implements MessageMetaData{
     
     @Override
     public boolean equals(Object obj) {
-        if(obj instanceof SimpleMessageMetaData) {
+        if (obj instanceof SimpleMessageMetaData) {
             return uid.equals(((SimpleMessageMetaData) obj).getUid());
         }
         return false;

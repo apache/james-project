@@ -140,9 +140,7 @@ public class HBaseMailbox implements Mailbox {
     public String toString() {
         return "Mailbox ( "
                 + "mailboxId = " + this.mailboxId + TAB
-//                + "namespace = " + this.namespace + TAB
                 + "name = " + this.name + TAB
-//                + "user = " + this.user + TAB
                 + "uidValidity = " + this.uidValidity + TAB
                 + " )";
     }

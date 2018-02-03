@@ -33,7 +33,7 @@ import org.apache.james.mailbox.store.Authenticator;
  * real sense in conjunction with the direct {@link MailboxSessionJCRRepository} implementation (not a subclass).
  *
  */
-public class JCRRepositoryAuthenticator implements Authenticator{
+public class JCRRepositoryAuthenticator implements Authenticator {
 
     private final MailboxSessionJCRRepository repository;
     

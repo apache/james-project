@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,7 +34,6 @@ import org.apache.james.jmap.api.access.AccessToken;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.runnable.ThrowingRunnable;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Hashing;
 
@@ -59,7 +59,7 @@ public class UserStepdefs {
         this.lastConnectedUser = Optional.empty();
     }
 
-    public void execWithUser(String user, ThrowingRunnable sideEffect) throws Exception {
+    public void execWithUser(String user, ThrowingRunnable sideEffect) {
         Optional<String> previousConnectedUser = lastConnectedUser;
         connectUser(user);
         try {
@@ -88,7 +88,7 @@ public class UserStepdefs {
     }
 
     @Given("^some users (.*)$")
-    public void createUsers(List<String> users) throws Throwable {
+    public void createUsers(List<String> users) {
         users.stream()
             .map(this::unquote)
             .forEach(Throwing.consumer(this::createUser));
@@ -112,7 +112,7 @@ public class UserStepdefs {
     }
 
     @Given("^\"([^\"]*)\" is connected$")
-    public void connectUser(String username) throws Exception {
+    public void connectUser(String username) {
         AccessToken accessToken = authenticate(username);
         tokenByUser.put(username, accessToken);
         lastConnectedUser = Optional.of(username);
@@ -128,6 +128,6 @@ public class UserStepdefs {
     }
 
     private String generatePassword(String username) {
-        return Hashing.murmur3_128().hashString(username, Charsets.UTF_8).toString();
+        return Hashing.murmur3_128().hashString(username, StandardCharsets.UTF_8).toString();
     }
 }

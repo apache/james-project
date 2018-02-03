@@ -69,6 +69,7 @@ public class MessageUtilsTest {
         messageUtils = new MessageUtils(mailboxSession, uidProvider, modSeqProvider);
         message = new SimpleMailboxMessage(MESSAGE_ID, new Date(), CONTENT.length(), BODY_START, new SharedByteArrayInputStream(CONTENT.getBytes()), new Flags(), new PropertyBuilder(), mailbox.getMailboxId());
     }
+    
     @Test
     public void newInstanceShouldFailWhenNullUidProvider() {
         expectedException.expect(NullPointerException.class);

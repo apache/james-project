@@ -27,13 +27,13 @@ import java.util.Map;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.MailAddress;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.queue.api.MailPrioritySupport;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 
 /**
  * Handler which set a configured {@link Mail} priority for the mail.
@@ -66,15 +66,17 @@ public class MailPriorityHandler implements JamesMessageHook, ProtocolHandler {
                     }
 
                     // already the highest priority
-                    if (p == MailPrioritySupport.HIGH_PRIORITY)
+                    if (p == MailPrioritySupport.HIGH_PRIORITY) {
                         break;
+                    }
                 }
             }
         }
 
         // set the priority if one was found
-        if (p != null)
+        if (p != null) {
             mail.setAttribute(MailPrioritySupport.MAIL_PRIORITY, p);
+        }
         return new HookResult(HookReturnCode.DECLINED);
     }
 

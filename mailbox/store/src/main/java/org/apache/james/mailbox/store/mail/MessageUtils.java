@@ -77,7 +77,7 @@ public class MessageUtils {
 
         long modSeq = nextModSeq(mailbox);
 
-        while(messages.hasNext()) {
+        while (messages.hasNext()) {
             MailboxMessage member = messages.next();
             Flags originalFlags = member.createFlags();
             member.setFlags(flagsUpdateCalculator.buildNewFlags(originalFlags));

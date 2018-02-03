@@ -25,8 +25,8 @@ import java.util.Collection;
 
 import javax.mail.MessagingException;
 
-import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.slf4j.Logger;
 
@@ -44,11 +44,8 @@ public class ProcessorUtil {
      *            the matcher or mailet than generated the exception
      * @param nextState
      *            the next state to set
-     *
-     * @throws MessagingException
-     *             thrown always, rethrowing the passed in exception
      */
-    public static void handleException(MessagingException me, Mail mail, String offendersName, String nextState, Logger logger) throws MessagingException {
+    public static void handleException(Exception me, Mail mail, String offendersName, String nextState, Logger logger) {
         mail.setState(nextState);
         StringWriter sout = new StringWriter();
         PrintWriter out = new PrintWriter(sout, true);
@@ -66,7 +63,7 @@ public class ProcessorUtil {
         String errorString = sout.toString();
         mail.setErrorMessage(errorString);
         logger.error(errorString);
-        throw me;
+        mail.setAttribute(Mail.MAILET_ERROR_ATTRIBUTE_NAME, me);
     }
 
     /**
@@ -78,7 +75,7 @@ public class ProcessorUtil {
      */
     public static void verifyMailAddresses(Collection<MailAddress> col) throws MessagingException {
         try {
-            MailAddress addresses[] = col.toArray(new MailAddress[col.size()]);
+            MailAddress[] addresses = col.toArray(new MailAddress[col.size()]);
 
             // Why is this here? According to the javadoc for
             // java.util.Collection.toArray(Object[]), this should

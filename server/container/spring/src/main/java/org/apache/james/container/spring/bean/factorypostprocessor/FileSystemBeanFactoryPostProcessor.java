@@ -53,7 +53,7 @@ public class FileSystemBeanFactoryPostProcessor implements BeanFactoryPostProces
      * (org.springframework.beans.factory.config.ConfigurableListableBeanFactory)
      */
     public void postProcessBeanFactory(ConfigurableListableBeanFactory factory) throws BeansException {
-        String names[] = factory.getBeanDefinitionNames();
+        String[] names = factory.getBeanDefinitionNames();
         for (String name : names) {
             BeanDefinition def = factory.getBeanDefinition(name);
             visitor.visitBeanDefinition(def);

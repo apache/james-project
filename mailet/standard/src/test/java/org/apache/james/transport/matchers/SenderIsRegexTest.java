@@ -55,7 +55,7 @@ public class SenderIsRegexTest {
                 .build());
 
         FakeMail fakeMail = FakeMail.builder()
-            .sender(new MailAddress(SENDER_NAME))
+            .sender(SENDER_NAME)
             .recipient(recipient)
             .build();
 
@@ -70,7 +70,7 @@ public class SenderIsRegexTest {
                 .build());
 
         FakeMail fakeMail = FakeMail.builder()
-            .sender(new MailAddress(SENDER_NAME))
+            .sender(SENDER_NAME)
             .recipient(recipient)
             .build();
 
@@ -99,7 +99,7 @@ public class SenderIsRegexTest {
                 .build());
 
         FakeMail fakeMail = FakeMail.builder()
-            .sender(new MailAddress(SENDER_NAME))
+            .sender(SENDER_NAME)
             .recipient(recipient)
             .build();
 

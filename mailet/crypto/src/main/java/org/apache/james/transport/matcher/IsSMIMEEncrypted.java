@@ -25,9 +25,9 @@ import java.util.Collection;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.mailet.base.GenericMatcher;
-import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMatcher;
 
 /**
  * Checks if a mail is smime encrypted.
@@ -39,15 +39,21 @@ public class IsSMIMEEncrypted extends GenericMatcher {
      * @see org.apache.mailet.Matcher#match(org.apache.mailet.Mail)
      */
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
-        if (mail == null) return null;
+        if (mail == null) {
+            return null;
+        }
         
         MimeMessage message = mail.getMessage();
-        if (message == null) return null;
+        if (message == null) {
+            return null;
+        }
         
         if ((message.isMimeType("application/x-pkcs7-mime") 
                 || message.isMimeType("application/pkcs7-mime")) && (message.getContentType().contains("smime-type=enveloped-data"))) {
             return mail.getRecipients();
-        } else return null;
+        } else {
+            return null;
+        }
     }
 
 }

@@ -19,12 +19,14 @@
 package org.apache.james.queue.library;
 
 import java.io.Serializable;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
@@ -34,6 +36,7 @@ import javax.management.openmbean.CompositeType;
 import javax.management.openmbean.OpenType;
 import javax.management.openmbean.SimpleType;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueueManagementMBean;
 import org.apache.james.queue.api.ManageableMailQueue;
@@ -41,7 +44,6 @@ import org.apache.james.queue.api.ManageableMailQueue.MailQueueItemView;
 import org.apache.james.queue.api.ManageableMailQueue.MailQueueIterator;
 import org.apache.james.queue.api.ManageableMailQueue.Type;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 
 /**
  * JMX MBean implementation which expose management functions by wrapping a
@@ -122,7 +124,7 @@ public class MailQueueManagement extends StandardMBean implements MailQueueManag
 
             MailQueueItemView mView = it.next();
             Mail m = mView.getMail();
-            long nextDelivery = mView.getNextDelivery();
+            Optional<ZonedDateTime> nextDelivery = mView.getNextDelivery();
             Map<String, Object> map = new HashMap<>();
             map.put(names[0], m.getName());
             String sender = null;

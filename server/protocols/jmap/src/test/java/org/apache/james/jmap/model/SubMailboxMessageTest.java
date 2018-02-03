@@ -33,22 +33,22 @@ public class SubMailboxMessageTest {
     private static final Optional<String> DEFAULT_TEXT_BODY = Optional.of("textBody");
     private static final Optional<String> DEFAULT_HTML_BODY = Optional.of("htmlBody");
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenHeadersIsNull() {
         SubMessage.builder().build();
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenSubjectIsNull() {
         SubMessage.builder().headers(ImmutableMap.of()).build();
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenSubjectIsEmpty() {
         SubMessage.builder().headers(ImmutableMap.of()).subject("").build();
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenDateIsNull() {
         SubMessage.builder().headers(ImmutableMap.of()).subject("subject").build();
     }
@@ -66,7 +66,7 @@ public class SubMailboxMessageTest {
         assertThat(tested).isEqualToComparingFieldByField(expected);
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenAttachedMessageIsNotMatchingAttachments() {
         Attachment simpleAttachment = Attachment.builder().blobId(BlobId.of("blobId")).type("type").name("name").size(123).build();
         ImmutableList<Attachment> attachments = ImmutableList.of(simpleAttachment);

@@ -69,7 +69,7 @@ public class ContentReplacer {
 
     private String replaceFirst(ReplacingPattern replacingPattern, Matcher matcher) {
         if (debug) {
-            LOGGER.debug("Subject rule match: " + replacingPattern.getMatcher());
+            LOGGER.debug("Subject rule match: {}", replacingPattern.getMatcher());
         }
         return matcher.replaceFirst(replacingPattern.getSubstitution());
     }
@@ -98,8 +98,7 @@ public class ContentReplacer {
             if (charset.isPresent()) {
                 mail.getMessage().setSubject(subject, charset.get().name());
                 return true;
-            }
-            else {
+            } else {
                 String previousCharset = previousCharset(mail);
                 mail.getMessage().setSubject(subject, previousCharset);
                 return true;

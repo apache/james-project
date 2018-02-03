@@ -3,13 +3,59 @@ Apache James Project
 
 link:https://gitter.im/apache/james-project[image:https://badges.gitter.im/apache/james-project.svg[Join the chat at link:https://gitter.im/apache/james-project]]
 
-This is the parent module for all Apache James artifacts. It contains useful values to be inherited by other Maven projects.
+image::james-logo.png[James logo]
 
-* The list of Apache James contributors, committers and PMC Members
-* Maven plugins management section with common plugins used in the project
-* URL's and mailing-lists definitions for the project
+== What is James?
 
-=== How to try James
+*James* stands for *Java Apache Mail Enterprise Server!*
+
+It has a modular architecture based on a rich set of *modern* and *efficient* components which provides at the end
+*complete, stable, secure and extendable Mail Servers running on the JVM*.
+
+Create your *own personal solution* for emails treatment by assembling the components you need thanks to the Inversion
+of Control mail platform offered and  go further customizing filtering and routing rules using *James Mailet Container*.
+
+Supported protocols are: IMAP, SMTP, JMAP, POP3 and more...
+
+Read more on https://james.apache.org/[our website].
+
+== How to contribute?
+
+James is a project that lives from the contributions of its community! Anyone can contribute!
+
+Read the https://james.apache.org/contribute.html[contributing guidelines].
+
+We more than welcome *articles* and *blog posts* about James. Contact us by https://james.apache.org/mail.html[email]
+or on https://gitter.im/apache/james-projec[Gitter] to share your experiences.
+
+*Documentation* is an easy way to get started, and more than wanted! Check out the https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20documentation%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC[~documentation] label on JIRA.
+
+And to get started with *code contributions*, search out the
+https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20newbie%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC[~newbie],
+https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20easyfix%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC[~easyfix],
+https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20feature%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC[~feature] labels on JIRA.
+
+There is many other ways one can help us: packaging, communication, etc ...
+
+= How to...
+
+ * https://github.com/apache/james-project/#how-to-try-james[How to try James]
+ * https://github.com/apache/james-project/#how-to-build-and-publish-the-website[How to build and publish the website]
+ * https://github.com/apache/james-project/#how-to-release-via-maven-release-plugin[How to release via maven release plugin]
+ * https://github.com/apache/james-project/#how-to-check-the-compilation[How to check the compilation]
+ * https://github.com/apache/james-project/#how-to-run-james-in-docker[How to run James in Docker]
+ ** https://github.com/apache/james-project/#run-james-with-java-8--guice--cassandra--elasticsearch[Run James with Java 8 + Guice + Cassandra + ElasticSearch]
+ ** https://github.com/apache/james-project/#run-james-with-java-8--guice--jpa--lucene[Run James with Java 8 + Guice + JPA + Lucene]
+ ** https://github.com/apache/james-project/#run-james-with-java-8--spring--jpa[Run James with Java 8 + Spring + JPA]
+ * https://github.com/apache/james-project/#other-useful-commands[Other Useful commands]
+ ** https://github.com/apache/james-project/#how-to-add-a-domain-[How to add a domain?]
+ ** https://github.com/apache/james-project/#how-to-add-a-user-[How to add a user?]
+ ** https://github.com/apache/james-project/#how-to-manage-sieve-scripts-[How to manage SIEVE scripts?]
+ ** https://github.com/apache/james-project/#how-to-retrieve-users-and-password-from-my-previous-container[How to retrieve users and password from my previous container?]
+ ** https://github.com/apache/james-project/#how-to-run-deployment-tests[How to run deployment Tests]
+ * https://github.com/apache/james-project/#generating-a-package-for-james[Generating a package for James]
+
+== How to try James
 
 Requirements: docker & docker-compose installed.
 
@@ -37,7 +83,7 @@ You have to create users before playing with james. You may also want to create 
 Follow the 'Useful commands' section for more information about James CLI.
 
 
-=== How to build and publish the website
+== How to build and publish the website
 
  1. Install Apache Maven 3.0.2+ and make its binary 'mvn' available on your PATH.
     See http://maven.apache.org/download.html#Installation.
@@ -55,13 +101,32 @@ http://maven.apache.org/plugins/maven-deploy-plugin/examples/deploy-ssh-external
 You can alternatively use a docker container to build the website :
 
 You need to build the homepage by:
+
     $ docker build -t james/homepage dockerfiles/site/homepage
     $ docker run -v $PWD:/origin -v $PWD/site:/destination james/homepage master
+
 Then you build the other pages by:
+
     $ docker build -t james/site dockerfiles/site/website
     $ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/site:/destination james/site master
 
-=== How to release via maven release plugin
+If you need to update the current site, checkout the branch asf-site from Apache git:
+
+    $ git clone https://git-wip-us.apache.org/repos/asf/james-site.git
+    $ cd james-site
+    $ git checkout origin/asf-site -b asf-site
+
+And replace in the previous commands `$PWD/site` by `<james-site-clone-directory>/content`, for example:
+
+    $ docker run -v $PWD:/origin -v $PWD/../james-site/content:/destination james/homepage master
+    $ docker run -v $PWD/.m2:/root/.m2 -v $PWD/../james-site/content:/origin -v $PWD/site:/destination james/site master
+
+Then just push the new site:
+
+    $ cd ../james-site
+    $ git push origin asf-site
+
+== How to release via maven release plugin
 
 See details on http://www.apache.org/dev/publishing-maven-artifacts.html
 
@@ -80,11 +145,11 @@ Don't forget to add your key to http://www.apache.org/dist/james/KEYS
     $ cd /www/www.apache.org/dist/james
 
 
-=== How to check the compilation
+== How to check the compilation
 
 In order to have a standard compilation environment, we introduce Dockerfiles, using java-8.
 
-==== Java 8
+=== Java 8
 
 First step, you have to build the Docker image
 
@@ -119,7 +184,7 @@ If you are using a a fresh installation of Docker, your DOCKER_HOST should be un
     $ docker run --env DOCKER_HOST=unix:///var/run/docker.sock -v /var/run/docker.sock:/var/run/docker.sock -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/dockerfiles/run/spring/destination:/destination -t james/project SHA1
 
 
-=== How to run James in Docker
+== How to run James in Docker
 
 This feature is available for three configurations :
 
@@ -128,10 +193,10 @@ This feature is available for three configurations :
  * Java 8 + Spring + JPA
 
 
-==== Run James with Java 8 + Guice + Cassandra + ElasticSearch
+=== Run James with Java 8 + Guice + Cassandra + ElasticSearch
 
 
-===== Requirements
+==== Requirements
 Built artifacts should be in ./dockerfiles/run/guice/cassandra/destination folder for cassandra.
 If you haven't already:
 
@@ -141,7 +206,7 @@ If you haven't already:
   -t james/project -s HEAD
 
 
-===== How to ?
+==== How to ?
 You need a running *cassandra* in docker. To achieve this run :
 
     $ docker run -d --name=cassandra cassandra:2.2.3
@@ -172,7 +237,7 @@ You can add an optional port binding to port 8000, to expose the webadmin server
 
 To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
 
-===== Handling attachment indexing
+==== Handling attachment indexing
 
 You can handle attachment text extraction before indexing in ElasticSearch. This makes attachments searchable. To enable this:
 
@@ -184,9 +249,9 @@ Add a link for the tika container in the above command line:
 
     $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link elasticsearch:elasticsearch --link tika:tika --name james_run -t james_run
 
-==== Run James with Java 8 + Guice + JPA + Lucene
+=== Run James with Java 8 + Guice + JPA + Lucene
 
-===== Requirements
+==== Requirements
 Built artifacts should be in ./dockerfiles/run/guice/jpa/destination folder for jpa.
 If you haven't already:
 
@@ -196,7 +261,7 @@ If you haven't already:
   -t james/project -s HEAD
 
 
-===== How to ?
+==== How to ?
 We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
 
 Copy your TLS keys to `run/guice/jpa/destination/conf/keystore` or generate it using the following command. The password must be `james72laBalle` to match default configuration.
@@ -219,9 +284,9 @@ You can add an optional port binding to port 8000, to expose the webadmin server
 To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
 
 
-==== Run James with Java 8 + Spring + JPA
+=== Run James with Java 8 + Spring + JPA
 
-===== Requirements
+==== Requirements
 
 Built artifacts should be in ./dockerfiles/run/spring/destination folder for Spring.
 If you haven't already:
@@ -232,7 +297,7 @@ If you haven't already:
   -t james/project -s HEAD
 
 
-===== Howto ?
+==== Howto ?
 
 We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
 
@@ -255,14 +320,14 @@ To run this container :
 Where HOSTNAME is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
 
 
-=== Other Useful commands
+== Other Useful commands
 
 The base command is different whether you choose guice flavor or spring :
 
   * guice use : `docker exec james_run java -jar /root/james-cli.jar`
   * spring use : `docker exec james_run /root/james-server-app-3.0.0-beta6-SNAPSHOT/bin/james-cli.sh`
 
-==== How to add a domain ?
+=== How to add a domain ?
 
     # Add DOMAIN to 127.0.0.1 in your host /etc/hosts
     $ <your-command-here> -h 127.0.0.1 -p 9999 adddomain DOMAIN
@@ -274,7 +339,7 @@ domain will be created upon James start:
 
     $ --environment DOMAIN=domain.tld
 
-==== How to add a user ?
+=== How to add a user ?
 
     $ <your-command-here> -h 127.0.0.1 -p 9999 adduser USER_MAIL_ADDRESS PASSWORD
 
@@ -285,7 +350,7 @@ Where :
 
 You can then just add DOMAIN to your /etc/hosts and you can connect to your james account with for instance Thunderbird.
 
-==== How to manage SIEVE scripts ?
+=== How to manage SIEVE scripts ?
 
 Each user can manage his SIEVE scripts threw the manage SIEVE mailet.
 
@@ -299,7 +364,7 @@ To activate a script for a user, you need the following combinaison :
  * PUTSCRIPT scriptname
  * SETACTIVE scriptname
 
-==== How to retrieve users and password from my previous container
+=== How to retrieve users and password from my previous container
 
 Some james data (those non related to mailbox, eg : mail queue, domains, users, rrt, SIEVE scripts, mail repositories ) are not yet supported by our Cassandra implementation.
 
@@ -313,7 +378,7 @@ Where :
 
 Beware : you will have concurrency issues if multiple containers are running on this single volume.
 
-==== How to run deployment Tests
+=== How to run deployment Tests
 
 We wrote some MPT (James' Mail Protocols Tests subproject) deployment tests to validate a James
 deployment.
@@ -336,7 +401,7 @@ Where :
 * JAMES_PORT: Port allocated to James' IMAP port (should be 143).
 * SHA1(optional): Branch to use in order to build integration tests or master if none.
 
-==== How to check the merge of a commit
+=== How to check the merge of a commit
 
 First step, you have to build the Docker image
 
@@ -351,23 +416,43 @@ Where :
 - SHA1: is the given git SHA1 of the james-project repository to merge.
 - RESULTING_BRANCH: is the branch created when merging.
 
-=== Generating a debian package for James
+== Generating a package for James
 
-You can generate a debian package for James by using the following process.
+You can generate a deb package and an RPM package for James by using the following process.
 
 First step, you have to build the Docker image used to generate the package
 
-    $ docker build -t build-james-deb --build-arg RELEASE=3.0-beta6 --build-arg ITERATION=1 dockerfiles/packaging/debian/
+    $ docker build -t build-james-packages \
+        --build-arg RELEASE=3.0-beta6 \
+        --build-arg ITERATION=1 \
+        --build-arg BASE=linagora/james-project \
+        --build-arg BASE_LDAP=linagora/james-ldap-project \
+        --build-arg TAG=latest \
+        dockerfiles/packaging/guice/cassandra
 
 Where:
 
 - ITERATION is the release number used after the last hyphen (e.g. 3.0-beta6-1, 3.0-beta6-2, 3.0-beta6-3...)
+- BASE is the image jar and executable are copied from. Defaults to linagora/james-project
+- BASE_LDAP is the image jar and executable are copied from for a deployment with an LDAP user repository. Defaults to linagora/james-ldap-project
+- TAG is the tag of these docker images. Defaults to latest.
 
 Then, you have to run the container:
 
-    $ docker run --name james-deb -v $PWD/jars:/jars -v $PWD/result:/result build-james-deb
+    $ docker run --name james-packages -v $PWD/result:/result build-james-packages
 
 Where:
 
-- $PWD/jars is the path to the folder containing the maven result (main jar and lib folder)
-- $PWD/result is the folder where the debian package will be copied
+- $PWD/result is the folder where the deb and the RPM packages will be copied
+
+Note: A helper script is provided for the generation of packages for a specific git commit. For instance:
+
+    $ sh dockerfiles/packaging/guice/cassandra/package.sh 3.0.1 1 c298195e84 $PWD/result
+
+The generated package allow you to choose between a deployment with or without LDAP using update-alternatives.
+Once installed, try:
+
+    $ update-alternatives --config james
+
+By default James is configured without LDAP support.
+

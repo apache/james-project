@@ -19,16 +19,17 @@
 package org.apache.james.user.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Optional;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
-import org.apache.james.core.MailAddress;
 import org.junit.Assume;
 import org.junit.Test;
 
@@ -155,12 +156,12 @@ public abstract class AbstractUsersRepositoryTest {
     public void addUserShouldThrowWhenUserAlreadyPresentInRepository() throws UsersRepositoryException {
         //Given
         usersRepository.addUser(user1, "password");
-       //When
+        //When
         usersRepository.addUser(user1, "password2");
     }
     
     @Test
-    public void getUserByNameShouldReturnAUserWhenContainedInRepository () throws UsersRepositoryException {
+    public void getUserByNameShouldReturnAUserWhenContainedInRepository() throws UsersRepositoryException {
         //Given
         usersRepository.addUser(user1, "password");
         //When
@@ -225,7 +226,7 @@ public abstract class AbstractUsersRepositoryTest {
         //Given
         usersRepository.addUser(login("username"), "password");
         //When
-        boolean actual= usersRepository.test(login("userName"), "password");
+        boolean actual = usersRepository.test(login("userName"), "password");
         //Then
         assertThat(actual).isFalse();
     }
@@ -267,7 +268,7 @@ public abstract class AbstractUsersRepositoryTest {
     
     @Test
     public void updateUserShouldAllowToAuthenticateWithNewPassword() throws UsersRepositoryException { 
-      //Given
+        //Given
         usersRepository.addUser(user1, "password");
         User user = usersRepository.getUserByName(user1);
         user.setPassword("newpass");

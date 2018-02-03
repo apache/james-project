@@ -72,10 +72,7 @@ public class ValidSenderDomainHandlerTest {
             public boolean isRelayingAllowed() {
                 return false;
             }
-            /*
-             * (non-Javadoc)
-             * @see org.apache.james.protocols.api.ProtocolSession#setAttachment(java.lang.String, java.lang.Object, org.apache.james.protocols.api.ProtocolSession.State)
-             */
+
             public Object setAttachment(String key, Object value, State state) {
                 if (state == State.Connection) {
                     throw new UnsupportedOperationException();

@@ -20,9 +20,9 @@
 
 package org.apache.mailet.base.test;
 
-import java.io.ByteArrayInputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -30,16 +30,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+
 import javax.mail.MessagingException;
-import javax.mail.Session;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.PerRecipientHeaders.Header;
 
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -48,15 +52,22 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-public class FakeMail implements Mail {
+public class FakeMail implements Mail, Serializable {
+
+    private static final String DEFAULT_REMOTE_HOST = "111.222.333.444";
+    public static final String DEFAULT_REMOTE_ADDRESS = "127.0.0.1";
+
+    public static FakeMail fromMessage(MimeMessageBuilder message) throws MessagingException {
+        return FakeMail.builder()
+            .mimeMessage(message)
+            .build();
+    }
 
     public static FakeMail fromMime(String text, String javaEncodingCharset, String javamailDefaultEncodingCharset) throws MessagingException, UnsupportedEncodingException {
         Properties javamailProperties = new Properties();
         javamailProperties.setProperty("mail.mime.charset", javamailDefaultEncodingCharset);
         return FakeMail.builder()
-                .mimeMessage(new MimeMessage(
-                    Session.getInstance(javamailProperties),
-                    new ByteArrayInputStream(text.getBytes(javaEncodingCharset))))
+                .mimeMessage(MimeMessageUtil.mimeMessageFromBytes((text.getBytes(javaEncodingCharset))))
                 .build();
     }
 
@@ -70,13 +81,19 @@ public class FakeMail implements Mail {
             mail.getLastUpdated(),
             attributes(mail),
             mail.getMessageSize(),
-            mail.getRemoteAddr());
+            mail.getRemoteAddr(),
+            mail.getRemoteHost(),
+            mail.getPerRecipientSpecificHeaders());
     }
 
     public static FakeMail from(MimeMessage message) throws MessagingException {
         return builder()
                 .mimeMessage(message)
                 .build();
+    }
+
+    public static FakeMail from(MimeMessageBuilder message) throws MessagingException {
+        return from(message.build());
     }
 
     public static Builder builder() {
@@ -96,6 +113,8 @@ public class FakeMail implements Mail {
         private Map<String, Serializable> attributes;
         private Optional<Long> size;
         private Optional<String> remoteAddr;
+        private Optional<String> remoteHost;
+        private PerRecipientHeaders perRecipientHeaders;
 
         private Builder() {
             fileName = Optional.empty();
@@ -109,6 +128,8 @@ public class FakeMail implements Mail {
             attributes = Maps.newHashMap();
             size = Optional.empty();
             remoteAddr = Optional.empty();
+            remoteHost = Optional.empty();
+            perRecipientHeaders = new PerRecipientHeaders();
         }
 
         public Builder size(long size) {
@@ -126,19 +147,36 @@ public class FakeMail implements Mail {
             return this;
         }
 
+        public Builder mimeMessage(MimeMessageBuilder mimeMessage) throws MessagingException {
+            this.mimeMessage = Optional.of(mimeMessage.build());
+            return this;
+        }
+
+        public Builder recipients() {
+            return this;
+        }
+
         public Builder recipients(List<MailAddress> recipients) {
             this.recipients.addAll(recipients);
             return this;
         }
 
         public Builder recipients(MailAddress... recipients) {
-            this.recipients.addAll(ImmutableList.copyOf(recipients));
-            return this;
+            return recipients(ImmutableList.copyOf(recipients));
+        }
+
+        public Builder recipients(String... recipients) {
+            return recipients(Arrays.stream(recipients)
+                .map(Throwing.function(MailAddress::new))
+                .collect(Guavate.toImmutableList()));
         }
 
         public Builder recipient(MailAddress recipient) {
-            this.recipients.add(recipient);
-            return this;
+            return recipients(recipient);
+        }
+
+        public Builder recipient(String recipient) throws AddressException {
+            return recipients(recipient);
         }
 
         public Builder name(String name) {
@@ -149,6 +187,10 @@ public class FakeMail implements Mail {
         public Builder sender(MailAddress sender) {
             this.sender = Optional.of(sender);
             return this;
+        }
+
+        public Builder sender(String sender) throws AddressException {
+            return sender(new MailAddress(sender));
         }
 
         public Builder state(String state) {
@@ -181,15 +223,25 @@ public class FakeMail implements Mail {
             return this;
         }
 
+        public Builder remoteHost(String remoteHost) {
+            this.remoteHost = Optional.of(remoteHost);
+            return this;
+        }
+
+        public Builder addHeaderForRecipient(Header header, MailAddress recipient) {
+            this.perRecipientHeaders.addHeaderForRecipient(header, recipient);
+            return this;
+        }
+
         public FakeMail build() throws MessagingException {
             return new FakeMail(getMimeMessage(), recipients, name.orElse(null), sender.orElse(null), state.orElse(null), errorMessage.orElse(null), lastUpdated.orElse(null),
-                    attributes, size.orElse(0l), remoteAddr.orElse("127.0.0.1"));
+                attributes, size.orElse(0L), remoteAddr.orElse(DEFAULT_REMOTE_ADDRESS), remoteHost.orElse(DEFAULT_REMOTE_HOST), perRecipientHeaders);
         }
 
         private MimeMessage getMimeMessage() throws MessagingException {
             Preconditions.checkState(!(fileName.isPresent() && mimeMessage.isPresent()), "You can not specify a MimeMessage object when you alredy set Content from a file");
             if (fileName.isPresent()) {
-                return new MimeMessage(Session.getInstance(new Properties()), ClassLoader.getSystemResourceAsStream(fileName.get()));
+                return MimeMessageUtil.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream(fileName.get()));
             }
             return mimeMessage.orElse(null);
         }
@@ -207,7 +259,7 @@ public class FakeMail implements Mail {
         return builder.build();
     }
 
-    private MimeMessage msg;
+    private transient MimeMessage msg;
     private Collection<MailAddress> recipients;
     private String name;
     private MailAddress sender;
@@ -217,10 +269,11 @@ public class FakeMail implements Mail {
     private Map<String, Serializable> attributes;
     private long size;
     private String remoteAddr;
+    private String remoteHost;
     private PerRecipientHeaders perRecipientHeaders;
     
     public FakeMail(MimeMessage msg, List<MailAddress> recipients, String name, MailAddress sender, String state, String errorMessage, Date lastUpdated,
-            Map<String, Serializable> attributes, long size, String remoteAddr) {
+            Map<String, Serializable> attributes, long size, String remoteAddr, String remoteHost, PerRecipientHeaders perRecipientHeaders) {
         this.msg = msg;
         this.recipients = recipients;
         this.name = name;
@@ -231,7 +284,8 @@ public class FakeMail implements Mail {
         this.attributes = attributes;
         this.size = size;
         this.remoteAddr = remoteAddr;
-        this.perRecipientHeaders = new PerRecipientHeaders();
+        this.perRecipientHeaders = perRecipientHeaders;
+        this.remoteHost = remoteHost;
     }
 
     @Override
@@ -271,7 +325,7 @@ public class FakeMail implements Mail {
 
     @Override
     public String getRemoteHost() {
-        return "111.222.333.444";
+        return remoteHost;
     }
 
     @Override
@@ -362,7 +416,6 @@ public class FakeMail implements Mail {
             FakeMail that = (FakeMail) o;
 
             return Objects.equal(this.size, that.size)
-                && Objects.equal(this.msg, that.msg)
                 && Objects.equal(this.recipients, that.recipients)
                 && Objects.equal(this.name, that.name)
                 && Objects.equal(this.sender, that.sender)
@@ -377,7 +430,7 @@ public class FakeMail implements Mail {
 
     @Override
     public final int hashCode() {
-        return Objects.hashCode(msg, name, sender, recipients, state, errorMessage, lastUpdated, attributes, size, recipients, remoteAddr);
+        return Objects.hashCode(name, sender, recipients, state, errorMessage, lastUpdated, attributes, size, remoteAddr);
     }
 
     @Override

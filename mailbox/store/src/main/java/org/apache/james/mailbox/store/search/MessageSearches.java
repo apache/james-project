@@ -116,7 +116,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
                     builder.add(m);
                 }
             } catch (MailboxException e) {
-                LOGGER.error("Unable to search message " + m.getUid(), e);
+                LOGGER.error("Unable to search message {}", m.getUid(), e);
             }
         }
         return builder.build()
@@ -301,6 +301,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
             headerImpl.addField(Fields.to(Lists.newArrayList(addressList.iterator())));
         }
     }
+    
     private boolean matches(SearchQuery.ConjunctionCriterion criterion, MailboxMessage message,
             final Collection<MessageUid> recentMessageUids) throws MailboxException {
         final List<SearchQuery.Criterion> criteria = criterion.getCriteria();
@@ -423,7 +424,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
             if (headerName.equalsIgnoreCase(name)) {
                 String value = header.getValue();
                 AddressList aList = LenientAddressParser.DEFAULT.parseAddressList(value);
-                for ( Address address : aList) {
+                for (Address address : aList) {
                     if (address instanceof Mailbox) {
                         if (AddressFormatter.DEFAULT.encode((Mailbox) address).toUpperCase(Locale.US)
                             .contains(text)) {

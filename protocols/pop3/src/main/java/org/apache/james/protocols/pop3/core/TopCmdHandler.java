@@ -165,19 +165,19 @@ public class TopCmdHandler extends RetrCmdHandler implements CapaCapability {
 
                     // check for empty line
                     if (!isBody && isEmptyLine && lastChar == '\r' && a == '\n') {
-                    	// reached body
-                    	isBody = true;
+                        // reached body
+                        isBody = true;
                     }
 
                     if (lastChar == '\r' && a == '\n') {
-                    	// reset empty line flag
-                    	isEmptyLine = true;
+                        // reset empty line flag
+                        isEmptyLine = true;
 
-                    	if (isBody) {
-                    		count++;
-                    	}
+                        if (isBody) {
+                            count++;
+                        }
                     } else if (lastChar == '\n' && a != '\r') {
-                    	isEmptyLine = false;
+                        isEmptyLine = false;
                     }
 
                     lastChar = a;

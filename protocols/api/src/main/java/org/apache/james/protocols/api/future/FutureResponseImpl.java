@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  * 
  *
  */
-public class FutureResponseImpl implements FutureResponse{
+public class FutureResponseImpl implements FutureResponse {
     
     private final Logger logger;
 
@@ -60,10 +60,7 @@ public class FutureResponseImpl implements FutureResponse{
             }
         }
     }
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.FutureResponse#addListener(org.apache.james.protocols.api.FutureResponse.ResponseListener)
-     */
+
     public synchronized void addListener(ResponseListener listener) {
         if (isReady()) {
             listener.onResponse(this);
@@ -155,7 +152,7 @@ public class FutureResponseImpl implements FutureResponse{
                 try {
                     listener.onResponse(this);
                 } catch (Throwable e) {
-                    logger.warn("An exception was thrown by the listener " + listener, e);
+                    logger.warn("An exception was thrown by the listener {}", listener, e);
                 }
             }
             listeners = null;

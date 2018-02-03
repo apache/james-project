@@ -37,7 +37,7 @@ import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.FunctionRunnerWithRetry;
 import org.apache.james.backends.cassandra.utils.LightweightTransactionException;
-import org.apache.james.mailbox.acl.PositiveUserACLChanged;
+import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
@@ -75,7 +75,7 @@ public class CassandraACLMapper {
 
     @Inject
     public CassandraACLMapper(Session session, CassandraUserMailboxRightsDAO userMailboxRightsDAO, CassandraConfiguration cassandraConfiguration) {
-        this(session, userMailboxRightsDAO, cassandraConfiguration, () -> {});
+        this(session, userMailboxRightsDAO, cassandraConfiguration, () -> { });
     }
 
     public CassandraACLMapper(Session session, CassandraUserMailboxRightsDAO userMailboxRightsDAO, CassandraConfiguration cassandraConfiguration, CodeInjector codeInjector) {
@@ -126,23 +126,27 @@ public class CassandraACLMapper {
         return deserializeACL(cassandraId, serializedACL);
     }
 
-    public void updateACL(CassandraId cassandraId, MailboxACL.ACLCommand command) throws MailboxException {
+    public ACLDiff updateACL(CassandraId cassandraId, MailboxACL.ACLCommand command) throws MailboxException {
         MailboxACL replacement = MailboxACL.EMPTY.apply(command);
 
-        PositiveUserACLChanged positiveUserAclChanged = updateAcl(cassandraId, aclWithVersion -> aclWithVersion.apply(command), replacement);
+        ACLDiff aclDiff = updateAcl(cassandraId, aclWithVersion -> aclWithVersion.apply(command), replacement);
 
-        userMailboxRightsDAO.update(cassandraId, positiveUserAclChanged).join();
+        return userMailboxRightsDAO.update(cassandraId, aclDiff)
+            .thenApply(any -> aclDiff)
+            .join();
     }
 
-    public void setACL(CassandraId cassandraId, MailboxACL mailboxACL) throws MailboxException {
-        PositiveUserACLChanged positiveUserAclChanged = updateAcl(cassandraId,
+    public ACLDiff setACL(CassandraId cassandraId, MailboxACL mailboxACL) throws MailboxException {
+        ACLDiff aclDiff = updateAcl(cassandraId,
             acl -> new ACLWithVersion(acl.version, mailboxACL),
             mailboxACL);
 
-        userMailboxRightsDAO.update(cassandraId, positiveUserAclChanged).join();
+        return userMailboxRightsDAO.update(cassandraId, aclDiff)
+            .thenApply(any -> aclDiff)
+            .join();
     }
 
-    private PositiveUserACLChanged updateAcl(CassandraId cassandraId, Function<ACLWithVersion, ACLWithVersion> aclTransformation, MailboxACL replacement) throws MailboxException {
+    private ACLDiff updateAcl(CassandraId cassandraId, Function<ACLWithVersion, ACLWithVersion> aclTransformation, MailboxACL replacement) throws MailboxException {
         try {
             return new FunctionRunnerWithRetry(maxRetry)
                 .executeAndRetrieveObject(
@@ -151,9 +155,9 @@ public class CassandraACLMapper {
                         return getAclWithVersion(cassandraId)
                             .map(aclWithVersion ->
                                 updateStoredACL(cassandraId, aclTransformation.apply(aclWithVersion))
-                                    .map(newACL -> new PositiveUserACLChanged(aclWithVersion.mailboxACL, newACL)))
+                                    .map(newACL -> ACLDiff.computeDiff(aclWithVersion.mailboxACL, newACL)))
                             .orElseGet(() -> insertACL(cassandraId, replacement)
-                                .map(newACL -> new PositiveUserACLChanged(MailboxACL.EMPTY, newACL)));
+                                .map(newACL -> ACLDiff.computeDiff(MailboxACL.EMPTY, newACL)));
                     });
         } catch (LightweightTransactionException e) {
             throw new MailboxException("Exception during lightweight transaction", e);
@@ -211,7 +215,7 @@ public class CassandraACLMapper {
     private MailboxACL deserializeACL(CassandraId cassandraId, String serializedACL) {
         try {
             return MailboxACLJsonConverter.toACL(serializedACL);
-        } catch(IOException exception) {
+        } catch (IOException exception) {
             LOG.error("Unable to read stored ACL. " +
                 "We will use empty ACL instead." +
                 "Mailbox is {} ." +
@@ -232,7 +236,7 @@ public class CassandraACLMapper {
         public ACLWithVersion apply(MailboxACL.ACLCommand command) {
             try {
                 return new ACLWithVersion(version, mailboxACL.apply(command));
-            } catch(UnsupportedRightException exception) {
+            } catch (UnsupportedRightException exception) {
                 throw Throwables.propagate(exception);
             }
         }

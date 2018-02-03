@@ -27,18 +27,18 @@
 
 <lmtpservers>
  
-	<!-- The LMTP server is disabled by default -->
-	<!-- Disabling blocks will stop them from listening, -->
-	<!-- but does not free as many resources as removing them would -->
-	<lmtpserver enabled="false">
-	
+    <!-- The LMTP server is disabled by default -->
+    <!-- Disabling blocks will stop them from listening, -->
+    <!-- but does not free as many resources as removing them would -->
+    <lmtpserver enabled="false">
+
        <jmxName>lmtpserver</jmxName>
 
-	   <!-- LMTP should not be reachable from outside your network so bind it to loopback-->
-	   <bind>127.0.0.1:24</bind>
-	    
-	   <connectionBacklog>200</connectionBacklog>
-	      
+       <!-- LMTP should not be reachable from outside your network so bind it to loopback-->
+       <bind>127.0.0.1:24</bind>
+
+       <connectionBacklog>200</connectionBacklog>
+
        <!-- This is the name used by the server to identify itself in the LMTP -->
        <!-- protocol.  If autodetect is TRUE, the server will discover its -->
        <!-- own host name and use that in the protocol.  If discovery fails, -->
@@ -72,6 +72,6 @@
            <handler class="org.apache.james.lmtpserver.CoreCmdHandlerLoader"/>
        </handlerchain>
 
-	</lmtpserver>
-	
+    </lmtpserver>
+
 </lmtpservers>

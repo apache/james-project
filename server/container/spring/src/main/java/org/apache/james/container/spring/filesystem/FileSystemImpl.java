@@ -18,16 +18,16 @@
  ****************************************************************/
 package org.apache.james.container.spring.filesystem;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.apache.james.container.spring.resource.JamesResourceLoader;
 import org.apache.james.filesystem.api.FileSystem;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * {@link FileSystem} implementation which use the {@link JamesResourceLoader}

@@ -32,9 +32,9 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.sql.DataSource;
 
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
@@ -241,7 +241,7 @@ public class BayesianAnalysis extends GenericMailet {
         if (maxSizeParam != null) {
             setMaxSize(Integer.parseInt(maxSizeParam));
         }
-        LOGGER.debug("maxSize: " + getMaxSize());
+        LOGGER.debug("maxSize: {}", getMaxSize());
 
         String tag = getInitParameter("tagSubject");
         if (tag != null && tag.equals("false")) {
@@ -321,7 +321,9 @@ public class BayesianAnalysis extends GenericMailet {
             }
             if (probability > 0.1) {
                 final Collection<MailAddress> recipients = mail.getRecipients();
-                LOGGER.debug(headerName + ": " + probabilityString + "; From: " + senderString + "; Recipient(s): " + getAddressesString(recipients));
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug(headerName + ": " + probabilityString + "; From: " + senderString + "; Recipient(s): " + getAddressesString(recipients));
+                }
 
                 // Check if we should tag the subject
                 if (tagSubject) {
@@ -332,7 +334,7 @@ public class BayesianAnalysis extends GenericMailet {
             saveChanges(message);
 
         } catch (Exception e) {
-            LOGGER.error("Exception: " + e.getMessage(), e);
+            LOGGER.error("Exception: {}", e.getMessage(), e);
             throw new MessagingException("Exception thrown", e);
         }
     }
@@ -392,7 +394,7 @@ public class BayesianAnalysis extends GenericMailet {
                 message.setSubject(toAppend + " " + subject, "iso-8859-1");
             }
         } catch (MessagingException ex) {
-            LOGGER.error("Failure to append to subject phrase: '" + toAppend + "'", ex);
+            LOGGER.error("Failure to append to subject phrase: '{}'", toAppend, ex);
         }
     }
 

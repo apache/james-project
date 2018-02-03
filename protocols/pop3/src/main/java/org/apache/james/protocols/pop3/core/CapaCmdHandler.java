@@ -86,7 +86,7 @@ public class CapaCmdHandler implements CommandHandler<POP3Session>, ExtensibleHa
      *      java.util.List)
      */
     @SuppressWarnings("unchecked")
-	public void wireExtensions(Class<?> interfaceName, List<?> extension) throws WiringException {
+    public void wireExtensions(Class<?> interfaceName, List<?> extension) throws WiringException {
         if (interfaceName.equals(CapaCapability.class)) {
             caps = (List<CapaCapability>) extension;
         }

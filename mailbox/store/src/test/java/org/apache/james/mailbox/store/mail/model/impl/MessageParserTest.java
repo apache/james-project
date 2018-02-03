@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.store.mail.model.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -252,5 +253,17 @@ public class MessageParserTest {
             ClassLoader.getSystemResourceAsStream("eml/emailWithOnlyAttachment.eml"));
 
         assertThat(attachments).hasSize(1);
+    }
+
+    @Test
+    public void gpgSignatureShouldBeConsideredAsAnAttachment() throws Exception {
+        List<MessageAttachment> attachments = testee.retrieveAttachments(
+            ClassLoader.getSystemResourceAsStream("eml/signedMessage.eml"));
+
+        assertThat(attachments).hasSize(2)
+            .extracting(MessageAttachment::getName)
+            .allMatch(Optional::isPresent)
+            .extracting(Optional::get)
+            .containsOnly("message suivi", "signature.asc");
     }
 }

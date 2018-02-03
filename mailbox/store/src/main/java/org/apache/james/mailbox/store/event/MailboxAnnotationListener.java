@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.event;
 
+import java.util.List;
+
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxAnnotation;
@@ -27,8 +29,6 @@ import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-
 public class MailboxAnnotationListener implements MailboxListener {
     private static final Logger logger = LoggerFactory.getLogger(MailboxAnnotationListener.class);
     private MailboxSessionMapperFactory mailboxSessionMapperFactory;
@@ -36,6 +36,7 @@ public class MailboxAnnotationListener implements MailboxListener {
     public MailboxAnnotationListener(MailboxSessionMapperFactory mailboxSessionMapperFactory) {
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
     }
+    
     @Override
     public ListenerType getType() {
         return ListenerType.EACH_NODE;
@@ -66,7 +67,7 @@ public class MailboxAnnotationListener implements MailboxListener {
             try {
                 annotationMapper.deleteAnnotation(mailboxId, annotation.getKey());
             } catch (Exception e) {
-                logger.error("Unable to delete annotation {0} cause {1}", annotation.getKey(), e.getMessage());
+                logger.error("Unable to delete annotation {} cause {}", annotation.getKey(), e.getMessage());
             }
         }
     }

@@ -23,36 +23,37 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
+import org.apache.james.jmap.model.Number;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.junit.Test;
 
 public class MailboxTest {
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void idShouldThrowWhenIdIsNull() {
         Mailbox.builder()
             .id(null);
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void nameShouldThrowWhenNameIsNull() {
         Mailbox.builder()
             .name(null);
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenIdIsNull() {
         Mailbox.builder().build();
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenNameIsNull() {
         Mailbox.builder()
             .id(InMemoryId.of(1))
             .build();
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenNameIsEmpty() {
         Mailbox.builder()
             .id(InMemoryId.of(1))
@@ -62,8 +63,14 @@ public class MailboxTest {
 
     @Test
     public void buildShouldWork() {
+        Number totalMessages = Number.fromLong(456);
+        Number unreadMessages = Number.fromLong(789);
+        Number totalThreads = Number.fromLong(741);
+        Number unreadThreads = Number.fromLong(852);
         Mailbox expectedMailbox = new Mailbox(InMemoryId.of(1), "name", Optional.of(InMemoryId.of(0)), Optional.of(Role.DRAFTS), SortOrder.of(123),
-                true, true, true, true, true, true, true, 456, 789, 741, 852, Rights.EMPTY, MailboxNamespace.personal());
+            true, true, true, true, true, true, true,
+            totalMessages, unreadMessages, totalThreads, unreadThreads,
+            Rights.EMPTY, MailboxNamespace.personal());
 
         Mailbox mailbox = Mailbox.builder()
             .id(InMemoryId.of(1))
@@ -95,5 +102,137 @@ public class MailboxTest {
             .build();
 
         assertThat(mailbox.getParentId()).isEmpty();
+    }
+
+    @Test
+    public void totalMessagesShouldNeverBeNegative() {
+        Mailbox mailbox = Mailbox.builder()
+                .id(InMemoryId.of(1))
+                .name("name")
+                .totalMessages(-1234)
+                .build();
+
+        assertThat(mailbox.getTotalMessages()).isEqualTo(Number.ZERO);
+    }
+
+    @Test
+    public void unreadMessagesShouldNeverBeNegative() {
+        Mailbox mailbox = Mailbox.builder()
+                .id(InMemoryId.of(1))
+                .name("name")
+                .unreadMessages(-1234)
+                .build();
+
+        assertThat(mailbox.getUnreadMessages()).isEqualTo(Number.ZERO);
+    }
+
+    @Test
+    public void totalMessagesShouldReturnZeroWhenZero() {
+        Mailbox mailbox = Mailbox.builder()
+                .id(InMemoryId.of(1))
+                .name("name")
+                .totalMessages(0)
+                .build();
+
+        assertThat(mailbox.getTotalMessages()).isEqualTo(Number.ZERO);
+    }
+
+    @Test
+    public void unreadMessagesShouldReturnZeroWhenZero() {
+        Mailbox mailbox = Mailbox.builder()
+                .id(InMemoryId.of(1))
+                .name("name")
+                .unreadMessages(0)
+                .build();
+
+        assertThat(mailbox.getUnreadMessages()).isEqualTo(Number.ZERO);
+    }
+
+    @Test
+    public void totalMessagesShouldAcceptPositiveValue() {
+        Mailbox mailbox = Mailbox.builder()
+                .id(InMemoryId.of(1))
+                .name("name")
+                .totalMessages(1234)
+                .build();
+
+        Number expectedTotalMessages = Number.fromLong(1234);
+        assertThat(mailbox.getTotalMessages()).isEqualTo(expectedTotalMessages);
+    }
+
+    @Test
+    public void unreadMessagesShouldAcceptPositiveValue() {
+        Mailbox mailbox = Mailbox.builder()
+            .id(InMemoryId.of(1))
+            .name("name")
+            .unreadMessages(1234)
+            .build();
+
+        Number expectedTotalMessages = Number.fromLong(1234);
+        assertThat(mailbox.getUnreadMessages()).isEqualTo(expectedTotalMessages);
+    }
+
+    @Test
+    public void hasRoleShouldReturnFalseWhenMailboxEmptyRole() {
+        Mailbox mailbox = Mailbox.builder()
+            .id(InMemoryId.of(0))
+            .name("name")
+            .build();
+
+        assertThat(mailbox.hasRole(Role.OUTBOX)).isFalse();
+    }
+
+    @Test
+    public void hasRoleShouldReturnFalseWhenMailboxDoesNotHaveSameRole() {
+        Mailbox mailbox = Mailbox.builder()
+            .id(InMemoryId.of(0))
+            .name("name")
+            .role(Optional.of(Role.DRAFTS))
+            .build();
+
+        assertThat(mailbox.hasRole(Role.OUTBOX)).isFalse();
+    }
+
+    @Test
+    public void hasRoleShouldReturnTrueWhenMailboxHasSameRole() {
+        Mailbox mailbox = Mailbox.builder()
+            .id(InMemoryId.of(0))
+            .name("name")
+            .role(Optional.of(Role.DRAFTS))
+            .build();
+
+        assertThat(mailbox.hasRole(Role.DRAFTS)).isTrue();
+    }
+
+    @Test
+    public void hasSystemRoleShouldReturnFalseWhenMailboxHasNotSameRole() throws Exception {
+        Mailbox mailbox = Mailbox.builder()
+            .name("mailbox")
+            .id(InMemoryId.of(0))
+            .build();
+
+        assertThat(mailbox.hasSystemRole()).isFalse();
+    }
+
+    @Test
+    public void hasSystemRoleShouldReturnFalseWhenMailboxHasNotSystemRole() throws Exception {
+        Mailbox mailbox = Mailbox.builder()
+            .name("mailbox")
+            .id(InMemoryId.of(0))
+            .role(Role.from("any"))
+            .build();
+
+        assertThat(mailbox.hasSystemRole()).isFalse();
+    }
+
+    @Test
+    public void hasSystemRoleShouldReturnTrueWhenMailboxHasSystemRole() throws Exception {
+        Mailbox mailbox = Mailbox.builder()
+            .name("mailbox")
+            .id(InMemoryId.of(0))
+            .role(Optional.of(Role.OUTBOX))
+            .build();
+
+        assertThat(mailbox.hasSystemRole()).isTrue();
     }
 }

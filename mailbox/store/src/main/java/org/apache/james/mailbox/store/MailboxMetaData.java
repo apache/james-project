@@ -27,12 +27,36 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Describes the current state of a mailbox.
  */
 public class MailboxMetaData implements MessageManager.MetaData {
+
+    public static MailboxMetaData sensibleInformationFree(MailboxACL resolvedAcl, long uidValidity, boolean writeable, boolean modSeqPermanent) throws MailboxException {
+        ImmutableList<MessageUid> recents = ImmutableList.of();
+        MessageUid uidNext = MessageUid.MIN_VALUE;
+        long highestModSeq = 0L;
+        long messageCount = 0L;
+        long unseenCount = 0L;
+        MessageUid firstUnseen = null;
+        return new MailboxMetaData(
+            recents,
+            new Flags(),
+            uidValidity,
+            uidNext,
+            highestModSeq,
+            messageCount,
+            unseenCount,
+            firstUnseen,
+            writeable,
+            modSeqPermanent,
+            resolvedAcl);
+    }
 
     private final long recentCount;
     private final List<MessageUid> recent;

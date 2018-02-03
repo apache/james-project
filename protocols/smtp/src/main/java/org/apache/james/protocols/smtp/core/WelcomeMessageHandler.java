@@ -33,7 +33,7 @@ import org.apache.james.protocols.smtp.SMTPSession;
  */
 public class WelcomeMessageHandler implements ConnectHandler<SMTPSession> {
 
-    private final static String SERVICE_TYPE = "SMTP";
+    private static final String SERVICE_TYPE = "SMTP";
     
     /**
      * @see org.apache.james.protocols.api.handler.ConnectHandler#onConnect(org.apache.james.protocols.api.ProtocolSession)

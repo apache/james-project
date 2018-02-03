@@ -77,8 +77,8 @@ public class FilterToSearchQuery {
         filter.getIsFlagged().ifPresent(isFlagged -> searchQuery.andCriteria(SearchQuery.flag(Flag.FLAGGED, isFlagged)));
         filter.getIsUnread().ifPresent(isUnread -> searchQuery.andCriteria(SearchQuery.flag(Flag.SEEN, !isUnread)));
         filter.getIsForwarded().ifPresent(isForwarded -> searchQuery.andCriteria(SearchQuery.flagSet(Keyword.FORWARDED.getFlagName(), isForwarded)));
-        filter.getMaxSize().ifPresent(maxSize -> searchQuery.andCriteria(SearchQuery.sizeLessThan(maxSize)));
-        filter.getMinSize().ifPresent(minSize -> searchQuery.andCriteria(SearchQuery.sizeGreaterThan(minSize)));
+        filter.getMaxSize().ifPresent(maxSize -> searchQuery.andCriteria(SearchQuery.sizeLessThan(maxSize.asLong())));
+        filter.getMinSize().ifPresent(minSize -> searchQuery.andCriteria(SearchQuery.sizeGreaterThan(minSize.asLong())));
         filter.getHasAttachment().ifPresent(hasAttachment -> searchQuery.andCriteria(SearchQuery.hasAttachment(hasAttachment)));
         filter.getHasKeyword().ifPresent(hasKeyword -> {
             keywordQuery(hasKeyword, true).ifPresent(hasKeywordCriterion

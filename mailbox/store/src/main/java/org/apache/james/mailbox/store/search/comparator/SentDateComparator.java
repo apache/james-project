@@ -37,7 +37,7 @@ import com.google.common.annotations.VisibleForTesting;
  */
 public class SentDateComparator extends AbstractHeaderComparator {
 
-    public final static Comparator<MailboxMessage> SENTDATE = new SentDateComparator();
+    public static final Comparator<MailboxMessage> SENTDATE = new SentDateComparator();
     private static final Logger LOGGER = LoggerFactory.getLogger(SentDateComparator.class);
     // Some sent e-mail have this form : Wed,  3 Jun 2015 09:05:46 +0000 (UTC)
     // Java 8 Time library RFC_1123_DATE_TIME corresponds to Wed,  3 Jun 2015 09:05:46 +0000 only
@@ -53,7 +53,7 @@ public class SentDateComparator extends AbstractHeaderComparator {
                 sanitizeDateStringHeaderValue(value),
                 ImapDateTimeFormatter.rfc5322()));
         } catch (Exception e) {
-            LOGGER.info("Can not parse receive date " + value);
+            LOGGER.info("Can not parse receive date {}", value);
             return Optional.empty();
         }
     }
@@ -65,7 +65,7 @@ public class SentDateComparator extends AbstractHeaderComparator {
         // This method is here to convert the first date into something parsable by RFC_1123_DATE_TIME DateTimeFormatter
         Matcher sanitizerMatcher = DATE_SANITIZING_PATTERN.matcher(value);
         if (sanitizerMatcher.find()) {
-            return value.substring(0 , sanitizerMatcher.start());
+            return value.substring(0, sanitizerMatcher.start());
         }
         return value;
     }

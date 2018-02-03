@@ -48,11 +48,11 @@ import org.slf4j.LoggerFactory;
  * Sample configuration:
  * 
  * <mailet match="All" class="SerialiseToHTTP">
- * 		<name>URL</name> <value>url where serialised message will be posted</value>
- * 		<name>ParameterKey</name> <value>An arbitrary parameter be added to the post</value>
- * 		<name>ParameterValue</name> <value>A value for the arbitrary parameter</value>
- * 		<name>MessageKeyName</name> <value>Field name for the serialised message</value>
- * 		<name>passThrough</name> <value>true or false</value>
+ *         <name>URL</name> <value>url where serialised message will be posted</value>
+ *         <name>ParameterKey</name> <value>An arbitrary parameter be added to the post</value>
+ *         <name>ParameterValue</name> <value>A value for the arbitrary parameter</value>
+ *         <name>MessageKeyName</name> <value>Field name for the serialised message</value>
+ *         <name>passThrough</name> <value>true or false</value>
  * </mailet>
  * 
  */
@@ -99,14 +99,16 @@ public class SerialiseToHTTP extends GenericMailet {
         }
 
         // record the result
-        LOGGER.debug("I will attempt to deliver serialised messages to "
-                + targetUrl
-                + " as "
-                + messageKeyName
-                + ". "
-                + (parameterKey==null || parameterKey.length()<2 ? "I will not add any fields to the post. " : "I will prepend: "	+ parameterKey + "=" + parameterValue + ". ")
-                + (passThrough ? "Messages will pass through."
-                        : "Messages will be ghosted."));
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("I will attempt to deliver serialised messages to "
+                    + targetUrl
+                    + " as "
+                    + messageKeyName
+                    + ". "
+                    + (parameterKey == null || parameterKey.length() < 2 ? "I will not add any fields to the post. " : "I will prepend: " + parameterKey + "=" + parameterValue + ". ")
+                    + (passThrough ? "Messages will pass through."
+                            : "Messages will be ghosted."));
+        }
     }
 
     /**
@@ -137,7 +139,7 @@ public class SerialiseToHTTP extends GenericMailet {
         try {
             MimeMessage message = mail.getMessage();
             message.setHeader("X-toHTTP", (success ? "Succeeded" : "Failed"));
-            if (!success && errorMessage!=null && errorMessage.length()>0) {
+            if (!success && errorMessage != null && errorMessage.length() > 0) {
                 message.setHeader("X-toHTTPFailure", errorMessage);
             }
             message.saveChanges();
@@ -157,9 +159,9 @@ public class SerialiseToHTTP extends GenericMailet {
 
         RequestBuilder requestBuilder = RequestBuilder.post(url);
 
-        if( data.length>1 && data[1]!=null ) {
+        if (data.length > 1 && data[1] != null) {
             requestBuilder.addParameter(data[1].getName(),data[1].getValue());
-            LOGGER.debug( data[1].getName() + "::" + data[1].getValue() );
+            LOGGER.debug("{}::{}", data[1].getName(), data[1].getValue());
         }
 
         CloseableHttpClient client = HttpClientBuilder.create().build();
@@ -168,7 +170,7 @@ public class SerialiseToHTTP extends GenericMailet {
             clientResponse = client.execute(requestBuilder.build());
 
             if (clientResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                LOGGER.debug("POST failed: " + clientResponse.getStatusLine());
+                LOGGER.debug("POST failed: {}", clientResponse.getStatusLine());
                 return clientResponse.getStatusLine().toString();
             }
             return null;
@@ -187,14 +189,14 @@ public class SerialiseToHTTP extends GenericMailet {
     private NameValuePair[] getNameValuePairs(String message) throws UnsupportedEncodingException {
 
         int l = 1;
-        if (parameterKey!=null && parameterKey.length()>0) {
+        if (parameterKey != null && parameterKey.length() > 0) {
             l = 2;
         }
 
         NameValuePair[] data = new BasicNameValuePair[l];
-        data[0] = new BasicNameValuePair( messageKeyName, message);
-        if (l==2) {
-            data[1] = new BasicNameValuePair( parameterKey, parameterValue);
+        data[0] = new BasicNameValuePair(messageKeyName, message);
+        if (l == 2) {
+            data[1] = new BasicNameValuePair(parameterKey, parameterValue);
         }
 
         return data;

@@ -51,14 +51,15 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
         try {
             final InputStream inputStream = getInputStream(key);
 
-            if (inputStream == null)
+            if (inputStream == null) {
                 throw new NullPointerException("Null input stream returned for key: " + key);
+            }
             try {
                 final ObjectInputStream stream = new ObjectInputStream(inputStream);
 
                 final Object object = stream.readObject();
                 if (DEBUG) {
-                    LOGGER.debug("returning object " + object + " for key " + key);
+                    LOGGER.debug("returning object {} for key {}", object, key);
                 }
                 return object;
             } finally {
@@ -87,7 +88,7 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
                 final Object object = stream.readObject();
 
                 if (DEBUG) {
-                    LOGGER.debug("returning object " + object + " for key " + key);
+                    LOGGER.debug("returning object {} for key {}", object, key);
                 }
                 return object;
             } finally {
@@ -109,8 +110,9 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
         try (OutputStream outputStream = getOutputStream(key)) {
             final ObjectOutputStream stream = new ObjectOutputStream(outputStream);
             stream.writeObject(value);
-            if (DEBUG)
-                LOGGER.debug("storing object " + value + " for key " + key);
+            if (DEBUG) {
+                LOGGER.debug("storing object {} for key {}", value, key);
+            }
         } catch (Exception e) {
             throw new RuntimeException("Exception caught while storing an object: " + e);
         }

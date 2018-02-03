@@ -31,6 +31,7 @@ import java.io.ByteArrayInputStream;
 import java.util.Date;
 
 import javax.mail.Flags;
+import javax.mail.Flags.Flag;
 
 import org.apache.james.jmap.DefaultMailboxes;
 import org.apache.james.jmap.exceptions.MailboxRoleNotFoundException;
@@ -110,7 +111,7 @@ public class PostDequeueDecoratorTest {
         testee.done(true);
     }
     
-    @Test(expected=MailboxRoleNotFoundException.class)
+    @Test(expected = MailboxRoleNotFoundException.class)
     public void doneShouldThrowWhenSentDoesNotExist() throws Exception {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME);
         mailboxManager.createMailbox(OUTBOX_MAILBOX_PATH, mailboxSession);
@@ -260,6 +261,7 @@ public class PostDequeueDecoratorTest {
 
         verify(messageIdManager, times(1)).getMessages(eq(ImmutableList.of(messageId.getMessageId())), eq(FetchGroupImpl.MINIMAL), any(MailboxSession.class));
         verify(messageIdManager, times(1)).setInMailboxes(eq(messageId.getMessageId()), eq(ImmutableList.of(sentMailboxId)), any(MailboxSession.class));
+        verify(messageIdManager, times(1)).setFlags(eq(new Flags(Flag.SEEN)), eq(MessageManager.FlagsUpdateMode.ADD), eq(messageId.getMessageId()), eq(ImmutableList.of(sentMailboxId)), any(MailboxSession.class));
 
         verifyNoMoreInteractions(messageIdManager);
     }

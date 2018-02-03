@@ -34,7 +34,7 @@ import com.google.common.base.Objects;
  * Used to define a range of messages by uid.<br>
  * The type of the set should be defined by using an appropriate constructor.
  */
-public class MessageRange implements Iterable<MessageUid>{
+public class MessageRange implements Iterable<MessageUid> {
 
     public enum Type {
         /** All messages */
@@ -131,19 +131,21 @@ public class MessageRange implements Iterable<MessageUid>{
             if (getUidFrom().compareTo(uid) <= 0) {
                 return true;
             }
+            return false;
         case RANGE:
             if (getUidFrom().compareTo(uid) <= 0 &&
                     getUidTo().compareTo(uid) >= 0) {
                 return true;
             }
+            return false;
         case ONE:
             if (getUidFrom().equals(uid)) {
                 return true;
             }
+            return false;
         default:
-            break;
+            return false;
         }
-        return false;
     }
 
     public String toString() {
@@ -172,19 +174,19 @@ public class MessageRange implements Iterable<MessageUid>{
                     ranges.add(MessageUid.of(firstUid).toRange());
                 }
             } else {
-                if ((firstUid + a +1) != u) {
+                if ((firstUid + a + 1) != u) {
                     ranges.add(MessageRange.range(MessageUid.of(firstUid), MessageUid.of(firstUid + a)));
                     
                     // set the next first uid and reset the counter
                     firstUid = u;
                     a = 0;
-                    if (uids.size() <= i +1) {
+                    if (uids.size() <= i + 1) {
                         ranges.add(MessageUid.of(firstUid).toRange());
                     }
                 } else {
                     a++;
                     // Handle uids which are in sequence. See MAILBOX-56
-                    if (uids.size() <= i +1) {
+                    if (uids.size() <= i + 1) {
                         ranges.add(MessageRange.range(MessageUid.of(firstUid), MessageUid.of(firstUid + a)));
                         break;
                     } 
@@ -246,9 +248,9 @@ public class MessageRange implements Iterable<MessageUid>{
             long from = getUidFrom().asLong();
             long to = getUidTo().asLong();
             long realTo = to;
-            while(from <= realTo) {
-                if (from + maxItems  -1 < realTo) {
-                    to = from + maxItems -1;
+            while (from <= realTo) {
+                if (from + maxItems - 1 < realTo) {
+                    to = from + maxItems - 1;
                 } else {
                     to = realTo;
                 }

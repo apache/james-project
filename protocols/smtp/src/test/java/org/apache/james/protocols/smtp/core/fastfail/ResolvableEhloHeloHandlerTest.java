@@ -37,9 +37,9 @@ import org.junit.Test;
 
 public class ResolvableEhloHeloHandlerTest {
 
-    public final static String INVALID_HOST = "foo.bar";
+    public static final String INVALID_HOST = "foo.bar";
     
-    public final static String VALID_HOST = "james.apache.org";
+    public static final String VALID_HOST = "james.apache.org";
 
 
     private SMTPSession setupMockSession(String argument,
@@ -110,8 +110,9 @@ public class ResolvableEhloHeloHandlerTest {
 
             @Override
             protected String resolve(String host) throws UnknownHostException {
-                if (host.equals(INVALID_HOST)) 
+                if (host.equals(INVALID_HOST)) {
                     throw new UnknownHostException();
+                }
                 return InetAddress.getLocalHost().getHostName();
             }
             

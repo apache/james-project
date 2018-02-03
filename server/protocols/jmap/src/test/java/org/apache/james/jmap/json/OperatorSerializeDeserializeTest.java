@@ -35,7 +35,7 @@ public class OperatorSerializeDeserializeTest {
         assertThat(operator.operator).isEqualTo(Operator.AND);
     }
 
-    @Test(expected=InvalidFormatException.class)
+    @Test(expected = InvalidFormatException.class)
     public void deserializeUnknownValue() throws Exception {
         new ObjectMapper().readValue("{\"operator\":\"UNKNOWN\"}", ObjectWithOperator.class);
     }

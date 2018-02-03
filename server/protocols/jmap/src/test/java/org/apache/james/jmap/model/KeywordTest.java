@@ -33,8 +33,8 @@ import org.junit.rules.ExpectedException;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class KeywordTest {
-    private final static int FLAG_NAME_MAX_LENTH = 255;
-    private final static String ANY_KEYWORD = "AnyKeyword";
+    private static final int FLAG_NAME_MAX_LENTH = 255;
+    private static final String ANY_KEYWORD = "AnyKeyword";
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();

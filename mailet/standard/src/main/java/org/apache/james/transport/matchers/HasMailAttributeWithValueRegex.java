@@ -21,17 +21,17 @@
 
 package org.apache.james.transport.matchers;
 
-
-import org.apache.mailet.base.GenericMatcher;
-import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
-import org.apache.mailet.MatcherConfig;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import javax.mail.MessagingException;
-import java.io.Serializable;
+
+import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MatcherConfig;
+import org.apache.mailet.base.GenericMatcher;
 
 /**
  * <P>This Matcher determines if the mail contains the attribute specified in the
@@ -47,8 +47,7 @@ import java.io.Serializable;
  * @version CVS $Revision$ $Date$
  * @since 2.2.0
  **/
-public class HasMailAttributeWithValueRegex extends GenericMatcher 
-{
+public class HasMailAttributeWithValueRegex extends GenericMatcher {
     
     private String attributeName;
     private Pattern pattern   = null;
@@ -62,20 +61,19 @@ public class HasMailAttributeWithValueRegex extends GenericMatcher
         return "Has Mail Attribute Value Matcher";
     }
 
-    public void init (MatcherConfig conf) throws MessagingException
-    {
+    public void init(MatcherConfig conf) throws MessagingException {
         String condition = conf.getCondition();
         int idx = condition.indexOf(',');
         if (idx != -1) {
             attributeName = condition.substring(0,idx).trim();
-            String pattern_string = condition.substring (idx+1, condition.length()).trim();
+            String patternString = condition.substring(idx + 1, condition.length()).trim();
             try {
-                pattern = Pattern.compile(pattern_string);
-            } catch(PatternSyntaxException mpe) {
-                throw new MessagingException("Malformed pattern: " + pattern_string, mpe);
+                pattern = Pattern.compile(patternString);
+            } catch (PatternSyntaxException mpe) {
+                throw new MessagingException("Malformed pattern: " + patternString, mpe);
             }
         } else {
-            throw new MessagingException ("malformed condition for HasMailAttributeWithValueRegex. must be of the form: attr,regex");
+            throw new MessagingException("malformed condition for HasMailAttributeWithValueRegex. must be of the form: attr,regex");
         }
     }
 
@@ -86,11 +84,10 @@ public class HasMailAttributeWithValueRegex extends GenericMatcher
      * interpreted as a regular expression matches the toString value of the
      * corresponding attributes value.
      **/
-    public Collection<MailAddress> match (Mail mail) throws MessagingException
-    {
-        Serializable obj = mail.getAttribute (attributeName);
+    public Collection<MailAddress> match(Mail mail) throws MessagingException {
+        Serializable obj = mail.getAttribute(attributeName);
         //to be a little more generic the toString of the value is what is matched against
-        if ( obj != null && pattern.matcher(obj.toString()).matches()) {
+        if (obj != null && pattern.matcher(obj.toString()).matches()) {
             return mail.getRecipients();
         } 
         return null;

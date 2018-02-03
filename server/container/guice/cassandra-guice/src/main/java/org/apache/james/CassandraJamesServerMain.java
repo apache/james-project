@@ -22,6 +22,7 @@ package org.apache.james;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.data.CassandraDomainListModule;
 import org.apache.james.modules.data.CassandraJmapModule;
+import org.apache.james.modules.data.CassandraMailRepositoryModule;
 import org.apache.james.modules.data.CassandraRecipientRewriteTableModule;
 import org.apache.james.modules.data.CassandraSieveRepositoryModule;
 import org.apache.james.modules.data.CassandraUsersRepositoryModule;
@@ -42,6 +43,8 @@ import org.apache.james.modules.server.CassandraRoutesModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.ElasticSearchMetricReporterModule;
 import org.apache.james.modules.server.JMXServerModule;
+import org.apache.james.modules.server.MailQueueRoutesModule;
+import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
@@ -51,14 +54,16 @@ import com.google.inject.util.Modules;
 
 public class CassandraJamesServerMain {
 
-    public static final Module webadmin = Modules.combine(
+    public static final Module WEBADMIN = Modules.combine(
         new CassandraRoutesModule(),
         new DataRoutesModules(),
         new MailboxRoutesModule(),
+        new MailQueueRoutesModule(),
+        new MailRepositoriesRoutesModule(),
         new SwaggerRoutesModule(),
         new WebAdminServerModule());
 
-    public static final Module protocols = Modules.combine(
+    public static final Module PROTOCOLS = Modules.combine(
         new IMAPServerModule(),
         new LMTPServerModule(),
         new ManageSieveServerModule(),
@@ -66,13 +71,14 @@ public class CassandraJamesServerMain {
         new ProtocolHandlerModule(),
         new SMTPServerModule(),
         new JMAPServerModule(),
-        webadmin);
+        WEBADMIN);
 
-    public static final Module cassandraServerModule = Modules.combine(
+    public static final Module CASSANDRA_SERVER_MODULE = Modules.combine(
         new ActiveMQQueueModule(),
         new CassandraDomainListModule(),
         new CassandraJmapModule(),
         new CassandraMailboxModule(),
+        new CassandraMailRepositoryModule(),
         new CassandraMetricsModule(),
         new CassandraRecipientRewriteTableModule(),
         new CassandraSessionModule(),
@@ -85,7 +91,7 @@ public class CassandraJamesServerMain {
 
     public static void main(String[] args) throws Exception {
         GuiceJamesServer server = new GuiceJamesServer()
-                    .combineWith(cassandraServerModule, protocols, new JMXServerModule());
+                    .combineWith(CASSANDRA_SERVER_MODULE, PROTOCOLS, new JMXServerModule());
         server.start();
     }
 

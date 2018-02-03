@@ -43,10 +43,10 @@ import org.jboss.netty.handler.stream.ChunkedStream;
 public class ChannelImapResponseWriter implements ImapResponseWriter {
 
     private final Channel channel;
-	private final boolean zeroCopy;
+    private final boolean zeroCopy;
 
     public ChannelImapResponseWriter(Channel channel) {
-    	this(channel, true);
+        this(channel, true);
     }
 
     public ChannelImapResponseWriter(Channel channel, boolean zeroCopy) {
@@ -71,11 +71,11 @@ public class ChannelImapResponseWriter implements ImapResponseWriter {
             InputStream in = literal.getInputStream();
             if (in instanceof FileInputStream && channel.getFactory() instanceof NioServerSocketChannelFactory) {
                 FileChannel fc = ((FileInputStream) in).getChannel();
-                   // Zero-copy is only possible if no SSL/TLS  and no COMPRESS is in place
+                // Zero-copy is only possible if no SSL/TLS  and no COMPRESS is in place
                 //
                 // See JAMES-1305 and JAMES-1306
                 ChannelPipeline cp = channel.getPipeline();
-                if (zeroCopy && cp.get(SslHandler.class) == null && cp.get(ZlibEncoder.class) == null ) {
+                if (zeroCopy && cp.get(SslHandler.class) == null && cp.get(ZlibEncoder.class) == null) {
                     channel.write(new DefaultFileRegion(fc, fc.position(), literal.size()));
                 } else {
                     channel.write(new ChunkedNioFile(fc, 8192));

@@ -29,7 +29,7 @@ import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.protocols.imap.utils.EolInputStream;
 import org.apache.james.protocols.imap.utils.FixedLengthInputStream;
 
-public class IMAPRequestLineReader extends ImapRequestLineReader{
+public class IMAPRequestLineReader extends ImapRequestLineReader {
 
     private final Iterator<ByteBuffer> args;
     private final byte[] prefix;

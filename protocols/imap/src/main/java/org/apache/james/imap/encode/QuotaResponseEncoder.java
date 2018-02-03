@@ -19,14 +19,14 @@
 
 package org.apache.james.imap.encode;
 
+import java.io.IOException;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.QuotaResponse;
 import org.apache.james.mailbox.model.Quota;
-
-import java.io.IOException;
 
 /**
  * Quota response encoder
@@ -51,8 +51,8 @@ public class QuotaResponseEncoder extends AbstractChainedImapEncoder {
         composer.message(quotaResponse.getResourceName());
         // See RFC 2087 : response for STORAGE should be in KB. For more accuracy, we stores B, so conversion should be made
         if (quotaResponse.getResourceName().equalsIgnoreCase(ImapConstants.STORAGE_QUOTA_RESOURCE)) {
-            composer.message(quota.getUsed()/1024);
-            composer.message(quota.getMax()/1024);
+            composer.message(quota.getUsed() / 1024);
+            composer.message(quota.getMax() / 1024);
         } else {
             composer.message(quota.getUsed());
             composer.message(quota.getMax());

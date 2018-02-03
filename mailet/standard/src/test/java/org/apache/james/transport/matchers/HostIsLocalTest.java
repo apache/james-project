@@ -65,7 +65,7 @@ public class HostIsLocalTest {
             .recipients(ANY_AT_JAMES, OTHER_AT_JAMES)
             .build();
 
-        assertThat( matcher.match(mail)).containsExactly(ANY_AT_JAMES, OTHER_AT_JAMES);
+        assertThat(matcher.match(mail)).containsExactly(ANY_AT_JAMES, OTHER_AT_JAMES);
     }
 
     @Test
@@ -74,7 +74,7 @@ public class HostIsLocalTest {
             .recipients(ANY_AT_JAMES, ANY_AT_JAMES2)
             .build();
 
-        assertThat( matcher.match(mail)).containsExactly(ANY_AT_JAMES);
+        assertThat(matcher.match(mail)).containsExactly(ANY_AT_JAMES);
     }
 
     @Test

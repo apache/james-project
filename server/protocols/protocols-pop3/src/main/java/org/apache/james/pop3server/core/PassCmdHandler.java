@@ -77,7 +77,7 @@ public class PassCmdHandler extends AbstractPassCmdHandler  {
             // check if the mailbox exists, if not create it
             if (!manager.mailboxExists(inbox, mSession)) {
                 Optional<MailboxId> mailboxId = manager.createMailbox(inbox, mSession);
-                LOGGER.info("Provisioning INBOX. " + mailboxId + " created.");
+                LOGGER.info("Provisioning INBOX. {} created.", mailboxId);
             }
             MessageManager mailbox = manager.getMailbox(MailboxPath.inbox(mSession), mSession);
             return new MailboxAdapter(manager, mailbox, mSession);

@@ -18,22 +18,25 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import static org.junit.Assert.assertEquals;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.apache.mailet.Mail;
-import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 
 public class SetMimeHeaderHandlerTest {
 
+    private static final String HEADER_NAME = "JUNIT";
+    private static final String HEADER_VALUE = "test-value";
+
     private SMTPSession mockedSMTPSession;
     private MimeMessage mockedMimeMessage;
     private Mail mockedMail;
-    private final String HEADER_NAME = "JUNIT";
-    private final String HEADER_VALUE = "test-value";
     private String headerName = "defaultHeaderName";
     private String headerValue = "defaultHeaderValue";
 

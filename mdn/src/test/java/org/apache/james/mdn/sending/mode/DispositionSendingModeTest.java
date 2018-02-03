@@ -41,6 +41,7 @@ public class DispositionSendingModeTest {
         assertThat(DispositionSendingMode.fromString(DispositionSendingMode.Manual.getValue()))
             .contains(DispositionSendingMode.Manual);
     }
+    
     @Test
     public void fromStringShouldNotBeCaseSensitive() {
         assertThat(DispositionSendingMode.fromString("mdn-sent-automatically"))

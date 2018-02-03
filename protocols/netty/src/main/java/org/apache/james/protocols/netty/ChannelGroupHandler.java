@@ -32,12 +32,13 @@ import org.jboss.netty.channel.group.ChannelGroup;
  */
 public final class ChannelGroupHandler extends SimpleChannelUpstreamHandler {
     private final ChannelGroup channels;
+    
     public ChannelGroupHandler(ChannelGroup channels) {
         this.channels = channels;
     }
    
     @Override
-    public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception{
+    public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         // Add all open channels to the global group so that they are
         // closed on shutdown.
         channels.add(e.getChannel());

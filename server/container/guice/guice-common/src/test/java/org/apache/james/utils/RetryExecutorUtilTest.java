@@ -117,9 +117,9 @@ public class RetryExecutorUtilTest {
     @Test
     @SuppressWarnings("unchecked")
     public void retryOnExceptionsAndExecuteShouldFailIfFailMoreThanMaxRetry() throws Exception {
-        given(serviceMock.faultyService()).
-            willThrow(IllegalStateException.class, IllegalStateException.class, IllegalStateException.class, IllegalStateException.class).
-            willReturn("Foo");
+        given(serviceMock.faultyService())
+            .willThrow(IllegalStateException.class, IllegalStateException.class, IllegalStateException.class, IllegalStateException.class)
+            .willReturn("Foo");
 
         retryExecutor = RetryExecutorUtil.retryOnExceptions(new AsyncRetryExecutor(scheduledExecutor), MAX_RETRIES, MIN_DELAY, IllegalStateException.class);
 

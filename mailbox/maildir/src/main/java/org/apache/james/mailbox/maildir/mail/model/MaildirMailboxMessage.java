@@ -62,8 +62,9 @@ public class MaildirMailboxMessage extends DelegatingMailboxMessage {
         } else {
             // if the message resist in the new folder its RECENT
             if (file.getParentFile().getName().equals(MaildirFolder.NEW)) {
-                if (flags == null)
+                if (flags == null) {
                     flags = new Flags();
+                }
                 flags.add(Flags.Flag.RECENT);
             }
         }
@@ -163,16 +164,21 @@ public class MaildirMailboxMessage extends DelegatingMailboxMessage {
         theString.append(getUid());
         theString.append(" {");
         Flags flags = createFlags();
-        if (flags.contains(Flags.Flag.DRAFT))
+        if (flags.contains(Flags.Flag.DRAFT)) {
             theString.append(MaildirMessageName.FLAG_DRAFT);
-        if (flags.contains(Flags.Flag.FLAGGED))
+        }
+        if (flags.contains(Flags.Flag.FLAGGED)) {
             theString.append(MaildirMessageName.FLAG_FLAGGED);
-        if (flags.contains(Flags.Flag.ANSWERED))
+        }
+        if (flags.contains(Flags.Flag.ANSWERED)) {
             theString.append(MaildirMessageName.FLAG_ANSWERD);
-        if (flags.contains(Flags.Flag.SEEN))
+        }
+        if (flags.contains(Flags.Flag.SEEN)) {
             theString.append(MaildirMessageName.FLAG_SEEN);
-        if (flags.contains(Flags.Flag.DELETED))
+        }
+        if (flags.contains(Flags.Flag.DELETED)) {
             theString.append(MaildirMessageName.FLAG_DELETED);
+        }
         theString.append("} ");
         theString.append(getInternalDate());
         return theString.toString();

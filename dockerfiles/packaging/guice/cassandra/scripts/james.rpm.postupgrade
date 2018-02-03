@@ -1,0 +1,5 @@
+#! /bin/sh -e
+ 
+#Workaround waiting for https://github.com/jordansissel/fpm/issues/1163 to be released
+systemctl try-restart james
+

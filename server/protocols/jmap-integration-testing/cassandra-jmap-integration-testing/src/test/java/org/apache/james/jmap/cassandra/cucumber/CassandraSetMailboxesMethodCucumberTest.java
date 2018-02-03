@@ -27,8 +27,8 @@ import cucumber.api.CucumberOptions;
 import cucumber.api.junit.Cucumber;
 
 @RunWith(Cucumber.class)
-@CucumberOptions(features= { "classpath:cucumber/MailboxModification.feature", "classpath:cucumber/SetMailboxes.feature" },
-                glue= { "org.apache.james.jmap.methods.integration", "org.apache.james.jmap.cassandra.cucumber" },
+@CucumberOptions(features = { "classpath:cucumber/MailboxModification.feature", "classpath:cucumber/SetMailboxes.feature" },
+                glue = { "org.apache.james.jmap.methods.integration", "org.apache.james.jmap.cassandra.cucumber" },
                 strict = true)
 public class CassandraSetMailboxesMethodCucumberTest {
 

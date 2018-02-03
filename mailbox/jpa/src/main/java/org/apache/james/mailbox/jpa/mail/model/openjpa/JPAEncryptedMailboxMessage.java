@@ -41,8 +41,8 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.openjpa.persistence.Externalizer;
 import org.apache.openjpa.persistence.Factory;
 
-@Entity(name="MailboxMessage")
-@Table(name="JAMES_MAIL")
+@Entity(name = "MailboxMessage")
+@Table(name = "JAMES_MAIL")
 public class JPAEncryptedMailboxMessage extends AbstractJPAMailboxMessage {
 
         /** The value for the body field. Lazy loaded */
@@ -63,7 +63,7 @@ public class JPAEncryptedMailboxMessage extends AbstractJPAMailboxMessage {
         @Lob private byte[] header;
         
         public JPAEncryptedMailboxMessage(JPAMailbox mailbox, Date internalDate, int size, Flags flags, SharedInputStream content, int bodyStartOctet, PropertyBuilder propertyBuilder) throws MailboxException {
-            super(mailbox, internalDate, flags, size ,bodyStartOctet, propertyBuilder);
+            super(mailbox, internalDate, flags, size, bodyStartOctet, propertyBuilder);
             try {
                 int headerEnd = bodyStartOctet;
                 if (headerEnd < 0) {
@@ -80,7 +80,7 @@ public class JPAEncryptedMailboxMessage extends AbstractJPAMailboxMessage {
         /**
          * Create a copy of the given message
          */
-        public JPAEncryptedMailboxMessage(JPAMailbox mailbox, MessageUid uid, long modSeq, MailboxMessage message) throws MailboxException{
+        public JPAEncryptedMailboxMessage(JPAMailbox mailbox, MessageUid uid, long modSeq, MailboxMessage message) throws MailboxException {
             super(mailbox, uid, modSeq, message);
             try {
                 this.body = IOUtils.toByteArray(message.getBodyContent());

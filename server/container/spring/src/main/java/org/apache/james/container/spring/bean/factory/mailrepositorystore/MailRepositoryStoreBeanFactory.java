@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.annotation.PostConstruct;
 
@@ -88,6 +89,11 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
 
     }
 
+    @Override
+    public Optional<MailRepository> get(String url) throws MailRepositoryStoreException {
+        return Optional.ofNullable(repositories.get(url));
+    }
+
     /**
      * <p>
      * Registers a new mail repository type in the mail store's registry based
@@ -106,8 +112,6 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
 
         String className = repConf.getString("[@class]");
 
-        boolean infoEnabled = LOGGER.isInfoEnabled();
-
         for (String protocol : repConf.getStringArray("protocols.protocol")) {
             HierarchicalConfiguration defConf = null;
 
@@ -117,9 +121,7 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
                 defConf = repConf.configurationAt("config");
             }
 
-            if (infoEnabled) {
-                LOGGER.info("Registering Repository instance of class {} to handle {} protocol requests", className, protocol);
-            }
+            LOGGER.info("Registering Repository instance of class {} to handle {} protocol requests", className, protocol);
 
             if (classes.get(protocol) != null) {
                 throw new ConfigurationException("The combination of protocol and type comprise a unique key for repositories.  This constraint has been violated.  Please check your repository configuration.");
@@ -154,25 +156,19 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
     @SuppressWarnings("deprecation")
     public synchronized MailRepository select(String destination) throws MailRepositoryStoreException {
         int idx = destination.indexOf(':');
-        if (idx == -1)
+        if (idx == -1) {
             throw new MailRepositoryStoreException("Destination is malformed. Must be a valid URL: " + destination);
+        }
         String protocol = destination.substring(0, idx);
 
         String repID = destination;
         MailRepository reply = repositories.get(repID);
-        StringBuffer logBuffer;
         if (reply != null) {
-            if (LOGGER.isDebugEnabled()) {
-                logBuffer = new StringBuffer(128).append("obtained repository: ").append(repID).append(",").append(reply.getClass());
-                LOGGER.debug(logBuffer.toString());
-            }
+            LOGGER.debug("obtained repository: {},{}", repID, reply.getClass());
             return reply;
         } else {
             String repClass = classes.get(protocol);
-            if (LOGGER.isDebugEnabled()) {
-                logBuffer = new StringBuffer(128).append("obtained repository: ").append(repClass).append(" to handle: ").append(protocol).append(" with key ").append(protocol);
-                LOGGER.debug(logBuffer.toString());
-            }
+            LOGGER.debug("obtained repository: {} to handle: {}", repClass, protocol);
 
             // If default values have been set, create a new repository
             // configuration element using the default values
@@ -200,15 +196,10 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
                 reply = (MailRepository) getBeanFactory().initializeBean(reply, protocol);
 
                 repositories.put(repID, reply);
-                if (LOGGER.isInfoEnabled()) {
-                    logBuffer = new StringBuffer(128).append("added repository: ").append(repID).append("->").append(repClass);
-                    LOGGER.info(logBuffer.toString());
-                }
+                LOGGER.info("added repository: {}->{}", repID, repClass);
                 return reply;
             } catch (Exception e) {
-                if (LOGGER.isWarnEnabled()) {
-                    LOGGER.warn("Exception while creating repository:" + e.getMessage(), e);
-                }
+                LOGGER.warn("Exception while creating repository: {}", e.getMessage(), e);
                 throw new MailRepositoryStoreException("Cannot find or init repository", e);
             }
         }

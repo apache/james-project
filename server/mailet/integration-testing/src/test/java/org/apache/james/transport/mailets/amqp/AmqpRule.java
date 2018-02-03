@@ -20,14 +20,14 @@
 package org.apache.james.transport.mailets.amqp;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.james.util.streams.SwarmGenericContainer;
+import org.apache.james.util.docker.SwarmGenericContainer;
 import org.junit.rules.ExternalResource;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import com.jayway.awaitility.Awaitility;
 import com.rabbitmq.client.BuiltinExchangeType;
@@ -71,7 +71,7 @@ public class AmqpRule extends ExternalResource {
 
     public Optional<String> readContent() throws IOException {
         return readContentAsBytes()
-            .map(value -> new String(value, Charsets.UTF_8));
+            .map(value -> new String(value, StandardCharsets.UTF_8));
     }
 
     public Optional<byte[]> readContentAsBytes() throws IOException {

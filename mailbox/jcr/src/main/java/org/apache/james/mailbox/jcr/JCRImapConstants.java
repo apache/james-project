@@ -25,9 +25,9 @@ package org.apache.james.mailbox.jcr;
 public interface JCRImapConstants {
 
     
-	/**
-	 * Delimiter for Nodes
-	 */
-	String NODE_DELIMITER = "/";
+    /**
+     * Delimiter for Nodes
+     */
+    String NODE_DELIMITER = "/";
 
 }

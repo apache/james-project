@@ -56,13 +56,15 @@ public class ProtocolHandlerChainImpl implements ProtocolHandlerChain {
 
         // check if the coreHandlersPackage was specified in the config, if
         // not add the default
-        if (handlerchainConfig.getString("[@coreHandlersPackage]") == null)
+        if (handlerchainConfig.getString("[@coreHandlersPackage]") == null) {
             handlerchainConfig.addProperty("[@coreHandlersPackage]", coreHandlersPackage);
+        }
 
         String coreHandlersPackage = handlerchainConfig.getString("[@coreHandlersPackage]");
 
-        if (handlerchainConfig.getString("[@jmxHandlersPackage]") == null)
+        if (handlerchainConfig.getString("[@jmxHandlersPackage]") == null) {
             handlerchainConfig.addProperty("[@jmxHandlersPackage]", jmxHandlersPackage);
+        }
 
         String jmxHandlersPackage = handlerchainConfig.getString("[@jmxHandlersPackage]");
 

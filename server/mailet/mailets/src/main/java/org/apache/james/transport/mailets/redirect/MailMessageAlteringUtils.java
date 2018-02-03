@@ -113,7 +113,7 @@ public class MailMessageAlteringUtils {
             multipart.addBodyPart(contentPartRoot);
 
             if (mailet.getInitParameters().isDebug()) {
-                LOGGER.debug("attachmentType:" + mailet.getInitParameters().getAttachmentType());
+                LOGGER.debug("attachmentType:{}", mailet.getInitParameters().getAttachmentType());
             }
             if (!mailet.getInitParameters().getAttachmentType().equals(TypeCode.NONE)) {
                 multipart.addBodyPart(getAttachmentPart(originalMessage, head));
@@ -192,7 +192,7 @@ public class MailMessageAlteringUtils {
         }
 
         if (mailet.getInitParameters().isDebug()) {
-            LOGGER.debug("inline:" + mailet.getInitParameters().getInLineType());
+            LOGGER.debug("inline:{}", mailet.getInitParameters().getInLineType());
         }
         switch (mailet.getInitParameters().getInLineType()) {
             case ALL:
@@ -243,7 +243,6 @@ public class MailMessageAlteringUtils {
     }
 
     private void copyRelevantHeaders(MimeMessage originalMessage, MimeMessage newMessage) throws MessagingException {
-        @SuppressWarnings("unchecked")
         Enumeration<String> headerEnum = originalMessage.getMatchingHeaderLines(
                 new String[] { RFC2822Headers.DATE, RFC2822Headers.FROM, RFC2822Headers.REPLY_TO, RFC2822Headers.TO, 
                         RFC2822Headers.SUBJECT, RFC2822Headers.RETURN_PATH });

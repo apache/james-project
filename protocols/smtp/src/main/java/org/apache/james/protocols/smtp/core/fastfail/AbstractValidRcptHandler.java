@@ -51,18 +51,18 @@ public abstract class AbstractValidRcptHandler implements RcptHook {
             }
         } else {
             if (isLocalDomain(session, rcpt.getDomain()) == false) {
-                LOGGER.debug("Unknown domain " + rcpt.getDomain() + " so reject it");
+                LOGGER.debug("Unknown domain {} so reject it", rcpt.getDomain());
 
             } else {
                 if (isValidRecipient(session, rcpt) == false) {
-                    reject= true;
+                    reject = true;
                 }
             }
         }
        
         if (reject) {
-          //user not exist
-            LOGGER.info("Rejected message. Unknown user: " + rcpt.toString());
+            //user not exist
+            LOGGER.info("Rejected message. Unknown user: {}", rcpt);
             return new HookResult(HookReturnCode.DENY,SMTPRetCode.MAILBOX_PERM_UNAVAILABLE, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.ADDRESS_MAILBOX) + " Unknown user: " + rcpt.toString());
         } else {
             return HookResult.declined();

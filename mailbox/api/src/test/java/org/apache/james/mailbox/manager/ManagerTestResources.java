@@ -126,7 +126,7 @@ public class ManagerTestResources<T extends MailboxManager> {
     }
 
     public void fillMailbox() throws MailboxException, UnsupportedEncodingException {
-        for(int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++) {
             provideSomeMessages();
         }
     }

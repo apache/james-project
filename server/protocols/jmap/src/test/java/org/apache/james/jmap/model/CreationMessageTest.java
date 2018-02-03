@@ -20,6 +20,9 @@
 package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.util.Optional;
 
 import org.apache.james.jmap.methods.ValidationResult;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
@@ -39,6 +42,18 @@ public class CreationMessageTest {
         testedBuilder = CreationMessage.builder()
                 .mailboxIds(ImmutableList.of("ba9-0f-dead-beef"))
                 .headers(ImmutableMap.of());
+    }
+
+    @Test
+    public void buildShouldThrowWhenBothMapAndOldKeyword() {
+        assertThatThrownBy(() -> CreationMessage.builder()
+                .mailboxIds(ImmutableList.of("ba9-0f-dead-beef"))
+                .headers(ImmutableMap.of())
+                .keywords(ImmutableMap.of("$Draft", true))
+                .isAnswered(Optional.of(true))
+                .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Does not support keyword and is* at the same time");
     }
 
     @Test
@@ -70,7 +85,7 @@ public class CreationMessageTest {
     }
 
     @Test
-    public void validateShouldReturnErrorWhenNoRecipientSet () {
+    public void validateShouldReturnErrorWhenNoRecipientSet() {
         testedBuilder = testedBuilder
                 .subject("anything");
 
@@ -81,7 +96,7 @@ public class CreationMessageTest {
     }
 
     @Test
-    public void validateShouldReturnErrorWhenNoValidRecipientSet () {
+    public void validateShouldReturnErrorWhenNoValidRecipientSet() {
         testedBuilder = testedBuilder
                 .subject("anything");
 
@@ -96,7 +111,7 @@ public class CreationMessageTest {
     }
 
     @Test
-    public void validateShouldReturnEmptyListWhenNoErrors () {
+    public void validateShouldReturnEmptyListWhenNoErrors() {
         testedBuilder = testedBuilder
                 .subject("anything");
 
@@ -109,7 +124,7 @@ public class CreationMessageTest {
     }
 
     @Test
-    public void validateShouldReturnEmptyListWhenSubjectIsNull () {
+    public void validateShouldReturnEmptyListWhenSubjectIsNull() {
         testedBuilder = testedBuilder
                 .subject(null);
 
@@ -122,7 +137,7 @@ public class CreationMessageTest {
     }
 
     @Test
-    public void validateShouldReturnEmptyListWhenSubjectIsEmpty () {
+    public void validateShouldReturnEmptyListWhenSubjectIsEmpty() {
         testedBuilder = testedBuilder
                 .subject("");
 
@@ -143,5 +158,70 @@ public class CreationMessageTest {
             .build();
 
         assertThat(message.getMailboxIds()).containsExactly(mailboxId);
+    }
+
+    @Test
+    public void isDraftShouldBeFalseWhenNoKeywordsSpecified() {
+        String mailboxId = "123";
+        CreationMessage message = CreationMessage.builder()
+            .mailboxId(mailboxId)
+            .build();
+
+        assertThat(message.isDraft()).isFalse();
+    }
+
+    @Test
+    public void isDraftShouldBeTrueWhenOldKeywordDraft() {
+        String mailboxId = "123";
+        CreationMessage message = CreationMessage.builder()
+            .mailboxId(mailboxId)
+            .isDraft(Optional.of(true))
+            .build();
+
+        assertThat(message.isDraft()).isTrue();
+    }
+
+    @Test
+    public void isDraftShouldBeFalseWhenOldKeywordNonDraft() {
+        String mailboxId = "123";
+        CreationMessage message = CreationMessage.builder()
+            .mailboxId(mailboxId)
+            .isAnswered(Optional.of(true))
+            .build();
+
+        assertThat(message.isDraft()).isFalse();
+    }
+
+    @Test
+    public void isDraftShouldBeFalseWhenEmptyKeywords() {
+        String mailboxId = "123";
+        CreationMessage message = CreationMessage.builder()
+            .keywords(ImmutableMap.of())
+            .mailboxId(mailboxId)
+            .build();
+
+        assertThat(message.isDraft()).isFalse();
+    }
+
+    @Test
+    public void isDraftShouldBeFalseWhenKeywordsDoesNotContainsDraft() {
+        String mailboxId = "123";
+        CreationMessage message = CreationMessage.builder()
+            .keywords(ImmutableMap.of(Keyword.ANSWERED.getFlagName(), true))
+            .mailboxId(mailboxId)
+            .build();
+
+        assertThat(message.isDraft()).isFalse();
+    }
+
+    @Test
+    public void isDraftShouldBeTrueWhenKeywordsContainsDraft() {
+        String mailboxId = "123";
+        CreationMessage message = CreationMessage.builder()
+            .keywords(ImmutableMap.of(Keyword.DRAFT.getFlagName(), true))
+            .mailboxId(mailboxId)
+            .build();
+
+        assertThat(message.isDraft()).isTrue();
     }
 }

@@ -20,7 +20,7 @@ package org.apache.james.imap.message.response;
 
 import java.util.Set;
 
-public class EnableResponse extends CapabilityResponse{
+public class EnableResponse extends CapabilityResponse {
 
     public EnableResponse(Set<String> capabilities) {
         super(capabilities);

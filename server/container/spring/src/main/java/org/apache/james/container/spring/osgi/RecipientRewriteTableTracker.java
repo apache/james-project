@@ -20,7 +20,7 @@ package org.apache.james.container.spring.osgi;
 
 import org.apache.james.rrt.api.RecipientRewriteTable;
 
-public class RecipientRewriteTableTracker extends AbstractBundleTracker{
+public class RecipientRewriteTableTracker extends AbstractBundleTracker {
 
     @Override
     protected String getComponentName() {

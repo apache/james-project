@@ -58,6 +58,7 @@ public class IndexableMessage {
                     Instant.ofEpochMilli(message.getInternalDate().getTime()),
                     zoneId);
         }
+        
         private IndexAttachments indexAttachments;
         private MailboxMessage message;
         private TextExtractor textExtractor;
@@ -313,10 +314,12 @@ public class IndexableMessage {
     public List<MimePart> getAttachments() {
         return attachments;
     }
+    
     @JsonProperty(JsonMessageConstants.BCC)
     public EMailers getBcc() {
         return bcc;
     }
+    
     @JsonProperty(JsonMessageConstants.HTML_BODY)
     public Optional<String> getBodyHtml() {
         return bodyHtml;

@@ -21,9 +21,6 @@ package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Arrays;
-import java.util.List;
-
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.FlagsBuilder;
@@ -34,12 +31,12 @@ import org.junit.rules.ExpectedException;
 import com.google.common.collect.ImmutableMap;
 
 public class UpdateMessagePatchTest {
-    private final static String FORWARDED = "forwarded";
+    private static final String FORWARDED = "forwarded";
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
     @Test
-    public void UnsetUpdatePatchShouldBeValid() {
+    public void unsetUpdatePatchShouldBeValid() {
         UpdateMessagePatch emptyPatch = UpdateMessagePatch.builder().build();
         assertThat(emptyPatch.isValid()).isTrue();
     }
@@ -50,35 +47,36 @@ public class UpdateMessagePatchTest {
     }
 
     @Test
-    public void applyStateShouldSetFlaggedOnlyWhenIsFlagged() {
-        UpdateMessagePatch testee = UpdateMessagePatch.builder().isFlagged(true).build();
-        List<Flags.Flag> updatedFlags = Arrays.asList(testee.applyToState(new Flags()).getSystemFlags());
-        assertThat(updatedFlags).containsExactly(Flags.Flag.FLAGGED);
-    }
+    public void applyToStateShouldNotResetSystemFlagsWhenUsingOldKeywords() {
+        UpdateMessagePatch testee = UpdateMessagePatch.builder()
+            .isAnswered(true)
+            .build();
 
-
-    @Test
-    public void applyStateShouldRemoveFlaggedWhenEmptyIsFlaggedOnFlaggedMessage() {
-        UpdateMessagePatch testee = UpdateMessagePatch.builder().isAnswered(true).build();
-        Flags isFlagged = new Flags(Flags.Flag.FLAGGED);
-        List<Flags.Flag> updatedFlags = Arrays.asList(testee.applyToState(isFlagged).getSystemFlags());
-        assertThat(updatedFlags).doesNotContain(Flags.Flag.FLAGGED);
-    }
-
-    @Test
-    public void applyStateShouldReturnUnreadFlagWhenUnreadSetOnSeenMessage() {
-        UpdateMessagePatch testee = UpdateMessagePatch.builder().isUnread(true).build();
         Flags isSeen = new Flags(Flags.Flag.SEEN);
-        List<Flags.Flag> updatedFlags = Arrays.asList(testee.applyToState(isSeen).getSystemFlags());
-        assertThat(updatedFlags).doesNotContain(Flags.Flag.SEEN);
+        assertThat(testee.applyToState(isSeen).getSystemFlags())
+            .containsExactly(Flags.Flag.ANSWERED, Flags.Flag.SEEN);
     }
 
     @Test
-    public void applyStateShouldReturnSeenWhenPatchSetsSeenOnSeenMessage() {
-        UpdateMessagePatch testee = UpdateMessagePatch.builder().isUnread(false).build();
-        Flags isSeen = new Flags(Flags.Flag.SEEN);
-        List<Flags.Flag> updatedFlags = Arrays.asList(testee.applyToState(isSeen).getSystemFlags());
-        assertThat(updatedFlags).containsExactly(Flags.Flag.SEEN);
+    public void applyToStateShouldNotModifySpecifiedOldKeywordsWhenAlreadySet() {
+        UpdateMessagePatch testee = UpdateMessagePatch.builder()
+            .isAnswered(true)
+            .build();
+
+        Flags isSeen = new Flags(Flags.Flag.ANSWERED);
+        assertThat(testee.applyToState(isSeen).getSystemFlags())
+            .containsExactly(Flags.Flag.ANSWERED);
+    }
+
+    @Test
+    public void applyToStateShouldResetSpecifiedOldKeywords() {
+        UpdateMessagePatch testee = UpdateMessagePatch.builder()
+            .isAnswered(false)
+            .build();
+
+        Flags isSeen = new Flags(Flags.Flag.ANSWERED);
+        assertThat(testee.applyToState(isSeen).getSystemFlags())
+            .containsExactly();
     }
 
     @Test
@@ -256,5 +254,15 @@ public class UpdateMessagePatchTest {
                 .build();
 
         messagePatch.isFlagsIdentity();
+    }
+
+    @Test
+    public void applyStateShouldKeepKeywordsWhenNoKeywordPatchDefined() {
+        UpdateMessagePatch messagePatch = UpdateMessagePatch.builder()
+            .build();
+        Flags flags = FlagsBuilder.builder()
+            .add(Flags.Flag.DELETED, Flags.Flag.RECENT, Flags.Flag.DRAFT)
+            .build();
+        assertThat(messagePatch.applyToState(flags)).isEqualTo(flags);
     }
 }

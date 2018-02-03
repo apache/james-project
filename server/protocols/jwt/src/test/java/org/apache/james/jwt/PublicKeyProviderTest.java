@@ -58,7 +58,7 @@ public class PublicKeyProviderTest {
 
     @Test
     public void getShouldThrowWhenPEMKeyNotProvided() {
-        JwtConfiguration configWithPEMKey = new JwtConfiguration(Optional.of(""));
+        JwtConfiguration configWithPEMKey = new JwtConfiguration(Optional.empty());
 
         PublicKeyProvider sut = new PublicKeyProvider(configWithPEMKey, new PublicKeyReader());
 

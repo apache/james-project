@@ -30,7 +30,7 @@ import org.junit.Test;
 
 public class FunctionRunnerWithRetryTest {
     
-    private final static int MAX_RETRY = 10;
+    private static final int MAX_RETRY = 10;
 
     @Test(expected = IllegalArgumentException.class)
     public void functionRunnerWithInvalidMaxRetryShouldFail() throws Exception {

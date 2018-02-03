@@ -20,7 +20,6 @@ package org.apache.james.domainlist.jpa;
 
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.jpa.model.JPADomain;
 import org.apache.james.domainlist.lib.AbstractDomainListTest;
 import org.junit.After;
@@ -39,7 +38,7 @@ public class JPADomainListTest extends AbstractDomainListTest {
     }
 
     @After
-    public void tearDown() throws DomainListException {
+    public void tearDown() throws Exception {
         DomainList domainList = createDomainList();
         for (String domain: domainList.getDomains()) {
             domainList.removeDomain(domain);
@@ -47,7 +46,7 @@ public class JPADomainListTest extends AbstractDomainListTest {
     }
 
     @Override
-    protected DomainList createDomainList() {
+    protected DomainList createDomainList() throws Exception {
         JPADomainList jpaDomainList = new JPADomainList(getDNSServer("localhost"),
             JPA_TEST_CLUSTER.getEntityManagerFactory());
         jpaDomainList.setAutoDetect(false);

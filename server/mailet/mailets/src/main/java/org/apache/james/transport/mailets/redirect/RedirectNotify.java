@@ -21,14 +21,15 @@ package org.apache.james.transport.mailets.redirect;
 
 import java.util.List;
 import java.util.Optional;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.transport.mailets.Redirect;
 import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetConfig;
 
@@ -146,6 +147,7 @@ public interface RedirectNotify extends Mailet, MailetConfig {
 
     @Deprecated
     void log(String message);
+    
     @Deprecated
     void log(String message, Throwable t);
 

@@ -87,9 +87,8 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
              */
             if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Lookup, mailboxSession)) {
                 no(command, tag, responder, HumanReadableText.MAILBOX_NOT_FOUND);
-            }
-            /* RFC 4314 section 4. */
-            else if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Administer, mailboxSession)) {
+            } else if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Administer, mailboxSession)) {
+                /* RFC 4314 section 4. */
                 Object[] params = new Object[] {
                         MailboxACL.Right.Administer.toString(),
                         command.getName(),
@@ -97,8 +96,7 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
                 };
                 HumanReadableText text = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
                 no(command, tag, responder, text);
-            }
-            else {
+            } else {
                 
                 EntryKey key = EntryKey.deserialize(identifier);
                 
@@ -112,7 +110,7 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
                 // Note that Section 6 recommends additional identifier’s verification
                 // steps.
                 
-                Rfc4314Rights[] rights = mailboxManager.listRigths(mailboxPath, key, mailboxSession);
+                Rfc4314Rights[] rights = mailboxManager.listRights(mailboxPath, key, mailboxSession);
                 ListRightsResponse aclResponse = new ListRightsResponse(mailboxName, identifier, rights);
                 responder.respond(aclResponse);
                 okComplete(command, tag, responder);
@@ -122,7 +120,7 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
         } catch (MailboxNotFoundException e) {
             no(command, tag, responder, HumanReadableText.MAILBOX_NOT_FOUND);
         } catch (MailboxException e) {
-            LOGGER.error(command.getName() + " failed for mailbox " + mailboxName, e);
+            LOGGER.error("{} failed for mailbox {}", command.getName(), mailboxName, e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
 

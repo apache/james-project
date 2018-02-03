@@ -50,7 +50,7 @@ public class MessageContentExtractor {
         if (body instanceof TextBody) {
             return parseTextBody(message, (TextBody)body);
         }
-        if (body instanceof Multipart){
+        if (body instanceof Multipart) {
             return parseMultipart(message, (Multipart)body);
         }
         return MessageContent.empty();
@@ -73,7 +73,7 @@ public class MessageContentExtractor {
     }
 
     private MessageContent parseMultipartContent(Entity entity, Multipart multipart) throws IOException {
-        switch(entity.getMimeType()) {
+        switch (entity.getMimeType()) {
         case MULTIPART_ALTERNATIVE:
             return retrieveHtmlAndPlainTextContent(multipart);
         default:
@@ -173,7 +173,8 @@ public class MessageContentExtractor {
     }
 
     private boolean isInlinedWithoutCid(Entity part) {
-        return part.getDispositionType().equals(MimeMessage.INLINE) && part.getHeader().getField(CONTENT_ID) == null;
+        return Objects.equals(part.getDispositionType(), MimeMessage.INLINE)
+            && part.getHeader().getField(CONTENT_ID) == null;
     }
 
     public static class MessageContent {

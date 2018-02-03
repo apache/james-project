@@ -78,7 +78,7 @@ public class XListResponseEncoderTest {
     }
 
     @Test
-	public void encoderShouldIncludeListCommand() throws Exception {
+    public void encoderShouldIncludeListCommand() throws Exception {
         encoder.encode(
             new XListResponse(
                 MailboxMetaData.Children.HAS_CHILDREN,

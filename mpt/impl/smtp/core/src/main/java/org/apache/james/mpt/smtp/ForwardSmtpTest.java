@@ -18,27 +18,21 @@
  ****************************************************************/
 package org.apache.james.mpt.smtp;
 
-import static com.jayway.restassured.RestAssured.when;
-import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
-import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static com.jayway.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
+import static com.jayway.awaitility.Duration.ONE_MINUTE;
 import static org.hamcrest.Matchers.equalTo;
 
-import java.net.InetAddress;
 import java.util.Locale;
 
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
-import org.apache.james.util.streams.SwarmGenericContainer;
+import org.apache.james.utils.FakeSmtp;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TemporaryFolder;
-import org.testcontainers.containers.wait.HostPortWaitStrategy;
 
-import com.google.common.base.Charsets;
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.builder.RequestSpecBuilder;
-import com.jayway.restassured.http.ContentType;
+import com.jayway.awaitility.Awaitility;
+import com.jayway.awaitility.Duration;
+import com.jayway.awaitility.core.ConditionFactory;
 
 public abstract class ForwardSmtpTest {
 
@@ -47,14 +41,10 @@ public abstract class ForwardSmtpTest {
     public static final String USER_AT_DOMAIN = USER + "@" + DOMAIN;
     public static final String PASSWORD = "secret";
 
-    private final TemporaryFolder folder = new TemporaryFolder();
-    private final SwarmGenericContainer fakeSmtp = new SwarmGenericContainer("weave/rest-smtp-sink:latest")
-            .withExposedPorts(25)
-            .withAffinityToContainer()
-            .waitingFor(new HostPortWaitStrategy());
-    
     @Rule
-    public final RuleChain chain = RuleChain.outerRule(folder).around(fakeSmtp);
+    public FakeSmtp fakeSmtp = new FakeSmtp();
+
+    private ConditionFactory calmlyAwait;
 
     protected abstract SmtpHostSystem createSmtpHostSystem();
     
@@ -68,32 +58,30 @@ public abstract class ForwardSmtpTest {
         scriptedTest = new SimpleScriptedTestProtocol("/org/apache/james/smtp/scripts/", hostSystem)
                 .withLocale(Locale.US)
                 .withUser(USER_AT_DOMAIN, PASSWORD);
-
-        InetAddress containerIp = InetAddress.getByName(fakeSmtp.getContainerIp());
         
         hostSystem.getInMemoryDnsService()
-            .registerRecord("yopmail.com", containerIp, "yopmail.com");
+            .registerMxRecord("yopmail.com", fakeSmtp.getContainer().getContainerIp());
         hostSystem.addAddressMapping(USER, DOMAIN, "ray@yopmail.com");
 
-        RestAssured.requestSpecification = new RequestSpecBuilder()
-        		.setContentType(ContentType.JSON)
-        		.setAccept(ContentType.JSON)
-        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(80)
-        		.setBaseUri("http://" + containerIp.getHostAddress())
-        		.build();
+        Duration slowPacedPollInterval = FIVE_HUNDRED_MILLISECONDS;
+        calmlyAwait = Awaitility.with()
+            .pollInterval(slowPacedPollInterval)
+            .and()
+            .with()
+            .pollDelay(slowPacedPollInterval)
+            .await();
+
+        fakeSmtp.awaitStarted(calmlyAwait.atMost(ONE_MINUTE));
     }
 
     @Test
     public void forwardingAnEmailShouldWork() throws Exception {
         scriptedTest.run("helo");
 
-        when()
-            .get("/api/email")
-        .then()
-            .statusCode(200)
-            .body("[0].from", equalTo("matthieu@yopmail.com"))
-            .body("[0].subject", equalTo("test"))
-            .body("[0].text", equalTo("content"));
+        calmlyAwait.atMost(ONE_MINUTE).until(() ->
+            fakeSmtp.isReceived(response -> response
+                .body("[0].from", equalTo("matthieu@yopmail.com"))
+                .body("[0].subject", equalTo("test"))
+                .body("[0].text", equalTo("content"))));
     }
 }

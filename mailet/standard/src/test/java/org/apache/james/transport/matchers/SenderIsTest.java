@@ -34,7 +34,7 @@ import org.junit.rules.ExpectedException;
 
 public class SenderIsTest {
 
-    private final String SENDER_NAME = "test@james.apache.org";
+    private static final String SENDER_NAME = "test@james.apache.org";
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -57,7 +57,7 @@ public class SenderIsTest {
 
         FakeMail fakeMail = FakeMail.builder()
             .recipient(recipient)
-            .sender(new MailAddress(SENDER_NAME))
+            .sender(SENDER_NAME)
             .build();
 
         assertThat(matcher.match(fakeMail)).containsExactly(recipient);
@@ -72,7 +72,7 @@ public class SenderIsTest {
 
         FakeMail fakeMail = FakeMail.builder()
             .recipient(recipient)
-            .sender(new MailAddress("other@james.apache.org"))
+            .sender("other@james.apache.org")
             .build();
 
         assertThat(matcher.match(fakeMail)).isNull();

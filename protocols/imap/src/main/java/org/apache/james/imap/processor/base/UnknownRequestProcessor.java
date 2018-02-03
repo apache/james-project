@@ -42,9 +42,7 @@ public class UnknownRequestProcessor implements ImapProcessor {
     }
 
     public ImapResponseMessage process(ImapMessage message) {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Unknown message: " + message);
-        }
+        LOGGER.debug("Unknown message: {}", message);
         final ImapResponseMessage result;
         if (message instanceof ImapRequest) {
             ImapRequest request = (ImapRequest) message;

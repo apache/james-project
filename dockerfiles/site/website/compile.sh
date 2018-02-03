@@ -43,4 +43,7 @@ export MAVEN_OPTS="-Xmx7168m -Xms2048m -XX:+UseConcMarkSweepGC -XX:-UseGCOverhea
 
 mvn clean install -DskipTests
 mvn clean site:site -Dmaven.javadoc.skip=true
-mvn site:stage -DstagingDirectory=$DESTINATION/
+mkdir /tmp/website-generation
+mvn site:stage -DstagingDirectory=/tmp/website-generation
+
+cp -r /tmp/website-generation/* $DESTINATION/

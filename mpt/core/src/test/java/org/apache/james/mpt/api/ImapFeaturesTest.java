@@ -18,10 +18,10 @@
  ****************************************************************/
 package org.apache.james.mpt.api;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.junit.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class ImapFeaturesTest {
 
@@ -61,23 +61,23 @@ public class ImapFeaturesTest {
         assertThat(ImapFeatures.of().supports()).isTrue();
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void supportsShouldThrowOnNullFeature() {
         assertThat(ImapFeatures.of().supports((Feature)null));
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void supportsShouldThrowOnNullFeatureArray() {
         assertThat(ImapFeatures.of().supports((Feature[])null));
     }
 
     
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void ofShouldThrowOnNullFeature() {
         ImapFeatures.of((Feature)null);
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void ofShouldThrowOnNullFeatureArray() {
         ImapFeatures.of((Feature[])null);
     }

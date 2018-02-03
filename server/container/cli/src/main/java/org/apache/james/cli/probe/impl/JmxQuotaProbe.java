@@ -29,7 +29,7 @@ import org.apache.james.mailbox.store.mail.model.SerializableQuota;
 import org.apache.james.mailbox.store.probe.QuotaProbe;
 
 public class JmxQuotaProbe implements QuotaProbe, JmxProbe {
-    private final static String QUOTAMANAGER_OBJECT_NAME = "org.apache.james:type=component,name=quotamanagerbean";
+    private static final String QUOTAMANAGER_OBJECT_NAME = "org.apache.james:type=component,name=quotamanagerbean";
 
     private QuotaManagementMBean quotaManagement;
 

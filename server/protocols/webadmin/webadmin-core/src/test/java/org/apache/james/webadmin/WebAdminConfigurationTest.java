@@ -29,7 +29,7 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class WebAdminConfigurationTest {
 
-    public static final FixedPort PORT = new FixedPort(80);
+    public static final FixedPortSupplier PORT = new FixedPortSupplier(80);
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -129,7 +129,7 @@ public class WebAdminConfigurationTest {
             WebAdminConfiguration.builder()
                 .enabled()
                 .port(PORT)
-                .CORSenabled()
+                .corsEnabled()
                 .build())
             .extracting(WebAdminConfiguration::isEnableCORS)
             .containsExactly(true);
@@ -141,7 +141,7 @@ public class WebAdminConfigurationTest {
             WebAdminConfiguration.builder()
                 .enabled()
                 .port(PORT)
-                .CORSenabled()
+                .corsEnabled()
                 .build())
             .extracting(WebAdminConfiguration::getUrlCORSOrigin)
             .containsExactly("*");
@@ -153,7 +153,7 @@ public class WebAdminConfigurationTest {
             WebAdminConfiguration.builder()
                 .enabled()
                 .port(PORT)
-                .CORSdisabled()
+                .corsDisabled()
                 .build())
             .extracting(WebAdminConfiguration::isEnableCORS)
             .containsExactly(false);
@@ -166,7 +166,7 @@ public class WebAdminConfigurationTest {
             WebAdminConfiguration.builder()
                 .enabled()
                 .port(PORT)
-                .CORSenabled()
+                .corsEnabled()
                 .urlCORSOrigin(origin)
                 .build())
             .extracting(WebAdminConfiguration::getUrlCORSOrigin)

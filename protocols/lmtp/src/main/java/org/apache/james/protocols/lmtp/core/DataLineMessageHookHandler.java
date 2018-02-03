@@ -40,7 +40,7 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
  * 
  *
  */
-public class DataLineMessageHookHandler extends org.apache.james.protocols.smtp.core.DataLineMessageHookHandler{
+public class DataLineMessageHookHandler extends org.apache.james.protocols.smtp.core.DataLineMessageHookHandler {
 
     private final List<DeliverToRecipientHook> handlers = new ArrayList<>();
 

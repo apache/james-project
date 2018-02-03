@@ -68,7 +68,7 @@ import org.apache.james.metrics.api.TimeMetric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends AbstractChainedProcessor<M> {
+public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends AbstractChainedProcessor<M> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMailboxProcessor.class);
 
     public static final String IMAP_PREFIX = "IMAP-";
@@ -142,9 +142,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     protected void unsolicitedResponses(ImapSession session, ImapProcessor.Responder responder, boolean omitExpunged, boolean useUid) {
         final SelectedMailbox selected = session.getSelected();
         if (selected == null) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("No mailbox selected");
-            }
+            LOGGER.debug("No mailbox selected");
         } else {
             unsolicitedResponses(session, responder, selected, omitExpunged, useUid);
         }
@@ -224,9 +222,10 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             final Collection<MessageUid> flagUpdateUids = selected.flagUpdateUids();
             if (!flagUpdateUids.isEmpty()) {
                 Iterator<MessageRange> ranges = MessageRange.toRanges(flagUpdateUids).iterator();
-                while(ranges.hasNext()) {
-                 if (messageManager == null)
-                 messageManager = getMailbox(session, selected);
+                while (ranges.hasNext()) {
+                 if (messageManager == null) {
+                     messageManager = getMailbox(session, selected);
+                 }
                     addFlagsResponses(session, selected, responder, useUid, ranges.next(), messageManager, mailboxSession);
                 }
 
@@ -246,9 +245,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             final MessageUid uid = mr.getUid();
             int msn = selected.msn(uid);
             if (msn == SelectedMailbox.NO_SUCH_MESSAGE) {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("No message found with uid " + uid + " in the uid<->msn mapping for mailbox " + selected.getPath().getFullName(mailboxSession.getPathDelimiter()) +" , this may be because it was deleted by a concurrent session. So skip it..");
-                }  
+                LOGGER.debug("No message found with uid {} in the uid<->msn mapping for mailbox {}. This may be because it was deleted by a concurrent session. So skip it..", uid, selected.getPath().getFullName(mailboxSession.getPathDelimiter()));
                     
 
                 // skip this as it was not found in the mapping
@@ -321,7 +318,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     }
 
     private void handleResponseException(ImapProcessor.Responder responder, MailboxException e, HumanReadableText message, ImapSession session) {
-        LOGGER.error(message.toString(), e);
+        LOGGER.error("{}", message, e);
         // TODO: consider whether error message should be passed to the user
         final StatusResponse response = factory.untaggedNo(message);
         responder.respond(response);
@@ -377,13 +374,15 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             sb.append(mailboxPath.getNamespace());
         }
         if (mailboxPath.getUser() != null && !mailboxPath.getUser().equals("")) {
-            if (sb.length() > 0)
+            if (sb.length() > 0) {
                 sb.append(delimiter);
+            }
             sb.append(mailboxPath.getUser());
         }
         if (mailboxPath.getName() != null && !mailboxPath.getName().equals("")) {
-            if (sb.length() > 0)
+            if (sb.length() > 0) {
                 sb.append(delimiter);
+            }
             sb.append(mailboxPath.getName());
         }
         return sb.toString();
@@ -495,6 +494,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
         }
         return uid.get();
     }
+    
     /**
      * Format MessageRange to RANGE format applying selected folder min & max
      * UIDs constraints
@@ -570,7 +570,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
                 }
                 MessageUid from = nr.getLowValue();
                 MessageUid to = nr.getHighValue();
-                while(from.compareTo(to) <= 0) {
+                while (from.compareTo(to) <= 0) {
                     vanishedUids.add(from);
                     from = from.next();
                 }
@@ -580,7 +580,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             searchQuery.andCriteria(SearchQuery.uid(nRanges));
             searchQuery.andCriteria(SearchQuery.modSeqGreaterThan(changedSince));
             Iterator<MessageUid> uids = mailbox.search(searchQuery, session);
-            while(uids.hasNext()) {
+            while (uids.hasNext()) {
                 vanishedUids.remove(uids.next());
             }
             UidRange[] vanishedIdRanges = uidRanges(MessageRange.toRanges(vanishedUids));
@@ -596,7 +596,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
         UidRange[] idRanges = new UidRange[mRanges.size()];
         Iterator<MessageRange> mIt = mRanges.iterator();
         int i = 0;
-        while(mIt.hasNext()) {
+        while (mIt.hasNext()) {
             MessageRange mr = mIt.next();
             UidRange ir;
             if (mr.getType() == Type.ONE) {

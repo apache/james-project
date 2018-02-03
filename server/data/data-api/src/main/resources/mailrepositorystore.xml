@@ -46,11 +46,5 @@
               <filestore>file://var/dbmail</filestore>
           </config>
       </mailrepository>
-      <mailrepository class="org.apache.james.mailrepository.file.MBoxMailRepository">
-          <protocols>
-              <protocol>mbox</protocol>
-          </protocols>
-          <config FIFO="false"/> 
-      </mailrepository>
   </mailrepositories>
 </mailrepositorystore>

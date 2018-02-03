@@ -39,6 +39,10 @@ import com.google.common.collect.ImmutableMap;
 
 public class MDCBuilder {
 
+    public interface VoidOperation {
+        void perform();
+    }
+
     public static <T> T withMdc(MDCBuilder mdcBuilder, Supplier<T> answerSupplier) {
         try (Closeable closeable = mdcBuilder.build()) {
             try {
@@ -50,6 +54,13 @@ public class MDCBuilder {
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
+    }
+
+    public static void withMdc(MDCBuilder mdcBuilder, VoidOperation logOperation) {
+        withMdc(mdcBuilder, () -> {
+            logOperation.perform();
+            return null;
+        });
     }
 
     public static final String HOST = "host";

@@ -32,6 +32,7 @@ public class SMTPResponse extends AbstractResponse {
     protected SMTPResponse() {
         
     }
+    
     /**
      * Construct a new SMTPResponse. The given code and description can not be null, if null an IllegalArgumentException
      * get thrown
@@ -61,7 +62,7 @@ public class SMTPResponse extends AbstractResponse {
     
 
     private  static String extractCode(String raw) {
-        String args[] = raw.split(" ");
+        String[] args = raw.split(" ");
         if (args != null && args.length > 1) {
             return args[0];
             
@@ -71,7 +72,7 @@ public class SMTPResponse extends AbstractResponse {
     }
     
     private  static String extractResponse(String raw) {
-        String args[] = raw.split(" ");
+        String[] args = raw.split(" ");
         if (args != null && args.length > 1) {
             return args[2];
             

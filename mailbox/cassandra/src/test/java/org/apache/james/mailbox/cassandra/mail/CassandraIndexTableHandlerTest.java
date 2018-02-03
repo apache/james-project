@@ -273,8 +273,8 @@ public class CassandraIndexTableHandlerTest {
             MAILBOX_ID).join();
 
         assertThat(
-            deletedMessageDAO.
-                retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
+            deletedMessageDAO
+                .retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
                 .join()
                 .collect(Guavate.toImmutableList()))
             .isEmpty();
@@ -333,8 +333,8 @@ public class CassandraIndexTableHandlerTest {
             .build()).join();
 
         assertThat(
-            deletedMessageDAO.
-                retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
+            deletedMessageDAO
+                .retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
                 .join()
                 .collect(Guavate.toImmutableList()))
             .containsExactly(MESSAGE_UID);
@@ -357,8 +357,8 @@ public class CassandraIndexTableHandlerTest {
             .build()).join();
 
         assertThat(
-            deletedMessageDAO.
-                retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
+            deletedMessageDAO
+                .retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
                 .join()
                 .collect(Guavate.toImmutableList()))
             .isEmpty();
@@ -381,8 +381,8 @@ public class CassandraIndexTableHandlerTest {
             .build()).join();
 
         assertThat(
-            deletedMessageDAO.
-                retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
+            deletedMessageDAO
+                .retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
                 .join()
                 .collect(Guavate.toImmutableList()))
             .containsExactly(MESSAGE_UID);
@@ -403,8 +403,8 @@ public class CassandraIndexTableHandlerTest {
             .build()).join();
 
         assertThat(
-            deletedMessageDAO.
-                retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
+            deletedMessageDAO
+                .retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
                 .join()
                 .collect(Guavate.toImmutableList()))
             .isEmpty();
@@ -527,8 +527,8 @@ public class CassandraIndexTableHandlerTest {
         testee.updateIndexOnAdd(message, MAILBOX_ID).join();
 
         assertThat(
-            deletedMessageDAO.
-                retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
+            deletedMessageDAO
+                .retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
                 .join()
                 .collect(Guavate.toImmutableList()))
             .containsExactly(MESSAGE_UID);
@@ -542,8 +542,8 @@ public class CassandraIndexTableHandlerTest {
         testee.updateIndexOnAdd(message, MAILBOX_ID).join();
 
         assertThat(
-            deletedMessageDAO.
-                retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
+            deletedMessageDAO
+                .retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
                 .join()
                 .collect(Guavate.toImmutableList()))
             .isEmpty();

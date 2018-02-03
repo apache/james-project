@@ -59,7 +59,7 @@ public class CurrentQuotaCalculator {
         for (Mailbox mailbox : mailboxes) {
             Iterator<MailboxMessage> messages = mapper.findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, -1);
             messageCount += mapper.countMessagesInMailbox(mailbox);
-            while(messages.hasNext()) {
+            while (messages.hasNext()) {
                 messagesSizes +=  messages.next().getFullContentOctets();
             }
         }

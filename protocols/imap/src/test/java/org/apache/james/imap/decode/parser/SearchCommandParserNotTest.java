@@ -121,7 +121,7 @@ public class SearchCommandParserNotTest {
     
     @Test 
     public void testUserFlagsParsing() throws Exception { 
-        ImapRequestLineReader reader = new ImapRequestStreamLineReader( 
+        ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream("NOT (KEYWORD bar KEYWORD foo)".getBytes("US-ASCII")), 
                 new ByteArrayOutputStream()); 
         SearchKey key = parser.searchKey(null, reader, null, false); 

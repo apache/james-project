@@ -116,7 +116,7 @@ public class DecoderUtilsTest {
 
     @Test
     @SuppressWarnings("deprecation")
-	public void testSimpleDecodeDateTime() throws Exception {
+    public void testSimpleDecodeDateTime() throws Exception {
         assertEquals("21 Oct 1972 20:00:00 GMT", DecoderUtils.decodeDateTime(
                 "21-Oct-1972 20:00:00 +0000").toGMTString());
         assertEquals("21 Oct 1972 19:00:00 GMT", DecoderUtils.decodeDateTime(
@@ -182,7 +182,7 @@ public class DecoderUtilsTest {
 
     @Test
     @SuppressWarnings("deprecation")
-	public void testAppleMailPrependsZeroNotSpace() throws Exception {
+    public void testAppleMailPrependsZeroNotSpace() throws Exception {
         assertEquals("9 Apr 2008 13:17:51 GMT", DecoderUtils.decodeDateTime(
                 "09-Apr-2008 15:17:51 +0200").toGMTString());
     }

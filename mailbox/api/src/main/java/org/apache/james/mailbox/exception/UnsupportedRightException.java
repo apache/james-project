@@ -37,7 +37,7 @@ public class UnsupportedRightException extends MailboxSecurityException {
     }
 
     public UnsupportedRightException(char right) {
-        super("Unsupported right flag '"+ right +"'.");
+        super("Unsupported right flag '" + right + "'.");
         this.unsupportedRight  = right;
     }
     

@@ -40,9 +40,9 @@ import org.apache.james.mailbox.store.probe.MailboxProbe;
 
 public class JmxMailboxProbe implements MailboxProbe, JmxProbe {
 
-    private final static String MAILBOXCOPIER_OBJECT_NAME = "org.apache.james:type=component,name=mailboxcopier";
-    private final static String MAILBOXMANAGER_OBJECT_NAME = "org.apache.james:type=component,name=mailboxmanagerbean";
-    private final static String REINDEXER_OBJECT_NAME = "org.apache.james:type=component,name=reindexerbean";
+    private static final String MAILBOXCOPIER_OBJECT_NAME = "org.apache.james:type=component,name=mailboxcopier";
+    private static final String MAILBOXMANAGER_OBJECT_NAME = "org.apache.james:type=component,name=mailboxmanagerbean";
+    private static final String REINDEXER_OBJECT_NAME = "org.apache.james:type=component,name=reindexerbean";
 
     private MailboxCopierManagementMBean mailboxCopierManagement;
     private MailboxManagerManagementMBean mailboxManagerManagement;

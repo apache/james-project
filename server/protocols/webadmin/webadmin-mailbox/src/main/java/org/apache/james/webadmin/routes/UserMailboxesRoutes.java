@@ -29,9 +29,14 @@ import javax.ws.rs.Produces;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.service.UserMailboxesService;
+import org.apache.james.webadmin.utils.ErrorResponder;
+import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.MailboxHaveChildrenException;
 import org.apache.james.webadmin.validation.MailboxName;
+import org.eclipse.jetty.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -39,8 +44,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import spark.Service;
 
 @Api(tags = "User's Mailbox")
@@ -88,20 +91,24 @@ public class UserMailboxesRoutes implements Routes {
     })
     @ApiOperation(value = "Listing all mailboxes of user.")
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "The list of mailboxes", response = String.class),
-            @ApiResponse(code = 401, message = "Unauthorized. The user is not authenticated on the platform", response = String.class),
-            @ApiResponse(code = 404, message = "The user name does not exist."),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "The list of mailboxes", response = String.class),
+            @ApiResponse(code = HttpStatus.UNAUTHORIZED_401, message = "Unauthorized. The user is not authenticated on the platform", response = String.class),
+            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The user name does not exist."),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineGetUserMailboxes() {
         service.get(USER_MAILBOXES_BASE, (request, response) -> {
-            response.status(200);
+            response.status(HttpStatus.OK_200);
             try {
                 return userMailboxesService.listMailboxes(request.params(USER_NAME));
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid get on user mailboxes", e);
-                response.status(404);
-                return Constants.EMPTY_BODY;
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Invalid get on user mailboxes")
+                    .cause(e)
+                    .haltError();
             }
         }, jsonTransformer);
     }
@@ -114,26 +121,41 @@ public class UserMailboxesRoutes implements Routes {
     })
     @ApiOperation(value = "Deleting a mailbox and its children")
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "The mailbox now does not exist on the server", response = String.class),
-            @ApiResponse(code = 400, message = "Invalid mailbox name"),
-            @ApiResponse(code = 401, message = "Unauthorized. The user is not authenticated on the platform"),
-            @ApiResponse(code = 404, message = "The user name does not exist."),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "The mailbox now does not exist on the server", response = String.class),
+            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid mailbox name"),
+            @ApiResponse(code = HttpStatus.UNAUTHORIZED_401, message = "Unauthorized. The user is not authenticated on the platform"),
+            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The user name does not exist."),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineDeleteUserMailbox() {
         service.delete(SPECIFIC_MAILBOX, (request, response) -> {
             try {
                 userMailboxesService.deleteMailbox(request.params(USER_NAME), new MailboxName(request.params(MAILBOX_NAME)));
-                response.status(204);
+                response.status(HttpStatus.NO_CONTENT_204);
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid delete on user mailbox", e);
-                response.status(404);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Invalid delete on user mailboxes")
+                    .cause(e)
+                    .haltError();
             } catch (MailboxHaveChildrenException e) {
                 LOGGER.info("Attempt to delete a mailbox with children");
-                response.status(409);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.CONFLICT_409)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Attempt to delete a mailbox with children")
+                    .cause(e)
+                    .haltError();
             } catch (IllegalArgumentException e) {
                 LOGGER.info("Attempt to create an invalid mailbox");
-                response.status(400);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Attempt to create an invalid mailbox")
+                    .cause(e)
+                    .haltError();
             }
             return Constants.EMPTY_BODY;
         });
@@ -145,19 +167,24 @@ public class UserMailboxesRoutes implements Routes {
     })
     @ApiOperation(value = "Deleting user mailboxes.")
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "The user does not have any mailbox", response = String.class),
-            @ApiResponse(code = 401, message = "Unauthorized. The user is not authenticated on the platform"),
-            @ApiResponse(code = 404, message = "The user name does not exist."),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "The user does not have any mailbox", response = String.class),
+            @ApiResponse(code = HttpStatus.UNAUTHORIZED_401, message = "Unauthorized. The user is not authenticated on the platform"),
+            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The user name does not exist."),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineDeleteUserMailboxes() {
         service.delete(USER_MAILBOXES_BASE, (request, response) -> {
             try {
                 userMailboxesService.deleteMailboxes(request.params(USER_NAME));
-                response.status(204);
+                response.status(HttpStatus.NO_CONTENT_204);
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid delete on user mailboxes", e);
-                response.status(404);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Invalid delete on user mailboxes")
+                    .cause(e)
+                    .haltError();
             }
             return Constants.EMPTY_BODY;
         });
@@ -171,26 +198,40 @@ public class UserMailboxesRoutes implements Routes {
     })
     @ApiOperation(value = "Testing existence of a mailbox.")
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "The mailbox exists", response = String.class),
-            @ApiResponse(code = 400, message = "Invalid mailbox name"),
-            @ApiResponse(code = 401, message = "Unauthorized. The user is not authenticated on the platform"),
-            @ApiResponse(code = 404, message = "The user name does not exist."),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "The mailbox exists", response = String.class),
+            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid mailbox name"),
+            @ApiResponse(code = HttpStatus.UNAUTHORIZED_401, message = "Unauthorized. The user is not authenticated on the platform"),
+            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The user name does not exist."),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineMailboxExists() {
         service.get(SPECIFIC_MAILBOX, (request, response) -> {
             try {
                 if (userMailboxesService.testMailboxExists(request.params(USER_NAME), new MailboxName(request.params(MAILBOX_NAME)))) {
-                    response.status(204);
+                    response.status(HttpStatus.NO_CONTENT_204);
                 } else {
-                    response.status(404);
+                    throw ErrorResponder.builder()
+                        .statusCode(HttpStatus.NOT_FOUND_404)
+                        .type(ErrorType.INVALID_ARGUMENT)
+                        .message("Invalid get on user mailboxes")
+                        .haltError();
                 }
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid get on user mailbox", e);
-                response.status(404);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Invalid get on user mailboxes")
+                    .cause(e)
+                    .haltError();
             } catch (IllegalArgumentException e) {
                 LOGGER.info("Attempt to create an invalid mailbox");
-                response.status(400);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Attempt to create an invalid mailbox")
+                    .cause(e)
+                    .haltError();
             }
             return Constants.EMPTY_BODY;
         });
@@ -204,23 +245,33 @@ public class UserMailboxesRoutes implements Routes {
             @ApiImplicitParam(required = true, dataType = "string", name = "mailboxName", paramType = "path")
     })
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "OK. The mailbox now exists on the server.", response = String.class),
-            @ApiResponse(code = 400, message = "Invalid mailbox name"),
-            @ApiResponse(code = 401, message = "Unauthorized. The user is not authenticated on the platform"),
-            @ApiResponse(code = 404, message = "The user name does not exist."),
-            @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
+            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. The mailbox now exists on the server.", response = String.class),
+            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid mailbox name"),
+            @ApiResponse(code = HttpStatus.UNAUTHORIZED_401, message = "Unauthorized. The user is not authenticated on the platform"),
+            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The user name does not exist."),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineCreateUserMailbox() {
         service.put(SPECIFIC_MAILBOX, (request, response) -> {
             try {
                 userMailboxesService.createMailbox(request.params(USER_NAME), new MailboxName(request.params(MAILBOX_NAME)));
-                response.status(204);
+                response.status(HttpStatus.NO_CONTENT_204);
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid put on user mailbox", e);
-                response.status(404);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Invalid get on user mailboxes")
+                    .cause(e)
+                    .haltError();
             } catch (IllegalArgumentException e) {
                 LOGGER.info("Attempt to create an invalid mailbox");
-                response.status(400);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Attempt to create an invalid mailbox")
+                    .cause(e)
+                    .haltError();
             }
             return Constants.EMPTY_BODY;
         });

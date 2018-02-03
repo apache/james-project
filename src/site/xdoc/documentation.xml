@@ -66,7 +66,7 @@
 
             <h4>Internal Projects</h4>
 
-            <p>The <a href='http://james.apache.org/mailets/'>Apache James Mailet project</a> collects products
+            <p>The <a href='http://james.apache.org/mailet/'>Apache James Mailet project</a> collects products
                related to mailets (mail processing components analogous to servlets). These are independent of the
                 <a href='http://james.apache.org/server/'>James server</a> and can be reused in any mailet container.</p>
 
@@ -84,14 +84,14 @@
             <p><a href='http://james.apache.org/protocols/'>Apache James Protocols</a> project delivers a lightweight,
                and highly extensible framework for mail protocols implementations.
                Protocols is coming with several implementations of popular mail protocols like:
-	            <ul>
-	              <li>SMTP</li>
-	              <li>LMPT</li>
-	              <li>POP3</li>
-	              <li>IMAP</li>
-	              <li>ManageSieve</li>
-	              <li>JMAP</li>
-	            </ul>
+                <ul>
+                  <li>SMTP</li>
+                  <li>LMPT</li>
+                  <li>POP3</li>
+                  <li>IMAP</li>
+                  <li>ManageSieve</li>
+                  <li>JMAP</li>
+                </ul>
             </p>
 
             <p><a href='http://james.apache.org/mailbox/'>Apache James Mailbox</a> features include the support of emails storage, 

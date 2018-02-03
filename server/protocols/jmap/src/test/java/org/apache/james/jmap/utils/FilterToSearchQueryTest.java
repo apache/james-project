@@ -40,7 +40,7 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 
 public class FilterToSearchQueryTest {
-    private final static String FORWARDED = "forwarded";
+    private static final String FORWARDED = "forwarded";
 
     @Test
     public void filterConditionShouldThrowWhenUnknownFilter() {

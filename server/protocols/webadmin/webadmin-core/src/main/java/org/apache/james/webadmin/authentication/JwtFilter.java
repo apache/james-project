@@ -26,6 +26,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.jwt.JwtTokenVerifier;
+import org.eclipse.jetty.http.HttpStatus;
 
 import spark.Request;
 import spark.Response;
@@ -60,19 +61,19 @@ public class JwtFilter implements AuthenticationFilter {
 
     private void checkHeaderPresent(Optional<String> bearer) {
         if (!bearer.isPresent()) {
-            halt(401, "No Bearer header.");
+            halt(HttpStatus.UNAUTHORIZED_401, "No Bearer header.");
         }
     }
 
     private void checkValidSignature(Optional<String> bearer) {
         if (!jwtTokenVerifier.verify(bearer.get())) {
-            halt(401, "Invalid Bearer header.");
+            halt(HttpStatus.UNAUTHORIZED_401, "Invalid Bearer header.");
         }
     }
 
     private void checkIsAdmin(Optional<String> bearer) {
         if (!jwtTokenVerifier.hasAttribute("admin", true, bearer.get())) {
-            halt(401, "Non authorized user.");
+            halt(HttpStatus.UNAUTHORIZED_401, "Non authorized user.");
         }
     }
 

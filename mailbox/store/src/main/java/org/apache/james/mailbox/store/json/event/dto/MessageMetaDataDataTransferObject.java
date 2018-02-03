@@ -86,7 +86,7 @@ public class MessageMetaDataDataTransferObject {
     public SimpleMessageMetaData getMetadata() {
         try {
             return new SimpleMessageMetaData(MessageUid.of(uid), modseq, flags.getFlags(), size, parse(date), messageId);
-        } catch(ParseException parseException) {
+        } catch (ParseException parseException) {
             LOG.error("Parse exception while parsing date while deserializing metadata upon event serialization. Using nowadays date instead.", parseException);
             return new SimpleMessageMetaData(MessageUid.of(uid), modseq, flags.getFlags(), size, new Date(), messageId);
         }

@@ -39,7 +39,7 @@ public class AccessTokenManagerImplTest {
         accessTokenManager = new AccessTokenManagerImpl(accessTokenRepository);
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void grantShouldThrowOnNullUsername() throws Exception {
         accessTokenManager.grantAccessToken(null);
     }
@@ -55,17 +55,17 @@ public class AccessTokenManagerImplTest {
         assertThat(accessTokenRepository.getUsernameFromToken(token).join()).isEqualTo("username");
     }
     
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void getUsernameShouldThrowWhenNullToken() throws Exception {
         accessTokenManager.getUsernameFromToken(null);
     }
 
-    @Test(expected=InvalidAccessToken.class)
+    @Test(expected = InvalidAccessToken.class)
     public void getUsernameShouldThrowWhenUnknownToken() throws Exception {
         accessTokenManager.getUsernameFromToken(AccessToken.generate());
     }
 
-    @Test(expected=InvalidAccessToken.class)
+    @Test(expected = InvalidAccessToken.class)
     public void getUsernameShouldThrowWhenOtherToken() throws Exception {
         accessTokenManager.grantAccessToken("username");
         accessTokenManager.getUsernameFromToken(AccessToken.generate());
@@ -77,7 +77,7 @@ public class AccessTokenManagerImplTest {
         assertThat(accessTokenManager.getUsernameFromToken(token)).isEqualTo("username");
     }
     
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void isValidShouldThrowOnNullToken() throws Exception {
         accessTokenManager.isValid(null);
     }
@@ -99,7 +99,7 @@ public class AccessTokenManagerImplTest {
         assertThat(accessTokenManager.isValid(accessToken)).isTrue();
     }
     
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void revokeShouldThrowWhenNullToken() throws Exception {
         accessTokenManager.revoke(null);
     }

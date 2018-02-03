@@ -104,7 +104,9 @@ public class JPAMailboxModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), MailboxManagerDefinition.class).addBinding().to(JPAMailboxManagerDefinition.class);
     }
 
-    @Provides @Named(Names.MAILBOXMANAGER_NAME) @Singleton
+    @Provides
+    @Named(Names.MAILBOXMANAGER_NAME)
+    @Singleton
     public MailboxManager provideMailboxManager(OpenJPAMailboxManager jpaMailboxManager) throws MailboxException {
         jpaMailboxManager.init();
         return jpaMailboxManager;
@@ -132,7 +134,7 @@ public class JPAMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    JPAConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws FileNotFoundException, ConfigurationException{
+    JPAConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws FileNotFoundException, ConfigurationException {
         PropertiesConfiguration dataSource = propertiesProvider.getConfiguration("james-database");
         return JPAConfiguration.builder()
                 .driverName(dataSource.getString("database.driverClassName"))

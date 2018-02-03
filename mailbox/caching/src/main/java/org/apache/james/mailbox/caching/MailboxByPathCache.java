@@ -12,15 +12,15 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
  */
 public interface MailboxByPathCache {
 
-	Mailbox findMailboxByPath(MailboxPath mailboxName,
-								  MailboxMapper underlying) throws MailboxNotFoundException,
-			MailboxException;
+    Mailbox findMailboxByPath(MailboxPath mailboxName,
+                                  MailboxMapper underlying) throws MailboxNotFoundException,
+            MailboxException;
 
-	void invalidate(Mailbox mailbox);
-	
-	void invalidate(MailboxPath mailboxPath);
+    void invalidate(Mailbox mailbox);
 
-	// for the purpose of cascading the invalidations; does it make sense? 
-	//public void connectTo(MailboxMetadataCache<Id> mailboxMetadataCache);
+    void invalidate(MailboxPath mailboxPath);
+
+    // for the purpose of cascading the invalidations; does it make sense?
+    //public void connectTo(MailboxMetadataCache<Id> mailboxMetadataCache);
 
 }

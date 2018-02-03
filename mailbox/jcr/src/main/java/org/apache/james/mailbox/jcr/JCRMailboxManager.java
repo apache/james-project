@@ -63,7 +63,7 @@ public class JCRMailboxManager extends StoreMailboxManager implements JCRImapCon
     }
     
     @Override
-    protected StoreMessageManager createMessageManager(Mailbox mailboxEntity, MailboxSession session) throws MailboxException{
+    protected StoreMessageManager createMessageManager(Mailbox mailboxEntity, MailboxSession session) throws MailboxException {
         return new JCRMessageManager(getMapperFactory(),
             getMessageSearchIndex(),
             getEventDispatcher(),

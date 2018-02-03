@@ -109,7 +109,7 @@ public class HBaseHostSystem extends JamesImapHostSystem {
 
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
         MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
-        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, aclResolver, groupMembershipResolver);
+        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, aclResolver, groupMembershipResolver, mailboxEventDispatcher);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mapperFactory, storeRightManager);
         mailboxManager = new HBaseMailboxManager(mapperFactory, authenticator, authorizator,
             new JVMMailboxPathLocker(), messageParser,
@@ -133,6 +133,7 @@ public class HBaseHostSystem extends JamesImapHostSystem {
                 new DefaultImapEncoderFactory().buildImapEncoder(),
                 defaultImapProcessorFactory);
     }
+    
     @Override
     public void afterTest() throws Exception {
         super.afterTest();

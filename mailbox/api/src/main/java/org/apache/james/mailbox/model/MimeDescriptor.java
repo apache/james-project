@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 
-public interface MimeDescriptor extends Headers{
+public interface MimeDescriptor extends Headers {
 
     /**
      * Gets the top level MIME content media type.

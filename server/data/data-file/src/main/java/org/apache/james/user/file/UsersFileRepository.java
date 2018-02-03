@@ -98,14 +98,9 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
             objectRepository.setFileSystem(fileSystem);
             objectRepository.configure(objectConfiguration);
             objectRepository.init();
-            if (LOGGER.isDebugEnabled()) {
-                String logBuffer = this.getClass().getName() + " created in " + destination;
-                LOGGER.debug(logBuffer);
-            }
+            LOGGER.debug("{} created in {}", getClass().getName(), destination);
         } catch (Exception e) {
-            if (LOGGER.isErrorEnabled()) {
-                LOGGER.error("Failed to initialize repository:" + e.getMessage(), e);
-            }
+            LOGGER.error("Failed to initialize repository", e);
             throw e;
         }
     }
@@ -241,8 +236,9 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
         User user;
         try {
             user = getUserByName(name);
-            if (user == null)
+            if (user == null) {
                 return false;
+            }
         } catch (Exception e) {
             throw new RuntimeException("Exception retrieving User" + e);
         }

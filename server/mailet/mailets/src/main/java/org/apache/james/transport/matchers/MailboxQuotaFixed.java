@@ -18,12 +18,12 @@
  ****************************************************************/
 package org.apache.james.transport.matchers;
 
+import javax.mail.MessagingException;
+
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.Matcher;
-
-import javax.mail.MessagingException;
 
 /**
  * Matcher which can be used to set a quota for users Mailbox. This

@@ -20,11 +20,11 @@
 package org.apache.james.app.spring;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.container.spring.context.JamesServerApplicationContext;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
-
 import org.assertj.core.api.Condition;
 import org.junit.After;
 import org.junit.Before;

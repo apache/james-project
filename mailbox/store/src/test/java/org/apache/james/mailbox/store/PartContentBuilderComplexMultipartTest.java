@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
@@ -33,8 +34,6 @@ import org.apache.james.mailbox.store.streaming.PartContentBuilder;
 import org.apache.james.mailbox.store.streaming.PartContentBuilder.PartNotFoundException;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.base.Charsets;
 
 public class PartContentBuilderComplexMultipartTest {
 
@@ -193,12 +192,12 @@ public class PartContentBuilderComplexMultipartTest {
 
     private String fullContent(int[] position) throws Exception {
         to(position);
-        return IOUtils.toString(builder.getFullContent().getInputStream(), Charsets.UTF_8);
+        return IOUtils.toString(builder.getFullContent().getInputStream(), StandardCharsets.UTF_8);
     }
 
     private String bodyContent(int[] position) throws Exception {
         to(position);
-        return IOUtils.toString(builder.getMimeBodyContent().getInputStream(), Charsets.UTF_8);
+        return IOUtils.toString(builder.getMimeBodyContent().getInputStream(), StandardCharsets.UTF_8);
     }
 
     private void checkContentType(String contentType, int[] position)

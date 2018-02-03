@@ -184,8 +184,9 @@ public class InetNetworkBuilder {
         int octets = 0;
 
         for (int i = 1; i < netspec.length(); i++) {
-            if (srcb[i] == '.')
+            if (srcb[i] == '.') {
                 octets++;
+            }
         }
 
         return (octets == 0) ? masks[0] : netspec.substring(0, netspec.length() - 1).concat(masks[octets]);

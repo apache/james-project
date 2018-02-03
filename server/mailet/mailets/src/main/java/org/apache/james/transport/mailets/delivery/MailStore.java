@@ -21,8 +21,8 @@ package org.apache.james.transport.mailets.delivery;
 
 import javax.mail.MessagingException;
 
-import org.apache.mailet.Mail;
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
 
 public interface MailStore {
     String DELIVERY_PATH_PREFIX = "DeliveryPath_";

@@ -22,14 +22,14 @@ package org.apache.james.transport.mailets;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import java.net.UnknownHostException;
-import java.util.Properties;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.MimeMessage;
 
-import org.apache.james.dnsservice.api.DNSService;
+import java.net.UnknownHostException;
+
+import javax.mail.MessagingException;
+
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.dnsservice.api.DNSService;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
@@ -278,10 +278,9 @@ public class RedirectTest {
                 .build();
         redirect.init(mailetConfig);
 
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setSubject("subject");
-        message.setText("This is a fake mail");
-        FakeMail mail = FakeMail.from(message);
+        FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder()
+            .setSubject("subject")
+            .setText("This is a fake mail"));
 
         assertThat(redirect.getReversePath(mail)).isEmpty();
     }
@@ -295,10 +294,9 @@ public class RedirectTest {
                 .build();
         redirect.init(mailetConfig);
 
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setSubject("subject");
-        message.setText("This is a fake mail");
-        FakeMail mail = FakeMail.from(message);
+        FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder()
+            .setSubject("subject")
+            .setText("This is a fake mail"));
 
         assertThat(redirect.getReversePath(mail)).contains(new MailAddress("reverse@james.org"));
     }
@@ -312,10 +310,9 @@ public class RedirectTest {
                 .build();
         redirect.init(mailetConfig);
 
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setSubject("subject");
-        message.setText("This is a fake mail");
-        FakeMail mail = FakeMail.from(message);
+        FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder()
+            .setSubject("subject")
+            .setText("This is a fake mail"));
 
         assertThat(redirect.getReversePath(mail)).contains(postmaster);
     }
@@ -330,10 +327,9 @@ public class RedirectTest {
                 .build();
         redirect.init(mailetConfig);
 
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setSubject("subject");
-        message.setText("This is a fake mail");
-        FakeMail mail = FakeMail.from(message);
+        FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder()
+            .setSubject("subject")
+            .setText("This is a fake mail"));
 
         assertThat(redirect.getReversePath(mail)).contains(postmaster);
     }
@@ -347,10 +343,9 @@ public class RedirectTest {
                 .build();
         redirect.init(mailetConfig);
 
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setSubject("subject");
-        message.setText("This is a fake mail");
-        FakeMail mail = FakeMail.from(message);
+        FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder()
+            .setSubject("subject")
+            .setText("This is a fake mail"));
 
         assertThat(redirect.getReversePath(mail)).contains(new MailAddress("sender@james.org"));
     }
@@ -365,13 +360,12 @@ public class RedirectTest {
                 .build();
         redirect.init(mailetConfig);
 
-        MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        mimeMessage.setSubject("My subject");
-        mimeMessage.setText("content");
         FakeMail mail = FakeMail.builder()
                 .name(MAILET_NAME)
                 .sender(MailAddressFixture.ANY_AT_JAMES)
-                .mimeMessage(mimeMessage)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setSubject("My subject")
+                    .setText("content"))
                 .build();
 
         redirect.service(mail);
@@ -389,13 +383,13 @@ public class RedirectTest {
                 .build();
         redirect.init(mailetConfig);
 
-        MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        mimeMessage.setSubject("My subject");
-        mimeMessage.setText("content");
+
         FakeMail mail = FakeMail.builder()
                 .name(MAILET_NAME)
                 .sender(MailAddressFixture.ANY_AT_JAMES)
-                .mimeMessage(mimeMessage)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setSubject("My subject")
+                    .setText("content"))
                 .build();
 
         redirect.service(mail);

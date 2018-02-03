@@ -21,10 +21,10 @@ package org.apache.james.domainlist.lib;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Stream;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -40,6 +40,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 /**
  * All implementations of the DomainList interface should extends this abstract
@@ -137,7 +138,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
 
     @Override
     public String getDefaultDomain() throws DomainListException {
-        if (defaultDomain!= null) {
+        if (defaultDomain != null) {
             return defaultDomain;
         } else {
             throw new DomainListException("Null default domain. Domain list might not be configured yet.");
@@ -151,32 +152,35 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     }
 
     @Override
-    public List<String> getDomains() throws DomainListException {
+    public ImmutableList<String> getDomains() throws DomainListException {
         List<String> domains = getDomainListInternal();
-
-        // create mutable copy, some subclasses return ImmutableList
-        ArrayList<String> mutableDomains = new ArrayList<>(domains);
-        List<String> detectedDomains = detectDomains();
-        mutableDomains.addAll(detectedDomains);
-        mutableDomains.addAll(detectIps(mutableDomains));
+        ImmutableList<String> detectedDomains = detectDomains();
+        // Guava does not support concatenating ImmutableLists at this time:
+        // https://stackoverflow.com/questions/37919648/concatenating-immutablelists
+        // A work-around is to use Iterables.concat() until something like
+        // https://github.com/google/guava/issues/1029 is implemented.
+        Iterable<String> domainsWithoutIp = Iterables.concat(domains, detectedDomains);
+        ImmutableList<String> detectedIps = detectIps(domainsWithoutIp);
+        ImmutableList<String> allDomains = ImmutableList.copyOf(Iterables.concat(domainsWithoutIp, detectedIps));
 
         if (LOGGER.isDebugEnabled()) {
-            for (String domain : mutableDomains) {
+            for (String domain : allDomains) {
                 LOGGER.debug("Handling mail for: " + domain);
             }
         }
 
-        return ImmutableList.copyOf(mutableDomains);
+        return allDomains;
     }
 
-    private List<String> detectIps(ArrayList<String> mutableDomains) {
+    private ImmutableList<String> detectIps(Iterable<String> domains) {
         if (autoDetectIP) {
-            return getDomainsIP(mutableDomains, dns, LOGGER);
+            return getDomainsIpStream(domains, dns, LOGGER)
+                .collect(Guavate.toImmutableList());
         }
         return ImmutableList.of();
     }
 
-    private List<String> detectDomains() {
+    private ImmutableList<String> detectDomains() {
         if (autoDetect) {
             String hostName;
             try {
@@ -185,7 +189,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
                 hostName = "localhost";
             }
 
-            LOGGER.info("Local host is: " + hostName);
+            LOGGER.info("Local host is: {}", hostName);
             if (hostName != null && !hostName.equals("localhost")) {
                 return ImmutableList.of(hostName.toLowerCase(Locale.US));
             }
@@ -194,31 +198,29 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     }
 
     /**
-     * Return a List which holds all ipAddress of the domains in the given List
+     * Return a stream of all IP addresses of the given domains.
      * 
      * @param domains
-     *            List of domains
-     * @return domainIP List of ipaddress for domains
+     *            Iterable of domains
+     * @return Stream of ipaddress for domains
      */
-    private static List<String> getDomainsIP(List<String> domains, DNSService dns, Logger log) {
-        return domains.stream()
-            .flatMap(domain -> getDomainIP(domain, dns, log).stream())
-            .distinct()
-            .collect(Guavate.toImmutableList());
+    private static Stream<String> getDomainsIpStream(Iterable<String> domains, DNSService dns, Logger log) {
+        return Guavate.stream(domains)
+            .flatMap(domain -> getDomainIpStream(domain, dns, log))
+            .distinct();
     }
 
     /**
      * @see #getDomainsIP(List, DNSService, Logger)
      */
-    private static List<String> getDomainIP(String domain, DNSService dns, Logger log) {
+    private static Stream<String> getDomainIpStream(String domain, DNSService dns, Logger log) {
         try {
             return dns.getAllByName(domain).stream()
                 .map(InetAddress::getHostAddress)
-                .distinct()
-                .collect(Guavate.toImmutableList());
+                .distinct();
         } catch (UnknownHostException e) {
-            log.error("Cannot get IP address(es) for " + domain);
-            return ImmutableList.of();
+            log.error("Cannot get IP address(es) for {}", domain);
+            return Stream.of();
         }
     }
 
@@ -230,7 +232,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
      *            set to <code>false</code> for disable
      */
     public synchronized void setAutoDetect(boolean autoDetect) {
-        LOGGER.info("Set autodetect to: " + autoDetect);
+        LOGGER.info("Set autodetect to: {}", autoDetect);
         this.autoDetect = autoDetect;
     }
 
@@ -242,7 +244,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
      *            set to <code>false</code> for disable
      */
     public synchronized void setAutoDetectIP(boolean autoDetectIP) {
-        LOGGER.info("Set autodetectIP to: " + autoDetectIP);
+        LOGGER.info("Set autodetectIP to: {}", autoDetectIP);
         this.autoDetectIP = autoDetectIP;
     }
 

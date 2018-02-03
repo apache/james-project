@@ -22,13 +22,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.mail.Flags;
@@ -42,7 +43,7 @@ import com.google.common.collect.ImmutableSet;
 
 public abstract class MailboxManagerStressTest {
 
-    private final static int APPEND_OPERATIONS = 200;
+    private static final int APPEND_OPERATIONS = 200;
 
     private MailboxManager mailboxManager;
 
@@ -57,8 +58,8 @@ public abstract class MailboxManagerStressTest {
     public void testStressTest() throws InterruptedException, MailboxException {
 
         final CountDownLatch latch = new CountDownLatch(APPEND_OPERATIONS);
-        final ExecutorService pool = Executors.newFixedThreadPool(APPEND_OPERATIONS / 2);
-        final List<MessageUid> uList = new ArrayList<>();
+        final ExecutorService pool = Executors.newFixedThreadPool(APPEND_OPERATIONS / 20);
+        final Collection<MessageUid> uList = new ConcurrentLinkedDeque<>();
         final String username = "username";
         MailboxSession session = mailboxManager.createSystemSession(username);
         mailboxManager.startProcessingRequest(session);
@@ -121,7 +122,7 @@ public abstract class MailboxManagerStressTest {
             });
         }
 
-        latch.await();
+        latch.await(10L, TimeUnit.MINUTES);
 
         // check if there is no duplicates
         // For mailboxes without locks, even if the UID is monotic, as re-scheduling can happen between UID generation and event delivery,

@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store.mail.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
@@ -38,7 +39,7 @@ import org.junit.rules.ExpectedException;
 import com.google.common.collect.ImmutableMap;
 
 public abstract class MailboxMapperACLTest {
-    private final static long UID_VALIDITY = 42;
+    private static final long UID_VALIDITY = 42;
     public static final boolean POSITIVE = true;
     public static final boolean NEGATIVE = !POSITIVE;
 
@@ -398,4 +399,48 @@ public abstract class MailboxMapperACLTest {
             .containsOnly(benwaInboxMailbox);
     }
 
+    @Test
+    public void findMailboxByPathShouldReturnMailboxWithACL() throws MailboxException {
+        EntryKey key = EntryKey.createUserEntryKey("user");
+        Rfc4314Rights rights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
+        mailboxMapper.setACL(benwaInboxMailbox,
+            new MailboxACL(ImmutableMap.of(key, rights)));
+
+        assertThat(
+            mailboxMapper.findMailboxByPath(benwaInboxMailbox.generateAssociatedPath())
+                .getACL()
+                .getEntries())
+            .hasSize(1)
+            .containsEntry(key, rights);
+    }
+
+    @Test
+    public void setACLShouldReturnACLDiff() throws MailboxException {
+        EntryKey key = EntryKey.createUserEntryKey("user");
+        Rfc4314Rights rights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
+
+        ACLDiff expectAclDiff = ACLDiff.computeDiff(MailboxACL.EMPTY, MailboxACL.EMPTY.apply(
+            MailboxACL.command()
+                .key(key)
+                .rights(rights)
+                .asAddition()));
+
+        assertThat(mailboxMapper.setACL(benwaInboxMailbox,
+            new MailboxACL(ImmutableMap.of(key, rights)))).isEqualTo(expectAclDiff);
+    }
+
+    @Test
+    public void updateACLShouldReturnACLDiff() throws MailboxException {
+        EntryKey key = EntryKey.createUserEntryKey("user");
+        Rfc4314Rights rights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
+
+        MailboxACL.ACLCommand aclCommand = MailboxACL.command()
+            .key(key)
+            .rights(rights)
+            .asAddition();
+
+        ACLDiff expectAclDiff = ACLDiff.computeDiff(MailboxACL.EMPTY, MailboxACL.EMPTY.apply(aclCommand));
+
+        assertThat(mailboxMapper.updateACL(benwaInboxMailbox, aclCommand)).isEqualTo(expectAclDiff);
+    }
 }

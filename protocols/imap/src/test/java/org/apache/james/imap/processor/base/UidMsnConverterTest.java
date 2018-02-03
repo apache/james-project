@@ -20,16 +20,17 @@
 package org.apache.james.imap.processor.base;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import org.junit.Before;
-import org.junit.Test;
 
 public class UidMsnConverterTest {
     private UidMsnConverter testee;

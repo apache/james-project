@@ -64,15 +64,11 @@ public class MailAttributesListToMimeHeaders extends GenericMailet {
     }
 
     @Override
-    public void service(Mail mail) {
-        try {
-            MimeMessage message = mail.getMessage();
-            attributeNameToHeader.entrySet()
-                .forEach(entry -> addAttributeToHeader(mail, message, entry));
-            message.saveChanges();
-        } catch (MessagingException e) {
-            LOGGER.warn("Exception while adding headers", e);
-        }
+    public void service(Mail mail) throws MessagingException {
+        MimeMessage message = mail.getMessage();
+        attributeNameToHeader.entrySet()
+            .forEach(entry -> addAttributeToHeader(mail, message, entry));
+        message.saveChanges();
     }
 
     private void addAttributeToHeader(Mail mail, MimeMessage message, Entry<String, String> entry) {

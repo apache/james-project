@@ -32,21 +32,22 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.name.Names;
 
-public class TestJMAPServerModule extends AbstractModule{
+public class TestJMAPServerModule extends AbstractModule {
 
-    private static final String PUBLIC_PEM_KEY = "-----BEGIN PUBLIC KEY-----\n" +
-            "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtlChO/nlVP27MpdkG0Bh\n" +
-            "16XrMRf6M4NeyGa7j5+1UKm42IKUf3lM28oe82MqIIRyvskPc11NuzSor8HmvH8H\n" +
-            "lhDs5DyJtx2qp35AT0zCqfwlaDnlDc/QDlZv1CoRZGpQk1Inyh6SbZwYpxxwh0fi\n" +
-            "+d/4RpE3LBVo8wgOaXPylOlHxsDizfkL8QwXItyakBfMO6jWQRrj7/9WDhGf4Hi+\n" +
-            "GQur1tPGZDl9mvCoRHjFrD5M/yypIPlfMGWFVEvV5jClNMLAQ9bYFuOc7H1fEWw6\n" +
-            "U1LZUUbJW9/CH45YXz82CYqkrfbnQxqRb2iVbVjs/sHopHd1NTiCfUtwvcYJiBVj\n" +
-            "kwIDAQAB\n" +
-            "-----END PUBLIC KEY-----";
+    private static final String PUBLIC_PEM_KEY = 
+        "-----BEGIN PUBLIC KEY-----\n" 
+        + "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtlChO/nlVP27MpdkG0Bh\n"
+        + "16XrMRf6M4NeyGa7j5+1UKm42IKUf3lM28oe82MqIIRyvskPc11NuzSor8HmvH8H\n"
+        + "lhDs5DyJtx2qp35AT0zCqfwlaDnlDc/QDlZv1CoRZGpQk1Inyh6SbZwYpxxwh0fi\n"
+        + "+d/4RpE3LBVo8wgOaXPylOlHxsDizfkL8QwXItyakBfMO6jWQRrj7/9WDhGf4Hi+\n"
+        + "GQur1tPGZDl9mvCoRHjFrD5M/yypIPlfMGWFVEvV5jClNMLAQ9bYFuOc7H1fEWw6\n"
+        + "U1LZUUbJW9/CH45YXz82CYqkrfbnQxqRb2iVbVjs/sHopHd1NTiCfUtwvcYJiBVj\n"
+        + "kwIDAQAB\n"
+        + "-----END PUBLIC KEY-----";
 
-    private final int maximumLimit;
+    private final long maximumLimit;
 
-    public TestJMAPServerModule(int maximumLimit) {
+    public TestJMAPServerModule(long maximumLimit) {
         this.maximumLimit = maximumLimit;
     }
 
@@ -57,7 +58,7 @@ public class TestJMAPServerModule extends AbstractModule{
 
     @Provides
     @Singleton
-    JMAPConfiguration provideConfiguration() throws FileNotFoundException, ConfigurationException{
+    JMAPConfiguration provideConfiguration() throws FileNotFoundException, ConfigurationException {
         return JMAPConfiguration.builder()
                 .enable()
                 .keystore("keystore")

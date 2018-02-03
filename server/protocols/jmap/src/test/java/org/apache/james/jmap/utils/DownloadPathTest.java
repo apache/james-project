@@ -28,22 +28,22 @@ public class DownloadPathTest {
 
     @Test
     public void fromShouldThrowWhenPathIsNull() {
-        assertThatThrownBy(()-> DownloadPath.from(null)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> DownloadPath.from(null)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromShouldThrowWhenPathIsEmpty() {
-        assertThatThrownBy(()-> DownloadPath.from("")).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> DownloadPath.from("")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromShouldThrowWhenNoBlobId() {
-        assertThatThrownBy(()-> DownloadPath.from("/")).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> DownloadPath.from("/")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromShouldThrowWhenBlobIdIsEmpty() {
-        assertThatThrownBy(()-> DownloadPath.from("//")).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> DownloadPath.from("//")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -74,11 +74,11 @@ public class DownloadPathTest {
 
     @Test
     public void fromShouldThrowWhenExtraPathVariables() {
-        assertThatThrownBy(()-> DownloadPath.from("/123456789/myName/132/456/789")).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> DownloadPath.from("/123456789/myName/132/456/789")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromShouldThrowWhenExtraPathSeparator() {
-        assertThatThrownBy(()-> DownloadPath.from("/123456789//myName")).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> DownloadPath.from("/123456789//myName")).isInstanceOf(IllegalArgumentException.class);
     }
 }

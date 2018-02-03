@@ -19,6 +19,7 @@
 package org.apache.james.mailetcontainer.api.mock;
 
 import javax.mail.MessagingException;
+
 import org.apache.james.mailetcontainer.api.MatcherLoader;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.MatcherConfig;
@@ -30,8 +31,8 @@ public class MockMatcherLoader implements MatcherLoader {
     public Matcher getMatcher(MatcherConfig config) throws MessagingException {
 
         try {
-            Class<Matcher> clazz = (Class<Matcher>) Thread.currentThread().getContextClassLoader().loadClass(config.
-                    getMatcherName());
+            Class<Matcher> clazz = (Class<Matcher>) Thread.currentThread().getContextClassLoader().loadClass(
+                    config.getMatcherName());
             Matcher m = clazz.newInstance();
             m.init(config);
             return m;

@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.model;
 
-
 import javax.mail.Flags;
 
 import com.google.common.base.MoreObjects;

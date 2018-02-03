@@ -26,8 +26,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.core.MailAddress;
+import org.apache.james.rrt.api.RecipientRewriteTable;
 
 /**
  * This helper class contains methods for the RecipientRewriteTable implementations
@@ -61,8 +61,9 @@ public class RecipientRewriteTableUtil {
         int msgPos = targetString.indexOf(':', identifierLength + 1);
 
         // Throw exception on invalid format
-        if (msgPos < identifierLength + 1)
+        if (msgPos < identifierLength + 1) {
             throw new PatternSyntaxException("Regex should be formatted as regex:<regular-expression>:<parameterized-string>", targetString, 0);
+        }
 
         Pattern pattern = Pattern.compile(targetString.substring(identifierLength, msgPos));
         Matcher match = pattern.matcher(address.toString());
@@ -87,7 +88,7 @@ public class RecipientRewriteTableUtil {
      *            replaced where found in the input strings
      * @return the requested resource
      */
-    static public String replaceParameters(String str, Map<String, String> parameters) {
+    public static String replaceParameters(String str, Map<String, String> parameters) {
         if (str != null && parameters != null) {
             // Do parameter replacements for this string resource.
             StringBuilder replaceBuffer = new StringBuilder(64);
@@ -113,19 +114,19 @@ public class RecipientRewriteTableUtil {
      *            the string to replace with
      * @return the substituted string
      */
-    static private String substituteSubString(String input, String find, String replace) {
-        int find_length = find.length();
-        int replace_length = replace.length();
+    private static String substituteSubString(String input, String find, String replace) {
+        int findLength = find.length();
+        int replaceLength = replace.length();
 
         StringBuilder output = new StringBuilder(input);
         int index = input.indexOf(find);
         int outputOffset = 0;
 
         while (index > -1) {
-            output.replace(index + outputOffset, index + outputOffset + find_length, replace);
-            outputOffset = outputOffset + (replace_length - find_length);
+            output.replace(index + outputOffset, index + outputOffset + findLength, replace);
+            outputOffset = outputOffset + (replaceLength - findLength);
 
-            index = input.indexOf(find, index + find_length);
+            index = input.indexOf(find, index + findLength);
         }
 
         String result = output.toString();

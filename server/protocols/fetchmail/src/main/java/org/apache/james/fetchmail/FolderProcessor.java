@@ -75,7 +75,7 @@ public class FolderProcessor extends ProcessorAbstract {
             try {
                 open();
             } catch (MessagingException ex) {
-                LOGGER.error(getFetchTaskName() + " Failed to open folder!");
+                LOGGER.error("{} Failed to open folder!", getFetchTaskName());
                 throw ex;
             }
 
@@ -88,13 +88,10 @@ public class FolderProcessor extends ProcessorAbstract {
                         try {
                             new MessageProcessor(message, getAccount()).process();
                             messagesProcessed++;
-                        }
-                        // Catch and report an exception but don't rethrow it,
-                        // allowing subsequent messages to be processed.
-                        catch (Exception ex) {
-                            StringBuilder logMessageBuffer = new StringBuilder("Exception processing message ID: ");
-                            logMessageBuffer.append(message.getMessageID());
-                            LOGGER.error(logMessageBuffer.toString(), ex);
+                        } catch (Exception ex) {
+                            // Catch and report an exception but don't rethrow it,
+                            // allowing subsequent messages to be processed.
+                            LOGGER.error("Exception processing message ID: {}", message.getMessageID(), ex);
                         }
                     }
                 }
@@ -108,20 +105,14 @@ public class FolderProcessor extends ProcessorAbstract {
             } catch (MessagingException ex) {
                 // No-op
             }
-            StringBuilder logMessageBuffer = new StringBuilder("Processed ");
-            logMessageBuffer.append(messagesProcessed);
-            logMessageBuffer.append(" messages of ");
-            logMessageBuffer.append(messageCount);
-            logMessageBuffer.append(" in folder '");
-            logMessageBuffer.append(getFolder().getName());
-            logMessageBuffer.append("'");
-            LOGGER.info(logMessageBuffer.toString());
+            LOGGER.info("Processed {} messages of {} in folder '{}'", messagesProcessed, messageCount, getFolder().getName());
         }
 
         // Recurse through sub-folders if required
         try {
-            if (isRecurse())
+            if (isRecurse()) {
                 recurse();
+            }
         } catch (MessagingException mex) {
             LOGGER.error("A MessagingException has terminated recursing through sub-folders", mex);
         }
@@ -133,8 +124,9 @@ public class FolderProcessor extends ProcessorAbstract {
      * @throws MessagingException
      */
     protected void close() throws MessagingException {
-        if (null != getFolder() && getFolder().isOpen())
+        if (null != getFolder() && getFolder().isOpen()) {
             getFolder().close(true);
+        }
     }
 
     /**
@@ -145,7 +137,7 @@ public class FolderProcessor extends ProcessorAbstract {
     protected void recurse() throws MessagingException {
         if ((getFolder().getType() & Folder.HOLDS_FOLDERS) == Folder.HOLDS_FOLDERS) {
             // folder contains subfolders...
-            Folder folders[] = getFolder().list();
+            Folder[] folders = getFolder().list();
 
             for (Folder folder : folders) {
                 new FolderProcessor(folder, getAccount()).process();
@@ -162,8 +154,9 @@ public class FolderProcessor extends ProcessorAbstract {
     protected void open() throws MessagingException {
         int openFlag = Folder.READ_WRITE;
 
-        if (isOpenReadOnly())
+        if (isOpenReadOnly()) {
             openFlag = Folder.READ_ONLY;
+        }
 
         getFolder().open(openFlag);
     }
@@ -186,10 +179,11 @@ public class FolderProcessor extends ProcessorAbstract {
      */
     protected boolean isSeen(MimeMessage aMessage) throws MessagingException {
         boolean isSeen;
-        if (isMarkSeenPermanent())
+        if (isMarkSeenPermanent()) {
             isSeen = aMessage.isSet(Flags.Flag.SEEN);
-        else
+        } else {
             isSeen = handleMarkSeenNotPermanent(aMessage);
+        }
         return isSeen;
     }
 

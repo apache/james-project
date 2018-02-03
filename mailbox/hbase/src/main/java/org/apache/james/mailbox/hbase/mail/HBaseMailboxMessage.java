@@ -177,7 +177,7 @@ public class HBaseMailboxMessage implements MailboxMessage {
         if (obj instanceof HBaseMailboxMessage) {
             HBaseMailboxMessage other = (HBaseMailboxMessage) obj;
             return Objects.equal(this.mailboxId, other.mailboxId) &&
-                    Objects.equal(this.uid, other.uid) ;
+                    Objects.equal(this.uid, other.uid);
         }
         return false;
     }

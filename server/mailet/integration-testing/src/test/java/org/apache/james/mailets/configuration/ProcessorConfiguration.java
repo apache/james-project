@@ -20,24 +20,48 @@
 
 package org.apache.james.mailets.configuration;
 
+import java.util.Optional;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 public class ProcessorConfiguration implements SerializableAsXml {
 
+    public static final String STATE_TRANSPORT = "transport";
+    public static final String STATE_ROOT = "root";
+    public static final String STATE_BOUNCES = "bounces";
+    public static final String STATE_ERROR = "error";
+    public static final String STATE_SPAM = "spam";
+
     public static Builder builder() {
         return new Builder();
     }
 
     public static Builder transport() {
-        return builder().state("transport");
+        return builder().state(STATE_TRANSPORT);
+    }
+
+    public static Builder root() {
+        return builder().state(STATE_ROOT);
+    }
+
+    public static Builder bounces() {
+        return builder().state(STATE_BOUNCES);
+    }
+
+    public static Builder error() {
+        return builder().state(STATE_ERROR);
+    }
+
+    public static Builder spam() {
+        return builder().state(STATE_SPAM);
     }
 
     public static class Builder {
 
         private String state;
-        private boolean enableJmx;
+        private Optional<Boolean> enableJmx = Optional.empty();
         private ImmutableList.Builder<MailetConfiguration> mailets;
 
         private Builder() {
@@ -50,7 +74,7 @@ public class ProcessorConfiguration implements SerializableAsXml {
         }
 
         public Builder enableJmx(boolean enableJmx) {
-            this.enableJmx = enableJmx;
+            this.enableJmx = Optional.of(enableJmx);
             return this;
         }
 
@@ -59,9 +83,23 @@ public class ProcessorConfiguration implements SerializableAsXml {
             return this;
         }
 
+        public Builder addMailetsFrom(ProcessorConfiguration processorConfiguration) {
+            this.mailets.addAll(processorConfiguration.mailets);
+            return this;
+        }
+
+        public Builder addMailetsFrom(ProcessorConfiguration.Builder processorConfiguration) {
+            return this.addMailetsFrom(processorConfiguration.build());
+        }
+
+        public Builder addMailet(MailetConfiguration.Builder mailetConfiguration) {
+            this.mailets.add(mailetConfiguration.build());
+            return this;
+        }
+
         public ProcessorConfiguration build() {
             Preconditions.checkState(!Strings.isNullOrEmpty(state), "'state' is mandatory");
-            return new ProcessorConfiguration(state, enableJmx, mailets.build());
+            return new ProcessorConfiguration(state, enableJmx.orElse(false), mailets.build());
         }
     }
 

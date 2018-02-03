@@ -93,11 +93,13 @@ public class HeadersToHTTP extends GenericMailet {
         }
 
         // record the result
-        LOGGER.debug("I will attempt to deliver serialised messages to "
-                + targetUrl
-                + ". "
-                + ( ((parameterKey==null) || (parameterKey.length()<1)) ? "I will not add any fields to the post. " : "I will prepend: "	+ parameterKey + "=" + parameterValue + ". ")
-                + (passThrough ? "Messages will pass through." : "Messages will be ghosted."));
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("I will attempt to deliver serialised messages to "
+                    + targetUrl
+                    + ". "
+                    + (((parameterKey == null) || (parameterKey.length() < 1)) ? "I will not add any fields to the post. " : "I will prepend: " + parameterKey + "=" + parameterValue + ". ")
+                    + (passThrough ? "Messages will pass through." : "Messages will be ghosted."));
+        }
     }
 
     /**
@@ -109,10 +111,10 @@ public class HeadersToHTTP extends GenericMailet {
      */
     public void service(Mail mail) {
         try {
-            LOGGER.debug(mail.getName() + "HeadersToHTTP: Starting");
+            LOGGER.debug("{} HeadersToHTTP: Starting", mail.getName());
             MimeMessage message = mail.getMessage();
             HashSet<NameValuePair> pairs = getNameValuePairs(message);
-            LOGGER.debug(mail.getName() + "HeadersToHTTP: " + pairs.size() + " named value pairs found");
+            LOGGER.debug("{} HeadersToHTTP: {} named value pairs found", mail.getName(), pairs.size());
             String result = httpPost(pairs);
             if (passThrough) {
                 addHeader(mail, true, result);
@@ -129,7 +131,7 @@ public class HeadersToHTTP extends GenericMailet {
         try {
             MimeMessage message = mail.getMessage();
             message.setHeader("X-headerToHTTP", (success ? "Succeeded" : "Failed"));
-            if (!success && errorMessage!=null && errorMessage.length()>0) {
+            if (!success && errorMessage != null && errorMessage.length() > 0) {
                 message.setHeader("X-headerToHTTPFailure", errorMessage);
             }
             message.saveChanges();
@@ -147,7 +149,7 @@ public class HeadersToHTTP extends GenericMailet {
             HttpUriRequest request = RequestBuilder.post(url).addParameters(pairs.toArray(new NameValuePair[0])).build();
             clientResponse = client.execute(request);
             String result = clientResponse.getStatusLine().getStatusCode() + ": " + clientResponse.getStatusLine();
-            LOGGER.debug("HeadersToHTTP: " + result);
+            LOGGER.debug("HeadersToHTTP: {}", result);
             return result;
         } finally {
             IOUtils.closeQuietly(clientResponse);
@@ -164,23 +166,23 @@ public class HeadersToHTTP extends GenericMailet {
 
         HashSet<NameValuePair> pairs = new HashSet<>();
 
-        if (message!=null) {
-            if (message.getSender()!=null) {
-                pairs.add( new BasicNameValuePair( "from", message.getSender().toString() ) );
+        if (message != null) {
+            if (message.getSender() != null) {
+                pairs.add(new BasicNameValuePair("from", message.getSender().toString()));
             }
-            if (message.getReplyTo()!=null) {
-                pairs.add( new BasicNameValuePair( "reply_to", Arrays.toString(message.getReplyTo())) );
+            if (message.getReplyTo() != null) {
+                pairs.add(new BasicNameValuePair("reply_to", Arrays.toString(message.getReplyTo())));
             }
-            if (message.getMessageID()!=null) {
-                pairs.add( new BasicNameValuePair( "message_id", message.getMessageID() ) );
+            if (message.getMessageID() != null) {
+                pairs.add(new BasicNameValuePair("message_id", message.getMessageID()));
             }
-            if (message.getSubject()!=null) {
-                pairs.add( new BasicNameValuePair( "subject", message.getSubject() ) );
+            if (message.getSubject() != null) {
+                pairs.add(new BasicNameValuePair("subject", message.getSubject()));
             }
-            pairs.add( new BasicNameValuePair( "size", Integer.toString(message.getSize()) ) );
+            pairs.add(new BasicNameValuePair("size", Integer.toString(message.getSize())));
         }
 
-        pairs.add( new BasicNameValuePair( parameterKey, parameterValue) );
+        pairs.add(new BasicNameValuePair(parameterKey, parameterValue));
 
         return pairs;
     }

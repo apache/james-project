@@ -20,14 +20,14 @@ package org.apache.james.smtpserver;
 
 import javax.inject.Inject;
 
-import org.apache.james.server.core.MailImpl;
-import org.apache.james.server.core.MimeMessageInputStreamSource;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.SMTPResponse;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.core.DataCmdHandler;
+import org.apache.james.server.core.MailImpl;
+import org.apache.james.server.core.MimeMessageInputStreamSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

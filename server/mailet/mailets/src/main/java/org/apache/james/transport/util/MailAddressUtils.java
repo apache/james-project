@@ -20,11 +20,12 @@ package org.apache.james.transport.util;
 
 import java.util.List;
 import java.util.stream.Stream;
+
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
-import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.core.MailAddress;
+import org.apache.james.transport.mailets.redirect.SpecialAddress;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;

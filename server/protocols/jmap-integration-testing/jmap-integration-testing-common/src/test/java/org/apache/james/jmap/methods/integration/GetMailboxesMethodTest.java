@@ -35,6 +35,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -65,7 +66,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.jayway.restassured.RestAssured;
@@ -102,7 +102,7 @@ public abstract class GetMailboxesMethodTest {
         RestAssured.requestSpecification = new RequestSpecBuilder()
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
-                .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+                .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
                 .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
                 .build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
@@ -125,7 +125,7 @@ public abstract class GetMailboxesMethodTest {
             .setHost("localhost")
             .setPort(jmapServer.getProbe(JmapGuiceProbe.class)
                 .getJmapPort())
-            .setCharset(Charsets.UTF_8);
+            .setCharset(StandardCharsets.UTF_8);
     }
 
     @After
@@ -231,7 +231,7 @@ public abstract class GetMailboxesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "myMailbox");
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "myMailbox2");
 
-        List<String> expectedMailboxes = ImmutableList.<String> builder()
+        List<String> expectedMailboxes = ImmutableList.<String>builder()
                 .addAll(DefaultMailboxes.DEFAULT_MAILBOXES)
                 .add("myMailbox")
                 .add("myMailbox2")
@@ -588,7 +588,7 @@ public abstract class GetMailboxesMethodTest {
         MailboxPath bobMailboxPath = MailboxPath.forUser(bob, sharedMailboxName);
         aclProbe.replaceRights(bobMailboxPath, alice, new Rfc4314Rights(Right.Lookup));
 
-        List<String> expectedMailboxes = ImmutableList.<String> builder()
+        List<String> expectedMailboxes = ImmutableList.<String>builder()
             .addAll(DefaultMailboxes.DEFAULT_MAILBOXES)
             .add(sharedMailboxName)
             .build();
@@ -620,7 +620,7 @@ public abstract class GetMailboxesMethodTest {
         aclProbe.replaceRights(bobSharedReadMailboxPath, alice, new Rfc4314Rights(Right.Lookup));
         aclProbe.replaceRights(bobSharedAdministerMailboxPath, alice, new Rfc4314Rights(Right.Administer));
 
-        List<String> expectedMailboxes = ImmutableList.<String> builder()
+        List<String> expectedMailboxes = ImmutableList.<String>builder()
             .addAll(DefaultMailboxes.DEFAULT_MAILBOXES)
             .add(sharedReadMailboxName)
             .build();

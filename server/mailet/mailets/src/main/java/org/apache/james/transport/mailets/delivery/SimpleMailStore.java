@@ -21,12 +21,12 @@ package org.apache.james.transport.mailets.delivery;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,7 +110,7 @@ public class SimpleMailStore implements MailStore {
         try {
             return usersRepository.getUser(recipient);
         } catch (UsersRepositoryException e) {
-            LOGGER.warn("Unable to retrieve username for " + recipient.asPrettyString(), e);
+            LOGGER.warn("Unable to retrieve username for {}", recipient.asPrettyString(), e);
             return recipient.toString();
         }
     }

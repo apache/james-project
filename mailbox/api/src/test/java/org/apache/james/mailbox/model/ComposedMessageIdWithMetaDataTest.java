@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.mailbox.model;
 
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.Flags;

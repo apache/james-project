@@ -150,7 +150,7 @@ public abstract class AbstractPOP3ServerTest {
             assertThat(info[1].number).isEqualTo(2);
 
             mInfo = client.listUniqueIdentifier(1);
-            assertThat(mInfo.identifier) .isEqualTo(identifier + "-" + MESSAGE1.meta.getUid());
+            assertThat(mInfo.identifier).isEqualTo(identifier + "-" + MESSAGE1.meta.getUid());
             assertThat(mInfo.number).isEqualTo(1);
 
             // try to retrieve message that not exist
@@ -395,6 +395,7 @@ public abstract class AbstractPOP3ServerTest {
         }
         
     }
+    
     @Test
     public void testDifferentStates() throws Exception {
         ProtocolServer server = null;
@@ -475,6 +476,7 @@ public abstract class AbstractPOP3ServerTest {
         }
         
     }
+    
     private void checkMessage(Message message, Reader reader) throws IOException {
         int read = 0;
         int i = -1;
@@ -497,7 +499,7 @@ public abstract class AbstractPOP3ServerTest {
         BufferedReader bufReader = new BufferedReader(reader);
         String line = null;
         int linesRead = 0;
-        String parts[] = message.body.split("\r\n");
+        String[] parts = message.body.split("\r\n");
         while ((line = bufReader.readLine()) != null) {
             assertThat(line).isEqualTo(parts[linesRead++]);
             

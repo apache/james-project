@@ -21,7 +21,7 @@ package org.apache.james.mailbox.store.json.event.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-@JsonFormat(shape= JsonFormat.Shape.NUMBER)
+@JsonFormat(shape = JsonFormat.Shape.NUMBER)
 public enum EventType {
     ADDED,
     DELETED,

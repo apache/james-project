@@ -61,8 +61,9 @@ public class IndexerConfigurationBeanFactoryPostProcessor implements BeanFactory
                 reIndexer = "fake-reindexer";
             }
 
-            if (indexer == null)
+            if (indexer == null) {
                 throw new ConfigurationException("Indexer provider " + provider + " not supported!");
+            }
             registry.registerAlias(indexer, "indexer");
             registry.registerAlias(reIndexer, "reindexer");
 

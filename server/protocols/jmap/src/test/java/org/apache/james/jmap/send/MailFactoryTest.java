@@ -23,12 +23,14 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Collection;
 
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.jmap.model.Envelope;
 import org.apache.james.jmap.model.Keyword;
 import org.apache.james.jmap.model.Keywords;
 import org.apache.james.jmap.model.Message;
@@ -48,7 +50,6 @@ import org.apache.mailet.Mail;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -57,6 +58,7 @@ public class MailFactoryTest {
     private MailFactory testee;
     private MetaDataWithContent message;
     private Message jmapMessage;
+    private Envelope envelope;
 
     @Before
     public void init() throws MailboxException {
@@ -74,7 +76,7 @@ public class MailFactoryTest {
                 .keywords(Keywords.factory().from(Keyword.SEEN))
                 .size(content.length())
                 .internalDate(Instant.now())
-                .sharedContent(new SharedByteArrayInputStream(content.getBytes(Charsets.UTF_8)))
+                .sharedContent(new SharedByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)))
                 .attachments(ImmutableList.of())
                 .mailboxId(InMemoryId.of(3))
                 .messageId(TestMessageId.of(2))
@@ -88,14 +90,15 @@ public class MailFactoryTest {
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.fromString("fake"));
         MessageFactory messageFactory = new MessageFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor);
         jmapMessage = messageFactory.fromMetaDataWithContent(message);
+        envelope = Envelope.fromMessage(jmapMessage);
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void buildMailShouldThrowWhenNullMailboxMessage() throws Exception {
-        testee.build(null, jmapMessage);
+        testee.build(null, envelope);
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void buildMailShouldThrowWhenNullJmapMessage() throws Exception {
         testee.build(message, null);
     }
@@ -110,7 +113,7 @@ public class MailFactoryTest {
                 new MailAddress("2@example.com"),
                 new MailAddress("4@example.com"));
         
-        Mail actual = testee.build(message, jmapMessage);
+        Mail actual = testee.build(message, envelope);
         
         assertThat(actual.getName()).isEqualTo(expectedName);
         assertThat(actual.getSender()).isEqualTo(expectedSender);

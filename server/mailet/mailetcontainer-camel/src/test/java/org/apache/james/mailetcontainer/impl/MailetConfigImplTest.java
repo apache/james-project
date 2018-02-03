@@ -78,8 +78,8 @@ public class MailetConfigImplTest {
     @Test
     public void testParamWithXmlSpace() throws ConfigurationException {
         builder.setDelimiterParsingDisabled(true);
-        builder.load(new ByteArrayInputStream("<mailet><whatever xml:space=\"preserve\"> some text </whatever></mailet>".
-                getBytes()));
+        builder.load(new ByteArrayInputStream(
+                "<mailet><whatever xml:space=\"preserve\"> some text </whatever></mailet>".getBytes()));
 
         config.setConfiguration(builder);
 

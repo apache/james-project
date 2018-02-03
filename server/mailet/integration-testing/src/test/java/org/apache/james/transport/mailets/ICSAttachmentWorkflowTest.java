@@ -19,33 +19,37 @@
 
 package org.apache.james.transport.mailets;
 
+import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
+import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
+import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
+import static org.apache.james.mailets.configuration.Constants.PASSWORD;
+import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
+import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.core.MailAddress;
+import org.apache.james.MemoryJamesServerMain;
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.jmap.mailet.TextCalendarBodyToAttachment;
-import org.apache.james.jmap.mailet.VacationMailet;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
-import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.amqp.AmqpRule;
 import org.apache.james.transport.matchers.All;
-import org.apache.james.transport.matchers.RecipientIsLocal;
-import org.apache.james.util.streams.SwarmGenericContainer;
+import org.apache.james.util.docker.Images;
+import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
-import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.MimeMessageBuilder;
+import org.apache.mailet.base.test.MimeMessageUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -53,27 +57,15 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
 
 public class ICSAttachmentWorkflowTest {
-
-    private static final String LOCALHOST_IP = "127.0.0.1";
-    private static final int IMAP_PORT = 1143;
-    private static final int SMTP_PORT = 1025;
-    private static final String PASSWORD = "secret";
-
-    private static final String JAMES_APACHE_ORG = "james.org";
-
-    private static final String FROM = "fromUser@" + JAMES_APACHE_ORG;
-    private static final String RECIPIENT = "touser@" + JAMES_APACHE_ORG;
+    private static final String FROM = "fromUser@" + DEFAULT_DOMAIN;
+    private static final String RECIPIENT = "touser@" + DEFAULT_DOMAIN;
 
     private static final String MAIL_ATTRIBUTE = "ical.attachments";
     private static final String PARSED_ICAL_MAIL_ATTRIBUTE = "ical.parsed";
@@ -434,15 +426,18 @@ public class ICSAttachmentWorkflowTest {
             "END:VCALENDAR\r\n" +
             "";
 
-    public SwarmGenericContainer rabbitMqContainer = new SwarmGenericContainer("rabbitmq:3")
+    public SwarmGenericContainer rabbitMqContainer = new SwarmGenericContainer(Images.RABBITMQ)
             .withAffinityToContainer();
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     public AmqpRule amqpRule = new AmqpRule(rabbitMqContainer, EXCHANGE_NAME, ROUTING_KEY);
 
     @Rule
-    public final RuleChain chain = RuleChain.outerRule(temporaryFolder).around(rabbitMqContainer).around(amqpRule);
+    public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(rabbitMqContainer).around(amqpRule);
+    @Rule
+    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
+    @Rule
+    public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
-    private ConditionFactory calmlyAwait;
     private TemporaryJamesServer jamesServer;
     private MimeMessage messageWithoutICSAttached;
     private MimeMessage messageWithICSAttached;
@@ -452,104 +447,72 @@ public class ICSAttachmentWorkflowTest {
 
     @Before
     public void setup() throws Exception {
-        MailetContainer mailetContainer = MailetContainer.builder()
-            .postmaster("postmaster@" + JAMES_APACHE_ORG)
-            .threads(5)
-            .addProcessor(CommonProcessors.root())
-            .addProcessor(CommonProcessors.error())
-            .addProcessor(ProcessorConfiguration.builder()
-                    .state("transport")
-                    .enableJmx(true)
-                    .addMailet(MailetConfiguration.builder()
-                            .matcher(All.class)
-                            .mailet(RemoveMimeHeader.class)
-                            .addProperty("name", "bcc")
-                            .build())
-                    .addMailet(MailetConfiguration.builder()
-                            .matcher(All.class)
-                            .mailet(StripAttachment.class)
-                            .addProperty("attribute", MAIL_ATTRIBUTE)
-                            .addProperty("pattern", ".*")
-                            .build())
-                    .addMailet(MailetConfiguration.builder()
-                            .matcher(All.class)
-                            .mailet(MimeDecodingMailet.class)
-                            .addProperty("attribute", MAIL_ATTRIBUTE)
-                            .build())
-                    .addMailet(MailetConfiguration.builder()
-                            .matcher(All.class)
-                            .mailet(ICalendarParser.class)
-                            .addProperty("sourceAttribute", MAIL_ATTRIBUTE)
-                            .addProperty("destinationAttribute", PARSED_ICAL_MAIL_ATTRIBUTE)
-                            .build())
-                    .addMailet(MailetConfiguration.builder()
-                            .matcher(All.class)
-                            .mailet(ICALToHeader.class)
-                            .addProperty("attribute", PARSED_ICAL_MAIL_ATTRIBUTE)
-                            .build())
-                    .addMailet(MailetConfiguration.builder()
-                            .matcher(All.class)
-                            .mailet(ICALToJsonAttribute.class)
-                            .addProperty("source", PARSED_ICAL_MAIL_ATTRIBUTE)
-                            .addProperty("rawSource", MAIL_ATTRIBUTE)
-                            .addProperty("destination", JSON_MAIL_ATTRIBUTE)
-                            .build())
-                    .addMailet(MailetConfiguration.builder()
-                            .matcher(All.class)
-                            .mailet(TextCalendarBodyToAttachment.class)
-                            .build())
-                    .addMailet(MailetConfiguration.builder()
-                            .matcher(All.class)
-                            .mailet(AmqpForwardAttribute.class)
-                            .addProperty("uri", amqpRule.getAmqpUri())
-                            .addProperty("exchange", EXCHANGE_NAME)
-                            .addProperty("attribute", JSON_MAIL_ATTRIBUTE)
-                            .addProperty("routing_key", ROUTING_KEY)
-                            .build())
-                    .addMailet(MailetConfiguration.builder()
-                            .matcher(RecipientIsLocal.class)
-                            .mailet(VacationMailet.class)
-                            .build())
-                    .addMailet(MailetConfiguration.builder()
-                            .matcher(RecipientIsLocal.class)
-                            .mailet(LocalDelivery.class)
-                            .build())
-                    .build())
-            .build();
+        MailetContainer.Builder mailetContainer = TemporaryJamesServer.DEFAULT_MAILET_CONTAINER_CONFIGURATION
+            .putProcessor(ProcessorConfiguration.transport()
+                .addMailet(MailetConfiguration.builder()
+                    .matcher(All.class)
+                    .mailet(StripAttachment.class)
+                    .addProperty("attribute", MAIL_ATTRIBUTE)
+                    .addProperty("pattern", ".*"))
+                .addMailet(MailetConfiguration.builder()
+                    .matcher(All.class)
+                    .mailet(MimeDecodingMailet.class)
+                    .addProperty("attribute", MAIL_ATTRIBUTE))
+                .addMailet(MailetConfiguration.builder()
+                    .matcher(All.class)
+                    .mailet(ICalendarParser.class)
+                    .addProperty("sourceAttribute", MAIL_ATTRIBUTE)
+                    .addProperty("destinationAttribute", PARSED_ICAL_MAIL_ATTRIBUTE))
+                .addMailet(MailetConfiguration.builder()
+                    .matcher(All.class)
+                    .mailet(ICALToHeader.class)
+                    .addProperty("attribute", PARSED_ICAL_MAIL_ATTRIBUTE))
+                .addMailet(MailetConfiguration.builder()
+                    .matcher(All.class)
+                    .mailet(ICALToJsonAttribute.class)
+                    .addProperty("source", PARSED_ICAL_MAIL_ATTRIBUTE)
+                    .addProperty("rawSource", MAIL_ATTRIBUTE)
+                    .addProperty("destination", JSON_MAIL_ATTRIBUTE))
+                .addMailet(MailetConfiguration.builder()
+                    .matcher(All.class)
+                    .mailet(TextCalendarBodyToAttachment.class))
+                .addMailet(MailetConfiguration.builder()
+                    .matcher(All.class)
+                    .mailet(AmqpForwardAttribute.class)
+                    .addProperty("uri", amqpRule.getAmqpUri())
+                    .addProperty("exchange", EXCHANGE_NAME)
+                    .addProperty("attribute", JSON_MAIL_ATTRIBUTE)
+                    .addProperty("routing_key", ROUTING_KEY))
+                .addMailetsFrom(CommonProcessors.deliverOnlyTransport()));
 
-        jamesServer = new TemporaryJamesServer(temporaryFolder, mailetContainer);
-        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
+            .withMailetContainer(mailetContainer)
+            .build(temporaryFolder);
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(JAMES_APACHE_ORG);
-        dataProbe.addUser(FROM, PASSWORD);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(RECIPIENT, PASSWORD);
-        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, RECIPIENT, "INBOX");
 
         messageWithoutICSAttached = MimeMessageBuilder.mimeMessageBuilder()
             .setMultipartWithBodyParts(
                 MimeMessageBuilder.bodyPartBuilder()
-                    .data("simple text")
-                    .build(),
+                    .data("simple text"),
                 MimeMessageBuilder.bodyPartBuilder()
                     .data("My attachment")
                     .filename("test.txt")
-                    .disposition("attachment")
-                    .build())
+                    .disposition("attachment"))
             .setSubject("test")
             .build();
 
         messageWithICSAttached = MimeMessageBuilder.mimeMessageBuilder()
             .setMultipartWithBodyParts(
                 MimeMessageBuilder.bodyPartBuilder()
-                    .data("simple text")
-                    .build(),
+                    .data("simple text"),
                 MimeMessageBuilder.bodyPartBuilder()
-                    .data(ICS_1.getBytes(Charsets.UTF_8))
+                    .data(ICS_1.getBytes(StandardCharsets.UTF_8))
                     .filename("meeting.ics")
-                    .disposition("attachment")
-                    .build())
+                    .disposition("attachment"))
             .setSubject("test")
             .build();
 
@@ -558,32 +521,28 @@ public class ICSAttachmentWorkflowTest {
                 MimeMessageBuilder.bodyPartBuilder()
                     .data("simple text")
                     .build(),
-                MimeMessageBuilder.bodyPartFromBytes(ICS_BASE64.getBytes(Charsets.UTF_8)))
+                MimeMessageBuilder.bodyPartFromBytes(ICS_BASE64.getBytes(StandardCharsets.UTF_8)))
             .setSubject("test")
             .build();
 
-        yahooInvitationMessage = MimeMessageBuilder.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream("eml/yahooInvitation.eml"));
+        yahooInvitationMessage = MimeMessageUtil.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream("eml/yahooInvitation.eml"));
 
         messageWithThreeICSAttached = MimeMessageBuilder.mimeMessageBuilder()
             .setMultipartWithBodyParts(
                 MimeMessageBuilder.bodyPartBuilder()
-                    .data("simple text")
-                    .build(),
+                    .data("simple text"),
                 MimeMessageBuilder.bodyPartBuilder()
-                    .data(ICS_1.getBytes(Charsets.UTF_8))
+                    .data(ICS_1.getBytes(StandardCharsets.UTF_8))
                     .filename("test1.txt")
-                    .disposition("attachment")
-                    .build(),
+                    .disposition("attachment"),
                 MimeMessageBuilder.bodyPartBuilder()
-                    .data(ICS_2.getBytes(Charsets.UTF_8))
+                    .data(ICS_2.getBytes(StandardCharsets.UTF_8))
                     .filename("test2.txt")
-                    .disposition("attachment")
-                    .build(),
+                    .disposition("attachment"),
                 MimeMessageBuilder.bodyPartBuilder()
-                    .data(ICS_3.getBytes(Charsets.UTF_8))
+                    .data(ICS_3.getBytes(StandardCharsets.UTF_8))
                     .filename("test3.txt")
-                    .disposition("attachment")
-                    .build())
+                    .disposition("attachment"))
             .setSubject("test")
             .build();
     }
@@ -595,48 +554,46 @@ public class ICSAttachmentWorkflowTest {
 
     @Test
     public void calendarAttachmentShouldNotBePublishedInMQWhenNoICalAttachment() throws Exception {
-        Mail mail = FakeMail.builder()
-              .mimeMessage(messageWithoutICSAttached)
-              .sender(new MailAddress(FROM))
-              .recipient(new MailAddress(RECIPIENT))
-              .build();
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(messageWithoutICSAttached)
+                .sender(FROM)
+                .recipient(RECIPIENT))
+            .awaitSent(awaitAtMostOneMinute);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-                IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(mail);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
-        }
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(RECIPIENT, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
 
         assertThat(amqpRule.readContent()).isEmpty();
     }
 
     @Test
     public void calendarAttachmentShouldBePublishedInMQWhenMatchingWorkflowConfiguration() throws Exception {
-        Mail mail = FakeMail.builder()
-              .mimeMessage(messageWithICSAttached)
-              .sender(new MailAddress(FROM))
-              .recipient(new MailAddress(RECIPIENT))
-              .build();
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(messageWithICSAttached)
+                .sender(FROM)
+                .recipient(RECIPIENT))
+            .awaitSent(awaitAtMostOneMinute);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-                IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(mail);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
-        }
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(RECIPIENT, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
 
         Optional<String> content = amqpRule.readContent();
         assertThat(content).isPresent();
         DocumentContext jsonPath = toJsonPath(content.get());
-        assertThat(jsonPath.<String> read("ical")).isEqualTo(ICS_1);
-        assertThat(jsonPath.<String> read("sender")).isEqualTo(FROM);
-        assertThat(jsonPath.<String> read("recipient")).isEqualTo(RECIPIENT);
-        assertThat(jsonPath.<String> read("uid")).isEqualTo(ICS_UID);
-        assertThat(jsonPath.<String> read("sequence")).isEqualTo(ICS_SEQUENCE);
-        assertThat(jsonPath.<String> read("dtstamp")).isEqualTo(ICS_DTSTAMP);
-        assertThat(jsonPath.<String> read("method")).isEqualTo(ICS_METHOD);
-        assertThat(jsonPath.<String> read("recurrence-id")).isNull();
+        assertThat(jsonPath.<String>read("ical")).isEqualTo(ICS_1);
+        assertThat(jsonPath.<String>read("sender")).isEqualTo(FROM);
+        assertThat(jsonPath.<String>read("recipient")).isEqualTo(RECIPIENT);
+        assertThat(jsonPath.<String>read("uid")).isEqualTo(ICS_UID);
+        assertThat(jsonPath.<String>read("sequence")).isEqualTo(ICS_SEQUENCE);
+        assertThat(jsonPath.<String>read("dtstamp")).isEqualTo(ICS_DTSTAMP);
+        assertThat(jsonPath.<String>read("method")).isEqualTo(ICS_METHOD);
+        assertThat(jsonPath.<String>read("recurrence-id")).isNull();
     }
 
     private DocumentContext toJsonPath(String content) {
@@ -647,166 +604,155 @@ public class ICSAttachmentWorkflowTest {
 
     @Test
     public void headersShouldNotBeAddedInMailWhenNoICalAttachment() throws Exception {
-        Mail mail = FakeMail.builder()
-              .mimeMessage(messageWithoutICSAttached)
-              .sender(new MailAddress(FROM))
-              .recipient(new MailAddress(RECIPIENT))
-              .build();
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(messageWithoutICSAttached)
+                .sender(FROM)
+                .recipient(RECIPIENT))
+            .awaitSent(awaitAtMostOneMinute);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-                IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(mail);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(RECIPIENT, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
 
-            String receivedHeaders = imapMessageReader.readFirstMessageHeadersInInbox(RECIPIENT, PASSWORD);
-
-            assertThat(receivedHeaders).doesNotContain("X-MEETING-UID");
-            assertThat(receivedHeaders).doesNotContain("X-MEETING-METHOD");
-            assertThat(receivedHeaders).doesNotContain("X-MEETING-RECURRENCE-ID");
-            assertThat(receivedHeaders).doesNotContain("X-MEETING-SEQUENCE");
-            assertThat(receivedHeaders).doesNotContain("X-MEETING-DTSTAMP");
-        }
+        String receivedHeaders = imapMessageReader.readFirstMessageHeaders();
+        assertThat(receivedHeaders).doesNotContain("X-MEETING-UID");
+        assertThat(receivedHeaders).doesNotContain("X-MEETING-METHOD");
+        assertThat(receivedHeaders).doesNotContain("X-MEETING-RECURRENCE-ID");
+        assertThat(receivedHeaders).doesNotContain("X-MEETING-SEQUENCE");
+        assertThat(receivedHeaders).doesNotContain("X-MEETING-DTSTAMP");
     }
 
     @Test
     public void headersShouldBeAddedInMailWhenOneICalAttachment() throws Exception {
-        Mail mail = FakeMail.builder()
-              .mimeMessage(messageWithICSAttached)
-              .sender(new MailAddress(FROM))
-              .recipient(new MailAddress(RECIPIENT))
-              .build();
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(messageWithICSAttached)
+                .sender(FROM)
+                .recipient(RECIPIENT))
+            .awaitSent(awaitAtMostOneMinute);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-                IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(mail);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(RECIPIENT, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
 
-            String receivedHeaders = imapMessageReader.readFirstMessageHeadersInInbox(RECIPIENT, PASSWORD);
-
-            assertThat(receivedHeaders).contains("X-MEETING-UID: " + ICS_UID);
-            assertThat(receivedHeaders).contains("X-MEETING-METHOD: " + ICS_METHOD);
-            assertThat(receivedHeaders).contains("X-MEETING-SEQUENCE: " + ICS_SEQUENCE);
-            assertThat(receivedHeaders).contains("X-MEETING-DTSTAMP: " + ICS_DTSTAMP);
-        }
+        String receivedHeaders = imapMessageReader.readFirstMessageHeaders();
+        assertThat(receivedHeaders).contains("X-MEETING-UID: " + ICS_UID);
+        assertThat(receivedHeaders).contains("X-MEETING-METHOD: " + ICS_METHOD);
+        assertThat(receivedHeaders).contains("X-MEETING-SEQUENCE: " + ICS_SEQUENCE);
+        assertThat(receivedHeaders).contains("X-MEETING-DTSTAMP: " + ICS_DTSTAMP);
     }
 
     @Test
     public void headersShouldBeAddedInMailWhenOneBase64ICalAttachment() throws Exception {
-        Mail mail = FakeMail.builder()
-            .mimeMessage(messageWithICSBase64Attached)
-            .sender(new MailAddress(FROM))
-            .recipient(new MailAddress(RECIPIENT))
-            .build();
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(messageWithICSBase64Attached)
+                .sender(FROM)
+                .recipient(RECIPIENT))
+            .awaitSent(awaitAtMostOneMinute);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(mail);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(RECIPIENT, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
 
-            String receivedHeaders = imapMessageReader.readFirstMessageHeadersInInbox(RECIPIENT, PASSWORD);
-
-            assertThat(receivedHeaders).contains("X-MEETING-UID: " + ICS_BASE64_UID);
-            assertThat(receivedHeaders).contains("X-MEETING-METHOD: " + ICS_METHOD);
-            assertThat(receivedHeaders).contains("X-MEETING-SEQUENCE: " + ICS_SEQUENCE);
-            assertThat(receivedHeaders).contains("X-MEETING-DTSTAMP: " + ICS_BASE64_DTSTAMP);
-        }
+        String receivedHeaders = imapMessageReader.readFirstMessageHeaders();
+        assertThat(receivedHeaders).contains("X-MEETING-UID: " + ICS_BASE64_UID);
+        assertThat(receivedHeaders).contains("X-MEETING-METHOD: " + ICS_METHOD);
+        assertThat(receivedHeaders).contains("X-MEETING-SEQUENCE: " + ICS_SEQUENCE);
+        assertThat(receivedHeaders).contains("X-MEETING-DTSTAMP: " + ICS_BASE64_DTSTAMP);
     }
 
     @Test
     public void base64CalendarAttachmentShouldBePublishedInMQWhenMatchingWorkflowConfiguration() throws Exception {
-        Mail mail = FakeMail.builder()
-            .mimeMessage(messageWithICSBase64Attached)
-            .sender(new MailAddress(FROM))
-            .recipient(new MailAddress(RECIPIENT))
-            .build();
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(messageWithICSBase64Attached)
+                .sender(FROM)
+                .recipient(RECIPIENT))
+            .awaitSent(awaitAtMostOneMinute);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(mail);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
-        }
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(RECIPIENT, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
 
         Optional<String> content = amqpRule.readContent();
         assertThat(content).isPresent();
         DocumentContext jsonPath = toJsonPath(content.get());
-        assertThat(jsonPath.<String> read("sender")).isEqualTo(FROM);
-        assertThat(jsonPath.<String> read("recipient")).isEqualTo(RECIPIENT);
-        assertThat(jsonPath.<String> read("uid")).isEqualTo(ICS_BASE64_UID);
-        assertThat(jsonPath.<String> read("sequence")).isEqualTo(ICS_SEQUENCE);
-        assertThat(jsonPath.<String> read("dtstamp")).isEqualTo(ICS_BASE64_DTSTAMP);
-        assertThat(jsonPath.<String> read("method")).isEqualTo(ICS_METHOD);
-        assertThat(jsonPath.<String> read("recurrence-id")).isNull();
+        assertThat(jsonPath.<String>read("sender")).isEqualTo(FROM);
+        assertThat(jsonPath.<String>read("recipient")).isEqualTo(RECIPIENT);
+        assertThat(jsonPath.<String>read("uid")).isEqualTo(ICS_BASE64_UID);
+        assertThat(jsonPath.<String>read("sequence")).isEqualTo(ICS_SEQUENCE);
+        assertThat(jsonPath.<String>read("dtstamp")).isEqualTo(ICS_BASE64_DTSTAMP);
+        assertThat(jsonPath.<String>read("method")).isEqualTo(ICS_METHOD);
+        assertThat(jsonPath.<String>read("recurrence-id")).isNull();
     }
 
     @Test
     public void yahooBase64CalendarAttachmentShouldBePublishedInMQWhenMatchingWorkflowConfiguration() throws Exception {
-        Mail mail = FakeMail.builder()
-            .mimeMessage(yahooInvitationMessage)
-            .sender(new MailAddress(FROM))
-            .recipient(new MailAddress(RECIPIENT))
-            .build();
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(yahooInvitationMessage)
+                .sender(FROM)
+                .recipient(RECIPIENT))
+            .awaitSent(awaitAtMostOneMinute);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(mail);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
-        }
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(RECIPIENT, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
 
         Optional<String> content = amqpRule.readContent();
         assertThat(content).isPresent();
         DocumentContext jsonPath = toJsonPath(content.get());
-        assertThat(jsonPath.<String> read("sender")).isEqualTo("obmlinagora@yahoo.fr");
-        assertThat(jsonPath.<String> read("recipient")).isEqualTo(RECIPIENT);
-        assertThat(jsonPath.<String> read("uid")).isEqualTo("5014513f-1026-4b58-82cf-80d4fc060bbe");
-        assertThat(jsonPath.<String> read("sequence")).isEqualTo("0");
-        assertThat(jsonPath.<String> read("dtstamp")).isEqualTo("20170123T121635Z");
-        assertThat(jsonPath.<String> read("method")).isEqualTo("REQUEST");
-        assertThat(jsonPath.<String> read("ical")).isEqualTo(ICS_YAHOO);
-        assertThat(jsonPath.<String> read("recurrence-id")).isNull();
+        assertThat(jsonPath.<String>read("sender")).isEqualTo("obmlinagora@yahoo.fr");
+        assertThat(jsonPath.<String>read("recipient")).isEqualTo(RECIPIENT);
+        assertThat(jsonPath.<String>read("uid")).isEqualTo("5014513f-1026-4b58-82cf-80d4fc060bbe");
+        assertThat(jsonPath.<String>read("sequence")).isEqualTo("0");
+        assertThat(jsonPath.<String>read("dtstamp")).isEqualTo("20170123T121635Z");
+        assertThat(jsonPath.<String>read("method")).isEqualTo("REQUEST");
+        assertThat(jsonPath.<String>read("ical")).isEqualTo(ICS_YAHOO);
+        assertThat(jsonPath.<String>read("recurrence-id")).isNull();
     }
 
     @Test
     public void headersShouldBeFilledOnlyWithOneICalAttachmentWhenMailHasSeveral() throws Exception {
-        Mail mail = FakeMail.builder()
-              .mimeMessage(messageWithThreeICSAttached)
-              .sender(new MailAddress(FROM))
-              .recipient(new MailAddress(RECIPIENT))
-              .build();
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(messageWithThreeICSAttached)
+                .sender(FROM)
+                .recipient(RECIPIENT))
+            .awaitSent(awaitAtMostOneMinute);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-                IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(mail);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(RECIPIENT, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
 
-            String receivedHeaders = imapMessageReader.readFirstMessageHeadersInInbox(RECIPIENT, PASSWORD);
-
-            assertThat(receivedHeaders).contains("X-MEETING-UID: " + ICS_UID);
-            assertThat(receivedHeaders).contains("X-MEETING-METHOD: " + ICS_METHOD);
-            assertThat(receivedHeaders).contains("X-MEETING-SEQUENCE: " + ICS_SEQUENCE);
-            assertThat(receivedHeaders).contains("X-MEETING-DTSTAMP: " + ICS_DTSTAMP);
-        }
+        String receivedHeaders = imapMessageReader.readFirstMessageHeaders();
+        assertThat(receivedHeaders).contains("X-MEETING-UID: " + ICS_UID);
+        assertThat(receivedHeaders).contains("X-MEETING-METHOD: " + ICS_METHOD);
+        assertThat(receivedHeaders).contains("X-MEETING-SEQUENCE: " + ICS_SEQUENCE);
+        assertThat(receivedHeaders).contains("X-MEETING-DTSTAMP: " + ICS_DTSTAMP);
     }
 
     @Test
     public void pipelineShouldSendSeveralJSONOverRabbitMQWhenSeveralAttachments() throws Exception {
-        Mail mail = FakeMail.builder()
-            .mimeMessage(messageWithThreeICSAttached)
-            .sender(new MailAddress(FROM))
-            .recipient(new MailAddress(RECIPIENT))
-            .build();
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(messageWithThreeICSAttached)
+                .sender(FROM)
+                .recipient(RECIPIENT))
+            .awaitSent(awaitAtMostOneMinute);
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(mail);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
-        }
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(RECIPIENT, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
 
         Optional<String> content1 = amqpRule.readContent();
         assertThat(content1).isPresent();
@@ -833,22 +779,20 @@ public class ICSAttachmentWorkflowTest {
 
     @Test
     public void mailShouldNotContainCalendarContentInTextBodyButAttachment() throws Exception {
-        MimeMessage calendarMessage = MimeMessageBuilder.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream("eml/calendar.eml"));
-        Mail mail = FakeMail.builder()
-            .mimeMessage(calendarMessage)
-            .sender(new MailAddress(FROM))
-            .recipient(new MailAddress(RECIPIENT))
-            .build();
+        MimeMessage calendarMessage = MimeMessageUtil.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream("eml/calendar.eml"));
 
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, JAMES_APACHE_ORG);
-             IMAPMessageReader imapMessageReader = new IMAPMessageReader(LOCALHOST_IP, IMAP_PORT)) {
-            messageSender.sendMessage(mail);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
-            calmlyAwait.atMost(Duration.ONE_MINUTE).until(() -> imapMessageReader.userReceivedMessage(RECIPIENT, PASSWORD));
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(calendarMessage)
+                .sender(FROM)
+                .recipient(RECIPIENT))
+            .awaitSent(awaitAtMostOneMinute);
 
-            String receivedMessage = imapMessageReader.readFirstMessageInInbox(RECIPIENT, PASSWORD);
-
-            assertThat(receivedMessage).containsSequence("Content-Type: multipart/mixed", "Content-Disposition: attachment");
-        }
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(RECIPIENT, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage())
+            .containsSequence("Content-Type: multipart/mixed", "Content-Disposition: attachment");
     }
 }

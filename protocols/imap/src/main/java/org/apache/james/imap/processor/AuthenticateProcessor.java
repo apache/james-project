@@ -47,9 +47,9 @@ import com.google.common.collect.ImmutableList;
  * 
  *
  */
-public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateRequest> implements CapabilityImplementingProcessor{
+public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticateProcessor.class);
-    private final static String PLAIN = "PLAIN";
+    private static final String PLAIN = "PLAIN";
     
     public AuthenticateProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
@@ -87,9 +87,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                 }
             }
         } else {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug  ("Unsupported authentication mechanism '" + authType + "'");
-            }
+            LOGGER.debug("Unsupported authentication mechanism '{}'", authType);
             no(command, tag, responder, HumanReadableText.UNSUPPORTED_AUTHENTICATION_MECHANISM);
         }
     }

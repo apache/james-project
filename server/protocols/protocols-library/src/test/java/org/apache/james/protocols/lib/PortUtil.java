@@ -27,12 +27,10 @@ import java.net.ServerSocket;
  */
 public class PortUtil {
 
-    private static final int PORT_RANGE_START = 8000; // the lowest possible
-                                                      // port number assigned
-                                                      // for testing
-    private static final int PORT_RANGE_END = 11000; // the highest possible
-                                                     // port number assigned for
-                                                     // testing
+    //the lowest possible port number assigned for testing
+    private static final int PORT_RANGE_START = 8000;
+    // the highest possible port number assigned for testing
+    private static final int PORT_RANGE_END = 11000; 
     private static int PORT_LAST_USED = PORT_RANGE_START;
 
     /**
@@ -41,8 +39,8 @@ public class PortUtil {
      * @return port number
      */
     public static int getNonPrivilegedPort() {
-        return getNextNonPrivilegedPort(); // uses sequential assignment of
-                                           // ports
+        // uses sequential assignment of ports
+        return getNextNonPrivilegedPort(); 
     }
 
     /**
@@ -59,16 +57,18 @@ public class PortUtil {
      * 
      * @return port number
      */
-    protected synchronized static int getNextNonPrivilegedPort() {
+    protected static synchronized int getNextNonPrivilegedPort() {
         // Hack to increase probability that the port is bindable
         int nextPortCandidate = PORT_LAST_USED;
         while (true) {
             try {
                 nextPortCandidate++;
-                if (PORT_LAST_USED == nextPortCandidate)
+                if (PORT_LAST_USED == nextPortCandidate) {
                     throw new RuntimeException("no free port found");
-                if (nextPortCandidate > PORT_RANGE_END)
+                }
+                if (nextPortCandidate > PORT_RANGE_END) {
                     nextPortCandidate = PORT_RANGE_START; // start over
+                }
 
                 // test, port is available
                 ServerSocket ss;

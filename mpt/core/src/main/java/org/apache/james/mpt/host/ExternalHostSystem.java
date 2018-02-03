@@ -77,12 +77,12 @@ public class ExternalHostSystem extends ExternalSessionFactory implements ImapHo
         this.features = features;
         this.userAdder = userAdder;
     }
+    
     public boolean addUser(String user, String password) throws Exception {
         if (userAdder == null) {
             monitor.note("Please ensure user '" + user + "' with password '" + password + "' exists.");
             return false;
-        }
-        else {
+        } else {
             userAdder.addUser(user, password);
         }
         return true;

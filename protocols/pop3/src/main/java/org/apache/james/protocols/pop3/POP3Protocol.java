@@ -29,7 +29,7 @@ import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
  * {@link ProtocolImpl} which implements the POP3 Protocol
  *
  */
-public class POP3Protocol extends ProtocolImpl{
+public class POP3Protocol extends ProtocolImpl {
     
     public POP3Protocol(ProtocolHandlerChain chain, ProtocolConfiguration config) {
         super(chain, config);

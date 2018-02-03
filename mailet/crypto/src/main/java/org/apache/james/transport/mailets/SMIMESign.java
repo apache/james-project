@@ -84,7 +84,7 @@ public class SMIMESign extends Sign {
         };
     }
     
-     /* ******************************************************************** */
+    /* ******************************************************************** */
     /* ****************** Begin of setters and getters ******************** */
     /* ******************************************************************** */    
     
@@ -137,7 +137,7 @@ public class SMIMESign extends Sign {
             throw new MessagingException(keyHolderClassName + "does not exist.");
         }
         if (isDebug()) {
-            LOGGER.debug("keyHolderClass: " + getKeyHolderClass());
+            LOGGER.debug("keyHolderClass: {}", getKeyHolderClass());
         }
     }
     

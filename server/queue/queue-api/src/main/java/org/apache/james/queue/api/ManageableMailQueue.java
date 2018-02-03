@@ -18,7 +18,9 @@
  ****************************************************************/
 package org.apache.james.queue.api;
 
+import java.time.ZonedDateTime;
 import java.util.Iterator;
+import java.util.Optional;
 
 import org.apache.mailet.Mail;
 
@@ -89,22 +91,31 @@ public interface ManageableMailQueue extends MailQueue {
     /**
      * Represent a View over a queue {@link MailQueue.MailQueueItem}
      */
-    interface MailQueueItemView {
+    class MailQueueItemView {
 
-        /**
-         * Return the Mail
-         * 
-         * @return mail
-         */
-        Mail getMail();
+        private final Mail mail;
+        private final Optional<ZonedDateTime> nextDelivery;
 
-        /**
-         * Return the timestamp when the mail will be ready for dequeuing or -1
-         * if there is no restriction set..
-         * 
-         * @return nextDelivery
-         */
-        long getNextDelivery();
+        public MailQueueItemView(Mail mail) {
+            this(mail, Optional.empty());
+        }
+
+        public MailQueueItemView(Mail mail, ZonedDateTime nextDelivery) {
+            this(mail, Optional.of(nextDelivery));
+        }
+
+        public MailQueueItemView(Mail mail, Optional<ZonedDateTime> nextDelivery) {
+            this.mail = mail;
+            this.nextDelivery = nextDelivery;
+        }
+
+        public Mail getMail() {
+            return mail;
+        }
+
+        public Optional<ZonedDateTime> getNextDelivery() {
+            return nextDelivery;
+        }
     }
 
 }

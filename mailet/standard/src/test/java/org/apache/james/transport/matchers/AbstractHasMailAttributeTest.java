@@ -39,9 +39,9 @@ public abstract class AbstractHasMailAttributeTest extends TestCase {
 
     protected Matcher matcher;
 
-    protected final String MAIL_ATTRIBUTE_NAME = "org.apache.james.test.junit";
+    protected static final String MAIL_ATTRIBUTE_NAME = "org.apache.james.test.junit";
 
-    protected final String MAIL_ATTRIBUTE_VALUE = "true";
+    protected static final String MAIL_ATTRIBUTE_VALUE = "true";
 
     protected String mailAttributeName = "org.apache.james";
 

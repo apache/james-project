@@ -87,7 +87,7 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
      */
     private MailProcessor mailProcessor;
 
-    private MailQueueFactory queueFactory;
+    private MailQueueFactory<?> queueFactory;
 
     private int numDequeueThreads;
 
@@ -97,7 +97,7 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
     }
 
     @Inject
-    public void setMailQueueFactory(MailQueueFactory queueFactory) {
+    public void setMailQueueFactory(MailQueueFactory<?> queueFactory) {
         this.queueFactory = queueFactory;
     }
 
@@ -120,14 +120,11 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
      */
     @PostConstruct
     public void init() {
-        LOGGER.info(getClass().getName() + " init...");
+        LOGGER.info("{} init...", getClass().getName());
 
-        queue = queueFactory.getQueue(MailQueueFactory.SPOOL);
+        queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
 
-        if (LOGGER.isInfoEnabled()) {
-            String infoBuffer = getClass().getName() + " uses " + numThreads + " Thread(s)";
-            LOGGER.info(infoBuffer);
-        }
+        LOGGER.info("{} uses {} Thread(s)", getClass().getName(), numThreads);
 
         active.set(true);
         workerService = JMXEnabledThreadPoolExecutor.newFixedThreadPool("org.apache.james:type=component,component=mailetcontainer,name=mailspooler,sub-type=threadpool", "spooler", numThreads);
@@ -145,11 +142,8 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
      */
     @Override
     public void run() {
-
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Run " + getClass().getName() + ": " + Thread.currentThread().getName());
-            LOGGER.info("Queue=" + queue.toString());
-        }
+        LOGGER.info("Run {}: {}", getClass().getName(), Thread.currentThread().getName());
+        LOGGER.info("Queue={}", queue);
 
         while (active.get()) {
 
@@ -165,17 +159,14 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
                         processingActive.incrementAndGet();
 
                         Mail mail = queueItem.getMail();
-                        if (LOGGER.isDebugEnabled()) {
-                            String debugBuffer = "==== Begin processing mail " + mail.getName() + "====";
-                            LOGGER.debug(debugBuffer);
-                        }
+                        LOGGER.debug("==== Begin processing mail {} ====", mail.getName());
 
                         try {
                             mailProcessor.service(mail);
                             queueItem.done(true);
                         } catch (Exception e) {
-                            if (active.get() && LOGGER.isErrorEnabled()) {
-                                LOGGER.error("Exception processing mail while spooling " + e.getMessage(), e);
+                            if (active.get()) {
+                                LOGGER.error("Exception processing mail while spooling", e);
                             }
                             queueItem.done(false);
 
@@ -184,8 +175,8 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
                             mail = null;
                         }
                     } catch (Throwable e) {
-                        if (active.get() && LOGGER.isErrorEnabled()) {
-                            LOGGER.error("Exception processing mail while spooling " + e.getMessage(), e);
+                        if (active.get()) {
+                            LOGGER.error("Exception processing mail while spooling", e);
 
                         }
                     } finally {
@@ -196,9 +187,8 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
 
                 });
             } catch (MailQueueException e1) {
-                if (active.get() && LOGGER.isErrorEnabled()) {
+                if (active.get()) {
                     LOGGER.error("Exception dequeue mail", e1);
-
                 }
             } catch (InterruptedException interrupted) {
                 //MailSpooler is stopping
@@ -220,7 +210,7 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
     @PreDestroy
     @Override
     public void dispose() {
-        LOGGER.info(getClass().getName() + " dispose...");
+        LOGGER.info("{} dispose...", getClass().getName());
         active.set(false); // shutdown the threads
         dequeueService.shutdownNow();
         workerService.shutdown();
@@ -230,11 +220,12 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
         while (numActive.get() != 0 && stop > System.currentTimeMillis()) {
             try {
                 Thread.sleep(1000);
-            } catch (Exception ignored) {
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
 
-        LOGGER.info(getClass().getName() + " thread shutdown completed.");
+        LOGGER.info("{} thread shutdown completed.", getClass().getName());
     }
 
     @Override

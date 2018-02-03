@@ -22,6 +22,7 @@ package org.apache.james.mailbox.elasticsearch;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.concurrent.Executors;
@@ -60,7 +61,6 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 
 public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
@@ -70,7 +70,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
     private static final boolean IS_RECENT = true;
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch= new EmbeddedElasticSearch(temporaryFolder, MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
+    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
 
     @Rule
     public RuleChain ruleChain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
@@ -147,7 +147,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
         String recipient = "benwa@linagora.com";
         ComposedMessageId composedMessageId = messageManager.appendMessage(new ByteArrayInputStream(("To: " + recipient + "\n" +
             "\n" +
-            Strings.repeat("0à2345678é", 3200)).getBytes(Charsets.UTF_8)), new Date(), session, IS_RECENT, new Flags());
+            Strings.repeat("0à2345678é", 3200)).getBytes(StandardCharsets.UTF_8)), new Date(), session, IS_RECENT, new Flags());
 
         embeddedElasticSearch.awaitForElasticSearch();
 
@@ -164,7 +164,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
         String recipient = "benwa@linagora.com";
         ComposedMessageId composedMessageId = messageManager.appendMessage(new ByteArrayInputStream(("To: " + recipient + "\n" +
             "\n" +
-            Strings.repeat("0123456789", 3300)).getBytes(Charsets.UTF_8)), new Date(), session, IS_RECENT, new Flags());
+            Strings.repeat("0123456789", 3300)).getBytes(StandardCharsets.UTF_8)), new Date(), session, IS_RECENT, new Flags());
 
         embeddedElasticSearch.awaitForElasticSearch();
 
@@ -181,7 +181,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
         String recipient = "benwa@linagora.com";
         ComposedMessageId composedMessageId = messageManager.appendMessage(new ByteArrayInputStream(("To: " + recipient + "\n" +
             "\n" +
-            Strings.repeat("0123456789 ", 5000)).getBytes(Charsets.UTF_8)), new Date(), session, IS_RECENT, new Flags());
+            Strings.repeat("0123456789 ", 5000)).getBytes(StandardCharsets.UTF_8)), new Date(), session, IS_RECENT, new Flags());
 
         embeddedElasticSearch.awaitForElasticSearch();
 
@@ -198,7 +198,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
         String recipient = "benwa@linagora.com";
         ComposedMessageId composedMessageId = messageManager.appendMessage(new ByteArrayInputStream(("To: " + recipient + "\n" +
             "\n" +
-            Strings.repeat("0123456789", 5000) + " matchMe").getBytes(Charsets.UTF_8)), new Date(), session, IS_RECENT, new Flags());
+            Strings.repeat("0123456789", 5000) + " matchMe").getBytes(StandardCharsets.UTF_8)), new Date(), session, IS_RECENT, new Flags());
 
         embeddedElasticSearch.awaitForElasticSearch();
 
@@ -216,7 +216,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
         String reasonableLongTerm = "dichlorodiphényltrichloroéthane";
         ComposedMessageId composedMessageId = messageManager.appendMessage(new ByteArrayInputStream(("To: " + recipient + "\n" +
             "\n" +
-            reasonableLongTerm).getBytes(Charsets.UTF_8)), new Date(), session, IS_RECENT, new Flags());
+            reasonableLongTerm).getBytes(StandardCharsets.UTF_8)), new Date(), session, IS_RECENT, new Flags());
 
         embeddedElasticSearch.awaitForElasticSearch();
 

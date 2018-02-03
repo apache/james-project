@@ -51,7 +51,7 @@ public class SearchCommandParserCharsetTest {
 
     private static final String ASCII_SEARCH_TERM = "A Search Term";
 
-    private static final String NON_ASCII_SEARCH_TERM = "\u043A\u0430\u043A \u0414\u0435\u043B\u0430?";
+    private static final String NON_ASCII_SEARCH_TERM = "как Дела?";
 
     private static final byte[] BYTES_NON_ASCII_SEARCH_TERM = NioUtils.toBytes(
             NON_ASCII_SEARCH_TERM, UTF8);
@@ -74,7 +74,7 @@ public class SearchCommandParserCharsetTest {
 
     ImapMessage message;
 
-	private ImapSession session;
+    private ImapSession session;
 
     @Before
     public void setUp() throws Exception {
@@ -91,12 +91,14 @@ public class SearchCommandParserCharsetTest {
     @Test
     public void testBadCharset() throws Exception {
         context.checking(new Expectations() {{
-            oneOf (mockStatusResponseFactory).taggedNo(
-                    with(equal(TAG)), 
-                    with(same(command)), 
-                    with(equal(HumanReadableText.BAD_CHARSET)),
-                    with(equal(StatusResponse.ResponseCode.badCharset(CharsetUtil.getAvailableCharsetNames()))));
-        }});
+                oneOf(mockStatusResponseFactory).taggedNo(
+                        with(equal(TAG)), 
+                        with(same(command)), 
+                        with(equal(HumanReadableText.BAD_CHARSET)),
+                        with(equal(StatusResponse.ResponseCode.badCharset(CharsetUtil.getAvailableCharsetNames()))));
+                }
+            }
+        );
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream("CHARSET BOGUS ".getBytes("US-ASCII")),
                 new ByteArrayOutputStream());

@@ -26,7 +26,7 @@ import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 
-public class ProtocolHandlerLoaderBeanFactory extends AbstractBeanFactory implements ProtocolHandlerLoader{
+public class ProtocolHandlerLoaderBeanFactory extends AbstractBeanFactory implements ProtocolHandlerLoader {
 
     @SuppressWarnings("unchecked")
     @Override

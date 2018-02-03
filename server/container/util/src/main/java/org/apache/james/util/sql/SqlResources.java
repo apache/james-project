@@ -46,13 +46,13 @@ import org.w3c.dom.NodeList;
  */
 public class SqlResources {
     /** A map of statement types to SQL statements */
-    private final Map<String, String> m_sql = new HashMap<>();
+    private final Map<String, String> sql = new HashMap<>();
 
     /** A map of engine specific options */
-    private final Map<String, String> m_dbOptions = new HashMap<>();
+    private final Map<String, String> dbOptions = new HashMap<>();
 
     /** A set of all used String values */
-    static private final Map<String, String> stringTable = java.util.Collections.synchronizedMap(new HashMap<String, String>());
+    private static final Map<String, String> stringTable = java.util.Collections.synchronizedMap(new HashMap<String, String>());
 
     /**
      * <p>
@@ -143,10 +143,10 @@ public class SqlResources {
         Element dbOptionsElement = (Element) (sqlDoc.getElementsByTagName("dbOptions").item(0));
         if (dbOptionsElement != null) {
             // First populate the map with default values
-            populateDbOptions("", dbOptionsElement, m_dbOptions);
+            populateDbOptions("", dbOptionsElement, dbOptions);
             // Now update the map with specific product values
             if (dbProduct != null) {
-                populateDbOptions(dbProduct, dbOptionsElement, m_dbOptions);
+                populateDbOptions(dbProduct, dbOptionsElement, dbOptions);
             }
         }
 
@@ -244,8 +244,8 @@ public class SqlResources {
         }
 
         // Copy in default strings, then overwrite product-specific ones.
-        m_sql.putAll(defaultSqlStatements);
-        m_sql.putAll(dbProductSqlStatements);
+        sql.putAll(defaultSqlStatements);
+        sql.putAll(dbProductSqlStatements);
     }
 
     /**
@@ -322,18 +322,18 @@ public class SqlResources {
      * @return the substituted string
      */
     private String substituteSubString(String input, String find, String replace) {
-        int find_length = find.length();
-        int replace_length = replace.length();
+        int findLength = find.length();
+        int replaceLength = replace.length();
 
         StringBuilder output = new StringBuilder(input);
         int index = input.indexOf(find);
         int outputOffset = 0;
 
         while (index > -1) {
-            output.replace(index + outputOffset, index + outputOffset + find_length, replace);
-            outputOffset = outputOffset + (replace_length - find_length);
+            output.replace(index + outputOffset, index + outputOffset + findLength, replace);
+            outputOffset = outputOffset + (replaceLength - findLength);
 
-            index = input.indexOf(find, index + find_length);
+            index = input.indexOf(find, index + findLength);
         }
 
         return output.toString();
@@ -348,7 +348,7 @@ public class SqlResources {
      * @return the requested resource
      */
     public String getSqlString(String name) {
-        return m_sql.get(name);
+        return sql.get(name);
     }
 
     /**
@@ -382,7 +382,7 @@ public class SqlResources {
      * @return the requested dbOption value
      */
     public String getDbOption(String name) {
-        return m_dbOptions.get(name);
+        return dbOptions.get(name);
     }
 
 }

@@ -17,71 +17,56 @@
  * under the License.                                           *
  ****************************************************************/
 
-
 package org.apache.james.transport.matchers;
 
-import java.util.Collection;
-
-import javax.mail.MessagingException;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.core.MailAddress;
-import org.apache.mailet.Matcher;
+import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.apache.mailet.base.test.MailUtil;
-import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class SMTPIsAuthNetworkTest {
 
-    private FakeMail mockedMail;
+    private SMTPIsAuthNetwork testee;
+    private MailAddress recipient;
 
-    private Matcher matcher;
-
-    private boolean isAuthorized = false;
-
-    private void setIsAuthorized(boolean isAuthorized) {
-        this.isAuthorized = isAuthorized;
-    }
-
-    private void setupMockedMail() throws MessagingException {
-        mockedMail = MailUtil.createMockMail2Recipients();
-        if (isAuthorized) {
-            String MAIL_ATTRIBUTE_NAME = "org.apache.james.SMTPIsAuthNetwork";
-            mockedMail.setAttribute(MAIL_ATTRIBUTE_NAME, "true");
-        }
-    }
-
-    private void setupMatcher() throws MessagingException {
-        matcher = new SMTPIsAuthNetwork();
-        FakeMatcherConfig mci = FakeMatcherConfig.builder()
-                .matcherName("SMTPIsAuthNetwork")
-                .build();
-
-        matcher.init(mci);
+    @Before
+    public void setUp() throws Exception {
+        testee = new SMTPIsAuthNetwork();
+        recipient = new MailAddress("recipient@domain.com");
     }
 
     @Test
-    public void testIsAuthNetwork() throws MessagingException {
-        setIsAuthorized(true);
-        setupMockedMail();
-        setupMatcher();
+    public void matchShouldReturnEmptyWhenNoSmtpInformation() throws Exception {
+        Mail mail = FakeMail.builder()
+            .recipient(recipient)
+            .build();
 
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        Assert.assertNotNull(matchedRecipients);
-        Assert.assertEquals(matchedRecipients.size(), mockedMail.getRecipients()
-                .size());
+        assertThat(testee.match(mail))
+            .isEmpty();
     }
 
     @Test
-    public void testIsNotAuthNetwork() throws MessagingException {
-        setIsAuthorized(false);
-        setupMockedMail();
-        setupMatcher();
+    public void matchShouldReturnAddressesWhenAuthorizedNetwork() throws Exception {
+        Mail mail = FakeMail.builder()
+            .recipient(recipient)
+            .attribute(SMTPIsAuthNetwork.SMTP_AUTH_NETWORK_NAME, "true")
+            .build();
 
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
+        assertThat(testee.match(mail))
+            .containsOnly(recipient);
+    }
 
-        Assert.assertNull(matchedRecipients);
+    @Test
+    public void matchShouldReturnEmptyWhenNonAuthorizedNetwork() throws Exception {
+        Mail mail = FakeMail.builder()
+            .recipient(recipient)
+            .attribute(SMTPIsAuthNetwork.SMTP_AUTH_NETWORK_NAME, "false")
+            .build();
+
+        assertThat(testee.match(mail))
+            .isEmpty();
     }
 }

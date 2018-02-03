@@ -18,13 +18,13 @@
  ****************************************************************/
 package org.apache.james.metrics.logger;
 
+import java.util.function.Supplier;
+
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.function.Supplier;
 
 public class DefaultMetricFactory implements MetricFactory {
 

@@ -73,11 +73,13 @@ public class ImapRequestHandlerAdandonConnectionTest {
         
         // Setup stubs
         mockery.checking(new Expectations() {{
-            ignoring(decoderStub);
-            ignoring(processorStub);
-            ignoring(encoderStub);
-            ignoring(sessionStub);
-        }});
+                    ignoring(decoderStub);
+                    ignoring(processorStub);
+                    ignoring(encoderStub);
+                    ignoring(sessionStub);
+                }
+            }
+        );
         
         // Create input stream that will throw IOException after first read
         byte[] endOfStreamAfterOneCharacter = {'0'};

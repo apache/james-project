@@ -60,11 +60,23 @@ public class MessageBuilder {
     
     public void setFlags(boolean seen, boolean flagged, boolean answered,
             boolean draft, boolean deleted, boolean recent) {
-        if (seen) flags.add(Flags.Flag.SEEN);
-        if (flagged) flags.add(Flags.Flag.FLAGGED);
-        if (answered) flags.add(Flags.Flag.ANSWERED);
-        if (draft) flags.add(Flags.Flag.DRAFT);
-        if (deleted) flags.add(Flags.Flag.DELETED);
-        if (recent) flags.add(Flags.Flag.RECENT);
+        if (seen) {
+            flags.add(Flags.Flag.SEEN);
+        }
+        if (flagged) {
+            flags.add(Flags.Flag.FLAGGED);
+        }
+        if (answered) {
+            flags.add(Flags.Flag.ANSWERED);
+        }
+        if (draft) {
+            flags.add(Flags.Flag.DRAFT);
+        }
+        if (deleted) {
+            flags.add(Flags.Flag.DELETED);
+        }
+        if (recent) {
+            flags.add(Flags.Flag.RECENT);
+        }
     }
 }

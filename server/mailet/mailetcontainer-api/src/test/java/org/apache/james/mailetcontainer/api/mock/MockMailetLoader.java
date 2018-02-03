@@ -19,6 +19,7 @@
 package org.apache.james.mailetcontainer.api.mock;
 
 import javax.mail.MessagingException;
+
 import org.apache.james.mailetcontainer.api.MailetLoader;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetConfig;
@@ -29,8 +30,8 @@ public class MockMailetLoader implements MailetLoader {
     @Override
     public Mailet getMailet(MailetConfig config) throws MessagingException {
         try {
-            Class<Mailet> clazz = (Class<Mailet>) Thread.currentThread().getContextClassLoader().loadClass(config.
-                    getMailetName());
+            Class<Mailet> clazz = (Class<Mailet>) Thread.currentThread().getContextClassLoader().loadClass(
+                    config.getMailetName());
             Mailet m = clazz.newInstance();
             m.init(config);
             return m;

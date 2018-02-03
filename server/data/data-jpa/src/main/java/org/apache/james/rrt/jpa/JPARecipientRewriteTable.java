@@ -56,7 +56,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
      * @param entityManagerFactory
      */
     @Inject
-    @PersistenceUnit(unitName="James")
+    @PersistenceUnit(unitName = "James")
     public void setEntityManagerFactory(EntityManagerFactory entityManagerFactory) {
         this.entityManagerFactory = entityManagerFactory;
     }
@@ -99,7 +99,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
                 return virtualUsers.get(0).getTargetAddress();
             }
         } catch (PersistenceException e) {
-            LOGGER.debug("Failed to find mapping for  user=" + user + " and domain=" + domain, e);
+            LOGGER.debug("Failed to find mapping for  user={} and domain={}", user, domain, e);
             if (transaction.isActive()) {
                 transaction.rollback();
             }
@@ -154,8 +154,9 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
             for (JPARecipientRewrite virtualUser : virtualUsers) {
                 mapping.put(virtualUser.getUser() + "@" + virtualUser.getDomain(), MappingsImpl.fromRawString(virtualUser.getTargetAddress()));
             }
-            if (mapping.size() > 0)
+            if (mapping.size() > 0) {
                 return mapping;
+            }
         } catch (PersistenceException e) {
             LOGGER.debug("Failed to get all mappings", e);
             if (transaction.isActive()) {

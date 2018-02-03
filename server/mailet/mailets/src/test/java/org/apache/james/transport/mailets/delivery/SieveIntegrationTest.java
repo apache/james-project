@@ -29,6 +29,8 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.core.builder.MimeMessageBuilder.Header;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.transport.mailets.Sieve;
@@ -38,8 +40,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.apache.mailet.base.test.MimeMessageBuilder;
-import org.apache.mailet.base.test.MimeMessageBuilder.Header;
+import org.apache.mailet.base.test.MimeMessageUtil;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -268,11 +269,11 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/headerEncodedFolded.script");
 
         FakeMail mail = FakeMail.builder()
-            .mimeMessage(MimeMessageBuilder.mimeMessageFromStream(
+            .mimeMessage(MimeMessageUtil.mimeMessageFromStream(
                 ClassLoader.getSystemResourceAsStream("eml/gmail.eml")))
             .state(Mail.DEFAULT)
-            .recipient(new MailAddress(RECEIVER_DOMAIN_COM))
-            .sender(new MailAddress("sender@any.com"))
+            .recipient(RECEIVER_DOMAIN_COM)
+            .sender("sender@any.com")
             .build();
         testee.service(mail);
 
@@ -426,7 +427,7 @@ public class SieveIntegrationTest {
 
         assertThat(mail.getRecipients()).isEmpty();
         FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
-            .sender(new MailAddress("sender@any.com"))
+            .sender("sender@any.com")
             .recipient(new MailAddress("redirect@apache.org"))
             .fromMailet()
             .build();
@@ -793,7 +794,7 @@ public class SieveIntegrationTest {
 
         // Notification of script interpretation failure
         assertThat(fakeMailContext.getSentMails()).containsExactly(FakeMailContext.sentMailBuilder()
-            .recipient(new MailAddress(RECEIVER_DOMAIN_COM))
+            .recipient(RECEIVER_DOMAIN_COM)
             .sender(new MailAddress(RECEIVER_DOMAIN_COM))
             .fromMailet()
             .build());
@@ -961,12 +962,10 @@ public class SieveIntegrationTest {
                             .data("A text to match")
                             .addHeader("Content-Type", "text/plain; charset=UTF-8")
                             .filename("file.txt")
-                            .disposition(MimeBodyPart.ATTACHMENT)
-                            .build())
-                    .build())
+                            .disposition(MimeBodyPart.ATTACHMENT)))
             .state(Mail.DEFAULT)
-            .recipient(new MailAddress(RECEIVER_DOMAIN_COM))
-            .sender(new MailAddress("sender@any.com"))
+            .recipient(RECEIVER_DOMAIN_COM)
+            .sender("sender@any.com")
             .build();
     }
 

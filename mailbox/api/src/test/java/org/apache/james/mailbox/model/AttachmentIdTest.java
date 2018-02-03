@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.UUID;
 
-import org.apache.commons.io.IOUtils;
+import org.apache.james.util.ClassLoaderUtils;
 import org.junit.Test;
 
 public class AttachmentIdTest {
@@ -127,8 +127,8 @@ public class AttachmentIdTest {
 
     @Test
     public void forPayloadAndTypeShouldCalculateDifferentHashesWhenCraftedSha1Collision() throws Exception {
-        byte[] payload1 = IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("shattered-1.pdf"));
-        byte[] payload2 = IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("shattered-2.pdf"));
+        byte[] payload1 = ClassLoaderUtils.getSystemResourceAsByteArray("shattered-1.pdf");
+        byte[] payload2 = ClassLoaderUtils.getSystemResourceAsByteArray("shattered-2.pdf");
         AttachmentId attachmentId1 = AttachmentId.forPayloadAndType(payload1, "application/pdf");
         AttachmentId attachmentId2 = AttachmentId.forPayloadAndType(payload2, "application/pdf");
         assertThat(attachmentId1).isNotEqualTo(attachmentId2);

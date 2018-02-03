@@ -33,7 +33,7 @@ import org.apache.james.mpt.protocol.ProtocolSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GenericSimpleScriptedTestProtocol<T extends HostSystem, SELF extends GenericSimpleScriptedTestProtocol<?, ?>> {
+public class GenericSimpleScriptedTestProtocol<T extends HostSystem, SelfT extends GenericSimpleScriptedTestProtocol<?, ?>> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GenericSimpleScriptedTestProtocol.class);
 
@@ -84,21 +84,21 @@ public class GenericSimpleScriptedTestProtocol<T extends HostSystem, SELF extend
     }
 
     @SuppressWarnings("unchecked")
-    public SELF withLocale(Locale locale) {
+    public SelfT withLocale(Locale locale) {
         this.locale = locale;
-        return (SELF) this;
+        return (SelfT) this;
     }
     
     @SuppressWarnings("unchecked")
-    public SELF withUser(String user, String password) {
+    public SelfT withUser(String user, String password) {
         prepareCommands.add(new CreateUser(user, password));
-        return (SELF) this;
+        return (SelfT) this;
     }
     
     @SuppressWarnings("unchecked")
-    public SELF withPreparedCommand(PrepareCommand<? super T> command) {
+    public SelfT withPreparedCommand(PrepareCommand<? super T> command) {
         prepareCommands.add(command);
-        return (SELF) this;
+        return (SelfT) this;
     }
     
     public ProtocolSession preElements() {
@@ -158,6 +158,7 @@ public class GenericSimpleScriptedTestProtocol<T extends HostSystem, SELF extend
             }
 
         }
+        
         SessionContinuation continuation = new SessionContinuation();
 
         Session[] sessions = new Session[testElements.getSessionCount()];
@@ -173,8 +174,7 @@ public class GenericSimpleScriptedTestProtocol<T extends HostSystem, SELF extend
             testElements.runSessions(sessions);
             continuation.session = postElements;
             postElements.runSessions(sessions);
-        }
-        finally {
+        } finally {
             for (Session session : sessions) {
                 session.stop();
             }
@@ -204,8 +204,7 @@ public class GenericSimpleScriptedTestProtocol<T extends HostSystem, SELF extend
 
         try {
             builder.addProtocolLinesFromStream(is, session, fileName);
-        }
-        finally {
+        } finally {
             IOUtils.closeQuietly(is);
         }
         

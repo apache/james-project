@@ -28,8 +28,8 @@ import org.apache.james.imap.api.message.request.ImapRequest;
  */
 public class MoveRequest extends AbstractMessageRangeRequest {
 
-	public MoveRequest(ImapCommand command, IdRange[] idSet, String mailboxName, boolean useUids, String tag) {
-		super(command, idSet, mailboxName, useUids, tag);
-	}
+    public MoveRequest(ImapCommand command, IdRange[] idSet, String mailboxName, boolean useUids, String tag) {
+        super(command, idSet, mailboxName, useUids, tag);
+    }
 
 }

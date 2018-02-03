@@ -99,6 +99,10 @@ public class MailboxPath {
         return name;
     }
 
+    public boolean belongsTo(MailboxSession mailboxSession) {
+        return mailboxSession.getUser().isSameUser(user);
+    }
+
     /**
      * Return a list of MailboxPath representing the hierarchy levels of this
      * MailboxPath. E.g. INBOX.main.sub would yield

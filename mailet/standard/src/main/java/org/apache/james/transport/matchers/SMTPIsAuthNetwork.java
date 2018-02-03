@@ -17,16 +17,16 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
 package org.apache.james.transport.matchers;
 
-import org.apache.mailet.Experimental;
-import org.apache.mailet.base.GenericMatcher;
-import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
-
 import java.util.Collection;
+import java.util.Objects;
+
+import org.apache.james.core.MailAddress;
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMatcher;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * <P>
@@ -37,21 +37,20 @@ import java.util.Collection;
  * class=&quot;&lt;any-class&gt;&quot;&gt; </CODE></PRE>
  * 
  */
-@Experimental
 public class SMTPIsAuthNetwork extends GenericMatcher {
 
     /**
      * The mail attribute which is set if the client is allowed to relay
      */
-    private final static String SMTP_AUTH_NETWORK_NAME = "org.apache.james.SMTPIsAuthNetwork";
+    public static final String SMTP_AUTH_NETWORK_NAME = "org.apache.james.SMTPIsAuthNetwork";
 
     public Collection<MailAddress> match(Mail mail) {
         String relayingAllowed = (String) mail
                 .getAttribute(SMTP_AUTH_NETWORK_NAME);
-        if (relayingAllowed != null && relayingAllowed.equals("true")) {
+        if (Objects.equals(relayingAllowed, "true")) {
             return mail.getRecipients();
         } else {
-            return null;
+            return ImmutableList.of();
         }
     }
 }

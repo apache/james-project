@@ -26,9 +26,9 @@ import java.util.Collection;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * @since 2.2.0
  */
 @Experimental
-abstract public class AbstractQuotaMatcher extends GenericMatcher {
+public abstract class AbstractQuotaMatcher extends GenericMatcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractQuotaMatcher.class);
 
     /**
@@ -79,10 +79,12 @@ abstract public class AbstractQuotaMatcher extends GenericMatcher {
     protected boolean isOverQuota(MailAddress address, Mail mail) {
         try {
             boolean over = getQuota(address, mail) < getUsed(address, mail);
-            if (over) LOGGER.info(address + " is over quota.");
+            if (over) {
+                LOGGER.info("{} is over quota.", address);
+            }
             return over;
         } catch (Throwable e) {
-            LOGGER.error("Exception checking quota for: " + address, e);
+            LOGGER.error("Exception checking quota for: {}", address, e);
             return false;
         }
     }
@@ -116,8 +118,8 @@ abstract public class AbstractQuotaMatcher extends GenericMatcher {
      *
      * @param address the address holding the quota if applicable
      * @param mail the mail involved if needed
-     */    
-    abstract protected long getQuota(MailAddress address, Mail mail) throws MessagingException;
+     */
+    protected abstract long getQuota(MailAddress address, Mail mail) throws MessagingException;
     
     /**
      * Gets the used amount to check against the quota.
@@ -125,7 +127,7 @@ abstract public class AbstractQuotaMatcher extends GenericMatcher {
      * @param address the address involved
      * @param mail the mail involved if needed
      */
-    abstract protected long getUsed(MailAddress address, Mail mail) throws MessagingException;
+    protected abstract long getUsed(MailAddress address, Mail mail) throws MessagingException;
 
     /**
      * Utility method that parses an amount string.
@@ -148,8 +150,7 @@ abstract public class AbstractQuotaMatcher extends GenericMatcher {
                 quota = Long.parseLong(amount);
             }
             return quota;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new MessagingException("Exception parsing quota", e);
         }
     }

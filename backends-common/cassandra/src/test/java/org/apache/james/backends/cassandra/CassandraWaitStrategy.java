@@ -50,7 +50,7 @@ public class CassandraWaitStrategy implements WaitStrategy {
                         .execInContainer("cqlsh", "-e", "show host")
                         .getStdout()
                         .contains("Connected to Test Cluster");
-                } catch (IOException|InterruptedException e) {
+                } catch (IOException | InterruptedException e) {
                     return false;
                 }
             }

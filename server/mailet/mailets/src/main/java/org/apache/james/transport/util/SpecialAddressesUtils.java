@@ -22,17 +22,18 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.ParseException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.transport.mailets.redirect.AddressExtractor;
 import org.apache.james.transport.mailets.redirect.RedirectNotify;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.transport.mailets.redirect.SpecialAddressKind;
 import org.apache.mailet.Mail;
-import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,7 +138,7 @@ public class SpecialAddressesUtils {
             try {
                 builder.add(new MailAddress(replyTo));
             } catch (ParseException pe) {
-                LOGGER.warn("Unable to parse a \"REPLY_TO\" header address in the original message: " + replyTo + "; ignoring.");
+                LOGGER.warn("Unable to parse a \"REPLY_TO\" header address in the original message: {}; ignoring.", replyTo);
             }
         }
         return builder.build();
@@ -236,7 +237,7 @@ public class SpecialAddressesUtils {
                         InternetAddress[] originalToInternetAddresses = InternetAddress.parse(toHeader, false);
                         return MailAddressUtils.from(originalToInternetAddresses);
                     } catch (MessagingException ae) {
-                        LOGGER.warn("Unable to parse a \"TO\" header address in the original message: " + toHeader + "; ignoring.");
+                        LOGGER.warn("Unable to parse a \"TO\" header address in the original message: {}; ignoring.", toHeader);
                     }
                 }
             }

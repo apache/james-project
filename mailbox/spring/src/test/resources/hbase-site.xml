@@ -30,12 +30,12 @@
         <name>hbase.rootdir</name>
         <value>hdfs://localhost:9000/hbase</value>
     </property>
-	
+
     <property>
         <name>hbase.master.port</name>
         <value>60000</value>
     </property>
-	
+
     <property>
         <name>hbase.regionserver.info.port</name>
         <value>6030</value>

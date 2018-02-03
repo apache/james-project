@@ -24,15 +24,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Properties;
-
-import javax.mail.Session;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.MimeMessageUtil;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -46,7 +44,7 @@ public class HasAttachmentTest {
     public void setUp() throws Exception {
         testee = new HasAttachment();
 
-        mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        mimeMessage = MimeMessageUtil.defaultMimeMessage();
         mail = FakeMail.builder()
             .recipient(ANY_AT_JAMES)
             .mimeMessage(mimeMessage)

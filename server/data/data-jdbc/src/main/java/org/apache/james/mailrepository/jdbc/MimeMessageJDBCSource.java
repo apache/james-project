@@ -29,8 +29,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.apache.james.server.core.MimeMessageSource;
 import org.apache.james.repository.api.StreamRepository;
+import org.apache.james.server.core.MimeMessageSource;
 import org.apache.james.util.sql.JDBCUtil;
 
 /**
@@ -179,8 +179,9 @@ public class MimeMessageJDBCSource extends MimeMessageSource {
      * @see org.apache.james.server.core.MimeMessageSource#getMessageSize()
      */
     public synchronized long getMessageSize() throws IOException {
-        if (size != -1)
+        if (size != -1) {
             return size;
+        }
         if (retrieveMessageBodySizeSQL == null) {
             // There was no SQL statement for this repository... figure it out
             // the hard way

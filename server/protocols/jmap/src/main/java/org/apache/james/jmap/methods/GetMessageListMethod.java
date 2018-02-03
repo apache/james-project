@@ -34,6 +34,7 @@ import org.apache.james.jmap.model.FilterCondition;
 import org.apache.james.jmap.model.GetMessageListRequest;
 import org.apache.james.jmap.model.GetMessageListResponse;
 import org.apache.james.jmap.model.GetMessagesRequest;
+import org.apache.james.jmap.model.Number;
 import org.apache.james.jmap.utils.FilterToSearchQuery;
 import org.apache.james.jmap.utils.SortConverter;
 import org.apache.james.mailbox.MailboxManager;
@@ -53,21 +54,22 @@ import com.google.common.base.Throwables;
 
 public class GetMessageListMethod implements Method {
 
+    private static final long DEFAULT_POSITION = 0;
     public static final String MAXIMUM_LIMIT = "maximumLimit";
-    public static final int DEFAULT_MAXIMUM_LIMIT = 256;
+    public static final long DEFAULT_MAXIMUM_LIMIT = 256;
 
     private static final Method.Request.Name METHOD_NAME = Method.Request.name("getMessageList");
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("messageList");
 
     private final MailboxManager mailboxManager;
-    private final int maximumLimit;
+    private final long maximumLimit;
     private final GetMessagesMethod getMessagesMethod;
     private final Factory mailboxIdFactory;
     private final MetricFactory metricFactory;
 
     @Inject
     @VisibleForTesting public GetMessageListMethod(MailboxManager mailboxManager,
-            @Named(MAXIMUM_LIMIT) int maximumLimit, GetMessagesMethod getMessagesMethod, MailboxId.Factory mailboxIdFactory,
+            @Named(MAXIMUM_LIMIT) long maximumLimit, GetMessagesMethod getMessagesMethod, MailboxId.Factory mailboxIdFactory,
             MetricFactory metricFactory) {
 
         this.mailboxManager = mailboxManager;
@@ -123,11 +125,12 @@ public class GetMessageListMethod implements Method {
         GetMessageListResponse.Builder builder = GetMessageListResponse.builder();
         try {
             MultimailboxesSearchQuery searchQuery = convertToSearchQuery(messageListRequest);
+            Long postionValue = messageListRequest.getPosition().map(Number::asLong).orElse(DEFAULT_POSITION);
             mailboxManager.search(searchQuery,
                 mailboxSession,
-                messageListRequest.getLimit().orElse(maximumLimit) + messageListRequest.getPosition())
+                postionValue + messageListRequest.getLimit().map(Number::asLong).orElse(maximumLimit))
                 .stream()
-                .skip(messageListRequest.getPosition())
+                .skip(postionValue)
                 .forEach(builder::messageId);
             return builder.build();
         } catch (MailboxException e) {

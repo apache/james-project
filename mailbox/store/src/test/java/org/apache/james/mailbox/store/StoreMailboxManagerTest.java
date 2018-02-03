@@ -75,10 +75,13 @@ public class StoreMailboxManagerTest {
         FakeAuthenticator authenticator = new FakeAuthenticator();
         authenticator.addUser(CURRENT_USER, CURRENT_USER_PASSWORD);
         authenticator.addUser(ADMIN, ADMIN_PASSWORD);
-        StoreRightManager storeRightManager = new StoreRightManager(mockedMapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver());
 
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
         MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
+
+        StoreRightManager storeRightManager = new StoreRightManager(mockedMapperFactory, new UnionMailboxACLResolver(),
+                                                                    new SimpleGroupMembershipResolver(), mailboxEventDispatcher);
+
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mockedMapperFactory, storeRightManager);
         storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, authenticator, FakeAuthorizator.forUserAndAdmin(ADMIN, CURRENT_USER),
                 new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,
@@ -96,7 +99,8 @@ public class StoreMailboxManagerTest {
     @Test
     public void getMailboxShouldReturnMailboxManagerWhenKnownId() throws Exception {
         Mailbox mockedMailbox = mock(Mailbox.class);
-        when(mockedMailbox.getUser()).thenReturn(CURRENT_USER);
+        when(mockedMailbox.generateAssociatedPath())
+            .thenReturn(MailboxPath.forUser(CURRENT_USER, "mailboxName"));
         when(mockedMailbox.getMailboxId()).thenReturn(MAILBOX_ID);
         when(mockedMailboxMapper.findMailboxById(MAILBOX_ID)).thenReturn(mockedMailbox);
 
@@ -108,7 +112,8 @@ public class StoreMailboxManagerTest {
     @Test
     public void getMailboxShouldReturnMailboxManagerWhenKnownIdAndDifferentCaseUser() throws Exception {
         Mailbox mockedMailbox = mock(Mailbox.class);
-        when(mockedMailbox.getUser()).thenReturn("uSEr");
+        when(mockedMailbox.generateAssociatedPath())
+            .thenReturn(MailboxPath.forUser("uSEr", "mailboxName"));
         when(mockedMailbox.getMailboxId()).thenReturn(MAILBOX_ID);
         when(mockedMailboxMapper.findMailboxById(MAILBOX_ID)).thenReturn(mockedMailbox);
 
@@ -121,7 +126,8 @@ public class StoreMailboxManagerTest {
     public void getMailboxShouldThrowWhenMailboxDoesNotMatchUserWithoutRight() throws Exception {
         Mailbox mockedMailbox = mock(Mailbox.class);
         when(mockedMailbox.getACL()).thenReturn(new MailboxACL());
-        when(mockedMailbox.getUser()).thenReturn("other.user");
+        when(mockedMailbox.generateAssociatedPath())
+            .thenReturn(MailboxPath.forUser("other.user", "mailboxName"));
         when(mockedMailbox.getMailboxId()).thenReturn(MAILBOX_ID);
         when(mockedMailboxMapper.findMailboxById(MAILBOX_ID)).thenReturn(mockedMailbox);
         when(mockedMailboxMapper.findMailboxByPath(any())).thenReturn(mockedMailbox);

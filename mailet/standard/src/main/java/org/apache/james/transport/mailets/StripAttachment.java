@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
+
 import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -42,10 +43,10 @@ import javax.mail.Part;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
 
-import org.apache.james.mime4j.codec.DecodeMonitor;
-import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.james.mime4j.codec.DecodeMonitor;
+import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
@@ -173,29 +174,31 @@ public class StripAttachment extends GenericMailet {
         }
     }
 
-      private void logConfiguration() {
-      StringBuilder logMessage = new StringBuilder();
-      logMessage.append("StripAttachment is initialised with regex pattern [");
-      if (regExPattern != null) {
-          logMessage.append(regExPattern.pattern());
-      }
-      logMessage.append(" / ");
-      if (notRegExPattern != null) {
-          logMessage.append(notRegExPattern.pattern());
-      }
-      logMessage.append("]");
+    private void logConfiguration() {
+        if (LOGGER.isDebugEnabled()) {
+            StringBuilder logMessage = new StringBuilder();
+            logMessage.append("StripAttachment is initialised with regex pattern [");
+            if (regExPattern != null) {
+                logMessage.append(regExPattern.pattern());
+            }
+            logMessage.append(" / ");
+            if (notRegExPattern != null) {
+                logMessage.append(notRegExPattern.pattern());
+            }
+            logMessage.append(']');
 
-      if (directoryName != null) {
-          logMessage.append(" and will save to directory [");
-          logMessage.append(directoryName);
-          logMessage.append("]");
-      }
-      if (attributeName != null) {
-          logMessage.append(" and will store attachments to attribute [");
-          logMessage.append(attributeName);
-          logMessage.append("]");
-      }
-      LOGGER.debug(logMessage.toString());
+            if (directoryName != null) {
+                logMessage.append(" and will save to directory [");
+                logMessage.append(directoryName);
+                logMessage.append(']');
+            }
+            if (attributeName != null) {
+                logMessage.append(" and will store attachments to attribute [");
+                logMessage.append(attributeName);
+                logMessage.append(']');
+            }
+            LOGGER.debug(logMessage.toString());
+        }
     }
     
     /**
@@ -411,7 +414,7 @@ public class StripAttachment extends GenericMailet {
         boolean result = isMatchingPattern(name, regExPattern).orElse(false)
                 || !isMatchingPattern(name, notRegExPattern).orElse(true);
 
-        LOGGER.debug("attachment " + name + " " + ((result) ? "matches" : "does not match"));
+        LOGGER.debug("attachment {} {}", name, result ? "matches" : "does not match");
         return result;
     }
 
@@ -440,7 +443,7 @@ public class StripAttachment extends GenericMailet {
         try {
             File outputFile = outputFile(part, fileName);
 
-            LOGGER.debug("saving content of " + outputFile.getName() + "...");
+            LOGGER.debug("saving content of {}...", outputFile.getName());
             IOUtils.copy(part.getInputStream(), new FileOutputStream(outputFile));
 
             return Optional.of(outputFile.getName());

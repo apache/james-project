@@ -21,20 +21,24 @@ package org.apache.james.queue.file;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import javax.inject.Inject;
 
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
+import org.apache.james.queue.api.ManageableMailQueue;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * {@link MailQueueFactory} implementation which returns {@link FileMailQueue} instances
  */
-public class FileMailQueueFactory implements MailQueueFactory {
+public class FileMailQueueFactory implements MailQueueFactory<ManageableMailQueue> {
 
-    private final Map<String, MailQueue> queues = new HashMap<>();
+    private final Map<String, ManageableMailQueue> queues = new HashMap<>();
     private MailQueueItemDecoratorFactory mailQueueActionItemDecoratorFactory;
     private FileSystem fs;
     private boolean sync = true;
@@ -43,6 +47,11 @@ public class FileMailQueueFactory implements MailQueueFactory {
     public FileMailQueueFactory(FileSystem fs, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory) {
         this.fs = fs;
         this.mailQueueActionItemDecoratorFactory = mailQueueItemDecoratorFactory;
+    }
+
+    @Override
+    public Set<ManageableMailQueue> listCreatedMailQueues() {
+        return ImmutableSet.copyOf(queues.values());
     }
 
     /**
@@ -58,19 +67,25 @@ public class FileMailQueueFactory implements MailQueueFactory {
     }
 
     @Override
-    public MailQueue getQueue(String name) {
-        MailQueue queue = queues.get(name);
-        if (queue == null) {
-            synchronized (queues) {
-                try {
-                    queue = new FileMailQueue(mailQueueActionItemDecoratorFactory, fs.getFile("file://var/store/queue"), name, sync);
-                    queues.put(name, queue);
-                } catch (IOException e) {
-                    throw new RuntimeException("Unable to access queue " + name, e);
-                }
+    public Optional<ManageableMailQueue> getQueue(String name) {
+        return Optional.ofNullable(queues.get(name));
+    }
+
+    @Override
+    public ManageableMailQueue createQueue(String name) {
+        return getQueue(name).orElseGet(() -> createAndRegisterQueue(name));
+    }
+
+    private ManageableMailQueue createAndRegisterQueue(String name) {
+        synchronized (queues) {
+            try {
+                FileMailQueue queue = new FileMailQueue(mailQueueActionItemDecoratorFactory, fs.getFile("file://var/store/queue"), name, sync);
+                queues.put(name, queue);
+                return queue;
+            } catch (IOException e) {
+                throw new RuntimeException("Unable to access queue " + name, e);
             }
         }
-        return queue;
     }
 
 }

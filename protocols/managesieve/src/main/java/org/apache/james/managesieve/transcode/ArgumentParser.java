@@ -20,17 +20,19 @@
 
 package org.apache.james.managesieve.transcode;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
+import java.util.Iterator;
+
+import javax.inject.Inject;
+
 import org.apache.james.managesieve.api.ArgumentException;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.api.commands.CoreCommands;
 import org.apache.james.managesieve.util.ParserUtils;
 
-import javax.inject.Inject;
-import java.util.Iterator;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 
 /**
  * Parses the user input and calls the underlying command processor
@@ -174,7 +176,7 @@ public class ArgumentParser {
             try {
                 ParserUtils.getSize(arguments.next());
             } catch (ArgumentException e) {
-                return "NO \""+ e.getMessage() + "\"";
+                return "NO \"" + e.getMessage() + "\"";
             }
         }
         if (arguments.hasNext()) {

@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -33,8 +34,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
-import org.apache.james.mailbox.store.StoreMailboxManager;
-import org.apache.mailet.base.test.MimeMessageBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -60,13 +59,12 @@ public class MailboxAppenderTest {
         mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
             .setMultipartWithBodyParts(
                 MimeMessageBuilder.bodyPartBuilder()
-                    .data("toto")
-                    .build())
+                    .data("toto"))
             .build();
 
         integrationResources = new InMemoryIntegrationResources();
         integrationResources.init();
-        mailboxManager = new ManagerTestResources<StoreMailboxManager>(integrationResources).getMailboxManager();
+        mailboxManager = new ManagerTestResources<>(integrationResources).getMailboxManager();
         testee = new MailboxAppender(mailboxManager);
 
         session = mailboxManager.createSystemSession("TEST");

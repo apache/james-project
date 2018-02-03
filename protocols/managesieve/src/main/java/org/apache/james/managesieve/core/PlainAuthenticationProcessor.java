@@ -20,7 +20,8 @@
 
 package org.apache.james.managesieve.core;
 
-import com.google.common.base.Splitter;
+import java.util.Iterator;
+
 import org.apache.james.managesieve.api.AuthenticationException;
 import org.apache.james.managesieve.api.AuthenticationProcessor;
 import org.apache.james.managesieve.api.Session;
@@ -29,7 +30,7 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 
-import java.util.Iterator;
+import com.google.common.base.Splitter;
 
 /**
  * See RFC-4616 : https://tools.ietf.org/html/rfc4616

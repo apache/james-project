@@ -19,9 +19,10 @@
 
 package org.apache.james.backends.cassandra.init;
 
+import org.apache.james.backends.cassandra.components.CassandraModule;
+
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
-import org.apache.james.backends.cassandra.components.CassandraModule;
 
 public class CassandraTableManager {
 

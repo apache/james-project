@@ -24,8 +24,8 @@ import java.io.FilenameFilter;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.security.SecureRandom;
 import java.util.Date;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -66,22 +66,25 @@ public class MaildirMessageName {
     /**
      * A random generator for the random part in the unique message names
      */
-    private static final Random random = new Random();
+    private static final SecureRandom random = new SecureRandom();
 
     /**
      * The process id of the server process
      */
     private static String processName = ManagementFactory.getRuntimeMXBean().getName();
+    
     static {
         String[] parts = processName.split("@");
-        if (parts.length > 1)
+        if (parts.length > 1) {
             processName = parts[0];
+        }
     }
     
     /**
      * The host name of the machine the server is running on
      */
     private static String currentHostname;
+    
     static {
         try {
             currentHostname = InetAddress.getLocalHost().getHostName();
@@ -125,8 +128,9 @@ public class MaildirMessageName {
      * @return true if the file or directory belonging to this {@link MaildirFolder} exists ; false otherwise 
      */
     public boolean exists() {
-        if (file != null && file.isFile())
+        if (file != null && file.isFile()) {
             return true;
+        }
         File assumedFile1 = new File(parentFolder.getCurFolder(), fullName);
         if (assumedFile1.isFile()) {
             file = assumedFile1;
@@ -183,10 +187,12 @@ public class MaildirMessageName {
             fullBuffer.append(uniqueString);
             fullBuffer.append(".");
             fullBuffer.append(hostname);
-            if (sizeString != null)
+            if (sizeString != null) {
                 fullBuffer.append(sizeString);
-            if (flagsString != null)
+            }
+            if (flagsString != null) {
                 fullBuffer.append(flagsString);
+            }
             fullName = fullBuffer.toString();
         }
         return fullName;
@@ -199,11 +205,12 @@ public class MaildirMessageName {
      * @throws FileNotFoundException If there is no file for the given name
      */
     public File getFile() throws FileNotFoundException {
-        if (exists())
+        if (exists()) {
             return file;
-        else
+        } else {
             throw new FileNotFoundException("There is no file for message name " + fullName
-                    + " in mailbox " + parentFolder.getRootFile().getAbsolutePath());
+                + " in mailbox " + parentFolder.getRootFile().getAbsolutePath());
+        }
     }
     
     /**
@@ -276,10 +283,10 @@ public class MaildirMessageName {
         }
         if (isMessageNameStrictParse()) {
             if (sizeString == null) {
-                throw new IllegalArgumentException("No message size found in message name: "+ fullName);
+                throw new IllegalArgumentException("No message size found in message name: " + fullName);
             }
             if (flagsString == null) {
-                throw new IllegalArgumentException("No flags found in message name: "+ fullName);
+                throw new IllegalArgumentException("No flags found in message name: " + fullName);
             }
         }
     }
@@ -304,10 +311,12 @@ public class MaildirMessageName {
     public Flags getFlags() {
         if (flags == null) {
             split();
-            if (flagsString == null)
+            if (flagsString == null) {
                 return null;
-            if (flagsString.length() >= 3)
+            }
+            if (flagsString.length() >= 3) {
                 flags = decodeFlags(flagsString.substring(3)); // skip the ":2," part
+            }
         }
         return flags;
     }
@@ -319,10 +328,12 @@ public class MaildirMessageName {
     public Long getSize() {
         if (size == null) {
             split();
-            if (sizeString == null)
+            if (sizeString == null) {
                 return null;
-            if (!sizeString.startsWith(",S="))
+            }
+            if (!sizeString.startsWith(",S=")) {
                 return null;
+            }
             size = Long.valueOf(sizeString.substring(3)); // skip the ",S=" part
         }
         return size;
@@ -335,8 +346,9 @@ public class MaildirMessageName {
     public Date getInternalDate() {
         if (internalDate == null) {
             split();
-            if (timestamp == null)
+            if (timestamp == null) {
                 return null;
+            }
             internalDate = new Date(Long.valueOf(timestamp) * 1000);
         }
         return internalDate;
@@ -365,16 +377,21 @@ public class MaildirMessageName {
      */
     public String encodeFlags(Flags flags) {
         StringBuilder localFlagsString = new StringBuilder(":2,");
-        if (flags.contains(Flags.Flag.DRAFT))
+        if (flags.contains(Flags.Flag.DRAFT)) {
             localFlagsString.append(FLAG_DRAFT);
-        if (flags.contains(Flags.Flag.FLAGGED))
+        }
+        if (flags.contains(Flags.Flag.FLAGGED)) {
             localFlagsString.append(FLAG_FLAGGED);
-        if (flags.contains(Flags.Flag.ANSWERED))
+        }
+        if (flags.contains(Flags.Flag.ANSWERED)) {
             localFlagsString.append(FLAG_ANSWERD);
-        if (flags.contains(Flags.Flag.SEEN))
+        }
+        if (flags.contains(Flags.Flag.SEEN)) {
             localFlagsString.append(FLAG_SEEN);
-        if (flags.contains(Flags.Flag.DELETED))
+        }
+        if (flags.contains(Flags.Flag.DELETED)) {
             localFlagsString.append(FLAG_DELETED);
+        }
         return localFlagsString.toString();
     }
     
@@ -386,16 +403,21 @@ public class MaildirMessageName {
      */
     public Flags decodeFlags(String flagsString) {
         Flags localFlags = new Flags();
-        if (flagsString.contains(FLAG_DRAFT))
+        if (flagsString.contains(FLAG_DRAFT)) {
             localFlags.add(Flags.Flag.DRAFT);
-        if (flagsString.contains(FLAG_FLAGGED))
+        }
+        if (flagsString.contains(FLAG_FLAGGED)) {
             localFlags.add(Flags.Flag.FLAGGED);
-        if (flagsString.contains(FLAG_ANSWERD))
+        }
+        if (flagsString.contains(FLAG_ANSWERD)) {
             localFlags.add(Flags.Flag.ANSWERED);
-        if (flagsString.contains(FLAG_SEEN))
+        }
+        if (flagsString.contains(FLAG_SEEN)) {
             localFlags.add(Flags.Flag.SEEN);
-        if (flagsString.contains(FLAG_DELETED))
+        }
+        if (flagsString.contains(FLAG_DELETED)) {
             localFlags.add(Flags.Flag.DELETED);
+        }
         return localFlags;
     }
     
@@ -405,7 +427,7 @@ public class MaildirMessageName {
      * This is used for the creation of message names.
      * @return The number of (attempted) deliveries until now
      */
-    static private long getNextDeliveryNumber() {
+    private static long getNextDeliveryNumber() {
         return deliveries.getAndIncrement();
     }
     
@@ -434,10 +456,10 @@ public class MaildirMessageName {
      */
     public static MaildirMessageName createUniqueName(MaildirFolder parentFolder, long size) {
         String timestamp = String.valueOf(System.currentTimeMillis());
-        timestamp = timestamp.substring(0, timestamp.length()-3); // time in seconds
+        timestamp = timestamp.substring(0, timestamp.length() - 3); // time in seconds
         StringBuilder uniquePart = new StringBuilder();
         uniquePart.append(Integer.toHexString(random.nextInt())); // random number as hex
-        uniquePart.append(timestamp.substring(timestamp.length()-3)); // milliseconds
+        uniquePart.append(timestamp.substring(timestamp.length() - 3)); // milliseconds
         uniquePart.append(processName); // process name
         uniquePart.append(getNextDeliveryNumber()); // delivery number
         String sizeString = ",S=" + String.valueOf(size);

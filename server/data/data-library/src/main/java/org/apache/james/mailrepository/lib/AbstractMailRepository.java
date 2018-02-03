@@ -33,6 +33,10 @@ import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
+
 /**
  * This class represent an AbstractMailRepository. All MailRepositories should
  * extend this class.
@@ -60,14 +64,24 @@ public abstract class AbstractMailRepository implements MailRepository, Configur
     }
 
     /**
-     * @see org.apache.james.mailrepository.api.MailRepository#unlock(String)
+     * Releases a lock on a message identified the key
+     * 
+     * @param key
+     *            the key of the message to be unlocked
+     * 
+     * @return true if successfully released the lock, false otherwise
      */
     public boolean unlock(String key) {
         return lock.unlock(key);
     }
 
     /**
-     * @see org.apache.james.mailrepository.api.MailRepository#lock(String)
+     * Obtains a lock on a message identified by key
+     * 
+     * @param key
+     *            the key of the message to be locked
+     * 
+     * @return true if successfully obtained the lock, false otherwise
      */
     public boolean lock(String key) {
         return lock.lock(key);
@@ -89,10 +103,10 @@ public abstract class AbstractMailRepository implements MailRepository, Configur
             }
             internalStore(mc);
         } catch (MessagingException e) {
-            LOGGER.error("Exception caught while storing mail " + key, e);
+            LOGGER.error("Exception caught while storing mail {}", key, e);
             throw e;
         } catch (Exception e) {
-            LOGGER.error("Exception caught while storing mail " + key, e);
+            LOGGER.error("Exception caught while storing mail {}", key, e);
             throw new MessagingException("Exception caught while storing mail " + key, e);
         } finally {
             if (!wasLocked) {
@@ -147,4 +161,14 @@ public abstract class AbstractMailRepository implements MailRepository, Configur
      */
     protected abstract void internalRemove(String key) throws MessagingException;
 
+    @Override
+    public long size() throws MessagingException {
+        return Iterators.size(list());
+    }
+
+    @Override
+    public void removeAll() throws MessagingException {
+        ImmutableList.copyOf(list())
+            .forEach(Throwing.<String>consumer(this::remove).sneakyThrow());
+    }
 }

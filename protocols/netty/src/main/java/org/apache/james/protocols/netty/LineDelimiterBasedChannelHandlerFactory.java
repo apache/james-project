@@ -20,10 +20,10 @@ package org.apache.james.protocols.netty;
 
 import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
-import org.jboss.netty.handler.codec.frame.Delimiters;
+import org.jboss.netty.handler.codec.frame.LineBasedFrameDecoder;
 
 public class LineDelimiterBasedChannelHandlerFactory implements ChannelHandlerFactory {
+    private static final Boolean FAIL_FAST = true;
     private final int maxLineLength;
 
     public LineDelimiterBasedChannelHandlerFactory(int maxLineLength) {
@@ -32,7 +32,7 @@ public class LineDelimiterBasedChannelHandlerFactory implements ChannelHandlerFa
 
     @Override
     public ChannelHandler create(ChannelPipeline pipeline) {
-        return new DelimiterBasedFrameDecoder(maxLineLength, false, Delimiters.lineDelimiter());
+        return new LineBasedFrameDecoder(maxLineLength, false, !FAIL_FAST);
     }
 
 }

@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.mailbox.model;
 
-
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.UUID;

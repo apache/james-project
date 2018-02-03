@@ -95,7 +95,7 @@ public class IndexCreationFactory {
         if (!aliasExist(client, aliasName)) {
             client.admin()
                 .indices()
-                .aliases( new IndicesAliasesRequest()
+                .aliases(new IndicesAliasesRequest()
                     .addAlias(aliasName.getValue(), indexName.getValue()))
                 .actionGet();
         }
@@ -119,7 +119,7 @@ public class IndexCreationFactory {
                 .execute()
                 .actionGet();
         } catch (IndexAlreadyExistsException exception) {
-            LOGGER.info("Index [" + indexName + "] already exist");
+            LOGGER.info("Index [{}] already exist", indexName);
         }
     }
 

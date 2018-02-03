@@ -30,6 +30,11 @@ public class MailAddressFixture {
     public static final String JAMES_APACHE_ORG = "james.apache.org";
     public static final String JAMES2_APACHE_ORG = "james2.apache.org";
 
+    public static final MailAddress SENDER = createMailAddress("sender@" + JAMES_LOCAL);
+    public static final MailAddress RECIPIENT1 = createMailAddress("recipient1@" + JAMES_LOCAL);
+    public static final MailAddress RECIPIENT2 = createMailAddress("recipient2@" + JAMES_LOCAL);
+    public static final MailAddress RECIPIENT3 = createMailAddress("recipient3@" + JAMES_LOCAL);
+
     public static final MailAddress ANY_AT_LOCAL = createMailAddress("any@" + JAMES_LOCAL);
     public static final MailAddress OTHER_AT_LOCAL = createMailAddress("other@" + JAMES_LOCAL);
     public static final MailAddress ANY_AT_JAMES = createMailAddress("any@" + JAMES_APACHE_ORG);

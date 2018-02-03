@@ -21,30 +21,26 @@ package org.apache.james.domainlist.lib;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
-import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collection;
 
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.dnsservice.api.mock.MockDNSService;
+import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
-
 public abstract class AbstractDomainListTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDomainListTest.class);
 
-    private final String DOMAIN_1 = "domain1.tld";
-    private final String DOMAIN_2 = "domain2.tld";
-    private final String DOMAIN_3 = "domain3.tld";
-    private final String DOMAIN_4 = "domain4.tld";
-    private final String DOMAIN_5 = "domain5.tld";
-    private final String DOMAIN_UPPER_5 = "Domain5.tld";
+    private static final String DOMAIN_1 = "domain1.tld";
+    private static final String DOMAIN_2 = "domain2.tld";
+    private static final String DOMAIN_3 = "domain3.tld";
+    private static final String DOMAIN_4 = "domain4.tld";
+    private static final String DOMAIN_5 = "domain5.tld";
+    private static final String DOMAIN_UPPER_5 = "Domain5.tld";
 
     private DomainList domainList;
 
@@ -117,21 +113,21 @@ public abstract class AbstractDomainListTest {
     }
 
     @Test
-    public void ContainsShouldReturnFalseWhenDomainIsRemoved() throws DomainListException {
+    public void containsShouldReturnFalseWhenDomainIsRemoved() throws DomainListException {
         domainList.addDomain(DOMAIN_1);
         domainList.removeDomain(DOMAIN_1);
         assertThat(domainList.containsDomain(DOMAIN_1)).isFalse();
     }
 
     @Test
-    public void RemoveShouldRemoveDomainsUsingUpperCases() throws DomainListException {
+    public void removeShouldRemoveDomainsUsingUpperCases() throws DomainListException {
         domainList.addDomain(DOMAIN_UPPER_5);
         domainList.removeDomain(DOMAIN_UPPER_5);
         assertThat(domainList.containsDomain(DOMAIN_UPPER_5)).isFalse();
     }
 
     @Test
-    public void RemoveShouldRemoveDomainsUsingLowerCases() throws DomainListException {
+    public void removeShouldRemoveDomainsUsingLowerCases() throws DomainListException {
         domainList.addDomain(DOMAIN_UPPER_5);
         domainList.removeDomain(DOMAIN_5);
         assertThat(domainList.containsDomain(DOMAIN_UPPER_5)).isFalse();
@@ -155,24 +151,10 @@ public abstract class AbstractDomainListTest {
     /**
      * Return a fake DNSServer.
      */
-    protected DNSService getDNSServer(final String hostName) {
-        return new MockDNSService() {
-
-            @Override
-            public String getHostName(InetAddress inet) {
-                return hostName;
-            }
-
-            @Override
-            public Collection<InetAddress> getAllByName(String name) throws UnknownHostException {
-                return ImmutableList.of(InetAddress.getByName("127.0.0.1"));
-            }
-
-            @Override
-            public InetAddress getLocalHost() throws UnknownHostException {
-                return InetAddress.getLocalHost();
-            }
-        };
+    protected DNSService getDNSServer(final String hostName) throws UnknownHostException {
+        return new InMemoryDNSService()
+            .registerMxRecord(hostName, "127.0.0.1")
+            .registerMxRecord("127.0.0.1", "127.0.0.1");
     }
 
     /**
@@ -181,5 +163,5 @@ public abstract class AbstractDomainListTest {
      * 
      * @return an implementation of DomainList
      */
-    protected abstract DomainList createDomainList();
+    protected abstract DomainList createDomainList() throws Exception;
 }
