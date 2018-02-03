@@ -104,7 +104,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
     private String secret;
 
-    private Encryption encryption;
+    protected Encryption encryption;
 
     protected String jmxName;
 
@@ -382,8 +382,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
      * 
      * @throws Exception
      */
-
-    private void buildSSLContext() throws Exception {
+    protected void buildSSLContext() throws Exception {
         if (useStartTLS || useSSL) {
             FileInputStream fis = null;
             try {
@@ -426,7 +425,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
      * @return the socket type ('plain' or 'secure')
      */
     public String getSocketType() {
-        if (encryption != null && !encryption.isStartTLS()) {
+        if (getEncryption() != null && !getEncryption().isStartTLS()) {
             return "secure";
         }
         return "plain";
@@ -436,7 +435,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
      * @see org.apache.james.protocols.lib.jmx.ServerMBean#getStartTLSSupported()
      */
     public boolean getStartTLSSupported() {
-        return encryption != null && encryption.isStartTLS();
+        return getEncryption() != null && getEncryption().isStartTLS();
     }
 
     /**
@@ -574,16 +573,16 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             enabledCipherSuites, getExecutionHandler(), getFrameHandlerFactory(), timer) {
             @Override
             protected SSLContext getSSLContext() {
-                if (encryption == null) {
+                if (getEncryption() == null) {
                     return null;
                 } else {
-                    return encryption.getContext();
+                    return getEncryption().getContext();
                 }
             }
 
             @Override
             protected boolean isSSLSocket() {
-                return encryption != null && !encryption.isStartTLS();
+                return getEncryption() != null && !getEncryption().isStartTLS();
             }
 
 
