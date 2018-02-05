@@ -232,7 +232,6 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             enqueuedMailsMetric.increment();
             mailQueueSize.increment();
         } catch (Exception e) {
-            rollback(session);
             throw new MailQueueException("Unable to enqueue mail " + mail, e);
         } finally {
             timeMetric.stopAndPublish();
