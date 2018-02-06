@@ -19,7 +19,6 @@
 
 package org.apache.james.queue.jms;
 
-import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
@@ -34,13 +33,11 @@ import org.apache.mailet.Mail;
 public class JMSMailQueueItem implements MailQueueItem {
 
     protected final Mail mail;
-    protected final Connection connection;
     protected final Session session;
     protected final MessageConsumer consumer;
 
-    public JMSMailQueueItem(Mail mail, Connection connection, Session session, MessageConsumer consumer) {
+    public JMSMailQueueItem(Mail mail, Session session, MessageConsumer consumer) {
         this.mail = mail;
-        this.connection = connection;
         this.session = session;
         this.consumer = consumer;
     }

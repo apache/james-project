@@ -23,7 +23,6 @@ import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Map;
 
-import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
@@ -217,9 +216,9 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
     }
 
     @Override
-    protected MailQueueItem createMailQueueItem(Connection connection, Session session, MessageConsumer consumer, Message message) throws JMSException, MessagingException {
+    protected MailQueueItem createMailQueueItem(Session session, MessageConsumer consumer, Message message) throws JMSException, MessagingException {
         Mail mail = createMail(message);
-        ActiveMQMailQueueItem activeMQMailQueueItem = new ActiveMQMailQueueItem(mail, connection, session, consumer, message);
+        ActiveMQMailQueueItem activeMQMailQueueItem = new ActiveMQMailQueueItem(mail, session, consumer, message);
         return mailQueueItemDecoratorFactory.decorate(activeMQMailQueueItem);
     }
 

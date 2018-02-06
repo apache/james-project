@@ -204,7 +204,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
 
                 if (message != null) {
                     mailQueueSize.decrement();
-                    return createMailQueueItem(connection, session, consumer, message);
+                    return createMailQueueItem(session, consumer, message);
                 } else {
                     session.commit();
                     closeConsumer(consumer);
@@ -473,9 +473,9 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
      * @throws JMSException
      * @throws MessagingException
      */
-    protected MailQueueItem createMailQueueItem(Connection connection, Session session, MessageConsumer consumer, Message message) throws JMSException, MessagingException {
+    protected MailQueueItem createMailQueueItem(Session session, MessageConsumer consumer, Message message) throws JMSException, MessagingException {
         final Mail mail = createMail(message);
-        JMSMailQueueItem jmsMailQueueItem = new JMSMailQueueItem(mail, connection, session, consumer);
+        JMSMailQueueItem jmsMailQueueItem = new JMSMailQueueItem(mail, session, consumer);
         return mailQueueItemDecoratorFactory.decorate(jmsMailQueueItem);
     }
 
