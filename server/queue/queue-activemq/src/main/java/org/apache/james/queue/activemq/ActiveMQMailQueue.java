@@ -141,8 +141,8 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
     /**
      * Produce the mail to the JMS Queue
      */
-    protected void produceMail(Session session, Map<String, Object> props, int msgPrio, Mail mail) throws JMSException, MessagingException, IOException {
-        MessageProducer producer = null;
+    @Override
+    protected void produceMail(Map<String, Object> props, int msgPrio, Mail mail) throws JMSException, MessagingException, IOException {
         BlobMessage blobMessage = null;
         boolean reuse = false;
 
@@ -189,28 +189,20 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
                 // store the queue name in the props
                 props.put(JAMES_QUEUE_NAME, queueName);
 
-                Queue queue = session.createQueue(queueName);
-
-                producer = session.createProducer(queue);
                 for (Map.Entry<String, Object> entry : props.entrySet()) {
                     blobMessage.setObjectProperty(entry.getKey(), entry.getValue());
                 }
                 producer.send(blobMessage, Message.DEFAULT_DELIVERY_MODE, msgPrio, Message.DEFAULT_TIME_TO_LIVE);
-                    
-              
 
             } else {
-                super.produceMail(session, props, msgPrio, mail);
+                super.produceMail(props, msgPrio, mail);
             }
         } catch (JMSException e) {
             if (!reuse && blobMessage != null && blobMessage instanceof ActiveMQBlobMessage) {
                 ((ActiveMQBlobMessage) blobMessage).deleteFile();
             }
             throw e;
-        } finally {
-            closeProducer(producer);
         }
-
     }
 
     /**
@@ -272,15 +264,11 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
      */
     @Override
     public long getSize() throws MailQueueException {
-
-        Session session = null;
         MessageConsumer consumer = null;
         MessageProducer producer = null;
         TemporaryQueue replyTo = null;
-        long size;
 
         try {
-            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             replyTo = session.createTemporaryQueue();
             consumer = session.createConsumer(replyTo);
 
@@ -296,8 +284,7 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
             MapMessage reply = (MapMessage) consumer.receive(2000);
             if (reply != null && reply.itemExists("size")) {
                 try {
-                    size = reply.getLong("size");
-                    return size;
+                    return reply.getLong("size");
                 } catch (NumberFormatException e) {
                     return super.getSize();
                 }
@@ -321,7 +308,6 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
                     LOGGER.error("Error while deleting temporary queue", e);
                 }
             }
-            closeSession(session);
         }
     }
 
