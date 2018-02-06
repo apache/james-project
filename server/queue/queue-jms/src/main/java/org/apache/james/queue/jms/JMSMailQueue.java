@@ -190,7 +190,6 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
     @Override
     public MailQueueItem deQueue() throws MailQueueException {
         Session session = null;
-        Message message;
         MessageConsumer consumer = null;
 
         while (true) {
@@ -200,7 +199,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
                 Queue queue = session.createQueue(queueName);
                 consumer = session.createConsumer(queue, getMessageSelector());
 
-                message = consumer.receive(10000);
+                Message message = consumer.receive(10000);
 
                 if (message != null) {
                     mailQueueSize.decrement();
@@ -220,7 +219,6 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
                 timeMetric.stopAndPublish();
             }
         }
-
     }
 
     @Override
@@ -474,7 +472,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
      * @throws MessagingException
      */
     protected MailQueueItem createMailQueueItem(Session session, MessageConsumer consumer, Message message) throws JMSException, MessagingException {
-        final Mail mail = createMail(message);
+        Mail mail = createMail(message);
         JMSMailQueueItem jmsMailQueueItem = new JMSMailQueueItem(mail, session, consumer);
         return mailQueueItemDecoratorFactory.decorate(jmsMailQueueItem);
     }
@@ -488,7 +486,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         QueueBrowser browser = null;
         try {
             browser = session.createBrowser(queue);
-            Enumeration enumeration = browser.getEnumeration();
+            Enumeration<?> enumeration = browser.getEnumeration();
             return Iterators.size(new EnumerationIterator(enumeration));
         } catch (Exception e) {
             LOGGER.error("Unable to get size of queue {}", queueName, e);
@@ -641,8 +639,8 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         try {
             browser = session.createBrowser(queue);
 
-            final Enumeration<Message> messages = browser.getEnumeration();
-            final QueueBrowser myBrowser = browser;
+            Enumeration<Message> messages = browser.getEnumeration();
+            QueueBrowser myBrowser = browser;
 
             return new MailQueueIterator() {
 
