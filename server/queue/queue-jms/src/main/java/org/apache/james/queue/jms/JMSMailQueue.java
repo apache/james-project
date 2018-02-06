@@ -50,6 +50,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.collections.iterators.EnumerationIterator;
 import org.apache.james.core.MailAddress;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.metrics.api.Metric;
@@ -67,6 +68,7 @@ import org.slf4j.LoggerFactory;
 import org.threeten.extra.Temporals;
 
 import com.google.common.base.Throwables;
+import com.google.common.collect.Iterators;
 
 /**
  * <p>
@@ -481,21 +483,13 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         return JAMES_NEXT_DELIVERY + " <= " + System.currentTimeMillis() + " OR " + FORCE_DELIVERY + " = true";
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public long getSize() throws MailQueueException {
         QueueBrowser browser = null;
-        int size = 0;
         try {
             browser = session.createBrowser(queue);
-
-            Enumeration<Message> messages = browser.getEnumeration();
-
-            while (messages.hasMoreElements()) {
-                messages.nextElement();
-                size++;
-            }
-            return size;
+            Enumeration enumeration = browser.getEnumeration();
+            return Iterators.size(new EnumerationIterator(enumeration));
         } catch (Exception e) {
             LOGGER.error("Unable to get size of queue {}", queueName, e);
             throw new MailQueueException("Unable to get size of queue " + queueName, e);
