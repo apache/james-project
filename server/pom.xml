@@ -98,12 +98,13 @@
         <module>protocols/protocols-smtp</module>
         <module>protocols/webadmin-integration-test</module>
         <module>protocols/webadmin</module>
-        <module>queue/queue-activemq</module>
 
+        <module>queue/queue-activemq</module>
         <module>queue/queue-api</module>
         <module>queue/queue-file</module>
         <module>queue/queue-jms</module>
         <module>queue/queue-memory</module>
+        <module>queue/queue-rabbitmq</module>
 
         <module>task</module>
         <module>testing</module>
