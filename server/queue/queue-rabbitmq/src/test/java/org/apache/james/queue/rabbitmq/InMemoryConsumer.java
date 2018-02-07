@@ -16,34 +16,34 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.queue.rabbitmq;
 
-import static com.jayway.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
-import static com.jayway.awaitility.Duration.ONE_MINUTE;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
 
-public class RabbitMQFixture {
-    public static final boolean DURABLE = true;
-    public static final boolean AUTO_ACK = true;
-    public static final AMQP.BasicProperties NO_PROPERTIES = null;
-    public static final String EXCHANGE_NAME = "exchangeName";
-    public static final String ROUTING_KEY = "routingKey";
-    public static final String DIRECT = "direct";
-    public static final boolean EXCLUSIVE = true;
-    public static final boolean AUTO_DELETE = true;
-    public static final String WORK_QUEUE = "workQueue";
+public class InMemoryConsumer extends DefaultConsumer {
 
-    public static Duration slowPacedPollInterval = FIVE_HUNDRED_MILLISECONDS;
-    public static ConditionFactory calmlyAwait = Awaitility.with()
-        .pollInterval(slowPacedPollInterval)
-        .and()
-        .with()
-        .pollDelay(slowPacedPollInterval)
-        .await();
-    public static ConditionFactory awaitAtMostOneMinute = calmlyAwait.atMost(ONE_MINUTE);
+    private final ConcurrentLinkedQueue<Integer> messages;
+
+    public InMemoryConsumer(Channel channel) {
+        super(channel);
+        messages = new ConcurrentLinkedQueue<>();
+    }
+
+    @Override
+    public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+        Integer payload = Integer.valueOf(new String(body, StandardCharsets.UTF_8));
+        messages.add(payload);
+    }
+
+    public Queue<Integer> getConsumedMessages() {
+        return messages;
+    }
 }
