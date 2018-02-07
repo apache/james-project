@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+        <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+                <resetJUL>true</resetJUL>
+        </contextListener>
+
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+                <encoder>
+                        <pattern>%d{HH:mm:ss.SSS} [%-5level] %logger{15} - %msg%n%rEx</pattern>
+                        <immediateFlush>false</immediateFlush>
+                </encoder>
+        </appender>
+
+        <root level="ERROR">
+                <appender-ref ref="CONSOLE" />
+        </root>
+
+        <logger name="org.testcontainers" level="ERROR"/>
+        <logger name="org.apache.james" level="DEBUG"/>
+        <logger name="org.apache.james.queue.rabbitmq.DockerRabbitMQ" level="DEBUG"/>
+
+</configuration>

@@ -18,12 +18,15 @@
  ****************************************************************/
 package org.apache.james.queue.rabbitmq;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
 
 import com.rabbitmq.client.ConnectionFactory;
 
 public class DockerRabbitMQ {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DockerRabbitMQ.class);
 
     private static final int DEFAULT_RABBITMQ_PORT = 5672;
     private static final String DEFAULT_RABBITMQ_HOSTNAME = "my-rabbit";
@@ -37,7 +40,8 @@ public class DockerRabbitMQ {
         container = new GenericContainer<>("rabbitmq:3.7.5")
                 .withCreateContainerCmdModifier(cmd -> cmd.withHostName(DEFAULT_RABBITMQ_HOSTNAME))
                 .withExposedPorts(DEFAULT_RABBITMQ_PORT)
-                .waitingFor(RabbitMQWaitStrategy.withDefaultTimeout(this));
+                .waitingFor(RabbitMQWaitStrategy.withDefaultTimeout(this))
+                .withLogConsumer(frame -> LOGGER.debug(frame.getUtf8String()));
     }
 
     public String getHostIp() {
