@@ -18,30 +18,50 @@
  ****************************************************************/
 package org.apache.james.queue.rabbitmq;
 
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.Network;
 
 import com.rabbitmq.client.ConnectionFactory;
 
 public class DockerRabbitMQ {
     private static final Logger LOGGER = LoggerFactory.getLogger(DockerRabbitMQ.class);
 
+    private static final String DEFAULT_RABBIT_NODE = "my-rabbit";
     private static final int DEFAULT_RABBITMQ_PORT = 5672;
-    private static final String DEFAULT_RABBITMQ_HOSTNAME = "my-rabbit";
     private static final String DEFAULT_RABBITMQ_USERNAME = "guest";
     private static final String DEFAULT_RABBITMQ_PASSWORD = "guest";
+    private static final String RABBITMQ_ERLANG_COOKIE = "RABBITMQ_ERLANG_COOKIE";
+    private static final String RABBITMQ_NODENAME = "RABBITMQ_NODENAME";
 
-    private GenericContainer<?> container;
+    private final GenericContainer<?> container;
+    private final Optional<String> nodeName;
+
+    public static DockerRabbitMQ withCookieAndNodeName(String hostName, String erlangCookie, String nodeName, Network network) {
+        return new DockerRabbitMQ(Optional.ofNullable(hostName), Optional.ofNullable(erlangCookie), Optional.ofNullable(nodeName),
+            Optional.of(network));
+    }
+
+    public static DockerRabbitMQ withoutCookie() {
+        return new DockerRabbitMQ(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+    }
 
     @SuppressWarnings("resource")
-    public DockerRabbitMQ() {
+    private DockerRabbitMQ(Optional<String> hostName, Optional<String> erlangCookie, Optional<String> nodeName, Optional<Network> net) {
         container = new GenericContainer<>("rabbitmq:3.7.5")
-                .withCreateContainerCmdModifier(cmd -> cmd.withHostName(DEFAULT_RABBITMQ_HOSTNAME))
+                .withCreateContainerCmdModifier(cmd -> cmd.withName(hostName.orElse("localhost")))
+                .withCreateContainerCmdModifier(cmd -> cmd.withHostName(hostName.orElse(DEFAULT_RABBIT_NODE)))
                 .withExposedPorts(DEFAULT_RABBITMQ_PORT)
                 .waitingFor(RabbitMQWaitStrategy.withDefaultTimeout(this))
                 .withLogConsumer(frame -> LOGGER.debug(frame.getUtf8String()));
+        net.ifPresent(container::withNetwork);
+        erlangCookie.ifPresent(cookie -> container.withEnv(RABBITMQ_ERLANG_COOKIE, cookie));
+        nodeName.ifPresent(name -> container.withEnv(RABBITMQ_NODENAME, name));
+        this.nodeName = nodeName;
     }
 
     public String getHostIp() {
@@ -80,5 +100,30 @@ public class DockerRabbitMQ {
     public void restart() {
         DockerClientFactory.instance().client()
             .restartContainerCmd(container.getContainerId());
+    }
+
+    public GenericContainer<?> container() {
+        return container;
+    }
+
+    public String node() {
+        return nodeName.get();
+    }
+
+    public void join(DockerRabbitMQ rabbitMQ) throws Exception {
+        container()
+            .execInContainer("rabbitmqctl", "stop_app")
+            .getStdout();
+        container()
+            .execInContainer("rabbitmqctl", "join_cluster", rabbitMQ.node())
+            .getStdout();
+    }
+
+    public void startApp() throws Exception {
+        String stdout = container()
+                .execInContainer("rabbitmqctl", "start_app")
+                .getStdout();
+        System.out.println(stdout);
+
     }
 }
