@@ -28,6 +28,7 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 import org.testcontainers.containers.Network;
 
 import com.google.common.collect.ImmutableList;
+import com.rabbitmq.client.Address;
 
 public class DockerClusterRabbitMQExtention implements BeforeEachCallback, AfterEachCallback, ParameterResolver {
 
@@ -107,6 +108,13 @@ public class DockerClusterRabbitMQExtention implements BeforeEachCallback, After
 
         public DockerRabbitMQ getRabbitMQ3() {
             return rabbitMQ3;
+        }
+
+        public ImmutableList<Address> getAddresses() {
+            return ImmutableList.of(
+                new Address(rabbitMQ1.getHostIp(), rabbitMQ1.getPort()),
+                new Address(rabbitMQ2.getHostIp(), rabbitMQ2.getPort()),
+                new Address(rabbitMQ3.getHostIp(), rabbitMQ3.getPort()));
         }
     }
 }

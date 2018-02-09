@@ -30,15 +30,27 @@ import com.rabbitmq.client.Envelope;
 
 public class InMemoryConsumer extends DefaultConsumer {
 
+    @FunctionalInterface
+    interface Operation {
+        void perform();
+    }
+
     private final ConcurrentLinkedQueue<Integer> messages;
+    private final Operation operation;
 
     public InMemoryConsumer(Channel channel) {
+        this(channel, () -> {});
+    }
+
+    public InMemoryConsumer(Channel channel, Operation operation) {
         super(channel);
-        messages = new ConcurrentLinkedQueue<>();
+        this.operation = operation;
+        this.messages = new ConcurrentLinkedQueue<>();
     }
 
     @Override
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+        operation.perform();
         Integer payload = Integer.valueOf(new String(body, StandardCharsets.UTF_8));
         messages.add(payload);
     }
