@@ -35,5 +35,5 @@ public interface DefaultMailboxes {
     String SPAM = "Spam";
     String TEMPLATES = "Templates";
 
-    List<String> DEFAULT_MAILBOXES = ImmutableList.of(INBOX, OUTBOX, SENT, TRASH, DRAFTS);
+    List<String> DEFAULT_MAILBOXES = ImmutableList.of(INBOX, OUTBOX, SENT, TRASH, DRAFTS, SPAM);
 }

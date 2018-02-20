@@ -96,7 +96,7 @@ public abstract class ProvisioningTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
-            .body(ARGUMENTS + ".list", hasSize(5))
+            .body(ARGUMENTS + ".list", hasSize(6))
             .body(ARGUMENTS + ".list.name", hasItems(DefaultMailboxes.DEFAULT_MAILBOXES.toArray()));
     }
 

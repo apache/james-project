@@ -245,7 +245,7 @@ public abstract class GetMailboxesMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
-            .body(ARGUMENTS + ".list", hasSize(7))
+            .body(ARGUMENTS + ".list", hasSize(8))
             .body(ARGUMENTS + ".list.name", hasItems(expectedMailboxes.toArray()));
     }
 
@@ -362,7 +362,7 @@ public abstract class GetMailboxesMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
-            .body(ARGUMENTS + ".list", hasSize(5))
+            .body(ARGUMENTS + ".list", hasSize(6))
             .body(ARGUMENTS + ".list.name", hasItems(DefaultMailboxes.DEFAULT_MAILBOXES.toArray()));
     }
 
@@ -633,7 +633,7 @@ public abstract class GetMailboxesMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
-            .body(ARGUMENTS + ".list", hasSize(6))
+            .body(ARGUMENTS + ".list", hasSize(7))
             .body(ARGUMENTS + ".list.name", hasItems(expectedMailboxes.toArray()));
     }
 

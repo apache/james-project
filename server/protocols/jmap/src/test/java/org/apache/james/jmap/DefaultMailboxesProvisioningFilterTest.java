@@ -34,6 +34,7 @@ import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 
 public class DefaultMailboxesProvisioningFilterTest {
@@ -63,6 +64,18 @@ public class DefaultMailboxesProvisioningFilterTest {
                 .stream()
                 .map(mailboxName -> MailboxPath.forUser(USERNAME, mailboxName))
                 .collect(Guavate.toImmutableList()));
+    }
+
+    @Test
+    public void createMailboxesIfNeededShouldCreateSpamWhenOtherSystemMailboxesExist() throws Exception {
+        DefaultMailboxes.DEFAULT_MAILBOXES
+            .stream()
+            .filter(mailbox -> !DefaultMailboxes.SPAM.equals(mailbox))
+            .forEach(Throwing.consumer(mailbox -> mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, mailbox), session)));
+
+        testee.createMailboxesIfNeeded(session);
+
+        assertThat(mailboxManager.list(session)).contains(MailboxPath.forUser(USERNAME, DefaultMailboxes.SPAM));
     }
 
     @Test
