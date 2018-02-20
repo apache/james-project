@@ -26,7 +26,6 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.cli.util.OutputCapture;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.store.quota.QuotaRootImpl;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.modules.QuotaProbesImpl;
 import org.apache.james.modules.server.JMXServerModule;
@@ -37,7 +36,7 @@ import org.junit.Test;
 
 public class QuotaCommandsIntegrationTest {
     public static final String USER = "user";
-    public static final QuotaRoot QUOTA_ROOT = QuotaRootImpl.quotaRoot("#private&" + USER);
+    public static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("#private&" + USER);
     private OutputCapture outputCapture;
 
     @Rule

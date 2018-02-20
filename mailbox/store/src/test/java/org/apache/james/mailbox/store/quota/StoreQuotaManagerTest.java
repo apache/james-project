@@ -44,7 +44,7 @@ public class StoreQuotaManagerTest {
         mockedCurrentQuotaManager = mock(CurrentQuotaManager.class);
         mockedMaxQuotaManager = mock(MaxQuotaManager.class);
         testee = new StoreQuotaManager(mockedCurrentQuotaManager, mockedMaxQuotaManager);
-        quotaRoot = QuotaRootImpl.quotaRoot("benwa");
+        quotaRoot = QuotaRoot.quotaRoot("benwa");
     }
 
     @Test

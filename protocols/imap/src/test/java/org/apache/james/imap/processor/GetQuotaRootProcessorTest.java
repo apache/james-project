@@ -40,7 +40,6 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.quota.QuotaImpl;
-import org.apache.james.mailbox.store.quota.QuotaRootImpl;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -50,7 +49,7 @@ import org.junit.Test;
 
 public class GetQuotaRootProcessorTest {
 
-    private static final QuotaRoot QUOTA_ROOT = QuotaRootImpl.quotaRoot("plop");
+    private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("plop");
     public static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("plop", "INBOX");
     public static final Quota MESSAGE_QUOTA = QuotaImpl.quota(24, 1589);
     public static final Quota STORAGE_QUOTA = QuotaImpl.quota(240, 15890);

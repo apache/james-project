@@ -19,11 +19,36 @@
 
 package org.apache.james.mailbox.model;
 
+import com.google.common.base.Objects;
+
 /**
  * Represents RFC 2087 Quota root
  */
-public interface QuotaRoot {
+public class QuotaRoot {
 
-    String getValue();
+    public static QuotaRoot quotaRoot(String value) {
+        return new QuotaRoot(value);
+    }
+
+    private final String value;
+
+    private QuotaRoot(String value) {
+        this.value = value;
+    }
+
+    public boolean equals(Object o) {
+        if (o == null || !(o instanceof QuotaRoot)) {
+            return false;
+        }
+        return value.equals(((QuotaRoot) o).getValue());
+    }
+
+    public int hashCode() {
+        return Objects.hashCode(value);
+    }
+
+    public String getValue() {
+        return value;
+    }
 
 }

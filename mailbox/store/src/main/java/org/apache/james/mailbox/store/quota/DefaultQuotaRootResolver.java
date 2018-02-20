@@ -48,14 +48,14 @@ public class DefaultQuotaRootResolver implements QuotaRootResolver {
 
     @Override
     public QuotaRoot createQuotaRoot(String quotaRootValue) {
-        return QuotaRootImpl.quotaRoot(quotaRootValue);
+        return QuotaRoot.quotaRoot(quotaRootValue);
     }
 
     @Override
     public QuotaRoot getQuotaRoot(MailboxPath mailboxPath) throws MailboxException {
         Preconditions.checkArgument(!mailboxPath.getNamespace().contains(SEPARATOR), "Namespace should not contain " + SEPARATOR);
         Preconditions.checkArgument(!mailboxPath.getUser().contains(SEPARATOR), "Username should not contain " + SEPARATOR);
-        return QuotaRootImpl.quotaRoot(mailboxPath.getNamespace() + SEPARATOR + mailboxPath.getUser());
+        return QuotaRoot.quotaRoot(mailboxPath.getNamespace() + SEPARATOR + mailboxPath.getUser());
     }
 
     @Override

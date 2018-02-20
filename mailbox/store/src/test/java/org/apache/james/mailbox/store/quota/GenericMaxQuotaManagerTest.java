@@ -37,7 +37,7 @@ public abstract class GenericMaxQuotaManagerTest {
     @Before
     public void setUp() {
         maxQuotaManager = provideMaxQuotaManager();
-        quotaRoot = QuotaRootImpl.quotaRoot("benwa");
+        quotaRoot = QuotaRoot.quotaRoot("benwa");
     }
 
     @Test

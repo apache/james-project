@@ -26,7 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public abstract class StoreCurrentQuotaManagerTest {
-    public static final QuotaRoot QUOTA_ROOT = QuotaRootImpl.quotaRoot("benwa");
+    public static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa");
     
     protected abstract StoreCurrentQuotaManager provideTestee();
     

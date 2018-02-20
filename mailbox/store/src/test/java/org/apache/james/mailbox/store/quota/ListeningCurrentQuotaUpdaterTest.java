@@ -44,7 +44,7 @@ public class ListeningCurrentQuotaUpdaterTest {
 
     public static final int SIZE = 45;
     public static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("benwa", "INBOX");
-    public static final QuotaRoot QUOTA_ROOT = QuotaRootImpl.quotaRoot("benwa");
+    public static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa");
 
     private StoreCurrentQuotaManager mockedCurrentQuotaManager;
     private QuotaRootResolver mockedQuotaRootResolver;
