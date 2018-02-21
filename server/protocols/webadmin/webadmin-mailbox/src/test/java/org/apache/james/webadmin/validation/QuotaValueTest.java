@@ -17,43 +17,63 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.dto;
+package org.apache.james.webadmin.validation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
-public class QuotaRequestTest {
+import spark.HaltException;
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+public class QuotaValueTest {
 
     @Test
-    public void parseShouldThrowWhenNotANumber() {
-        expectedException.expect(NumberFormatException.class);
-
-        QuotaRequest.parse("invalid");
+    public void quotaCountShouldThrowWhenNotANumber() {
+        assertThatThrownBy(() -> QuotaValue.quotaCount("invalid"))
+            .isInstanceOf(HaltException.class);
     }
 
     @Test
-    public void parseShouldThrowOnNegativeNumber() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        QuotaRequest.parse("-1");
-    }
-
-    @Test
-    public void parseShouldParseZero() {
-        assertThat(QuotaRequest.parse("0").getValue())
+    public void quotaCountShouldParseZero() {
+        assertThat(QuotaValue.quotaCount("0").asLong())
             .isEqualTo(0);
     }
 
     @Test
-    public void parseShouldParsePositiveValue() {
-        assertThat(QuotaRequest.parse("42").getValue())
+    public void quotaCountShouldParsePositiveValue() {
+        assertThat(QuotaValue.quotaCount("42").asLong())
             .isEqualTo(42);
+    }
+
+    @Test
+    public void quotaCountShouldThrowOnNegativeNumber() {
+        assertThatThrownBy(() -> QuotaValue.quotaCount("-1"))
+            .isInstanceOf(HaltException.class);
+    }
+
+    @Test
+    public void quotaSizeShouldThrowWhenNotANumber() {
+        assertThatThrownBy(() -> QuotaValue.quotaSize("invalid"))
+            .isInstanceOf(HaltException.class);
+    }
+
+    @Test
+    public void quotaSizeShouldParseZero() {
+        assertThat(QuotaValue.quotaSize("0").asLong())
+            .isEqualTo(0);
+    }
+
+    @Test
+    public void quotaSizeShouldParsePositiveValue() {
+        assertThat(QuotaValue.quotaSize("42").asLong())
+            .isEqualTo(42);
+    }
+
+    @Test
+    public void quotaSizeShouldThrowOnNegativeNumber() {
+        assertThatThrownBy(() -> QuotaValue.quotaSize("-1"))
+            .isInstanceOf(HaltException.class);
     }
 
 }

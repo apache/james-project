@@ -30,16 +30,16 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.QuotaDTO;
-import org.apache.james.webadmin.dto.QuotaRequest;
 import org.apache.james.webadmin.service.UserQuotaService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.validation.QuotaValue;
+import org.apache.james.webadmin.validation.QuotaValue.QuotaCount;
+import org.apache.james.webadmin.validation.QuotaValue.QuotaSize;
 import org.eclipse.jetty.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -54,8 +54,6 @@ import spark.Service;
 @Path(UserQuotaRoutes.QUOTA_ENDPOINT)
 @Produces("application/json")
 public class UserQuotaRoutes implements Routes {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(Routes.class);
 
     private static final String USER = "user";
     static final String QUOTA_ENDPOINT = "/quota/users/:" + USER;
@@ -160,8 +158,8 @@ public class UserQuotaRoutes implements Routes {
     public void defineUpdateQuotaSize() {
         service.put(SIZE_ENDPOINT, (request, response) -> {
             String user = checkUserExist(request);
-            QuotaRequest quotaRequest = parseQuotaRequest(request);
-            userQuotaService.defineMaxSizeQuota(user, quotaRequest);
+            QuotaSize quotaSize = QuotaValue.quotaSize(request.body());
+            userQuotaService.defineMaxSizeQuota(user, quotaSize);
             response.status(HttpStatus.NO_CONTENT_204);
             return response;
         });
@@ -212,8 +210,8 @@ public class UserQuotaRoutes implements Routes {
     public void defineUpdateQuotaCount() {
         service.put(COUNT_ENDPOINT, (request, response) -> {
             String user = checkUserExist(request);
-            QuotaRequest quotaRequest = parseQuotaRequest(request);
-            userQuotaService.defineMaxCountQuota(user, quotaRequest);
+            QuotaCount quotaCount = QuotaValue.quotaCount(request.body());
+            userQuotaService.defineMaxCountQuota(user, quotaCount);
             response.status(HttpStatus.NO_CONTENT_204);
             return response;
         });
@@ -265,17 +263,4 @@ public class UserQuotaRoutes implements Routes {
         }
     }
 
-    private QuotaRequest parseQuotaRequest(Request request) {
-        try {
-            return QuotaRequest.parse(request.body());
-        } catch (IllegalArgumentException e) {
-            LOGGER.info("Invalid quota. Need to be an integer value greater than 0");
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorType.INVALID_ARGUMENT)
-                .message("Invalid quota. Need to be an integer value greater than 0")
-                .cause(e)
-                .haltError();
-        }
-    }
 }

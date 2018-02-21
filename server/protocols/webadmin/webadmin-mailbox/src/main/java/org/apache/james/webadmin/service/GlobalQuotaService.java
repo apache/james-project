@@ -24,7 +24,8 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.webadmin.dto.QuotaDTO;
-import org.apache.james.webadmin.dto.QuotaRequest;
+import org.apache.james.webadmin.validation.QuotaValue.QuotaCount;
+import org.apache.james.webadmin.validation.QuotaValue.QuotaSize;
 
 public class GlobalQuotaService {
 
@@ -52,8 +53,8 @@ public class GlobalQuotaService {
         return maxQuotaManager.getDefaultMaxStorage();
     }
 
-    public void defineMaxSizeQuota(QuotaRequest quotaRequest) throws MailboxException {
-        maxQuotaManager.setDefaultMaxStorage(quotaRequest.getValue());
+    public void defineMaxSizeQuota(QuotaSize quotaRequest) throws MailboxException {
+        maxQuotaManager.setDefaultMaxStorage(quotaRequest.asLong());
     }
 
     public void deleteMaxSizeQuota() throws MailboxException {
@@ -64,8 +65,8 @@ public class GlobalQuotaService {
         return maxQuotaManager.getDefaultMaxMessage();
     }
 
-    public void defineMaxCountQuota(QuotaRequest quotaRequest) throws MailboxException {
-        maxQuotaManager.setDefaultMaxMessage(quotaRequest.getValue());
+    public void defineMaxCountQuota(QuotaCount value) throws MailboxException {
+        maxQuotaManager.setDefaultMaxMessage(value.asLong());
     }
 
     public void deleteMaxCountQuota() throws MailboxException {

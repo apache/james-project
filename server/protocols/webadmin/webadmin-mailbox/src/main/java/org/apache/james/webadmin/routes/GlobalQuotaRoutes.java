@@ -28,13 +28,15 @@ import javax.ws.rs.Produces;
 
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.QuotaDTO;
-import org.apache.james.webadmin.dto.QuotaRequest;
 import org.apache.james.webadmin.service.GlobalQuotaService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.validation.QuotaValue;
+import org.apache.james.webadmin.validation.QuotaValue.QuotaCount;
+import org.apache.james.webadmin.validation.QuotaValue.QuotaSize;
 import org.eclipse.jetty.http.HttpStatus;
 
 import io.swagger.annotations.Api;
@@ -43,7 +45,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import spark.Request;
 import spark.Service;
 
 @Api(tags = "GlobalQuota")
@@ -164,8 +165,8 @@ public class GlobalQuotaRoutes implements Routes {
     })
     public void defineUpdateQuotaSize() {
         service.put(SIZE_ENDPOINT, (request, response) -> {
-            QuotaRequest quotaRequest = parseQuotaRequest(request);
-            globalQuotaService.defineMaxSizeQuota(quotaRequest);
+            QuotaSize quotaSize = QuotaValue.quotaSize(request.body());
+            globalQuotaService.defineMaxSizeQuota(quotaSize);
             response.status(HttpStatus.NO_CONTENT_204);
             return response;
         });
@@ -210,7 +211,7 @@ public class GlobalQuotaRoutes implements Routes {
     })
     public void defineUpdateQuotaCount() {
         service.put(COUNT_ENDPOINT, (request, response) -> {
-            QuotaRequest quotaRequest = parseQuotaRequest(request);
+            QuotaCount quotaRequest = QuotaValue.quotaCount(request.body());
             globalQuotaService.defineMaxCountQuota(quotaRequest);
             response.status(HttpStatus.NO_CONTENT_204);
             return response;
@@ -226,19 +227,6 @@ public class GlobalQuotaRoutes implements Routes {
     })
     public void defineGetQuotaCount() {
         service.get(COUNT_ENDPOINT, (request, response) -> globalQuotaService.getMaxCountQuota(), jsonTransformer);
-    }
-
-    private QuotaRequest parseQuotaRequest(Request request) {
-        try {
-            return QuotaRequest.parse(request.body());
-        } catch (IllegalArgumentException e) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorType.INVALID_ARGUMENT)
-                .message("Invalid quota. Need to be an integer value greater than 0")
-                .cause(e)
-                .haltError();
-        }
     }
 
 }
