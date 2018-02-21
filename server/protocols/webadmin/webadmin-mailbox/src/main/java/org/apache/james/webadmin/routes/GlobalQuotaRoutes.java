@@ -26,20 +26,16 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
-import org.apache.james.mailbox.model.Quota;
-import org.apache.james.mailbox.quota.MaxQuotaManager;
-import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.QuotaDTO;
 import org.apache.james.webadmin.dto.QuotaRequest;
+import org.apache.james.webadmin.service.GlobalQuotaService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -47,6 +43,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import spark.Request;
 import spark.Service;
 
 @Api(tags = "GlobalQuota")
@@ -57,16 +54,15 @@ public class GlobalQuotaRoutes implements Routes {
     public static final String QUOTA_ENDPOINT = "/quota";
     public static final String COUNT_ENDPOINT = QUOTA_ENDPOINT + "/count";
     public static final String SIZE_ENDPOINT = QUOTA_ENDPOINT + "/size";
-    private static final Logger LOGGER = LoggerFactory.getLogger(Routes.class);
 
-    private final MaxQuotaManager maxQuotaManager;
     private final JsonTransformer jsonTransformer;
     private final JsonExtractor<QuotaDTO> jsonExtractor;
+    private final GlobalQuotaService globalQuotaService;
     private Service service;
 
     @Inject
-    public GlobalQuotaRoutes(MaxQuotaManager maxQuotaManager, JsonTransformer jsonTransformer) {
-        this.maxQuotaManager = maxQuotaManager;
+    public GlobalQuotaRoutes(GlobalQuotaService globalQuotaService, JsonTransformer jsonTransformer) {
+        this.globalQuotaService = globalQuotaService;
         this.jsonTransformer = jsonTransformer;
         this.jsonExtractor = new JsonExtractor<>(QuotaDTO.class);
     }
@@ -106,11 +102,10 @@ public class GlobalQuotaRoutes implements Routes {
         service.put(QUOTA_ENDPOINT, ((request, response) -> {
             try {
                 QuotaDTO quotaDTO = jsonExtractor.parse(request.body());
-                maxQuotaManager.setDefaultMaxMessage(quotaDTO.getCount());
-                maxQuotaManager.setDefaultMaxStorage(quotaDTO.getSize());
+                globalQuotaService.defineQuota(quotaDTO);
                 response.status(HttpStatus.NO_CONTENT_204);
+                return response;
             } catch (JsonExtractException e) {
-                LOGGER.info("Malformed JSON", e);
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .type(ErrorType.INVALID_ARGUMENT)
@@ -118,7 +113,6 @@ public class GlobalQuotaRoutes implements Routes {
                     .cause(e)
                     .haltError();
             } catch (IllegalArgumentException e) {
-                LOGGER.info("Quota should be positive or unlimited (-1)", e);
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .type(ErrorType.INVALID_ARGUMENT)
@@ -126,7 +120,6 @@ public class GlobalQuotaRoutes implements Routes {
                     .cause(e)
                     .haltError();
             }
-            return Constants.EMPTY_BODY;
         }));
     }
 
@@ -140,13 +133,7 @@ public class GlobalQuotaRoutes implements Routes {
             @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineGetQuota() {
-        service.get(QUOTA_ENDPOINT, (request, response) -> {
-            QuotaDTO quotaDTO = QuotaDTO.builder()
-                .count(maxQuotaManager.getDefaultMaxMessage())
-                .size(maxQuotaManager.getDefaultMaxStorage()).build();
-            response.status(HttpStatus.OK_200);
-            return quotaDTO;
-        }, jsonTransformer);
+        service.get(QUOTA_ENDPOINT, (request, response) -> globalQuotaService.getQuota(), jsonTransformer);
     }
 
     @DELETE
@@ -158,9 +145,9 @@ public class GlobalQuotaRoutes implements Routes {
     })
     public void defineDeleteQuotaSize() {
         service.delete(SIZE_ENDPOINT, (request, response) -> {
-            maxQuotaManager.setDefaultMaxStorage(Quota.UNLIMITED);
+            globalQuotaService.deleteMaxSizeQuota();
             response.status(HttpStatus.NO_CONTENT_204);
-            return Constants.EMPTY_BODY;
+            return response;
         });
     }
 
@@ -177,20 +164,10 @@ public class GlobalQuotaRoutes implements Routes {
     })
     public void defineUpdateQuotaSize() {
         service.put(SIZE_ENDPOINT, (request, response) -> {
-            try {
-                QuotaRequest quotaRequest = QuotaRequest.parse(request.body());
-                maxQuotaManager.setDefaultMaxStorage(quotaRequest.getValue());
-                response.status(HttpStatus.NO_CONTENT_204);
-            } catch (IllegalArgumentException e) {
-                LOGGER.info("Invalid quota. Need to be an integer value greater than 0");
-                throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .type(ErrorType.INVALID_ARGUMENT)
-                    .message("Invalid quota. Need to be an integer value greater than 0")
-                    .cause(e)
-                    .haltError();
-            }
-            return Constants.EMPTY_BODY;
+            QuotaRequest quotaRequest = parseQuotaRequest(request);
+            globalQuotaService.defineMaxSizeQuota(quotaRequest);
+            response.status(HttpStatus.NO_CONTENT_204);
+            return response;
         });
     }
 
@@ -202,11 +179,7 @@ public class GlobalQuotaRoutes implements Routes {
             @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineGetQuotaSize() {
-        service.get(SIZE_ENDPOINT, (request, response) -> {
-            long value = maxQuotaManager.getDefaultMaxStorage();
-            response.status(HttpStatus.OK_200);
-            return value;
-        }, jsonTransformer);
+        service.get(SIZE_ENDPOINT, (request, response) -> globalQuotaService.getMaxSizeQuota(), jsonTransformer);
     }
 
     @DELETE
@@ -218,9 +191,9 @@ public class GlobalQuotaRoutes implements Routes {
     })
     public void defineDeleteQuotaCount() {
         service.delete(COUNT_ENDPOINT, (request, response) -> {
-            maxQuotaManager.setDefaultMaxMessage(Quota.UNLIMITED);
+            globalQuotaService.deleteMaxCountQuota();
             response.status(HttpStatus.NO_CONTENT_204);
-            return Constants.EMPTY_BODY;
+            return response;
         });
     }
 
@@ -237,20 +210,10 @@ public class GlobalQuotaRoutes implements Routes {
     })
     public void defineUpdateQuotaCount() {
         service.put(COUNT_ENDPOINT, (request, response) -> {
-            try {
-                QuotaRequest quotaRequest = QuotaRequest.parse(request.body());
-                maxQuotaManager.setDefaultMaxMessage(quotaRequest.getValue());
-                response.status(HttpStatus.NO_CONTENT_204);
-            } catch (IllegalArgumentException e) {
-                LOGGER.info("Invalid quota. Need to be an integer value greater than 0");
-                throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .type(ErrorType.INVALID_ARGUMENT)
-                    .message("Invalid quota. Need to be an integer value greater than 0")
-                    .cause(e)
-                    .haltError();
-            }
-            return Constants.EMPTY_BODY;
+            QuotaRequest quotaRequest = parseQuotaRequest(request);
+            globalQuotaService.defineMaxCountQuota(quotaRequest);
+            response.status(HttpStatus.NO_CONTENT_204);
+            return response;
         });
     }
 
@@ -262,10 +225,20 @@ public class GlobalQuotaRoutes implements Routes {
             @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineGetQuotaCount() {
-        service.get(COUNT_ENDPOINT, (request, response) -> {
-            long value = maxQuotaManager.getDefaultMaxMessage();
-            response.status(HttpStatus.OK_200);
-            return value;
-        }, jsonTransformer);
+        service.get(COUNT_ENDPOINT, (request, response) -> globalQuotaService.getMaxCountQuota(), jsonTransformer);
     }
+
+    private QuotaRequest parseQuotaRequest(Request request) {
+        try {
+            return QuotaRequest.parse(request.body());
+        } catch (IllegalArgumentException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("Invalid quota. Need to be an integer value greater than 0")
+                .cause(e)
+                .haltError();
+        }
+    }
+
 }

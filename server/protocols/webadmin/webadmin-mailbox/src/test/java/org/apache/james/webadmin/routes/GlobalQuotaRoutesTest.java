@@ -30,6 +30,7 @@ import org.apache.james.mailbox.model.Quota;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.service.GlobalQuotaService;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
@@ -50,7 +51,7 @@ public class GlobalQuotaRoutesTest {
         maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new DefaultMetricFactory(),
-            new GlobalQuotaRoutes(maxQuotaManager, new JsonTransformer()));
+            new GlobalQuotaRoutes(new GlobalQuotaService(maxQuotaManager), new JsonTransformer()));
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
 
