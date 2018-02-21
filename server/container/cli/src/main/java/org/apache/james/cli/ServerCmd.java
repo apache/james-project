@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -44,7 +45,8 @@ import org.apache.james.cli.probe.impl.JmxQuotaProbe;
 import org.apache.james.cli.probe.impl.JmxSieveProbe;
 import org.apache.james.cli.type.CmdType;
 import org.apache.james.cli.utils.ValueWithUnit;
-import org.apache.james.mailbox.model.Quota;
+import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.mail.model.SerializableQuota;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.mailbox.store.probe.QuotaProbe;
@@ -283,16 +285,16 @@ public class ServerCmd {
             printStream.println("MailboxMessage count allowed for Quota Root " + arguments[1] + ": " + formatMessageValue(quotaProbe.getMaxMessageCount(arguments[1])));
             break;
         case SETMAXSTORAGEQUOTA:
-            quotaProbe.setMaxStorage(arguments[1], ValueWithUnit.parse(arguments[2]).getConvertedValue());
+            quotaProbe.setMaxStorage(arguments[1], QuotaSize.size(ValueWithUnit.parse(arguments[2]).getConvertedValue()));
             break;
         case SETMAXMESSAGECOUNTQUOTA:
-            quotaProbe.setMaxMessageCount(arguments[1], Long.parseLong(arguments[2]));
+            quotaProbe.setMaxMessageCount(arguments[1], QuotaCount.count(Long.parseLong(arguments[2])));
             break;
         case SETDEFAULTMAXSTORAGEQUOTA:
-            quotaProbe.setDefaultMaxStorage(ValueWithUnit.parse(arguments[1]).getConvertedValue());
+            quotaProbe.setDefaultMaxStorage(QuotaSize.size(ValueWithUnit.parse(arguments[1]).getConvertedValue()));
             break;
         case SETDEFAULTMAXMESSAGECOUNTQUOTA:
-            quotaProbe.setDefaultMaxMessageCount(Long.parseLong(arguments[1]));
+            quotaProbe.setDefaultMaxMessageCount(QuotaCount.count(Long.parseLong(arguments[1])));
             break;
         case GETDEFAULTMAXSTORAGEQUOTA:
             printStream.println("Default Maximum Storage Quota: " + formatStorageValue(quotaProbe.getDefaultMaxStorage()));
@@ -343,38 +345,56 @@ public class ServerCmd {
         }
     }
 
-    private void printStorageQuota(String quotaRootString, SerializableQuota quota, PrintStream printStream) {
+    private void printStorageQuota(String quotaRootString, SerializableQuota<QuotaSize> quota, PrintStream printStream) {
         printStream.println(String.format("Storage quota for %s is: %s / %s",
             quotaRootString,
             formatStorageValue(quota.getUsed()),
-            formatStorageValue(quota.getMax())));
+            formatStorageValue(quota.encodeAsLong())));
     }
 
-    private void printMessageQuota(String quotaRootString, SerializableQuota quota, PrintStream printStream) {
+    private void printMessageQuota(String quotaRootString, SerializableQuota<QuotaCount> quota, PrintStream printStream) {
         printStream.println(String.format("MailboxMessage count quota for %s is: %s / %s",
             quotaRootString,
             formatMessageValue(quota.getUsed()),
-            formatMessageValue(quota.getMax())));
+            formatMessageValue(quota.encodeAsLong())));
     }
 
-    private String formatStorageValue(long value) {
-        if (value == Quota.UNKNOWN) {
+    private String formatStorageValue(Long value) {
+        if (value == null) {
             return ValueWithUnit.UNKNOWN;
         }
-        if (value == Quota.UNLIMITED) {
+        if (value == SerializableQuota.UNLIMITED) {
             return ValueWithUnit.UNLIMITED;
         }
         return FileUtils.byteCountToDisplaySize(value);
     }
 
-    private String formatMessageValue(long value) {
-        if (value == Quota.UNKNOWN) {
+    private String formatStorageValue(Optional<QuotaSize> value) {
+        return value.map(size -> {
+            if (size.isUnlimited()) {
+                return ValueWithUnit.UNLIMITED;
+            }
+            return FileUtils.byteCountToDisplaySize(size.asLong());
+        }).orElse(ValueWithUnit.UNKNOWN);
+    }
+
+    private String formatMessageValue(Long value) {
+        if (value == null) {
             return ValueWithUnit.UNKNOWN;
         }
-        if (value == Quota.UNLIMITED) {
+        if (value == SerializableQuota.UNLIMITED) {
             return ValueWithUnit.UNLIMITED;
         }
         return String.valueOf(value);
+    }
+
+    private String formatMessageValue(Optional<QuotaCount> value) {
+        return value.map(count -> {
+            if (count.isUnlimited()) {
+                return ValueWithUnit.UNLIMITED;
+            }
+            return String.valueOf(count.asLong());
+        }).orElse(ValueWithUnit.UNKNOWN);
     }
 
     private void print(Map<String, Mappings> map, PrintStream out) {

@@ -32,10 +32,10 @@ public class MaxUserStorage {
     @Column(name = "QUOTAROOT_ID")
     private String quotaRoot;
 
-    @Column(name = "VALUE")
-    private long value;
+    @Column(name = "VALUE", nullable = true)
+    private Long value;
 
-    public MaxUserStorage(String quotaRoot, long value) {
+    public MaxUserStorage(String quotaRoot, Long value) {
         this.quotaRoot = quotaRoot;
         this.value = value;
     }
@@ -43,7 +43,11 @@ public class MaxUserStorage {
     public MaxUserStorage() {
     }
 
-    public long getValue() {
+    public Long getValue() {
         return value;
+    }
+
+    public void setValue(Long value) {
+        this.value = value;
     }
 }

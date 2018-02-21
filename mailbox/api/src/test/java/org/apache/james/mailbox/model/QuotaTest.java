@@ -22,6 +22,7 @@ package org.apache.james.mailbox.model;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.model.Quota;
+import org.apache.james.mailbox.quota.QuotaCount;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -33,49 +34,49 @@ public class QuotaTest {
 
     @Test
     public void unlimitedQuotaShouldNotBeOverQuota() {
-        assertThat(Quota.unlimited().isOverQuota()).isFalse();
+        assertThat(Quota.unknownUsedQuota(QuotaCount.unlimited()).isOverQuota()).isFalse();
     }
 
     @Test
     public void isOverQuotaShouldReturnFalseWhenQuotaIsNotExceeded() {
-        assertThat(Quota.quota(36, 360).isOverQuota()).isFalse();
+        assertThat(Quota.quota(QuotaCount.count(36), QuotaCount.count(360)).isOverQuota()).isFalse();
     }
 
     @Test
     public void isOverQuotaShouldReturnFalseWhenMaxValueIsUnlimited() {
-        assertThat(Quota.quota(36, Quota.UNLIMITED).isOverQuota()).isFalse();
+        assertThat(Quota.quota(QuotaCount.count(36), QuotaCount.unlimited()).isOverQuota()).isFalse();
     }
 
     @Test
     public void isOverQuotaShouldReturnFalseWhenUsedValueIsUnknown() {
-        assertThat(Quota.quota(Quota.UNKNOWN, 36).isOverQuota()).isFalse();
+        assertThat(Quota.unknownUsedQuota(QuotaCount.count(36)).isOverQuota()).isFalse();
     }
 
     @Test
     public void isOverQuotaShouldReturnTrueWhenQuotaIsExceeded() {
-        assertThat(Quota.quota(360, 36).isOverQuota()).isTrue();
+        assertThat(Quota.quota(QuotaCount.count(360), QuotaCount.count(36)).isOverQuota()).isTrue();
     }
 
     @Test
     public void isOverQuotaWithAdditionalValueShouldReturnTrueWhenOverLimit() {
-        assertThat(Quota.quota(36, 36).isOverQuotaWithAdditionalValue(1)).isTrue();
+        assertThat(Quota.quota(QuotaCount.count(36), QuotaCount.count(36)).isOverQuotaWithAdditionalValue(1)).isTrue();
     }
 
     @Test
     public void isOverQuotaWithAdditionalValueShouldReturnTrueWhenUnderLimit() {
-        assertThat(Quota.quota(34, 36).isOverQuotaWithAdditionalValue(1)).isFalse();
+        assertThat(Quota.quota(QuotaCount.count(34), QuotaCount.count(36)).isOverQuotaWithAdditionalValue(1)).isFalse();
     }
 
     @Test
     public void isOverQuotaWithAdditionalValueShouldReturnFalseWhenAtLimit() {
-        assertThat(Quota.quota(36, 36).isOverQuotaWithAdditionalValue(0)).isFalse();
+        assertThat(Quota.quota(QuotaCount.count(36), QuotaCount.count(36)).isOverQuotaWithAdditionalValue(0)).isFalse();
     }
 
     @Test
     public void isOverQuotaWithAdditionalValueShouldThrowOnNegativeValue() {
         expectedException.expect(IllegalArgumentException.class);
 
-        Quota.quota(25, 36).isOverQuotaWithAdditionalValue(-1);
+        Quota.quota(QuotaCount.count(25), QuotaCount.count(36)).isOverQuotaWithAdditionalValue(-1);
     }
 
 }

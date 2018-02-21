@@ -40,8 +40,10 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
+import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 
@@ -78,12 +80,15 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
         try {
             if (mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Read, mailboxSession)) {
                 QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxPath);
-                Quota messageQuota = quotaManager.getMessageQuota(quotaRoot);
-                // See RFC 2087 : response for STORAGE should be in KB. For more accuracy, we stores B, so conversion should be made
-                Quota storageQuota = quotaManager.getStorageQuota(quotaRoot);
+                Quota<QuotaCount> messageQuota = quotaManager.getMessageQuota(quotaRoot);
+                Quota<QuotaSize> storageQuota = quotaManager.getStorageQuota(quotaRoot);
                 responder.respond(new QuotaRootResponse(message.getMailboxName(), quotaRoot.getValue()));
-                responder.respond(new QuotaResponse(ImapConstants.MESSAGE_QUOTA_RESOURCE, quotaRoot.getValue(), messageQuota));
-                responder.respond(new QuotaResponse(ImapConstants.STORAGE_QUOTA_RESOURCE, quotaRoot.getValue(), storageQuota));
+                if (messageQuota.getMax().isLimited() && messageQuota.getUsed().isPresent()) {
+                    responder.respond(new QuotaResponse(ImapConstants.MESSAGE_QUOTA_RESOURCE, quotaRoot.getValue(), messageQuota));
+                }
+                if (storageQuota.getMax().isLimited() && storageQuota.getUsed().isPresent()) {
+                    responder.respond(new QuotaResponse(ImapConstants.STORAGE_QUOTA_RESOURCE, quotaRoot.getValue(), storageQuota));
+                }
                 okComplete(command, tag, responder);
             } else {
                 Object[] params = new Object[]{

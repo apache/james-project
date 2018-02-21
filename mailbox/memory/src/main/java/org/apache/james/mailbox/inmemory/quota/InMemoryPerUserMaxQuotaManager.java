@@ -19,66 +19,88 @@
 package org.apache.james.mailbox.inmemory.quota;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaSize;
 
 public class InMemoryPerUserMaxQuotaManager implements MaxQuotaManager {
 
-    private long maxMessage = Quota.UNLIMITED;
-    private long maxStorage = Quota.UNLIMITED;
+    private Optional<QuotaCount> maxMessage = Optional.empty();
+    private Optional<QuotaSize> maxStorage = Optional.empty();
 
-    private final Map<String, Long> userMaxStorage = new ConcurrentHashMap<>();
-    private final Map<String, Long> userMaxMessage = new ConcurrentHashMap<>();
+    private final Map<String, QuotaSize> userMaxStorage = new ConcurrentHashMap<>();
+    private final Map<String, QuotaCount> userMaxMessage = new ConcurrentHashMap<>();
 
     @Override
-    public void setDefaultMaxStorage(long maxStorage) throws MailboxException {
-        this.maxStorage = maxStorage;
+    public void setDefaultMaxStorage(QuotaSize maxStorage) throws MailboxException {
+        this.maxStorage = Optional.of(maxStorage);
     }
 
     @Override
-    public void setDefaultMaxMessage(long maxMessage) throws MailboxException {
-        this.maxMessage = maxMessage;
+    public void setDefaultMaxMessage(QuotaCount maxMessage) throws MailboxException {
+        this.maxMessage = Optional.of(maxMessage);
     }
 
     @Override
-    public long getMaxStorage(QuotaRoot quotaRoot) throws MailboxException {
-        Long max = userMaxStorage.get(quotaRoot.getValue());
+    public Optional<QuotaSize> getMaxStorage(QuotaRoot quotaRoot) throws MailboxException {
+        QuotaSize max = userMaxStorage.get(quotaRoot.getValue());
         if (max == null) {
             return maxStorage;
         }
-        return max;
+        return Optional.of(max);
     }
 
     @Override
-    public long getMaxMessage(QuotaRoot quotaRoot) throws MailboxException {
-        Long max = userMaxMessage.get(quotaRoot.getValue());
+    public Optional<QuotaCount> getMaxMessage(QuotaRoot quotaRoot) throws MailboxException {
+        QuotaCount max = userMaxMessage.get(quotaRoot.getValue());
         if (max == null) {
             return maxMessage;
         }
-        return max;
+        return Optional.of(max);
     }
 
     @Override
-    public void setMaxStorage(QuotaRoot user, long maxStorageQuota) {
+    public void setMaxStorage(QuotaRoot user, QuotaSize maxStorageQuota) {
         userMaxStorage.put(user.getValue(), maxStorageQuota);
     }
 
     @Override
-    public void setMaxMessage(QuotaRoot quotaRoot, long maxMessageCount) {
+    public void setMaxMessage(QuotaRoot quotaRoot, QuotaCount maxMessageCount) {
         userMaxMessage.put(quotaRoot.getValue(), maxMessageCount);
     }
 
     @Override
-    public long getDefaultMaxStorage() throws MailboxException {
+    public Optional<QuotaSize> getDefaultMaxStorage() throws MailboxException {
         return maxStorage;
     }
 
     @Override
-    public long getDefaultMaxMessage() throws MailboxException {
+    public Optional<QuotaCount> getDefaultMaxMessage() throws MailboxException {
         return maxMessage;
+    }
+
+    @Override
+    public void removeMaxMessage(QuotaRoot quotaRoot) throws MailboxException {
+        userMaxMessage.remove(quotaRoot.getValue());
+    }
+
+    @Override
+    public void removeMaxStorage(QuotaRoot quotaRoot) throws MailboxException {
+        userMaxStorage.remove(quotaRoot.getValue());
+    }
+
+    @Override
+    public void removeDefaultMaxStorage() throws MailboxException {
+        maxStorage = Optional.empty();
+    }
+
+    @Override
+    public void removeDefaultMaxMessage() throws MailboxException {
+        maxMessage = Optional.empty();
     }
 }

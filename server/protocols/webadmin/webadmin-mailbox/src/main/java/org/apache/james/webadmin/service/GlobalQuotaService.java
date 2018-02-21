@@ -18,14 +18,15 @@
  ****************************************************************/
 package org.apache.james.webadmin.service;
 
+import java.util.Optional;
+
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.webadmin.dto.QuotaDTO;
-import org.apache.james.webadmin.validation.QuotaValue.QuotaCount;
-import org.apache.james.webadmin.validation.QuotaValue.QuotaSize;
 
 public class GlobalQuotaService {
 
@@ -37,8 +38,19 @@ public class GlobalQuotaService {
     }
 
     public void defineQuota(QuotaDTO quota) throws MailboxException {
-        maxQuotaManager.setDefaultMaxMessage(quota.getCount());
-        maxQuotaManager.setDefaultMaxStorage(quota.getSize());
+        Optional<QuotaCount> count = quota.getCount();
+        if (count.isPresent()) {
+            maxQuotaManager.setDefaultMaxMessage(count.get());
+        } else {
+            maxQuotaManager.removeDefaultMaxMessage();
+        }
+
+        Optional<QuotaSize> size = quota.getSize();
+        if (size.isPresent()) {
+            maxQuotaManager.setDefaultMaxStorage(size.get());
+        } else {
+            maxQuotaManager.removeDefaultMaxStorage();
+        }
     }
 
     public QuotaDTO getQuota() throws MailboxException {
@@ -49,27 +61,27 @@ public class GlobalQuotaService {
             .build();
     }
 
-    public Long getMaxSizeQuota() throws MailboxException {
+    public Optional<QuotaSize> getMaxSizeQuota() throws MailboxException {
         return maxQuotaManager.getDefaultMaxStorage();
     }
 
     public void defineMaxSizeQuota(QuotaSize quotaRequest) throws MailboxException {
-        maxQuotaManager.setDefaultMaxStorage(quotaRequest.asLong());
+        maxQuotaManager.setDefaultMaxStorage(quotaRequest);
     }
 
     public void deleteMaxSizeQuota() throws MailboxException {
-        maxQuotaManager.setDefaultMaxStorage(Quota.UNLIMITED);
+        maxQuotaManager.removeDefaultMaxStorage();
     }
 
-    public Long getMaxCountQuota() throws MailboxException {
+    public Optional<QuotaCount> getMaxCountQuota() throws MailboxException {
         return maxQuotaManager.getDefaultMaxMessage();
     }
 
     public void defineMaxCountQuota(QuotaCount value) throws MailboxException {
-        maxQuotaManager.setDefaultMaxMessage(value.asLong());
+        maxQuotaManager.setDefaultMaxMessage(value);
     }
 
     public void deleteMaxCountQuota() throws MailboxException {
-        maxQuotaManager.setDefaultMaxMessage(Quota.UNLIMITED);
+        maxQuotaManager.removeDefaultMaxMessage();
     }
 }

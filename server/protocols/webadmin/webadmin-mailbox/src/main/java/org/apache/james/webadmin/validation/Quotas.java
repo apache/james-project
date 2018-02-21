@@ -19,32 +19,38 @@
 
 package org.apache.james.webadmin.validation;
 
+import java.util.Optional;
+
+import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.eclipse.jetty.http.HttpStatus;
 
-public abstract class QuotaValue {
-
-    public static class QuotaSize extends QuotaValue {
-        QuotaSize(long value) {
-            super(value);
-        }
-    }
-
-    public static class QuotaCount extends QuotaValue {
-        QuotaCount(long value) {
-            super(value);
-        }
-    }
+public abstract class Quotas {
 
     public static QuotaCount quotaCount(String serialized) {
-        return new QuotaCount(parse(serialized));
+        return minusOneToEmpty(parseToLong(serialized))
+                .map(QuotaCount::count)
+                .orElse(QuotaCount.unlimited());
     }
 
     public static QuotaSize quotaSize(String serialized) {
-        return new QuotaSize(parse(serialized));
+        return minusOneToEmpty(parseToLong(serialized))
+            .map(QuotaSize::size)
+            .orElse(QuotaSize.unlimited());
     }
 
-    private static long parse(String serialized) {
+    private static Optional<Long> minusOneToEmpty(long value) {
+        if (value < -1) {
+            throw generateInvalidInputError().haltError();
+        }
+        if (value == -1) {
+            return Optional.empty();
+        }
+        return Optional.of(value);
+    }
+
+    private static long parseToLong(String serialized) {
         try {
             return Long.valueOf(serialized);
         } catch (IllegalArgumentException e) {
@@ -58,21 +64,7 @@ public abstract class QuotaValue {
         return ErrorResponder.builder()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-            .message("Invalid quota. Need to be an integer value greater than 0");
-    }
-
-    private final long value;
-
-    private QuotaValue(long value) {
-        if (value < 0) {
-            throw generateInvalidInputError()
-                .haltError();
-        }
-        this.value = value;
-    }
-
-    public long asLong() {
-        return value;
+            .message("Invalid quota. Need to be an integer value greater or equal to -1");
     }
 
 }

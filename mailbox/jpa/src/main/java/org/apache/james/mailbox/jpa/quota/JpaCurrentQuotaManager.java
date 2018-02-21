@@ -28,6 +28,8 @@ import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.quota.model.JpaCurrentQuota;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 
 import com.google.common.base.Preconditions;
@@ -50,23 +52,23 @@ public class JpaCurrentQuotaManager implements StoreCurrentQuotaManager {
     }
 
     @Override
-    public long getCurrentMessageCount(QuotaRoot quotaRoot) throws MailboxException {
+    public QuotaCount getCurrentMessageCount(QuotaRoot quotaRoot) throws MailboxException {
         JpaCurrentQuota userQuota = retrieveUserQuota(quotaRoot);
 
         if (userQuota == null) {
-            return NO_STORED_BYTES;
+            return QuotaCount.count(NO_STORED_BYTES);
         }
-        return userQuota.getMessageCount();
+        return QuotaCount.count(userQuota.getMessageCount());
     }
 
     @Override
-    public long getCurrentStorage(QuotaRoot quotaRoot) throws MailboxException {
+    public QuotaSize getCurrentStorage(QuotaRoot quotaRoot) throws MailboxException {
         JpaCurrentQuota userQuota = retrieveUserQuota(quotaRoot);
 
         if (userQuota == null) {
-            return NO_STORED_BYTES;
+            return QuotaSize.size(NO_STORED_BYTES);
         }
-        return userQuota.getSize();
+        return QuotaSize.size(userQuota.getSize());
     }
 
     @Override

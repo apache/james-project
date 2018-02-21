@@ -20,29 +20,44 @@
 package org.apache.james.mailbox.store.mail.model;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 import org.apache.james.mailbox.model.Quota;
+import org.apache.james.mailbox.quota.QuotaValue;
 
-public class SerializableQuota implements Serializable {
+public class SerializableQuota<T extends QuotaValue<T>> implements Serializable {
 
-    private final long max;
-    private final long used;
+    public static final long UNLIMITED = -1;
 
-    public SerializableQuota(long max, long used) {
+    private final Long max;
+    private final Long used;
+
+    public SerializableQuota(Long max, Long used) {
         this.max = max;
         this.used = used;
     }
 
-    public SerializableQuota(Quota quota) {
-        this.max = quota.getMax();
-        this.used = quota.getUsed();
+    public SerializableQuota(Quota<T> quota) {
+        this.max = encodeAsLong(quota.getMax());
+        this.used = getUsed(quota.getUsed());
     }
 
-    public long getMax() {
+    private Long getUsed(Optional<T> quota) {
+        return quota.map(this::encodeAsLong).orElse(null);
+    }
+
+    private Long encodeAsLong(T quota) {
+        if (quota.isLimited()) {
+            return quota.asLong();
+        }
+        return UNLIMITED;
+    }
+
+    public Long encodeAsLong() {
         return max;
     }
 
-    public long getUsed() {
+    public Long getUsed() {
         return used;
     }
 

@@ -18,43 +18,42 @@
  ****************************************************************/
 package org.apache.james.mailbox.model;
 
+import java.util.Optional;
+
+import org.apache.james.mailbox.quota.QuotaValue;
+
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
-public class Quota {
+public class Quota<T extends QuotaValue<T>> {
 
-    public static final long UNLIMITED = -1;
-
-    public static final long UNKNOWN = Long.MIN_VALUE;
-
-    private static final Quota UNLIMITED_QUOTA = new Quota(UNKNOWN, UNLIMITED);
-
-    public static Quota unlimited() {
-        return UNLIMITED_QUOTA;
+    public static <T extends QuotaValue<T>> Quota<T> quota(T used, T max) {
+        Preconditions.checkNotNull(used);
+        return new Quota<>(Optional.of(used), max);
     }
 
-    public static Quota quota(long used, long max) {
-        return new Quota(used, max);
+    public static <T extends QuotaValue<T>> Quota<T> unknownUsedQuota(T max) {
+        return new Quota<>(Optional.empty(), max);
     }
 
-    private final long max;
-    private long used;
+    private final T max;
+    private final Optional<T> used;
 
-    private Quota(long used, long max) {
+    private Quota(Optional<T> used, T max) {
         this.used = used;
         this.max = max;
     }
 
-    public long getMax() {
+    public T getMax() {
         return max;
     }
 
-    public long getUsed() {
+    public Optional<T> getUsed() {
         return used;
     }
 
-    public void addValueToQuota(long value) {
-        used += value;
+    public Quota<T> addValueToQuota(T value) {
+        return new Quota<T>(used.map(x -> x.add(value)), max);
     }
 
     /**
@@ -68,8 +67,10 @@ public class Quota {
 
     public boolean isOverQuotaWithAdditionalValue(long additionalValue) {
         Preconditions.checkArgument(additionalValue >= 0);
-        return max != UNLIMITED
-            && used + additionalValue > max;
+        if (!max.isLimited()) {
+            return false;
+        }
+        return used.map(x -> x.add(additionalValue).isGreaterThan(max)).orElse(false);
     }
 
     @Override
@@ -82,9 +83,9 @@ public class Quota {
         if (o == null || ! (o instanceof  Quota)) {
             return false;
         }
-        Quota other = (Quota) o;
-        return used == other.getUsed()
-            && max == other.getMax();
+        Quota<?> other = (Quota<?>) o;
+        return Objects.equal(used, other.getUsed())
+            && Objects.equal(max,other.getMax());
     }
 
     @Override

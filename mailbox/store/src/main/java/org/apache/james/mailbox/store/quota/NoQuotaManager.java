@@ -22,7 +22,9 @@ package org.apache.james.mailbox.store.quota;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaManager;
+import org.apache.james.mailbox.quota.QuotaSize;
 
 /**
  * This quota manager is intended to be used when you want to deactivate the Quota feature
@@ -30,12 +32,12 @@ import org.apache.james.mailbox.quota.QuotaManager;
 public class NoQuotaManager implements QuotaManager {
 
     @Override
-    public Quota getMessageQuota(QuotaRoot quotaRoot) throws MailboxException {
-        return Quota.unlimited();
+    public Quota<QuotaCount> getMessageQuota(QuotaRoot quotaRoot) throws MailboxException {
+        return Quota.unknownUsedQuota(QuotaCount.unlimited());
     }
 
     @Override
-    public Quota getStorageQuota(QuotaRoot quotaRoot) throws MailboxException {
-        return Quota.unlimited();
+    public Quota<QuotaSize> getStorageQuota(QuotaRoot quotaRoot) throws MailboxException {
+        return Quota.unknownUsedQuota(QuotaSize.unlimited());
     }
 }

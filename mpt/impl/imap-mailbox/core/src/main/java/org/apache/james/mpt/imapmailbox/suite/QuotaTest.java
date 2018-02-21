@@ -21,6 +21,8 @@ package org.apache.james.mpt.imapmailbox.suite;
 
 import java.util.Locale;
 
+import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.ImapTestConstants;
@@ -33,8 +35,8 @@ import org.junit.Test;
 
 public abstract class QuotaTest implements ImapTestConstants {
 
-    private static final int MAX_MESSAGE_QUOTA = 4096;
-    private static final long MAX_STORAGE_QUOTA = 5 * 1024L * 1024L * 1024L;
+    private static final QuotaCount MAX_MESSAGE_QUOTA = QuotaCount.count(4096);
+    private static final QuotaSize MAX_STORAGE_QUOTA = QuotaSize.size(5 * 1024L * 1024L * 1024L);
 
     protected abstract ImapHostSystem createImapHostSystem();
     

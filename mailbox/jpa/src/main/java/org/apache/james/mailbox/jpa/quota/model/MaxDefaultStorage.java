@@ -33,10 +33,10 @@ public class MaxDefaultStorage {
     @Column(name = "QUOTAROOT_ID")
     private String quotaRoot = DEFAULT_KEY;
 
-    @Column(name = "VALUE")
-    private long value;
+    @Column(name = "VALUE", nullable = true)
+    private Long value;
 
-    public MaxDefaultStorage(long value) {
+    public MaxDefaultStorage(Long value) {
         this.quotaRoot = DEFAULT_KEY;
         this.value = value;
     }
@@ -44,7 +44,11 @@ public class MaxDefaultStorage {
     public MaxDefaultStorage() {
     }
 
-    public long getValue() {
+    public Long getValue() {
         return value;
+    }
+
+    public void setValue(Long value) {
+        this.value = value;
     }
 }

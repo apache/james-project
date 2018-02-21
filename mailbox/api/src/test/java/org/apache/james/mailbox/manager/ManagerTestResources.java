@@ -35,8 +35,10 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.mock.MockMail;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
+import org.apache.james.mailbox.quota.QuotaSize;
 
 /**
  * Provide an initialized Mailbox environment where we can run managers tests
@@ -75,8 +77,8 @@ public class ManagerTestResources<T extends MailboxManager> {
         inbox = MailboxPath.inbox(session);
         subFolder = new MailboxPath(inbox, "INBOX.SUB");
 
-        maxQuotaManager.setDefaultMaxMessage(1000);
-        maxQuotaManager.setDefaultMaxStorage(1000000);
+        maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(1000));
+        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(1000000));
     }
 
     public void createMailboxes() throws MailboxException {

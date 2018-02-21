@@ -19,6 +19,10 @@
 
 package org.apache.james.webadmin.routes;
 
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -26,6 +30,8 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Routes;
@@ -36,9 +42,8 @@ import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
-import org.apache.james.webadmin.validation.QuotaValue;
-import org.apache.james.webadmin.validation.QuotaValue.QuotaCount;
-import org.apache.james.webadmin.validation.QuotaValue.QuotaSize;
+import org.apache.james.webadmin.utils.JsonTransformerModule;
+import org.apache.james.webadmin.validation.Quotas;
 import org.eclipse.jetty.http.HttpStatus;
 
 import io.swagger.annotations.Api;
@@ -67,11 +72,11 @@ public class UserQuotaRoutes implements Routes {
     private Service service;
 
     @Inject
-    public UserQuotaRoutes(UsersRepository usersRepository, UserQuotaService userQuotaService, JsonTransformer jsonTransformer) {
+    public UserQuotaRoutes(UsersRepository usersRepository, UserQuotaService userQuotaService, JsonTransformer jsonTransformer, Set<JsonTransformerModule> modules) {
         this.usersRepository = usersRepository;
         this.userQuotaService = userQuotaService;
         this.jsonTransformer = jsonTransformer;
-        this.jsonExtractor = new JsonExtractor<>(QuotaDTO.class);
+        this.jsonExtractor = new JsonExtractor<>(QuotaDTO.class, modules.stream().map(JsonTransformerModule::asJacksonModule).collect(Collectors.toList()));
     }
 
     @Override
@@ -158,7 +163,7 @@ public class UserQuotaRoutes implements Routes {
     public void defineUpdateQuotaSize() {
         service.put(SIZE_ENDPOINT, (request, response) -> {
             String user = checkUserExist(request);
-            QuotaSize quotaSize = QuotaValue.quotaSize(request.body());
+            QuotaSize quotaSize = Quotas.quotaSize(request.body());
             userQuotaService.defineMaxSizeQuota(user, quotaSize);
             response.status(HttpStatus.NO_CONTENT_204);
             return response;
@@ -170,12 +175,18 @@ public class UserQuotaRoutes implements Routes {
     @ApiOperation(value = "Reading per user mail size limitation")
     @ApiResponses(value = {
             @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = Long.class),
+            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "No value defined"),
             @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineGetQuotaSize() {
         service.get(SIZE_ENDPOINT, (request, response) -> {
             String user = checkUserExist(request);
-            return userQuotaService.getMaxSizeQuota(user);
+            Optional<QuotaSize> maxSizeQuota = userQuotaService.getMaxSizeQuota(user);
+            if (maxSizeQuota.isPresent()) {
+                return maxSizeQuota;
+            }
+            response.status(HttpStatus.NO_CONTENT_204);
+            return null;
         }, jsonTransformer);
     }
 
@@ -210,7 +221,7 @@ public class UserQuotaRoutes implements Routes {
     public void defineUpdateQuotaCount() {
         service.put(COUNT_ENDPOINT, (request, response) -> {
             String user = checkUserExist(request);
-            QuotaCount quotaCount = QuotaValue.quotaCount(request.body());
+            QuotaCount quotaCount = Quotas.quotaCount(request.body());
             userQuotaService.defineMaxCountQuota(user, quotaCount);
             response.status(HttpStatus.NO_CONTENT_204);
             return response;
@@ -227,7 +238,12 @@ public class UserQuotaRoutes implements Routes {
     public void defineGetQuotaCount() {
         service.get(COUNT_ENDPOINT, (request, response) -> {
             String user = checkUserExist(request);
-            return userQuotaService.getMaxCountQuota(user);
+            Optional<QuotaCount> maxCountQuota = userQuotaService.getMaxCountQuota(user);
+            if (maxCountQuota.isPresent()) {
+                return maxCountQuota;
+            }
+            response.status(HttpStatus.NO_CONTENT_204);
+            return null;
         }, jsonTransformer);
     }
 

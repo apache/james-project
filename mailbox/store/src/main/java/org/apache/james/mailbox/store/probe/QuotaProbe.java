@@ -19,31 +19,35 @@
 
 package org.apache.james.mailbox.store.probe;
 
+import java.util.Optional;
+
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.mail.model.SerializableQuota;
 
 public interface QuotaProbe {
 
     String getQuotaRoot(String namespace, String user, String name) throws MailboxException;
 
-    SerializableQuota getMessageCountQuota(String quotaRoot) throws MailboxException;
+    SerializableQuota<QuotaCount> getMessageCountQuota(String quotaRoot) throws MailboxException;
 
-    SerializableQuota getStorageQuota(String quotaRoot) throws MailboxException;
+    SerializableQuota<QuotaSize> getStorageQuota(String quotaRoot) throws MailboxException;
 
-    long getMaxMessageCount(String quotaRoot) throws MailboxException;
+    Optional<QuotaCount> getMaxMessageCount(String quotaRoot) throws MailboxException;
 
-    long getMaxStorage(String quotaRoot) throws MailboxException;
+    Optional<QuotaSize> getMaxStorage(String quotaRoot) throws MailboxException;
 
-    long getDefaultMaxMessageCount() throws MailboxException;
+    Optional<QuotaCount> getDefaultMaxMessageCount() throws MailboxException;
 
-    long getDefaultMaxStorage() throws MailboxException;
+    Optional<QuotaSize> getDefaultMaxStorage() throws MailboxException;
 
-    void setMaxMessageCount(String quotaRoot, long maxMessageCount) throws MailboxException;
+    void setMaxMessageCount(String quotaRoot, QuotaCount maxMessageCount) throws MailboxException;
 
-    void setMaxStorage(String quotaRoot, long maxSize) throws MailboxException;
+    void setMaxStorage(String quotaRoot, QuotaSize maxSize) throws MailboxException;
 
-    void setDefaultMaxMessageCount(long maxDefaultMessageCount) throws MailboxException;
+    void setDefaultMaxMessageCount(QuotaCount maxDefaultMessageCount) throws MailboxException;
 
-    void setDefaultMaxStorage(long maxDefaultSize) throws MailboxException;
+    void setDefaultMaxStorage(QuotaSize maxDefaultSize) throws MailboxException;
 
 }

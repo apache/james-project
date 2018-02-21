@@ -19,93 +19,86 @@
 
 package org.apache.james.mailbox.jpa.quota;
 
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
+import java.util.Optional;
 
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.jpa.quota.model.MaxDefaultMessageCount;
-import org.apache.james.mailbox.jpa.quota.model.MaxDefaultStorage;
-import org.apache.james.mailbox.jpa.quota.model.MaxUserMessageCount;
-import org.apache.james.mailbox.jpa.quota.model.MaxUserStorage;
-import org.apache.james.mailbox.model.Quota;
+import javax.inject.Inject;
+
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaSize;
 
 public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
 
-    private final EntityManager entityManager;
+    private final JPAPerUserMaxQuotaDAO dao;
 
     @Inject
-    public JPAPerUserMaxQuotaManager(EntityManagerFactory entityManagerFactory) {
-        entityManager = entityManagerFactory.createEntityManager();
+    public JPAPerUserMaxQuotaManager(JPAPerUserMaxQuotaDAO dao) {
+        this.dao = dao;
     }
 
     @Override
-    public void setMaxStorage(QuotaRoot quotaRoot, long maxStorageQuota) throws MailboxException {
-        entityManager.getTransaction().begin();
-        entityManager.merge(new MaxUserStorage(quotaRoot.getValue(), maxStorageQuota));
-        entityManager.getTransaction().commit();
+    public void setMaxStorage(QuotaRoot quotaRoot, QuotaSize maxStorageQuota) {
+        dao.setMaxStorage(quotaRoot, Optional.of(maxStorageQuota));
     }
 
     @Override
-    public void setMaxMessage(QuotaRoot quotaRoot, long maxMessageCount) throws MailboxException {
-        entityManager.getTransaction().begin();
-        entityManager.merge(new MaxUserMessageCount(quotaRoot.getValue(), maxMessageCount));
-        entityManager.getTransaction().commit();
+    public void setMaxMessage(QuotaRoot quotaRoot, QuotaCount maxMessageCount) {
+        dao.setMaxMessage(quotaRoot, Optional.of(maxMessageCount));
     }
 
     @Override
-    public void setDefaultMaxStorage(long defaultMaxStorage) throws MailboxException {
-        entityManager.getTransaction().begin();
-        entityManager.merge(new MaxDefaultStorage(defaultMaxStorage));
-        entityManager.getTransaction().commit();
+    public void removeMaxMessage(QuotaRoot quotaRoot) {
+        dao.setMaxMessage(quotaRoot, Optional.empty());
     }
 
     @Override
-    public void setDefaultMaxMessage(long defaultMaxMessageCount) throws MailboxException {
-        entityManager.getTransaction().begin();
-        entityManager.merge(new MaxDefaultMessageCount(defaultMaxMessageCount));
-        entityManager.getTransaction().commit();
+    public void setDefaultMaxStorage(QuotaSize defaultMaxStorage) {
+        dao.setDefaultMaxStorage(Optional.of(defaultMaxStorage));
     }
 
     @Override
-    public long getDefaultMaxStorage() throws MailboxException {
-        MaxDefaultStorage storedValue = entityManager.find(MaxDefaultStorage.class, MaxDefaultStorage.DEFAULT_KEY);
-
-        if (storedValue == null) {
-            return Quota.UNLIMITED;
-        }
-        return storedValue.getValue();
+    public void removeDefaultMaxMessage() {
+        dao.setDefaultMaxMessage(Optional.empty());
     }
 
     @Override
-    public long getDefaultMaxMessage() throws MailboxException {
-        MaxDefaultMessageCount storedValue = entityManager.find(MaxDefaultMessageCount.class, MaxDefaultMessageCount.DEFAULT_KEY);
-
-        if (storedValue == null) {
-            return Quota.UNLIMITED;
-        }
-        return storedValue.getValue();
+    public void setDefaultMaxMessage(QuotaCount defaultMaxMessageCount) {
+        dao.setDefaultMaxMessage(Optional.of(defaultMaxMessageCount));
     }
 
     @Override
-    public long getMaxStorage(QuotaRoot quotaRoot) throws MailboxException {
-        MaxUserStorage storedValue = entityManager.find(MaxUserStorage.class, quotaRoot.getValue());
-
-        if (storedValue == null) {
-            return getDefaultMaxStorage();
-        }
-        return storedValue.getValue();
+    public Optional<QuotaSize> getDefaultMaxStorage() {
+        return dao.getDefaultMaxStorage();
     }
 
     @Override
-    public long getMaxMessage(QuotaRoot quotaRoot) throws MailboxException {
-        MaxUserMessageCount storedValue = entityManager.find(MaxUserMessageCount.class, quotaRoot.getValue());
-
-        if (storedValue == null) {
-            return getDefaultMaxMessage();
-        }
-        return storedValue.getValue();
+    public Optional<QuotaCount> getDefaultMaxMessage() {
+        return dao.getDefaultMaxMessage();
     }
+
+    @Override
+    public Optional<QuotaSize> getMaxStorage(QuotaRoot quotaRoot) {
+        return dao.getMaxStorage(quotaRoot)
+            .map(Optional::of)
+            .orElseGet(this::getDefaultMaxStorage);
+    }
+
+    @Override
+    public Optional<QuotaCount> getMaxMessage(QuotaRoot quotaRoot) {
+        return dao.getMaxMessage(quotaRoot)
+                .map(Optional::of)
+                .orElseGet(this::getDefaultMaxMessage);
+    }
+
+    @Override
+    public void removeMaxStorage(QuotaRoot quotaRoot) {
+        dao.setMaxStorage(quotaRoot, Optional.empty());
+    }
+
+    @Override
+    public void removeDefaultMaxStorage() {
+        dao.setDefaultMaxStorage(Optional.empty());
+    }
+
 }

@@ -37,7 +37,7 @@ public interface QuotaManager {
      * @return quota
      * @throws MailboxException
      */
-    Quota getMessageQuota(QuotaRoot quotaRoot) throws MailboxException;
+    Quota<QuotaCount> getMessageQuota(QuotaRoot quotaRoot) throws MailboxException;
 
 
     /**
@@ -48,5 +48,5 @@ public interface QuotaManager {
      * @return quota
      * @throws MailboxException
      */
-    Quota getStorageQuota(QuotaRoot quotaRoot) throws MailboxException;
+    Quota<QuotaSize> getStorageQuota(QuotaRoot quotaRoot) throws MailboxException;
 }

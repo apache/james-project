@@ -18,39 +18,34 @@
  ****************************************************************/
 package org.apache.james.mailbox.exception;
 
+import org.apache.james.mailbox.quota.QuotaValue;
 
 /**
  * {@link MailboxException} which identicate that a user was over-quota
- * 
- *
  */
 public class OverQuotaException extends MailboxException {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 532673188582481689L;
     
-    private long used;
-    private long max;
+    private QuotaValue<?> used;
+    private QuotaValue<?> max;
 
-    public OverQuotaException(String msg, long max, long used) {
+    public OverQuotaException(String msg, QuotaValue<?> max, QuotaValue<?> used) {
         super(msg);
         this.used = used;
         this.max = max;
     }
     
-    public OverQuotaException(long max, long used) {
+    public OverQuotaException(QuotaValue<?> max, QuotaValue<?> used) {
         this(null, max, used);
     }
     
-    public long getUsed() {
+    public QuotaValue<?> getUsed() {
         return used;
     }
     
-    public long getMax() {
+    public QuotaValue<?> getMax() {
         return max;
     }
-    
-    
+
 }

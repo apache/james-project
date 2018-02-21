@@ -38,8 +38,10 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
+import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 
@@ -77,10 +79,14 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
         try {
             if (hasRight(message.getQuotaRoot(), session)) {
                 QuotaRoot quotaRoot = quotaRootResolver.createQuotaRoot(message.getQuotaRoot());
-                Quota messageQuota = quotaManager.getMessageQuota(quotaRoot);
-                Quota storageQuota = quotaManager.getStorageQuota(quotaRoot);
-                responder.respond(new QuotaResponse(ImapConstants.MESSAGE_QUOTA_RESOURCE, quotaRoot.getValue(), messageQuota));
-                responder.respond(new QuotaResponse(ImapConstants.STORAGE_QUOTA_RESOURCE, quotaRoot.getValue(), storageQuota));
+                Quota<QuotaCount> messageQuota = quotaManager.getMessageQuota(quotaRoot);
+                Quota<QuotaSize> storageQuota = quotaManager.getStorageQuota(quotaRoot);
+                if (messageQuota.getMax().isLimited() && messageQuota.getUsed().isPresent()) {
+                    responder.respond(new QuotaResponse(ImapConstants.MESSAGE_QUOTA_RESOURCE, quotaRoot.getValue(), messageQuota));
+                }
+                if (storageQuota.getMax().isLimited() && storageQuota.getUsed().isPresent()) {
+                    responder.respond(new QuotaResponse(ImapConstants.STORAGE_QUOTA_RESOURCE, quotaRoot.getValue(), storageQuota));
+                }
                 okComplete(command, tag, responder);
             } else {
                 Object[] params = new Object[]{

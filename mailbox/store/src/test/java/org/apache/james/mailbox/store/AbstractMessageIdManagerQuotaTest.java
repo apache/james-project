@@ -32,7 +32,9 @@ import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaManager;
+import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.junit.Before;
 import org.junit.Rule;
@@ -82,7 +84,7 @@ public abstract class AbstractMessageIdManagerQuotaTest {
 
     @Test
     public void setInMailboxesShouldNotThrowWhenMessageQuotaNotExceeded() throws Exception {
-        maxQuotaManager.setDefaultMaxMessage(1);
+        maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(1));
 
         MessageId messageId = testingData.persist(mailbox2.getMailboxId(), messageUid1, FLAGS, session);
 
@@ -91,7 +93,7 @@ public abstract class AbstractMessageIdManagerQuotaTest {
 
     @Test
     public void setInMailboxesShouldNotThrowWhenStorageQuotaNotExceeded() throws Exception {
-        maxQuotaManager.setDefaultMaxStorage(testingData.getConstantMessageSize());
+        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(testingData.getConstantMessageSize()));
 
         MessageId messageId = testingData.persist(mailbox2.getMailboxId(), messageUid1, FLAGS, session);
 
@@ -100,7 +102,7 @@ public abstract class AbstractMessageIdManagerQuotaTest {
 
     @Test
     public void setInMailboxesShouldThrowWhenStorageQuotaExceeded() throws Exception {
-        maxQuotaManager.setDefaultMaxStorage(2 * testingData.getConstantMessageSize());
+        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(2 * testingData.getConstantMessageSize()));
 
         testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
         MessageId messageId = testingData.persist(mailbox2.getMailboxId(), messageUid1, FLAGS, session);
@@ -111,7 +113,7 @@ public abstract class AbstractMessageIdManagerQuotaTest {
 
     @Test
     public void setInMailboxesShouldThrowWhenStorageQuotaExceededWhenCopiedToMultipleMailboxes() throws Exception {
-        maxQuotaManager.setDefaultMaxStorage(2 * testingData.getConstantMessageSize());
+        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(2 * testingData.getConstantMessageSize()));
 
         MessageId messageId = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
 
@@ -121,7 +123,7 @@ public abstract class AbstractMessageIdManagerQuotaTest {
 
     @Test
     public void setInMailboxesShouldThrowWhenStorageMessageExceeded() throws Exception {
-        maxQuotaManager.setDefaultMaxMessage(2);
+        maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(2));
 
         testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
         MessageId messageId = testingData.persist(mailbox2.getMailboxId(), messageUid1, FLAGS, session);

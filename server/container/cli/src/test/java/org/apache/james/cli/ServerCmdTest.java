@@ -27,6 +27,7 @@ import static org.easymock.EasyMock.expectLastCall;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Optional;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
@@ -36,6 +37,8 @@ import org.apache.james.cli.exceptions.UnrecognizedCommandException;
 import org.apache.james.cli.type.CmdType;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.Quota;
+import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.mail.model.SerializableQuota;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.mailbox.store.probe.QuotaProbe;
@@ -381,7 +384,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETDEFAULTMAXMESSAGECOUNTQUOTA.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(quotaProbe.getDefaultMaxMessageCount()).andReturn(1024L * 1024L);
+        expect(quotaProbe.getDefaultMaxMessageCount()).andReturn(Optional.of(QuotaCount.count(1024L * 1024L)));
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -393,7 +396,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETDEFAULTMAXSTORAGEQUOTA.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(quotaProbe.getDefaultMaxStorage()).andReturn(1024L * 1024L * 1024L);
+        expect(quotaProbe.getDefaultMaxStorage()).andReturn(Optional.of(QuotaSize.size(1024L * 1024L * 1024L)));
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -405,7 +408,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETDEFAULTMAXMESSAGECOUNTQUOTA.getCommand(), "1054"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        quotaProbe.setDefaultMaxMessageCount(1054);
+        quotaProbe.setDefaultMaxMessageCount(QuotaCount.count(1054));
         expectLastCall();
 
         control.replay();
@@ -418,7 +421,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETDEFAULTMAXSTORAGEQUOTA.getCommand(), "1G"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        quotaProbe.setDefaultMaxStorage(1024 * 1024 * 1024);
+        quotaProbe.setDefaultMaxStorage(QuotaSize.size(1024 * 1024 * 1024));
         expectLastCall();
 
         control.replay();
@@ -432,7 +435,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETMAXMESSAGECOUNTQUOTA.getCommand(), quotaroot, "1000"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        quotaProbe.setMaxMessageCount(quotaroot, 1000);
+        quotaProbe.setMaxMessageCount(quotaroot, QuotaCount.count(1000));
         expectLastCall();
 
         control.replay();
@@ -446,7 +449,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETMAXSTORAGEQUOTA.getCommand(), quotaroot, "5M"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        quotaProbe.setMaxStorage(quotaroot, 5 * 1024 * 1024);
+        quotaProbe.setMaxStorage(quotaroot, QuotaSize.size(5 * 1024 * 1024));
         expectLastCall();
 
         control.replay();
@@ -460,7 +463,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETMAXMESSAGECOUNTQUOTA.getCommand(), quotaroot};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(quotaProbe.getMaxMessageCount(quotaroot)).andReturn(Quota.UNLIMITED);
+        expect(quotaProbe.getMaxMessageCount(quotaroot)).andReturn(Optional.of(QuotaCount.unlimited()));
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -473,7 +476,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETMAXSTORAGEQUOTA.getCommand(), quotaroot};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(quotaProbe.getMaxStorage(quotaroot)).andReturn(Quota.UNLIMITED);
+        expect(quotaProbe.getMaxStorage(quotaroot)).andReturn(Optional.of(QuotaSize.unlimited()));
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -486,7 +489,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETSTORAGEQUOTA.getCommand(), quotaroot};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(quotaProbe.getStorageQuota(quotaroot)).andReturn(new SerializableQuota(Quota.UNLIMITED, Quota.UNKNOWN));
+        expect(quotaProbe.getStorageQuota(quotaroot)).andReturn(new SerializableQuota<>(Quota.unknownUsedQuota(QuotaSize.unlimited())));
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -499,7 +502,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETMESSAGECOUNTQUOTA.getCommand(), quotaroot};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(quotaProbe.getMessageCountQuota(quotaroot)).andReturn(new SerializableQuota(Quota.UNLIMITED, Quota.UNKNOWN));
+        expect(quotaProbe.getMessageCountQuota(quotaroot)).andReturn(new SerializableQuota<>(Quota.unknownUsedQuota(QuotaCount.unlimited())));
 
         control.replay();
         testee.executeCommandLine(commandLine);

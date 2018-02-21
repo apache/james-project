@@ -20,11 +20,14 @@
 package org.apache.james.cli.probe.impl;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import javax.management.MalformedObjectNameException;
 
 import org.apache.james.adapter.mailbox.QuotaManagementMBean;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.mail.model.SerializableQuota;
 import org.apache.james.mailbox.store.probe.QuotaProbe;
 
@@ -48,52 +51,52 @@ public class JmxQuotaProbe implements QuotaProbe, JmxProbe {
     }
 
     @Override
-    public SerializableQuota getMessageCountQuota(String quotaRoot) throws MailboxException {
+    public SerializableQuota<QuotaCount> getMessageCountQuota(String quotaRoot) throws MailboxException {
         return quotaManagement.getMessageCountQuota(quotaRoot);
     }
 
     @Override
-    public SerializableQuota getStorageQuota(String quotaRoot) throws MailboxException {
+    public SerializableQuota<QuotaSize> getStorageQuota(String quotaRoot) throws MailboxException {
         return quotaManagement.getStorageQuota(quotaRoot);
     }
 
     @Override
-    public long getMaxMessageCount(String quotaRoot) throws MailboxException {
+    public Optional<QuotaCount> getMaxMessageCount(String quotaRoot) throws MailboxException {
         return quotaManagement.getMaxMessageCount(quotaRoot);
     }
 
     @Override
-    public long getMaxStorage(String quotaRoot) throws MailboxException {
+    public Optional<QuotaSize> getMaxStorage(String quotaRoot) throws MailboxException {
         return quotaManagement.getMaxStorage(quotaRoot);
     }
 
     @Override
-    public long getDefaultMaxMessageCount() throws MailboxException {
+    public Optional<QuotaCount> getDefaultMaxMessageCount() throws MailboxException {
         return quotaManagement.getDefaultMaxMessageCount();
     }
 
     @Override
-    public long getDefaultMaxStorage() throws MailboxException {
+    public Optional<QuotaSize> getDefaultMaxStorage() throws MailboxException {
         return quotaManagement.getDefaultMaxStorage();
     }
 
     @Override
-    public void setMaxMessageCount(String quotaRoot, long maxMessageCount) throws MailboxException {
+    public void setMaxMessageCount(String quotaRoot, QuotaCount maxMessageCount) throws MailboxException {
         quotaManagement.setMaxMessageCount(quotaRoot, maxMessageCount);
     }
 
     @Override
-    public void setMaxStorage(String quotaRoot, long maxSize) throws MailboxException {
+    public void setMaxStorage(String quotaRoot, QuotaSize maxSize) throws MailboxException {
         quotaManagement.setMaxStorage(quotaRoot, maxSize);
     }
 
     @Override
-    public void setDefaultMaxMessageCount(long maxDefaultMessageCount) throws MailboxException {
+    public void setDefaultMaxMessageCount(QuotaCount maxDefaultMessageCount) throws MailboxException {
         quotaManagement.setDefaultMaxMessageCount(maxDefaultMessageCount);
     }
 
     @Override
-    public void setDefaultMaxStorage(long maxDefaultSize) throws MailboxException {
+    public void setDefaultMaxStorage(QuotaSize maxDefaultSize) throws MailboxException {
         quotaManagement.setDefaultMaxStorage(maxDefaultSize);
     }
 

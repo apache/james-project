@@ -19,12 +19,14 @@
 
 package org.apache.james.mailbox.cassandra.quota;
 
+import java.util.Optional;
+
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaSize;
 
 import com.github.fge.lambdas.Throwing;
 
@@ -38,42 +40,66 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public void setMaxStorage(QuotaRoot quotaRoot, long maxStorageQuota) throws MailboxException {
+    public void setMaxStorage(QuotaRoot quotaRoot, QuotaSize maxStorageQuota) {
         dao.setMaxStorage(quotaRoot, maxStorageQuota);
     }
 
     @Override
-    public void setMaxMessage(QuotaRoot quotaRoot, long maxMessageCount) throws MailboxException {
+    public void setMaxMessage(QuotaRoot quotaRoot, QuotaCount maxMessageCount) {
         dao.setMaxMessage(quotaRoot, maxMessageCount);
     }
 
     @Override
-    public void setDefaultMaxStorage(long defaultMaxStorage) throws MailboxException {
+    public void removeMaxMessage(QuotaRoot quotaRoot) {
+        dao.removeMaxMessage(quotaRoot);
+    }
+
+    @Override
+    public void removeMaxStorage(QuotaRoot quotaRoot) {
+        dao.removeMaxStorage(quotaRoot);
+    }
+
+    @Override
+    public void setDefaultMaxStorage(QuotaSize defaultMaxStorage) {
         dao.setDefaultMaxStorage(defaultMaxStorage);
     }
 
     @Override
-    public void setDefaultMaxMessage(long defaultMaxMessageCount) throws MailboxException {
+    public void removeDefaultMaxStorage() {
+        dao.removeDefaultMaxStorage();
+    }
+
+    @Override
+    public void setDefaultMaxMessage(QuotaCount defaultMaxMessageCount) {
         dao.setDefaultMaxMessage(defaultMaxMessageCount);
     }
 
     @Override
-    public long getDefaultMaxStorage() throws MailboxException {
-        return dao.getDefaultMaxStorage().orElse(Quota.UNLIMITED);
+    public void removeDefaultMaxMessage() {
+        dao.removeDefaultMaxMessage();
     }
 
     @Override
-    public long getDefaultMaxMessage() throws MailboxException {
-        return dao.getDefaultMaxMessage().orElse(Quota.UNLIMITED);
+    public Optional<QuotaSize> getDefaultMaxStorage() {
+        return dao.getDefaultMaxStorage();
     }
 
     @Override
-    public long getMaxStorage(QuotaRoot quotaRoot) throws MailboxException {
-        return dao.getMaxStorage(quotaRoot).orElseGet(Throwing.supplier(this::getDefaultMaxStorage).sneakyThrow());
+    public Optional<QuotaCount> getDefaultMaxMessage() {
+        return dao.getDefaultMaxMessage();
     }
 
     @Override
-    public long getMaxMessage(QuotaRoot quotaRoot) throws MailboxException {
-        return dao.getMaxMessage(quotaRoot).orElseGet(Throwing.supplier(this::getDefaultMaxMessage).sneakyThrow());
+    public Optional<QuotaSize> getMaxStorage(QuotaRoot quotaRoot) {
+        return dao.getMaxStorage(quotaRoot)
+            .map(Optional::of)
+            .orElseGet(Throwing.supplier(this::getDefaultMaxStorage).sneakyThrow());
+    }
+
+    @Override
+    public Optional<QuotaCount> getMaxMessage(QuotaRoot quotaRoot) {
+        return dao.getMaxMessage(quotaRoot)
+            .map(Optional::of)
+            .orElseGet(Throwing.supplier(this::getDefaultMaxMessage).sneakyThrow());
     }
 }

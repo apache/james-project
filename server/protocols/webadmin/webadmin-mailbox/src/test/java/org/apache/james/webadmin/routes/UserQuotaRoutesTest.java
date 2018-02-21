@@ -21,7 +21,6 @@ package org.apache.james.webadmin.routes;
 
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.when;
-import static org.apache.james.mailbox.model.Quota.UNLIMITED;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,11 +30,14 @@ import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.jackson.QuotaModule;
 import org.apache.james.webadmin.service.UserQuotaService;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
@@ -44,6 +46,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableSet;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.path.json.JsonPath;
@@ -71,7 +74,8 @@ public class UserQuotaRoutesTest {
         usersRepository.setDomainList(memoryDomainList);
         usersRepository.addUser(BOB, PASSWORD);
         UserQuotaService userQuotaService = new UserQuotaService(maxQuotaManager);
-        UserQuotaRoutes userQuotaRoutes = new UserQuotaRoutes(usersRepository, userQuotaService, new JsonTransformer());
+        QuotaModule quotaModule = new QuotaModule();
+        UserQuotaRoutes userQuotaRoutes = new UserQuotaRoutes(usersRepository, userQuotaService, new JsonTransformer(quotaModule), ImmutableSet.of(quotaModule));
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new NoopMetricFactory(),
             userQuotaRoutes);
@@ -97,23 +101,17 @@ public class UserQuotaRoutesTest {
     }
 
     @Test
-    public void getCountShouldReturnUnlimitedByDefault() throws UsersRepositoryException {
-        long quota =
-            given()
-                .get(QUOTA_USERS + "/" + BOB + "/" + COUNT)
-            .then()
-                .statusCode(HttpStatus.OK_200)
-                .contentType(ContentType.JSON)
-                .extract()
-                .as(Long.class);
-
-        assertThat(quota).isEqualTo(UNLIMITED);
+    public void getCountShouldReturnNoContentByDefault() throws UsersRepositoryException {
+        given()
+            .get(QUOTA_USERS + "/" + BOB + "/" + COUNT)
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
     }
 
     @Test
     public void getCountShouldReturnStoredValue() throws Exception {
         int value = 42;
-        maxQuotaManager.setMaxMessage(QuotaRoot.forUser(BOB), value);
+        maxQuotaManager.setMaxMessage(QuotaRoot.forUser(BOB), QuotaCount.count(value));
 
         Long actual =
             given()
@@ -154,14 +152,26 @@ public class UserQuotaRoutesTest {
         assertThat(errors)
             .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
             .containsEntry("type", "InvalidArgument")
-            .containsEntry("message", "Invalid quota. Need to be an integer value greater than 0")
+            .containsEntry("message", "Invalid quota. Need to be an integer value greater or equal to -1")
             .containsEntry("cause", "For input string: \"invalid\"");
     }
 
     @Test
-    public void putCountShouldRejectNegative() throws Exception {
-        Map<String, Object> errors = given()
+    public void putCountShouldSetToInfiniteWhenMinusOne() throws Exception {
+        given()
             .body("-1")
+        .when()
+            .put(QUOTA_USERS + "/" + BOB + "/" + COUNT)
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+
+        assertThat(maxQuotaManager.getMaxMessage(QuotaRoot.forUser(BOB))).contains(QuotaCount.unlimited());
+    }
+
+    @Test
+    public void putCountShouldRejectNegativeOtherThanMinusOne() throws Exception {
+        Map<String, Object> errors = given()
+            .body("-2")
             .put(QUOTA_USERS + "/" + BOB + "/" + COUNT)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
@@ -174,7 +184,7 @@ public class UserQuotaRoutesTest {
         assertThat(errors)
             .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
             .containsEntry("type", "InvalidArgument")
-            .containsEntry("message", "Invalid quota. Need to be an integer value greater than 0");
+            .containsEntry("message", "Invalid quota. Need to be an integer value greater or equal to -1");
     }
 
     @Test
@@ -185,9 +195,8 @@ public class UserQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getMaxMessage(QuotaRoot.forUser(BOB))).isEqualTo(42);
+        assertThat(maxQuotaManager.getMaxMessage(QuotaRoot.forUser(BOB))).contains(QuotaCount.count(42));
     }
-
 
     @Test
     @Ignore("no link between quota and mailbox for now")
@@ -211,15 +220,15 @@ public class UserQuotaRoutesTest {
 
 
     @Test
-    public void deleteCountShouldSetQuotaToUnlimited() throws Exception {
-        maxQuotaManager.setMaxMessage(QuotaRoot.forUser(BOB), 42);
+    public void deleteCountShouldSetQuotaToEmpty() throws Exception {
+        maxQuotaManager.setMaxMessage(QuotaRoot.forUser(BOB), QuotaCount.count(42));
 
         given()
             .delete(QUOTA_USERS + "/" + BOB + "/" + COUNT)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getMaxMessage(QuotaRoot.forUser(BOB))).isEqualTo(UNLIMITED);
+        assertThat(maxQuotaManager.getMaxMessage(QuotaRoot.forUser(BOB))).isEmpty();
     }
 
     @Test
@@ -231,23 +240,17 @@ public class UserQuotaRoutesTest {
     }
 
     @Test
-    public void getSizeShouldReturnUnlimitedByDefault() throws UsersRepositoryException {
-        long quota =
-            given()
-                .get(QUOTA_USERS + "/" + BOB + "/" + SIZE)
-            .then()
-                .statusCode(HttpStatus.OK_200)
-                .contentType(ContentType.JSON)
-                .extract()
-                .as(Long.class);
-
-        assertThat(quota).isEqualTo(UNLIMITED);
+    public void getSizeShouldReturnNoContentByDefault() throws UsersRepositoryException {
+        when()
+            .get(QUOTA_USERS + "/" + BOB + "/" + SIZE)
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
     }
 
     @Test
     public void getSizeShouldReturnStoredValue() throws Exception {
         long value = 42;
-        maxQuotaManager.setMaxStorage(QuotaRoot.forUser(BOB), value);
+        maxQuotaManager.setMaxStorage(QuotaRoot.forUser(BOB), QuotaSize.size(value));
 
 
         long quota =
@@ -278,7 +281,7 @@ public class UserQuotaRoutesTest {
         assertThat(errors)
             .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
             .containsEntry("type", "InvalidArgument")
-            .containsEntry("message", "Invalid quota. Need to be an integer value greater than 0")
+            .containsEntry("message", "Invalid quota. Need to be an integer value greater or equal to -1")
             .containsEntry("cause", "For input string: \"invalid\"");
     }
 
@@ -293,9 +296,21 @@ public class UserQuotaRoutesTest {
     }
 
     @Test
-    public void putSizeShouldRejectNegative() throws Exception {
-        Map<String, Object> errors = given()
+    public void putSizeShouldSetToInfiniteWhenMinusOne() throws Exception {
+        given()
             .body("-1")
+        .when()
+            .put(QUOTA_USERS + "/" + BOB + "/" + SIZE)
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+
+        assertThat(maxQuotaManager.getMaxStorage(QuotaRoot.forUser(BOB))).contains(QuotaSize.unlimited());
+    }
+
+    @Test
+    public void putSizeShouldRejectNegativeOtherThanMinusOne() throws Exception {
+        Map<String, Object> errors = given()
+            .body("-2")
             .put(QUOTA_USERS + "/" + BOB + "/" + SIZE)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
@@ -308,18 +323,19 @@ public class UserQuotaRoutesTest {
         assertThat(errors)
             .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
             .containsEntry("type", "InvalidArgument")
-            .containsEntry("message", "Invalid quota. Need to be an integer value greater than 0");
+            .containsEntry("message", "Invalid quota. Need to be an integer value greater or equal to -1");
     }
 
     @Test
     public void putSizeShouldAcceptValidValue() throws Exception {
         given()
             .body("42")
+        .when()
             .put(QUOTA_USERS + "/" + BOB + "/" + SIZE)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getMaxStorage(QuotaRoot.forUser(BOB))).isEqualTo(42);
+        assertThat(maxQuotaManager.getMaxStorage(QuotaRoot.forUser(BOB))).contains(QuotaSize.size(42));
     }
 
     @Test
@@ -331,15 +347,15 @@ public class UserQuotaRoutesTest {
     }
 
     @Test
-    public void deleteSizeShouldSetQuotaToUnlimited() throws Exception {
-        maxQuotaManager.setMaxStorage(QuotaRoot.forUser(BOB), 42);
+    public void deleteSizeShouldSetQuotaToEmpty() throws Exception {
+        maxQuotaManager.setMaxStorage(QuotaRoot.forUser(BOB), QuotaSize.size(42));
 
         given()
             .delete(QUOTA_USERS + "/" + BOB + "/" + SIZE)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getMaxStorage(QuotaRoot.forUser(BOB))).isEqualTo(UNLIMITED);
+        assertThat(maxQuotaManager.getMaxStorage(QuotaRoot.forUser(BOB))).isEmpty();
     }
 
     @Test
@@ -354,8 +370,8 @@ public class UserQuotaRoutesTest {
     public void getQuotaShouldReturnBothWhenValueSpecified() throws Exception {
         int maxStorage = 42;
         int maxMessage = 52;
-        maxQuotaManager.setMaxStorage(QuotaRoot.forUser(BOB), maxStorage);
-        maxQuotaManager.setMaxMessage(QuotaRoot.forUser(BOB), maxMessage);
+        maxQuotaManager.setMaxStorage(QuotaRoot.forUser(BOB), QuotaSize.size(maxStorage));
+        maxQuotaManager.setMaxMessage(QuotaRoot.forUser(BOB), QuotaCount.count(maxMessage));
 
         JsonPath jsonPath =
             given()
@@ -371,7 +387,7 @@ public class UserQuotaRoutesTest {
     }
 
     @Test
-    public void getQuotaShouldReturnBothDefaultValues() throws Exception {
+    public void getQuotaShouldReturnBothEmptyWhenDefaultValues() throws Exception {
         JsonPath jsonPath =
             given()
                 .get(QUOTA_USERS + "/" + BOB)
@@ -381,14 +397,14 @@ public class UserQuotaRoutesTest {
                 .extract()
                 .jsonPath();
 
-        assertThat(jsonPath.getLong(SIZE)).isEqualTo(UNLIMITED);
-        assertThat(jsonPath.getLong(COUNT)).isEqualTo(UNLIMITED);
+        assertThat(jsonPath.getObject(SIZE, Long.class)).isNull();
+        assertThat(jsonPath.getObject(COUNT, Long.class)).isNull();
     }
 
     @Test
-    public void getQuotaShouldReturnBothWhenNoCount() throws Exception {
+    public void getQuotaShouldReturnSizeWhenNoCount() throws Exception {
         int maxStorage = 42;
-        maxQuotaManager.setMaxStorage(QuotaRoot.forUser(BOB), maxStorage);
+        maxQuotaManager.setMaxStorage(QuotaRoot.forUser(BOB), QuotaSize.size(maxStorage));
 
         JsonPath jsonPath =
             given()
@@ -400,13 +416,13 @@ public class UserQuotaRoutesTest {
                 .jsonPath();
 
         assertThat(jsonPath.getLong(SIZE)).isEqualTo(maxStorage);
-        assertThat(jsonPath.getLong(COUNT)).isEqualTo(UNLIMITED);
+        assertThat(jsonPath.getObject(COUNT, Long.class)).isNull();
     }
 
     @Test
     public void getQuotaShouldReturnBothWhenNoSize() throws Exception {
         int maxMessage = 42;
-        maxQuotaManager.setMaxMessage(QuotaRoot.forUser(BOB), maxMessage);
+        maxQuotaManager.setMaxMessage(QuotaRoot.forUser(BOB), QuotaCount.count(maxMessage));
 
 
         JsonPath jsonPath =
@@ -418,7 +434,7 @@ public class UserQuotaRoutesTest {
                 .extract()
                 .jsonPath();
 
-        assertThat(jsonPath.getLong(SIZE)).isEqualTo(UNLIMITED);
+        assertThat(jsonPath.getObject(SIZE, Long.class)).isNull();
         assertThat(jsonPath.getLong(COUNT)).isEqualTo(maxMessage);
     }
 
@@ -433,25 +449,25 @@ public class UserQuotaRoutesTest {
     @Test
     public void putQuotaShouldUpdateBothQuota() throws Exception {
         given()
-            .body("{\"" + COUNT + "\":52,\"" + SIZE + "\":42}")
+            .body("{\"count\":52,\"size\":42}")
             .put(QUOTA_USERS + "/" + BOB)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getMaxMessage(QuotaRoot.forUser(BOB))).isEqualTo(52);
-        assertThat(maxQuotaManager.getMaxStorage(QuotaRoot.forUser(BOB))).isEqualTo(42);
+        assertThat(maxQuotaManager.getMaxMessage(QuotaRoot.forUser(BOB))).contains(QuotaCount.count(52));
+        assertThat(maxQuotaManager.getMaxStorage(QuotaRoot.forUser(BOB))).contains(QuotaSize.size(42));
     }
 
     @Test
     public void putQuotaShouldBeAbleToRemoveBothQuota() throws Exception {
         given()
-            .body("{\"" + COUNT + "\":-1,\"" + SIZE + "\":-1}")
+            .body("{\"count\":null,\"count\":null}")
             .put(QUOTA_USERS + "/" + BOB)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getMaxMessage(QuotaRoot.forUser(BOB))).isEqualTo(UNLIMITED);
-        assertThat(maxQuotaManager.getMaxStorage(QuotaRoot.forUser(BOB))).isEqualTo(UNLIMITED);
+        assertThat(maxQuotaManager.getMaxMessage(QuotaRoot.forUser(BOB))).isEmpty();
+        assertThat(maxQuotaManager.getMaxStorage(QuotaRoot.forUser(BOB))).isEmpty();
     }
 
 }

@@ -50,7 +50,9 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.UpdatedFlags;
+import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaManager;
+import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -61,7 +63,7 @@ import org.junit.rules.ExpectedException;
 import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractMessageIdManagerSideEffectTest {
-    private static final Quota OVER_QUOTA = Quota.quota(102, 100);
+    private static final Quota<QuotaCount> OVER_QUOTA = Quota.quota(QuotaCount.count(102), QuotaCount.count(100));
     private static final MessageUid messageUid1 = MessageUid.of(111);
 
     public static final Flags FLAGS = new Flags();
@@ -162,9 +164,9 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
     public void setInMailboxesShouldThrowExceptionWhenOverQuota() throws Exception {
         MessageId messageId = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
         reset(dispatcher);
-        when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(Quota.unlimited());
+        when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(Quota.unknownUsedQuota(QuotaSize.unlimited()));
         when(quotaManager.getMessageQuota(any(QuotaRoot.class))).thenReturn(OVER_QUOTA);
-        when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(Quota.unlimited());
+        when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(Quota.unknownUsedQuota(QuotaSize.unlimited()));
 
         expectedException.expect(OverQuotaException.class);
 
@@ -306,8 +308,8 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
     }
 
     private void givenUnlimitedQuota() throws MailboxException {
-        when(quotaManager.getMessageQuota(any(QuotaRoot.class))).thenReturn(Quota.unlimited());
-        when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(Quota.unlimited());
+        when(quotaManager.getMessageQuota(any(QuotaRoot.class))).thenReturn(Quota.unknownUsedQuota(QuotaCount.unlimited()));
+        when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(Quota.unknownUsedQuota(QuotaSize.unlimited()));
     }
 
     private SimpleMessageMetaData fromMessageResult(MessageId messageId, MessageResult messageResult) {

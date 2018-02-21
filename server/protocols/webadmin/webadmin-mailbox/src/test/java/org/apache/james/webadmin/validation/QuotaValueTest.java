@@ -22,6 +22,8 @@ package org.apache.james.webadmin.validation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaSize;
 import org.junit.Test;
 
 import spark.HaltException;
@@ -30,50 +32,60 @@ public class QuotaValueTest {
 
     @Test
     public void quotaCountShouldThrowWhenNotANumber() {
-        assertThatThrownBy(() -> QuotaValue.quotaCount("invalid"))
+        assertThatThrownBy(() -> Quotas.quotaCount("invalid"))
             .isInstanceOf(HaltException.class);
     }
 
     @Test
     public void quotaCountShouldParseZero() {
-        assertThat(QuotaValue.quotaCount("0").asLong())
+        assertThat(Quotas.quotaCount("0").asLong())
             .isEqualTo(0);
     }
 
     @Test
     public void quotaCountShouldParsePositiveValue() {
-        assertThat(QuotaValue.quotaCount("42").asLong())
+        assertThat(Quotas.quotaCount("42").asLong())
             .isEqualTo(42);
     }
 
     @Test
+    public void quotaCountShouldBeUnlimitedOnMinusOne() {
+        assertThat(Quotas.quotaCount("-1")).isEqualTo(QuotaCount.unlimited());
+    }
+
+    @Test
     public void quotaCountShouldThrowOnNegativeNumber() {
-        assertThatThrownBy(() -> QuotaValue.quotaCount("-1"))
+        assertThatThrownBy(() -> Quotas.quotaCount("-2"))
             .isInstanceOf(HaltException.class);
     }
 
     @Test
     public void quotaSizeShouldThrowWhenNotANumber() {
-        assertThatThrownBy(() -> QuotaValue.quotaSize("invalid"))
+        assertThatThrownBy(() -> Quotas.quotaSize("invalid"))
             .isInstanceOf(HaltException.class);
     }
 
     @Test
     public void quotaSizeShouldParseZero() {
-        assertThat(QuotaValue.quotaSize("0").asLong())
+        assertThat(Quotas.quotaSize("0").asLong())
             .isEqualTo(0);
     }
 
     @Test
     public void quotaSizeShouldParsePositiveValue() {
-        assertThat(QuotaValue.quotaSize("42").asLong())
+        assertThat(Quotas.quotaSize("42").asLong())
             .isEqualTo(42);
     }
 
     @Test
-    public void quotaSizeShouldThrowOnNegativeNumber() {
-        assertThatThrownBy(() -> QuotaValue.quotaSize("-1"))
-            .isInstanceOf(HaltException.class);
+    public void quotaSizeShouldBeUnlimitedOnMinusOne() {
+        assertThat(Quotas.quotaSize("-1")).isEqualTo(QuotaSize.unlimited());
+
     }
 
+    @Test
+    public void quotaSizeShouldThrowOnNegativeNumber() {
+        assertThatThrownBy(() -> Quotas.quotaSize("-2"))
+            .isInstanceOf(HaltException.class);
+    }
 }

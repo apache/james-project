@@ -22,6 +22,8 @@ package org.apache.james.mailbox.store.quota;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaSize;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,15 +41,15 @@ public abstract class StoreCurrentQuotaManagerTest {
 
     @Test
     public void getCurrentStorageShouldReturnZeroByDefault() throws Exception {
-        assertThat(testee.getCurrentStorage(QUOTA_ROOT)).isEqualTo(0);
+        assertThat(testee.getCurrentStorage(QUOTA_ROOT)).isEqualTo(QuotaSize.size(0));
     }
 
     @Test
     public void increaseShouldWork() throws Exception {
         testee.increase(QUOTA_ROOT, 10, 100);
 
-        assertThat(testee.getCurrentMessageCount(QUOTA_ROOT)).isEqualTo(10);
-        assertThat(testee.getCurrentStorage(QUOTA_ROOT)).isEqualTo(100);
+        assertThat(testee.getCurrentMessageCount(QUOTA_ROOT)).isEqualTo(QuotaCount.count(10));
+        assertThat(testee.getCurrentStorage(QUOTA_ROOT)).isEqualTo(QuotaSize.size(100));
     }
 
     @Test
@@ -56,16 +58,16 @@ public abstract class StoreCurrentQuotaManagerTest {
 
         testee.decrease(QUOTA_ROOT, 10, 100);
 
-        assertThat(testee.getCurrentMessageCount(QUOTA_ROOT)).isEqualTo(10);
-        assertThat(testee.getCurrentStorage(QUOTA_ROOT)).isEqualTo(100);
+        assertThat(testee.getCurrentMessageCount(QUOTA_ROOT)).isEqualTo(QuotaCount.count(10));
+        assertThat(testee.getCurrentStorage(QUOTA_ROOT)).isEqualTo(QuotaSize.size(100));
     }
 
     @Test
     public void decreaseShouldNotFailWhenItLeadsToNegativeValues() throws Exception {
         testee.decrease(QUOTA_ROOT, 10, 100);
 
-        assertThat(testee.getCurrentMessageCount(QUOTA_ROOT)).isEqualTo(-10);
-        assertThat(testee.getCurrentStorage(QUOTA_ROOT)).isEqualTo(-100);
+        assertThat(testee.getCurrentMessageCount(QUOTA_ROOT)).isEqualTo(QuotaCount.count(-10));
+        assertThat(testee.getCurrentStorage(QUOTA_ROOT)).isEqualTo(QuotaSize.size(-100));
     }
 
     @Test(expected = IllegalArgumentException.class)

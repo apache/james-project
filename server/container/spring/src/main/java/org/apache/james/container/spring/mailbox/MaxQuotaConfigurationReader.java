@@ -28,7 +28,9 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
+import org.apache.james.mailbox.quota.QuotaSize;
 
 public class MaxQuotaConfigurationReader implements Configurable {
 
@@ -65,19 +67,19 @@ public class MaxQuotaConfigurationReader implements Configurable {
 
     private void configureDefaultValues(Long defaultMaxMessage, Long defaultMaxStorage) throws MailboxException {
         if (defaultMaxMessage != null) {
-            maxQuotaManager.setDefaultMaxMessage(defaultMaxMessage);
+            maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(defaultMaxMessage));
         }
         if (defaultMaxStorage != null) {
-            maxQuotaManager.setDefaultMaxStorage(defaultMaxStorage);
+            maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(defaultMaxStorage));
         }
     }
 
     private void configureQuotaRootSpecificValues(Map<String, Long> maxMessage, Map<String, Long> maxStorage) throws MailboxException {
         for (Map.Entry<String, Long> entry : maxMessage.entrySet()) {
-            maxQuotaManager.setMaxMessage(quotaRootResolver.createQuotaRoot(entry.getKey()), entry.getValue());
+            maxQuotaManager.setMaxMessage(quotaRootResolver.createQuotaRoot(entry.getKey()), QuotaCount.count(entry.getValue()));
         }
         for (Map.Entry<String, Long> entry : maxStorage.entrySet()) {
-            maxQuotaManager.setMaxStorage(quotaRootResolver.createQuotaRoot(entry.getKey()), entry.getValue());
+            maxQuotaManager.setMaxStorage(quotaRootResolver.createQuotaRoot(entry.getKey()), QuotaSize.size(entry.getValue()));
         }
     }
 }

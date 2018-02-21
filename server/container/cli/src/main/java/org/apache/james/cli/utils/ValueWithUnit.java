@@ -19,8 +19,6 @@
 
 package org.apache.james.cli.utils;
 
-import org.apache.james.mailbox.model.Quota;
-
 import com.google.common.math.LongMath;
 
 /**
@@ -30,6 +28,8 @@ public class ValueWithUnit {
 
     public static final String UNKNOWN = "UNKNOWN";
     public static final String UNLIMITED = "UNLIMITED";
+    public static final long UNKNOWN_VALUE = Long.MIN_VALUE;
+    public static final long UNLIMITED_VALUE = -1;
 
     /**
      * supported units : B ( 2^0 ), K ( 2^10 ), M ( 2^20 ), G ( 2^30 )
@@ -55,10 +55,10 @@ public class ValueWithUnit {
 
     public static ValueWithUnit parse(String providedLongWithUnitString) throws Exception {
         if (providedLongWithUnitString.equalsIgnoreCase(UNKNOWN)) {
-            return new ValueWithUnit(Unit.NoUnit, Quota.UNKNOWN);
+            return new ValueWithUnit(Unit.NoUnit, UNKNOWN_VALUE);
         }
         if (providedLongWithUnitString.equalsIgnoreCase(UNLIMITED)) {
-            return new ValueWithUnit(Unit.NoUnit, Quota.UNLIMITED);
+            return new ValueWithUnit(Unit.NoUnit, UNLIMITED_VALUE);
         }
         char lastChar = providedLongWithUnitString.charAt(providedLongWithUnitString.length() - 1);
         Unit unit = getUnit(lastChar);

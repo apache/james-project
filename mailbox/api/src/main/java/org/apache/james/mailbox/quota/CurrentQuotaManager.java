@@ -27,8 +27,8 @@ import org.apache.james.mailbox.model.QuotaRoot;
  */
 public interface CurrentQuotaManager {
 
-    long getCurrentMessageCount(QuotaRoot quotaRoot) throws MailboxException;
+    QuotaCount getCurrentMessageCount(QuotaRoot quotaRoot) throws MailboxException;
 
-    long getCurrentStorage(QuotaRoot quotaRoot) throws MailboxException;
+    QuotaSize getCurrentStorage(QuotaRoot quotaRoot) throws MailboxException;
 
 }

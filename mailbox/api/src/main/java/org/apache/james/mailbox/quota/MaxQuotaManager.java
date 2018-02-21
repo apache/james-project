@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.quota;
 
+import java.util.Optional;
+
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
 
@@ -34,33 +36,67 @@ public interface MaxQuotaManager {
      * @param quotaRoot Quota root argument from RFC 2087 ( correspond to the user owning this mailbox )
      * @param maxStorageQuota The new storage quota ( in bytes ) for this user
      */
-    void setMaxStorage(QuotaRoot quotaRoot, long maxStorageQuota) throws MailboxException;
+    void setMaxStorage(QuotaRoot quotaRoot, QuotaSize maxStorageQuota) throws MailboxException;
 
     /**
-     * Method allowing you to set the maximum message count allowed for this user
+     * Method allowing you to set the maximum message count allowed for this quotaroot
      *
-     * @param quotaRoot Quota root argument from RFC 2087 ( correspond to the user owning this mailbox )
-     * @param maxMessageCount The new message count allowed for this user.
+     * @param quotaRoot Quota root argument from RFC 2087
+     * @param maxMessageCount The new message count allowed.
      */
-    void setMaxMessage(QuotaRoot quotaRoot, long maxMessageCount) throws MailboxException;
+    void setMaxMessage(QuotaRoot quotaRoot, QuotaCount maxMessageCount) throws MailboxException;
+
+    /**
+     * Method allowing you to remove the maximum messages count allowed for this quotaroot
+     *
+     * @param quotaRoot Quota root argument from RFC 2087
+     */
+    void removeMaxMessage(QuotaRoot quotaRoot) throws MailboxException;
+
+    /**
+     * Method allowing you to remove the maximum messages size allowed for this quotaroot
+     *
+     * @param quotaRoot Quota root argument from RFC 2087
+     */
+    void removeMaxStorage(QuotaRoot quotaRoot) throws MailboxException;
 
     /**
      * Method allowing you to set the default maximum storage in bytes.
      *
      * @param defaultMaxStorage new default maximum storage
      */
-    void setDefaultMaxStorage(long defaultMaxStorage) throws MailboxException;
+    void setDefaultMaxStorage(QuotaSize defaultMaxStorage) throws MailboxException;
+
+    /**
+     * Method allowing you to remove the default maximum messages size in bytes.
+     */
+    void removeDefaultMaxStorage() throws MailboxException;
 
     /**
      * Method allowing you to set the default maximum message count allowed
      *
      * @param defaultMaxMessageCount new default message count
      */
-    void setDefaultMaxMessage(long defaultMaxMessageCount) throws MailboxException;
+    void setDefaultMaxMessage(QuotaCount defaultMaxMessageCount) throws MailboxException;
 
-    long getDefaultMaxStorage() throws MailboxException;
+    /**
+     * Method allowing you to remove the default maximum messages count.
+     */
+    void removeDefaultMaxMessage() throws MailboxException;
 
-    long getDefaultMaxMessage() throws MailboxException;
+    /**
+     * Method allowing you to get the default maximum storage in bytes.
+     *
+     * @return default maximum storage, if defined
+     */
+    Optional<QuotaSize> getDefaultMaxStorage() throws MailboxException;
+
+    /**
+     * Method allowing you to get the default maximum message count allowed
+     *
+     * @return default maximum message count, if defined
+     */
+    Optional<QuotaCount> getDefaultMaxMessage() throws MailboxException;
 
     /**
      * Return the maximum storage which is allowed for the given {@link QuotaRoot} (in fact the user which the session is bound to)
@@ -68,18 +104,15 @@ public interface MaxQuotaManager {
      * The returned valued must be in <strong>bytes</strong>
      *
      * @param quotaRoot Quota root argument from RFC 2087 ( correspond to the user owning this mailbox )
-     * @return maxBytesThe maximum storage
-     * @throws MailboxException
+     * @return The maximum storage in bytes if any
      */
-    long getMaxStorage(QuotaRoot quotaRoot) throws MailboxException;
-
+    Optional<QuotaSize> getMaxStorage(QuotaRoot quotaRoot) throws MailboxException;
 
     /**
      * Return the maximum message count which is allowed for the given {@link QuotaRoot} (in fact the user which the session is bound to)
      *
      * @param quotaRoot Quota root argument from RFC 2087 ( correspond to the user owning this mailbox )
      * @return maximum of allowed message count
-     * @throws MailboxException
      */
-    long getMaxMessage(QuotaRoot quotaRoot) throws MailboxException;
+    Optional<QuotaCount> getMaxMessage(QuotaRoot quotaRoot) throws MailboxException;
 }
