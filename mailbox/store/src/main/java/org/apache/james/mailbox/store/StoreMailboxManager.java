@@ -67,6 +67,7 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.event.SpamEventListener;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -135,6 +136,7 @@ public class StoreMailboxManager implements MailboxManager {
     private final MessageParser messageParser;
     private final Factory messageIdFactory;
     private final ImmutableMailboxMessage.Factory immutableMailboxMessageFactory;
+    private SpamEventListener spamEventListener;
 
     @Inject
     public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, Authorizator authorizator,
@@ -199,6 +201,10 @@ public class StoreMailboxManager implements MailboxManager {
         return immutableMailboxMessageFactory;
     }
 
+    public void setSpamEventListener(SpamEventListener spamEventListener) {
+        this.spamEventListener = spamEventListener;
+    }
+
     /**
      * Init the {@link MailboxManager}
      *
@@ -233,6 +239,9 @@ public class StoreMailboxManager implements MailboxManager {
         }
         if (hasCapability(MailboxCapabilities.Annotation)) {
             this.addGlobalListener(new MailboxAnnotationListener(mailboxSessionMapperFactory), session);
+        }
+        if (spamEventListener != null) {
+            this.addGlobalListener(spamEventListener, session);
         }
     }
 
