@@ -29,6 +29,7 @@ import org.apache.james.modules.data.CassandraUsersRepositoryModule;
 import org.apache.james.modules.mailbox.CassandraMailboxModule;
 import org.apache.james.modules.mailbox.CassandraSessionModule;
 import org.apache.james.modules.mailbox.ElasticSearchMailboxModule;
+import org.apache.james.modules.mailbox.SpamAssassinListenerModule;
 import org.apache.james.modules.mailbox.TikaMailboxModule;
 import org.apache.james.modules.metrics.CassandraMetricsModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
@@ -87,7 +88,8 @@ public class CassandraJamesServerMain {
         new ElasticSearchMailboxModule(),
         new ElasticSearchMetricReporterModule(),
         new MailboxModule(),
-        new TikaMailboxModule());
+        new TikaMailboxModule(),
+        new SpamAssassinListenerModule());
 
     public static void main(String[] args) throws Exception {
         GuiceJamesServer server = new GuiceJamesServer()

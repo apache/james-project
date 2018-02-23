@@ -68,9 +68,11 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreAttachmentManager;
 import org.apache.james.mailbox.store.StoreBlobManager;
+import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.event.SpamEventListener;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
@@ -144,6 +146,7 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(Authenticator.class).to(UserRepositoryAuthenticator.class);
         bind(Authorizator.class).to(UserRepositoryAuthorizator.class);
         bind(MailboxManager.class).to(CassandraMailboxManager.class);
+        bind(StoreMailboxManager.class).to(CassandraMailboxManager.class);
         bind(MailboxId.Factory.class).to(CassandraId.Factory.class);
         bind(MessageId.Factory.class).to(CassandraMessageId.Factory.class);
         bind(MessageIdManager.class).to(StoreMessageIdManager.class);
@@ -176,7 +179,8 @@ public class CassandraMailboxModule extends AbstractModule {
     @Named(Names.MAILBOXMANAGER_NAME)
     @Singleton
     public MailboxManager provideMailboxManager(CassandraMailboxManager cassandraMailboxManager, ListeningCurrentQuotaUpdater quotaUpdater,
-                                                QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, BatchSizes batchSizes) throws MailboxException {
+                                                QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, BatchSizes batchSizes,
+                                                SpamEventListener spamEventListener) throws MailboxException {
         cassandraMailboxManager.setQuotaUpdater(quotaUpdater);
         cassandraMailboxManager.setQuotaManager(quotaManager);
         cassandraMailboxManager.setQuotaRootResolver(quotaRootResolver);
