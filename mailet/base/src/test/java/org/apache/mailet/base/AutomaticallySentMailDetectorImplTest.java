@@ -32,8 +32,8 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.MimeMessageUtil;
 import org.junit.Test;
 
 public class AutomaticallySentMailDetectorImplTest {

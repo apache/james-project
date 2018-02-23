@@ -526,6 +526,7 @@
     <modules>
         <module>backends-common</module>
         <module>core</module>
+        <module>javax-mail-extension</module>
         <module>mailbox</module>
         <module>mailet</module>
         <module>mdn</module>
@@ -1447,6 +1448,17 @@
                 <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-webadmin-swagger</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>javax-mail-extension</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>javax-mail-extension</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>

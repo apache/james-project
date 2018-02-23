@@ -25,11 +25,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.apache.mailet.base.test.MimeMessageUtil;
 import org.junit.Before;
 import org.junit.Test;
 

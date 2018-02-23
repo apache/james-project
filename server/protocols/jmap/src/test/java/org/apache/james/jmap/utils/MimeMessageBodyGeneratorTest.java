@@ -31,7 +31,7 @@ import java.util.Optional;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.mailet.base.test.MimeMessageUtil;
+import org.apache.james.util.MimeMessageUtil;
 import org.junit.Before;
 import org.junit.Test;
 

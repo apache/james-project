@@ -31,9 +31,9 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.MimeMessageUtil;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;

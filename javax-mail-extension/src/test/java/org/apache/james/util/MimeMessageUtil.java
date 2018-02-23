@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.mailet.base.test;
+package org.apache.james.util;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

@@ -47,6 +47,12 @@
             <artifactId>apache-mime4j-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>javax-mail-extension</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.github.steveash.guavate</groupId>
             <artifactId>guavate</artifactId>
         </dependency>

@@ -21,10 +21,10 @@ package org.apache.james.queue.api;
 
 import static org.apache.james.queue.api.Mails.createMimeMessage;
 import static org.apache.james.queue.api.Mails.defaultMail;
+import static org.apache.james.util.MimeMessageUtil.asString;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT1;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT2;
 import static org.apache.mailet.base.MailAddressFixture.SENDER;
-import static org.apache.mailet.base.test.MimeMessageUtil.asString;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 

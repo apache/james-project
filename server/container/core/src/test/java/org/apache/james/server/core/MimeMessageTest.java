@@ -38,8 +38,8 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.lifecycle.api.LifecycleUtil;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.base.RFC2822Headers;
-import org.apache.mailet.base.test.MimeMessageUtil;
 import org.junit.Test;
 
 public class MimeMessageTest {
