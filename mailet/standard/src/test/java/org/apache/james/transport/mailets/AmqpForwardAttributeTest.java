@@ -48,9 +48,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.AMQP.BasicProperties;
+import com.rabbitmq.client.AMQP.Channel.Close;
+import com.rabbitmq.client.AlreadyClosedException;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.ShutdownSignalException;
 
 public class AmqpForwardAttributeTest {
 
@@ -201,6 +204,19 @@ public class AmqpForwardAttributeTest {
         when(mail.getAttribute(MAIL_ATTRIBUTE)).thenReturn(ATTRIBUTE_CONTENT);
         ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
         when(connectionFactory.newConnection()).thenThrow(new IOException());
+        mailet.setConnectionFactory(connectionFactory);
+
+        mailet.service(mail);
+    }
+
+    @Test
+    public void serviceShouldNotFailWhenAlreadyClosedException() throws Exception {
+        mailet.init(mailetConfig);
+        Mail mail = mock(Mail.class);
+        when(mail.getAttribute(MAIL_ATTRIBUTE)).thenReturn(ATTRIBUTE_CONTENT);
+        ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
+        ShutdownSignalException shutdownSignalException = new ShutdownSignalException(false, false, new Close.Builder().build(), "reference");
+        when(connectionFactory.newConnection()).thenThrow(new AlreadyClosedException(shutdownSignalException));
         mailet.setConnectionFactory(connectionFactory);
 
         mailet.service(mail);
