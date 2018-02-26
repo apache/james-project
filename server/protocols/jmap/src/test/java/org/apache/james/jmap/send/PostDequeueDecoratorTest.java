@@ -33,9 +33,9 @@ import java.util.Date;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
-import org.apache.james.jmap.DefaultMailboxes;
 import org.apache.james.jmap.exceptions.MailboxRoleNotFoundException;
 import org.apache.james.jmap.utils.SystemMailboxesProviderImpl;
+import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;

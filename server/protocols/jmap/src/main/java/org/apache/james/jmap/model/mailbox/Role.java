@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
-import org.apache.james.jmap.DefaultMailboxes;
+import org.apache.james.mailbox.DefaultMailboxes;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.annotations.VisibleForTesting;
