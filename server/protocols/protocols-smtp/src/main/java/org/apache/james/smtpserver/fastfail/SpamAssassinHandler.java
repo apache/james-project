@@ -32,6 +32,7 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.smtpserver.JamesMessageHook;
 import org.apache.james.util.scanner.SpamAssassinInvoker;
+import org.apache.james.util.scanner.SpamAssassinResult;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,17 +118,17 @@ public class SpamAssassinHandler implements JamesMessageHook, ProtocolHandler {
         try {
             MimeMessage message = mail.getMessage();
             SpamAssassinInvoker sa = new SpamAssassinInvoker(spamdHost, spamdPort);
-            sa.scanMail(message);
+            SpamAssassinResult result = sa.scanMail(message);
 
             // Add the headers
-            for (String key : sa.getHeadersAsAttribute().keySet()) {
-                mail.setAttribute(key, sa.getHeadersAsAttribute().get(key));
+            for (String key : result.getHeadersAsAttribute().keySet()) {
+                mail.setAttribute(key, result.getHeadersAsAttribute().get(key));
             }
 
             // Check if rejectionHits was configured
             if (spamdRejectionHits > 0) {
                 try {
-                    double hits = Double.parseDouble(sa.getHits());
+                    double hits = Double.parseDouble(result.getHits());
 
                     // if the hits are bigger the rejectionHits reject the
                     // message

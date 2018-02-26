@@ -41,40 +41,31 @@ public class SpamAssassinInvokerTest {
     }
 
     @Test
-    public void getHitsShouldReturnQuestionMarkByDefault() {
-        assertThat(testee.getHits()).isEqualTo("?");
-    }
-
-    @Test
     public void scanMailShouldModifyHitsField() throws Exception {
         MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
                 ClassLoader.getSystemResourceAsStream("eml/spam.eml"));
-        testee.scanMail(mimeMessage);
+        SpamAssassinResult result = testee.scanMail(mimeMessage);
 
-        assertThat(testee.getHits()).isEqualTo("0.4");
-    }
-
-    @Test
-    public void getRequiredHitsShouldReturnQuestionMarkByDefault() {
-        assertThat(testee.getRequiredHits()).isEqualTo("?");
+        // The result is varying from 0.4 to 0.0
+        assertThat(result.getHits()).startsWith("0.");
     }
 
     @Test
     public void scanMailShouldModifyRequiredHitsField() throws Exception {
         MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
                 ClassLoader.getSystemResourceAsStream("eml/spam.eml"));
-        testee.scanMail(mimeMessage);
+        SpamAssassinResult result = testee.scanMail(mimeMessage);
 
-        assertThat(testee.getRequiredHits()).isEqualTo("5.0");
+        assertThat(result.getRequiredHits()).isEqualTo("5.0");
     }
 
     @Test
     public void scanMailShouldModifyHeadersField() throws Exception {
         MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
                 ClassLoader.getSystemResourceAsStream("eml/spam.eml"));
-        testee.scanMail(mimeMessage);
+        SpamAssassinResult result = testee.scanMail(mimeMessage);
 
-        assertThat(testee.getHeadersAsAttribute()).isNotEmpty();
+        assertThat(result.getHeadersAsAttribute()).isNotEmpty();
     }
 
     @Test
@@ -84,8 +75,8 @@ public class SpamAssassinInvokerTest {
         MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
                 ClassLoader.getSystemResourceAsStream("spamassassin_db/spam/spam1"));
 
-        testee.scanMail(mimeMessage);
+        SpamAssassinResult result = testee.scanMail(mimeMessage);
 
-        assertThat(testee.getHeadersAsAttribute().get(SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME)).isEqualTo("YES");
+        assertThat(result.getHeadersAsAttribute().get(SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME)).isEqualTo("YES");
     }
 }

@@ -26,6 +26,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.util.Port;
 import org.apache.james.util.scanner.SpamAssassinInvoker;
+import org.apache.james.util.scanner.SpamAssassinResult;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.MailetUtil;
@@ -86,11 +87,11 @@ public class SpamAssassin extends GenericMailet {
 
         // Invoke SpamAssassin connection and scan the message
         SpamAssassinInvoker sa = new SpamAssassinInvoker(spamdHost, spamdPort);
-        sa.scanMail(message);
+        SpamAssassinResult result = sa.scanMail(message);
 
         // Add headers as attribute to mail object
-        for (String key : sa.getHeadersAsAttribute().keySet()) {
-            mail.setAttribute(key, sa.getHeadersAsAttribute().get(key));
+        for (String key : result.getHeadersAsAttribute().keySet()) {
+            mail.setAttribute(key, result.getHeadersAsAttribute().get(key));
         }
 
         message.saveChanges();

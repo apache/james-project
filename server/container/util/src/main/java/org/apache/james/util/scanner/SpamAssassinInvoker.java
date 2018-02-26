@@ -23,16 +23,16 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.StringTokenizer;
+import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import com.google.common.io.Closeables;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 
 /**
  * Sends the message through daemonized SpamAssassin (spamd), visit <a
@@ -46,15 +46,13 @@ public class SpamAssassinInvoker {
     /** The mail attribute under which the flag get stored */
     public static final String FLAG_MAIL_ATTRIBUTE_NAME = "org.apache.james.spamassassin.flag";
 
+    private static final int SPAM_INDEX = 1;
+    private static final int HITS_INDEX = 3;
+    private static final int REQUIRED_HITS_INDEX = 5;
+
     private final String spamdHost;
 
     private final int spamdPort;
-
-    private String hits = "?";
-
-    private String required = "?";
-
-    private final Map<String, String> headers = new HashMap<>();
 
     /**
      * Init the spamassassin invoker
@@ -78,96 +76,60 @@ public class SpamAssassinInvoker {
      * @throws MessagingException
      *             if an error on scanning is detected
      */
-    public boolean scanMail(MimeMessage message) throws MessagingException {
-        Socket socket = null;
-        OutputStream out = null;
-        BufferedReader in = null;
+    public SpamAssassinResult scanMail(MimeMessage message) throws MessagingException {
+        try (Socket socket = new Socket(spamdHost, spamdPort);
+                OutputStream out = socket.getOutputStream();
+                PrintWriter writer = new PrintWriter(out);
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-        try {
-            socket = new Socket(spamdHost, spamdPort);
-
-            out = socket.getOutputStream();
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out.write("CHECK SPAMC/1.2\r\n\r\n".getBytes());
+            writer.write("CHECK SPAMC/1.2\r\n\r\n");
+            writer.flush();
 
             // pass the message to spamd
             message.writeTo(out);
             out.flush();
             socket.shutdownOutput();
-            String s;
-            while ((s = in.readLine()) != null) {
-                if (s.startsWith("Spam:")) {
-                    StringTokenizer t = new StringTokenizer(s, " ");
-                    boolean spam;
-                    try {
-                        t.nextToken();
-                        spam = Boolean.valueOf(t.nextToken());
-                    } catch (Exception e) {
-                        // On exception return flase
-                        return false;
-                    }
-                    t.nextToken();
-                    hits = t.nextToken();
-                    t.nextToken();
-                    required = t.nextToken();
 
-                    if (spam) {
-                        // message was spam
-                        headers.put(FLAG_MAIL_ATTRIBUTE_NAME, "YES");
-                        headers.put(STATUS_MAIL_ATTRIBUTE_NAME, "Yes, hits=" + hits + " required=" + required);
-
-                        // spam detected
-                        return true;
-                    } else {
-                        // add headers
-                        headers.put(FLAG_MAIL_ATTRIBUTE_NAME, "NO");
-                        headers.put(STATUS_MAIL_ATTRIBUTE_NAME, "No, hits=" + hits + " required=" + required);
-
-                        return false;
-                    }
-                }
-            }
-            return false;
+            return in.lines()
+                .filter(this::isSpam)
+                .map(this::processSpam)
+                .findFirst()
+                .orElse(SpamAssassinResult.empty());
         } catch (UnknownHostException e1) {
             throw new MessagingException("Error communicating with spamd. Unknown host: " + spamdHost);
         } catch (IOException | MessagingException e1) {
             throw new MessagingException("Error communicating with spamd on " + spamdHost + ":" + spamdPort + " Exception: " + e1);
-        } finally {
-            try {
-                Closeables.close(in, true);
-                Closeables.close(out, true);
-                socket.close();
-            } catch (Exception e) {
-                // Should never happen
-            }
-
         }
     }
 
-    /**
-     * Return the hits which was returned by spamd
-     * 
-     * @return hits The hits which was detected
-     */
-    public String getHits() {
-        return hits;
+    private SpamAssassinResult processSpam(String line) {
+        List<String> elements = Lists.newArrayList(Splitter.on(' ').split(line));
+        boolean spam = spam(elements.get(SPAM_INDEX));
+        String hits = elements.get(HITS_INDEX);
+        String required = elements.get(REQUIRED_HITS_INDEX);
+        SpamAssassinResult.Builder builder = SpamAssassinResult.builder()
+            .hits(hits)
+            .requiredHits(required);
+
+        if (spam) {
+            builder.putHeader(FLAG_MAIL_ATTRIBUTE_NAME, "YES");
+            builder.putHeader(STATUS_MAIL_ATTRIBUTE_NAME, "Yes, hits=" + hits + " required=" + required);
+        } else {
+            builder.putHeader(FLAG_MAIL_ATTRIBUTE_NAME, "NO");
+            builder.putHeader(STATUS_MAIL_ATTRIBUTE_NAME, "No, hits=" + hits + " required=" + required);
+        }
+        return builder.build();
     }
 
-    /**
-     * Return the required hits
-     * 
-     * @return required The required hits before a message is handled as spam
-     */
-    public String getRequiredHits() {
-        return required;
+    private boolean spam(String string) {
+        try {
+            return Boolean.valueOf(string);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
-    /**
-     * Return the headers as attributes which spamd generates
-     * 
-     * @return headers Map of headers to add as attributes
-     */
-    public Map<String, String> getHeadersAsAttribute() {
-        return headers;
+    private boolean isSpam(String line) {
+        return line.startsWith("Spam:");
     }
 }
