@@ -51,18 +51,18 @@ public class StoreQuotaManager implements QuotaManager {
     public Quota getMessageQuota(QuotaRoot quotaRoot) throws MailboxException {
         long maxValue = maxQuotaManager.getMaxMessage(quotaRoot);
         if (maxValue == Quota.UNLIMITED && !calculateWhenUnlimited) {
-            return QuotaImpl.quota(Quota.UNKNOWN, Quota.UNLIMITED);
+            return Quota.quota(Quota.UNKNOWN, Quota.UNLIMITED);
         }
-        return QuotaImpl.quota(currentQuotaManager.getCurrentMessageCount(quotaRoot), maxValue);
+        return Quota.quota(currentQuotaManager.getCurrentMessageCount(quotaRoot), maxValue);
     }
 
 
     public Quota getStorageQuota(QuotaRoot quotaRoot) throws MailboxException {
         long maxValue = maxQuotaManager.getMaxStorage(quotaRoot);
         if (maxValue == Quota.UNLIMITED && !calculateWhenUnlimited) {
-            return QuotaImpl.quota(Quota.UNKNOWN, Quota.UNLIMITED);
+            return Quota.quota(Quota.UNKNOWN, Quota.UNLIMITED);
         }
-        return QuotaImpl.quota(currentQuotaManager.getCurrentStorage(quotaRoot), maxValue);
+        return Quota.quota(currentQuotaManager.getCurrentStorage(quotaRoot), maxValue);
     }
 
 }

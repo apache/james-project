@@ -31,11 +31,11 @@ public class NoQuotaManager implements QuotaManager {
 
     @Override
     public Quota getMessageQuota(QuotaRoot quotaRoot) throws MailboxException {
-        return QuotaImpl.unlimited();
+        return Quota.unlimited();
     }
 
     @Override
     public Quota getStorageQuota(QuotaRoot quotaRoot) throws MailboxException {
-        return QuotaImpl.unlimited();
+        return Quota.unlimited();
     }
 }

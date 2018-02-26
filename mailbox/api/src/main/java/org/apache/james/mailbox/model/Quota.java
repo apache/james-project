@@ -18,47 +18,78 @@
  ****************************************************************/
 package org.apache.james.mailbox.model;
 
-/**
- * A {@link Quota} restriction
- */
-public interface Quota {
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 
-    /**
-     * Unlimited value
-     */
-    long UNLIMITED = -1;
+public class Quota {
 
-    /**
-     * Value not known
-     */
-    long UNKNOWN = Long.MIN_VALUE;
+    public static final long UNLIMITED = -1;
 
-    /**
-     * Return the maximum value for the {@link Quota}
-     *
-     * @return max
-     */
-    long getMax();
+    public static final long UNKNOWN = Long.MIN_VALUE;
 
-    /**
-     * Return the currently used for the {@link Quota}
-     *
-     * @return used
-     */
-    long getUsed();
+    private static final Quota UNLIMITED_QUOTA = new Quota(UNKNOWN, UNLIMITED);
 
-    /**
-     *  Adds the value to the quota.
-     */
-    void addValueToQuota(long value);
+    public static Quota unlimited() {
+        return UNLIMITED_QUOTA;
+    }
+
+    public static Quota quota(long used, long max) {
+        return new Quota(used, max);
+    }
+
+    private final long max;
+    private long used;
+
+    private Quota(long used, long max) {
+        this.used = used;
+        this.max = max;
+    }
+
+    public long getMax() {
+        return max;
+    }
+
+    public long getUsed() {
+        return used;
+    }
+
+    public void addValueToQuota(long value) {
+        used += value;
+    }
 
     /**
      * Tells us if the quota is reached
      *
      * @return True if the user over uses the resource of this quota
      */
-    boolean isOverQuota();
+    public boolean isOverQuota() {
+        return isOverQuotaWithAdditionalValue(0);
+    }
 
-    boolean isOverQuotaWithAdditionalValue(long additionalValue);
+    public boolean isOverQuotaWithAdditionalValue(long additionalValue) {
+        Preconditions.checkArgument(additionalValue >= 0);
+        return max != UNLIMITED
+            && used + additionalValue > max;
+    }
+
+    @Override
+    public String toString() {
+        return used + "/" + max;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || ! (o instanceof  Quota)) {
+            return false;
+        }
+        Quota other = (Quota) o;
+        return used == other.getUsed()
+            && max == other.getMax();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(used, max);
+    }
 
 }

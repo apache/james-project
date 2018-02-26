@@ -51,14 +51,14 @@ public class StoreQuotaManagerTest {
     public void getMessageQuotaShouldWorkWithNumericValues() throws Exception {
         when(mockedMaxQuotaManager.getMaxMessage(quotaRoot)).thenReturn(360L);
         when(mockedCurrentQuotaManager.getCurrentMessageCount(quotaRoot)).thenReturn(36L);
-        assertThat(testee.getMessageQuota(quotaRoot)).isEqualTo(QuotaImpl.quota(36, 360));
+        assertThat(testee.getMessageQuota(quotaRoot)).isEqualTo(Quota.quota(36, 360));
     }
 
     @Test
     public void getStorageQuotaShouldWorkWithNumericValues() throws Exception {
         when(mockedMaxQuotaManager.getMaxStorage(quotaRoot)).thenReturn(360L);
         when(mockedCurrentQuotaManager.getCurrentStorage(quotaRoot)).thenReturn(36L);
-        assertThat(testee.getStorageQuota(quotaRoot)).isEqualTo(QuotaImpl.quota(36, 360));
+        assertThat(testee.getStorageQuota(quotaRoot)).isEqualTo(Quota.quota(36, 360));
     }
 
     @Test
@@ -66,7 +66,7 @@ public class StoreQuotaManagerTest {
         testee.setCalculateWhenUnlimited(false);
         when(mockedMaxQuotaManager.getMaxStorage(quotaRoot)).thenReturn(Quota.UNLIMITED);
 
-        assertThat(testee.getStorageQuota(quotaRoot)).isEqualTo(QuotaImpl.quota(Quota.UNKNOWN, Quota.UNLIMITED));
+        assertThat(testee.getStorageQuota(quotaRoot)).isEqualTo(Quota.quota(Quota.UNKNOWN, Quota.UNLIMITED));
         verify(mockedCurrentQuotaManager, never()).getCurrentStorage(quotaRoot);
     }
 
@@ -75,7 +75,7 @@ public class StoreQuotaManagerTest {
         testee.setCalculateWhenUnlimited(false);
         when(mockedMaxQuotaManager.getMaxMessage(quotaRoot)).thenReturn(Quota.UNLIMITED);
 
-        assertThat(testee.getMessageQuota(quotaRoot)).isEqualTo(QuotaImpl.quota(Quota.UNKNOWN, Quota.UNLIMITED));
+        assertThat(testee.getMessageQuota(quotaRoot)).isEqualTo(Quota.quota(Quota.UNKNOWN, Quota.UNLIMITED));
         verify(mockedCurrentQuotaManager, never()).getCurrentMessageCount(quotaRoot);
     }
 
@@ -85,7 +85,7 @@ public class StoreQuotaManagerTest {
         when(mockedMaxQuotaManager.getMaxStorage(quotaRoot)).thenReturn(Quota.UNLIMITED);
         when(mockedCurrentQuotaManager.getCurrentStorage(quotaRoot)).thenReturn(36L);
 
-        assertThat(testee.getStorageQuota(quotaRoot)).isEqualTo(QuotaImpl.quota(36, Quota.UNLIMITED));
+        assertThat(testee.getStorageQuota(quotaRoot)).isEqualTo(Quota.quota(36, Quota.UNLIMITED));
     }
 
     @Test
@@ -94,7 +94,7 @@ public class StoreQuotaManagerTest {
         when(mockedMaxQuotaManager.getMaxMessage(quotaRoot)).thenReturn(Quota.UNLIMITED);
         when(mockedCurrentQuotaManager.getCurrentMessageCount(quotaRoot)).thenReturn(36L);
 
-        assertThat(testee.getMessageQuota(quotaRoot)).isEqualTo(QuotaImpl.quota(36, Quota.UNLIMITED));
+        assertThat(testee.getMessageQuota(quotaRoot)).isEqualTo(Quota.quota(36, Quota.UNLIMITED));
     }
 
 }
