@@ -641,10 +641,10 @@
     </sql>
     <sql name="createWhiteListTable" db="oracle">
         CREATE TABLE whitelist (
-            localUser varchar (64) NOT NULL,
-            localHost varchar (255) NOT NULL,
-            remoteUser varchar (64) NOT NULL,
-            remoteHost varchar (255) NOT NULL,
+            localUser varchar2(64) NOT NULL,
+            localHost varchar2(255) NOT NULL,
+            remoteUser varchar2(64) NOT NULL,
+            remoteHost varchar2(255) NOT NULL,
             PRIMARY KEY (localUser, localHost, remoteUser, remoteHost)
         )
     </sql>
@@ -734,9 +734,9 @@
     </sql>
     <sql name="createNetworkWhiteListTable" db="oracle">
         CREATE TABLE networkWhitelist (
-            localUser varchar (64) NOT NULL,
-            localHost varchar (255) NOT NULL,
-            network varchar (255) NOT NULL
+            localUser varchar2(64) NOT NULL,
+            localHost varchar2(255) NOT NULL,
+            network varchar2(255) NOT NULL
         )
     </sql>
     <sql name="createNetworkWhiteListTable" db="postgresql">
@@ -959,14 +959,6 @@
             PRIMARY KEY (user,domain)
         )
     </sql>
-    <sql name="createTable" db="oracle">
-        CREATE TABLE RecipientRewriteTable (
-            user varchar2(64) NOT NULL default '',
-            domain varchar2(255) NOT NULL default '',
-            target_address varchar2(255) NOT NULL default '',
-            PRIMARY KEY (user,domain)
-        )
-    </sql>
     <sql name="createTable" db="sapdb">
         CREATE TABLE RecipientRewriteTable (
             user varchar(64) NOT NULL default '',
@@ -992,6 +984,14 @@
         )
     </sql>
     -->
+    <sql name="createTable" db="oracle">
+        CREATE TABLE RecipientRewriteTable (
+            user varchar2(64) NOT NULL default '',
+            domain varchar2(255) NOT NULL default '',
+            target_address varchar2(255) NOT NULL default '',
+            PRIMARY KEY (user,domain)
+        )
+    </sql>
     <sql name="createTable" db="postgresql">
         CREATE TABLE RecipientRewriteTable (
             "user" varchar(64) NOT NULL default '',
