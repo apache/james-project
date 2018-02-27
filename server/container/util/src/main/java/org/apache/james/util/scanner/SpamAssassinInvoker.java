@@ -21,6 +21,7 @@ package org.apache.james.util.scanner;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -30,6 +31,8 @@ import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+
+import org.apache.commons.io.IOUtils;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -49,6 +52,7 @@ public class SpamAssassinInvoker {
     private static final int SPAM_INDEX = 1;
     private static final int HITS_INDEX = 3;
     private static final int REQUIRED_HITS_INDEX = 5;
+    private static final String CRLF = "\r\n";
 
     private final String spamdHost;
 
@@ -82,7 +86,9 @@ public class SpamAssassinInvoker {
                 PrintWriter writer = new PrintWriter(out);
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-            writer.write("CHECK SPAMC/1.2\r\n\r\n");
+            writer.write("CHECK SPAMC/1.2");
+            writer.write(CRLF);
+            writer.write(CRLF);
             writer.flush();
 
             // pass the message to spamd
@@ -131,5 +137,47 @@ public class SpamAssassinInvoker {
 
     private boolean isSpam(String line) {
         return line.startsWith("Spam:");
+    }
+
+    /**
+     * Tell spamd that the given MimeMessage is a spam.
+     * 
+     * @param message
+     *            The MimeMessage to tell
+     * @throws MessagingException
+     *             if an error occured during learning.
+     */
+    public boolean learnAsSpam(InputStream message) throws MessagingException {
+        try (Socket socket = new Socket(spamdHost, spamdPort);
+                OutputStream out = socket.getOutputStream();
+                PrintWriter writer = new PrintWriter(out);
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+
+            writer.write("TELL SPAMC/1.2");
+            writer.write(CRLF);
+            writer.write("Message-class: spam");
+            writer.write(CRLF);
+            writer.write("Set: local, remote");
+            writer.write(CRLF);
+            writer.write(CRLF);
+            writer.flush();
+
+            IOUtils.copy(message, out);
+            out.flush();
+            socket.shutdownOutput();
+
+            return in.lines()
+                .filter(this::hasBeenSet)
+                .findAny()
+                .isPresent();
+        } catch (UnknownHostException e) {
+            throw new MessagingException("Error communicating with spamd. Unknown host: " + spamdHost);
+        } catch (IOException e) {
+            throw new MessagingException("Error communicating with spamd on " + spamdHost + ":" + spamdPort + " Exception: " + e);
+        }
+    }
+
+    private boolean hasBeenSet(String line) {
+        return line.startsWith("DidSet");
     }
 }

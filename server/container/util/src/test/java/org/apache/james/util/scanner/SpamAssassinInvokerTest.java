@@ -79,4 +79,26 @@ public class SpamAssassinInvokerTest {
 
         assertThat(result.getHeadersAsAttribute().get(SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME)).isEqualTo("YES");
     }
+
+    @Test
+    public void learnAsSpamShouldReturnTrueWhenLearningWorks() throws Exception {
+        MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
+                ClassLoader.getSystemResourceAsStream("spamassassin_db/spam/spam1"));
+
+        boolean result = testee.learnAsSpam(mimeMessage.getInputStream());
+
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    public void scanMailShouldMarkHasSpamWhenMessageAlreadyLearnedAsSpam() throws Exception {
+        MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
+                ClassLoader.getSystemResourceAsStream("spamassassin_db/spam/spam1"));
+
+        testee.learnAsSpam(mimeMessage.getInputStream());
+
+        SpamAssassinResult result = testee.scanMail(mimeMessage);
+
+        assertThat(result.getHeadersAsAttribute().get(SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME)).isEqualTo("YES");
+    }
 }
