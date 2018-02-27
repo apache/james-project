@@ -16,15 +16,12 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.model.mailbox;
+package org.apache.james.mailbox;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
-import org.apache.james.mailbox.DefaultMailboxes;
-
-import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -91,7 +88,6 @@ public class Role {
         return predefinedRole(defaultMailbox).isPresent();
     }
 
-    @JsonValue
     public String serialize() {
         return name;
     }

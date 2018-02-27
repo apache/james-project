@@ -16,13 +16,14 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.model.mailbox;
+package org.apache.james.mailbox;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Locale;
 import java.util.Optional;
 
+import org.apache.james.mailbox.Role;
 import org.junit.Test;
 
 public class RoleTest {

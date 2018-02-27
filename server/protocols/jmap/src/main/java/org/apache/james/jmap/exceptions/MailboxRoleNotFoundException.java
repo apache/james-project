@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.exceptions;
 
-import org.apache.james.jmap.model.mailbox.Role;
+import org.apache.james.mailbox.Role;
 
 public class MailboxRoleNotFoundException extends RuntimeException {
 

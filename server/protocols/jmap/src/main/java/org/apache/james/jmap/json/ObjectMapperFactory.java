@@ -25,6 +25,7 @@ import java.util.Set;
 import javax.inject.Inject;
 
 import org.apache.james.jmap.model.mailbox.Rights;
+import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 
@@ -70,6 +71,9 @@ public class ObjectMapperFactory {
         mailboxIdModule.addKeySerializer(MessageId.class, new MessageIdKeySerializer());
         mailboxIdModule.addKeyDeserializer(Rights.Username.class, new UsernameKeyDeserializer());
         mailboxIdModule.addDeserializer(Rights.Right.class, new RightDeserializer());
+
+        mailboxIdModule.setMixInAnnotation(Role.class, RoleMixIn.class);
+
         jacksonModules = JACKSON_BASE_MODULES.add(mailboxIdModule).build();
     }
 

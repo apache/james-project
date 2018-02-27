@@ -23,10 +23,10 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxMetaData;

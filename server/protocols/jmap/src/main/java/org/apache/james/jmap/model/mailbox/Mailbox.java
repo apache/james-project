@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import org.apache.james.jmap.methods.JmapResponseWriterImpl;
 import org.apache.james.jmap.model.Number;
+import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.model.MailboxId;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
