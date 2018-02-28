@@ -68,7 +68,7 @@ public class GlobalQuotaRoutesTest {
     public void getCountQuotaCountShouldReturnUnlimitedByDefault() {
         long quota =
             given()
-                .get(GlobalQuotaRoutes.COUNT_ENDPOINT)
+                .get("/quota/count")
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
@@ -85,7 +85,7 @@ public class GlobalQuotaRoutesTest {
 
         Long actual =
             given()
-                .get(GlobalQuotaRoutes.COUNT_ENDPOINT)
+                .get("/quota/count")
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
@@ -96,10 +96,10 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void putCountShouldRejectInvalid() throws Exception {
+    public void putCountShouldRejectInvalid() {
         Map<String, Object> errors = given()
             .body("invalid")
-            .put(GlobalQuotaRoutes.COUNT_ENDPOINT)
+            .put("/quota/count")
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .contentType(ContentType.JSON)
@@ -116,10 +116,10 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void putCountShouldRejectNegative() throws Exception {
+    public void putCountShouldRejectNegative() {
         Map<String, Object> errors = given()
             .body("-1")
-            .put(GlobalQuotaRoutes.COUNT_ENDPOINT)
+            .put("/quota/count")
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .contentType(ContentType.JSON)
@@ -138,7 +138,7 @@ public class GlobalQuotaRoutesTest {
     public void putCountShouldAcceptValidValue() throws Exception {
         given()
             .body("42")
-            .put(GlobalQuotaRoutes.COUNT_ENDPOINT)
+            .put("/quota/count")
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
@@ -150,7 +150,7 @@ public class GlobalQuotaRoutesTest {
         maxQuotaManager.setDefaultMaxMessage(42);
 
         given()
-            .delete(GlobalQuotaRoutes.COUNT_ENDPOINT)
+            .delete("/quota/count")
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
@@ -161,7 +161,7 @@ public class GlobalQuotaRoutesTest {
     public void getSizeQuotaCountShouldReturnUnlimitedByDefault() {
         long quota =
             given()
-                .get(GlobalQuotaRoutes.SIZE_ENDPOINT)
+                .get("/quota/size")
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
@@ -179,7 +179,7 @@ public class GlobalQuotaRoutesTest {
 
         long quota =
             given()
-                .get(GlobalQuotaRoutes.SIZE_ENDPOINT)
+                .get("/quota/size")
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
@@ -190,10 +190,10 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void putSizeShouldRejectInvalid() throws Exception {
+    public void putSizeShouldRejectInvalid() {
         Map<String, Object> errors = given()
             .body("invalid")
-            .put(GlobalQuotaRoutes.SIZE_ENDPOINT)
+            .put("/quota/size")
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .contentType(ContentType.JSON)
@@ -210,10 +210,10 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void putSizeShouldRejectNegative() throws Exception {
+    public void putSizeShouldRejectNegative() {
         Map<String, Object> errors = given()
             .body("-1")
-            .put(GlobalQuotaRoutes.SIZE_ENDPOINT)
+            .put("/quota/size")
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .contentType(ContentType.JSON)
@@ -232,7 +232,7 @@ public class GlobalQuotaRoutesTest {
     public void putSizeShouldAcceptValidValue() throws Exception {
         given()
             .body("42")
-            .put(GlobalQuotaRoutes.SIZE_ENDPOINT)
+            .put("/quota/size")
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
@@ -244,7 +244,7 @@ public class GlobalQuotaRoutesTest {
         maxQuotaManager.setDefaultMaxStorage(42);
 
         given()
-            .delete(GlobalQuotaRoutes.COUNT_ENDPOINT)
+            .delete("/quota/count")
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
@@ -260,7 +260,7 @@ public class GlobalQuotaRoutesTest {
 
         JsonPath jsonPath =
             given()
-                .get(GlobalQuotaRoutes.QUOTA_ENDPOINT)
+                .get("/quota")
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
@@ -272,10 +272,10 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void getQuotaShouldReturnBothDefaultValues() throws Exception {
+    public void getQuotaShouldReturnBothDefaultValues() {
         JsonPath jsonPath =
             given()
-                .get(GlobalQuotaRoutes.QUOTA_ENDPOINT)
+                .get("/quota")
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
@@ -293,7 +293,7 @@ public class GlobalQuotaRoutesTest {
 
         JsonPath jsonPath =
             given()
-                .get(GlobalQuotaRoutes.QUOTA_ENDPOINT)
+                .get("/quota")
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
@@ -312,7 +312,7 @@ public class GlobalQuotaRoutesTest {
 
         JsonPath jsonPath =
             given()
-                .get(GlobalQuotaRoutes.QUOTA_ENDPOINT)
+                .get("/quota")
                 .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
@@ -327,7 +327,7 @@ public class GlobalQuotaRoutesTest {
     public void putQuotaShouldUpdateBothQuota() throws Exception {
         given()
             .body("{\"count\":52,\"size\":42}")
-            .put(GlobalQuotaRoutes.QUOTA_ENDPOINT)
+            .put("/quota")
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
@@ -339,7 +339,7 @@ public class GlobalQuotaRoutesTest {
     public void putQuotaShouldBeAbleToRemoveBothQuota() throws Exception {
         given()
             .body("{\"count\":-1,\"size\":-1}")
-            .put(GlobalQuotaRoutes.QUOTA_ENDPOINT)
+            .put("/quota")
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 

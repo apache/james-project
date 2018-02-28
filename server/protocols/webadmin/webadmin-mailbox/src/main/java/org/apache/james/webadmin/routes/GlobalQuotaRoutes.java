@@ -52,9 +52,9 @@ import spark.Service;
 @Produces("application/json")
 public class GlobalQuotaRoutes implements Routes {
 
-    public static final String QUOTA_ENDPOINT = "/quota";
-    public static final String COUNT_ENDPOINT = QUOTA_ENDPOINT + "/count";
-    public static final String SIZE_ENDPOINT = QUOTA_ENDPOINT + "/size";
+    /* for @Path annotation */ static final String QUOTA_ENDPOINT = "/quota";
+    private static final String COUNT_ENDPOINT = QUOTA_ENDPOINT + "/count";
+    private static final String SIZE_ENDPOINT = QUOTA_ENDPOINT + "/size";
 
     private final JsonTransformer jsonTransformer;
     private final JsonExtractor<QuotaDTO> jsonExtractor;
