@@ -36,7 +36,7 @@ public class CassandraPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerT
     @Override
     protected MaxQuotaManager provideMaxQuotaManager() {
         cassandra = CassandraCluster.create(new CassandraQuotaModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
-        return new CassandraPerUserMaxQuotaManager(cassandra.getConf());
+        return new CassandraPerUserMaxQuotaManager(new CassandraPerUserMaxQuotaDao(cassandra.getConf()));
     }
 
     @After
