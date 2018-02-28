@@ -44,6 +44,7 @@
         <module>jpa-guice</module>
         <module>jpa-smtp</module>
         <module>mailbox</module>
+        <module>mailbox-plugin-spamassassin</module>
         <module>mailet</module>
         <module>memory-guice</module>
         <module>onami</module>
@@ -104,6 +105,11 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>james-server-guice-mailbox</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>james-server-guice-mailbox-plugin-spamassassin</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

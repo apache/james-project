@@ -16,12 +16,13 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.mailbox;
+package org.apache.james.modules.spamassassin;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.mailbox.spamassassin.SpamAssassinConfiguration;
+import org.apache.james.modules.spamassassin.SpamAssassinConfigurationLoader;
 import org.apache.james.util.Host;
 import org.junit.Test;
 
