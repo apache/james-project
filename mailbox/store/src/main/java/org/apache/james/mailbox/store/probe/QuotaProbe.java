@@ -19,12 +19,11 @@
 
 package org.apache.james.mailbox.store.probe;
 
-import java.util.Optional;
-
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.mail.model.SerializableQuota;
+import org.apache.james.mailbox.store.mail.model.SerializableQuotaValue;
 
 public interface QuotaProbe {
 
@@ -34,20 +33,20 @@ public interface QuotaProbe {
 
     SerializableQuota<QuotaSize> getStorageQuota(String quotaRoot) throws MailboxException;
 
-    Optional<QuotaCount> getMaxMessageCount(String quotaRoot) throws MailboxException;
+    SerializableQuotaValue<QuotaCount> getMaxMessageCount(String quotaRoot) throws MailboxException;
 
-    Optional<QuotaSize> getMaxStorage(String quotaRoot) throws MailboxException;
+    SerializableQuotaValue<QuotaSize> getMaxStorage(String quotaRoot) throws MailboxException;
 
-    Optional<QuotaCount> getDefaultMaxMessageCount() throws MailboxException;
+    SerializableQuotaValue<QuotaCount> getDefaultMaxMessageCount() throws MailboxException;
 
-    Optional<QuotaSize> getDefaultMaxStorage() throws MailboxException;
+    SerializableQuotaValue<QuotaSize> getDefaultMaxStorage() throws MailboxException;
 
-    void setMaxMessageCount(String quotaRoot, QuotaCount maxMessageCount) throws MailboxException;
+    void setMaxMessageCount(String quotaRoot, SerializableQuotaValue<QuotaCount> maxMessageCount) throws MailboxException;
 
-    void setMaxStorage(String quotaRoot, QuotaSize maxSize) throws MailboxException;
+    void setMaxStorage(String quotaRoot, SerializableQuotaValue<QuotaSize> maxSize) throws MailboxException;
 
-    void setDefaultMaxMessageCount(QuotaCount maxDefaultMessageCount) throws MailboxException;
+    void setDefaultMaxMessageCount(SerializableQuotaValue<QuotaCount> maxDefaultMessageCount) throws MailboxException;
 
-    void setDefaultMaxStorage(QuotaSize maxDefaultSize) throws MailboxException;
+    void setDefaultMaxStorage(SerializableQuotaValue<QuotaSize> maxDefaultSize) throws MailboxException;
 
 }

@@ -62,7 +62,7 @@ public class QuotaCommandsIntegrationTest {
     public void setDefaultMaxStorageShouldWork() throws Exception {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "setdefaultmaxstoragequota", "36"});
 
-        assertThat(quotaProbe.getDefaultMaxStorage()).isEqualTo(36);
+        assertThat(quotaProbe.getDefaultMaxStorage().encodeAsLong()).isEqualTo(36);
     }
 
     @Test
@@ -80,7 +80,7 @@ public class QuotaCommandsIntegrationTest {
     public void setDefaultMaxMessageCountShouldWork() throws Exception {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "setdefaultmaxmessagecountquota", "36"});
 
-        assertThat(quotaProbe.getDefaultMaxMessageCount()).isEqualTo(36);
+        assertThat(quotaProbe.getDefaultMaxMessageCount().encodeAsLong()).isEqualTo(36);
     }
 
     @Test
@@ -98,7 +98,7 @@ public class QuotaCommandsIntegrationTest {
     public void setMaxStorageShouldWork() throws Exception {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "setmaxstoragequota", QUOTA_ROOT.getValue(), "36"});
 
-        assertThat(quotaProbe.getMaxStorage(QUOTA_ROOT.getValue())).isEqualTo(36);
+        assertThat(quotaProbe.getMaxStorage(QUOTA_ROOT.getValue()).encodeAsLong()).isEqualTo(36);
     }
 
     @Test
@@ -116,7 +116,7 @@ public class QuotaCommandsIntegrationTest {
     public void setMaxMessageCountShouldWork() throws Exception {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "setmaxmessagecountquota", QUOTA_ROOT.getValue(), "36"});
 
-        assertThat(quotaProbe.getMaxMessageCount(QUOTA_ROOT.getValue())).isEqualTo(36);
+        assertThat(quotaProbe.getMaxMessageCount(QUOTA_ROOT.getValue()).encodeAsLong()).isEqualTo(36);
     }
 
     @Test

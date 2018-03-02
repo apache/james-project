@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -47,7 +48,9 @@ import org.apache.james.cli.type.CmdType;
 import org.apache.james.cli.utils.ValueWithUnit;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
+import org.apache.james.mailbox.quota.QuotaValue;
 import org.apache.james.mailbox.store.mail.model.SerializableQuota;
+import org.apache.james.mailbox.store.mail.model.SerializableQuotaValue;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.mailbox.store.probe.QuotaProbe;
 import org.apache.james.mailbox.store.probe.SieveProbe;
@@ -285,16 +288,16 @@ public class ServerCmd {
             printStream.println("MailboxMessage count allowed for Quota Root " + arguments[1] + ": " + formatMessageValue(quotaProbe.getMaxMessageCount(arguments[1])));
             break;
         case SETMAXSTORAGEQUOTA:
-            quotaProbe.setMaxStorage(arguments[1], QuotaSize.size(ValueWithUnit.parse(arguments[2]).getConvertedValue()));
+            quotaProbe.setMaxStorage(arguments[1], parseQuotaSize(arguments[2]));
             break;
         case SETMAXMESSAGECOUNTQUOTA:
-            quotaProbe.setMaxMessageCount(arguments[1], QuotaCount.count(Long.parseLong(arguments[2])));
+            quotaProbe.setMaxMessageCount(arguments[1], parseQuotaCount(arguments[2]));
             break;
         case SETDEFAULTMAXSTORAGEQUOTA:
-            quotaProbe.setDefaultMaxStorage(QuotaSize.size(ValueWithUnit.parse(arguments[1]).getConvertedValue()));
+            quotaProbe.setDefaultMaxStorage(parseQuotaSize(arguments[1]));
             break;
         case SETDEFAULTMAXMESSAGECOUNTQUOTA:
-            quotaProbe.setDefaultMaxMessageCount(QuotaCount.count(Long.parseLong(arguments[1])));
+            quotaProbe.setDefaultMaxMessageCount(parseQuotaCount(arguments[1]));
             break;
         case GETDEFAULTMAXSTORAGEQUOTA:
             printStream.println("Default Maximum Storage Quota: " + formatStorageValue(quotaProbe.getDefaultMaxStorage()));
@@ -335,6 +338,30 @@ public class ServerCmd {
         }
     }
 
+    private SerializableQuotaValue<QuotaSize> parseQuotaSize(String argument) throws Exception {
+        long convertedValue = ValueWithUnit.parse(argument).getConvertedValue();
+        return longToSerializableQuotaValue(convertedValue, QuotaSize.unlimited(), QuotaSize::size);
+    }
+
+    private SerializableQuotaValue<QuotaCount> parseQuotaCount(String argument) {
+        long value = Long.parseLong(argument);
+        return longToSerializableQuotaValue(value, QuotaCount.unlimited(), QuotaCount::count);
+    }
+
+    private <T extends QuotaValue<T>> SerializableQuotaValue<T> longToSerializableQuotaValue(long value, T unlimited, Function<Long, T> factory) {
+        return SerializableQuotaValue.valueOf(Optional.of(longToQuotaValue(value, unlimited, factory)));
+    }
+
+    private <T extends QuotaValue<T>> T longToQuotaValue(long value, T unlimited, Function<Long, T> factory) {
+        if (value == -1) {
+            return unlimited;
+        }
+        if (value >= 0) {
+            return factory.apply(value);
+        }
+        throw new IllegalArgumentException("Quota should be -1 for unlimited or a positive value");
+    }
+
     private static void print(String[] data, PrintStream out) {
         print(Arrays.asList(data), out);
     }
@@ -369,8 +396,10 @@ public class ServerCmd {
         return FileUtils.byteCountToDisplaySize(value);
     }
 
-    private String formatStorageValue(Optional<QuotaSize> value) {
-        return value.map(size -> {
+    private String formatStorageValue(SerializableQuotaValue<QuotaSize> value) {
+        return value
+            .toValue(QuotaSize::size, QuotaSize.unlimited())
+            .map(size -> {
             if (size.isUnlimited()) {
                 return ValueWithUnit.UNLIMITED;
             }
@@ -388,8 +417,10 @@ public class ServerCmd {
         return String.valueOf(value);
     }
 
-    private String formatMessageValue(Optional<QuotaCount> value) {
-        return value.map(count -> {
+    private String formatMessageValue(SerializableQuotaValue<QuotaCount> value) {
+        return value
+            .toValue(QuotaCount::count, QuotaCount.unlimited())
+            .map(count -> {
             if (count.isUnlimited()) {
                 return ValueWithUnit.UNLIMITED;
             }
