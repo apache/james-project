@@ -32,73 +32,75 @@ import com.github.fge.lambdas.Throwing;
 
 public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
 
-    private final CassandraPerUserMaxQuotaDao dao;
+    private final CassandraPerUserMaxQuotaDao perUserQuota;
+    private final CassandraDefaultMaxQuotaDao defaultQuota;
 
     @Inject
-    public CassandraPerUserMaxQuotaManager(CassandraPerUserMaxQuotaDao dao) {
-        this.dao = dao;
+    public CassandraPerUserMaxQuotaManager(CassandraPerUserMaxQuotaDao perUserQuota, CassandraDefaultMaxQuotaDao defaultQuota) {
+        this.perUserQuota = perUserQuota;
+        this.defaultQuota = defaultQuota;
     }
 
     @Override
     public void setMaxStorage(QuotaRoot quotaRoot, QuotaSize maxStorageQuota) {
-        dao.setMaxStorage(quotaRoot, maxStorageQuota);
+        perUserQuota.setMaxStorage(quotaRoot, maxStorageQuota);
     }
 
     @Override
     public void setMaxMessage(QuotaRoot quotaRoot, QuotaCount maxMessageCount) {
-        dao.setMaxMessage(quotaRoot, maxMessageCount);
+        perUserQuota.setMaxMessage(quotaRoot, maxMessageCount);
     }
 
     @Override
     public void removeMaxMessage(QuotaRoot quotaRoot) {
-        dao.removeMaxMessage(quotaRoot);
+        perUserQuota.removeMaxMessage(quotaRoot);
     }
 
     @Override
     public void removeMaxStorage(QuotaRoot quotaRoot) {
-        dao.removeMaxStorage(quotaRoot);
+        perUserQuota.removeMaxStorage(quotaRoot);
     }
 
     @Override
     public void setDefaultMaxStorage(QuotaSize defaultMaxStorage) {
-        dao.setDefaultMaxStorage(defaultMaxStorage);
+        defaultQuota.setDefaultMaxStorage(defaultMaxStorage);
     }
 
     @Override
     public void removeDefaultMaxStorage() {
-        dao.removeDefaultMaxStorage();
+        defaultQuota.removeDefaultMaxStorage();
     }
 
     @Override
     public void setDefaultMaxMessage(QuotaCount defaultMaxMessageCount) {
-        dao.setDefaultMaxMessage(defaultMaxMessageCount);
+        defaultQuota.setDefaultMaxMessage(defaultMaxMessageCount);
     }
 
     @Override
     public void removeDefaultMaxMessage() {
-        dao.removeDefaultMaxMessage();
+        defaultQuota.removeDefaultMaxMessage();
     }
 
     @Override
     public Optional<QuotaSize> getDefaultMaxStorage() {
-        return dao.getDefaultMaxStorage();
+        return defaultQuota.getDefaultMaxStorage();
     }
 
     @Override
     public Optional<QuotaCount> getDefaultMaxMessage() {
-        return dao.getDefaultMaxMessage();
+        return defaultQuota.getDefaultMaxMessage();
     }
 
     @Override
     public Optional<QuotaSize> getMaxStorage(QuotaRoot quotaRoot) {
-        return dao.getMaxStorage(quotaRoot)
+        return perUserQuota.getMaxStorage(quotaRoot)
             .map(Optional::of)
             .orElseGet(Throwing.supplier(this::getDefaultMaxStorage).sneakyThrow());
     }
 
     @Override
     public Optional<QuotaCount> getMaxMessage(QuotaRoot quotaRoot) {
-        return dao.getMaxMessage(quotaRoot)
+        return perUserQuota.getMaxMessage(quotaRoot)
             .map(Optional::of)
             .orElseGet(Throwing.supplier(this::getDefaultMaxMessage).sneakyThrow());
     }
