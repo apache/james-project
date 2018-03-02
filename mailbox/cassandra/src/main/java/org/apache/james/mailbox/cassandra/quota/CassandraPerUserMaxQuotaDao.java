@@ -40,6 +40,9 @@ import org.apache.james.mailbox.quota.QuotaValue;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.querybuilder.Delete;
+import com.datastax.driver.core.querybuilder.Insert;
+import com.datastax.driver.core.querybuilder.Select;
 
 public class CassandraPerUserMaxQuotaDao {
 
@@ -59,36 +62,76 @@ public class CassandraPerUserMaxQuotaDao {
     @Inject
     public CassandraPerUserMaxQuotaDao(Session session) {
         this.session = session;
-        this.setMaxStorageStatement = session.prepare(insertInto(CassandraMaxQuota.TABLE_NAME)
-            .value(CassandraMaxQuota.QUOTA_ROOT, bindMarker())
-            .value(CassandraMaxQuota.STORAGE, bindMarker()));
-        this.setMaxMessageStatement = session.prepare(insertInto(CassandraMaxQuota.TABLE_NAME)
-            .value(CassandraMaxQuota.QUOTA_ROOT, bindMarker())
-            .value(CassandraMaxQuota.MESSAGE_COUNT, bindMarker()));
-        this.getMaxStorageStatement = session.prepare(select(CassandraMaxQuota.STORAGE)
+        this.setMaxStorageStatement = session.prepare(setMaxStorageStatement());
+        this.setMaxMessageStatement = session.prepare(setMaxMessageStatement());
+        this.getMaxStorageStatement = session.prepare(getMaxStorageStatement());
+        this.getMaxMessageStatement = session.prepare(getMaxMessageStatement());
+        this.getDefaultMaxStatement = session.prepare(getDefaultMaxStatement());
+        this.setDefaultMaxMessageStatement = session.prepare(setDefaultMaxMessageStatement());
+        this.setDefaultMaxStorageStatement = session.prepare(setDefaultMaxStorageStatement());
+        this.removeDefaultMaxQuotaStatement = session.prepare(removeDefaultMaxQuotaStatement());
+        this.removeMaxStorageStatement = session.prepare(removeMaxStorageStatement());
+        this.removeMaxMessageStatement = session.prepare(removeMaxMessageStatement());
+    }
+
+    private Delete.Where removeMaxMessageStatement() {
+        return delete().column(CassandraMaxQuota.MESSAGE_COUNT)
             .from(CassandraMaxQuota.TABLE_NAME)
-            .where(eq(CassandraMaxQuota.QUOTA_ROOT, bindMarker())));
-        this.getMaxMessageStatement = session.prepare(select(CassandraMaxQuota.MESSAGE_COUNT)
+            .where(eq(CassandraMaxQuota.QUOTA_ROOT, bindMarker()));
+    }
+
+    private Delete.Where removeMaxStorageStatement() {
+        return delete().column(CassandraMaxQuota.STORAGE)
             .from(CassandraMaxQuota.TABLE_NAME)
-            .where(eq(CassandraMaxQuota.QUOTA_ROOT, bindMarker())));
-        this.getDefaultMaxStatement = session.prepare(select(CassandraDefaultMaxQuota.VALUE)
+            .where(eq(CassandraMaxQuota.QUOTA_ROOT, bindMarker()));
+    }
+
+    private Delete.Where removeDefaultMaxQuotaStatement() {
+        return delete().all()
             .from(CassandraDefaultMaxQuota.TABLE_NAME)
-            .where(eq(CassandraDefaultMaxQuota.TYPE, bindMarker(CassandraDefaultMaxQuota.TYPE))));
-        this.setDefaultMaxMessageStatement = session.prepare(insertInto(CassandraDefaultMaxQuota.TABLE_NAME)
-            .value(CassandraDefaultMaxQuota.TYPE, CassandraDefaultMaxQuota.MESSAGE)
-            .value(CassandraDefaultMaxQuota.VALUE, bindMarker()));
-        this.setDefaultMaxStorageStatement = session.prepare(insertInto(CassandraDefaultMaxQuota.TABLE_NAME)
+            .where(eq(CassandraDefaultMaxQuota.TYPE, bindMarker(CassandraDefaultMaxQuota.TYPE)));
+    }
+
+    private Insert setDefaultMaxStorageStatement() {
+        return insertInto(CassandraDefaultMaxQuota.TABLE_NAME)
             .value(CassandraDefaultMaxQuota.TYPE, CassandraDefaultMaxQuota.STORAGE)
-            .value(CassandraDefaultMaxQuota.VALUE, bindMarker()));
-        this.removeDefaultMaxQuotaStatement = session.prepare(delete().all()
+            .value(CassandraDefaultMaxQuota.VALUE, bindMarker());
+    }
+
+    private Insert setDefaultMaxMessageStatement() {
+        return insertInto(CassandraDefaultMaxQuota.TABLE_NAME)
+            .value(CassandraDefaultMaxQuota.TYPE, CassandraDefaultMaxQuota.MESSAGE)
+            .value(CassandraDefaultMaxQuota.VALUE, bindMarker());
+    }
+
+    private Select.Where getDefaultMaxStatement() {
+        return select(CassandraDefaultMaxQuota.VALUE)
             .from(CassandraDefaultMaxQuota.TABLE_NAME)
-            .where(eq(CassandraDefaultMaxQuota.TYPE, bindMarker(CassandraDefaultMaxQuota.TYPE))));
-        this.removeMaxStorageStatement = session.prepare(delete().column(CassandraMaxQuota.STORAGE)
+            .where(eq(CassandraDefaultMaxQuota.TYPE, bindMarker(CassandraDefaultMaxQuota.TYPE)));
+    }
+
+    private Select.Where getMaxMessageStatement() {
+        return select(CassandraMaxQuota.MESSAGE_COUNT)
             .from(CassandraMaxQuota.TABLE_NAME)
-            .where(eq(CassandraMaxQuota.QUOTA_ROOT, bindMarker())));
-        this.removeMaxMessageStatement = session.prepare(delete().column(CassandraMaxQuota.MESSAGE_COUNT)
+            .where(eq(CassandraMaxQuota.QUOTA_ROOT, bindMarker()));
+    }
+
+    private Select.Where getMaxStorageStatement() {
+        return select(CassandraMaxQuota.STORAGE)
             .from(CassandraMaxQuota.TABLE_NAME)
-            .where(eq(CassandraMaxQuota.QUOTA_ROOT, bindMarker())));
+            .where(eq(CassandraMaxQuota.QUOTA_ROOT, bindMarker()));
+    }
+
+    private Insert setMaxMessageStatement() {
+        return insertInto(CassandraMaxQuota.TABLE_NAME)
+            .value(CassandraMaxQuota.QUOTA_ROOT, bindMarker())
+            .value(CassandraMaxQuota.MESSAGE_COUNT, bindMarker());
+    }
+
+    private Insert setMaxStorageStatement() {
+        return insertInto(CassandraMaxQuota.TABLE_NAME)
+            .value(CassandraMaxQuota.QUOTA_ROOT, bindMarker())
+            .value(CassandraMaxQuota.STORAGE, bindMarker());
     }
 
     public void setMaxStorage(QuotaRoot quotaRoot, QuotaSize maxStorageQuota) {
