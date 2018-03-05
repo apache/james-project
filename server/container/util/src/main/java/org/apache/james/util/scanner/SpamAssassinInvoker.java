@@ -27,6 +27,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.mail.MessagingException;
@@ -83,16 +84,30 @@ public class SpamAssassinInvoker {
      * @throws MessagingException
      *             if an error on scanning is detected
      */
+    public SpamAssassinResult scanMail(MimeMessage message, String user) throws MessagingException {
+        return scanMailWithAdditionalHeaders(message,
+            "User: " + user);
+    }
+
     public SpamAssassinResult scanMail(MimeMessage message) throws MessagingException {
+        return scanMailWithAdditionalHeaders(message);
+    }
+
+    public SpamAssassinResult scanMailWithAdditionalHeaders(MimeMessage message, String... additionalHeaders) throws MessagingException {
         try (Socket socket = new Socket(spamdHost, spamdPort);
-                OutputStream out = socket.getOutputStream();
-                PrintWriter writer = new PrintWriter(out);
-                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+             OutputStream out = socket.getOutputStream();
+             PrintWriter writer = new PrintWriter(out);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
             writer.write("CHECK SPAMC/1.2");
             writer.write(CRLF);
-            writer.write("User: alice@angels.org");
-            writer.write(CRLF);
+
+            Arrays.stream(additionalHeaders)
+                .forEach(header -> {
+                    writer.write(header);
+                    writer.write(CRLF);
+                });
+
             writer.write(CRLF);
             writer.flush();
 
@@ -153,7 +168,7 @@ public class SpamAssassinInvoker {
      * @throws MessagingException
      *             if an error occured during learning.
      */
-    public boolean learnAsSpam(InputStream message) throws MessagingException {
+    public boolean learnAsSpam(InputStream message, String user) throws MessagingException {
         try (Socket socket = new Socket(spamdHost, spamdPort);
                 OutputStream out = socket.getOutputStream();
                 PrintWriter writer = new PrintWriter(out);
@@ -164,11 +179,11 @@ public class SpamAssassinInvoker {
             writer.write(CRLF);
             writer.write("Content-length: " + byteArray.length);
             writer.write(CRLF);
-            writer.write("User: alice@angels.org");
-            writer.write(CRLF);
             writer.write("Message-class: spam");
             writer.write(CRLF);
             writer.write("Set: local, remote");
+            writer.write(CRLF);
+            writer.write("User: " + user);
             writer.write(CRLF);
             writer.write(CRLF);
             writer.flush();

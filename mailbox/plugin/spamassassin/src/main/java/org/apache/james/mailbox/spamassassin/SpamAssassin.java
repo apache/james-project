@@ -37,12 +37,12 @@ public class SpamAssassin {
         this.spamAssassinConfiguration = spamAssassinConfiguration;
     }
 
-    public void learnSpam(List<InputStream> messages) {
+    public void learnSpam(List<InputStream> messages, String user) {
         if (spamAssassinConfiguration.isEnable()) {
             Host host = spamAssassinConfiguration.getHost().get();
             SpamAssassinInvoker invoker = new SpamAssassinInvoker(host.getHostName(), host.getPort());
             messages
-                .forEach(Throwing.consumer(message -> invoker.learnAsSpam(message)));
+                .forEach(Throwing.consumer(message -> invoker.learnAsSpam(message, user)));
         }
     }
 }

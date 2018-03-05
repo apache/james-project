@@ -100,6 +100,6 @@ public class SpamAssassinListenerTest {
 
         listener.event(added);
 
-        verify(spamAssassin).learnSpam(any());
+        verify(spamAssassin).learnSpam(any(), any());
     }
 }

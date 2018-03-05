@@ -67,7 +67,7 @@ public class SpamAssassinListener implements SpamEventListener {
                     .stream()
                     .map(Throwing.function(Message::getFullContent))
                     .collect(Guavate.toImmutableList());
-                spamAssassin.learnSpam(messages);
+                spamAssassin.learnSpam(messages, event.getMailboxPath().getUser());
             }
         }
     }

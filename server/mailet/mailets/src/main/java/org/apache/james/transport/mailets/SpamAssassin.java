@@ -19,11 +19,17 @@
 
 package org.apache.james.transport.mailets;
 
+import java.util.Arrays;
 import java.util.Optional;
 
+import javax.inject.Inject;
 import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.Port;
 import org.apache.james.util.scanner.SpamAssassinInvoker;
 import org.apache.james.util.scanner.SpamAssassinResult;
@@ -31,6 +37,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.MailetUtil;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
@@ -64,8 +71,15 @@ public class SpamAssassin extends GenericMailet {
     public static final String DEFAULT_HOST = "127.0.0.1";
     public static final int DEFAULT_PORT = 783;
 
+    private final UsersRepository usersRepository;
+
     private String spamdHost;
     private int spamdPort;
+
+    @Inject
+    public SpamAssassin(UsersRepository usersRepository) {
+        this.usersRepository = usersRepository;
+    }
 
     /**
      * @see org.apache.mailet.base.GenericMailet#init()
@@ -87,7 +101,16 @@ public class SpamAssassin extends GenericMailet {
 
         // Invoke SpamAssassin connection and scan the message
         SpamAssassinInvoker sa = new SpamAssassinInvoker(spamdHost, spamdPort);
-        SpamAssassinResult result = sa.scanMail(message);
+        Arrays.stream(message.getAllRecipients())
+            .map(InternetAddress.class::cast)
+            .forEach(
+                Throwing.consumer(
+                    (InternetAddress recipient) -> querySpamAssassin(mail, message, sa, recipient))
+                    .sneakyThrow());
+    }
+
+    private void querySpamAssassin(Mail mail, MimeMessage message, SpamAssassinInvoker sa, InternetAddress recipient) throws MessagingException, UsersRepositoryException {
+        SpamAssassinResult result = sa.scanMail(message, usersRepository.getUser(new MailAddress(recipient)));
 
         // Add headers as attribute to mail object
         for (String key : result.getHeadersAsAttribute().keySet()) {
