@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.model;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 /**
@@ -51,4 +52,9 @@ public class QuotaRoot {
         return value;
     }
 
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("value", value)
+                .toString();
+    }
 }

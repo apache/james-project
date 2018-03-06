@@ -76,7 +76,7 @@ public class DefaultQuotaRootResolverTest {
     }
 
     @Test(expected = MailboxException.class)
-    public void retrieveAssociatedMailboxesShouldThrowWhenQuotaRootNotContainsSeparator2Times() throws Exception {
+    public void retrieveAssociatedMailboxesShouldThrowWhenQuotaRootContainsSeparator2Times() throws Exception {
         testee.retrieveAssociatedMailboxes(QuotaRoot.quotaRoot("#private&be&nwa"), null);
     }
 
