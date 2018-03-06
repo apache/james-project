@@ -71,7 +71,7 @@ public class MailboxTest {
         Mailbox expectedMailbox = new Mailbox(InMemoryId.of(1), "name", Optional.of(InMemoryId.of(0)), Optional.of(Role.DRAFTS), SortOrder.of(123),
             true, true, true, true, true, true, true,
             totalMessages, unreadMessages, totalThreads, unreadThreads,
-            Rights.EMPTY, MailboxNamespace.personal());
+            Rights.EMPTY, MailboxNamespace.personal(), Optional.empty());
 
         Mailbox mailbox = Mailbox.builder()
             .id(InMemoryId.of(1))

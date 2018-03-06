@@ -25,6 +25,9 @@ import javax.inject.Inject;
 
 import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.jmap.model.mailbox.MailboxNamespace;
+import org.apache.james.jmap.model.mailbox.Quotas;
+import org.apache.james.jmap.model.mailbox.Quotas.QuotaId;
+import org.apache.james.jmap.model.mailbox.Quotas.Type;
 import org.apache.james.jmap.model.mailbox.Rights;
 import org.apache.james.jmap.model.mailbox.Rights.Username;
 import org.apache.james.jmap.model.mailbox.SortOrder;
@@ -38,11 +41,13 @@ import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.QuotaRoot;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableMap;
 
 public class MailboxFactory {
     public static final boolean NO_RESET_RECENT = false;
@@ -108,6 +113,9 @@ public class MailboxFactory {
         Rights rights = Rights.fromACL(metaData.getACL())
             .removeEntriesFor(Username.forMailboxPath(messageManager.getMailboxPath()));
         Username username = Username.fromSession(mailboxSession);
+        Quotas quotas = new Quotas(ImmutableMap.of(new QuotaId(QuotaRoot.quotaRoot("key")), new Quotas.Quota(ImmutableMap.of(
+                Type.STORAGE, new Quotas.Value(Number.ZERO, Optional.empty()),
+                Type.MESSAGE, new Quotas.Value(Number.ZERO, Optional.empty())))));
 
         return Mailbox.builder()
             .id(messageManager.getId())
@@ -125,6 +133,7 @@ public class MailboxFactory {
             .mayRemoveItems(rights.mayRemoveItems(username).orElse(isOwner))
             .mayRename(rights.mayRename(username).orElse(isOwner))
             .namespace(getNamespace(mailboxPath, isOwner))
+            .quotas(quotas)
             .build();
     }
 

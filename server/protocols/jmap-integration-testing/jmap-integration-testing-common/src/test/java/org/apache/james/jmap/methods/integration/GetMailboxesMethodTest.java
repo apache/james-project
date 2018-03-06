@@ -764,4 +764,38 @@ public abstract class GetMailboxesMethodTest {
             .body(FIRST_MAILBOX + ".mayDelete", equalTo(false))
             .body(FIRST_MAILBOX + ".mayRename", equalTo(false));
     }
+
+    @Test
+    public void getMailboxesShouldReturnUnlimitedQuotasForInboxByDefault() throws Exception {
+        String mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, DefaultMailboxes.INBOX).serialize();
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(FIRST_MAILBOX + ".quotas['key']['STORAGE'].max", nullValue())
+            .body(FIRST_MAILBOX + ".quotas['key']['MESSAGE'].max", nullValue());
+    }
+
+    @Test
+    public void getMailboxesShouldReturnEmptyQuotasForInboxWhenNoMail() throws Exception {
+        String mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, DefaultMailboxes.INBOX).serialize();
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(FIRST_MAILBOX + ".quotas['key']['STORAGE'].used", equalTo(0))
+            .body(FIRST_MAILBOX + ".quotas['key']['MESSAGE'].used", equalTo(0));
+    }
 }
