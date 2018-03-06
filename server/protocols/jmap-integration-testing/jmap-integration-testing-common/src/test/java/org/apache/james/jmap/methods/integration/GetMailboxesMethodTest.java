@@ -40,6 +40,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -54,11 +55,16 @@ import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.SerializableQuotaValue;
 import org.apache.james.mailbox.store.probe.ACLProbe;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
+import org.apache.james.mailbox.store.probe.QuotaProbe;
 import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
+import org.apache.james.modules.QuotaProbesImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
@@ -91,6 +97,7 @@ public abstract class GetMailboxesMethodTest {
     private GuiceJamesServer jmapServer;
     private MailboxProbe mailboxProbe;
     private ACLProbe aclProbe;
+    private QuotaProbe quotaProbe;
     
     @Before
     public void setup() throws Throwable {
@@ -98,6 +105,7 @@ public abstract class GetMailboxesMethodTest {
         jmapServer.start();
         mailboxProbe = jmapServer.getProbe(MailboxProbeImpl.class);
         aclProbe = jmapServer.getProbe(ACLProbeImpl.class);
+        quotaProbe = jmapServer.getProbe(QuotaProbesImpl.class);
 
         RestAssured.requestSpecification = new RequestSpecBuilder()
                 .setContentType(ContentType.JSON)
@@ -778,8 +786,42 @@ public abstract class GetMailboxesMethodTest {
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
             .body(ARGUMENTS + ".list", hasSize(1))
-            .body(FIRST_MAILBOX + ".quotas['key']['STORAGE'].max", nullValue())
-            .body(FIRST_MAILBOX + ".quotas['key']['MESSAGE'].max", nullValue());
+            .body(FIRST_MAILBOX + ".quotas['#private&alice@domain.tld']['STORAGE'].max", nullValue())
+            .body(FIRST_MAILBOX + ".quotas['#private&alice@domain.tld']['MESSAGE'].max", nullValue());
+    }
+
+    @Test
+    public void getMailboxesShouldReturnMaxStorageQuotasForInboxWhenSet() throws Exception {
+        quotaProbe.setDefaultMaxStorage(SerializableQuotaValue.valueOf(Optional.of(QuotaSize.size(42))));
+        String mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, DefaultMailboxes.INBOX).serialize();
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(FIRST_MAILBOX + ".quotas['#private&alice@domain.tld']['STORAGE'].max", equalTo(42));
+    }
+
+    @Test
+    public void getMailboxesShouldReturnMaxMessageQuotasForInboxWhenSet() throws Exception {
+        quotaProbe.setDefaultMaxMessageCount(SerializableQuotaValue.valueOf(Optional.of(QuotaCount.count(43))));
+        String mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, DefaultMailboxes.INBOX).serialize();
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(FIRST_MAILBOX + ".quotas['#private&alice@domain.tld']['MESSAGE'].max", equalTo(43));
     }
 
     @Test
@@ -795,7 +837,7 @@ public abstract class GetMailboxesMethodTest {
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
             .body(ARGUMENTS + ".list", hasSize(1))
-            .body(FIRST_MAILBOX + ".quotas['key']['STORAGE'].used", equalTo(0))
-            .body(FIRST_MAILBOX + ".quotas['key']['MESSAGE'].used", equalTo(0));
+            .body(FIRST_MAILBOX + ".quotas['#private&alice@domain.tld']['STORAGE'].used", equalTo(0))
+            .body(FIRST_MAILBOX + ".quotas['#private&alice@domain.tld']['MESSAGE'].used", equalTo(0));
     }
 }
