@@ -44,6 +44,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
+import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -68,31 +69,8 @@ import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
 public class StoreMessageIdManager implements MessageIdManager {
-
-    public static class MessageMoves {
-        private final ImmutableSet<MailboxId> previousMailboxIds;
-        private final ImmutableSet<MailboxId> targetMailboxIds;
-
-        public MessageMoves(Collection<MailboxId> previousMailboxIds, Collection<MailboxId> targetMailboxIds) {
-            this.previousMailboxIds = ImmutableSet.copyOf(previousMailboxIds);
-            this.targetMailboxIds = ImmutableSet.copyOf(targetMailboxIds);
-        }
-
-        public boolean isChange() {
-            return !previousMailboxIds.equals(targetMailboxIds);
-        }
-
-        public Set<MailboxId> addedMailboxIds() {
-            return Sets.difference(targetMailboxIds, previousMailboxIds);
-        }
-
-        public Set<MailboxId> removedMailboxIds() {
-            return Sets.difference(previousMailboxIds, targetMailboxIds);
-        }
-    }
 
     private static class MetadataWithMailboxId {
         private final MessageMetaData messageMetaData;
