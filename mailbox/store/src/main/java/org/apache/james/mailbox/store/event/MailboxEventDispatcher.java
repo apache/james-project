@@ -31,6 +31,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
+import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -152,5 +153,9 @@ public class MailboxEventDispatcher {
 
     public void aclUpdated(MailboxSession session, MailboxPath mailboxPath, ACLDiff aclDiff) {
         listener.event(eventFactory.aclUpdated(session, mailboxPath, aclDiff));
+    }
+
+    public void moved(MailboxSession session, MessageMoves messageMoves, Map<MessageUid, MailboxMessage> messages) {
+        listener.event(eventFactory.moved(session, messageMoves, messages));
     }
 }

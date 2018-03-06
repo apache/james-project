@@ -55,6 +55,7 @@ import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageId.Factory;
 import org.apache.james.mailbox.model.MessageMetaData;
+import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.mailbox.model.MessageResultIterator;
@@ -740,7 +741,22 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
     private SortedMap<MessageUid, MessageMetaData> copy(MessageRange set, StoreMessageManager to, MailboxSession session) throws MailboxException {
         IteratorWrapper<MailboxMessage> originalRows = new IteratorWrapper<>(retrieveOriginalRows(set, session));
-        return collectMetadata(to.copy(originalRows, session));
+
+        SortedMap<MessageUid, MessageMetaData> copiedUids = collectMetadata(to.copy(originalRows, session));
+
+        ImmutableMap.Builder<MessageUid, MailboxMessage> messagesMap = ImmutableMap.builder();
+        for (MailboxMessage message: originalRows.getEntriesSeen()) {
+            messagesMap.put(message.getUid(), immutableMailboxMessageFactory.from(to.getMailboxEntity().getMailboxId(), message));
+        }
+        dispatcher.added(session, copiedUids, to.getMailboxEntity(), messagesMap.build());
+        dispatcher.moved(session,
+            MessageMoves.builder()
+                .previousMailboxIds(getMailboxEntity().getMailboxId())
+                .targetMailboxIds(to.getMailboxEntity().getMailboxId(), getMailboxEntity().getMailboxId())
+                .build(),
+            messagesMap.build());
+
+        return copiedUids;
     }
 
     private SortedMap<MessageUid, MessageMetaData> move(MessageRange set, StoreMessageManager to, MailboxSession session) throws MailboxException {
@@ -755,6 +771,12 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         }
         dispatcher.added(session, moveUids, to.getMailboxEntity(), messagesMap.build());
         dispatcher.expunged(session, collectMetadata(moveResult.getOriginalMessages()), getMailboxEntity());
+        dispatcher.moved(session,
+                MessageMoves.builder()
+                    .previousMailboxIds(getMailboxEntity().getMailboxId())
+                    .targetMailboxIds(to.getMailboxEntity().getMailboxId())
+                    .build(),
+                messagesMap.build());
         return moveUids;
     }
 

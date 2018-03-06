@@ -88,6 +88,7 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
 
     @Override
     public void event(Event event) {
+        deliverEventToGlobalListeners(event);
         if (event instanceof MailboxEvent) {
             mailboxEvent((MailboxEvent) event);
         }
@@ -102,7 +103,6 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
             registry.handleRename(renamed.getMailboxPath(), renamed.getNewPath());
         }
         deliverEventToMailboxListeners(mailboxEvent, listenerSnapshot);
-        deliverEventToGlobalListeners(mailboxEvent);
     }
 
     protected void deliverEventToMailboxListeners(MailboxEvent event, Collection<MailboxListener> listenerSnapshot) {
@@ -111,7 +111,7 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
         }
     }
 
-    protected void deliverEventToGlobalListeners(MailboxEvent event) {
+    protected void deliverEventToGlobalListeners(Event event) {
         for (MailboxListener mailboxListener : registry.getGlobalListeners()) {
             eventDelivery.deliver(mailboxListener, event);
         }
