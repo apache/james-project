@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store.event.distributed;
 
 import java.util.Collection;
 
+import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -97,8 +98,15 @@ public class BroadcastDelegatingMailboxListener implements DistributedDelegating
     }
 
     @Override
-    public void event(MailboxEvent event) {
+    public void event(Event event) {
         deliverEventToGlobalListeners(event, ListenerType.ONCE);
+        if (event instanceof MailboxEvent) {
+            MailboxEvent mailboxEvent = (MailboxEvent) event;
+            publishMailboxEvent(mailboxEvent);
+        }
+    }
+
+    private void publishMailboxEvent(MailboxEvent event) {
         try {
             publisher.publish(globalTopic, eventSerializer.serializeEvent(event));
         } catch (Throwable t) {
@@ -129,7 +137,7 @@ public class BroadcastDelegatingMailboxListener implements DistributedDelegating
         }
     }
 
-    private void deliverEventToGlobalListeners(MailboxEvent event, ListenerType type) {
+    private void deliverEventToGlobalListeners(Event event, ListenerType type) {
         for (MailboxListener mailboxListener : mailboxListenerRegistry.getGlobalListeners()) {
             if (mailboxListener.getType() == type) {
                 eventDelivery.deliver(mailboxListener, event);

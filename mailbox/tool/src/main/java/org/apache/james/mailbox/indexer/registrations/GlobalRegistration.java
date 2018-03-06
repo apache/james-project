@@ -22,6 +22,7 @@ package org.apache.james.mailbox.indexer.registrations;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.model.MailboxPath;
 
@@ -54,11 +55,13 @@ public class GlobalRegistration implements MailboxListener {
     }
 
     @Override
-    public void event(MailboxEvent event) {
+    public void event(Event event) {
         if (event instanceof MailboxDeletion) {
-            isPathDeleted.put(event.getMailboxPath(), true);
+            MailboxDeletion mailboxDeletion = (MailboxDeletion) event;
+            isPathDeleted.put(mailboxDeletion.getMailboxPath(), true);
         } else if (event instanceof MailboxRenamed) {
-            nameCorrespondence.put(event.getMailboxPath(), ((MailboxRenamed) event).getNewPath());
+            MailboxRenamed mailboxRenamed = (MailboxRenamed) event;
+            nameCorrespondence.put(mailboxRenamed.getMailboxPath(), ((MailboxRenamed) event).getNewPath());
         }
     }
 }

@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.RightManager;
@@ -58,13 +59,13 @@ public class PropagateLookupRightListener implements MailboxListener {
     }
 
     @Override
-    public void event(MailboxEvent event) {
+    public void event(Event event) {
         MailboxSession mailboxSession = event.getSession();
 
         if (event instanceof MailboxACLUpdated) {
             MailboxACLUpdated aclUpdateEvent = (MailboxACLUpdated) event;
 
-            updateLookupRightOnParent(mailboxSession, event.getMailboxPath(), aclUpdateEvent.getAclDiff());
+            updateLookupRightOnParent(mailboxSession, aclUpdateEvent.getMailboxPath(), aclUpdateEvent.getAclDiff());
         } else if (event instanceof MailboxRenamed) {
             MailboxRenamed renamedEvent = (MailboxRenamed) event;
             updateLookupRightOnParent(mailboxSession, renamedEvent.getNewPath());

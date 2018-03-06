@@ -42,6 +42,7 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.message.request.IdleRequest;
 import org.apache.james.imap.message.response.ContinuationResponse;
+import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -188,7 +189,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             this.responder = responder;
         }
 
-        public void event(MailboxEvent event) {
+        public void event(Event event) {
             if (event instanceof Added || event instanceof Expunged || event instanceof FlagsUpdated) {
                 unsolicitedResponses(session, responder, false);
             }

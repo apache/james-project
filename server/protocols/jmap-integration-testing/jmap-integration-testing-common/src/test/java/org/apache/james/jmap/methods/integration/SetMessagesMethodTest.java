@@ -59,6 +59,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.DefaultMailboxes;
+import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.Role;
@@ -2196,7 +2197,7 @@ public abstract class SetMessagesMethodTest {
             "  ]" +
             "]";
 
-        List<MailboxListener.MailboxEvent> events = Lists.newArrayList();
+        List<Event> events = Lists.newArrayList();
         jmapServer.getProbe(JmapGuiceProbe.class).addMailboxListener(new MailboxListener() {
             @Override
             public ListenerType getType() {
@@ -2209,7 +2210,7 @@ public abstract class SetMessagesMethodTest {
             }
 
             @Override
-            public void event(MailboxEvent event) {
+            public void event(Event event) {
                 events.add(event);
             }
         });
@@ -2230,7 +2231,7 @@ public abstract class SetMessagesMethodTest {
             .anyMatch(event -> isAddedToOutboxEvent(messageId, event)));
     }
 
-    private boolean isAddedToOutboxEvent(String messageId, MailboxListener.MailboxEvent event) {
+    private boolean isAddedToOutboxEvent(String messageId, Event event) {
         if (!(event instanceof EventFactory.AddedImpl)) {
             return false;
         }

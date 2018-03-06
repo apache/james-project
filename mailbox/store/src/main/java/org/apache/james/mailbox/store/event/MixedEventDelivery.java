@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store.event;
 
+import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 
 public class MixedEventDelivery implements EventDelivery {
@@ -33,7 +34,7 @@ public class MixedEventDelivery implements EventDelivery {
     }
 
     @Override
-    public void deliver(MailboxListener mailboxListener, MailboxListener.MailboxEvent event) {
+    public void deliver(MailboxListener mailboxListener, Event event) {
         if (mailboxListener.getExecutionMode().equals(MailboxListener.ExecutionMode.SYNCHRONOUS)) {
             synchronousEventDelivery.deliver(mailboxListener, event);
         } else {

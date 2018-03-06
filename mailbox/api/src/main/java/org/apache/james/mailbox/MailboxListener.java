@@ -55,12 +55,12 @@ public interface MailboxListener {
      * @param event
      *            not null
      */
-    void event(MailboxEvent event);
+    void event(Event event);
 
     /**
      * A mailbox event.
      */
-    abstract class MailboxEvent implements Serializable {
+    abstract class MailboxEvent implements Event, Serializable {
         private final MailboxSession session;
         private final MailboxPath path;
 

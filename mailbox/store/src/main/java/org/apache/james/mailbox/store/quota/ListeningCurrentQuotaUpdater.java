@@ -22,6 +22,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -54,13 +55,16 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
     }
 
     @Override
-    public void event(MailboxEvent event) {
+    public void event(Event event) {
         try {
-            QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(event.getMailboxPath());
             if (event instanceof Added) {
-                handleAddedEvent((Added) event, quotaRoot);
+                Added addedEvent = (Added) event;
+                QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(addedEvent.getMailboxPath());
+                handleAddedEvent(addedEvent, quotaRoot);
             } else if (event instanceof Expunged) {
-                handleExpungedEvent((Expunged) event, quotaRoot);
+                Expunged expungedEvent = (Expunged) event;
+                QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(expungedEvent.getMailboxPath());
+                handleExpungedEvent(expungedEvent, quotaRoot);
             }
         } catch (MailboxException e) {
             LOGGER.error("Error while updating quotas", e);

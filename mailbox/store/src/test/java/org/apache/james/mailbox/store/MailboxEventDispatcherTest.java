@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
+import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
@@ -49,9 +50,9 @@ import com.google.common.collect.ImmutableMap;
 public class MailboxEventDispatcherTest {
     private static final int sessionId = 10;
     private static final int MOD_SEQ = -1;
-    public static final Condition<MailboxListener.MailboxEvent> INSTANCE_OF_EVENT_FLAGS_UPDATED = new Condition<MailboxListener.MailboxEvent>() {
+    public static final Condition<Event> INSTANCE_OF_EVENT_FLAGS_UPDATED = new Condition<Event>() {
         @Override
-        public boolean matches(MailboxListener.MailboxEvent event) {
+        public boolean matches(Event event) {
             return event instanceof MailboxListener.FlagsUpdated;
         }
     };

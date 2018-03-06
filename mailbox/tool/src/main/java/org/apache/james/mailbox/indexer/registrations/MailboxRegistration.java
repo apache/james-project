@@ -21,6 +21,7 @@ package org.apache.james.mailbox.indexer.registrations;
 
 import java.util.List;
 
+import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.indexer.events.FlagsMessageEvent;
@@ -59,7 +60,7 @@ public class MailboxRegistration implements MailboxListener {
     }
 
     @Override
-    public void event(MailboxEvent event) {
+    public void event(Event event) {
         if (event instanceof FlagsUpdated) {
             for (UpdatedFlags updatedFlags : ((FlagsUpdated) event).getUpdatedFlags()) {
                 impactingMessageEvents.put(updatedFlags.getUid(), new FlagsMessageEvent(mailboxPath, updatedFlags.getUid(), updatedFlags.getNewFlags()));

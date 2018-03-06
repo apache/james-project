@@ -22,6 +22,7 @@ package org.apache.james.mailbox.store.event.distributed;
 import java.util.Collection;
 import java.util.Set;
 
+import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -103,11 +104,14 @@ public class RegisteredDelegatingMailboxListener implements DistributedDelegatin
     }
 
     @Override
-    public void event(MailboxEvent event) {
+    public void event(Event event) {
         try {
             deliverEventToOnceGlobalListeners(event);
             deliverToMailboxPathRegisteredListeners(event);
-            sendToRemoteJames(event);
+            if (event instanceof MailboxEvent) {
+                MailboxEvent mailboxEvent = (MailboxEvent) event;
+                sendToRemoteJames(mailboxEvent);
+            }
         } catch (Throwable t) {
             LOGGER.error("Error while delegating event {}", event.getClass().getCanonicalName(), t);
         }
@@ -122,22 +126,29 @@ public class RegisteredDelegatingMailboxListener implements DistributedDelegatin
         }
     }
 
-    private void deliverToMailboxPathRegisteredListeners(MailboxEvent event) throws MailboxException {
-        Collection<MailboxListener> listenerSnapshot = mailboxListenerRegistry.getLocalMailboxListeners(event.getMailboxPath());
-        if (event instanceof MailboxDeletion && listenerSnapshot.size() > 0) {
-            mailboxListenerRegistry.deleteRegistryFor(event.getMailboxPath());
-            mailboxPathRegister.doCompleteUnRegister(event.getMailboxPath());
-        } else if (event instanceof MailboxRenamed && listenerSnapshot.size() > 0) {
-            MailboxRenamed renamed = (MailboxRenamed) event;
+    private void deliverToMailboxPathRegisteredListeners(Event event) throws MailboxException {
+        if (event instanceof MailboxEvent) {
+            MailboxEvent mailboxEvent = (MailboxEvent) event;
+            deliverToMailboxPathRegisteredListeners(mailboxEvent);
+        }
+    }
+
+    private void deliverToMailboxPathRegisteredListeners(MailboxEvent mailboxEvent) throws MailboxException {
+        Collection<MailboxListener> listenerSnapshot = mailboxListenerRegistry.getLocalMailboxListeners(mailboxEvent.getMailboxPath());
+        if (mailboxEvent instanceof MailboxDeletion && listenerSnapshot.size() > 0) {
+            mailboxListenerRegistry.deleteRegistryFor(mailboxEvent.getMailboxPath());
+            mailboxPathRegister.doCompleteUnRegister(mailboxEvent.getMailboxPath());
+        } else if (mailboxEvent instanceof MailboxRenamed && listenerSnapshot.size() > 0) {
+            MailboxRenamed renamed = (MailboxRenamed) mailboxEvent;
             mailboxListenerRegistry.handleRename(renamed.getMailboxPath(), renamed.getNewPath());
             mailboxPathRegister.doRename(renamed.getMailboxPath(), renamed.getNewPath());
         }
         for (MailboxListener listener : listenerSnapshot) {
-            eventDelivery.deliver(listener, event);
+            eventDelivery.deliver(listener, mailboxEvent);
         }
     }
 
-    private void deliverEventToOnceGlobalListeners(MailboxEvent event) {
+    private void deliverEventToOnceGlobalListeners(Event event) {
         for (MailboxListener mailboxListener : mailboxListenerRegistry.getGlobalListeners()) {
             if (mailboxListener.getType() == ListenerType.ONCE) {
                 eventDelivery.deliver(mailboxListener, event);

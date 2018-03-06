@@ -22,11 +22,12 @@ package org.apache.james.mailbox.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 
 public class EventCollector implements MailboxListener {
 
-    private final List<MailboxEvent> events = new ArrayList<>();
+    private final List<Event> events = new ArrayList<>();
 
     private final ListenerType listenerType;
 
@@ -48,11 +49,11 @@ public class EventCollector implements MailboxListener {
         return ExecutionMode.SYNCHRONOUS;
     }
 
-    public List<MailboxEvent> getEvents() {
+    public List<Event> getEvents() {
         return events;
     }
 
-    public void event(MailboxEvent event) {
+    public void event(Event event) {
         events.add(event);
     }
 

@@ -23,6 +23,7 @@ import java.util.Collection;
 
 import javax.inject.Inject;
 
+import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -86,16 +87,22 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
     }
 
     @Override
-    public void event(MailboxEvent event) {
-        Collection<MailboxListener> listenerSnapshot = registry.getLocalMailboxListeners(event.getMailboxPath());
-        if (event instanceof MailboxDeletion && listenerSnapshot.size() > 0) {
-            registry.deleteRegistryFor(event.getMailboxPath());
-        } else if (event instanceof MailboxRenamed && listenerSnapshot.size() > 0) {
-            MailboxRenamed renamed = (MailboxRenamed) event;
+    public void event(Event event) {
+        if (event instanceof MailboxEvent) {
+            mailboxEvent((MailboxEvent) event);
+        }
+    }
+
+    private void mailboxEvent(MailboxEvent mailboxEvent) {
+        Collection<MailboxListener> listenerSnapshot = registry.getLocalMailboxListeners(mailboxEvent.getMailboxPath());
+        if (mailboxEvent instanceof MailboxDeletion && listenerSnapshot.size() > 0) {
+            registry.deleteRegistryFor(mailboxEvent.getMailboxPath());
+        } else if (mailboxEvent instanceof MailboxRenamed && listenerSnapshot.size() > 0) {
+            MailboxRenamed renamed = (MailboxRenamed) mailboxEvent;
             registry.handleRename(renamed.getMailboxPath(), renamed.getNewPath());
         }
-        deliverEventToMailboxListeners(event, listenerSnapshot);
-        deliverEventToGlobalListeners(event);
+        deliverEventToMailboxListeners(mailboxEvent, listenerSnapshot);
+        deliverEventToGlobalListeners(mailboxEvent);
     }
 
     protected void deliverEventToMailboxListeners(MailboxEvent event, Collection<MailboxListener> listenerSnapshot) {

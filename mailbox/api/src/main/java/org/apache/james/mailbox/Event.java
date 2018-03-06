@@ -16,14 +16,9 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.mailbox;
 
-package org.apache.james.mailbox.store.event;
+public interface Event {
 
-import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener;
-
-public interface EventDelivery {
-
-    void deliver(MailboxListener mailboxListener, Event event);
-
+    MailboxSession getSession();
 }

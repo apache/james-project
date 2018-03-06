@@ -22,6 +22,7 @@ package org.apache.james.mailbox.cassandra;
 import static org.apache.james.mailbox.cassandra.GhostMailbox.MAILBOX_NAME;
 import static org.apache.james.mailbox.cassandra.GhostMailbox.TYPE;
 
+import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 
 /**
@@ -44,7 +45,7 @@ public class MailboxOperationLoggingListener implements MailboxListener {
     }
 
     @Override
-    public void event(MailboxEvent event) {
+    public void event(Event event) {
         if (event instanceof MailboxRenamed) {
             MailboxRenamed mailboxRenamed = (MailboxRenamed) event;
             GhostMailbox.logger()
@@ -57,14 +58,16 @@ public class MailboxOperationLoggingListener implements MailboxListener {
                 .log(logger -> logger.info("Mailbox renamed event"));
         }
         if (event instanceof MailboxDeletion) {
+            MailboxDeletion mailboxDeletion = (MailboxDeletion) event;
             GhostMailbox.logger()
-                .addField(MAILBOX_NAME, event.getMailboxPath())
+                .addField(MAILBOX_NAME, mailboxDeletion.getMailboxPath())
                 .addField(TYPE, REMOVED)
                 .log(logger -> logger.info("Mailbox deleted event"));
         }
         if (event instanceof MailboxAdded) {
+            MailboxAdded mailboxAdded = (MailboxAdded) event;
             GhostMailbox.logger()
-                .addField(MAILBOX_NAME, event.getMailboxPath())
+                .addField(MAILBOX_NAME, mailboxAdded.getMailboxPath())
                 .addField(TYPE, ADDED)
                 .log(logger -> logger.info("Mailbox added event"));
         }

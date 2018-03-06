@@ -22,6 +22,7 @@ import java.io.InputStream;
 
 import javax.inject.Inject;
 
+import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.event.SpamEventListener;
@@ -56,7 +57,7 @@ public class SpamAssassinListener implements SpamEventListener {
     }
 
     @Override
-    public void event(MailboxEvent event) {
+    public void event(Event event) {
         LOGGER.debug("Event {} received in listener.", event);
         if (event instanceof EventFactory.AddedImpl) {
             EventFactory.AddedImpl addedToMailboxEvent = (EventFactory.AddedImpl) event;
@@ -67,7 +68,7 @@ public class SpamAssassinListener implements SpamEventListener {
                     .stream()
                     .map(Throwing.function(Message::getFullContent))
                     .collect(Guavate.toImmutableList());
-                spamAssassin.learnSpam(messages, event.getMailboxPath().getUser());
+                spamAssassin.learnSpam(messages, addedToMailboxEvent.getMailboxPath().getUser());
             }
         }
     }
