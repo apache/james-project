@@ -58,6 +58,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
     private SimpleGroupMembershipResolver groupMembershipResolver;
     private DefaultUserQuotaRootResolver quotaRootResolver;
+    private InMemoryCurrentQuotaManager currentQuotaManager;
 
     @Override
     public InMemoryMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver) throws MailboxException {
@@ -146,10 +147,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
         QuotaRootResolver quotaRootResolver =  createQuotaRootResolver(mailboxManager);
 
-        InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(
-            new CurrentQuotaCalculator(mailboxManager.getMapperFactory(), quotaRootResolver),
-            mailboxManager
-        );
+        InMemoryCurrentQuotaManager currentQuotaManager = createCurrentQuotaManager(mailboxManager);
 
         ListeningCurrentQuotaUpdater listeningCurrentQuotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver);
         StoreQuotaManager quotaManager = new StoreQuotaManager(currentQuotaManager, maxQuotaManager);
@@ -157,6 +155,16 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         mailboxManager.setQuotaManager(quotaManager);
         mailboxManager.addGlobalListener(listeningCurrentQuotaUpdater, null);
         return quotaManager;
+    }
+
+    @Override
+    public InMemoryCurrentQuotaManager createCurrentQuotaManager(StoreMailboxManager mailboxManager) throws Exception {
+        if (currentQuotaManager == null) {
+            currentQuotaManager = new InMemoryCurrentQuotaManager(
+                    new CurrentQuotaCalculator(mailboxManager.getMapperFactory(), createQuotaRootResolver(mailboxManager)),
+                    mailboxManager);
+        }
+        return currentQuotaManager;
     }
 
     @Override

@@ -840,4 +840,25 @@ public abstract class GetMailboxesMethodTest {
             .body(FIRST_MAILBOX + ".quotas['#private&alice@domain.tld']['STORAGE'].used", equalTo(0))
             .body(FIRST_MAILBOX + ".quotas['#private&alice@domain.tld']['MESSAGE'].used", equalTo(0));
     }
+
+    @Test
+    public void getMailboxesShouldReturnUpdatedQuotasForInboxWhenMailReceived() throws Exception {
+        String mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, DefaultMailboxes.INBOX).serialize();
+        String message = "Subject: hello\r\n\r\nContent";
+        mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, DefaultMailboxes.INBOX),
+                new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)),
+                new Date(), true, new Flags());
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(FIRST_MAILBOX + ".quotas['#private&alice@domain.tld']['STORAGE'].used", equalTo(message.length()))
+            .body(FIRST_MAILBOX + ".quotas['#private&alice@domain.tld']['MESSAGE'].used", equalTo(1));
+    }
 }
