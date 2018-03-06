@@ -43,18 +43,18 @@ public class SpamAssassinExtension implements BeforeAllCallback, AfterAllCallbac
     private SpamAssassin spamAssassin;
 
     public SpamAssassinExtension() {
-        spamAssassinContainer = new GenericContainer<>("aduprat/spamassassin:latest");
+        spamAssassinContainer = new GenericContainer<>("linagora/spamassassin:latest");
         spamAssassinContainer.waitingFor(new SpamAssassinWaitStrategy());
     }
 
     @Override
-    public void beforeAll(ExtensionContext context) throws Exception {
+    public void beforeAll(ExtensionContext context) {
         spamAssassinContainer.start();
         spamAssassin = new SpamAssassin(spamAssassinContainer);
     }
 
     @Override
-    public void afterAll(ExtensionContext context) throws Exception {
+    public void afterAll(ExtensionContext context) {
         spamAssassinContainer.close();
     }
 
@@ -99,7 +99,7 @@ public class SpamAssassinExtension implements BeforeAllCallback, AfterAllCallbac
             train(user, Paths.get(ClassLoader.getSystemResource("spamassassin_db/ham").toURI()), TrainingKind.HAM);
         }
 
-        private void train(String user, Path folder, TrainingKind trainingKind) throws URISyntaxException, IOException {
+        private void train(String user, Path folder, TrainingKind trainingKind) throws IOException {
             spamAssassinContainer.getDockerClient().copyArchiveToContainerCmd(spamAssassinContainer.getContainerId())
                 .withHostResource(folder.toAbsolutePath().toString())
                 .withRemotePath("/root")
@@ -108,15 +108,13 @@ public class SpamAssassinExtension implements BeforeAllCallback, AfterAllCallbac
                 paths
                     .filter(Files::isRegularFile)
                     .map(Path::toFile)
-                    .forEach(Throwing.consumer(file -> {
-                            spamAssassinContainer.execInContainer("sa-learn", 
-                                    trainingKind.saLearnExtensionName(), "-u", user,
-                                    "/root/" + trainingKind.name().toLowerCase(Locale.US) + "/" +  file.getName());
-                    }));
+                    .forEach(Throwing.consumer(file -> spamAssassinContainer.execInContainer("sa-learn",
+                        trainingKind.saLearnExtensionName(), "-u", user,
+                        "/root/" + trainingKind.name().toLowerCase(Locale.US) + "/" +  file.getName())));
             }
         }
 
-        private static enum TrainingKind {
+        private enum TrainingKind {
             SPAM("--spam"), HAM("--ham");
 
             private String saLearnExtensionName;
