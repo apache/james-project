@@ -153,7 +153,7 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
         SimpleMailbox simpleMailbox = new SimpleMailbox(MAILBOX_PATH_1, 42);
         simpleMailbox.setMailboxId(TestId.of(52));
         TreeMap<MessageUid, MessageMetaData> uids = new TreeMap<>();
-        final MailboxListener.Event event = new EventFactory().added(mailboxSession, uids, simpleMailbox, EMPTY_MESSAGE_CACHE);
+        final MailboxListener.MailboxEvent event = new EventFactory().added(mailboxSession, uids, simpleMailbox, EMPTY_MESSAGE_CACHE);
 
         registeredDelegatingMailboxListener1.event(event);
 
@@ -167,7 +167,7 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
         SimpleMailbox simpleMailbox = new SimpleMailbox(MAILBOX_PATH_1, 42);
         simpleMailbox.setMailboxId(TestId.of(52));
         TreeMap<MessageUid, MessageMetaData> uids = new TreeMap<>();
-        final MailboxListener.Event event = new EventFactory().added(mailboxSession, uids, simpleMailbox, EMPTY_MESSAGE_CACHE);
+        final MailboxListener.MailboxEvent event = new EventFactory().added(mailboxSession, uids, simpleMailbox, EMPTY_MESSAGE_CACHE);
 
         registeredDelegatingMailboxListener1.event(event);
 

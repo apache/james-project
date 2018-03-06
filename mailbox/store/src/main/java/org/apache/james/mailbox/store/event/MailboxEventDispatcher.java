@@ -42,7 +42,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 
 /**
- * Helper class to dispatch {@link org.apache.james.mailbox.MailboxListener.Event}'s to registerend MailboxListener
+ * Helper class to dispatch {@link org.apache.james.mailbox.MailboxListener.MailboxEvent}'s to registerend MailboxListener
  */
 public class MailboxEventDispatcher {
 

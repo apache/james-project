@@ -23,6 +23,6 @@ import org.apache.james.mailbox.MailboxListener;
 
 public interface EventDelivery {
 
-    void deliver(MailboxListener mailboxListener, MailboxListener.Event event);
+    void deliver(MailboxListener mailboxListener, MailboxListener.MailboxEvent event);
 
 }

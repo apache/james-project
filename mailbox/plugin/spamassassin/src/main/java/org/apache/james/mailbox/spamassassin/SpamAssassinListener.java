@@ -56,7 +56,7 @@ public class SpamAssassinListener implements SpamEventListener {
     }
 
     @Override
-    public void event(Event event) {
+    public void event(MailboxEvent event) {
         LOGGER.debug("Event {} received in listener.", event);
         if (event instanceof EventFactory.AddedImpl) {
             EventFactory.AddedImpl addedToMailboxEvent = (EventFactory.AddedImpl) event;
@@ -73,7 +73,7 @@ public class SpamAssassinListener implements SpamEventListener {
     }
 
     @VisibleForTesting
-    boolean isEventOnSpamMailbox(Event event) {
+    boolean isEventOnSpamMailbox(MailboxEvent event) {
         return Role.from(event.getMailboxPath().getName())
             .filter(role -> role.equals(Role.SPAM))
             .isPresent();

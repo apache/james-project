@@ -56,21 +56,21 @@ public class GlobalRegistrationTest {
 
     @Test
     public void pathToIndexShouldNotBeChangedByAddedEvents() {
-        MailboxListener.Event event = eventFactory.mailboxAdded(session, MAILBOX);
+        MailboxListener.MailboxEvent event = eventFactory.mailboxAdded(session, MAILBOX);
         globalRegistration.event(event);
         assertThat(globalRegistration.getPathToIndex(INBOX).get()).isEqualTo(INBOX);
     }
 
     @Test
     public void pathToIndexShouldBeNullifiedByDeletedEvents() {
-        MailboxListener.Event event = eventFactory.mailboxDeleted(session, MAILBOX);
+        MailboxListener.MailboxEvent event = eventFactory.mailboxDeleted(session, MAILBOX);
         globalRegistration.event(event);
         assertThat(globalRegistration.getPathToIndex(INBOX)).isEqualTo(Optional.empty());
     }
 
     @Test
     public void pathToIndexShouldBeModifiedByRenamedEvents() {
-        MailboxListener.Event event = eventFactory.mailboxRenamed(session, INBOX, NEW_MAILBOX);
+        MailboxListener.MailboxEvent event = eventFactory.mailboxRenamed(session, INBOX, NEW_MAILBOX);
         globalRegistration.event(event);
         assertThat(globalRegistration.getPathToIndex(INBOX).get()).isEqualTo(NEW_PATH);
     }

@@ -2196,7 +2196,7 @@ public abstract class SetMessagesMethodTest {
             "  ]" +
             "]";
 
-        List<MailboxListener.Event> events = Lists.newArrayList();
+        List<MailboxListener.MailboxEvent> events = Lists.newArrayList();
         jmapServer.getProbe(JmapGuiceProbe.class).addMailboxListener(new MailboxListener() {
             @Override
             public ListenerType getType() {
@@ -2209,7 +2209,7 @@ public abstract class SetMessagesMethodTest {
             }
 
             @Override
-            public void event(Event event) {
+            public void event(MailboxEvent event) {
                 events.add(event);
             }
         });
@@ -2230,7 +2230,7 @@ public abstract class SetMessagesMethodTest {
             .anyMatch(event -> isAddedToOutboxEvent(messageId, event)));
     }
 
-    private boolean isAddedToOutboxEvent(String messageId, MailboxListener.Event event) {
+    private boolean isAddedToOutboxEvent(String messageId, MailboxListener.MailboxEvent event) {
         if (!(event instanceof EventFactory.AddedImpl)) {
             return false;
         }

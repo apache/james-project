@@ -58,7 +58,7 @@ public class PropagateLookupRightListener implements MailboxListener {
     }
 
     @Override
-    public void event(Event event) {
+    public void event(MailboxEvent event) {
         MailboxSession mailboxSession = event.getSession();
 
         if (event instanceof MailboxACLUpdated) {

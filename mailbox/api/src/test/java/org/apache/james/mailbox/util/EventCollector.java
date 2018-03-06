@@ -26,7 +26,7 @@ import org.apache.james.mailbox.MailboxListener;
 
 public class EventCollector implements MailboxListener {
 
-    private final List<Event> events = new ArrayList<>();
+    private final List<MailboxEvent> events = new ArrayList<>();
 
     private final ListenerType listenerType;
 
@@ -48,11 +48,11 @@ public class EventCollector implements MailboxListener {
         return ExecutionMode.SYNCHRONOUS;
     }
 
-    public List<Event> getEvents() {
+    public List<MailboxEvent> getEvents() {
         return events;
     }
 
-    public void event(Event event) {
+    public void event(MailboxEvent event) {
         events.add(event);
     }
 

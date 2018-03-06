@@ -305,7 +305,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
     }
 
     
-    public synchronized void event(Event event) {
+    public synchronized void event(MailboxEvent event) {
 
         // Check if the event was for the mailbox we are observing
         if (event.getMailboxPath().equals(getPath())) {

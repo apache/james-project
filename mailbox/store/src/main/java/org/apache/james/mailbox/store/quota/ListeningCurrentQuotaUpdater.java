@@ -54,7 +54,7 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
     }
 
     @Override
-    public void event(Event event) {
+    public void event(MailboxEvent event) {
         try {
             QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(event.getMailboxPath());
             if (event instanceof Added) {

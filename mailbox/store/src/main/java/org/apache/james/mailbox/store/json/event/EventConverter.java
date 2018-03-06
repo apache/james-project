@@ -60,7 +60,7 @@ public class EventConverter {
         this.mailboxConverter = mailboxConverter;
     }
 
-    public EventDataTransferObject convertToDataTransferObject(MailboxListener.Event event) throws Exception {
+    public EventDataTransferObject convertToDataTransferObject(MailboxListener.MailboxEvent event) throws Exception {
         MailboxDataTransferObject mailboxDataTransferObject = mailboxConverter.extractMailboxDataTransferObject(event);
         if (event instanceof MailboxListener.Added) {
             return constructMeteDataHoldingEventProxy(EventType.ADDED,
@@ -95,7 +95,7 @@ public class EventConverter {
         }
     }
 
-    public MailboxListener.Event retrieveEvent(EventDataTransferObject eventDataTransferObject) throws Exception {
+    public MailboxListener.MailboxEvent retrieveEvent(EventDataTransferObject eventDataTransferObject) throws Exception {
         Mailbox mailbox = mailboxConverter.retrieveMailbox(eventDataTransferObject.getMailbox());
         switch (eventDataTransferObject.getType()) {
             case ADDED:

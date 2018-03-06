@@ -59,7 +59,7 @@ public class MailboxRegistration implements MailboxListener {
     }
 
     @Override
-    public void event(Event event) {
+    public void event(MailboxEvent event) {
         if (event instanceof FlagsUpdated) {
             for (UpdatedFlags updatedFlags : ((FlagsUpdated) event).getUpdatedFlags()) {
                 impactingMessageEvents.put(updatedFlags.getUid(), new FlagsMessageEvent(mailboxPath, updatedFlags.getUid(), updatedFlags.getNewFlags()));

@@ -29,7 +29,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 
 /**
- * Receive a {@link org.apache.james.mailbox.MailboxListener.Event} and delegate it to an other
+ * Receive a {@link org.apache.james.mailbox.MailboxListener.MailboxEvent} and delegate it to an other
  * {@link MailboxListener} depending on the registered name
  *
  * This is a mono instance Thread safe implementation for DelegatingMailboxListener
@@ -86,7 +86,7 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
     }
 
     @Override
-    public void event(Event event) {
+    public void event(MailboxEvent event) {
         Collection<MailboxListener> listenerSnapshot = registry.getLocalMailboxListeners(event.getMailboxPath());
         if (event instanceof MailboxDeletion && listenerSnapshot.size() > 0) {
             registry.deleteRegistryFor(event.getMailboxPath());
@@ -98,13 +98,13 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
         deliverEventToGlobalListeners(event);
     }
 
-    protected void deliverEventToMailboxListeners(Event event, Collection<MailboxListener> listenerSnapshot) {
+    protected void deliverEventToMailboxListeners(MailboxEvent event, Collection<MailboxListener> listenerSnapshot) {
         for (MailboxListener listener : listenerSnapshot) {
             eventDelivery.deliver(listener, event);
         }
     }
 
-    protected void deliverEventToGlobalListeners(Event event) {
+    protected void deliverEventToGlobalListeners(MailboxEvent event) {
         for (MailboxListener mailboxListener : registry.getGlobalListeners()) {
             eventDelivery.deliver(mailboxListener, event);
         }

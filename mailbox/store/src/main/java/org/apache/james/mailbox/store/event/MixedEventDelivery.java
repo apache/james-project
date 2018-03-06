@@ -33,7 +33,7 @@ public class MixedEventDelivery implements EventDelivery {
     }
 
     @Override
-    public void deliver(MailboxListener mailboxListener, MailboxListener.Event event) {
+    public void deliver(MailboxListener mailboxListener, MailboxListener.MailboxEvent event) {
         if (mailboxListener.getExecutionMode().equals(MailboxListener.ExecutionMode.SYNCHRONOUS)) {
             synchronousEventDelivery.deliver(mailboxListener, event);
         } else {

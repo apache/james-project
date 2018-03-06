@@ -44,7 +44,7 @@ public class MailboxOperationLoggingListener implements MailboxListener {
     }
 
     @Override
-    public void event(Event event) {
+    public void event(MailboxEvent event) {
         if (event instanceof MailboxRenamed) {
             MailboxRenamed mailboxRenamed = (MailboxRenamed) event;
             GhostMailbox.logger()

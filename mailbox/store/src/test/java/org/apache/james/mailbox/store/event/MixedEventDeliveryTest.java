@@ -55,14 +55,14 @@ public class MixedEventDeliveryTest {
     @Test
     public void deliverShouldWorkOnSynchronousListeners() throws Exception {
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
-        MailboxListener.Event event = new MailboxListener.Event(null, null) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, null) {};
         mixedEventDelivery.deliver(listener, event);
         verify(listener).event(event);
     }
 
     @Test
     public void deliverShouldEventuallyDeliverOnAsynchronousListeners() throws Exception {
-        MailboxListener.Event event = new MailboxListener.Event(null, null) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, null) {};
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
         mixedEventDelivery.deliver(listener, event);
         verify(listener, timeout(DELIVERY_DELAY * 10)).event(event);
@@ -70,7 +70,7 @@ public class MixedEventDeliveryTest {
 
     @Test(timeout = ONE_MINUTE)
     public void deliverShouldNotBlockOnAsynchronousListeners() throws Exception {
-        MailboxListener.Event event = new MailboxListener.Event(null, null) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, null) {};
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
         final CountDownLatch latch = new CountDownLatch(1);
         doAnswer(invocation -> {

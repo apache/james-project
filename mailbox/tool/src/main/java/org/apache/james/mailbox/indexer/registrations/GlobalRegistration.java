@@ -54,7 +54,7 @@ public class GlobalRegistration implements MailboxListener {
     }
 
     @Override
-    public void event(Event event) {
+    public void event(MailboxEvent event) {
         if (event instanceof MailboxDeletion) {
             isPathDeleted.put(event.getMailboxPath(), true);
         } else if (event instanceof MailboxRenamed) {

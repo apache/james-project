@@ -75,7 +75,7 @@ public class MailboxRegistrationTest {
     public void addedEventsShouldNotBeReported() {
         TreeMap<MessageUid, MessageMetaData> treeMap = new TreeMap<>();
         treeMap.put(UID, new SimpleMessageMetaData(UID, MOD_SEQ, new Flags(), SIZE, new Date(), new DefaultMessageId()));
-        MailboxListener.Event event = eventFactory.added(session, treeMap, MAILBOX, ImmutableMap.<MessageUid, MailboxMessage>of());
+        MailboxListener.MailboxEvent event = eventFactory.added(session, treeMap, MAILBOX, ImmutableMap.<MessageUid, MailboxMessage>of());
         mailboxRegistration.event(event);
         assertThat(mailboxRegistration.getImpactingEvents(UID)).isEmpty();
     }
@@ -84,14 +84,14 @@ public class MailboxRegistrationTest {
     public void expungedEventsShouldBeReported() {
         TreeMap<MessageUid, MessageMetaData> treeMap = new TreeMap<>();
         treeMap.put(UID, new SimpleMessageMetaData(UID, MOD_SEQ, new Flags(), SIZE, new Date(), new DefaultMessageId()));
-        MailboxListener.Event event = eventFactory.expunged(session, treeMap, MAILBOX);
+        MailboxListener.MailboxEvent event = eventFactory.expunged(session, treeMap, MAILBOX);
         mailboxRegistration.event(event);
         assertThat(mailboxRegistration.getImpactingEvents(UID)).containsExactly(new MessageDeletedEvent(INBOX, UID));
     }
 
     @Test
     public void flagsEventsShouldBeReported() {
-        MailboxListener.Event event = eventFactory.flagsUpdated(session,
+        MailboxListener.MailboxEvent event = eventFactory.flagsUpdated(session,
             Lists.newArrayList(UID),
             MAILBOX,
             Lists.newArrayList(UpdatedFlags.builder()

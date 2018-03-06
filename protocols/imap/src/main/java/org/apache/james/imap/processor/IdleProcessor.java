@@ -188,7 +188,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             this.responder = responder;
         }
 
-        public void event(Event event) {
+        public void event(MailboxEvent event) {
             if (event instanceof Added || event instanceof Expunged || event instanceof FlagsUpdated) {
                 unsolicitedResponses(session, responder, false);
             }

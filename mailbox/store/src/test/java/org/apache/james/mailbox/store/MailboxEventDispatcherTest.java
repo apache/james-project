@@ -49,9 +49,9 @@ import com.google.common.collect.ImmutableMap;
 public class MailboxEventDispatcherTest {
     private static final int sessionId = 10;
     private static final int MOD_SEQ = -1;
-    public static final Condition<MailboxListener.Event> INSTANCE_OF_EVENT_FLAGS_UPDATED = new Condition<MailboxListener.Event>() {
+    public static final Condition<MailboxListener.MailboxEvent> INSTANCE_OF_EVENT_FLAGS_UPDATED = new Condition<MailboxListener.MailboxEvent>() {
         @Override
-        public boolean matches(MailboxListener.Event event) {
+        public boolean matches(MailboxListener.MailboxEvent event) {
             return event instanceof MailboxListener.FlagsUpdated;
         }
     };

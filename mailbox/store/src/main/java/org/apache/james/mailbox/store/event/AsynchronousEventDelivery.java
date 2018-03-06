@@ -37,7 +37,7 @@ public class AsynchronousEventDelivery implements EventDelivery {
     }
 
     @Override
-    public void deliver(final MailboxListener mailboxListener, final MailboxListener.Event event) {
+    public void deliver(final MailboxListener mailboxListener, final MailboxListener.MailboxEvent event) {
         threadPoolExecutor.submit(() -> synchronousEventDelivery.deliver(mailboxListener, event));
     }
 

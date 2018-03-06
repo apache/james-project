@@ -116,7 +116,7 @@ public class MailboxEventAnalyserTest {
 
     @Test
     public void testShouldBeNoSizeChangeOnOtherEvent() throws Exception {
-        MailboxListener.Event event = new MailboxListener.Event(MAILBOX_SESSION, MAILBOX_PATH) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(MAILBOX_SESSION, MAILBOX_PATH) {};
       
         testee.event(event);
 

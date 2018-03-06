@@ -74,7 +74,7 @@ public class DefaultDelegatingMailboxListenerTest {
 
     @Test
     public void eventShouldWork() throws Exception {
-        MailboxListener.Event event = new MailboxListener.Event(null, MAILBOX_PATH) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, MAILBOX_PATH) {};
         defaultDelegatingMailboxListener.event(event);
         assertThat(mailboxEventCollector.getEvents()).containsExactly(event);
         assertThat(eachNodeEventCollector.getEvents()).containsExactly(event);
@@ -83,7 +83,7 @@ public class DefaultDelegatingMailboxListenerTest {
 
     @Test
     public void eventShouldOnlyTriggerMAILBOXListenerRelatedToTheEvent() throws Exception {
-        MailboxListener.Event event = new MailboxListener.Event(null, OTHER_MAILBOX_PATH) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, OTHER_MAILBOX_PATH) {};
         defaultDelegatingMailboxListener.event(event);
         assertThat(mailboxEventCollector.getEvents()).isEmpty();
         assertThat(eachNodeEventCollector.getEvents()).containsExactly(event);
@@ -99,7 +99,7 @@ public class DefaultDelegatingMailboxListenerTest {
             }
         };
         defaultDelegatingMailboxListener.event(event);
-        MailboxListener.Event secondEvent = new MailboxListener.Event(null, MAILBOX_PATH) {};
+        MailboxListener.MailboxEvent secondEvent = new MailboxListener.MailboxEvent(null, MAILBOX_PATH) {};
         defaultDelegatingMailboxListener.event(secondEvent);
         assertThat(mailboxEventCollector.getEvents()).containsExactly(event);
         assertThat(eachNodeEventCollector.getEvents()).containsOnly(event, secondEvent);
@@ -115,7 +115,7 @@ public class DefaultDelegatingMailboxListenerTest {
             }
         };
         defaultDelegatingMailboxListener.event(event);
-        MailboxListener.Event secondEvent = new MailboxListener.Event(null, OTHER_MAILBOX_PATH) {};
+        MailboxListener.MailboxEvent secondEvent = new MailboxListener.MailboxEvent(null, OTHER_MAILBOX_PATH) {};
         defaultDelegatingMailboxListener.event(secondEvent);
         assertThat(mailboxEventCollector.getEvents()).containsOnly(event, secondEvent);
         assertThat(eachNodeEventCollector.getEvents()).containsOnly(event, secondEvent);
@@ -126,7 +126,7 @@ public class DefaultDelegatingMailboxListenerTest {
     public void mailboxDeletionShouldUnregisterMAILBOXListeners() throws Exception {
         MailboxListener.MailboxDeletion event = new MailboxListener.MailboxDeletion(null, MAILBOX_PATH) {};
         defaultDelegatingMailboxListener.event(event);
-        MailboxListener.Event secondEvent = new MailboxListener.Event(null, MAILBOX_PATH) {};
+        MailboxListener.MailboxEvent secondEvent = new MailboxListener.MailboxEvent(null, MAILBOX_PATH) {};
         defaultDelegatingMailboxListener.event(secondEvent);
         assertThat(mailboxEventCollector.getEvents()).containsExactly(event);
         assertThat(eachNodeEventCollector.getEvents()).containsOnly(event, secondEvent);
@@ -137,7 +137,7 @@ public class DefaultDelegatingMailboxListenerTest {
     public void mailboxDeletionShouldNotRegisterMAILBOXListenerToOtherPaths() throws Exception {
         MailboxListener.MailboxDeletion event = new MailboxListener.MailboxDeletion(null, MAILBOX_PATH) {};
         defaultDelegatingMailboxListener.event(event);
-        MailboxListener.Event secondEvent = new MailboxListener.Event(null, OTHER_MAILBOX_PATH) {};
+        MailboxListener.MailboxEvent secondEvent = new MailboxListener.MailboxEvent(null, OTHER_MAILBOX_PATH) {};
         defaultDelegatingMailboxListener.event(secondEvent);
         assertThat(mailboxEventCollector.getEvents()).containsExactly(event);
         assertThat(eachNodeEventCollector.getEvents()).containsOnly(event, secondEvent);
@@ -147,7 +147,7 @@ public class DefaultDelegatingMailboxListenerTest {
     @Test
     public void removeListenerShouldWork() throws Exception {
         defaultDelegatingMailboxListener.removeListener(MAILBOX_PATH, mailboxEventCollector, null);
-        MailboxListener.Event event = new MailboxListener.Event(null, MAILBOX_PATH) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, MAILBOX_PATH) {};
         defaultDelegatingMailboxListener.event(event);
         assertThat(mailboxEventCollector.getEvents()).isEmpty();
         assertThat(eachNodeEventCollector.getEvents()).containsExactly(event);
@@ -157,7 +157,7 @@ public class DefaultDelegatingMailboxListenerTest {
     @Test
     public void removeListenerShouldNotRemoveAListenerFromADifferentPath() throws Exception {
         defaultDelegatingMailboxListener.removeListener(OTHER_MAILBOX_PATH, mailboxEventCollector, null);
-        MailboxListener.Event event = new MailboxListener.Event(null, MAILBOX_PATH) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, MAILBOX_PATH) {};
         defaultDelegatingMailboxListener.event(event);
         assertThat(mailboxEventCollector.getEvents()).containsExactly(event);
         assertThat(eachNodeEventCollector.getEvents()).containsExactly(event);
@@ -167,7 +167,7 @@ public class DefaultDelegatingMailboxListenerTest {
     @Test
     public void removeGlobalListenerShouldWorkForONCE() throws Exception {
         defaultDelegatingMailboxListener.removeGlobalListener(eachNodeEventCollector, null);
-        MailboxListener.Event event = new MailboxListener.Event(null, MAILBOX_PATH) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, MAILBOX_PATH) {};
         defaultDelegatingMailboxListener.event(event);
         assertThat(mailboxEventCollector.getEvents()).containsExactly(event);
         assertThat(eachNodeEventCollector.getEvents()).isEmpty();
@@ -177,7 +177,7 @@ public class DefaultDelegatingMailboxListenerTest {
     @Test
     public void removeGlobalListenerShouldWorkForEACH_NODE() throws Exception {
         defaultDelegatingMailboxListener.removeGlobalListener(onceEventCollector, null);
-        MailboxListener.Event event = new MailboxListener.Event(null, MAILBOX_PATH) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, MAILBOX_PATH) {};
         defaultDelegatingMailboxListener.event(event);
         assertThat(mailboxEventCollector.getEvents()).containsExactly(event);
         assertThat(eachNodeEventCollector.getEvents()).containsExactly(event);
@@ -187,7 +187,7 @@ public class DefaultDelegatingMailboxListenerTest {
     @Test
     public void listenersErrorsShouldNotBePropageted() throws Exception {
         MailboxSession session = new MockMailboxSession("benwa");
-        MailboxListener.Event event = new MailboxListener.Event(session, MAILBOX_PATH) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(session, MAILBOX_PATH) {};
         MailboxListener mockedListener = mock(MailboxListener.class);
         when(mockedListener.getType()).thenReturn(MailboxListener.ListenerType.ONCE);
         doThrow(new RuntimeException()).when(mockedListener).event(event);

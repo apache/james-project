@@ -82,9 +82,9 @@ public abstract class EventSerializerTest {
     public void addedEventShouldBeWellConverted() throws Exception {
         TreeMap<MessageUid, MessageMetaData> treeMap = new TreeMap<>();
         treeMap.put(UID, MESSAGE_META_DATA);
-        MailboxListener.Event event = eventFactory.added(mailboxSession, treeMap, mailbox, ImmutableMap.<MessageUid, MailboxMessage>of());
+        MailboxListener.MailboxEvent event = eventFactory.added(mailboxSession, treeMap, mailbox, ImmutableMap.<MessageUid, MailboxMessage>of());
         byte[] serializedEvent = serializer.serializeEvent(event);
-        MailboxListener.Event deserializedEvent = serializer.deSerializeEvent(serializedEvent);
+        MailboxListener.MailboxEvent deserializedEvent = serializer.deSerializeEvent(serializedEvent);
         assertThat(deserializedEvent.getMailboxPath()).isEqualTo(event.getMailboxPath());
         assertThat(deserializedEvent.getSession().getSessionId()).isEqualTo(event.getSession().getSessionId());
         assertThat(deserializedEvent).isInstanceOf(MailboxListener.Added.class);
@@ -98,9 +98,9 @@ public abstract class EventSerializerTest {
     public void expungedEventShouldBeWellConverted() throws Exception {
         TreeMap<MessageUid, MessageMetaData> treeMap = new TreeMap<>();
         treeMap.put(UID, MESSAGE_META_DATA);
-        MailboxListener.Event event = eventFactory.expunged(mailboxSession, treeMap, mailbox);
+        MailboxListener.MailboxEvent event = eventFactory.expunged(mailboxSession, treeMap, mailbox);
         byte[] serializedEvent = serializer.serializeEvent(event);
-        MailboxListener.Event deserializedEvent = serializer.deSerializeEvent(serializedEvent);
+        MailboxListener.MailboxEvent deserializedEvent = serializer.deSerializeEvent(serializedEvent);
         assertThat(deserializedEvent.getMailboxPath()).isEqualTo(event.getMailboxPath());
         assertThat(deserializedEvent.getSession().getSessionId()).isEqualTo(event.getSession().getSessionId());
         assertThat(deserializedEvent).isInstanceOf(MailboxListener.Expunged.class);
@@ -112,9 +112,9 @@ public abstract class EventSerializerTest {
 
     @Test
     public void flagsUpdatedEventShouldBeWellConverted() throws Exception {
-        MailboxListener.Event event = eventFactory.flagsUpdated(mailboxSession, Lists.newArrayList(UID), mailbox, Lists.newArrayList(UPDATED_FLAGS));
+        MailboxListener.MailboxEvent event = eventFactory.flagsUpdated(mailboxSession, Lists.newArrayList(UID), mailbox, Lists.newArrayList(UPDATED_FLAGS));
         byte[] serializedEvent = serializer.serializeEvent(event);
-        MailboxListener.Event deserializedEvent = serializer.deSerializeEvent(serializedEvent);
+        MailboxListener.MailboxEvent deserializedEvent = serializer.deSerializeEvent(serializedEvent);
         assertThat(deserializedEvent.getMailboxPath()).isEqualTo(event.getMailboxPath());
         assertThat(deserializedEvent.getSession().getSessionId()).isEqualTo(event.getSession().getSessionId());
         assertThat(deserializedEvent).isInstanceOf(MailboxListener.FlagsUpdated.class);
@@ -123,9 +123,9 @@ public abstract class EventSerializerTest {
 
     @Test
     public void mailboxAddedShouldBeWellConverted() throws Exception {
-        MailboxListener.Event event = eventFactory.mailboxAdded(mailboxSession, mailbox);
+        MailboxListener.MailboxEvent event = eventFactory.mailboxAdded(mailboxSession, mailbox);
         byte[] serializedEvent = serializer.serializeEvent(event);
-        MailboxListener.Event deserializedEvent = serializer.deSerializeEvent(serializedEvent);
+        MailboxListener.MailboxEvent deserializedEvent = serializer.deSerializeEvent(serializedEvent);
         assertThat(deserializedEvent.getMailboxPath()).isEqualTo(event.getMailboxPath());
         assertThat(deserializedEvent.getSession().getSessionId()).isEqualTo(event.getSession().getSessionId());
         assertThat(deserializedEvent).isInstanceOf(MailboxListener.MailboxAdded.class);
@@ -133,9 +133,9 @@ public abstract class EventSerializerTest {
 
     @Test
     public void mailboxDeletionShouldBeWellConverted() throws Exception {
-        MailboxListener.Event event = eventFactory.mailboxDeleted(mailboxSession, mailbox);
+        MailboxListener.MailboxEvent event = eventFactory.mailboxDeleted(mailboxSession, mailbox);
         byte[] serializedEvent = serializer.serializeEvent(event);
-        MailboxListener.Event deserializedEvent = serializer.deSerializeEvent(serializedEvent);
+        MailboxListener.MailboxEvent deserializedEvent = serializer.deSerializeEvent(serializedEvent);
         assertThat(deserializedEvent.getMailboxPath()).isEqualTo(event.getMailboxPath());
         assertThat(deserializedEvent.getSession().getSessionId()).isEqualTo(event.getSession().getSessionId());
         assertThat(deserializedEvent).isInstanceOf(MailboxListener.MailboxDeletion.class);
@@ -143,9 +143,9 @@ public abstract class EventSerializerTest {
 
     @Test
     public void mailboxRenamedShouldBeWellConverted() throws Exception {
-        MailboxListener.Event event = eventFactory.mailboxRenamed(mailboxSession, FROM, mailbox);
+        MailboxListener.MailboxEvent event = eventFactory.mailboxRenamed(mailboxSession, FROM, mailbox);
         byte[] serializedEvent = serializer.serializeEvent(event);
-        MailboxListener.Event deserializedEvent = serializer.deSerializeEvent(serializedEvent);
+        MailboxListener.MailboxEvent deserializedEvent = serializer.deSerializeEvent(serializedEvent);
         assertThat(deserializedEvent.getMailboxPath()).isEqualTo(event.getMailboxPath());
         assertThat(deserializedEvent.getSession().getSessionId()).isEqualTo(event.getSession().getSessionId());
         assertThat(deserializedEvent).isInstanceOf(MailboxListener.MailboxRenamed.class);

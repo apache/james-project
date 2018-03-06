@@ -55,22 +55,22 @@ public interface MailboxListener {
      * @param event
      *            not null
      */
-    void event(Event event);
+    void event(MailboxEvent event);
 
     /**
      * A mailbox event.
      */
-    abstract class Event implements Serializable {
+    abstract class MailboxEvent implements Serializable {
         private final MailboxSession session;
         private final MailboxPath path;
 
-        public Event(MailboxSession session, MailboxPath path) {
+        public MailboxEvent(MailboxSession session, MailboxPath path) {
             this.session = session;
             this.path = path;
         }
 
         /**
-         * Gets the {@link MailboxSession} in which's context the {@link Event}
+         * Gets the {@link MailboxSession} in which's context the {@link MailboxEvent}
          * happened
          * 
          * @return session
@@ -92,7 +92,7 @@ public interface MailboxListener {
     /**
      * Indicates that mailbox has been deleted.
      */
-    class MailboxDeletion extends Event {
+    class MailboxDeletion extends MailboxEvent {
 
         /**
          * 
@@ -107,7 +107,7 @@ public interface MailboxListener {
     /**
      * Indicates that a mailbox has been Added.
      */
-    class MailboxAdded extends Event {
+    class MailboxAdded extends MailboxEvent {
         /**
          * 
          */
@@ -121,7 +121,7 @@ public interface MailboxListener {
     /**
      * Indicates that a mailbox has been renamed.
      */
-    abstract class MailboxRenamed extends Event {
+    abstract class MailboxRenamed extends MailboxEvent {
         /**
          * 
          */
@@ -143,7 +143,7 @@ public interface MailboxListener {
     /**
      * A mailbox event related to updated ACL
      */
-    class MailboxACLUpdated extends Event {
+    class MailboxACLUpdated extends MailboxEvent {
         private final ACLDiff aclDiff;
         private static final long serialVersionUID = 1L;
 
@@ -161,7 +161,7 @@ public interface MailboxListener {
     /**
      * A mailbox event related to a message.
      */
-    abstract class MessageEvent extends Event {
+    abstract class MessageEvent extends MailboxEvent {
 
         /**
          * 

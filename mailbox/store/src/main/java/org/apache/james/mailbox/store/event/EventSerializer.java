@@ -23,7 +23,7 @@ import org.apache.james.mailbox.MailboxListener;
 
 public interface EventSerializer {
 
-    byte[] serializeEvent(MailboxListener.Event event) throws Exception;
+    byte[] serializeEvent(MailboxListener.MailboxEvent event) throws Exception;
 
-    MailboxListener.Event deSerializeEvent(byte[] serializedEvent) throws Exception;
+    MailboxListener.MailboxEvent deSerializeEvent(byte[] serializedEvent) throws Exception;
 }

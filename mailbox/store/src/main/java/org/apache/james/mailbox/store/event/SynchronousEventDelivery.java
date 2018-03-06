@@ -28,7 +28,7 @@ public class SynchronousEventDelivery implements EventDelivery {
     private static final Logger LOGGER = LoggerFactory.getLogger(SynchronousEventDelivery.class);
 
     @Override
-    public void deliver(MailboxListener mailboxListener, MailboxListener.Event event) {
+    public void deliver(MailboxListener mailboxListener, MailboxListener.MailboxEvent event) {
         try {
             mailboxListener.event(event);
         } catch (Throwable throwable) {

@@ -48,7 +48,7 @@ public class MailboxAnnotationListener implements MailboxListener {
     }
 
     @Override
-    public void event(Event event) {
+    public void event(MailboxEvent event) {
         if (event instanceof EventFactory.MailboxDeletionImpl) {
             try {
                 AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(event.getSession());

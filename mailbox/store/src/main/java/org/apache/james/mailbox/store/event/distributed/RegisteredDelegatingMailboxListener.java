@@ -103,7 +103,7 @@ public class RegisteredDelegatingMailboxListener implements DistributedDelegatin
     }
 
     @Override
-    public void event(Event event) {
+    public void event(MailboxEvent event) {
         try {
             deliverEventToOnceGlobalListeners(event);
             deliverToMailboxPathRegisteredListeners(event);
@@ -115,14 +115,14 @@ public class RegisteredDelegatingMailboxListener implements DistributedDelegatin
 
     public void receiveSerializedEvent(byte[] serializedEvent) {
         try {
-            Event event = eventSerializer.deSerializeEvent(serializedEvent);
+            MailboxEvent event = eventSerializer.deSerializeEvent(serializedEvent);
             deliverToMailboxPathRegisteredListeners(event);
         } catch (Exception e) {
             LOGGER.error("Error while receiving serialized event", e);
         }
     }
 
-    private void deliverToMailboxPathRegisteredListeners(Event event) throws MailboxException {
+    private void deliverToMailboxPathRegisteredListeners(MailboxEvent event) throws MailboxException {
         Collection<MailboxListener> listenerSnapshot = mailboxListenerRegistry.getLocalMailboxListeners(event.getMailboxPath());
         if (event instanceof MailboxDeletion && listenerSnapshot.size() > 0) {
             mailboxListenerRegistry.deleteRegistryFor(event.getMailboxPath());
@@ -137,7 +137,7 @@ public class RegisteredDelegatingMailboxListener implements DistributedDelegatin
         }
     }
 
-    private void deliverEventToOnceGlobalListeners(Event event) {
+    private void deliverEventToOnceGlobalListeners(MailboxEvent event) {
         for (MailboxListener mailboxListener : mailboxListenerRegistry.getGlobalListeners()) {
             if (mailboxListener.getType() == ListenerType.ONCE) {
                 eventDelivery.deliver(mailboxListener, event);
@@ -145,7 +145,7 @@ public class RegisteredDelegatingMailboxListener implements DistributedDelegatin
         }
     }
 
-    private void sendToRemoteJames(Event event) {
+    private void sendToRemoteJames(MailboxEvent event) {
         Set<Topic> topics = mailboxPathRegister.getTopics(event.getMailboxPath());
         topics.remove(mailboxPathRegister.getLocalTopic());
         if (topics.size() > 0) {
@@ -153,7 +153,7 @@ public class RegisteredDelegatingMailboxListener implements DistributedDelegatin
         }
     }
 
-    private void sendEventToRemotesJamesByTopic(Event event, Set<Topic> topics) {
+    private void sendEventToRemotesJamesByTopic(MailboxEvent event, Set<Topic> topics) {
         byte[] serializedEvent;
         try {
             serializedEvent = eventSerializer.serializeEvent(event);

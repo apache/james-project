@@ -97,7 +97,7 @@ public class BroadcastDelegatingMailboxListener implements DistributedDelegating
     }
 
     @Override
-    public void event(Event event) {
+    public void event(MailboxEvent event) {
         deliverEventToGlobalListeners(event, ListenerType.ONCE);
         try {
             publisher.publish(globalTopic, eventSerializer.serializeEvent(event));
@@ -108,7 +108,7 @@ public class BroadcastDelegatingMailboxListener implements DistributedDelegating
 
     public void receiveSerializedEvent(byte[] serializedEvent) {
         try {
-            Event event = eventSerializer.deSerializeEvent(serializedEvent);
+            MailboxEvent event = eventSerializer.deSerializeEvent(serializedEvent);
             deliverToMailboxPathRegisteredListeners(event);
             deliverEventToGlobalListeners(event, ListenerType.EACH_NODE);
         } catch (Exception e) {
@@ -116,7 +116,7 @@ public class BroadcastDelegatingMailboxListener implements DistributedDelegating
         }
     }
 
-    private void deliverToMailboxPathRegisteredListeners(Event event) {
+    private void deliverToMailboxPathRegisteredListeners(MailboxEvent event) {
         Collection<MailboxListener> listenerSnapshot = mailboxListenerRegistry.getLocalMailboxListeners(event.getMailboxPath());
         if (event instanceof MailboxDeletion) {
             mailboxListenerRegistry.deleteRegistryFor(event.getMailboxPath());
@@ -129,7 +129,7 @@ public class BroadcastDelegatingMailboxListener implements DistributedDelegating
         }
     }
 
-    private void deliverEventToGlobalListeners(Event event, ListenerType type) {
+    private void deliverEventToGlobalListeners(MailboxEvent event, ListenerType type) {
         for (MailboxListener mailboxListener : mailboxListenerRegistry.getGlobalListeners()) {
             if (mailboxListener.getType() == type) {
                 eventDelivery.deliver(mailboxListener, event);
