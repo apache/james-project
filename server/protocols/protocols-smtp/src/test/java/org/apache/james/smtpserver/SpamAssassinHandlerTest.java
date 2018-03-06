@@ -21,7 +21,6 @@ package org.apache.james.smtpserver;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.io.IOException;
 import java.util.HashMap;
 
 import javax.mail.MessagingException;
@@ -109,7 +108,7 @@ public class SpamAssassinHandlerTest {
     }
 
     @Test
-    public void testNonSpam() throws IOException, MessagingException {
+    public void testNonSpam() throws Exception {
         SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessage("test")));
 
         SpamAssassinHandler handler = new SpamAssassinHandler();
@@ -126,7 +125,7 @@ public class SpamAssassinHandlerTest {
     }
 
     @Test
-    public void testSpam() throws IOException, MessagingException {
+    public void testSpam() throws Exception {
         SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessage(MockSpamd.GTUBE)));
 
         SpamAssassinHandler handler = new SpamAssassinHandler();
@@ -142,7 +141,7 @@ public class SpamAssassinHandlerTest {
     }
 
     @Test
-    public void testSpamReject() throws IOException, MessagingException {
+    public void testSpamReject() throws Exception {
         SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessage(MockSpamd.GTUBE)));
 
         SpamAssassinHandler handler = new SpamAssassinHandler();
