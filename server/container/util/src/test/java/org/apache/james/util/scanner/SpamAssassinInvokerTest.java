@@ -70,7 +70,7 @@ public class SpamAssassinInvokerTest {
 
     @Test
     public void scanMailShouldMarkHasSpamWhenKnownHasSpam() throws Exception {
-        spamAssassin.train();
+        spamAssassin.train("user");
         
         MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
                 ClassLoader.getSystemResourceAsStream("spamassassin_db/spam/spam1"));
@@ -91,7 +91,7 @@ public class SpamAssassinInvokerTest {
     }
 
     @Test
-    public void scanMailShouldMarkHasSpamWhenMessageAlreadyLearnedAsSpam() throws Exception {
+    public void scanMailShouldMarkAsSpamWhenMessageAlreadyLearnedAsSpam() throws Exception {
         MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
                 ClassLoader.getSystemResourceAsStream("spamassassin_db/spam/spam1"));
 

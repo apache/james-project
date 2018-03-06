@@ -23,6 +23,11 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.apache.james.util.Host;
+import org.apache.james.util.scanner.SpamAssassinInvoker;
+
+import com.github.fge.lambdas.Throwing;
+
 public class SpamAssassin {
 
     private final SpamAssassinConfiguration spamAssassinConfiguration;
@@ -34,7 +39,10 @@ public class SpamAssassin {
 
     public void learnSpam(List<InputStream> messages) {
         if (spamAssassinConfiguration.isEnable()) {
-            // Will call SpamAssassinInvoker
+            Host host = spamAssassinConfiguration.getHost().get();
+            SpamAssassinInvoker invoker = new SpamAssassinInvoker(host.getHostName(), host.getPort());
+            messages
+                .forEach(Throwing.consumer(message -> invoker.learnAsSpam(message)));
         }
     }
 }

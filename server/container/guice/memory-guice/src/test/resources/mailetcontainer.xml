@@ -56,6 +56,14 @@
             </mailet>
             <mailet match="All" class="RecipientRewriteTable" />
             <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet"/>
+            <mailet match="RecipientIsLocal" class="SpamAssassin">
+                <spamdHost>localhost</spamdHost>
+                <spamdPort>783</spamdPort>
+            </mailet>
+            <mailet match="IsMarkedAsSpam" class="ToRecipientFolder">
+                <folder>Spam</folder>
+                <consume>true</consume>
+            </mailet>
             <mailet match="RecipientIsLocal" class="LocalDelivery"/>
             <mailet match="HostIsLocal" class="ToProcessor">
                 <processor>local-address-error</processor>

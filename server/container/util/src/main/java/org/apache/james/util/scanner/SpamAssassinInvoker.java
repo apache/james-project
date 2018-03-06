@@ -33,6 +33,8 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -42,6 +44,7 @@ import com.google.common.collect.Lists;
  * href="SpamAssassin.org">SpamAssassin.org</a> for info on configuration.
  */
 public class SpamAssassinInvoker {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SpamAssassinInvoker.class);
 
     /** The mail attribute under which the status get stored */
     public static final String STATUS_MAIL_ATTRIBUTE_NAME = "org.apache.james.spamassassin.status";
@@ -88,6 +91,8 @@ public class SpamAssassinInvoker {
 
             writer.write("CHECK SPAMC/1.2");
             writer.write(CRLF);
+            writer.write("User: alice@angels.org");
+            writer.write(CRLF);
             writer.write(CRLF);
             writer.flush();
 
@@ -131,6 +136,7 @@ public class SpamAssassinInvoker {
         try {
             return Boolean.valueOf(string);
         } catch (Exception e) {
+            LOGGER.warn("Fail parsing spamassassin answer: " + string);
             return false;
         }
     }
@@ -153,7 +159,12 @@ public class SpamAssassinInvoker {
                 PrintWriter writer = new PrintWriter(out);
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
+            byte[] byteArray = IOUtils.toByteArray(message);
             writer.write("TELL SPAMC/1.2");
+            writer.write(CRLF);
+            writer.write("Content-length: " + byteArray.length);
+            writer.write(CRLF);
+            writer.write("User: alice@angels.org");
             writer.write(CRLF);
             writer.write("Message-class: spam");
             writer.write(CRLF);
@@ -162,14 +173,12 @@ public class SpamAssassinInvoker {
             writer.write(CRLF);
             writer.flush();
 
-            IOUtils.copy(message, out);
+            out.write(byteArray);
             out.flush();
             socket.shutdownOutput();
 
             return in.lines()
-                .filter(this::hasBeenSet)
-                .findAny()
-                .isPresent();
+                .anyMatch(this::hasBeenSet);
         } catch (UnknownHostException e) {
             throw new MessagingException("Error communicating with spamd. Unknown host: " + spamdHost);
         } catch (IOException e) {
@@ -178,6 +187,6 @@ public class SpamAssassinInvoker {
     }
 
     private boolean hasBeenSet(String line) {
-        return line.startsWith("DidSet");
+        return line.startsWith("DidSet: local");
     }
 }

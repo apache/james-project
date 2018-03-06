@@ -49,6 +49,7 @@ import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreAttachmentManager;
 import org.apache.james.mailbox.store.StoreBlobManager;
+import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
@@ -96,6 +97,7 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(Authenticator.class).to(UserRepositoryAuthenticator.class);
         bind(Authorizator.class).to(UserRepositoryAuthorizator.class);
         bind(MailboxManager.class).to(InMemoryMailboxManager.class);
+        bind(StoreMailboxManager.class).to(InMemoryMailboxManager.class);
         bind(MessageIdManager.class).to(StoreMessageIdManager.class);
         bind(AttachmentManager.class).to(StoreAttachmentManager.class);
 
