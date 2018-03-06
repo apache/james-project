@@ -72,7 +72,6 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
-import org.apache.james.mailbox.store.event.SpamEventListener;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
@@ -179,8 +178,7 @@ public class CassandraMailboxModule extends AbstractModule {
     @Named(Names.MAILBOXMANAGER_NAME)
     @Singleton
     public MailboxManager provideMailboxManager(CassandraMailboxManager cassandraMailboxManager, ListeningCurrentQuotaUpdater quotaUpdater,
-                                                QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, BatchSizes batchSizes,
-                                                SpamEventListener spamEventListener) throws MailboxException {
+                                                QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, BatchSizes batchSizes) throws MailboxException {
         cassandraMailboxManager.setQuotaUpdater(quotaUpdater);
         cassandraMailboxManager.setQuotaManager(quotaManager);
         cassandraMailboxManager.setQuotaRootResolver(quotaRootResolver);
