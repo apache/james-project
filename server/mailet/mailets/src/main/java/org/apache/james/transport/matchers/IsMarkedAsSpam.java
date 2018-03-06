@@ -26,7 +26,7 @@ import java.util.Locale;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.util.scanner.SpamAssassinInvoker;
+import org.apache.james.util.scanner.SpamAssassinResult;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
@@ -66,7 +66,7 @@ public class IsMarkedAsSpam extends GenericMatcher {
 
     @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
-        Serializable attribute = mail.getAttribute(SpamAssassinInvoker.STATUS_MAIL_ATTRIBUTE_NAME);
+        Serializable attribute = mail.getAttribute(SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME);
         if (isMarkedAsSpam(attribute)) {
             return mail.getRecipients();
         }

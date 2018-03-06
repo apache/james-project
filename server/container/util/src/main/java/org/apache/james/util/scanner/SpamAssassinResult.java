@@ -24,28 +24,37 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 public class SpamAssassinResult {
+    /** The mail attribute under which the status get stored */
+    public static final String STATUS_MAIL_ATTRIBUTE_NAME = "org.apache.james.spamassassin.status";
 
-    private static final String NO_RESULT = "?";
+    /** The mail attribute under which the flag get stored */
+    public static final String FLAG_MAIL_ATTRIBUTE_NAME = "org.apache.james.spamassassin.flag";
+
+    public static final String NO_RESULT = "?";
 
     public static SpamAssassinResult empty() {
-        return new Builder()
+        return asHam()
                 .hits(NO_RESULT)
                 .requiredHits(NO_RESULT)
                 .build();
     }
 
-    public static Builder builder() {
-        return new Builder();
+    public static Builder asSpam() {
+        return new Builder(true);
+    }
+
+    public static Builder asHam() {
+        return new Builder(false);
     }
 
     public static class Builder {
         
         private String hits;
         private String requiredHits;
-        private ImmutableMap.Builder<String, String> headersAsAttribute;
+        private final boolean isSpam;
 
-        private Builder() {
-            headersAsAttribute = ImmutableMap.builder();
+        private Builder(boolean isSpam) {
+            this.isSpam = isSpam;
         }
 
         public Builder hits(String hits) {
@@ -58,14 +67,19 @@ public class SpamAssassinResult {
             return this;
         }
 
-        public Builder putHeader(String name, String value) {
-            this.headersAsAttribute.put(name, value);
-            return this;
-        }
-
         public SpamAssassinResult build() {
             Preconditions.checkNotNull(hits);
             Preconditions.checkNotNull(requiredHits);
+
+            ImmutableMap.Builder<String, String> headersAsAttribute = ImmutableMap.builder();
+            if (isSpam) {
+                headersAsAttribute.put(FLAG_MAIL_ATTRIBUTE_NAME, "YES");
+                headersAsAttribute.put(STATUS_MAIL_ATTRIBUTE_NAME, "Yes, hits=" + hits + " required=" + requiredHits);
+            } else {
+                headersAsAttribute.put(FLAG_MAIL_ATTRIBUTE_NAME, "NO");
+                headersAsAttribute.put(STATUS_MAIL_ATTRIBUTE_NAME, "No, hits=" + hits + " required=" + requiredHits);
+            }
+
             return new SpamAssassinResult(hits, requiredHits, headersAsAttribute.build());
         }
     }

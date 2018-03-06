@@ -47,12 +47,6 @@ import com.google.common.collect.Lists;
 public class SpamAssassinInvoker {
     private static final Logger LOGGER = LoggerFactory.getLogger(SpamAssassinInvoker.class);
 
-    /** The mail attribute under which the status get stored */
-    public static final String STATUS_MAIL_ATTRIBUTE_NAME = "org.apache.james.spamassassin.status";
-
-    /** The mail attribute under which the flag get stored */
-    public static final String FLAG_MAIL_ATTRIBUTE_NAME = "org.apache.james.spamassassin.flag";
-
     private static final int SPAM_INDEX = 1;
     private static final int HITS_INDEX = 3;
     private static final int REQUIRED_HITS_INDEX = 5;
@@ -130,21 +124,19 @@ public class SpamAssassinInvoker {
 
     private SpamAssassinResult processSpam(String line) {
         List<String> elements = Lists.newArrayList(Splitter.on(' ').split(line));
-        boolean spam = spam(elements.get(SPAM_INDEX));
-        String hits = elements.get(HITS_INDEX);
-        String required = elements.get(REQUIRED_HITS_INDEX);
-        SpamAssassinResult.Builder builder = SpamAssassinResult.builder()
-            .hits(hits)
-            .requiredHits(required);
 
-        if (spam) {
-            builder.putHeader(FLAG_MAIL_ATTRIBUTE_NAME, "YES");
-            builder.putHeader(STATUS_MAIL_ATTRIBUTE_NAME, "Yes, hits=" + hits + " required=" + required);
+        return builderFrom(elements)
+            .hits(elements.get(HITS_INDEX))
+            .requiredHits(elements.get(REQUIRED_HITS_INDEX))
+            .build();
+    }
+
+    private SpamAssassinResult.Builder builderFrom(List<String> elements) {
+        if (spam(elements.get(SPAM_INDEX))) {
+            return SpamAssassinResult.asSpam();
         } else {
-            builder.putHeader(FLAG_MAIL_ATTRIBUTE_NAME, "NO");
-            builder.putHeader(STATUS_MAIL_ATTRIBUTE_NAME, "No, hits=" + hits + " required=" + required);
+            return SpamAssassinResult.asHam();
         }
-        return builder.build();
     }
 
     private boolean spam(String string) {

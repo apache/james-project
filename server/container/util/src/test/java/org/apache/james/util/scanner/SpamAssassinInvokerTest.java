@@ -34,7 +34,6 @@ public class SpamAssassinInvokerTest {
     private SpamAssassin spamAssassin;
     private SpamAssassinInvoker testee;
 
-
     @BeforeEach
     public void setup(SpamAssassin spamAssassin) throws Exception {
         this.spamAssassin = spamAssassin;
@@ -47,8 +46,7 @@ public class SpamAssassinInvokerTest {
                 ClassLoader.getSystemResourceAsStream("eml/spam.eml"));
         SpamAssassinResult result = testee.scanMail(mimeMessage, "any@james");
 
-        // The result is varying from 0.4 to 0.0
-        assertThat(result.getHits()).startsWith("0.");
+        assertThat(result.getHits()).isNotEqualTo(SpamAssassinResult.NO_RESULT);
     }
 
     @Test
@@ -70,7 +68,7 @@ public class SpamAssassinInvokerTest {
     }
 
     @Test
-    public void scanMailShouldMarkHasSpamWhenKnownHasSpam() throws Exception {
+    public void scanMailShouldMarkAsSpamWhenKnownAsSpam() throws Exception {
         spamAssassin.train("user");
         
         MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
@@ -78,13 +76,13 @@ public class SpamAssassinInvokerTest {
 
         SpamAssassinResult result = testee.scanMail(mimeMessage, "any@james");
 
-        assertThat(result.getHeadersAsAttribute().get(SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME)).isEqualTo("YES");
+        assertThat(result.getHeadersAsAttribute().get(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME)).isEqualTo("YES");
     }
 
     @Test
     public void learnAsSpamShouldReturnTrueWhenLearningWorks() throws Exception {
         MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
-                ClassLoader.getSystemResourceAsStream("spamassassin_db/spam/spam1"));
+                ClassLoader.getSystemResourceAsStream("spamassassin_db/spam/spam2"));
 
         boolean result = testee.learnAsSpam(mimeMessage.getInputStream(), "any@james");
 
@@ -100,6 +98,6 @@ public class SpamAssassinInvokerTest {
 
         SpamAssassinResult result = testee.scanMail(mimeMessage, "any@james");
 
-        assertThat(result.getHeadersAsAttribute().get(SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME)).isEqualTo("YES");
+        assertThat(result.getHeadersAsAttribute().get(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME)).isEqualTo("YES");
     }
 }

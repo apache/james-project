@@ -40,7 +40,7 @@ import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.SwarmGenericContainer;
-import org.apache.james.util.scanner.SpamAssassinInvoker;
+import org.apache.james.util.scanner.SpamAssassinResult;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
@@ -82,8 +82,8 @@ public class SpamAssassinTest {
                         .matcher(All.class)
                         .mailet(MailAttributesToMimeHeaders.class)
                         .addProperty("simplemapping",
-                            SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME + ";" + SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME + "," +
-                            SpamAssassinInvoker.STATUS_MAIL_ATTRIBUTE_NAME + ";" + SpamAssassinInvoker.STATUS_MAIL_ATTRIBUTE_NAME))
+                            SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME + ";" + SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME + "," +
+                                SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME + ";" + SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME))
                     .addMailetsFrom(CommonProcessors.deliverOnlyTransport()));
 
         jamesServer = TemporaryJamesServer.builder()
@@ -115,8 +115,8 @@ public class SpamAssassinTest {
 
         assertThat(messageReader.readFirstMessageHeaders())
             .contains(
-                SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME,
-                SpamAssassinInvoker.STATUS_MAIL_ATTRIBUTE_NAME);
+                SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME,
+                SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME);
     }
 
     @Test
@@ -131,8 +131,8 @@ public class SpamAssassinTest {
             .awaitMessage(awaitAtMostOneMinute);
 
         String receivedHeaders = messageReader.readFirstMessageHeaders();
-        assertThat(receivedHeaders).contains(SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME + ": YES");
-        assertThat(receivedHeaders).contains(SpamAssassinInvoker.STATUS_MAIL_ATTRIBUTE_NAME + ": Yes");
+        assertThat(receivedHeaders).contains(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME + ": YES");
+        assertThat(receivedHeaders).contains(SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME + ": Yes");
     }
 
     @Test
@@ -147,8 +147,8 @@ public class SpamAssassinTest {
             .awaitMessage(awaitAtMostOneMinute);
 
         String receivedHeaders = messageReader.readFirstMessageHeaders();
-        assertThat(receivedHeaders).contains(SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME + ": NO");
-        assertThat(receivedHeaders).contains(SpamAssassinInvoker.STATUS_MAIL_ATTRIBUTE_NAME + ": No");
+        assertThat(receivedHeaders).contains(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME + ": NO");
+        assertThat(receivedHeaders).contains(SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME + ": No");
     }
 
     private FakeMail.Builder mailWithContent(String textContent) throws MessagingException {

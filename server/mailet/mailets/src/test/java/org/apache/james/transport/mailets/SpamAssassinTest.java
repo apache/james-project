@@ -27,7 +27,7 @@ import javax.mail.MessagingException;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.util.Port;
-import org.apache.james.util.scanner.SpamAssassinInvoker;
+import org.apache.james.util.scanner.SpamAssassinResult;
 import org.apache.james.utils.MockSpamd;
 import org.apache.james.utils.MockSpamdTestRule;
 import org.apache.mailet.Mail;
@@ -156,7 +156,7 @@ public class SpamAssassinTest {
         mailet.service(mail);
 
         assertThat(mail.getAttributeNames())
-            .containsOnly(SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME, SpamAssassinInvoker.STATUS_MAIL_ATTRIBUTE_NAME);
+            .containsOnly(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME, SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME);
     }
 
     @Test
@@ -179,7 +179,7 @@ public class SpamAssassinTest {
 
         mailet.service(mail);
 
-        assertThat(mail.getAttribute(SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME)).isEqualTo("NO");
+        assertThat(mail.getAttribute(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME)).isEqualTo("NO");
     }
 
     @Test
@@ -202,7 +202,7 @@ public class SpamAssassinTest {
 
         mailet.service(mail);
 
-        assertThat(mail.getAttribute(SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME)).isEqualTo("YES");
+        assertThat(mail.getAttribute(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME)).isEqualTo("YES");
     }
 
     @Test
