@@ -320,6 +320,72 @@ public interface SpamAssassinContract {
     }
 
     @Test
+    default void movingAMailToTrashShouldNotImpactSpamassassinLearning(JamesWithSpamAssassin james) throws Exception {
+        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
+        ConditionFactory calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
+
+        james.getSpamAssassinExtension().getSpamAssassin().train(ALICE);
+        AccessToken aliceAccessToken = accessTokenFor(james.getJmapServer(), ALICE, ALICE_PASSWORD);
+        AccessToken bobAccessToken = accessTokenFor(james.getJmapServer(), BOB, BOB_PASSWORD);
+
+        // Bob is sending a message to Alice
+        given()
+            .header("Authorization", bobAccessToken.serialize())
+            .body(setMessageCreate(bobAccessToken))
+            .when()
+            .post("/jmap");
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> areMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
+
+        // Alice is moving this message to Spam -> learning in SpamAssassin
+        List<String> messageIds = with()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + getInboxId(aliceAccessToken) + "\"]}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messageList"))
+            .body(ARGUMENTS + ".messageIds", hasSize(1))
+            .extract()
+            .path(ARGUMENTS + ".messageIds");
+
+        messageIds
+            .forEach(messageId -> given()
+                .header("Authorization", aliceAccessToken.serialize())
+                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"mailboxIds\": [\"" + getSpamId(aliceAccessToken) + "\"] } } }, \"#0\"]]", messageId))
+            .when()
+                .post("/jmap")
+            .then()
+                .statusCode(200)
+                .body(NAME, equalTo("messagesSet"))
+                .body(ARGUMENTS + ".updated", hasSize(1)));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> areMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
+
+        // Alice is moving this message to trash
+        messageIds
+            .forEach(messageId -> given()
+                .header("Authorization", aliceAccessToken.serialize())
+                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"mailboxIds\": [\"" + getTrashId(aliceAccessToken) + "\"] } } }, \"#0\"]]", messageId))
+            .when()
+                .post("/jmap")
+            .then()
+                .statusCode(200)
+                .body(NAME, equalTo("messagesSet"))
+                .body(ARGUMENTS + ".updated", hasSize(1)));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> areMessagesFoundInMailbox(aliceAccessToken, getTrashId(aliceAccessToken), 1));
+
+        // Bob is sending again the same message to Alice
+        given()
+            .header("Authorization", bobAccessToken.serialize())
+            .body(setMessageCreate(bobAccessToken))
+        .when()
+            .post("/jmap");
+
+        // This message is delivered in Alice Spam mailbox (she now must have 1 messages in her Spam mailbox)
+        calmlyAwait.atMost(10, TimeUnit.SECONDS).until(() -> areMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
+    }
+
+    @Test
     default void spamAssassinShouldForgetMessagesMovedOutOfSpamFolderUsingIMAP(JamesWithSpamAssassin james) throws Exception {
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         ConditionFactory calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
@@ -576,5 +642,8 @@ public interface SpamAssassinContract {
 
     default String getSpamId(AccessToken accessToken) {
         return getMailboxId(accessToken, Role.SPAM);
+    }
+    default String getTrashId(AccessToken accessToken) {
+        return getMailboxId(accessToken, Role.TRASH);
     }
 }

@@ -60,6 +60,7 @@ public class SpamAssassinListenerTest {
     private MailboxId mailboxId2;
     private MailboxId spamMailboxId;
     private MailboxId spamCapitalMailboxId;
+    private MailboxId trashMailboxId;
     private MailboxMapper mailboxMapper;
 
     @Before
@@ -71,6 +72,7 @@ public class SpamAssassinListenerTest {
         mailboxId2 = mailboxMapper.save(new SimpleMailbox(MailboxPath.forUser(USER, "mailbox2"), UID_VALIDITY));
         spamMailboxId = mailboxMapper.save(new SimpleMailbox(MailboxPath.forUser(USER, "Spam"), UID_VALIDITY));
         spamCapitalMailboxId = mailboxMapper.save(new SimpleMailbox(MailboxPath.forUser(USER, "SPAM"), UID_VALIDITY));
+        trashMailboxId = mailboxMapper.save(new SimpleMailbox(MailboxPath.forUser(USER, "Trash"), UID_VALIDITY));
 
         listener = new SpamAssassinListener(spamAssassin, mapperFactory);
     }
@@ -186,6 +188,21 @@ public class SpamAssassinListenerTest {
             .build();
 
         assertThat(listener.isMessageMovedOutOfSpamMailbox(messageMoveEvent)).isTrue();
+    }
+
+    @Test
+    public void isMessageMovedOutOfSpamMailboxShouldReturnFalseWhenMessageMovedToTrash() {
+        MessageMoveEvent messageMoveEvent = MessageMoveEvent.builder()
+            .session(MAILBOX_SESSION)
+            .messageMoves(MessageMoves.builder()
+                .previousMailboxIds(spamMailboxId)
+                .targetMailboxIds(trashMailboxId)
+                .build())
+            .messages(ImmutableMap.of(MessageUid.of(45),
+                createMessage(mailboxId2)))
+            .build();
+
+        assertThat(listener.isMessageMovedOutOfSpamMailbox(messageMoveEvent)).isFalse();
     }
 
     @Test

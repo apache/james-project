@@ -89,8 +89,7 @@ public class SpamAssassinListener implements SpamEventListener {
     @VisibleForTesting
     boolean isMessageMovedToSpamMailbox(MessageMoveEvent event) {
         try {
-            MailboxPath spamMailboxPath = MailboxPath.forUser(event.getSession().getUser().getUserName(), Role.SPAM.getDefaultMailbox());
-            MailboxId spamMailboxId = mapperFactory.getMailboxMapper(event.getSession()).findMailboxByPath(spamMailboxPath).getMailboxId();
+            MailboxId spamMailboxId = getMailboxId(event, Role.SPAM);
 
             return event.getMessageMoves().addedMailboxIds().contains(spamMailboxId);
         } catch (MailboxException e) {
@@ -102,13 +101,23 @@ public class SpamAssassinListener implements SpamEventListener {
     @VisibleForTesting
     boolean isMessageMovedOutOfSpamMailbox(MessageMoveEvent event) {
         try {
-            MailboxPath spamMailboxPath = MailboxPath.forUser(event.getSession().getUser().getUserName(), Role.SPAM.getDefaultMailbox());
-            MailboxId spamMailboxId = mapperFactory.getMailboxMapper(event.getSession()).findMailboxByPath(spamMailboxPath).getMailboxId();
+            MailboxId spamMailboxId = getMailboxId(event, Role.SPAM);
+            MailboxId trashMailboxId = getMailboxId(event, Role.TRASH);
 
-            return event.getMessageMoves().removedMailboxIds().contains(spamMailboxId);
+            return event.getMessageMoves().removedMailboxIds().contains(spamMailboxId)
+                && !event.getMessageMoves().addedMailboxIds().contains(trashMailboxId);
         } catch (MailboxException e) {
             LOGGER.warn("Could not resolve Spam mailbox", e);
             return false;
         }
+    }
+
+    private MailboxId getMailboxId(MessageMoveEvent event, Role role) throws MailboxException {
+        String userName = event.getSession().getUser().getUserName();
+        MailboxPath mailboxPath = MailboxPath.forUser(userName, role.getDefaultMailbox());
+
+        return mapperFactory.getMailboxMapper(event.getSession())
+            .findMailboxByPath(mailboxPath)
+            .getMailboxId();
     }
 }
