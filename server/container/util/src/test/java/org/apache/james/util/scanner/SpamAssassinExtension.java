@@ -34,6 +34,7 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import com.github.fge.lambdas.Throwing;
 
@@ -43,7 +44,13 @@ public class SpamAssassinExtension implements BeforeAllCallback, AfterAllCallbac
     private SpamAssassin spamAssassin;
 
     public SpamAssassinExtension() {
-        spamAssassinContainer = new GenericContainer<>("linagora/spamassassin:latest");
+        spamAssassinContainer = new GenericContainer<>(
+            new ImageFromDockerfile()
+                .withFileFromClasspath("Dockerfile", "docker/spamassassin/Dockerfile")
+                .withFileFromClasspath("local.cf", "docker/spamassassin/local.cf")
+                .withFileFromClasspath("run.sh", "docker/spamassassin/run.sh")
+                .withFileFromClasspath("spamd.sh", "docker/spamassassin/spamd.sh")
+                .withFileFromClasspath("rule-update.sh", "docker/spamassassin/rule-update.sh"));
         spamAssassinContainer.waitingFor(new SpamAssassinWaitStrategy());
     }
 
