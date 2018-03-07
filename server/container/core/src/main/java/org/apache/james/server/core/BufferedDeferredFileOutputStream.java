@@ -16,23 +16,22 @@
  */
 package org.apache.james.server.core;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.commons.io.output.ThresholdingOutputStream;
 
-import java.io.*;
-
-
 /**
  * An almost copy of {@link DeferredFileOutputStream} with buffered file stream.
  */
-public class BufferedDeferredFileOutputStream
-    extends ThresholdingOutputStream
-{
-
-    // ----------------------------------------------------------- Data members
-
+public class BufferedDeferredFileOutputStream extends ThresholdingOutputStream {
 
     /**
      * The output stream to which data will be written prior to the theshold
@@ -85,8 +84,7 @@ public class BufferedDeferredFileOutputStream
      * @param threshold  The number of bytes at which to trigger an event.
      * @param outputFile The file to which data is saved beyond the threshold.
      */
-    public BufferedDeferredFileOutputStream(final int threshold, final File outputFile)
-    {
+    public BufferedDeferredFileOutputStream(final int threshold, final File outputFile) {
         this(threshold,  outputFile, null, null, null);
     }
 
@@ -102,8 +100,7 @@ public class BufferedDeferredFileOutputStream
      *
      * @since 1.4
      */
-    public BufferedDeferredFileOutputStream(final int threshold, final String prefix, final String suffix, final File directory)
-    {
+    public BufferedDeferredFileOutputStream(final int threshold, final String prefix, final String suffix, final File directory) {
         this(threshold, null, prefix, suffix, directory);
         if (prefix == null) {
             throw new IllegalArgumentException("Temporary file prefix is missing");
@@ -132,10 +129,6 @@ public class BufferedDeferredFileOutputStream
         this.directory = directory;
     }
 
-
-    // --------------------------------------- ThresholdingOutputStream methods
-
-
     /**
      * Returns the current output stream. This may be memory based or disk
      * based, depending on the current state with respect to the threshold.
@@ -145,11 +138,9 @@ public class BufferedDeferredFileOutputStream
      * @exception IOException if an error occurs.
      */
     @Override
-    protected OutputStream getStream() throws IOException
-    {
+    protected OutputStream getStream() throws IOException {
         return currentOutputStream;
     }
-
 
     /**
      * Switches the underlying output stream from a memory based stream to one
@@ -160,25 +151,20 @@ public class BufferedDeferredFileOutputStream
      * @exception IOException if an error occurs.
      */
     @Override
-    protected void thresholdReached() throws IOException
-    {
+    protected void thresholdReached() throws IOException {
         if (prefix != null) {
             outputFile = File.createTempFile(prefix, suffix, directory);
         }
         final FileOutputStream fos = new FileOutputStream(outputFile);
         try {
             memoryOutputStream.writeTo(fos);
-        } catch (IOException e){
+        } catch (IOException e) {
             fos.close();
             throw e;
         }
         currentOutputStream = new BufferedOutputStream(fos, getThreshold());
         memoryOutputStream = null;
     }
-
-
-    // --------------------------------------------------------- Public methods
-
 
     /**
      * Determines whether or not the data for this output stream has been
@@ -187,8 +173,7 @@ public class BufferedDeferredFileOutputStream
      * @return {@code true} if the data is available in memory;
      *         {@code false} otherwise.
      */
-    public boolean isInMemory()
-    {
+    public boolean isInMemory() {
         return !isThresholdExceeded();
     }
 
@@ -201,10 +186,8 @@ public class BufferedDeferredFileOutputStream
      * @return The data for this output stream, or {@code null} if no such
      *         data is available.
      */
-    public byte[] getData()
-    {
-        if (memoryOutputStream != null)
-        {
+    public byte[] getData() {
+        if (memoryOutputStream != null) {
             return memoryOutputStream.toByteArray();
         }
         return null;
@@ -225,8 +208,7 @@ public class BufferedDeferredFileOutputStream
      * @return The file for this output stream, or {@code null} if no such
      *         file exists.
      */
-    public File getFile()
-    {
+    public File getFile() {
         return outputFile;
     }
 
@@ -237,8 +219,7 @@ public class BufferedDeferredFileOutputStream
      * @exception IOException if an error occurs.
      */
     @Override
-    public void close() throws IOException
-    {
+    public void close() throws IOException {
         super.close();
         closed = true;
     }
@@ -251,22 +232,17 @@ public class BufferedDeferredFileOutputStream
      * @param out output stream to write to.
      * @exception IOException if this stream is not yet closed or an error occurs.
      */
-    public void writeTo(final OutputStream out) throws IOException
-    {
+    public void writeTo(final OutputStream out) throws IOException {
         // we may only need to check if this is closed if we are working with a file
         // but we should force the habit of closing wether we are working with
         // a file or memory.
-        if (!closed)
-        {
+        if (!closed) {
             throw new IOException("Stream not closed");
         }
 
-        if(isInMemory())
-        {
+        if (isInMemory()) {
             memoryOutputStream.writeTo(out);
-        }
-        else
-        {
+        } else {
             final FileInputStream fis = new FileInputStream(outputFile);
             try {
                 IOUtils.copy(fis, out);
