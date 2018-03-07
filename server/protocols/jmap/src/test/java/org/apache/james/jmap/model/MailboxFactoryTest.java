@@ -31,8 +31,8 @@ import org.apache.james.mailbox.manager.ManagerTestResources;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.SimpleMailboxMetaData;
 import org.apache.james.mailbox.store.StoreMailboxManager;
@@ -62,13 +62,13 @@ public class MailboxFactoryTest {
         mailboxManager = inMemoryIntegrationResources.createMailboxManager(inMemoryIntegrationResources.createGroupMembershipResolver());
         MaxQuotaManager maxQuotaManager = inMemoryIntegrationResources.createMaxQuotaManager();
         QuotaRootResolver quotaRootResolver = inMemoryIntegrationResources.createQuotaRootResolver(mailboxManager);
-        CurrentQuotaManager currentQuotaManager = inMemoryIntegrationResources.createCurrentQuotaManager(mailboxManager);
+        QuotaManager quotaManager = inMemoryIntegrationResources.createQuotaManager(maxQuotaManager, mailboxManager);
 
         user = ManagerTestResources.USER;
         otherUser = ManagerTestResources.OTHER_USER;
         mailboxSession = mailboxManager.login(user, ManagerTestResources.USER_PASS);
         otherMailboxSession = mailboxManager.login(otherUser, ManagerTestResources.OTHER_USER_PASS);
-        sut = new MailboxFactory(mailboxManager, maxQuotaManager, currentQuotaManager, quotaRootResolver);
+        sut = new MailboxFactory(mailboxManager, quotaManager, quotaRootResolver);
     }
 
 

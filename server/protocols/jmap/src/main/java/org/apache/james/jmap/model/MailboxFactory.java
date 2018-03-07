@@ -41,9 +41,9 @@ import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.quota.CurrentQuotaManager;
-import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.quota.QuotaValue;
 
@@ -56,8 +56,7 @@ import com.google.common.collect.ImmutableMap;
 public class MailboxFactory {
     public static final boolean NO_RESET_RECENT = false;
     private final MailboxManager mailboxManager;
-    private final MaxQuotaManager maxQuotaManager;
-    private final CurrentQuotaManager currentQuotaManager;
+    private final QuotaManager quotaManager;
     private final QuotaRootResolver quotaRootResolver;
 
     public static class MailboxBuilder {
@@ -101,10 +100,9 @@ public class MailboxFactory {
     }
 
     @Inject
-    public MailboxFactory(MailboxManager mailboxManager, MaxQuotaManager maxQuotaManager, CurrentQuotaManager currentQuotaManager, QuotaRootResolver quotaRootResolver) {
+    public MailboxFactory(MailboxManager mailboxManager, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) {
         this.mailboxManager = mailboxManager;
-        this.maxQuotaManager = maxQuotaManager;
-        this.currentQuotaManager = currentQuotaManager;
+        this.quotaManager = quotaManager;
         this.quotaRootResolver = quotaRootResolver;
     }
 
@@ -148,30 +146,27 @@ public class MailboxFactory {
     private Quotas getQuotas(MailboxPath mailboxPath) throws MailboxException {
         QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxPath);
         return new Quotas(ImmutableMap.of(new QuotaId(quotaRoot), new Quotas.Quota(ImmutableMap.of(
-                Type.STORAGE, new Quotas.Value(getCurrentStorageQuota(quotaRoot), getStorageMaxQuota(quotaRoot)),
-                Type.MESSAGE, new Quotas.Value(getCurrentMessageQuota(quotaRoot), getMessageMaxQuota(quotaRoot))))));
+                Type.STORAGE, quotaToValue(quotaManager.getStorageQuota(quotaRoot)),
+                Type.MESSAGE, quotaToValue(quotaManager.getMessageQuota(quotaRoot))))));
     }
 
-    private Number getCurrentStorageQuota(QuotaRoot quotaRoot) throws MailboxException {
-        return quotaValueToNumber(currentQuotaManager.getCurrentStorage(quotaRoot));
-    }
-
-    private Number getCurrentMessageQuota(QuotaRoot quotaRoot) throws MailboxException {
-        return quotaValueToNumber(currentQuotaManager.getCurrentMessageCount(quotaRoot));
-    }
-
-    private Optional<Number> getStorageMaxQuota(QuotaRoot quotaRoot) throws MailboxException {
-        return maxQuotaManager.getMaxStorage(quotaRoot)
-            .map(this::quotaValueToNumber);
-    }
-
-    private Optional<Number> getMessageMaxQuota(QuotaRoot quotaRoot) throws MailboxException {
-        return maxQuotaManager.getMaxMessage(quotaRoot)
-            .map(this::quotaValueToNumber);
+    private Quotas.Value quotaToValue(Quota<? extends QuotaValue<?>> quota) {
+        return new Quotas.Value(
+                quota.getUsed()
+                    .map(this::quotaValueToNumber)
+                    .orElse(Number.ZERO),
+                quotaValueToOptionalNumber(quota.getMax()));
     }
 
     private Number quotaValueToNumber(QuotaValue<?> value) {
         return Number.BOUND_SANITIZING_FACTORY.from(value.asLong());
+    }
+
+    private Optional<Number> quotaValueToOptionalNumber(QuotaValue<?> value) {
+        if (value.isUnlimited()) {
+            return Optional.empty();
+        }
+        return Optional.of(quotaValueToNumber(value));
     }
 
     private MailboxNamespace getNamespace(MailboxPath mailboxPath, boolean isOwner) {
