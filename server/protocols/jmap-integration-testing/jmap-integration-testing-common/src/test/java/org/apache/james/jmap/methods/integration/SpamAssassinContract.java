@@ -37,6 +37,7 @@ import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.Role;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,6 +61,8 @@ public interface SpamAssassinContract {
     String ALICES_DOMAIN = "angels.org";
     String ALICE = "alice@" + ALICES_DOMAIN;
     String ALICE_PASSWORD = "alicePassword";
+    String LOCALHOST = "127.0.0.1";
+    int IMAP_PORT = 1143;
 
     @BeforeEach
     default void setup(JamesWithSpamAssassin james) throws Throwable {
@@ -137,6 +140,106 @@ public interface SpamAssassinContract {
                 .statusCode(200)
                 .body(NAME, equalTo("messagesSet"))
                 .body(ARGUMENTS + ".updated", hasSize(1)));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> areMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
+
+        // Bob is sending again the same message to Alice
+        given()
+            .header("Authorization", bobAccessToken.serialize())
+            .body(setMessageCreate(bobAccessToken))
+        .when()
+            .post("/jmap");
+
+        // This message is delivered in Alice Spam mailbox (she now must have 2 messages in her Spam mailbox)
+        calmlyAwait.atMost(10, TimeUnit.SECONDS).until(() -> areMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 2));
+    }
+
+    @Test
+    default void imapCopiesToSpamMailboxShouldBeConsideredAsSpam(JamesWithSpamAssassin james) throws Exception {
+        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
+        ConditionFactory calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
+
+        james.getSpamAssassinExtension().getSpamAssassin().train(ALICE);
+        AccessToken aliceAccessToken = accessTokenFor(james.getJmapServer(), ALICE, ALICE_PASSWORD);
+        AccessToken bobAccessToken = accessTokenFor(james.getJmapServer(), BOB, BOB_PASSWORD);
+
+        // Bob is sending a message to Alice
+        given()
+            .header("Authorization", bobAccessToken.serialize())
+            .body(setMessageCreate(bobAccessToken))
+        .when()
+            .post("/jmap");
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> areMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
+
+        // Alice is moving this message to Spam -> learning in SpamAssassin
+        with()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + getInboxId(aliceAccessToken) + "\"]}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messageList"))
+            .body(ARGUMENTS + ".messageIds", hasSize(1))
+            .extract()
+            .path(ARGUMENTS + ".messageIds");
+
+        try (IMAPMessageReader imapMessageReader = new IMAPMessageReader()) {
+            imapMessageReader.connect(LOCALHOST, IMAP_PORT)
+                .login(ALICE, ALICE_PASSWORD)
+                .select(IMAPMessageReader.INBOX);
+
+            imapMessageReader.copyFirstMessage("Spam");
+        }
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> areMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
+
+        // Bob is sending again the same message to Alice
+        given()
+            .header("Authorization", bobAccessToken.serialize())
+            .body(setMessageCreate(bobAccessToken))
+        .when()
+            .post("/jmap");
+
+        // This message is delivered in Alice Spam mailbox (she now must have 2 messages in her Spam mailbox)
+        calmlyAwait.atMost(10, TimeUnit.SECONDS).until(() -> areMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 2));
+    }
+
+    @Test
+    default void imapMovesToSpamMailboxShouldBeConsideredAsSpam(JamesWithSpamAssassin james) throws Exception {
+        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
+        ConditionFactory calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
+
+        james.getSpamAssassinExtension().getSpamAssassin().train(ALICE);
+        AccessToken aliceAccessToken = accessTokenFor(james.getJmapServer(), ALICE, ALICE_PASSWORD);
+        AccessToken bobAccessToken = accessTokenFor(james.getJmapServer(), BOB, BOB_PASSWORD);
+
+        // Bob is sending a message to Alice
+        given()
+            .header("Authorization", bobAccessToken.serialize())
+            .body(setMessageCreate(bobAccessToken))
+        .when()
+            .post("/jmap");
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> areMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
+
+        // Alice is moving this message to Spam -> learning in SpamAssassin
+        with()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + getInboxId(aliceAccessToken) + "\"]}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messageList"))
+            .body(ARGUMENTS + ".messageIds", hasSize(1))
+            .extract()
+            .path(ARGUMENTS + ".messageIds");
+
+        try (IMAPMessageReader imapMessageReader = new IMAPMessageReader()) {
+            imapMessageReader.connect(LOCALHOST, IMAP_PORT)
+                .login(ALICE, ALICE_PASSWORD)
+                .select(IMAPMessageReader.INBOX);
+
+            imapMessageReader.moveFirstMessage("Spam");
+        }
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> areMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
 
         // Bob is sending again the same message to Alice
