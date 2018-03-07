@@ -58,7 +58,7 @@ import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
+import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
@@ -143,7 +143,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
                     mailboxManager,
                     subscriptionManager,
                     new NoQuotaManager(),
-                    new DefaultQuotaRootResolver(factory),
+                    new DefaultUserQuotaRootResolver(factory),
                     new DefaultMetricFactory());
 
             configure(new DefaultImapDecoderFactory().buildImapDecoder(),

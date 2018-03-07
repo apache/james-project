@@ -23,6 +23,7 @@ import javax.inject.Inject;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -55,22 +56,22 @@ public class QuotaProbesImpl implements QuotaProbe, GuiceProbe {
 
     @Override
     public SerializableQuota<QuotaCount> getMessageCountQuota(String quotaRoot) throws MailboxException {
-        return SerializableQuota.newInstance(quotaManager.getMessageQuota(quotaRootResolver.createQuotaRoot(quotaRoot)));
+        return SerializableQuota.newInstance(quotaManager.getMessageQuota(QuotaRoot.quotaRoot(quotaRoot)));
     }
 
     @Override
     public SerializableQuota<QuotaSize> getStorageQuota(String quotaRoot) throws MailboxException {
-        return SerializableQuota.newInstance(quotaManager.getStorageQuota(quotaRootResolver.createQuotaRoot(quotaRoot)));
+        return SerializableQuota.newInstance(quotaManager.getStorageQuota(QuotaRoot.quotaRoot(quotaRoot)));
     }
 
     @Override
     public SerializableQuotaValue<QuotaCount> getMaxMessageCount(String quotaRoot) throws MailboxException {
-        return SerializableQuotaValue.valueOf(maxQuotaManager.getMaxMessage(quotaRootResolver.createQuotaRoot(quotaRoot)));
+        return SerializableQuotaValue.valueOf(maxQuotaManager.getMaxMessage(QuotaRoot.quotaRoot(quotaRoot)));
     }
 
     @Override
     public SerializableQuotaValue<QuotaSize> getMaxStorage(String quotaRoot) throws MailboxException {
-        return SerializableQuotaValue.valueOf(maxQuotaManager.getMaxStorage(quotaRootResolver.createQuotaRoot(quotaRoot)));
+        return SerializableQuotaValue.valueOf(maxQuotaManager.getMaxStorage(QuotaRoot.quotaRoot(quotaRoot)));
     }
 
     @Override
@@ -88,7 +89,7 @@ public class QuotaProbesImpl implements QuotaProbe, GuiceProbe {
         maxMessageCount.toValue(QuotaCount::count, QuotaCount.unlimited())
             .ifPresent(
                 Throwing.consumer(
-                    (QuotaCount value) -> maxQuotaManager.setMaxMessage(quotaRootResolver.createQuotaRoot(quotaRoot), value))
+                    (QuotaCount value) -> maxQuotaManager.setMaxMessage(QuotaRoot.quotaRoot(quotaRoot), value))
                     .sneakyThrow());
     }
 
@@ -97,7 +98,7 @@ public class QuotaProbesImpl implements QuotaProbe, GuiceProbe {
         maxSize.toValue(QuotaSize::size, QuotaSize.unlimited())
             .ifPresent(
                 Throwing.consumer(
-                    (QuotaSize value) -> maxQuotaManager.setMaxStorage(quotaRootResolver.createQuotaRoot(quotaRoot), value))
+                    (QuotaSize value) -> maxQuotaManager.setMaxStorage(QuotaRoot.quotaRoot(quotaRoot), value))
                     .sneakyThrow());
     }
 

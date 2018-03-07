@@ -26,7 +26,8 @@ import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
+import org.apache.james.mailbox.quota.UserQuotaRootResolver;
+import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 
@@ -38,12 +39,13 @@ public class CassandraQuotaModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(DefaultQuotaRootResolver.class).in(Scopes.SINGLETON);
+        bind(DefaultUserQuotaRootResolver.class).in(Scopes.SINGLETON);
         bind(CassandraPerUserMaxQuotaManager.class).in(Scopes.SINGLETON);
         bind(StoreQuotaManager.class).in(Scopes.SINGLETON);
         bind(CassandraCurrentQuotaManager.class).in(Scopes.SINGLETON);
 
-        bind(QuotaRootResolver.class).to(DefaultQuotaRootResolver.class);
+        bind(QuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
+        bind(UserQuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
         bind(MaxQuotaManager.class).to(CassandraPerUserMaxQuotaManager.class);
         bind(QuotaManager.class).to(StoreQuotaManager.class);
         bind(CurrentQuotaManager.class).to(CassandraCurrentQuotaManager.class);

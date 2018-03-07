@@ -72,7 +72,7 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
-import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
+import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
 import org.apache.james.mailbox.store.quota.QuotaUpdater;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
@@ -220,7 +220,7 @@ public class StoreMailboxManager implements MailboxManager {
             quotaManager = new NoQuotaManager();
         }
         if (quotaRootResolver == null) {
-            quotaRootResolver = new DefaultQuotaRootResolver(mailboxSessionMapperFactory);
+            quotaRootResolver = new DefaultUserQuotaRootResolver(mailboxSessionMapperFactory);
         }
         if (quotaUpdater != null && quotaUpdater instanceof MailboxListener) {
             this.addGlobalListener((MailboxListener) quotaUpdater, session);

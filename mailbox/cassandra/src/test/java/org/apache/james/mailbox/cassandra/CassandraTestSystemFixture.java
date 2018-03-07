@@ -40,7 +40,7 @@ import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
+import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 
 public class CassandraTestSystemFixture {
@@ -77,7 +77,7 @@ public class CassandraTestSystemFixture {
             dispatcher,
             new CassandraMessageId.Factory(),
             quotaManager,
-            new DefaultQuotaRootResolver(mapperFactory));
+            new DefaultUserQuotaRootResolver(mapperFactory));
     }
 
     public static MaxQuotaManager createMaxQuotaManager(CassandraCluster cassandra) {

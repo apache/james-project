@@ -26,12 +26,6 @@ import com.google.common.base.Objects;
  */
 public class QuotaRoot {
 
-    private static final String USER = "user-";
-
-    public static QuotaRoot forUser(String value) {
-        return new QuotaRoot(USER + value);
-    }
-
     public static QuotaRoot quotaRoot(String value) {
         return new QuotaRoot(value);
     }

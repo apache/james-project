@@ -50,14 +50,14 @@ import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
-import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
+import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 
 public class InMemoryIntegrationResources implements IntegrationResources<StoreMailboxManager> {
 
     private SimpleGroupMembershipResolver groupMembershipResolver;
-    private DefaultQuotaRootResolver quotaRootResolver;
+    private DefaultUserQuotaRootResolver quotaRootResolver;
 
     @Override
     public InMemoryMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver) throws MailboxException {
@@ -171,9 +171,9 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
     }
 
     @Override
-    public DefaultQuotaRootResolver createQuotaRootResolver(StoreMailboxManager mailboxManager) throws Exception {
+    public DefaultUserQuotaRootResolver createQuotaRootResolver(StoreMailboxManager mailboxManager) throws Exception {
         if (quotaRootResolver == null) {
-            quotaRootResolver = new DefaultQuotaRootResolver(mailboxManager.getMapperFactory());
+            quotaRootResolver = new DefaultUserQuotaRootResolver(mailboxManager.getMapperFactory());
         }
         return quotaRootResolver;
     }

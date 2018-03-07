@@ -32,7 +32,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
-import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
+import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.junit.Before;
 
 public class StoreMessageIdManagerSideEffectTest extends AbstractMessageIdManagerSideEffectTest {
@@ -53,7 +53,7 @@ public class StoreMessageIdManagerSideEffectTest extends AbstractMessageIdManage
 
         MessageIdManager messageIdManager = new StoreMessageIdManager(mailboxManager,
             testMailboxSessionMapperFactory, dispatcher, messageIdFactory,
-            quotaManager, new DefaultQuotaRootResolver(testMailboxSessionMapperFactory));
+            quotaManager, new DefaultUserQuotaRootResolver(testMailboxSessionMapperFactory));
 
         return new StoreMessageIdManagerTestSystem(messageIdManager,
             messageIdFactory,

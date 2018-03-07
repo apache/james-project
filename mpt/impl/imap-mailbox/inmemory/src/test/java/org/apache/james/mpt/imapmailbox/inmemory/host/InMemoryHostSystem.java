@@ -36,7 +36,7 @@ import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
-import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
+import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
@@ -64,7 +64,7 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
         super.beforeTest();
         this.mailboxManager = new InMemoryIntegrationResources()
             .createMailboxManager(new SimpleGroupMembershipResolver(), authenticator, authorizator);
-        QuotaRootResolver quotaRootResolver = new DefaultQuotaRootResolver(mailboxManager.getMapperFactory());
+        QuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(mailboxManager.getMapperFactory());
 
         perUserMaxQuotaManager = new InMemoryPerUserMaxQuotaManager();
 

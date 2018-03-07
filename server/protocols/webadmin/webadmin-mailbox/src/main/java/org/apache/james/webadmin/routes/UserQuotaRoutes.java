@@ -30,6 +30,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.apache.james.core.User;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.user.api.UsersRepository;
@@ -108,7 +109,7 @@ public class UserQuotaRoutes implements Routes {
     })
     public void defineUpdateQuota() {
         service.put(QUOTA_ENDPOINT, ((request, response) -> {
-            String user = checkUserExist(request);
+            User user = checkUserExist(request);
             QuotaDTO quotaDTO = parseQuotaDTO(request);
             userQuotaService.defineQuota(user, quotaDTO);
             response.status(HttpStatus.NO_CONTENT_204);
@@ -127,7 +128,7 @@ public class UserQuotaRoutes implements Routes {
     })
     public void defineGetQuota() {
         service.get(QUOTA_ENDPOINT, (request, response) -> {
-            String user = checkUserExist(request);
+            User user = checkUserExist(request);
             return userQuotaService.getQuota(user);
         }, jsonTransformer);
     }
@@ -141,7 +142,7 @@ public class UserQuotaRoutes implements Routes {
     })
     public void defineDeleteQuotaSize() {
         service.delete(SIZE_ENDPOINT, (request, response) -> {
-            String user = checkUserExist(request);
+            User user = checkUserExist(request);
             userQuotaService.deleteMaxSizeQuota(user);
             response.status(HttpStatus.NO_CONTENT_204);
             return response;
@@ -162,7 +163,7 @@ public class UserQuotaRoutes implements Routes {
     })
     public void defineUpdateQuotaSize() {
         service.put(SIZE_ENDPOINT, (request, response) -> {
-            String user = checkUserExist(request);
+            User user = checkUserExist(request);
             QuotaSize quotaSize = Quotas.quotaSize(request.body());
             userQuotaService.defineMaxSizeQuota(user, quotaSize);
             response.status(HttpStatus.NO_CONTENT_204);
@@ -180,7 +181,7 @@ public class UserQuotaRoutes implements Routes {
     })
     public void defineGetQuotaSize() {
         service.get(SIZE_ENDPOINT, (request, response) -> {
-            String user = checkUserExist(request);
+            User user = checkUserExist(request);
             Optional<QuotaSize> maxSizeQuota = userQuotaService.getMaxSizeQuota(user);
             if (maxSizeQuota.isPresent()) {
                 return maxSizeQuota;
@@ -199,7 +200,7 @@ public class UserQuotaRoutes implements Routes {
     })
     public void defineDeleteQuotaCount() {
         service.delete(COUNT_ENDPOINT, (request, response) -> {
-            String user = checkUserExist(request);
+            User user = checkUserExist(request);
             userQuotaService.deleteMaxCountQuota(user);
             response.status(HttpStatus.NO_CONTENT_204);
             return response;
@@ -220,7 +221,7 @@ public class UserQuotaRoutes implements Routes {
     })
     public void defineUpdateQuotaCount() {
         service.put(COUNT_ENDPOINT, (request, response) -> {
-            String user = checkUserExist(request);
+            User user = checkUserExist(request);
             QuotaCount quotaCount = Quotas.quotaCount(request.body());
             userQuotaService.defineMaxCountQuota(user, quotaCount);
             response.status(HttpStatus.NO_CONTENT_204);
@@ -237,7 +238,7 @@ public class UserQuotaRoutes implements Routes {
     })
     public void defineGetQuotaCount() {
         service.get(COUNT_ENDPOINT, (request, response) -> {
-            String user = checkUserExist(request);
+            User user = checkUserExist(request);
             Optional<QuotaCount> maxCountQuota = userQuotaService.getMaxCountQuota(user);
             if (maxCountQuota.isPresent()) {
                 return maxCountQuota;
@@ -247,7 +248,7 @@ public class UserQuotaRoutes implements Routes {
         }, jsonTransformer);
     }
 
-    private String checkUserExist(Request request) throws UsersRepositoryException {
+    private User checkUserExist(Request request) throws UsersRepositoryException {
         String user = request.params(USER);
         if (!usersRepository.contains(user)) {
             throw ErrorResponder.builder()
@@ -256,7 +257,7 @@ public class UserQuotaRoutes implements Routes {
                 .message("User not found")
                 .haltError();
         }
-        return user;
+        return User.fromUsername(user);
     }
 
     private QuotaDTO parseQuotaDTO(Request request) {

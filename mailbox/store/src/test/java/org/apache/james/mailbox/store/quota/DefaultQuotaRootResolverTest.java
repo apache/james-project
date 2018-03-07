@@ -43,13 +43,13 @@ public class DefaultQuotaRootResolverTest {
     public static final SimpleMailbox MAILBOX_2 = new SimpleMailbox(MAILBOX_PATH_2, 10);
     public static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("#private&benwa");
 
-    private DefaultQuotaRootResolver testee;
+    private DefaultUserQuotaRootResolver testee;
     private MailboxSessionMapperFactory mockedFactory;
 
     @Before
     public void setUp() {
         mockedFactory = mock(MailboxSessionMapperFactory.class);
-        testee = new DefaultQuotaRootResolver(mockedFactory);
+        testee = new DefaultUserQuotaRootResolver(mockedFactory);
     }
 
     @Test

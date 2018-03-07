@@ -25,7 +25,7 @@
     <bean id="currentQuotaManager" class="org.apache.james.mailbox.jpa.quota.JpaCurrentQuotaManager">
         <constructor-arg index="0" ref="entityManagerFactory" />
     </bean>
-    <bean id="defaultQuotaRootResolver" class="org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver" lazy-init="true">
+    <bean id="defaultQuotaRootResolver" class="org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver" lazy-init="true">
         <constructor-arg index="0" ref="messageMapperFactory"/>
     </bean>
 

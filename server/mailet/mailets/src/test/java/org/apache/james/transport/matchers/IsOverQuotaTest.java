@@ -36,7 +36,7 @@ import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
-import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
+import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.base.MailAddressFixture;
@@ -48,7 +48,7 @@ import org.junit.Test;
 public class IsOverQuotaTest {
     private IsOverQuota testee;
     private InMemoryPerUserMaxQuotaManager maxQuotaManager;
-    private DefaultQuotaRootResolver quotaRootResolver;
+    private DefaultUserQuotaRootResolver quotaRootResolver;
     private StoreMailboxManager mailboxManager;
     private UsersRepository usersRepository;
 
@@ -56,7 +56,7 @@ public class IsOverQuotaTest {
     public void setUp() throws Exception {
         mailboxManager = new InMemoryIntegrationResources().createMailboxManager(new SimpleGroupMembershipResolver());
 
-        quotaRootResolver = new DefaultQuotaRootResolver(mailboxManager.getMapperFactory());
+        quotaRootResolver = new DefaultUserQuotaRootResolver(mailboxManager.getMapperFactory());
         maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
         CurrentQuotaCalculator quotaCalculator = new CurrentQuotaCalculator(mailboxManager.getMapperFactory(), quotaRootResolver);
         InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(quotaCalculator, mailboxManager);

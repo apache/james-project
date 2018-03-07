@@ -16,26 +16,14 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.mailbox.quota;
 
-import java.util.List;
-
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.core.User;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.quota.QuotaRootResolver;
 
-public interface QuotaRootResolver {
+public interface UserQuotaRootResolver extends QuotaRootResolver {
 
-    /**
-     * Return the quotaRoot associated with the given mailbox name.
-     *
-     * @param mailboxPath The name of the mailbox
-     * @return QuotaRoot ruling this mailbox ( we uses user owning this mailbox name )
-     * @throws MailboxException
-     */
-    QuotaRoot getQuotaRoot(MailboxPath mailboxPath) throws MailboxException;
+    QuotaRoot forUser(User user);
 
-    List<MailboxPath> retrieveAssociatedMailboxes(QuotaRoot quotaRoot, MailboxSession mailboxSession) throws MailboxException;
 }

@@ -54,7 +54,7 @@ import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
+import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
@@ -106,7 +106,7 @@ public class JPAHostSystem extends JamesImapHostSystem {
             messageParser, new DefaultMessageId.Factory(), delegatingListener,
             mailboxEventDispatcher, annotationManager, storeRightManager);
 
-        DefaultQuotaRootResolver quotaRootResolver = new DefaultQuotaRootResolver(mapperFactory);
+        DefaultUserQuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(mapperFactory);
         JpaCurrentQuotaManager currentQuotaManager = new JpaCurrentQuotaManager(entityManagerFactory);
         maxQuotaManager = new JPAPerUserMaxQuotaManager(new JPAPerUserMaxQuotaDAO(entityManagerFactory));
         StoreQuotaManager storeQuotaManager = new StoreQuotaManager(currentQuotaManager, maxQuotaManager);

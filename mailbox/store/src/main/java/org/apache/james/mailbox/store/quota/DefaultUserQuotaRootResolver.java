@@ -23,11 +23,13 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.quota.QuotaRootResolver;
+import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
@@ -35,20 +37,20 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 
-public class DefaultQuotaRootResolver implements QuotaRootResolver {
+public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
 
     public static final String SEPARATOR = "&"; // Character illegal for mailbox naming in regard of RFC 3501 section 5.1
 
     private final MailboxSessionMapperFactory factory;
 
     @Inject
-    public DefaultQuotaRootResolver(MailboxSessionMapperFactory factory) {
+    public DefaultUserQuotaRootResolver(MailboxSessionMapperFactory factory) {
         this.factory = factory;
     }
 
     @Override
-    public QuotaRoot createQuotaRoot(String quotaRootValue) {
-        return QuotaRoot.quotaRoot(quotaRootValue);
+    public QuotaRoot forUser(User user) {
+        return QuotaRoot.quotaRoot(MailboxConstants.USER_NAMESPACE + SEPARATOR + user.asString());
     }
 
     @Override

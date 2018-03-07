@@ -25,7 +25,8 @@ import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
+import org.apache.james.mailbox.quota.UserQuotaRootResolver;
+import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 
@@ -36,12 +37,13 @@ public class MemoryQuotaModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(DefaultQuotaRootResolver.class).in(Scopes.SINGLETON);
+        bind(DefaultUserQuotaRootResolver.class).in(Scopes.SINGLETON);
         bind(InMemoryPerUserMaxQuotaManager.class).in(Scopes.SINGLETON);
         bind(StoreQuotaManager.class).in(Scopes.SINGLETON);
         bind(InMemoryCurrentQuotaManager.class).in(Scopes.SINGLETON);
 
-        bind(QuotaRootResolver.class).to(DefaultQuotaRootResolver.class);
+        bind(UserQuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
+        bind(QuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
         bind(MaxQuotaManager.class).to(InMemoryPerUserMaxQuotaManager.class);
         bind(QuotaManager.class).to(StoreQuotaManager.class);
         bind(CurrentQuotaManager.class).to(InMemoryCurrentQuotaManager.class);

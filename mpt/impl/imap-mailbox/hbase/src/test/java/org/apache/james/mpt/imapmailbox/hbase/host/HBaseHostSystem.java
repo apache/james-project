@@ -51,7 +51,7 @@ import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
+import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
@@ -126,7 +126,7 @@ public class HBaseHostSystem extends JamesImapHostSystem {
                         mailboxManager, 
                         subscriptionManager, 
                         new NoQuotaManager(), 
-                        new DefaultQuotaRootResolver(mapperFactory),
+                        new DefaultUserQuotaRootResolver(mapperFactory),
                         new NoopMetricFactory());
 
         resetUserMetaData();

@@ -84,13 +84,11 @@ public class GetQuotaProcessorTest {
 
     @Test
     public void processorShouldWorkOnValidRights() throws Exception {
-        GetQuotaRequest getQuotaRequest = new GetQuotaRequest("A004", ImapCommand.anyStateCommand("Name"), "quotaRoot");
+        GetQuotaRequest getQuotaRequest = new GetQuotaRequest("A004", ImapCommand.anyStateCommand("Name"), QUOTA_ROOT.getValue());
 
         when(mockedImapSession.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
         when(mockedImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY))
             .thenReturn(mailboxSession);
-        when(mockedQuotaRootResolver.createQuotaRoot("quotaRoot"))
-            .thenReturn(QUOTA_ROOT);
         when(mockedQuotaRootResolver.retrieveAssociatedMailboxes(QUOTA_ROOT, mailboxSession))
             .thenReturn(ImmutableList.of(MAILBOX_PATH));
         when(mockedMailboxManager.hasRight(MAILBOX_PATH, MailboxACL.Right.Read, mailboxSession))
@@ -116,13 +114,11 @@ public class GetQuotaProcessorTest {
 
     @Test
     public void processorShouldWorkOnExceptionThrown() throws Exception {
-        GetQuotaRequest getQuotaRequest = new GetQuotaRequest("A004", ImapCommand.anyStateCommand("Name"), "quotaRoot");
+        GetQuotaRequest getQuotaRequest = new GetQuotaRequest("A004", ImapCommand.anyStateCommand("Name"), QUOTA_ROOT.getValue());
 
         when(mockedImapSession.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
         when(mockedImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY))
             .thenReturn(mailboxSession);
-        when(mockedQuotaRootResolver.createQuotaRoot("quotaRoot"))
-            .thenReturn(QUOTA_ROOT);
         when(mockedQuotaRootResolver.retrieveAssociatedMailboxes(QUOTA_ROOT, mailboxSession))
             .thenReturn(ImmutableList.of(MAILBOX_PATH));
         when(mockedMailboxManager.hasRight(MAILBOX_PATH, MailboxACL.Right.Read, mailboxSession))
@@ -143,13 +139,11 @@ public class GetQuotaProcessorTest {
 
     @Test
     public void processorShouldWorkOnNoRights() throws Exception {
-        GetQuotaRequest getQuotaRequest = new GetQuotaRequest("A004", ImapCommand.anyStateCommand("Name"), "quotaRoot");
+        GetQuotaRequest getQuotaRequest = new GetQuotaRequest("A004", ImapCommand.anyStateCommand("Name"), QUOTA_ROOT.getValue());
 
         when(mockedImapSession.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
         when(mockedImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY))
             .thenReturn(mailboxSession);
-        when(mockedQuotaRootResolver.createQuotaRoot("quotaRoot"))
-            .thenReturn(QUOTA_ROOT);
         when(mockedQuotaRootResolver.retrieveAssociatedMailboxes(QUOTA_ROOT, mailboxSession))
             .thenReturn(ImmutableList.of(MAILBOX_PATH));
         when(mockedMailboxManager.hasRight(MAILBOX_PATH, MailboxACL.Right.Read, mailboxSession))
