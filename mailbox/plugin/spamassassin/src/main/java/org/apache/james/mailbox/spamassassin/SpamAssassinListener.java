@@ -68,14 +68,22 @@ public class SpamAssassinListener implements SpamEventListener {
             MessageMoveEvent messageMoveEvent = (MessageMoveEvent) event;
             if (isMessageMovedToSpamMailbox(messageMoveEvent)) {
                 LOGGER.debug("Spam event detected");
-                ImmutableList<InputStream> messages = messageMoveEvent.getMessages()
-                    .values()
-                    .stream()
-                    .map(Throwing.function(Message::getFullContent))
-                    .collect(Guavate.toImmutableList());
+                ImmutableList<InputStream> messages = retrieveMessages(messageMoveEvent);
                 spamAssassin.learnSpam(messages, messageMoveEvent.getSession().getUser().getUserName());
             }
+            if (isMessageMovedOutOfSpamMailbox(messageMoveEvent)) {
+                ImmutableList<InputStream> messages = retrieveMessages(messageMoveEvent);
+                spamAssassin.learnHam(messages, messageMoveEvent.getSession().getUser().getUserName());
+            }
         }
+    }
+
+    public ImmutableList<InputStream> retrieveMessages(MessageMoveEvent messageMoveEvent) {
+        return messageMoveEvent.getMessages()
+            .values()
+            .stream()
+            .map(Throwing.function(Message::getFullContent))
+            .collect(Guavate.toImmutableList());
     }
 
     @VisibleForTesting
@@ -85,6 +93,19 @@ public class SpamAssassinListener implements SpamEventListener {
             MailboxId spamMailboxId = mapperFactory.getMailboxMapper(event.getSession()).findMailboxByPath(spamMailboxPath).getMailboxId();
 
             return event.getMessageMoves().addedMailboxIds().contains(spamMailboxId);
+        } catch (MailboxException e) {
+            LOGGER.warn("Could not resolve Spam mailbox", e);
+            return false;
+        }
+    }
+
+    @VisibleForTesting
+    boolean isMessageMovedOutOfSpamMailbox(MessageMoveEvent event) {
+        try {
+            MailboxPath spamMailboxPath = MailboxPath.forUser(event.getSession().getUser().getUserName(), Role.SPAM.getDefaultMailbox());
+            MailboxId spamMailboxId = mapperFactory.getMailboxMapper(event.getSession()).findMailboxByPath(spamMailboxPath).getMailboxId();
+
+            return event.getMessageMoves().removedMailboxIds().contains(spamMailboxId);
         } catch (MailboxException e) {
             LOGGER.warn("Could not resolve Spam mailbox", e);
             return false;

@@ -172,4 +172,8 @@ public class IMAPMessageReader extends ExternalResource implements Closeable {
     public void moveFirstMessage(String destMailbox) throws IOException {
         imapClient.sendCommand("MOVE 1 " + destMailbox);
     }
+
+    public void expunge() throws IOException {
+        imapClient.expunge();
+    }
 }

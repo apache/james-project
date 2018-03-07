@@ -193,6 +193,47 @@ public class SpamAssassinInvoker {
         }
     }
 
+    /**
+     * Tell spamd that the given MimeMessage is a ham.
+     *
+     * @param message
+     *            The MimeMessage to tell
+     * @throws MessagingException
+     *             if an error occured during learning.
+     */
+    public boolean learnAsHam(InputStream message, String user) throws MessagingException {
+        try (Socket socket = new Socket(spamdHost, spamdPort);
+                OutputStream out = socket.getOutputStream();
+                PrintWriter writer = new PrintWriter(out);
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+
+            byte[] byteArray = IOUtils.toByteArray(message);
+            writer.write("TELL SPAMC/1.2");
+            writer.write(CRLF);
+            writer.write("Content-length: " + byteArray.length);
+            writer.write(CRLF);
+            writer.write("Message-class: ham");
+            writer.write(CRLF);
+            writer.write("Set: local, remote");
+            writer.write(CRLF);
+            writer.write("User: " + user);
+            writer.write(CRLF);
+            writer.write(CRLF);
+            writer.flush();
+
+            out.write(byteArray);
+            out.flush();
+            socket.shutdownOutput();
+
+            return in.lines()
+                .anyMatch(this::hasBeenSet);
+        } catch (UnknownHostException e) {
+            throw new MessagingException("Error communicating with spamd. Unknown host: " + spamdHost);
+        } catch (IOException e) {
+            throw new MessagingException("Error communicating with spamd on " + spamdHost + ":" + spamdPort + " Exception: " + e);
+        }
+    }
+
     private boolean hasBeenSet(String line) {
         return line.startsWith("DidSet: local");
     }
