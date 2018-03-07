@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.model;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
 
@@ -25,10 +26,49 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 public class MessageMoves {
+
+    public static class Builder {
+        private final ImmutableSet.Builder<MailboxId> previousMailboxIds;
+        private final ImmutableSet.Builder<MailboxId> targetMailboxIds;
+
+        private Builder() {
+            previousMailboxIds = ImmutableSet.builder();
+            targetMailboxIds = ImmutableSet.builder();
+        }
+
+        public Builder previousMailboxIds(Collection<MailboxId> mailboxIds) {
+            previousMailboxIds.addAll(mailboxIds);
+            return this;
+        }
+
+        public Builder previousMailboxIds(MailboxId... mailboxIds) {
+            previousMailboxIds.addAll(Arrays.asList(mailboxIds));
+            return this;
+        }
+
+        public Builder targetMailboxIds(Collection<MailboxId> mailboxIds) {
+            targetMailboxIds.addAll(mailboxIds);
+            return this;
+        }
+
+        public Builder targetMailboxIds(MailboxId... mailboxIds) {
+            targetMailboxIds.addAll(Arrays.asList(mailboxIds));
+            return this;
+        }
+
+        public MessageMoves build() {
+            return new MessageMoves(previousMailboxIds.build(), targetMailboxIds.build());
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
     private final ImmutableSet<MailboxId> previousMailboxIds;
     private final ImmutableSet<MailboxId> targetMailboxIds;
 
-    public MessageMoves(Collection<MailboxId> previousMailboxIds, Collection<MailboxId> targetMailboxIds) {
+    private MessageMoves(Collection<MailboxId> previousMailboxIds, Collection<MailboxId> targetMailboxIds) {
         this.previousMailboxIds = ImmutableSet.copyOf(previousMailboxIds);
         this.targetMailboxIds = ImmutableSet.copyOf(targetMailboxIds);
     }
