@@ -27,7 +27,6 @@ import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.jmap.model.mailbox.MailboxNamespace;
 import org.apache.james.jmap.model.mailbox.Quotas;
 import org.apache.james.jmap.model.mailbox.Quotas.QuotaId;
-import org.apache.james.jmap.model.mailbox.Quotas.Type;
 import org.apache.james.jmap.model.mailbox.Rights;
 import org.apache.james.jmap.model.mailbox.Rights.Username;
 import org.apache.james.jmap.model.mailbox.SortOrder;
@@ -51,7 +50,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableMap;
 
 public class MailboxFactory {
     public static final boolean NO_RESET_RECENT = false;
@@ -145,13 +143,15 @@ public class MailboxFactory {
 
     private Quotas getQuotas(MailboxPath mailboxPath) throws MailboxException {
         QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxPath);
-        return new Quotas(ImmutableMap.of(new QuotaId(quotaRoot), new Quotas.Quota(ImmutableMap.of(
-                Type.STORAGE, quotaToValue(quotaManager.getStorageQuota(quotaRoot)),
-                Type.MESSAGE, quotaToValue(quotaManager.getMessageQuota(quotaRoot))))));
+        return Quotas.from(
+            QuotaId.fromQuotaRoot(quotaRoot),
+            Quotas.Quota.from(
+                quotaToValue(quotaManager.getStorageQuota(quotaRoot)),
+                quotaToValue(quotaManager.getMessageQuota(quotaRoot))));
     }
 
-    private Quotas.Value quotaToValue(Quota<? extends QuotaValue<?>> quota) {
-        return new Quotas.Value(
+    private <T extends QuotaValue<T>> Quotas.Value<T> quotaToValue(Quota<T> quota) {
+        return new Quotas.Value<>(
                 quota.getUsed()
                     .map(this::quotaValueToNumber)
                     .orElse(Number.ZERO),
