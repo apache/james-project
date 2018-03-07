@@ -58,7 +58,7 @@ public class QuotaChecker {
             throw new OverQuotaException(
                 "You use too much space in " + quotaRoot.getValue(),
                 afterAdditionQuotaSize.getMax(),
-                afterAdditionQuotaSize.getUsed().get());
+                afterAdditionQuotaSize.getUsed());
         }
     }
 
@@ -68,7 +68,7 @@ public class QuotaChecker {
             throw new OverQuotaException(
                 "You have too many messages in " + quotaRoot.getValue(),
                 messageQuota.getMax(),
-                messageQuota.getUsed().get());
+                messageQuota.getUsed());
         }
     }
 

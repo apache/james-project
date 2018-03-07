@@ -83,10 +83,10 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
                 Quota<QuotaCount> messageQuota = quotaManager.getMessageQuota(quotaRoot);
                 Quota<QuotaSize> storageQuota = quotaManager.getStorageQuota(quotaRoot);
                 responder.respond(new QuotaRootResponse(message.getMailboxName(), quotaRoot.getValue()));
-                if (messageQuota.getMax().isLimited() && messageQuota.getUsed().isPresent()) {
+                if (messageQuota.getMax().isLimited()) {
                     responder.respond(new QuotaResponse(ImapConstants.MESSAGE_QUOTA_RESOURCE, quotaRoot.getValue(), messageQuota));
                 }
-                if (storageQuota.getMax().isLimited() && storageQuota.getUsed().isPresent()) {
+                if (storageQuota.getMax().isLimited()) {
                     responder.respond(new QuotaResponse(ImapConstants.STORAGE_QUOTA_RESOURCE, quotaRoot.getValue(), storageQuota));
                 }
                 okComplete(command, tag, responder);

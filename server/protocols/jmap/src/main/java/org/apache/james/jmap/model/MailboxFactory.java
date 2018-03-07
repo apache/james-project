@@ -152,9 +152,7 @@ public class MailboxFactory {
 
     private <T extends QuotaValue<T>> Quotas.Value<T> quotaToValue(Quota<T> quota) {
         return new Quotas.Value<>(
-                quota.getUsed()
-                    .map(this::quotaValueToNumber)
-                    .orElse(Number.ZERO),
+                quotaValueToNumber(quota.getUsed()),
                 quotaValueToOptionalNumber(quota.getMax()));
     }
 

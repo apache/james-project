@@ -166,9 +166,9 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
     public void setInMailboxesShouldThrowExceptionWhenOverQuota() throws Exception {
         MessageId messageId = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
         reset(dispatcher);
-        when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(Quota.unknownUsedQuota(QuotaSize.unlimited()));
+        when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(Quota.quota(QuotaSize.size(2), QuotaSize.unlimited()));
         when(quotaManager.getMessageQuota(any(QuotaRoot.class))).thenReturn(OVER_QUOTA);
-        when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(Quota.unknownUsedQuota(QuotaSize.unlimited()));
+        when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(Quota.quota(QuotaSize.size(2), QuotaSize.unlimited()));
 
         expectedException.expect(OverQuotaException.class);
 
@@ -311,8 +311,8 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
     }
 
     private void givenUnlimitedQuota() throws MailboxException {
-        when(quotaManager.getMessageQuota(any(QuotaRoot.class))).thenReturn(Quota.unknownUsedQuota(QuotaCount.unlimited()));
-        when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(Quota.unknownUsedQuota(QuotaSize.unlimited()));
+        when(quotaManager.getMessageQuota(any(QuotaRoot.class))).thenReturn(Quota.quota(QuotaCount.count(2), QuotaCount.unlimited()));
+        when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(Quota.quota(QuotaSize.size(2), QuotaSize.unlimited()));
     }
 
     private SimpleMessageMetaData fromMessageResult(MessageId messageId, MessageResult messageResult) {

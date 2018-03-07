@@ -66,26 +66,7 @@ public class StoreQuotaManagerTest {
     }
 
     @Test
-    public void getStorageQuotaShouldNotCalculateCurrentQuotaWhenUnlimited() throws Exception {
-        testee.setCalculateWhenUnlimited(false);
-        when(mockedMaxQuotaManager.getMaxStorage(quotaRoot)).thenReturn(Optional.of(QuotaSize.unlimited()));
-
-        assertThat(testee.getStorageQuota(quotaRoot)).isEqualTo(Quota.unknownUsedQuota(QuotaSize.unlimited()));
-        verify(mockedCurrentQuotaManager, never()).getCurrentStorage(quotaRoot);
-    }
-
-    @Test
-    public void getMessageQuotaShouldNotCalculateCurrentQuotaWhenUnlimited() throws Exception {
-        testee.setCalculateWhenUnlimited(false);
-        when(mockedMaxQuotaManager.getMaxMessage(quotaRoot)).thenReturn(Optional.of(QuotaCount.unlimited()));
-
-        assertThat(testee.getMessageQuota(quotaRoot)).isEqualTo(Quota.unknownUsedQuota(QuotaCount.unlimited()));
-        verify(mockedCurrentQuotaManager, never()).getCurrentMessageCount(quotaRoot);
-    }
-
-    @Test
     public void getStorageQuotaShouldCalculateCurrentQuotaWhenUnlimited() throws Exception {
-        testee.setCalculateWhenUnlimited(true);
         when(mockedMaxQuotaManager.getMaxStorage(quotaRoot)).thenReturn(Optional.of(QuotaSize.unlimited()));
         when(mockedCurrentQuotaManager.getCurrentStorage(quotaRoot)).thenReturn(QuotaSize.size(36L));
 
@@ -94,7 +75,6 @@ public class StoreQuotaManagerTest {
 
     @Test
     public void getMessageQuotaShouldCalculateCurrentQuotaWhenUnlimited() throws Exception {
-        testee.setCalculateWhenUnlimited(true);
         when(mockedMaxQuotaManager.getMaxMessage(quotaRoot)).thenReturn(Optional.of(QuotaCount.unlimited()));
         when(mockedCurrentQuotaManager.getCurrentMessageCount(quotaRoot)).thenReturn(QuotaCount.count(36L));
 

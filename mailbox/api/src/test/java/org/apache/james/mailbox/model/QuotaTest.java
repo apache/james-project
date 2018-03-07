@@ -33,11 +33,6 @@ public class QuotaTest {
     public ExpectedException expectedException = ExpectedException.none();
 
     @Test
-    public void unlimitedQuotaShouldNotBeOverQuota() {
-        assertThat(Quota.unknownUsedQuota(QuotaCount.unlimited()).isOverQuota()).isFalse();
-    }
-
-    @Test
     public void isOverQuotaShouldReturnFalseWhenQuotaIsNotExceeded() {
         assertThat(Quota.quota(QuotaCount.count(36), QuotaCount.count(360)).isOverQuota()).isFalse();
     }
@@ -45,11 +40,6 @@ public class QuotaTest {
     @Test
     public void isOverQuotaShouldReturnFalseWhenMaxValueIsUnlimited() {
         assertThat(Quota.quota(QuotaCount.count(36), QuotaCount.unlimited()).isOverQuota()).isFalse();
-    }
-
-    @Test
-    public void isOverQuotaShouldReturnFalseWhenUsedValueIsUnknown() {
-        assertThat(Quota.unknownUsedQuota(QuotaCount.count(36)).isOverQuota()).isFalse();
     }
 
     @Test

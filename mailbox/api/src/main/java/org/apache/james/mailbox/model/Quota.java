@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.mailbox.model;
 
-import java.util.Optional;
-
 import org.apache.james.mailbox.quota.QuotaValue;
 
 import com.google.common.base.Objects;
@@ -29,17 +27,13 @@ public class Quota<T extends QuotaValue<T>> {
 
     public static <T extends QuotaValue<T>> Quota<T> quota(T used, T max) {
         Preconditions.checkNotNull(used);
-        return new Quota<>(Optional.of(used), max);
-    }
-
-    public static <T extends QuotaValue<T>> Quota<T> unknownUsedQuota(T max) {
-        return new Quota<>(Optional.empty(), max);
+        return new Quota<>(used, max);
     }
 
     private final T max;
-    private final Optional<T> used;
+    private final T used;
 
-    private Quota(Optional<T> used, T max) {
+    private Quota(T used, T max) {
         this.used = used;
         this.max = max;
     }
@@ -48,12 +42,12 @@ public class Quota<T extends QuotaValue<T>> {
         return max;
     }
 
-    public Optional<T> getUsed() {
+    public T getUsed() {
         return used;
     }
 
     public Quota<T> addValueToQuota(T value) {
-        return new Quota<T>(used.map(x -> x.add(value)), max);
+        return new Quota<>(used.add(value), max);
     }
 
     /**
@@ -67,10 +61,7 @@ public class Quota<T extends QuotaValue<T>> {
 
     public boolean isOverQuotaWithAdditionalValue(long additionalValue) {
         Preconditions.checkArgument(additionalValue >= 0);
-        if (!max.isLimited()) {
-            return false;
-        }
-        return used.map(x -> x.add(additionalValue).isGreaterThan(max)).orElse(false);
+        return max.isLimited() && used.add(additionalValue).isGreaterThan(max);
     }
 
     @Override

@@ -34,9 +34,15 @@ public class SerializableQuota<T extends QuotaValue<T>> implements Serializable 
     public static final long UNLIMITED = -1;
 
     public static <U extends QuotaValue<U>> SerializableQuota<U> newInstance(Quota<U> quota) {
-        return new SerializableQuota<>(new SerializableQuotaValue<>(quota.getMax()), getUsed(quota.getUsed(), SerializableQuotaValue::new));
+        return newInstance(quota.getUsed(), quota.getMax());
     }
 
+    public static <U extends QuotaValue<U>> SerializableQuota<U> newInstance(U used, U max) {
+        return new SerializableQuota<>(
+            new SerializableQuotaValue<>(used),
+            new SerializableQuotaValue<>(max)
+        );
+    }
 
     private static <U extends QuotaValue<U>> SerializableQuotaValue<U> getUsed(Optional<U> quota, Function<U, SerializableQuotaValue<U>> factory) {
         return quota.map(factory).orElse(null);
@@ -45,7 +51,7 @@ public class SerializableQuota<T extends QuotaValue<T>> implements Serializable 
     private final SerializableQuotaValue<T> max;
     private final SerializableQuotaValue<T> used;
 
-    public SerializableQuota(SerializableQuotaValue<T> max, SerializableQuotaValue<T> used) {
+    private SerializableQuota(SerializableQuotaValue<T> used, SerializableQuotaValue<T> max) {
         this.max = max;
         this.used = used;
     }
