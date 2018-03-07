@@ -27,8 +27,8 @@ import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.extension.AfterAllCallback;
-import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
@@ -38,7 +38,7 @@ import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import com.github.fge.lambdas.Throwing;
 
-public class SpamAssassinExtension implements BeforeAllCallback, AfterAllCallback, ParameterResolver {
+public class SpamAssassinExtension implements BeforeEachCallback, AfterEachCallback, ParameterResolver {
 
     private final GenericContainer<?> spamAssassinContainer;
     private SpamAssassin spamAssassin;
@@ -55,13 +55,13 @@ public class SpamAssassinExtension implements BeforeAllCallback, AfterAllCallbac
     }
 
     @Override
-    public void beforeAll(ExtensionContext context) {
+    public void beforeEach(ExtensionContext context) {
         spamAssassinContainer.start();
         spamAssassin = new SpamAssassin(spamAssassinContainer);
     }
 
     @Override
-    public void afterAll(ExtensionContext context) {
+    public void afterEach(ExtensionContext context) {
         spamAssassinContainer.close();
     }
 
