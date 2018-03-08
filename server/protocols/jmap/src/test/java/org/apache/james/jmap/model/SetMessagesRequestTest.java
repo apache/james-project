@@ -50,7 +50,7 @@ public class SetMessagesRequestTest {
     public void builderShouldWork() {
         ImmutableList<MessageId> destroy = ImmutableList.of(TestMessageId.of(4));
 
-        SetMessagesRequest expected = new SetMessagesRequest(Optional.empty(), Optional.empty(), ImmutableList.of(), ImmutableMap.of(), destroy);
+        SetMessagesRequest expected = new SetMessagesRequest(Optional.empty(), Optional.empty(), ImmutableList.of(), ImmutableList.of(), ImmutableMap.of(), destroy);
 
         SetMessagesRequest setMessagesRequest = SetMessagesRequest.builder()
             .accountId(null)
