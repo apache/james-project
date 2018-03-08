@@ -21,7 +21,7 @@ package org.apache.james.jmap.methods;
 
 import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessageId;
-import org.apache.james.jmap.model.MDN;
+import org.apache.james.jmap.model.JmapMDN;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.SetError;
 
@@ -51,8 +51,8 @@ public class ValueWithId<T> {
         }
     }
 
-    public static class CreationMDNEntry extends ValueWithId<MDN> {
-        public CreationMDNEntry(CreationMessageId creationId, MDN mdn) {
+    public static class MDNCreationEntry extends ValueWithId<JmapMDN> {
+        public MDNCreationEntry(CreationMessageId creationId, JmapMDN mdn) {
             super(creationId, mdn);
         }
     }

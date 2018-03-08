@@ -107,11 +107,14 @@ public class MIMEMessageConverter {
     }
 
     public byte[] convert(ValueWithId.CreationMessageEntry creationMessageEntry, ImmutableList<MessageAttachment> messageAttachments) {
+        return asBytes(convertToMime(creationMessageEntry, messageAttachments));
+    }
 
+    public byte[] asBytes(Message message) {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         DefaultMessageWriter writer = new DefaultMessageWriter();
         try {
-            writer.writeMessage(convertToMime(creationMessageEntry, messageAttachments), buffer);
+            writer.writeMessage(message, buffer);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }

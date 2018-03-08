@@ -57,6 +57,11 @@ public class MDNReport {
         private ImmutableList.Builder<Error> errorField = ImmutableList.builder();
         private ImmutableList.Builder<ExtensionField> extensionFields = ImmutableList.builder();
 
+        public Builder reportingUserAgentField(String userAgentName) {
+            this.reportingUserAgentField = Optional.of(new ReportingUserAgent(userAgentName, Optional.empty()));
+            return this;
+        }
+
         public Builder reportingUserAgentField(String userAgentName, String userAgentProduct) {
             this.reportingUserAgentField = Optional.of(new ReportingUserAgent(userAgentName, Optional.ofNullable(userAgentProduct)));
             return this;

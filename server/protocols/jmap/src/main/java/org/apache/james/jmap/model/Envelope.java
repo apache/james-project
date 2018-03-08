@@ -21,12 +21,17 @@ package org.apache.james.jmap.model;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.mime4j.dom.address.AddressList;
+import org.apache.james.mime4j.dom.address.Mailbox;
+import org.apache.james.mime4j.dom.address.MailboxList;
 import org.apache.james.util.StreamUtils;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 
@@ -46,9 +51,35 @@ public class Envelope {
                 .collect(Guavate.toImmutableSet()));
     }
 
+    public static Envelope fromMime4JMessage(org.apache.james.mime4j.dom.Message mime4JMessage) {
+        MailAddress sender = mime4JMessage.getFrom()
+            .stream()
+            .findAny()
+            .map(Mailbox::getAddress)
+            .map(Throwing.function(MailAddress::new))
+            .orElseThrow(() -> new RuntimeException("Sender is mandatory"));
+
+        Stream<MailAddress> to = emailersToMailAddresses(mime4JMessage.getTo());
+        Stream<MailAddress> cc = emailersToMailAddresses(mime4JMessage.getCc());
+        Stream<MailAddress> bcc = emailersToMailAddresses(mime4JMessage.getBcc());
+
+        return new Envelope(sender,
+            StreamUtils.flatten(Stream.of(to, cc, bcc))
+                .collect(Guavate.toImmutableSet()));
+    }
+
     private static Stream<MailAddress> emailersToMailAddresses(List<Emailer> emailers) {
         return emailers.stream()
             .map(Emailer::toMailAddress);
+    }
+
+    private static Stream<MailAddress> emailersToMailAddresses(AddressList addresses) {
+        return Optional.ofNullable(addresses)
+            .map(AddressList::flatten)
+            .map(MailboxList::stream)
+            .orElse(Stream.of())
+            .map(Mailbox::getAddress)
+            .map(Throwing.function(MailAddress::new));
     }
 
 

@@ -74,7 +74,8 @@ public class SetMessagesResponseTest {
         ImmutableMap<MessageId, SetError> notUpdated = ImmutableMap.of(TestMessageId.of(4), SetError.builder().type("updated").build());
         ImmutableMap<MessageId, SetError> notDestroyed  = ImmutableMap.of(TestMessageId.of(5), SetError.builder().type("destroyed").build());
         ImmutableMap<CreationMessageId, SetError> mdnNotSent = ImmutableMap.of(CreationMessageId.of("dead-beef-defec9"), SetError.builder().type("MDNNotSent").build());
-        SetMessagesResponse expected = new SetMessagesResponse(null, null, null, created, updated, destroyed, notCreated, mdnNotSent, notUpdated, notDestroyed);
+        ImmutableMap<CreationMessageId, MessageId> mdnSent = ImmutableMap.of(CreationMessageId.of("dead-beef-defed0"), TestMessageId.of(12));
+        SetMessagesResponse expected = new SetMessagesResponse(null, null, null, created, mdnSent, updated, destroyed, notCreated, mdnNotSent, notUpdated, notDestroyed);
 
         SetMessagesResponse setMessagesResponse = SetMessagesResponse.builder()
             .created(created)
@@ -83,7 +84,8 @@ public class SetMessagesResponseTest {
             .notCreated(notCreated)
             .notUpdated(notUpdated)
             .notDestroyed(notDestroyed)
-            .MDNNotSent(mdnNotSent)
+            .mdnNotSent(mdnNotSent)
+            .mdnSent(mdnSent)
             .build();
 
         assertThat(setMessagesResponse).isEqualToComparingFieldByField(expected);

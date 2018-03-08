@@ -30,6 +30,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.james.jmap.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.model.Attachment;
 import org.apache.james.jmap.model.CreationMessage;
+import org.apache.james.jmap.model.Keywords;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxManager;
@@ -94,6 +95,32 @@ public class MessageAppender {
             .attachments(messageAttachments)
             .mailboxId(mailbox.getId())
             .messageId(message.getMessageId())
+            .build();
+    }
+
+    public MessageFactory.MetaDataWithContent appendMessageInMailbox(org.apache.james.mime4j.dom.Message message,
+                                                                     MessageManager messageManager,
+                                                                     List<MessageAttachment> attachments,
+                                                                     Flags flags,
+                                                                     MailboxSession session) throws MailboxException {
+
+
+        byte[] messageContent = mimeMessageConverter.asBytes(message);
+        SharedByteArrayInputStream content = new SharedByteArrayInputStream(messageContent);
+        Date internalDate = new Date();
+        boolean notRecent = false;
+
+        ComposedMessageId appendedMessage = messageManager.appendMessage(content, internalDate, session, notRecent, flags);
+
+        return MessageFactory.MetaDataWithContent.builder()
+            .uid(appendedMessage.getUid())
+            .keywords(Keywords.factory().fromFlags(flags))
+            .internalDate(internalDate.toInstant())
+            .sharedContent(content)
+            .size(messageContent.length)
+            .attachments(attachments)
+            .mailboxId(messageManager.getId())
+            .messageId(appendedMessage.getMessageId())
             .build();
     }
 

@@ -30,7 +30,7 @@ import org.junit.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class MDNTest {
+public class JmapMDNTest {
 
     public static final String TEXT_BODY = "text body";
     public static final String SUBJECT = "subject";
@@ -44,7 +44,7 @@ public class MDNTest {
 
     @Test
     public void shouldMatchBeanContract() {
-        EqualsVerifier.forClass(MDN.class)
+        EqualsVerifier.forClass(JmapMDN.class)
             .allFieldsShouldBeUsed()
             .verify();
     }
@@ -52,20 +52,20 @@ public class MDNTest {
     @Test
     public void builderShouldReturnObjectWhenAllFieldsAreValid() {
         assertThat(
-            MDN.builder()
+            JmapMDN.builder()
                 .disposition(DISPOSITION)
                 .messageId(MESSAGE_ID)
                 .reportingUA(REPORTING_UA)
                 .subject(SUBJECT)
                 .textBody(TEXT_BODY)
                 .build())
-            .isEqualTo(new MDN(MESSAGE_ID, SUBJECT, TEXT_BODY, REPORTING_UA, DISPOSITION));
+            .isEqualTo(new JmapMDN(MESSAGE_ID, SUBJECT, TEXT_BODY, REPORTING_UA, DISPOSITION));
     }
 
     @Test
     public void dispositionIsCompulsory() {
         assertThatThrownBy(() ->
-            MDN.builder()
+            JmapMDN.builder()
                 .messageId(MESSAGE_ID)
                 .reportingUA(REPORTING_UA)
                 .subject(SUBJECT)
@@ -77,7 +77,7 @@ public class MDNTest {
     @Test
     public void messageIdIsCompulsory() {
         assertThatThrownBy(() ->
-            MDN.builder()
+            JmapMDN.builder()
                 .disposition(DISPOSITION)
                 .reportingUA(REPORTING_UA)
                 .subject(SUBJECT)
@@ -89,7 +89,7 @@ public class MDNTest {
     @Test
     public void reportingUAIsCompulsory() {
         assertThatThrownBy(() ->
-            MDN.builder()
+            JmapMDN.builder()
                 .disposition(DISPOSITION)
                 .messageId(MESSAGE_ID)
                 .subject(SUBJECT)
@@ -101,7 +101,7 @@ public class MDNTest {
     @Test
     public void subjectIsCompulsory() {
         assertThatThrownBy(() ->
-            MDN.builder()
+            JmapMDN.builder()
                 .disposition(DISPOSITION)
                 .messageId(MESSAGE_ID)
                 .reportingUA(REPORTING_UA)
@@ -113,7 +113,7 @@ public class MDNTest {
     @Test
     public void textBodyIsCompulsory() {
         assertThatThrownBy(() ->
-            MDN.builder()
+            JmapMDN.builder()
                 .disposition(DISPOSITION)
                 .messageId(MESSAGE_ID)
                 .reportingUA(REPORTING_UA)

@@ -29,8 +29,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
-@JsonDeserialize(builder = MDN.Builder.class)
-public class MDN {
+@JsonDeserialize(builder = JmapMDN.Builder.class)
+public class JmapMDN {
 
     public static Builder builder() {
         return new Builder();
@@ -69,14 +69,14 @@ public class MDN {
             return this;
         }
 
-        public MDN build() {
+        public JmapMDN build() {
             Preconditions.checkState(messageId != null, "'messageId' is mandatory");
             Preconditions.checkState(subject != null, "'subject' is mandatory");
             Preconditions.checkState(textBody != null, "'textBody' is mandatory");
             Preconditions.checkState(reportingUA != null, "'reportingUA' is mandatory");
             Preconditions.checkState(disposition != null, "'disposition' is mandatory");
 
-            return new MDN(messageId, subject, textBody, reportingUA, disposition);
+            return new JmapMDN(messageId, subject, textBody, reportingUA, disposition);
         }
 
     }
@@ -88,7 +88,7 @@ public class MDN {
     private final MDNDisposition disposition;
 
     @VisibleForTesting
-    MDN(MessageId messageId, String subject, String textBody, String reportingUA, MDNDisposition disposition) {
+    JmapMDN(MessageId messageId, String subject, String textBody, String reportingUA, MDNDisposition disposition) {
         this.messageId = messageId;
         this.subject = subject;
         this.textBody = textBody;
@@ -118,8 +118,8 @@ public class MDN {
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof MDN) {
-            MDN that = (MDN) o;
+        if (o instanceof JmapMDN) {
+            JmapMDN that = (JmapMDN) o;
 
             return Objects.equals(this.messageId, that.messageId)
                 && Objects.equals(this.subject, that.subject)
