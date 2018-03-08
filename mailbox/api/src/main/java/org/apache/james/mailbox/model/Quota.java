@@ -25,17 +25,42 @@ import com.google.common.base.Preconditions;
 
 public class Quota<T extends QuotaValue<T>> {
 
-    public static <T extends QuotaValue<T>> Quota<T> quota(T used, T limit) {
-        Preconditions.checkNotNull(used);
-        return new Quota<>(used, limit);
+    public static <T extends QuotaValue<T>> Builder<T> builder() {
+        return new Builder<>();
+    }
+
+    public static class Builder<T extends QuotaValue<T>> {
+
+        private T computedLimit;
+        private T used;
+
+        private Builder() {
+        }
+
+        public Builder<T> computedLimit(T limit) {
+            this.computedLimit = limit;
+            return this;
+        }
+
+        public Builder<T> used(T used) {
+            this.used = used;
+            return this;
+        }
+
+        public Quota<T> build() {
+            Preconditions.checkState(used != null);
+            Preconditions.checkState(computedLimit != null);
+            return new Quota<>(used, computedLimit);
+        }
+
     }
 
     private final T limit;
     private final T used;
 
-    private Quota(T used, T limit) {
+    private Quota(T used, T max) {
         this.used = used;
-        this.limit = limit;
+        this.limit = max;
     }
 
     public T getLimit() {

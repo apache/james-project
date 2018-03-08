@@ -54,8 +54,10 @@ public class QuotaCheckerTest {
     @Test
     public void quotaCheckerShouldNotThrowOnRegularQuotas() throws MailboxException {
         when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
-        when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(Quota.quota(QuotaCount.count(10), QuotaCount.count(100)));
-        when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(Quota.quota(QuotaSize.size(100), QuotaSize.size(1000)));
+        when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(
+            Quota.<QuotaCount>builder().used(QuotaCount.count(10)).computedLimit(QuotaCount.count(100)).build());
+        when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(
+            Quota.<QuotaSize>builder().used(QuotaSize.size(100)).computedLimit(QuotaSize.size(1000)).build());
         QuotaChecker quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
 
         quotaChecker.tryAddition(0, 0);
@@ -64,8 +66,10 @@ public class QuotaCheckerTest {
     @Test
     public void quotaCheckerShouldNotThrowOnRegularModifiedQuotas() throws MailboxException {
         when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
-        when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(Quota.quota(QuotaCount.count(10), QuotaCount.count(100)));
-        when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(Quota.quota(QuotaSize.size(100), QuotaSize.size(1000)));
+        when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(
+            Quota.<QuotaCount>builder().used(QuotaCount.count(10)).computedLimit(QuotaCount.count(100)).build());
+        when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(
+            Quota.<QuotaSize>builder().used(QuotaSize.size(100)).computedLimit(QuotaSize.size(1000)).build());
         QuotaChecker quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
 
         quotaChecker.tryAddition(89, 899);
@@ -74,8 +78,10 @@ public class QuotaCheckerTest {
     @Test
     public void quotaCheckerShouldNotThrowOnReachedMaximumQuotas() throws MailboxException {
         when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
-        when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(Quota.quota(QuotaCount.count(10), QuotaCount.count(100)));
-        when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(Quota.quota(QuotaSize.size(100), QuotaSize.size(1000)));
+        when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(
+            Quota.<QuotaCount>builder().used(QuotaCount.count(10)).computedLimit(QuotaCount.count(100)).build());
+        when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(
+            Quota.<QuotaSize>builder().used(QuotaSize.size(100)).computedLimit(QuotaSize.size(1000)).build());
         QuotaChecker quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
 
         quotaChecker.tryAddition(90, 900);
@@ -84,8 +90,10 @@ public class QuotaCheckerTest {
     @Test
     public void quotaCheckerShouldThrowOnExceededMessages() throws MailboxException {
         when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
-        when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(Quota.quota(QuotaCount.count(10), QuotaCount.count(100)));
-        when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(Quota.quota(QuotaSize.size(100), QuotaSize.size(1000)));
+        when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(
+            Quota.<QuotaCount>builder().used(QuotaCount.count(10)).computedLimit(QuotaCount.count(100)).build());
+        when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(
+            Quota.<QuotaSize>builder().used(QuotaSize.size(100)).computedLimit(QuotaSize.size(1000)).build());
         QuotaChecker quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
 
         assertThatThrownBy(() -> quotaChecker.tryAddition(91, 899))
@@ -95,8 +103,10 @@ public class QuotaCheckerTest {
     @Test
     public void quotaCheckerShouldThrowOnExceededStorage() throws MailboxException {
         when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
-        when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(Quota.quota(QuotaCount.count(10), QuotaCount.count(100)));
-        when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(Quota.quota(QuotaSize.size(100), QuotaSize.size(1000)));
+        when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(
+            Quota.<QuotaCount>builder().used(QuotaCount.count(10)).computedLimit(QuotaCount.count(100)).build());
+        when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(
+            Quota.<QuotaSize>builder().used(QuotaSize.size(100)).computedLimit(QuotaSize.size(1000)).build());
         QuotaChecker quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
 
         assertThatThrownBy(() -> quotaChecker.tryAddition(89, 901))

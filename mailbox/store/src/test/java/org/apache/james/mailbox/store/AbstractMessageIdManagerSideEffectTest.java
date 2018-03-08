@@ -63,7 +63,10 @@ import org.junit.rules.ExpectedException;
 import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractMessageIdManagerSideEffectTest {
-    private static final Quota<QuotaCount> OVER_QUOTA = Quota.quota(QuotaCount.count(102), QuotaCount.count(100));
+    private static final Quota<QuotaCount> OVER_QUOTA = Quota.<QuotaCount>builder()
+        .used(QuotaCount.count(102))
+        .computedLimit(QuotaCount.count(100))
+        .build();
     private static final MessageUid messageUid1 = MessageUid.of(111);
 
     public static final Flags FLAGS = new Flags();
@@ -166,9 +169,11 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
     public void setInMailboxesShouldThrowExceptionWhenOverQuota() throws Exception {
         MessageId messageId = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
         reset(dispatcher);
-        when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(Quota.quota(QuotaSize.size(2), QuotaSize.unlimited()));
+        when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(
+            Quota.<QuotaSize>builder().used(QuotaSize.size(2)).computedLimit(QuotaSize.unlimited()).build());
         when(quotaManager.getMessageQuota(any(QuotaRoot.class))).thenReturn(OVER_QUOTA);
-        when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(Quota.quota(QuotaSize.size(2), QuotaSize.unlimited()));
+        when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(
+            Quota.<QuotaSize>builder().used(QuotaSize.size(2)).computedLimit(QuotaSize.unlimited()).build());
 
         expectedException.expect(OverQuotaException.class);
 
@@ -311,8 +316,10 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
     }
 
     private void givenUnlimitedQuota() throws MailboxException {
-        when(quotaManager.getMessageQuota(any(QuotaRoot.class))).thenReturn(Quota.quota(QuotaCount.count(2), QuotaCount.unlimited()));
-        when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(Quota.quota(QuotaSize.size(2), QuotaSize.unlimited()));
+        when(quotaManager.getMessageQuota(any(QuotaRoot.class))).thenReturn(
+            Quota.<QuotaCount>builder().used(QuotaCount.count(2)).computedLimit(QuotaCount.unlimited()).build());
+        when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(
+            Quota.<QuotaSize>builder().used(QuotaSize.size(2)).computedLimit(QuotaSize.unlimited()).build());
     }
 
     private SimpleMessageMetaData fromMessageResult(MessageId messageId, MessageResult messageResult) {

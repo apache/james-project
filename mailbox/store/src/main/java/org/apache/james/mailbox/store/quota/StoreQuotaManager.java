@@ -46,16 +46,18 @@ public class StoreQuotaManager implements QuotaManager {
     }
 
     public Quota<QuotaCount> getMessageQuota(QuotaRoot quotaRoot) throws MailboxException {
-        return Quota.quota(
-            currentQuotaManager.getCurrentMessageCount(quotaRoot),
-            maxQuotaManager.getMaxMessage(quotaRoot).orElse(QuotaCount.unlimited()));
+        return Quota.<QuotaCount>builder()
+            .used(currentQuotaManager.getCurrentMessageCount(quotaRoot))
+            .computedLimit(maxQuotaManager.getMaxMessage(quotaRoot).orElse(QuotaCount.unlimited()))
+            .build();
     }
 
 
     public Quota<QuotaSize> getStorageQuota(QuotaRoot quotaRoot) throws MailboxException {
-        return Quota.quota(
-            currentQuotaManager.getCurrentStorage(quotaRoot),
-            maxQuotaManager.getMaxStorage(quotaRoot).orElse(QuotaSize.unlimited()));
+        return Quota.<QuotaSize>builder()
+            .used(currentQuotaManager.getCurrentStorage(quotaRoot))
+            .computedLimit(maxQuotaManager.getMaxStorage(quotaRoot).orElse(QuotaSize.unlimited()))
+            .build();
     }
 
 }

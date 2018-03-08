@@ -21,8 +21,6 @@ package org.apache.james.mailbox.store.quota;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -55,14 +53,16 @@ public class StoreQuotaManagerTest {
     public void getMessageQuotaShouldWorkWithNumericValues() throws Exception {
         when(mockedMaxQuotaManager.getMaxMessage(quotaRoot)).thenReturn(Optional.of(QuotaCount.count(360L)));
         when(mockedCurrentQuotaManager.getCurrentMessageCount(quotaRoot)).thenReturn(QuotaCount.count(36L));
-        assertThat(testee.getMessageQuota(quotaRoot)).isEqualTo(Quota.quota(QuotaCount.count(36L), QuotaCount.count(360L)));
+        assertThat(testee.getMessageQuota(quotaRoot)).isEqualTo(
+            Quota.<QuotaCount>builder().used(QuotaCount.count(36)).computedLimit(QuotaCount.count(360)).build());
     }
 
     @Test
     public void getStorageQuotaShouldWorkWithNumericValues() throws Exception {
         when(mockedMaxQuotaManager.getMaxStorage(quotaRoot)).thenReturn(Optional.of(QuotaSize.size(360L)));
         when(mockedCurrentQuotaManager.getCurrentStorage(quotaRoot)).thenReturn(QuotaSize.size(36L));
-        assertThat(testee.getStorageQuota(quotaRoot)).isEqualTo(Quota.quota(QuotaSize.size(36L), QuotaSize.size(360L)));
+        assertThat(testee.getStorageQuota(quotaRoot)).isEqualTo(
+            Quota.<QuotaSize>builder().used(QuotaSize.size(36)).computedLimit(QuotaSize.size(360)).build());
     }
 
     @Test
@@ -70,7 +70,8 @@ public class StoreQuotaManagerTest {
         when(mockedMaxQuotaManager.getMaxStorage(quotaRoot)).thenReturn(Optional.of(QuotaSize.unlimited()));
         when(mockedCurrentQuotaManager.getCurrentStorage(quotaRoot)).thenReturn(QuotaSize.size(36L));
 
-        assertThat(testee.getStorageQuota(quotaRoot)).isEqualTo(Quota.quota(QuotaSize.size(36L), QuotaSize.unlimited()));
+        assertThat(testee.getStorageQuota(quotaRoot)).isEqualTo(
+            Quota.<QuotaSize>builder().used(QuotaSize.size(36)).computedLimit(QuotaSize.unlimited()).build());
     }
 
     @Test
@@ -78,7 +79,8 @@ public class StoreQuotaManagerTest {
         when(mockedMaxQuotaManager.getMaxMessage(quotaRoot)).thenReturn(Optional.of(QuotaCount.unlimited()));
         when(mockedCurrentQuotaManager.getCurrentMessageCount(quotaRoot)).thenReturn(QuotaCount.count(36L));
 
-        assertThat(testee.getMessageQuota(quotaRoot)).isEqualTo(Quota.quota(QuotaCount.count(36L), QuotaCount.unlimited()));
+        assertThat(testee.getMessageQuota(quotaRoot)).isEqualTo(
+            Quota.<QuotaCount>builder().used(QuotaCount.count(36)).computedLimit(QuotaCount.unlimited()).build());
     }
 
 }

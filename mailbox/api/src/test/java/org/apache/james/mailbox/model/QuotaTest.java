@@ -20,53 +20,77 @@
 package org.apache.james.mailbox.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.quota.QuotaCount;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class QuotaTest {
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     @Test
     public void isOverQuotaShouldReturnFalseWhenQuotaIsNotExceeded() {
-        assertThat(Quota.quota(QuotaCount.count(36), QuotaCount.count(360)).isOverQuota()).isFalse();
+        Quota<QuotaCount> quota = Quota.<QuotaCount>builder().used(QuotaCount.count(36)).computedLimit(QuotaCount.count(360)).build();
+        assertThat(quota.isOverQuota()).isFalse();
     }
 
     @Test
     public void isOverQuotaShouldReturnFalseWhenMaxValueIsUnlimited() {
-        assertThat(Quota.quota(QuotaCount.count(36), QuotaCount.unlimited()).isOverQuota()).isFalse();
+        Quota<QuotaCount> quota = Quota.<QuotaCount>builder().used(QuotaCount.count(36)).computedLimit(QuotaCount.unlimited()).build();
+        assertThat(quota.isOverQuota()).isFalse();
     }
 
     @Test
     public void isOverQuotaShouldReturnTrueWhenQuotaIsExceeded() {
-        assertThat(Quota.quota(QuotaCount.count(360), QuotaCount.count(36)).isOverQuota()).isTrue();
+        Quota<QuotaCount> quota = Quota.<QuotaCount>builder().used(QuotaCount.count(360)).computedLimit(QuotaCount.count(36)).build();
+        assertThat(quota.isOverQuota()).isTrue();
     }
 
     @Test
     public void isOverQuotaWithAdditionalValueShouldReturnTrueWhenOverLimit() {
-        assertThat(Quota.quota(QuotaCount.count(36), QuotaCount.count(36)).isOverQuotaWithAdditionalValue(1)).isTrue();
+        Quota<QuotaCount> quota = Quota.<QuotaCount>builder().used(QuotaCount.count(36)).computedLimit(QuotaCount.count(36)).build();
+        assertThat(quota.isOverQuotaWithAdditionalValue(1)).isTrue();
     }
 
     @Test
     public void isOverQuotaWithAdditionalValueShouldReturnTrueWhenUnderLimit() {
-        assertThat(Quota.quota(QuotaCount.count(34), QuotaCount.count(36)).isOverQuotaWithAdditionalValue(1)).isFalse();
+        Quota<QuotaCount> quota = Quota.<QuotaCount>builder().used(QuotaCount.count(34)).computedLimit(QuotaCount.count(36)).build();
+        assertThat(quota.isOverQuotaWithAdditionalValue(1)).isFalse();
     }
 
     @Test
     public void isOverQuotaWithAdditionalValueShouldReturnFalseWhenAtLimit() {
-        assertThat(Quota.quota(QuotaCount.count(36), QuotaCount.count(36)).isOverQuotaWithAdditionalValue(0)).isFalse();
+        Quota<QuotaCount> quota = Quota.<QuotaCount>builder().used(QuotaCount.count(36)).computedLimit(QuotaCount.count(36)).build();
+        assertThat(quota.isOverQuotaWithAdditionalValue(0)).isFalse();
     }
 
     @Test
     public void isOverQuotaWithAdditionalValueShouldThrowOnNegativeValue() {
-        expectedException.expect(IllegalArgumentException.class);
+        Quota<QuotaCount> quota = Quota.<QuotaCount>builder().used(QuotaCount.count(25)).computedLimit(QuotaCount.count(36)).build();
+        assertThatThrownBy(() -> quota.isOverQuotaWithAdditionalValue(-1)).isInstanceOf(IllegalArgumentException.class);
+    }
 
-        Quota.quota(QuotaCount.count(25), QuotaCount.count(36)).isOverQuotaWithAdditionalValue(-1);
+    @Test
+    public void buildShouldThrowOnMissingUsedValue() {
+        assertThatThrownBy(
+            () -> Quota.<QuotaCount>builder().computedLimit(QuotaCount.count(1)).build())
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    public void buildShouldThrowOnMissingComputedLimitValue() {
+        assertThatThrownBy(
+            () -> Quota.<QuotaCount>builder().used(QuotaCount.count(1)).build())
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    public void buildShouldCreateValidObjectGivenMandatoryFields() {
+        Quota<QuotaCount> actual = Quota.<QuotaCount>builder()
+            .used(QuotaCount.count(1))
+            .computedLimit(QuotaCount.count(2))
+            .build();
+        assertThat(actual).isNotNull();
     }
 
 }
