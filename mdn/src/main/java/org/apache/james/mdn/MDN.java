@@ -19,6 +19,7 @@
 
 package org.apache.james.mdn;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Properties;
@@ -30,9 +31,22 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import org.apache.james.mime4j.Charsets;
+import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.dom.Multipart;
+import org.apache.james.mime4j.message.BasicBodyFactory;
+import org.apache.james.mime4j.message.BodyPartBuilder;
+import org.apache.james.mime4j.message.MultipartBuilder;
+import org.apache.james.mime4j.stream.NameValuePair;
+
 import com.google.common.base.Preconditions;
 
 public class MDN {
+    private static final NameValuePair UTF_8_CHARSET = new NameValuePair("charset", Charsets.UTF_8.name());
+
+    public static final String DISPOSITION_CONTENT_TYPE = "message/disposition-notification";
+    public static final String REPORT_SUB_TYPE = "report";
+
     public static class Builder {
         private String humanReadableText;
         private MDNReport report;
@@ -80,7 +94,7 @@ public class MDN {
 
     public MimeMultipart asMultipart() throws MessagingException {
         MimeMultipart multipart = new MimeMultipart();
-        multipart.setSubType("report");
+        multipart.setSubType(REPORT_SUB_TYPE);
         multipart.addBodyPart(computeHumanReadablePart());
         multipart.addBodyPart(computeReportPart());
         // The optional third part, the original message is omitted.
@@ -107,8 +121,30 @@ public class MDN {
 
     public BodyPart computeReportPart() throws MessagingException {
         MimeBodyPart mdnPart = new MimeBodyPart();
-        mdnPart.setContent(report.formattedValue(), "message/disposition-notification");
+        mdnPart.setContent(report.formattedValue(), DISPOSITION_CONTENT_TYPE);
         return mdnPart;
+    }
+
+    public Message.Builder asMime4JMessageBuilder() throws IOException {
+        Message.Builder messageBuilder = Message.Builder.of();
+        messageBuilder.setBody(asMime4JMultipart());
+        return messageBuilder;
+    }
+
+    private Multipart asMime4JMultipart() throws IOException {
+        MultipartBuilder builder = MultipartBuilder.create(REPORT_SUB_TYPE);
+        builder.addBodyPart(BodyPartBuilder.create()
+            .use(new BasicBodyFactory())
+            .setBody(humanReadableText, Charsets.UTF_8)
+            .setContentType("text/plain", UTF_8_CHARSET)
+            .build());
+        builder.addBodyPart(BodyPartBuilder.create()
+            .use(new BasicBodyFactory())
+            .setBody(report.formattedValue(), Charsets.UTF_8)
+            .setContentType(DISPOSITION_CONTENT_TYPE, UTF_8_CHARSET)
+            .build());
+
+        return builder.build();
     }
 
     @Override

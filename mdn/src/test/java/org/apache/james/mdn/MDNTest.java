@@ -30,6 +30,8 @@ import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.fields.Disposition;
 import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mdn.type.DispositionType;
+import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -163,5 +165,37 @@ public class MDNTest {
                     "Explanation:\n" +
                     " - We should always write detailed unit tests\n" +
                     " - We should think of all edge cases\n");
+    }
+
+    @Test
+    public void mdnShouldBeConvertibleToMime4JMessage() throws Exception {
+        Message message = MDN.builder()
+            .humanReadableText("Explanation:\n" +
+                " - We should always write detailed unit tests\n" +
+                " - We should think of all edge cases\n")
+            .report(MINIMAL_REPORT)
+            .build()
+            .asMime4JMessageBuilder()
+            .build();
+
+        assertThat(asString(message))
+            .contains("MIME-Version: 1.0\r\n" +
+                "Content-Type: multipart/report;")
+            .contains("Content-Type: text/plain; charset=UTF-8\r\n" +
+                "\r\n" +
+                "Explanation:\n" +
+                " - We should always write detailed unit tests\n" +
+                " - We should think of all edge cases")
+        .contains("Content-Type: message/disposition-notification; charset=UTF-8\r\n" +
+            "\r\n" +
+            "Final-Recipient: rfc822; final@domain.com\r\n" +
+            "Disposition: automatic-action/MDN-sent-automatically;deleted");
+    }
+
+    private String asString(Message message) throws Exception {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        DefaultMessageWriter writer = new DefaultMessageWriter();
+        writer.writeMessage(message, buffer);
+        return new String(buffer.toByteArray(), StandardCharsets.UTF_8);
     }
 }
