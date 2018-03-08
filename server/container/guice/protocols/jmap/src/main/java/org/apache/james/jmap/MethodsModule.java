@@ -29,6 +29,7 @@ import org.apache.james.jmap.methods.JmapRequestParserImpl;
 import org.apache.james.jmap.methods.JmapResponseWriter;
 import org.apache.james.jmap.methods.JmapResponseWriterImpl;
 import org.apache.james.jmap.methods.Method;
+import org.apache.james.jmap.methods.SendMDNProcessor;
 import org.apache.james.jmap.methods.SetMailboxesCreationProcessor;
 import org.apache.james.jmap.methods.SetMailboxesDestructionProcessor;
 import org.apache.james.jmap.methods.SetMailboxesMethod;
@@ -79,6 +80,7 @@ public class MethodsModule extends AbstractModule {
         setMessagesProcessors.addBinding().to(SetMessagesUpdateProcessor.class);
         setMessagesProcessors.addBinding().to(SetMessagesCreationProcessor.class);
         setMessagesProcessors.addBinding().to(SetMessagesDestructionProcessor.class);
+        setMessagesProcessors.addBinding().to(SendMDNProcessor.class);
     }
 
 }
