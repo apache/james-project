@@ -28,6 +28,9 @@ import org.apache.james.jmap.model.mailbox.Rights;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mdn.action.mode.DispositionActionMode;
+import org.apache.james.mdn.sending.mode.DispositionSendingMode;
+import org.apache.james.mdn.type.DispositionType;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -95,6 +98,113 @@ public class ObjectMapperFactoryTest {
     }
 
     @Test
+    public void readValueShouldParseActionModeWhenAutomatic() throws Exception {
+        DispositionActionMode actual = testee.forParsing()
+            .readValue("\"" + DispositionActionMode.Automatic.getValue() + "\"",
+                DispositionActionMode.class);
+
+        assertThat(actual)
+            .isEqualTo(DispositionActionMode.Automatic);
+    }
+
+    @Test
+    public void readValueShouldParseActionModeWhenManual() throws Exception {
+        DispositionActionMode actual = testee.forParsing()
+            .readValue("\"" + DispositionActionMode.Manual.getValue() + "\"",
+                DispositionActionMode.class);
+
+        assertThat(actual)
+            .isEqualTo(DispositionActionMode.Manual);
+    }
+
+    @Test
+    public void readValueShouldFailOnInvalidActionMode() {
+        assertThatThrownBy(() -> testee.forParsing()
+            .readValue("\"illegal\"",
+                DispositionActionMode.class))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Unrecognized MDN Disposition action mode illegal. Should be one of [manual-action, automatic-action]");
+    }
+
+    @Test
+    public void readValueShouldParseSendingModeWhenAutomatic() throws Exception {
+        DispositionSendingMode actual = testee.forParsing()
+            .readValue("\"" + DispositionSendingMode.Automatic.getValue() + "\"",
+                DispositionSendingMode.class);
+
+        assertThat(actual)
+            .isEqualTo(DispositionSendingMode.Automatic);
+    }
+
+    @Test
+    public void readValueShouldParseSendingModeWhenManual() throws Exception {
+        DispositionSendingMode actual = testee.forParsing()
+            .readValue("\"" + DispositionSendingMode.Manual.getValue() + "\"",
+                DispositionSendingMode.class);
+
+        assertThat(actual)
+            .isEqualTo(DispositionSendingMode.Manual);
+    }
+
+    @Test
+    public void readValueShouldFailOnInvalidSendingMode() {
+        assertThatThrownBy(() -> testee.forParsing()
+            .readValue("\"illegal\"",
+                DispositionSendingMode.class))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Unrecognized MDN Disposition sending mode illegal. Should be one of [MDN-sent-manually, MDN-sent-automatically]");
+    }
+
+    @Test
+    public void readValueShouldParseSendingModeWhenDeleted() throws Exception {
+        DispositionType actual = testee.forParsing()
+            .readValue("\"" + DispositionType.Deleted.getValue() + "\"",
+                DispositionType.class);
+
+        assertThat(actual)
+            .isEqualTo(DispositionType.Deleted);
+    }
+
+    @Test
+    public void readValueShouldParseSendingModeWhenDispatched() throws Exception {
+        DispositionType actual = testee.forParsing()
+            .readValue("\"" + DispositionType.Dispatched.getValue() + "\"",
+                DispositionType.class);
+
+        assertThat(actual)
+            .isEqualTo(DispositionType.Dispatched);
+    }
+
+    @Test
+    public void readValueShouldParseSendingModeWhenDisplayed() throws Exception {
+        DispositionType actual = testee.forParsing()
+            .readValue("\"" + DispositionType.Displayed.getValue() + "\"",
+                DispositionType.class);
+
+        assertThat(actual)
+            .isEqualTo(DispositionType.Displayed);
+    }
+
+    @Test
+    public void readValueShouldParseSendingModeWhenProcessed() throws Exception {
+        DispositionType actual = testee.forParsing()
+            .readValue("\"" + DispositionType.Processed.getValue() + "\"",
+                DispositionType.class);
+
+        assertThat(actual)
+            .isEqualTo(DispositionType.Processed);
+    }
+
+    @Test
+    public void readValueShouldFailOnInvalidDispositionType() {
+        assertThatThrownBy(() -> testee.forParsing()
+            .readValue("\"illegal\"",
+                DispositionType.class))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Unrecognized MDN Disposition type illegal. Should be one of [deleted, dispatched, displayed, processed]");
+    }
+
+    @Test
     public void readValueShouldParseRightsObject() throws Exception {
         String username = "username";
         Rights actual = testee.forParsing()
@@ -107,7 +217,7 @@ public class ObjectMapperFactoryTest {
     }
 
     @Test
-    public void readValueShouldRejectMultiCharacterRights() throws Exception {
+    public void readValueShouldRejectMultiCharacterRights() {
         assertThatThrownBy(() ->
             testee.forParsing()
                 .readValue("\"ae\"", Rights.Right.class))
@@ -115,7 +225,7 @@ public class ObjectMapperFactoryTest {
     }
 
     @Test
-    public void readValueShouldRejectUnsupportedRights() throws Exception {
+    public void readValueShouldRejectUnsupportedRights() {
         assertThatThrownBy(() ->
             testee.forParsing()
                 .readValue("\"p\"", Rights.Right.class))
@@ -123,7 +233,7 @@ public class ObjectMapperFactoryTest {
     }
 
     @Test
-    public void readValueShouldRejectUnExistingRights() throws Exception {
+    public void readValueShouldRejectUnExistingRights() {
         assertThatThrownBy(() ->
             testee.forParsing()
                 .readValue("\"z\"", Rights.Right.class))
