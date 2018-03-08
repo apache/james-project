@@ -54,6 +54,7 @@
             <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet"/>
             <mailet match="RecipientIsLocal" class="Sieve"/>
             <mailet match="RecipientIsLocal" class="SpamAssassin">
+                <onMailetException>ignore</onMailetException>
                 <spamdHost>localhost</spamdHost>
                 <spamdPort>783</spamdPort>
             </mailet>
