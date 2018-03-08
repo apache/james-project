@@ -57,7 +57,6 @@ public class MessageParser {
         .setMaxContentLen(-1)
         .setMaxHeaderCount(-1)
         .setMaxHeaderLen(-1)
-        .setMaxHeaderCount(-1)
         .setMaxLineLen(-1)
         .build();
     private static final String TEXT_MEDIA_TYPE = "text";
@@ -68,7 +67,9 @@ public class MessageParser {
     private static final List<String> ATTACHMENT_CONTENT_DISPOSITIONS = ImmutableList.of(
             ContentDispositionField.DISPOSITION_TYPE_ATTACHMENT.toLowerCase(Locale.US),
             ContentDispositionField.DISPOSITION_TYPE_INLINE.toLowerCase(Locale.US));
-    private static final ImmutableList<String> ATTACHMENT_CONTENT_TYPES = ImmutableList.of("application/pgp-signature");
+    private static final ImmutableList<String> ATTACHMENT_CONTENT_TYPES = ImmutableList.of(
+        "application/pgp-signature",
+        "message/disposition-notification");
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageParser.class);
 
     private final Cid.CidParser cidParser;

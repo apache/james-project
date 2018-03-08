@@ -21,12 +21,22 @@ package org.apache.james.mailbox.store.mail.model.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mdn.MDN;
+import org.apache.james.mdn.MDNReport;
+import org.apache.james.mdn.action.mode.DispositionActionMode;
+import org.apache.james.mdn.fields.Disposition;
+import org.apache.james.mdn.sending.mode.DispositionSendingMode;
+import org.apache.james.mdn.type.DispositionType;
+import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -265,5 +275,32 @@ public class MessageParserTest {
             .allMatch(Optional::isPresent)
             .extracting(Optional::get)
             .containsOnly("message suivi", "signature.asc");
+    }
+
+    @Test
+    public void mdnReportShouldBeConsideredAsAttachmentWhenDispositionContentType() throws Exception {
+        Message message = MDN.builder()
+            .humanReadableText("A little test")
+            .report(MDNReport.builder()
+                .dispositionField(Disposition.builder()
+                    .actionMode(DispositionActionMode.Automatic)
+                    .sendingMode(DispositionSendingMode.Automatic)
+                    .type(DispositionType.Processed)
+                    .build())
+                .originalMessageIdField("zeugzev@domain.tld")
+                .reportingUserAgentField("Thunderbird")
+                .finalRecipientField("user@domain.tld")
+                .originalRecipientField("user@domain.tld")
+                .build())
+            .build()
+            .asMime4JMessageBuilder()
+            .build();
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        new DefaultMessageWriter().writeMessage(message, outputStream);
+
+        List<MessageAttachment> result = testee.retrieveAttachments(new ByteArrayInputStream(outputStream.toByteArray()));
+        assertThat(result).hasSize(1)
+            .allMatch(attachment -> attachment.getAttachment().getType().equals(MDN.DISPOSITION_CONTENT_TYPE));
     }
 }
