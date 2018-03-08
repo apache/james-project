@@ -25,21 +25,21 @@ import com.google.common.base.Preconditions;
 
 public class Quota<T extends QuotaValue<T>> {
 
-    public static <T extends QuotaValue<T>> Quota<T> quota(T used, T max) {
+    public static <T extends QuotaValue<T>> Quota<T> quota(T used, T limit) {
         Preconditions.checkNotNull(used);
-        return new Quota<>(used, max);
+        return new Quota<>(used, limit);
     }
 
-    private final T max;
+    private final T limit;
     private final T used;
 
-    private Quota(T used, T max) {
+    private Quota(T used, T limit) {
         this.used = used;
-        this.max = max;
+        this.limit = limit;
     }
 
-    public T getMax() {
-        return max;
+    public T getLimit() {
+        return limit;
     }
 
     public T getUsed() {
@@ -47,7 +47,7 @@ public class Quota<T extends QuotaValue<T>> {
     }
 
     public Quota<T> addValueToQuota(T value) {
-        return new Quota<>(used.add(value), max);
+        return new Quota<>(used.add(value), limit);
     }
 
     /**
@@ -61,12 +61,12 @@ public class Quota<T extends QuotaValue<T>> {
 
     public boolean isOverQuotaWithAdditionalValue(long additionalValue) {
         Preconditions.checkArgument(additionalValue >= 0);
-        return max.isLimited() && used.add(additionalValue).isGreaterThan(max);
+        return limit.isLimited() && used.add(additionalValue).isGreaterThan(limit);
     }
 
     @Override
     public String toString() {
-        return used + "/" + max;
+        return used + "/" + limit;
     }
 
     @Override
@@ -76,12 +76,12 @@ public class Quota<T extends QuotaValue<T>> {
         }
         Quota<?> other = (Quota<?>) o;
         return Objects.equal(used, other.getUsed())
-            && Objects.equal(max,other.getMax());
+            && Objects.equal(limit,other.getLimit());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(used, max);
+        return Objects.hashCode(used, limit);
     }
 
 }

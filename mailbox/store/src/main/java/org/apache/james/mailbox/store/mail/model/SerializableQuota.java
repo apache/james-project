@@ -34,7 +34,7 @@ public class SerializableQuota<T extends QuotaValue<T>> implements Serializable 
     public static final long UNLIMITED = -1;
 
     public static <U extends QuotaValue<U>> SerializableQuota<U> newInstance(Quota<U> quota) {
-        return newInstance(quota.getUsed(), quota.getMax());
+        return newInstance(quota.getUsed(), quota.getLimit());
     }
 
     public static <U extends QuotaValue<U>> SerializableQuota<U> newInstance(U used, U max) {
