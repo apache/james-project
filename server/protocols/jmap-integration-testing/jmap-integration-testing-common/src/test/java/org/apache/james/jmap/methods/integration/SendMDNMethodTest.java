@@ -23,6 +23,7 @@ import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.with;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -69,8 +70,6 @@ public abstract class SendMDNMethodTest {
 
     protected abstract MessageId randomMessageId();
 
-    protected abstract void await();
-
     private AccessToken accessToken;
     private AccessToken bobAccessToken;
     private GuiceJamesServer jmapServer;
@@ -96,10 +95,9 @@ public abstract class SendMDNMethodTest {
         mailboxProbe.createMailbox("#private", USERNAME, DefaultMailboxes.INBOX);
         accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USERNAME, PASSWORD);
         bobAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), BOB, BOB_PASSWORD);
-        await();
     }
 
-    public void sendAnInitialMessage() {
+    private void sendAnInitialMessage() {
         String messageCreationId = "creationId";
         String outboxId = getOutboxId(bobAccessToken);
         String requestBody = "[" +
@@ -128,7 +126,7 @@ public abstract class SendMDNMethodTest {
             .body()
             .path(ARGUMENTS + ".created." + messageCreationId + ".id");
 
-        await();
+        calmlyAwait.until(() -> !getMessageIdListForAccount(accessToken.serialize()).isEmpty());
     }
 
     private URIBuilder baseUri() {
@@ -236,10 +234,8 @@ public abstract class SendMDNMethodTest {
                 "}}, \"#0\"]]")
             .post("/jmap");
 
-
-        await();
-
         // BOB should have received it
+        calmlyAwait.until(() -> !listMessagesInMailbox(bobAccessToken, getInboxId(bobAccessToken)).isEmpty());
         List<String> bobInboxMessageIds = listMessagesInMailbox(bobAccessToken, getInboxId(bobAccessToken));
 
         given()
@@ -283,9 +279,8 @@ public abstract class SendMDNMethodTest {
                 "}}, \"#0\"]]")
             .post("/jmap");
 
-        await();
-
         // BOB should have received it
+        calmlyAwait.until(() -> !listMessagesInMailbox(bobAccessToken, getInboxId(bobAccessToken)).isEmpty());
         List<String> bobInboxMessageIds = listMessagesInMailbox(bobAccessToken, getInboxId(bobAccessToken));
 
         String blobId = with()
@@ -419,7 +414,7 @@ public abstract class SendMDNMethodTest {
             .getList(ARGUMENTS + ".list");
     }
 
-    public List<String> getMessageIdListForAccount(String accessToken) {
+    private List<String> getMessageIdListForAccount(String accessToken) {
         return with()
             .header("Authorization", accessToken)
             .body("[[\"getMessageList\", {}, \"#0\"]]")
@@ -430,7 +425,7 @@ public abstract class SendMDNMethodTest {
             .path(ARGUMENTS + ".messageIds");
     }
 
-    public List<String> listMessagesInMailbox(AccessToken accessToken, String mailboxId) {
+    private List<String> listMessagesInMailbox(AccessToken accessToken, String mailboxId) {
         return with()
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]")

@@ -47,11 +47,6 @@ public class CassandraSendMDNMethodTest extends SendMDNMethodTest {
     protected GuiceJamesServer createJmapServer() {
         return rule.jmapServer(cassandra.getModule());
     }
-
-    @Override
-    protected void await() {
-        rule.await();
-    }
     
     @Override
     protected MessageId randomMessageId() {
