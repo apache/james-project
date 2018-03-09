@@ -19,18 +19,40 @@
 
 package org.apache.james.jmap.model;
 
+import java.io.IOException;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Stream;
 
+import org.apache.james.core.User;
+import org.apache.james.jmap.exceptions.InvalidOriginMessageForMDNException;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mdn.MDN;
+import org.apache.james.mdn.MDNReport;
+import org.apache.james.mdn.fields.Disposition;
+import org.apache.james.mime4j.codec.DecodeMonitor;
+import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.dom.address.AddressList;
+import org.apache.james.mime4j.dom.address.Mailbox;
+import org.apache.james.mime4j.dom.address.MailboxList;
+import org.apache.james.mime4j.dom.field.AddressListField;
+import org.apache.james.mime4j.dom.field.ParseException;
+import org.apache.james.mime4j.field.AddressListFieldLenientImpl;
+import org.apache.james.mime4j.util.MimeUtil;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 @JsonDeserialize(builder = JmapMDN.Builder.class)
 public class JmapMDN {
+
+    public static final String DISPOSITION_NOTIFICATION_TO = "Disposition-Notification-To";
+    public static final String RETURN_PATH = "Return-Path";
 
     public static Builder builder() {
         return new Builder();
@@ -114,6 +136,64 @@ public class JmapMDN {
 
     public MDNDisposition getDisposition() {
         return disposition;
+    }
+
+    public Message generateMDNMessage(Message originalMessage, MailboxSession mailboxSession) throws ParseException, IOException, InvalidOriginMessageForMDNException {
+
+        User user = User.fromUsername(mailboxSession.getUser().getUserName());
+
+        return MDN.builder()
+            .report(generateReport(originalMessage, mailboxSession))
+            .humanReadableText(textBody)
+            .build()
+        .asMime4JMessageBuilder()
+            .setTo(getSenderAddress(originalMessage))
+            .setFrom(user.asString())
+            .setSubject(subject)
+            .setMessageId(MimeUtil.createUniqueMessageId(user.getDomainPart().orElse(null)))
+            .build();
+    }
+
+    private String getSenderAddress(Message originalMessage) throws InvalidOriginMessageForMDNException {
+        return getAddressForHeader(originalMessage, DISPOSITION_NOTIFICATION_TO)
+            .orElseThrow(() -> InvalidOriginMessageForMDNException.missingHeader(DISPOSITION_NOTIFICATION_TO))
+            .getAddress();
+    }
+
+    private Optional<Mailbox> getAddressForHeader(Message originalMessage, String fieldName) {
+        return Optional.ofNullable(originalMessage.getHeader()
+            .getFields(fieldName))
+            .orElse(ImmutableList.of())
+            .stream()
+            .map(field -> AddressListFieldLenientImpl.PARSER.parse(field, new DecodeMonitor()))
+            .findFirst()
+            .map(AddressListField::getAddressList)
+            .map(AddressList::flatten)
+            .map(MailboxList::stream)
+            .orElse(Stream.of())
+            .findFirst();
+    }
+
+
+    public MDNReport generateReport(Message originalMessage, MailboxSession mailboxSession) throws InvalidOriginMessageForMDNException {
+        if (originalMessage.getMessageId() == null) {
+            throw InvalidOriginMessageForMDNException.missingHeader("Message-ID");
+        }
+        return MDNReport.builder()
+            .dispositionField(generateDisposition())
+            .originalRecipientField(mailboxSession.getUser().getUserName())
+            .originalMessageIdField(originalMessage.getMessageId())
+            .finalRecipientField(mailboxSession.getUser().getUserName())
+            .reportingUserAgentField(getReportingUA())
+            .build();
+    }
+
+    private Disposition generateDisposition() {
+        return Disposition.builder()
+            .actionMode(disposition.getActionMode())
+            .sendingMode(disposition.getSendingMode())
+            .type(disposition.getType())
+            .build();
     }
 
     @Override

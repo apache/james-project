@@ -29,11 +29,10 @@ import javax.inject.Inject;
 import javax.mail.Flags;
 import javax.mail.MessagingException;
 
-import org.apache.james.core.User;
+import org.apache.james.jmap.exceptions.InvalidOriginMessageForMDNException;
 import org.apache.james.jmap.exceptions.MessageNotFoundException;
 import org.apache.james.jmap.model.Envelope;
 import org.apache.james.jmap.model.JmapMDN;
-import org.apache.james.jmap.model.MDNDisposition;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMessagesRequest;
@@ -51,14 +50,12 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mdn.MDN;
 import org.apache.james.mdn.MDNReport;
-import org.apache.james.mdn.fields.Disposition;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.field.ParseException;
 import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.stream.MimeConfig;
-import org.apache.james.mime4j.util.MimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,6 +106,17 @@ public class SendMDNProcessor implements SetMessagesProcessor {
             MessageId messageId = sendMdn(MDNCreationEntry, mailboxSession);
             return SetMessagesResponse.builder()
                 .mdnSent(MDNCreationEntry.getCreationId(), messageId);
+        } catch (InvalidOriginMessageForMDNException e) {
+            return SetMessagesResponse.builder()
+                .mdnNotSent(MDNCreationEntry.getCreationId(),
+                    SetError.builder()
+                        .description(String.format("Origin messageId '%s' is invalid." +
+                                " A Message Delivery Notification can not be generated for it." +
+                                " Explanation: " + e.getExplanation(),
+                            MDNCreationEntry.getValue().getMessageId().serialize()))
+                        .type("invalidArgument")
+                        .build());
+
         } catch (MessageNotFoundException e) {
             return SetMessagesResponse.builder()
                 .mdnNotSent(MDNCreationEntry.getCreationId(),
@@ -129,14 +137,15 @@ public class SendMDNProcessor implements SetMessagesProcessor {
         }
     }
 
-    private MessageId sendMdn(ValueWithId.MDNCreationEntry MDNCreationEntry, MailboxSession mailboxSession) throws MailboxException, IOException, MessagingException, ParseException, MessageNotFoundException {
+    private MessageId sendMdn(ValueWithId.MDNCreationEntry MDNCreationEntry, MailboxSession mailboxSession)
+            throws MailboxException, IOException, MessagingException, ParseException, MessageNotFoundException, InvalidOriginMessageForMDNException {
+
         JmapMDN mdn = MDNCreationEntry.getValue();
         Message originalMessage = retrieveOriginalMessage(mdn, mailboxSession);
-        MDNReport mdnReport = generateReport(mdn, originalMessage, mailboxSession);
+        MDNReport mdnReport = mdn.generateReport(originalMessage, mailboxSession);
         List<MessageAttachment> reportAsAttachment = ImmutableList.of(convertReportToAttachment(mdnReport));
-        User user = User.fromUsername(mailboxSession.getUser().getUserName());
 
-        Message mdnAnswer = generateMDNMessage(originalMessage, mdn, mdnReport, user);
+        Message mdnAnswer = mdn.generateMDNMessage(originalMessage, mailboxSession);
 
         Flags seen = new Flags(Flags.Flag.SEEN);
         MessageFactory.MetaDataWithContent metaDataWithContent = messageAppender.appendMessageInMailbox(mdnAnswer,
@@ -146,19 +155,6 @@ public class SendMDNProcessor implements SetMessagesProcessor {
             Envelope.fromMime4JMessage(mdnAnswer), mailboxSession);
 
         return metaDataWithContent.getMessageId();
-    }
-
-    private Message generateMDNMessage(Message originalMessage, JmapMDN mdn, MDNReport mdnReport, User user) throws ParseException, IOException {
-        return MDN.builder()
-            .report(mdnReport)
-            .humanReadableText(mdn.getTextBody())
-            .build()
-        .asMime4JMessageBuilder()
-            .setTo(originalMessage.getSender().getAddress())
-            .setFrom(user.asString())
-            .setSubject(mdn.getSubject())
-            .setMessageId(MimeUtil.createUniqueMessageId(user.getDomainPart().orElse(null)))
-            .build();
     }
 
     private Message retrieveOriginalMessage(JmapMDN mdn, MailboxSession mailboxSession) throws MailboxException, IOException, MessageNotFoundException {
@@ -188,23 +184,6 @@ public class SendMDNProcessor implements SetMessagesProcessor {
             .build();
     }
 
-    private MDNReport generateReport(JmapMDN mdn, Message originalMessage, MailboxSession mailboxSession) {
-        return MDNReport.builder()
-                .dispositionField(generateDisposition(mdn.getDisposition()))
-                .originalRecipientField(mailboxSession.getUser().getUserName())
-                .originalMessageIdField(originalMessage.getMessageId())
-                .finalRecipientField(mailboxSession.getUser().getUserName())
-                .reportingUserAgentField(mdn.getReportingUA())
-                .build();
-    }
-
-    private Disposition generateDisposition(MDNDisposition disposition) {
-        return Disposition.builder()
-            .actionMode(disposition.getActionMode())
-            .sendingMode(disposition.getSendingMode())
-            .type(disposition.getType())
-            .build();
-    }
 
     private MessageManager getOutbox(MailboxSession mailboxSession) throws MailboxException {
         return systemMailboxesProvider.getMailboxByRole(Role.OUTBOX, mailboxSession)
