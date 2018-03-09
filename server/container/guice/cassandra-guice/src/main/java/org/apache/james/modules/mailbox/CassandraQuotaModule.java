@@ -39,17 +39,17 @@ public class CassandraQuotaModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(DefaultUserQuotaRootResolver.class).in(Scopes.SINGLETON);
-        bind(CassandraPerUserMaxQuotaManager.class).in(Scopes.SINGLETON);
-        bind(StoreQuotaManager.class).in(Scopes.SINGLETON);
         bind(CassandraCurrentQuotaManager.class).in(Scopes.SINGLETON);
+        bind(CassandraPerUserMaxQuotaManager.class).in(Scopes.SINGLETON);
+        bind(DefaultUserQuotaRootResolver.class).in(Scopes.SINGLETON);
+        bind(StoreQuotaManager.class).in(Scopes.SINGLETON);
 
-        bind(QuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
-        bind(UserQuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
+        bind(CurrentQuotaManager.class).to(CassandraCurrentQuotaManager.class);
         bind(MaxQuotaManager.class).to(CassandraPerUserMaxQuotaManager.class);
         bind(QuotaManager.class).to(StoreQuotaManager.class);
-        bind(CurrentQuotaManager.class).to(CassandraCurrentQuotaManager.class);
+        bind(QuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
         bind(StoreCurrentQuotaManager.class).to(CassandraCurrentQuotaManager.class);
+        bind(UserQuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().to(org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule.class);
