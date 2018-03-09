@@ -85,6 +85,28 @@ public class OptionalUtilsTest {
     }
 
     @Test
+    public void orShouldReturnEmptyWhenNoParameter() {
+        assertThat(OptionalUtils.or())
+            .isEmpty();
+    }
+
+    @Test
+    public void orShouldReturnEmptyWhenEmpty() {
+        assertThat(
+            OptionalUtils.or(
+                Optional.empty()))
+            .isEmpty();
+    }
+
+    @Test
+    public void orShouldReturnValueWhenValue() {
+        assertThat(
+            OptionalUtils.or(
+                Optional.of(1)))
+            .contains(1);
+    }
+
+    @Test
     public void orShouldReturnEmptyWhenBothEmpty() {
         assertThat(
             OptionalUtils.or(
@@ -117,6 +139,16 @@ public class OptionalUtilsTest {
             OptionalUtils.or(
                 Optional.of(1),
                 Optional.of(2)))
+            .contains(1);
+    }
+
+    @Test
+    public void orShouldReturnThirdValueWhenOnlyThirdValue() {
+        assertThat(
+            OptionalUtils.or(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(1)))
             .contains(1);
     }
 
