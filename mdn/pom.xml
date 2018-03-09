@@ -30,7 +30,7 @@
     <artifactId>james-mdn</artifactId>
 
     <name>Apache James :: MDN</name>
-    <description>Provides parser and representations for MDN messages</description>
+    <description>Provides builders for RFC 8098 Message Delivery Notification</description>
 
     <dependencies>
         <dependency>
