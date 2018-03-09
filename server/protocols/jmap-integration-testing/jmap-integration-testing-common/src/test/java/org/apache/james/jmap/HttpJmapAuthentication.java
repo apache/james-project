@@ -19,9 +19,10 @@
 
 package org.apache.james.jmap;
 
+import static org.apache.james.jmap.TestingConstants.calmlyAwait;
+
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.fluent.Request;
@@ -31,23 +32,12 @@ import org.apache.http.entity.ContentType;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.hamcrest.core.IsAnything;
 
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
 import com.jayway.jsonpath.JsonPath;
 
 public class HttpJmapAuthentication {
 
-    private static final ConditionFactory CALMLY_AWAIT = Awaitility.with()
-            .pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS)
-            .and().with()
-            .pollDelay(Duration.ONE_HUNDRED_MILLISECONDS)
-            .await()
-            .atMost(30, TimeUnit.SECONDS)
-            .ignoreExceptions();
-
     public static AccessToken authenticateJamesUser(URIBuilder uriBuilder, String username, String password) {
-        return CALMLY_AWAIT.until(
+        return calmlyAwait.until(
             () -> doAuthenticate(uriBuilder, username, password), IsAnything.anything());
     }
 

@@ -20,6 +20,7 @@
 package org.apache.james.jmap;
 
 import static com.jayway.awaitility.Duration.ONE_MINUTE;
+import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.hamcrest.Matchers.equalTo;
 
 import java.util.concurrent.TimeUnit;
@@ -42,10 +43,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
-
 public abstract class VacationRelayIntegrationTest {
 
     private static final String DOMAIN = "mydomain.tld";
@@ -60,8 +57,6 @@ public abstract class VacationRelayIntegrationTest {
     @Rule
     public FakeSmtp fakeSmtp = new FakeSmtp();
 
-
-    private ConditionFactory calmlyAwait;
     private GuiceJamesServer guiceJamesServer;
     private JmapGuiceProbe jmapGuiceProbe;
 
@@ -88,13 +83,6 @@ public abstract class VacationRelayIntegrationTest {
         await();
 
         jmapGuiceProbe = guiceJamesServer.getProbe(JmapGuiceProbe.class);
-
-        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
-        calmlyAwait = Awaitility
-            .with()
-            .pollInterval(slowPacedPollInterval)
-            .and()
-            .pollDelay(slowPacedPollInterval).await();
 
         fakeSmtp.awaitStarted(calmlyAwait.atMost(ONE_MINUTE));
     }

@@ -236,6 +236,7 @@ public abstract class SendMDNMethodTest {
                 "}}, \"#0\"]]")
             .post("/jmap");
 
+
         await();
 
         // BOB should have received it

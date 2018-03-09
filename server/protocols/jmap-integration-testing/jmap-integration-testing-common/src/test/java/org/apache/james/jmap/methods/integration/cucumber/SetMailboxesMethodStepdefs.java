@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
+import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
@@ -40,8 +41,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.Maps;
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 
@@ -269,11 +268,10 @@ public class SetMailboxesMethodStepdefs {
 
     @Then("^mailbox \"([^\"]*)\" contains (\\d+) messages$")
     public void mailboxContainsMessages(String mailboxName, int messageCount) {
-        Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         String username = userStepdefs.getConnectedUser();
         String mailboxId = mainStepdefs.getMailboxId(username, mailboxName).serialize();
 
-        Awaitility.await().atMost(Duration.FIVE_SECONDS).pollDelay(slowPacedPollInterval).pollInterval(slowPacedPollInterval).until(() -> {
+        calmlyAwait.until(() -> {
             String requestBody = "[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]";
 
             httpClient.post(requestBody);
