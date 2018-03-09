@@ -49,6 +49,7 @@ public class StoreQuotaManager implements QuotaManager {
         return Quota.<QuotaCount>builder()
             .used(currentQuotaManager.getCurrentMessageCount(quotaRoot))
             .computedLimit(maxQuotaManager.getMaxMessage(quotaRoot).orElse(QuotaCount.unlimited()))
+            .limitsByScope(maxQuotaManager.listMaxMessagesDetails(quotaRoot))
             .build();
     }
 
@@ -57,6 +58,7 @@ public class StoreQuotaManager implements QuotaManager {
         return Quota.<QuotaSize>builder()
             .used(currentQuotaManager.getCurrentStorage(quotaRoot))
             .computedLimit(maxQuotaManager.getMaxStorage(quotaRoot).orElse(QuotaSize.unlimited()))
+            .limitsByScope(maxQuotaManager.listMaxStorageDetails(quotaRoot))
             .build();
     }
 

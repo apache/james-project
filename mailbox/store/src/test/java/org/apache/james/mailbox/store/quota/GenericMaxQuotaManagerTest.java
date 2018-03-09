@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store.quota;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaCount;
@@ -102,4 +103,70 @@ public abstract class GenericMaxQuotaManagerTest {
         maxQuotaManager.removeDefaultMaxMessage();
         assertThat(maxQuotaManager.getDefaultMaxMessage()).isEmpty();
     }
+
+    @Test
+    public void listMaxMessagesDetailsShouldReturnEmptyWhenNoQuotaDefined() {
+        assertThat(maxQuotaManager.listMaxMessagesDetails(quotaRoot)).isEmpty();
+    }
+
+    @Test
+    public void listMaxStorageDetailsShouldReturnEmptyWhenNoQuotaDefined() {
+        assertThat(maxQuotaManager.listMaxStorageDetails(quotaRoot)).isEmpty();
+    }
+
+    @Test
+    public void listMaxMessagesDetailsShouldReturnGlobalValueWhenDefined() throws Exception {
+        maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(123));
+        assertThat(maxQuotaManager.listMaxMessagesDetails(quotaRoot))
+            .hasSize(1)
+            .containsEntry(Quota.Scope.Global, QuotaCount.count(123));
+    }
+
+
+    @Test
+    public void listMaxMessagesDetailsShouldReturnUserValueWhenDefined() throws Exception {
+        maxQuotaManager.setMaxMessage(quotaRoot, QuotaCount.count(123));
+        assertThat(maxQuotaManager.listMaxMessagesDetails(quotaRoot))
+            .hasSize(1)
+            .containsEntry(Quota.Scope.User, QuotaCount.count(123));
+    }
+
+    @Test
+    public void listMaxMessagesDetailsShouldReturnBothValuesWhenDefined() throws Exception {
+        maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(1234));
+        maxQuotaManager.setMaxMessage(quotaRoot, QuotaCount.count(123));
+        assertThat(maxQuotaManager.listMaxMessagesDetails(quotaRoot))
+            .hasSize(2)
+            .containsEntry(Quota.Scope.Global, QuotaCount.count(1234))
+            .containsEntry(Quota.Scope.User, QuotaCount.count(123));
+    }
+
+
+    @Test
+    public void listMaxStorageDetailsShouldReturnGlobalValueWhenDefined() throws Exception {
+        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(1111));
+        assertThat(maxQuotaManager.listMaxStorageDetails(quotaRoot))
+            .hasSize(1)
+            .containsEntry(Quota.Scope.Global, QuotaSize.size(1111));
+    }
+
+
+    @Test
+    public void listMaxStorageDetailsShouldReturnUserValueWhenDefined() throws Exception {
+        maxQuotaManager.setMaxStorage(quotaRoot, QuotaSize.size(2222));
+        assertThat(maxQuotaManager.listMaxStorageDetails(quotaRoot))
+            .hasSize(1)
+            .containsEntry(Quota.Scope.User, QuotaSize.size(2222));
+    }
+
+    @Test
+    public void listMaxStorageDetailsShouldReturnBothValuesWhenDefined() throws Exception {
+        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(3333));
+        maxQuotaManager.setMaxStorage(quotaRoot, QuotaSize.size(4444));
+        assertThat(maxQuotaManager.listMaxStorageDetails(quotaRoot))
+            .hasSize(2)
+            .containsEntry(Quota.Scope.Global, QuotaSize.size(3333))
+            .containsEntry(Quota.Scope.User, QuotaSize.size(4444));
+    }
+
 }
