@@ -42,6 +42,7 @@ import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.jackson.QuotaModule;
 import org.apache.james.webadmin.service.UserQuotaService;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
@@ -373,10 +374,10 @@ public class UserQuotaRoutesTest {
 
     @Test
     public void getQuotaShouldReturnBothWhenValueSpecified() throws Exception {
-        int maxStorage = 42;
-        int maxMessage = 52;
-        maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.size(maxStorage));
-        maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(maxMessage));
+        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(1111));
+        maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(22));
+        maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.size(42));
+        maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(52));
 
         JsonPath jsonPath =
             given()
@@ -387,8 +388,58 @@ public class UserQuotaRoutesTest {
                 .extract()
                 .jsonPath();
 
-        assertThat(jsonPath.getLong(SIZE)).isEqualTo(maxStorage);
-        assertThat(jsonPath.getLong(COUNT)).isEqualTo(maxMessage);
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(jsonPath.getLong("computed." + SIZE)).isEqualTo(42);
+        softly.assertThat(jsonPath.getLong("computed." + COUNT)).isEqualTo(52);
+        softly.assertThat(jsonPath.getLong("user." + SIZE)).isEqualTo(42);
+        softly.assertThat(jsonPath.getLong("user." + COUNT)).isEqualTo(52);
+        softly.assertThat(jsonPath.getLong("global." + SIZE)).isEqualTo(1111);
+        softly.assertThat(jsonPath.getLong("global." + COUNT)).isEqualTo(22);
+    }
+
+    @Test
+    public void getQuotaShouldReturnOnlySpecifiedValues() throws Exception {
+        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(1111));
+        maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(52));
+
+        JsonPath jsonPath =
+            given()
+                .get(QUOTA_USERS + "/" + BOB.asString())
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .extract()
+                .jsonPath();
+
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(jsonPath.getLong("computed." + SIZE)).isEqualTo(1111);
+        softly.assertThat(jsonPath.getLong("computed." + COUNT)).isEqualTo(52);
+        softly.assertThat(jsonPath.getLong("user." + COUNT)).isEqualTo(52);
+        softly.assertThat(jsonPath.getObject("user." + SIZE, Long.class)).isNull();
+        softly.assertThat(jsonPath.getLong("global." + SIZE)).isEqualTo(1111);
+        softly.assertThat(jsonPath.getObject("global." + COUNT, Long.class)).isNull();
+    }
+
+    @Test
+    public void getQuotaShouldReturnGlobalValuesWhenNoUserValuesDefined() throws Exception {
+        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(1111));
+        maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(12));
+
+        JsonPath jsonPath =
+            given()
+                .get(QUOTA_USERS + "/" + BOB.asString())
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .extract()
+                .jsonPath();
+
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(jsonPath.getLong("computed." + SIZE)).isEqualTo(1111);
+        softly.assertThat(jsonPath.getLong("computed." + COUNT)).isEqualTo(12);
+        softly.assertThat(jsonPath.getObject("user", Object.class)).isNull();
+        softly.assertThat(jsonPath.getLong("global." + SIZE)).isEqualTo(1111);
+        softly.assertThat(jsonPath.getLong("global." + COUNT)).isEqualTo(12);
     }
 
     @Test
@@ -420,8 +471,8 @@ public class UserQuotaRoutesTest {
                 .extract()
                 .jsonPath();
 
-        assertThat(jsonPath.getLong(SIZE)).isEqualTo(maxStorage);
-        assertThat(jsonPath.getObject(COUNT, Long.class)).isNull();
+        assertThat(jsonPath.getLong("user." + SIZE)).isEqualTo(maxStorage);
+        assertThat(jsonPath.getObject("user." + COUNT, Long.class)).isNull();
     }
 
     @Test
@@ -433,14 +484,14 @@ public class UserQuotaRoutesTest {
         JsonPath jsonPath =
             given()
                 .get(QUOTA_USERS + "/" + BOB.asString())
-                .then()
+            .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
                 .extract()
                 .jsonPath();
 
-        assertThat(jsonPath.getObject(SIZE, Long.class)).isNull();
-        assertThat(jsonPath.getLong(COUNT)).isEqualTo(maxMessage);
+        assertThat(jsonPath.getObject("user." + SIZE, Long.class)).isNull();
+        assertThat(jsonPath.getLong("user." + COUNT)).isEqualTo(maxMessage);
     }
 
     @Test
