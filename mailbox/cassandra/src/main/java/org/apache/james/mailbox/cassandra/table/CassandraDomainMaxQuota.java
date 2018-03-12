@@ -17,34 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.quota;
+package org.apache.james.mailbox.cassandra.table;
 
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
-import org.apache.james.mailbox.quota.MaxQuotaManager;
-import org.apache.james.mailbox.store.quota.GenericMaxQuotaManagerTest;
-import org.junit.After;
-import org.junit.ClassRule;
+public interface CassandraDomainMaxQuota {
+    String TABLE_NAME = "domainMaxQuota";
 
-public class CassandraPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerTest {
-
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private CassandraCluster cassandra;
-
-    @Override
-    protected MaxQuotaManager provideMaxQuotaManager() {
-        cassandra = CassandraCluster.create(new CassandraQuotaModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
-        return new CassandraPerUserMaxQuotaManager(
-            new CassandraPerUserMaxQuotaDao(cassandra.getConf()),
-            new CassandraPerDomainMaxQuotaDao(cassandra.getConf()),
-            new CassandraDefaultMaxQuotaDao(cassandra.getConf()));
-    }
-
-    @After
-    public void cleanUp() {
-        cassandra.close();
-    }
-
+    String DOMAIN = "domain";
+    String MESSAGE_COUNT = "maxMessageCount";
+    String STORAGE = "maxStorage";
 }

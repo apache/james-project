@@ -30,6 +30,8 @@ import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage;
 import org.apache.james.mailbox.jpa.quota.model.JpaCurrentQuota;
 import org.apache.james.mailbox.jpa.quota.model.MaxDefaultMessageCount;
 import org.apache.james.mailbox.jpa.quota.model.MaxDefaultStorage;
+import org.apache.james.mailbox.jpa.quota.model.MaxDomainMessageCount;
+import org.apache.james.mailbox.jpa.quota.model.MaxDomainStorage;
 import org.apache.james.mailbox.jpa.quota.model.MaxUserMessageCount;
 import org.apache.james.mailbox.jpa.quota.model.MaxUserStorage;
 import org.apache.james.mailbox.jpa.user.model.JPASubscription;
@@ -51,6 +53,8 @@ public interface JPAMailboxFixture {
     List<Class<?>> QUOTA_PERSISTANCE_CLASSES = ImmutableList.<Class<?>>of(
         MaxDefaultMessageCount.class,
         MaxDefaultStorage.class,
+        MaxDomainStorage.class,
+        MaxDomainMessageCount.class,
         MaxUserMessageCount.class,
         MaxUserStorage.class,
         JpaCurrentQuota.class
@@ -69,6 +73,8 @@ public interface JPAMailboxFixture {
         "JAMES_MAX_DEFAULT_STORAGE",
         "JAMES_MAX_USER_MESSAGE_COUNT",
         "JAMES_MAX_USER_STORAGE",
+        "JAMES_MAX_DOMAIN_MESSAGE_COUNT",
+        "JAMES_MAX_DOMAIN_STORAGE",
         "JAMES_QUOTA_CURRENTQUOTA"
     );
 }

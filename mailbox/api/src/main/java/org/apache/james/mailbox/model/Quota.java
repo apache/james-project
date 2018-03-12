@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableMap;
 public class Quota<T extends QuotaValue<T>> {
 
     public enum Scope {
+        Domain,
         Global,
         User
     }

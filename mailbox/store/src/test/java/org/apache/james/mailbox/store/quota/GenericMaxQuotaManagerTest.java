@@ -27,12 +27,14 @@ import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public abstract class GenericMaxQuotaManagerTest {
 
     private QuotaRoot quotaRoot;
     private MaxQuotaManager maxQuotaManager;
+    private String domain;
 
     protected abstract MaxQuotaManager provideMaxQuotaManager();
 
@@ -40,6 +42,7 @@ public abstract class GenericMaxQuotaManagerTest {
     public void setUp() {
         maxQuotaManager = provideMaxQuotaManager();
         quotaRoot = QuotaRoot.quotaRoot("benwa");
+        domain = "domain";
     }
 
     @Test
@@ -52,6 +55,14 @@ public abstract class GenericMaxQuotaManagerTest {
         assertThat(maxQuotaManager.getMaxStorage(quotaRoot)).isEmpty();
     }
 
+    @Ignore("how can we link domain and quotaRoot ?")
+    @Test
+    public void getMaxMessageShouldReturnDomainWhenNoValue() throws Exception {
+        maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(36));
+        maxQuotaManager.setDomainMaxMessage(domain, QuotaCount.count(23));
+        assertThat(maxQuotaManager.getMaxMessage(quotaRoot)).contains(QuotaCount.count(23));
+    }
+
     @Test
     public void getMaxMessageShouldReturnDefaultWhenNoValue() throws Exception {
         maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(36));
@@ -62,6 +73,14 @@ public abstract class GenericMaxQuotaManagerTest {
     public void getMaxStorageShouldReturnDefaultWhenNoValue() throws Exception {
         maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(36));
         assertThat(maxQuotaManager.getMaxStorage(quotaRoot)).contains(QuotaSize.size(36));
+    }
+
+    @Ignore("how can we link domain and quotaRoot ?")
+    @Test
+    public void getMaxStorageShouldReturnDomainWhenNoValue() throws Exception {
+        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(234));
+        maxQuotaManager.setDomainMaxStorage(domain, QuotaSize.size(111));
+        assertThat(maxQuotaManager.getMaxStorage(quotaRoot)).contains(QuotaSize.size(111));
     }
 
     @Test
@@ -122,6 +141,14 @@ public abstract class GenericMaxQuotaManagerTest {
             .containsEntry(Quota.Scope.Global, QuotaCount.count(123));
     }
 
+    @Ignore("how can we link domain and quotaRoot ?")
+    @Test
+    public void listMaxMessagesDetailsShouldReturnDomainValueWhenDefined() throws Exception {
+        maxQuotaManager.setDomainMaxMessage(domain, QuotaCount.count(123));
+        assertThat(maxQuotaManager.listMaxMessagesDetails(quotaRoot))
+            .hasSize(1)
+            .containsEntry(Quota.Scope.Domain, QuotaCount.count(123));
+    }
 
     @Test
     public void listMaxMessagesDetailsShouldReturnUserValueWhenDefined() throws Exception {
@@ -132,7 +159,7 @@ public abstract class GenericMaxQuotaManagerTest {
     }
 
     @Test
-    public void listMaxMessagesDetailsShouldReturnBothValuesWhenDefined() throws Exception {
+    public void listMaxMessagesDetailsShouldReturnBothValuesWhenGlobalAndUserDefined() throws Exception {
         maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(1234));
         maxQuotaManager.setMaxMessage(quotaRoot, QuotaCount.count(123));
         assertThat(maxQuotaManager.listMaxMessagesDetails(quotaRoot))
@@ -141,6 +168,18 @@ public abstract class GenericMaxQuotaManagerTest {
             .containsEntry(Quota.Scope.User, QuotaCount.count(123));
     }
 
+    @Ignore("how can we link domain and quotaRoot ?")
+    @Test
+    public void listMaxMessagesDetailsShouldReturnAllValuesWhenDefined() throws Exception {
+        maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(1234));
+        maxQuotaManager.setDomainMaxMessage(domain, QuotaCount.count(333));
+        maxQuotaManager.setMaxMessage(quotaRoot, QuotaCount.count(123));
+        assertThat(maxQuotaManager.listMaxMessagesDetails(quotaRoot))
+            .hasSize(3)
+            .containsEntry(Quota.Scope.Global, QuotaCount.count(1234))
+            .containsEntry(Quota.Scope.Domain, QuotaCount.count(333))
+            .containsEntry(Quota.Scope.User, QuotaCount.count(123));
+    }
 
     @Test
     public void listMaxStorageDetailsShouldReturnGlobalValueWhenDefined() throws Exception {
@@ -150,6 +189,14 @@ public abstract class GenericMaxQuotaManagerTest {
             .containsEntry(Quota.Scope.Global, QuotaSize.size(1111));
     }
 
+    @Ignore("how can we link domain and quotaRoot ?")
+    @Test
+    public void listMaxStorageDetailsShouldReturnDomainValueWhenDefined() throws Exception {
+        maxQuotaManager.setDomainMaxStorage(domain, QuotaSize.size(1111));
+        assertThat(maxQuotaManager.listMaxStorageDetails(quotaRoot))
+            .hasSize(1)
+            .containsEntry(Quota.Scope.Domain, QuotaSize.size(1111));
+    }
 
     @Test
     public void listMaxStorageDetailsShouldReturnUserValueWhenDefined() throws Exception {
@@ -167,6 +214,55 @@ public abstract class GenericMaxQuotaManagerTest {
             .hasSize(2)
             .containsEntry(Quota.Scope.Global, QuotaSize.size(3333))
             .containsEntry(Quota.Scope.User, QuotaSize.size(4444));
+    }
+
+    @Ignore("how can we link domain and quotaRoot ?")
+    @Test
+    public void listMaxStorageDetailsShouldReturnAllValuesWhenDefined() throws Exception {
+        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(3333));
+        maxQuotaManager.setDomainMaxStorage(domain, QuotaSize.size(2222));
+        maxQuotaManager.setMaxStorage(quotaRoot, QuotaSize.size(4444));
+        assertThat(maxQuotaManager.listMaxStorageDetails(quotaRoot))
+            .hasSize(3)
+            .containsEntry(Quota.Scope.Global, QuotaSize.size(3333))
+            .containsEntry(Quota.Scope.Domain, QuotaSize.size(2222))
+            .containsEntry(Quota.Scope.User, QuotaSize.size(4444));
+    }
+
+    @Test
+    public void getDomainMaxMessageShouldReturnEmptyWhenNoDefaultValue() {
+        assertThat(maxQuotaManager.getDomainMaxMessage(domain)).isEmpty();
+    }
+
+    @Test
+    public void getDomainMaxStorageShouldReturnEmptyWhenNoDefaultValue() {
+        assertThat(maxQuotaManager.getDomainMaxStorage(domain)).isEmpty();
+    }
+
+    @Test
+    public void getDomainMaxMessageShouldReturnProvidedValue() throws Exception {
+        maxQuotaManager.setDomainMaxMessage(domain, QuotaCount.count(36));
+        assertThat(maxQuotaManager.getDomainMaxMessage(domain)).contains(QuotaCount.count(36));
+    }
+
+    @Test
+    public void getDomainMaxStorageShouldReturnProvidedValue() throws Exception {
+        maxQuotaManager.setDomainMaxStorage(domain, QuotaSize.size(36));
+        assertThat(maxQuotaManager.getDomainMaxStorage(domain)).contains(QuotaSize.size(36));
+    }
+
+    @Test
+    public void deleteDomainMaxStorageShouldRemoveCurrentValue() throws Exception {
+        maxQuotaManager.setDomainMaxStorage(domain, QuotaSize.size(36));
+        maxQuotaManager.removeDomainMaxStorage(domain);
+        assertThat(maxQuotaManager.getDomainMaxStorage(domain)).isEmpty();
+    }
+
+    @Test
+    public void deleteDomainMaxMessageShouldRemoveCurrentValue() throws Exception {
+        maxQuotaManager.setDomainMaxMessage(domain, QuotaCount.count(36));
+        maxQuotaManager.removeDomainMaxMessage(domain);
+        assertThat(maxQuotaManager.getDomainMaxMessage(domain)).isEmpty();
     }
 
 }

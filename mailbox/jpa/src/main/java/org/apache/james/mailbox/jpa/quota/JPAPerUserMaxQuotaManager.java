@@ -26,6 +26,7 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
@@ -51,6 +52,36 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
     @Override
     public void setMaxMessage(QuotaRoot quotaRoot, QuotaCount maxMessageCount) {
         dao.setMaxMessage(quotaRoot, Optional.of(maxMessageCount));
+    }
+
+    @Override
+    public void setDomainMaxMessage(String domain, QuotaCount count) {
+        dao.setDomainMaxMessage(domain, Optional.of(count));
+    }
+
+    @Override
+    public void setDomainMaxStorage(String domain, QuotaSize size) {
+        dao.setDomainMaxStorage(domain, Optional.of(size));
+    }
+
+    @Override
+    public void removeDomainMaxMessage(String domain) throws MailboxException {
+        dao.setDomainMaxMessage(domain, Optional.empty());
+    }
+
+    @Override
+    public void removeDomainMaxStorage(String domain) {
+        dao.setDomainMaxStorage(domain, Optional.empty());
+    }
+
+    @Override
+    public Optional<QuotaCount> getDomainMaxMessage(String domain) {
+        return dao.getDomainMaxMessage(domain);
+    }
+
+    @Override
+    public Optional<QuotaSize> getDomainMaxStorage(String domain) {
+        return dao.getDomainMaxStorage(domain);
     }
 
     @Override

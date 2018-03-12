@@ -28,6 +28,8 @@ import javax.persistence.EntityManagerFactory;
 
 import org.apache.james.mailbox.jpa.quota.model.MaxDefaultMessageCount;
 import org.apache.james.mailbox.jpa.quota.model.MaxDefaultStorage;
+import org.apache.james.mailbox.jpa.quota.model.MaxDomainMessageCount;
+import org.apache.james.mailbox.jpa.quota.model.MaxDomainStorage;
 import org.apache.james.mailbox.jpa.quota.model.MaxUserMessageCount;
 import org.apache.james.mailbox.jpa.quota.model.MaxUserStorage;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -78,6 +80,42 @@ public class JPAPerUserMaxQuotaDAO {
         storedValue.setValue(value);
         return storedValue;
     }
+
+    public void setDomainMaxMessage(String domain, Optional<QuotaCount> count) {
+        entityManager.getTransaction().begin();
+        MaxDomainMessageCount storedValue = getMaxDomainMessageEntity(domain, count);
+        entityManager.persist(storedValue);
+        entityManager.getTransaction().commit();
+    }
+
+
+    public void setDomainMaxStorage(String domain, Optional<QuotaSize> size) {
+        entityManager.getTransaction().begin();
+        MaxDomainStorage storedValue = getMaxDomainStorageEntity(domain, size);
+        entityManager.persist(storedValue);
+        entityManager.getTransaction().commit();
+    }
+
+    private MaxDomainMessageCount getMaxDomainMessageEntity(String domain, Optional<QuotaCount> maxMessageQuota) {
+        MaxDomainMessageCount storedValue = entityManager.find(MaxDomainMessageCount.class, domain);
+        Long value = quotaValueToLong(maxMessageQuota);
+        if (storedValue == null) {
+            return new MaxDomainMessageCount(domain, value);
+        }
+        storedValue.setValue(value);
+        return storedValue;
+    }
+
+    private MaxDomainStorage getMaxDomainStorageEntity(String domain, Optional<QuotaSize> maxStorageQuota) {
+        MaxDomainStorage storedValue = entityManager.find(MaxDomainStorage.class, domain);
+        Long value = quotaValueToLong(maxStorageQuota);
+        if (storedValue == null) {
+            return new MaxDomainStorage(domain, value);
+        }
+        storedValue.setValue(value);
+        return storedValue;
+    }
+
 
     public void setDefaultMaxStorage(Optional<QuotaSize> defaultMaxStorage) {
         entityManager.getTransaction().begin();
@@ -145,6 +183,22 @@ public class JPAPerUserMaxQuotaDAO {
         return longToQuotaCount(storedValue.getValue());
     }
 
+    public Optional<QuotaCount> getDomainMaxMessage(String domain) {
+        MaxDomainMessageCount storedValue = entityManager.find(MaxDomainMessageCount.class, domain);
+        if (storedValue == null) {
+            return Optional.empty();
+        }
+        return longToQuotaCount(storedValue.getValue());
+    }
+
+    public Optional<QuotaSize> getDomainMaxStorage(String domain) {
+        MaxDomainStorage storedValue = entityManager.find(MaxDomainStorage.class, domain);
+        if (storedValue == null) {
+            return Optional.empty();
+        }
+        return longToQuotaSize(storedValue.getValue());
+    }
+
 
     private Long quotaValueToLong(Optional<? extends QuotaValue<?>> maxStorageQuota) {
         return maxStorageQuota.map(value -> {
@@ -172,4 +226,5 @@ public class JPAPerUserMaxQuotaDAO {
         }
         return Optional.of(quotaFactory.apply(value));
     }
+
 }

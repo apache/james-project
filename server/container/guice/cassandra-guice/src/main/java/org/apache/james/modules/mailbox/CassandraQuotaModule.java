@@ -22,6 +22,7 @@ package org.apache.james.modules.mailbox;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManager;
 import org.apache.james.mailbox.cassandra.quota.CassandraDefaultMaxQuotaDao;
+import org.apache.james.mailbox.cassandra.quota.CassandraPerDomainMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
@@ -43,6 +44,7 @@ public class CassandraQuotaModule extends AbstractModule {
     protected void configure() {
         bind(CassandraCurrentQuotaManager.class).in(Scopes.SINGLETON);
         bind(CassandraDefaultMaxQuotaDao.class).in(Scopes.SINGLETON);
+        bind(CassandraPerDomainMaxQuotaDao.class).in(Scopes.SINGLETON);
         bind(CassandraPerUserMaxQuotaDao.class).in(Scopes.SINGLETON);
         bind(CassandraPerUserMaxQuotaManager.class).in(Scopes.SINGLETON);
         bind(DefaultUserQuotaRootResolver.class).in(Scopes.SINGLETON);

@@ -59,6 +59,26 @@ public class NoMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
+    public void setDomainMaxMessage(String domain, QuotaCount count) throws MailboxException {
+        throw new MailboxException("Operation is not supported");
+    }
+
+    @Override
+    public void setDomainMaxStorage(String domain, QuotaSize size) throws MailboxException {
+        throw new MailboxException("Operation is not supported");
+    }
+
+    @Override
+    public void removeDomainMaxMessage(String domain) throws MailboxException {
+        throw new MailboxException("Operation is not supported");
+    }
+
+    @Override
+    public void removeDomainMaxStorage(String domain) throws MailboxException {
+        throw new MailboxException("Operation is not supported");
+    }
+
+    @Override
     public void setDefaultMaxStorage(QuotaSize defaultMaxStorage) throws MailboxException {
         throw new MailboxException("Operation is not supported");
     }
@@ -96,6 +116,16 @@ public class NoMaxQuotaManager implements MaxQuotaManager {
     @Override
     public Map<Quota.Scope, QuotaSize> listMaxStorageDetails(QuotaRoot quotaRoot) {
         return ImmutableMap.of();
+    }
+
+    @Override
+    public Optional<QuotaCount> getDomainMaxMessage(String domain) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<QuotaSize> getDomainMaxStorage(String domain) {
+        return Optional.empty();
     }
 
     @Override

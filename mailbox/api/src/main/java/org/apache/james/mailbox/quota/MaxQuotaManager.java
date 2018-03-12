@@ -121,4 +121,16 @@ public interface MaxQuotaManager {
     Map<Quota.Scope, QuotaCount> listMaxMessagesDetails(QuotaRoot quotaRoot);
 
     Map<Quota.Scope, QuotaSize> listMaxStorageDetails(QuotaRoot quotaRoot);
+
+    Optional<QuotaCount> getDomainMaxMessage(String domain);
+
+    void setDomainMaxMessage(String domain, QuotaCount count) throws MailboxException;
+
+    void removeDomainMaxMessage(String domain) throws MailboxException;
+
+    void setDomainMaxStorage(String domain, QuotaSize size) throws MailboxException;
+
+    Optional<QuotaSize> getDomainMaxStorage(String domain);
+
+    void removeDomainMaxStorage(String domain) throws MailboxException;
 }

@@ -49,6 +49,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManager;
 import org.apache.james.mailbox.cassandra.quota.CassandraDefaultMaxQuotaDao;
+import org.apache.james.mailbox.cassandra.quota.CassandraPerDomainMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -129,6 +130,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
 
         perUserMaxQuotaManager = new CassandraPerUserMaxQuotaManager(
             new CassandraPerUserMaxQuotaDao(session),
+            new CassandraPerDomainMaxQuotaDao(cassandra.getConf()),
             new CassandraDefaultMaxQuotaDao(session));
 
         CassandraCurrentQuotaManager currentQuotaManager = new CassandraCurrentQuotaManager(session);

@@ -26,6 +26,7 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
@@ -38,11 +39,15 @@ import com.github.steveash.guavate.Guavate;
 public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
 
     private final CassandraPerUserMaxQuotaDao perUserQuota;
+    private final CassandraPerDomainMaxQuotaDao perDomainQuota;
     private final CassandraDefaultMaxQuotaDao defaultQuota;
 
     @Inject
-    public CassandraPerUserMaxQuotaManager(CassandraPerUserMaxQuotaDao perUserQuota, CassandraDefaultMaxQuotaDao defaultQuota) {
+    public CassandraPerUserMaxQuotaManager(CassandraPerUserMaxQuotaDao perUserQuota,
+                                           CassandraPerDomainMaxQuotaDao domainQuota,
+                                           CassandraDefaultMaxQuotaDao defaultQuota) {
         this.perUserQuota = perUserQuota;
+        this.perDomainQuota = domainQuota;
         this.defaultQuota = defaultQuota;
     }
 
@@ -54,6 +59,36 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
     @Override
     public void setMaxMessage(QuotaRoot quotaRoot, QuotaCount maxMessageCount) {
         perUserQuota.setMaxMessage(quotaRoot, maxMessageCount);
+    }
+
+    @Override
+    public void setDomainMaxMessage(String domain, QuotaCount count) {
+        perDomainQuota.setMaxMessage(domain, count);
+    }
+
+    @Override
+    public void setDomainMaxStorage(String domain, QuotaSize size) {
+        perDomainQuota.setMaxStorage(domain, size);
+    }
+
+    @Override
+    public void removeDomainMaxMessage(String domain) throws MailboxException {
+        perDomainQuota.removeMaxMessage(domain);
+    }
+
+    @Override
+    public void removeDomainMaxStorage(String domain) {
+        perDomainQuota.removeMaxStorage(domain);
+    }
+
+    @Override
+    public Optional<QuotaCount> getDomainMaxMessage(String domain) {
+        return perDomainQuota.getMaxMessage(domain);
+    }
+
+    @Override
+    public Optional<QuotaSize> getDomainMaxStorage(String domain) {
+        return perDomainQuota.getMaxStorage(domain);
     }
 
     @Override

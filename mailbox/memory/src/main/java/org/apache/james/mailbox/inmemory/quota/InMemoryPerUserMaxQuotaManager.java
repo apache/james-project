@@ -38,6 +38,9 @@ public class InMemoryPerUserMaxQuotaManager implements MaxQuotaManager {
     private Optional<QuotaCount> maxMessage = Optional.empty();
     private Optional<QuotaSize> maxStorage = Optional.empty();
 
+    private final Map<String, QuotaCount> domainMaxMessage = new ConcurrentHashMap<>();
+    private final Map<String, QuotaSize> domainMaxStorage = new ConcurrentHashMap<>();
+
     private final Map<String, QuotaSize> userMaxStorage = new ConcurrentHashMap<>();
     private final Map<String, QuotaCount> userMaxMessage = new ConcurrentHashMap<>();
 
@@ -47,8 +50,23 @@ public class InMemoryPerUserMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public void setDefaultMaxMessage(QuotaCount maxMessage) throws MailboxException {
-        this.maxMessage = Optional.of(maxMessage);
+    public void setDomainMaxMessage(String domain, QuotaCount count) {
+        domainMaxMessage.put(domain, count);
+    }
+
+    @Override
+    public void setDomainMaxStorage(String domain, QuotaSize size) {
+        domainMaxStorage.put(domain, size);
+    }
+
+    @Override
+    public void removeDomainMaxMessage(String domain) throws MailboxException {
+        domainMaxMessage.remove(domain);
+    }
+
+    @Override
+    public void removeDomainMaxStorage(String domain) {
+        domainMaxStorage.remove(domain);
     }
 
     @Override
@@ -85,6 +103,21 @@ public class InMemoryPerUserMaxQuotaManager implements MaxQuotaManager {
             Pair.of(Quota.Scope.Global, maxStorage))
             .filter(pair -> pair.getValue().isPresent())
             .collect(Guavate.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
+    }
+
+    @Override
+    public void setDefaultMaxMessage(QuotaCount maxMessage) throws MailboxException {
+        this.maxMessage = Optional.of(maxMessage);
+    }
+
+    @Override
+    public Optional<QuotaCount> getDomainMaxMessage(String domain) {
+        return Optional.ofNullable(domainMaxMessage.get(domain));
+    }
+
+    @Override
+    public Optional<QuotaSize> getDomainMaxStorage(String domain) {
+        return Optional.ofNullable(domainMaxStorage.get(domain));
     }
 
     @Override
