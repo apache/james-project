@@ -19,12 +19,10 @@
 
 package org.apache.james.transport.mailets;
 
-import java.util.Arrays;
 import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
@@ -101,23 +99,19 @@ public class SpamAssassin extends GenericMailet {
 
         // Invoke SpamAssassin connection and scan the message
         SpamAssassinInvoker sa = new SpamAssassinInvoker(spamdHost, spamdPort);
-        Arrays.stream(message.getAllRecipients())
-            .map(InternetAddress.class::cast)
+        mail.getRecipients()
             .forEach(
-                Throwing.consumer(
-                    (InternetAddress recipient) -> querySpamAssassin(mail, message, sa, recipient))
+                Throwing.consumer((MailAddress recipient) -> querySpamAssassin(mail, message, sa, recipient))
                     .sneakyThrow());
     }
 
-    private void querySpamAssassin(Mail mail, MimeMessage message, SpamAssassinInvoker sa, InternetAddress recipient) throws MessagingException, UsersRepositoryException {
-        SpamAssassinResult result = sa.scanMail(message, usersRepository.getUser(new MailAddress(recipient)));
+    private void querySpamAssassin(Mail mail, MimeMessage message, SpamAssassinInvoker sa, MailAddress recipient) throws MessagingException, UsersRepositoryException {
+        SpamAssassinResult result = sa.scanMail(message, usersRepository.getUser(recipient));
 
         // Add headers as attribute to mail object
         for (String key : result.getHeadersAsAttribute().keySet()) {
             mail.setAttribute(key, result.getHeadersAsAttribute().get(key));
         }
-
-        message.saveChanges();
     }
 
     /**

@@ -18,16 +18,14 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
-import java.util.Arrays;
 import java.util.Random;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.ParseException;
 
-import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
-import org.apache.james.smtpserver.mock.mailet.MockMail;
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.test.FakeMail;
 
 /**
  * some utilities for James unit testing
@@ -36,13 +34,12 @@ public class Util {
 
     private static final Random RANDOM = new Random();
 
-    public static MockMail createMockMail2Recipients(MimeMessage m) throws ParseException {
-        MockMail mockedMail = new MockMail();
-        mockedMail.setName("ID=" + RANDOM.nextLong());
-        mockedMail.setMessage(m);
-        mockedMail.setRecipients(Arrays.asList(new MailAddress("test@james.apache.org"),
-                new MailAddress("test2@james.apache.org")));
-        return mockedMail;
+    public static Mail createMockMail2Recipients(MimeMessage m) throws MessagingException {
+        return FakeMail.builder()
+            .name("ID=" + RANDOM.nextLong())
+            .mimeMessage(m)
+            .recipients("test@james.apache.org", "test2@james.apache.org")
+            .build();
     }
 
     public static MimeMessage createMimeMessage(String headerName, String headerValue) throws MessagingException {

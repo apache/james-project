@@ -32,11 +32,11 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.apache.james.smtpserver.fastfail.SpamAssassinHandler;
-import org.apache.james.smtpserver.mock.mailet.MockMail;
 import org.apache.james.util.scanner.SpamAssassinResult;
 import org.apache.james.utils.MockSpamd;
 import org.apache.james.utils.MockSpamdTestRule;
 import org.apache.mailet.Mail;
+import org.apache.mailet.base.test.FakeMail;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -95,10 +95,10 @@ public class SpamAssassinHandlerTest {
     @Rule
     public MockSpamdTestRule spamd = new MockSpamdTestRule();
 
-    private Mail setupMockedMail(MimeMessage message) {
-        MockMail mail = new MockMail();
-        mail.setMessage(message);
-        return mail;
+    private Mail setupMockedMail(MimeMessage message) throws MessagingException {
+        return FakeMail.builder()
+            .mimeMessage(message)
+            .build();
     }
 
     public MimeMessage setupMockedMimeMessage(String text) throws MessagingException {

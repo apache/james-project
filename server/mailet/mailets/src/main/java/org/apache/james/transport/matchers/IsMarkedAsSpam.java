@@ -65,7 +65,7 @@ public class IsMarkedAsSpam extends GenericMatcher {
     }
 
     @Override
-    public Collection<MailAddress> match(Mail mail) throws MessagingException {
+    public Collection<MailAddress> match(Mail mail) {
         Serializable attribute = mail.getAttribute(SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME);
         if (isMarkedAsSpam(attribute)) {
             return mail.getRecipients();
@@ -74,8 +74,8 @@ public class IsMarkedAsSpam extends GenericMatcher {
     }
 
     private boolean isMarkedAsSpam(Serializable attribute) {
-        return attribute != null &&
-                attribute.toString()
+        return attribute instanceof String &&
+            ((String) attribute)
                     .toLowerCase(Locale.US)
                     .startsWith(YES);
     }
