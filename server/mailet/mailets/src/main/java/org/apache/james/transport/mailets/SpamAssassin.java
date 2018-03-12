@@ -116,8 +116,6 @@ public class SpamAssassin extends GenericMailet {
         for (String key : result.getHeadersAsAttribute().keySet()) {
             mail.setAttribute(key, result.getHeadersAsAttribute().get(key));
         }
-
-        message.saveChanges();
     }
 
     /**
