@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets;
 
+import static com.jayway.restassured.RestAssured.given;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
@@ -29,24 +30,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailbox.quota.QuotaSize;
-import org.apache.james.mailbox.store.mail.model.SerializableQuotaValue;
-import org.apache.james.mailbox.store.probe.QuotaProbe;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
-import org.apache.james.modules.QuotaProbesImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.matchers.IsOverQuota;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.WebAdminGuiceProbe;
+import org.apache.james.webadmin.WebAdminUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+
+import com.jayway.restassured.specification.RequestSpecification;
 
 public class IsOverQuotaMatcherTest {
 
@@ -67,6 +69,7 @@ public class IsOverQuotaMatcherTest {
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
     
     private TemporaryJamesServer jamesServer;
+    private RequestSpecification webAdminApi;
 
     @Before
     public void setup() throws Exception {
@@ -86,6 +89,11 @@ public class IsOverQuotaMatcherTest {
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder);
 
+        WebAdminGuiceProbe webAdminGuiceProbe = jamesServer.getProbe(WebAdminGuiceProbe.class);
+        webAdminGuiceProbe.await();
+        webAdminApi = given()
+            .spec(WebAdminUtils.buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort()).build());
+
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
@@ -94,14 +102,15 @@ public class IsOverQuotaMatcherTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
     public void aBounceMessageShouldBeSentToTheSenderWhenRecipientAsReachedHisQuota() throws Exception {
-        QuotaProbe quotaProbes = jamesServer.getProbe(QuotaProbesImpl.class);
-        quotaProbes.setMaxStorage(RECIPIENT_QUOTA_ROOT, new SerializableQuotaValue<>(SMALL_SIZE));
+        webAdminApi.given()
+            .body(SMALL_SIZE.asLong())
+            .put("/quota/users/" + RECIPIENT + "/size");
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT)
@@ -118,8 +127,9 @@ public class IsOverQuotaMatcherTest {
 
     @Test
     public void aBounceMessageShouldBeSentToTheRecipientWhenRecipientQuotaIsNotExceeded() throws Exception {
-        QuotaProbe quotaProbes = jamesServer.getProbe(QuotaProbesImpl.class);
-        quotaProbes.setMaxStorage(RECIPIENT_QUOTA_ROOT, new SerializableQuotaValue<>(LARGE_SIZE));
+        webAdminApi.given()
+            .body(LARGE_SIZE.asLong())
+            .put("/quota/users/" + RECIPIENT + "/size");
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT)
