@@ -35,7 +35,6 @@ import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.metrics.api.NoopMetricFactory;
-import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -65,7 +64,6 @@ public class UserQuotaRoutesTest {
     private static final String SIZE = "size";
     private WebAdminServer webAdminServer;
     private InMemoryPerUserMaxQuotaManager maxQuotaManager;
-    private MemoryUsersRepository usersRepository;
     private DefaultUserQuotaRootResolver userQuotaRootResolver;
 
     @Before
@@ -74,7 +72,7 @@ public class UserQuotaRoutesTest {
         MemoryDomainList memoryDomainList = new MemoryDomainList(new InMemoryDNSService());
         memoryDomainList.setAutoDetect(false);
         memoryDomainList.addDomain(PERDU_COM);
-        usersRepository = MemoryUsersRepository.withVirtualHosting();
+        MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting();
         usersRepository.setDomainList(memoryDomainList);
         usersRepository.addUser(BOB.asString(), PASSWORD);
         MailboxSessionMapperFactory factory = null;
@@ -107,7 +105,7 @@ public class UserQuotaRoutesTest {
     }
 
     @Test
-    public void getCountShouldReturnNoContentByDefault() throws UsersRepositoryException {
+    public void getCountShouldReturnNoContentByDefault() {
         given()
             .get(QUOTA_USERS + "/" + BOB.asString() + "/" + COUNT)
         .then()
@@ -115,7 +113,7 @@ public class UserQuotaRoutesTest {
     }
 
     @Test
-    public void getCountShouldReturnStoredValue() throws Exception {
+    public void getCountShouldReturnStoredValue() {
         int value = 42;
         maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(value));
 
@@ -143,7 +141,7 @@ public class UserQuotaRoutesTest {
 
 
     @Test
-    public void putCountShouldRejectInvalid() throws Exception {
+    public void putCountShouldRejectInvalid() {
         Map<String, Object> errors = given()
             .body("invalid")
             .put(QUOTA_USERS + "/" + BOB.asString() + "/" + COUNT)
@@ -175,7 +173,7 @@ public class UserQuotaRoutesTest {
     }
 
     @Test
-    public void putCountShouldRejectNegativeOtherThanMinusOne() throws Exception {
+    public void putCountShouldRejectNegativeOtherThanMinusOne() {
         Map<String, Object> errors = given()
             .body("-2")
             .put(QUOTA_USERS + "/" + BOB.asString() + "/" + COUNT)
@@ -246,7 +244,7 @@ public class UserQuotaRoutesTest {
     }
 
     @Test
-    public void getSizeShouldReturnNoContentByDefault() throws UsersRepositoryException {
+    public void getSizeShouldReturnNoContentByDefault() {
         when()
             .get(QUOTA_USERS + "/" + BOB.asString() + "/" + SIZE)
         .then()
@@ -254,7 +252,7 @@ public class UserQuotaRoutesTest {
     }
 
     @Test
-    public void getSizeShouldReturnStoredValue() throws Exception {
+    public void getSizeShouldReturnStoredValue() {
         long value = 42;
         maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.size(value));
 
@@ -272,7 +270,7 @@ public class UserQuotaRoutesTest {
     }
 
     @Test
-    public void putSizeShouldRejectInvalid() throws Exception {
+    public void putSizeShouldRejectInvalid() {
         Map<String, Object> errors = given()
             .body("invalid")
             .put(QUOTA_USERS + "/" + BOB.asString() + "/" + SIZE)
@@ -292,7 +290,7 @@ public class UserQuotaRoutesTest {
     }
 
     @Test
-    public void putSizeShouldReturnNotFoundWhenUserDoesntExist() throws Exception {
+    public void putSizeShouldReturnNotFoundWhenUserDoesntExist() {
         given()
             .body("123")
         .when()
@@ -310,11 +308,12 @@ public class UserQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getMaxStorage(userQuotaRootResolver.forUser(BOB))).contains(QuotaSize.unlimited());
+        assertThat(maxQuotaManager.getMaxStorage(userQuotaRootResolver.forUser(BOB)))
+            .contains(QuotaSize.unlimited());
     }
 
     @Test
-    public void putSizeShouldRejectNegativeOtherThanMinusOne() throws Exception {
+    public void putSizeShouldRejectNegativeOtherThanMinusOne() {
         Map<String, Object> errors = given()
             .body("-2")
             .put(QUOTA_USERS + "/" + BOB.asString() + "/" + SIZE)
@@ -345,7 +344,7 @@ public class UserQuotaRoutesTest {
     }
 
     @Test
-    public void deleteSizeShouldReturnNotFoundWhenUserDoesntExist() throws Exception {
+    public void deleteSizeShouldReturnNotFoundWhenUserDoesntExist() {
         when()
             .delete(QUOTA_USERS + "/" + JOE.asString() + "/" + SIZE)
         .then()
@@ -365,7 +364,7 @@ public class UserQuotaRoutesTest {
     }
 
     @Test
-    public void getQuotaShouldReturnNotFoundWhenUserDoesntExist() throws Exception {
+    public void getQuotaShouldReturnNotFoundWhenUserDoesntExist() {
         when()
             .get(QUOTA_USERS + "/" + JOE.asString())
         .then()
@@ -443,7 +442,7 @@ public class UserQuotaRoutesTest {
     }
 
     @Test
-    public void getQuotaShouldReturnBothEmptyWhenDefaultValues() throws Exception {
+    public void getQuotaShouldReturnBothEmptyWhenDefaultValues() {
         JsonPath jsonPath =
             given()
                 .get(QUOTA_USERS + "/" + BOB.asString())
@@ -458,7 +457,7 @@ public class UserQuotaRoutesTest {
     }
 
     @Test
-    public void getQuotaShouldReturnSizeWhenNoCount() throws Exception {
+    public void getQuotaShouldReturnSizeWhenNoCount() {
         int maxStorage = 42;
         maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.size(maxStorage));
 
@@ -476,7 +475,7 @@ public class UserQuotaRoutesTest {
     }
 
     @Test
-    public void getQuotaShouldReturnBothWhenNoSize() throws Exception {
+    public void getQuotaShouldReturnBothWhenNoSize() {
         int maxMessage = 42;
         maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(maxMessage));
 
@@ -495,7 +494,7 @@ public class UserQuotaRoutesTest {
     }
 
     @Test
-    public void putQuotaShouldReturnNotFoundWhenUserDoesntExist() throws Exception {
+    public void putQuotaShouldReturnNotFoundWhenUserDoesntExist() {
         when()
             .put(QUOTA_USERS + "/" + JOE.asString())
         .then()
@@ -510,8 +509,10 @@ public class UserQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getMaxMessage(userQuotaRootResolver.forUser(BOB))).contains(QuotaCount.count(52));
-        assertThat(maxQuotaManager.getMaxStorage(userQuotaRootResolver.forUser(BOB))).contains(QuotaSize.size(42));
+        assertThat(maxQuotaManager.getMaxMessage(userQuotaRootResolver.forUser(BOB)))
+            .contains(QuotaCount.count(52));
+        assertThat(maxQuotaManager.getMaxStorage(userQuotaRootResolver.forUser(BOB)))
+            .contains(QuotaSize.size(42));
     }
 
     @Test
