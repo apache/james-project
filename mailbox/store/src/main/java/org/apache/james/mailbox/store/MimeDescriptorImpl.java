@@ -45,15 +45,7 @@ import org.apache.james.mime4j.stream.RecursionMode;
 public class MimeDescriptorImpl implements MimeDescriptor {
 
     private static final Charset US_ASCII = Charset.forName("US-ASCII");
-    private static final MimeConfig MIME_ENTITY_CONFIG = MimeConfig.custom()
-        .setMaxContentLen(-1)
-        .setMaxHeaderCount(-1)
-        .setMaxHeaderLen(-1)
-        .setMaxHeaderCount(-1)
-        .setMaxLineLen(-1)
-        .build();
 
-    
     /**
      * Is this a composite media type (as per RFC2045)?
      * 
@@ -70,7 +62,7 @@ public class MimeDescriptorImpl implements MimeDescriptor {
         // Disable line length limit
         // See https://issues.apache.org/jira/browse/IMAP-132
         //
-        final MimeTokenStream parser = new MimeTokenStream(MIME_ENTITY_CONFIG, new DefaultBodyDescriptorBuilder());
+        final MimeTokenStream parser = new MimeTokenStream(MimeConfig.PERMISSIVE, new DefaultBodyDescriptorBuilder());
         
         parser.parse(stream);
         

@@ -37,13 +37,6 @@ import org.apache.mailet.Mail;
 
 public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailDetector {
 
-    private static final MimeConfig MIME_ENTITY_CONFIG = MimeConfig.custom()
-        .setMaxContentLen(-1)
-        .setMaxHeaderCount(-1)
-        .setMaxHeaderLen(-1)
-        .setMaxLineLen(-1)
-        .build();
-
     private static final String[] MAILING_LIST_HEADERS = new String[] {
             "List-Help",
             "List-Subscribe",
@@ -96,7 +89,7 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
 
     public boolean isMdnSentAutomatically(Mail mail) throws MessagingException {
         ResultCollector resultCollector = new ResultCollector(false);
-        MimeStreamParser parser = new MimeStreamParser(MIME_ENTITY_CONFIG);
+        MimeStreamParser parser = new MimeStreamParser(MimeConfig.PERMISSIVE);
         parser.setContentHandler(createMdnContentHandler(resultCollector));
         try {
             parser.parse(mail.getMessage().getInputStream());

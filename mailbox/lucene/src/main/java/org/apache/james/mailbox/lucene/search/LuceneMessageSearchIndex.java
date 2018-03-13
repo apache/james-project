@@ -732,12 +732,8 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             }
  
         };
-        MimeConfig config = MimeConfig.custom()
-                .setMaxLineLen(-1)
-                .setMaxContentLen(-1)
-                .build();
         //config.setStrictParsing(false);
-        MimeStreamParser parser = new MimeStreamParser(config);
+        MimeStreamParser parser = new MimeStreamParser(MimeConfig.PERMISSIVE);
         parser.setContentDecoding(true);
         parser.setContentHandler(handler);
        

@@ -103,14 +103,6 @@ import com.google.common.collect.ImmutableMap;
  */
 public class StoreMessageManager implements org.apache.james.mailbox.MessageManager {
 
-    private static final MimeConfig MIME_ENTITY_CONFIG = MimeConfig.custom()
-        .setMaxContentLen(-1)
-        .setMaxHeaderCount(-1)
-        .setMaxHeaderLen(-1)
-        .setMaxHeaderCount(-1)
-        .setMaxLineLen(-1)
-        .build();
-
     private static final MailboxCounters ZERO_MAILBOX_COUNTERS = MailboxCounters.builder()
         .count(0)
         .unseen(0)
@@ -309,9 +301,8 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             // Disable line length... This should be handled by the smtp server
             // component and not the parser itself
             // https://issues.apache.org/jira/browse/IMAP-122
-            MimeConfig config = MIME_ENTITY_CONFIG;
 
-            final MimeTokenStream parser = new MimeTokenStream(config, new DefaultBodyDescriptorBuilder());
+            final MimeTokenStream parser = new MimeTokenStream(MimeConfig.PERMISSIVE, new DefaultBodyDescriptorBuilder());
 
             parser.setRecursionMode(RecursionMode.M_NO_RECURSE);
             parser.parse(bIn);

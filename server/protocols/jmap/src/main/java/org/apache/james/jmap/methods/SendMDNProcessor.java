@@ -64,12 +64,6 @@ import com.google.common.collect.ImmutableList;
 public class SendMDNProcessor implements SetMessagesProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SendMDNProcessor.class);
-    private static final MimeConfig MIME_ENTITY_CONFIG = MimeConfig.custom()
-        .setMaxContentLen(-1)
-        .setMaxHeaderCount(-1)
-        .setMaxHeaderLen(-1)
-        .setMaxLineLen(-1)
-        .build();
 
     private final MetricFactory metricFactory;
     private final SystemMailboxesProvider systemMailboxesProvider;
@@ -167,7 +161,7 @@ public class SendMDNProcessor implements SetMessagesProcessor {
         }
 
         DefaultMessageBuilder messageBuilder = new DefaultMessageBuilder();
-        messageBuilder.setMimeEntityConfig(MIME_ENTITY_CONFIG);
+        messageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE);
         messageBuilder.setDecodeMonitor(DecodeMonitor.SILENT);
         return messageBuilder.parseMessage(messages.get(0).getHeaders().getInputStream());
     }

@@ -36,14 +36,6 @@ import com.google.common.base.Preconditions;
 
 public class MimePartParser {
 
-    private static final MimeConfig MIME_ENTITY_CONFIG = MimeConfig.custom()
-        .setMaxContentLen(-1)
-        .setMaxHeaderCount(-1)
-        .setMaxHeaderLen(-1)
-        .setMaxHeaderCount(-1)
-        .setMaxLineLen(-1)
-        .build();
-
     private final Message message;
     private final TextExtractor textExtractor;
     private final MimeTokenStream stream;
@@ -57,7 +49,7 @@ public class MimePartParser {
         this.builderStack = new LinkedList<>();
         this.currentlyBuildMimePart = new RootMimePartContainerBuilder();
         this.stream = new MimeTokenStream(
-            MIME_ENTITY_CONFIG,
+            MimeConfig.PERMISSIVE,
             new DefaultBodyDescriptorBuilder());
     }
 

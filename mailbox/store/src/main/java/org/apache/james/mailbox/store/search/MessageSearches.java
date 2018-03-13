@@ -88,14 +88,6 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageSearches.class);
 
-    private static final MimeConfig MIME_ENTITY_CONFIG = MimeConfig.custom()
-        .setMaxContentLen(-1)
-        .setMaxHeaderCount(-1)
-        .setMaxHeaderLen(-1)
-        .setMaxHeaderCount(-1)
-        .setMaxLineLen(-1)
-        .build();
-
     private final Iterator<MailboxMessage> messages;
     private final SearchQuery query;
     private final TextExtractor textExtractor;
@@ -278,7 +270,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
 
     private HeaderImpl buildTextHeaders(MailboxMessage message) throws IOException, MimeIOException {
         DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();
-        defaultMessageBuilder.setMimeEntityConfig(MIME_ENTITY_CONFIG);
+        defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE);
         Message headersMessage = defaultMessageBuilder
             .parseMessage(message.getHeaderContent());
         HeaderImpl headerImpl = new HeaderImpl();

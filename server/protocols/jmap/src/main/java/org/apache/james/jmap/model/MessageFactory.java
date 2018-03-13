@@ -64,14 +64,6 @@ public class MessageFactory {
 
     public static final String JMAP_MULTIVALUED_FIELD_DELIMITER = "\n";
 
-    private static final MimeConfig MIME_ENTITY_CONFIG = MimeConfig.custom()
-        .setMaxContentLen(-1)
-        .setMaxHeaderCount(-1)
-        .setMaxHeaderLen(-1)
-        .setMaxHeaderCount(-1)
-        .setMaxLineLen(-1)
-        .build();
-
     private final BlobManager blobManager;
     private final MessagePreviewGenerator messagePreview;
     private final MessageContentExtractor messageContentExtractor;
@@ -139,7 +131,7 @@ public class MessageFactory {
         try {
             return org.apache.james.mime4j.dom.Message.Builder
                     .of()
-                    .use(MIME_ENTITY_CONFIG)
+                    .use(MimeConfig.PERMISSIVE)
                     .parse(message.getContent())
                     .build();
         } catch (IOException e) {
