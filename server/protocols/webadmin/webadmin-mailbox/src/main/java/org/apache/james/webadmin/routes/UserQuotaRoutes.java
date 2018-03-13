@@ -19,6 +19,9 @@
 
 package org.apache.james.webadmin.routes;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -248,8 +251,10 @@ public class UserQuotaRoutes implements Routes {
         }, jsonTransformer);
     }
 
-    private User checkUserExist(Request request) throws UsersRepositoryException {
-        String user = request.params(USER);
+    private User checkUserExist(Request request) throws UsersRepositoryException, UnsupportedEncodingException {
+        String user = URLDecoder.decode(request.params(USER),
+            StandardCharsets.UTF_8.displayName());
+
         if (!usersRepository.contains(user)) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.NOT_FOUND_404)

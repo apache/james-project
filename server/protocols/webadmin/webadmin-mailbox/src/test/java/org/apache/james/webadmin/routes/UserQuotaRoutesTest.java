@@ -58,6 +58,7 @@ public class UserQuotaRoutesTest {
     private static final String QUOTA_USERS = "/quota/users";
     private static final String PERDU_COM = "perdu.com";
     private static final User BOB = User.fromUsername("bob@" + PERDU_COM);
+    private static final User ESCAPED_BOB = User.fromUsername("bob%40" + PERDU_COM);
     private static final User JOE = User.fromUsername("joe@" + PERDU_COM);
     private static final String PASSWORD = "secret";
     private static final String COUNT = "count";
@@ -139,6 +140,25 @@ public class UserQuotaRoutesTest {
             .statusCode(HttpStatus.NOT_FOUND_404);
     }
 
+    @Test
+    public void putCountShouldAcceptEscapedUsers() {
+        given()
+            .body("35")
+        .when()
+            .put(QUOTA_USERS + "/" + ESCAPED_BOB.asString() + "/" + COUNT)
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+    }
+
+    @Test
+    public void putCountSizeAcceptEscapedUsers() {
+        given()
+            .body("36")
+        .when()
+            .put(QUOTA_USERS + "/" + ESCAPED_BOB.asString() + "/" + SIZE)
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+    }
 
     @Test
     public void putCountShouldRejectInvalid() {
@@ -442,6 +462,26 @@ public class UserQuotaRoutesTest {
     }
 
     @Test
+    public void getQuotaShouldReturnBothWhenValueSpecifiedAndEscaped() {
+        int maxStorage = 42;
+        int maxMessage = 52;
+        maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.size(maxStorage));
+        maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(maxMessage));
+
+        JsonPath jsonPath =
+            given()
+                .get(QUOTA_USERS + "/" + ESCAPED_BOB.asString())
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .extract()
+                .jsonPath();
+
+        assertThat(jsonPath.getLong("user." + SIZE)).isEqualTo(maxStorage);
+        assertThat(jsonPath.getLong("user." + COUNT)).isEqualTo(maxMessage);
+    }
+
+    @Test
     public void getQuotaShouldReturnBothEmptyWhenDefaultValues() {
         JsonPath jsonPath =
             given()
@@ -506,6 +546,20 @@ public class UserQuotaRoutesTest {
         given()
             .body("{\"count\":52,\"size\":42}")
             .put(QUOTA_USERS + "/" + BOB.asString())
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+
+        assertThat(maxQuotaManager.getMaxMessage(userQuotaRootResolver.forUser(BOB)))
+            .contains(QuotaCount.count(52));
+        assertThat(maxQuotaManager.getMaxStorage(userQuotaRootResolver.forUser(BOB)))
+            .contains(QuotaSize.size(42));
+    }
+
+    @Test
+    public void putQuotaShouldUpdateBothQuotaWhenEscaped() throws Exception {
+        given()
+            .body("{\"count\":52,\"size\":42}")
+            .put(QUOTA_USERS + "/" + ESCAPED_BOB.asString())
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
