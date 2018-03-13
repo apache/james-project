@@ -34,6 +34,8 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.QuotaDTO;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -44,6 +46,8 @@ import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.JsonTransformerModule;
 import org.apache.james.webadmin.validation.Quotas;
 import org.eclipse.jetty.http.HttpStatus;
+
+import com.google.common.base.Throwables;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -66,14 +70,16 @@ public class DomainQuotaRoutes implements Routes {
 
     private final DomainList domainList;
     private final DomainQuotaService domainQuotaService;
+    private final UsersRepository usersRepository;
     private final JsonTransformer jsonTransformer;
     private final JsonExtractor<QuotaDTO> jsonExtractor;
     private Service service;
 
     @Inject
-    public DomainQuotaRoutes(DomainList domainList, DomainQuotaService domainQuotaService, JsonTransformer jsonTransformer, Set<JsonTransformerModule> modules) {
+    public DomainQuotaRoutes(DomainList domainList, DomainQuotaService domainQuotaService, UsersRepository usersRepository, JsonTransformer jsonTransformer, Set<JsonTransformerModule> modules) {
         this.domainList = domainList;
         this.domainQuotaService = domainQuotaService;
+        this.usersRepository = usersRepository;
         this.jsonTransformer = jsonTransformer;
         this.jsonExtractor = new JsonExtractor<>(QuotaDTO.class, modules.stream().map(JsonTransformerModule::asJacksonModule).collect(Collectors.toList()));
     }
@@ -92,6 +98,14 @@ public class DomainQuotaRoutes implements Routes {
 
         defineGetQuota();
         defineUpdateQuota();
+    }
+
+    public boolean isVirtualHostingSupported() {
+        try {
+            return usersRepository.supportVirtualHosting();
+        } catch (UsersRepositoryException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     @PUT
@@ -255,6 +269,13 @@ public class DomainQuotaRoutes implements Routes {
     }
 
     private String checkDomainExist(Request request) {
+        if (!isVirtualHostingSupported()) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.METHOD_NOT_ALLOWED_405)
+                .type(ErrorType.WRONG_STATE)
+                .message("Domain Quota configuration not supported when virtual hosting is desactivated. Please use global quota configuration instead")
+                .haltError();
+        }
         String domain = request.params(DOMAIN);
         try {
             if (!domainList.containsDomain(domain)) {
