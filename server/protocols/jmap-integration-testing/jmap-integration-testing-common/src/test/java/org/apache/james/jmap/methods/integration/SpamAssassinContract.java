@@ -617,6 +617,7 @@ public interface SpamAssassinContract {
     default String getSpamId(AccessToken accessToken) {
         return getMailboxId(accessToken, Role.SPAM);
     }
+
     default String getTrashId(AccessToken accessToken) {
         return getMailboxId(accessToken, Role.TRASH);
     }
