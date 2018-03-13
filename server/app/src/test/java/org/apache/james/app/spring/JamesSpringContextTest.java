@@ -41,14 +41,14 @@ public class JamesSpringContextTest {
     private JamesServerApplicationContext context;
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
         context = new JamesServerApplicationContext(new String[] { "META-INF/org/apache/james/spring-server.xml" });
         context.registerShutdownHook();
         context.start();
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         context.stop();
         context.destroy();
     }

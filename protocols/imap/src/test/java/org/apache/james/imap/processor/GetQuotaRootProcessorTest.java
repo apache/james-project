@@ -52,8 +52,10 @@ public class GetQuotaRootProcessorTest {
 
     private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("plop");
     public static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("plop", "INBOX");
-    public static final Quota<QuotaCount> MESSAGE_QUOTA = Quota.quota(QuotaCount.count(24), QuotaCount.count(1589));
-    public static final Quota<QuotaSize> STORAGE_QUOTA = Quota.quota(QuotaSize.size(240), QuotaSize.size(15890));
+    public static final Quota<QuotaCount> MESSAGE_QUOTA =
+        Quota.<QuotaCount>builder().used(QuotaCount.count(24)).computedLimit(QuotaCount.count(1589)).build();
+    public static final Quota<QuotaSize> STORAGE_QUOTA =
+        Quota.<QuotaSize>builder().used(QuotaSize.size(240)).computedLimit(QuotaSize.size(15890)).build();
 
     private GetQuotaRootProcessor testee;
     private Mockery mockery;

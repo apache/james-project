@@ -21,12 +21,17 @@ package org.apache.james.mailbox.inmemory.quota;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
+
+import com.github.steveash.guavate.Guavate;
 
 public class InMemoryPerUserMaxQuotaManager implements MaxQuotaManager {
 
@@ -62,6 +67,24 @@ public class InMemoryPerUserMaxQuotaManager implements MaxQuotaManager {
             return maxMessage;
         }
         return Optional.of(max);
+    }
+
+    @Override
+    public Map<Quota.Scope, QuotaCount> listMaxMessagesDetails(QuotaRoot quotaRoot) {
+        return Stream.of(
+                Pair.of(Quota.Scope.User, Optional.ofNullable(userMaxMessage.get(quotaRoot.getValue()))),
+                Pair.of(Quota.Scope.Global, maxMessage))
+            .filter(pair -> pair.getValue().isPresent())
+            .collect(Guavate.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
+    }
+
+    @Override
+    public Map<Quota.Scope, QuotaSize> listMaxStorageDetails(QuotaRoot quotaRoot) {
+        return Stream.of(
+            Pair.of(Quota.Scope.User, Optional.ofNullable(userMaxStorage.get(quotaRoot.getValue()))),
+            Pair.of(Quota.Scope.Global, maxStorage))
+            .filter(pair -> pair.getValue().isPresent())
+            .collect(Guavate.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
     }
 
     @Override

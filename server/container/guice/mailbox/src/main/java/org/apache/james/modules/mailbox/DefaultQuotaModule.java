@@ -38,7 +38,7 @@ public class DefaultQuotaModule extends AbstractModule {
         bind(DefaultUserQuotaRootResolver.class).in(Scopes.SINGLETON);
         bind(NoMaxQuotaManager.class).in(Scopes.SINGLETON);
 
-        bind(MaxQuotaManager.class).to(NoMaxQuotaManager.class);
+        bind(MaxQuotaManager.class).toInstance(new NoMaxQuotaManager());
         bind(QuotaManager.class).to(NoQuotaManager.class);
         bind(QuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
         bind(UserQuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);

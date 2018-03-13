@@ -79,7 +79,7 @@ public class QuotaResponse implements ImapResponseMessage {
                 .append(' ')
                 .append(quota.getUsed())
                 .append(' ')
-                .append(quota.getMax())
+                .append(quota.getLimit())
                 .append(')');
         return result.toString();
     }

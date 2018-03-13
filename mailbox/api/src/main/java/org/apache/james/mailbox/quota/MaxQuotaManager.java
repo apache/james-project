@@ -19,9 +19,11 @@
 
 package org.apache.james.mailbox.quota;
 
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 
 /**
@@ -115,4 +117,8 @@ public interface MaxQuotaManager {
      * @return maximum of allowed message count
      */
     Optional<QuotaCount> getMaxMessage(QuotaRoot quotaRoot) throws MailboxException;
+
+    Map<Quota.Scope, QuotaCount> listMaxMessagesDetails(QuotaRoot quotaRoot);
+
+    Map<Quota.Scope, QuotaSize> listMaxStorageDetails(QuotaRoot quotaRoot);
 }
