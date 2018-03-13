@@ -21,17 +21,19 @@ package org.apache.james.mailbox.cassandra.quota;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
+import org.apache.james.util.OptionalUtils;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
@@ -72,7 +74,7 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public void removeDomainMaxMessage(String domain) throws MailboxException {
+    public void removeDomainMaxMessage(String domain) {
         perDomainQuota.removeMaxMessage(domain);
     }
 
@@ -133,22 +135,38 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
 
     @Override
     public Optional<QuotaSize> getMaxStorage(QuotaRoot quotaRoot) {
-        return perUserQuota.getMaxStorage(quotaRoot)
-            .map(Optional::of)
-            .orElseGet(Throwing.supplier(this::getDefaultMaxStorage).sneakyThrow());
+        Supplier<Optional<QuotaSize>> domainQuotaSupplier = Throwing.supplier(() -> quotaRoot.getDomain()
+            .flatMap(this::getDomainMaxStorage)).sneakyThrow();
+        Supplier<Optional<QuotaSize>> defaultDomainSupplier = Throwing.supplier(this::getDefaultMaxStorage).sneakyThrow();
+
+        return Stream
+            .of(() -> perUserQuota.getMaxStorage(quotaRoot),
+                domainQuotaSupplier,
+                defaultDomainSupplier)
+            .flatMap(supplier -> OptionalUtils.toStream(supplier.get()))
+            .findFirst();
     }
 
     @Override
     public Optional<QuotaCount> getMaxMessage(QuotaRoot quotaRoot) {
-        return perUserQuota.getMaxMessage(quotaRoot)
-            .map(Optional::of)
-            .orElseGet(Throwing.supplier(this::getDefaultMaxMessage).sneakyThrow());
+        Supplier<Optional<QuotaCount>> domainQuotaSupplier = Throwing.supplier(() -> quotaRoot.getDomain()
+            .flatMap(this::getDomainMaxMessage)).sneakyThrow();
+        Supplier<Optional<QuotaCount>> defaultDomainSupplier = Throwing.supplier(this::getDefaultMaxMessage).sneakyThrow();
+
+        return Stream
+            .of(() -> perUserQuota.getMaxMessage(quotaRoot),
+                domainQuotaSupplier,
+                defaultDomainSupplier)
+            .flatMap(supplier -> OptionalUtils.toStream(supplier.get()))
+            .findFirst();
     }
 
     @Override
     public Map<Quota.Scope, QuotaCount> listMaxMessagesDetails(QuotaRoot quotaRoot) {
+        Function<String, Optional<QuotaCount>> domainQuotaSupplier = Throwing.function(this::getDomainMaxMessage).sneakyThrow();
         return Stream.of(
                 Pair.of(Quota.Scope.User, perUserQuota.getMaxMessage(quotaRoot)),
+                Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaSupplier)),
                 Pair.of(Quota.Scope.Global, defaultQuota.getDefaultMaxMessage()))
             .filter(pair -> pair.getValue().isPresent())
             .collect(Guavate.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
@@ -156,8 +174,10 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
 
     @Override
     public Map<Quota.Scope, QuotaSize> listMaxStorageDetails(QuotaRoot quotaRoot) {
+        Function<String, Optional<QuotaSize>> domainQuotaSupplier = Throwing.function(this::getDomainMaxStorage).sneakyThrow();
         return Stream.of(
                 Pair.of(Quota.Scope.User, perUserQuota.getMaxStorage(quotaRoot)),
+                Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaSupplier)),
                 Pair.of(Quota.Scope.Global, defaultQuota.getDefaultMaxStorage()))
             .filter(pair -> pair.getValue().isPresent())
             .collect(Guavate.toImmutableMap(Pair::getKey, value -> value.getValue().get()));

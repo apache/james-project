@@ -21,18 +21,21 @@ package org.apache.james.mailbox.jpa.quota;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
+import org.apache.james.util.OptionalUtils;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 
 public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
@@ -65,7 +68,7 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public void removeDomainMaxMessage(String domain) throws MailboxException {
+    public void removeDomainMaxMessage(String domain) {
         dao.setDomainMaxMessage(domain, Optional.empty());
     }
 
@@ -116,22 +119,30 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
 
     @Override
     public Optional<QuotaSize> getMaxStorage(QuotaRoot quotaRoot) {
-        return dao.getMaxStorage(quotaRoot)
-            .map(Optional::of)
-            .orElseGet(this::getDefaultMaxStorage);
+        return Stream
+            .of((Supplier<Optional<QuotaSize>>) () -> dao.getMaxStorage(quotaRoot),
+                () -> quotaRoot.getDomain().flatMap(this::getDomainMaxStorage),
+                this::getDefaultMaxStorage)
+            .flatMap(supplier -> OptionalUtils.toStream(supplier.get()))
+            .findFirst();
     }
 
     @Override
     public Optional<QuotaCount> getMaxMessage(QuotaRoot quotaRoot) {
-        return dao.getMaxMessage(quotaRoot)
-                .map(Optional::of)
-                .orElseGet(this::getDefaultMaxMessage);
+        return Stream
+            .of((Supplier<Optional<QuotaCount>>) () -> dao.getMaxMessage(quotaRoot),
+                () -> quotaRoot.getDomain().flatMap(this::getDomainMaxMessage),
+                this::getDefaultMaxMessage)
+            .flatMap(supplier -> OptionalUtils.toStream(supplier.get()))
+            .findFirst();
     }
 
     @Override
     public Map<Quota.Scope, QuotaCount> listMaxMessagesDetails(QuotaRoot quotaRoot) {
+        Function<String, Optional<QuotaCount>> domainQuotaFunction = Throwing.function(this::getDomainMaxMessage).sneakyThrow();
         return Stream.of(
             Pair.of(Quota.Scope.User, dao.getMaxMessage(quotaRoot)),
+            Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaFunction)),
             Pair.of(Quota.Scope.Global, dao.getDefaultMaxMessage()))
         .filter(pair -> pair.getValue().isPresent())
         .collect(Guavate.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
@@ -139,8 +150,10 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
 
     @Override
     public Map<Quota.Scope, QuotaSize> listMaxStorageDetails(QuotaRoot quotaRoot) {
+        Function<String, Optional<QuotaSize>> domainQuotaFunction = Throwing.function(this::getDomainMaxStorage).sneakyThrow();
         return Stream.of(
             Pair.of(Quota.Scope.User, dao.getMaxStorage(quotaRoot)),
+            Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaFunction)),
             Pair.of(Quota.Scope.Global, dao.getDefaultMaxStorage()))
         .filter(pair -> pair.getValue().isPresent())
         .collect(Guavate.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
