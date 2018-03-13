@@ -19,9 +19,6 @@
 
 package org.apache.james.mailbox.store.quota;
 
-import javax.inject.Inject;
-
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaCount;
@@ -33,12 +30,8 @@ import org.apache.james.mailbox.quota.QuotaSize;
  */
 public class NoQuotaManager implements QuotaManager {
 
-    @Inject
-    public NoQuotaManager() {
-    }
-
     @Override
-    public Quota<QuotaCount> getMessageQuota(QuotaRoot quotaRoot) throws MailboxException {
+    public Quota<QuotaCount> getMessageQuota(QuotaRoot quotaRoot) {
         return Quota.<QuotaCount>builder()
             .used(QuotaCount.count(0))
             .computedLimit(QuotaCount.unlimited())
@@ -46,7 +39,7 @@ public class NoQuotaManager implements QuotaManager {
     }
 
     @Override
-    public Quota<QuotaSize> getStorageQuota(QuotaRoot quotaRoot) throws MailboxException {
+    public Quota<QuotaSize> getStorageQuota(QuotaRoot quotaRoot) {
         return Quota.<QuotaSize>builder()
             .used(QuotaSize.size(0))
             .computedLimit(QuotaSize.unlimited())
