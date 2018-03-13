@@ -35,6 +35,7 @@ import org.junit.Test;
 public abstract class GenericMaxQuotaManagerTest {
 
     public static final Domain DOMAIN = Domain.of("domain");
+    public static final Domain DOMAIN_CASE_VARIATION = Domain.of("doMain");
     public static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa@domain", Optional.of(DOMAIN));
     private MaxQuotaManager maxQuotaManager;
 
@@ -257,6 +258,58 @@ public abstract class GenericMaxQuotaManagerTest {
         maxQuotaManager.setDomainMaxMessage(DOMAIN, QuotaCount.count(36));
         maxQuotaManager.removeDomainMaxMessage(DOMAIN);
         assertThat(maxQuotaManager.getDomainMaxMessage(DOMAIN)).isEmpty();
+    }
+
+    @Test
+    public void deleteDomainMaxMessageShouldNotBeCaseSensitive() throws Exception {
+        maxQuotaManager.setDomainMaxMessage(DOMAIN, QuotaCount.count(36));
+
+        maxQuotaManager.removeDomainMaxMessage(DOMAIN_CASE_VARIATION);
+
+        assertThat(maxQuotaManager.getDomainMaxMessage(DOMAIN)).isEmpty();
+    }
+
+    @Test
+    public void deleteDomainMaxStorageShouldNotBeCaseSensitive() throws Exception {
+        maxQuotaManager.setDomainMaxStorage(DOMAIN, QuotaSize.size(36));
+
+        maxQuotaManager.removeDomainMaxStorage(DOMAIN_CASE_VARIATION);
+
+        assertThat(maxQuotaManager.getDomainMaxStorage(DOMAIN)).isEmpty();
+    }
+
+    @Test
+    public void setDomainMaxMessageShouldNotBeCaseSensitive() throws Exception {
+        maxQuotaManager.setDomainMaxMessage(DOMAIN_CASE_VARIATION, QuotaCount.count(36));
+
+
+        assertThat(maxQuotaManager.getDomainMaxMessage(DOMAIN))
+            .contains(QuotaCount.count(36));
+    }
+
+    @Test
+    public void setDomainMaxStorageShouldNotBeCaseSensitive() throws Exception {
+        maxQuotaManager.setDomainMaxStorage(DOMAIN_CASE_VARIATION, QuotaSize.size(36));
+
+        assertThat(maxQuotaManager.getDomainMaxStorage(DOMAIN))
+            .contains(QuotaSize.size(36));
+    }
+
+    @Test
+    public void getDomainMaxMessageShouldNotBeCaseSensitive() throws Exception {
+        maxQuotaManager.setDomainMaxMessage(DOMAIN, QuotaCount.count(36));
+
+
+        assertThat(maxQuotaManager.getDomainMaxMessage(DOMAIN_CASE_VARIATION))
+            .contains(QuotaCount.count(36));
+    }
+
+    @Test
+    public void getDomainMaxStorageShouldNotBeCaseSensitive() throws Exception {
+        maxQuotaManager.setDomainMaxStorage(DOMAIN, QuotaSize.size(36));
+
+        assertThat(maxQuotaManager.getDomainMaxStorage(DOMAIN_CASE_VARIATION))
+            .contains(QuotaSize.size(36));
     }
 
 }
