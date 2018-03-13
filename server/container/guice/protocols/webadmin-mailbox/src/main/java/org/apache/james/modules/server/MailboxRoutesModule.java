@@ -21,6 +21,7 @@ package org.apache.james.modules.server;
 
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.jackson.QuotaModule;
+import org.apache.james.webadmin.routes.DomainQuotaRoutes;
 import org.apache.james.webadmin.routes.GlobalQuotaRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserQuotaRoutes;
@@ -36,6 +37,7 @@ public class MailboxRoutesModule extends AbstractModule {
         Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
         routesMultibinder.addBinding().to(UserMailboxesRoutes.class);
         routesMultibinder.addBinding().to(GlobalQuotaRoutes.class);
+        routesMultibinder.addBinding().to(DomainQuotaRoutes.class);
         routesMultibinder.addBinding().to(UserQuotaRoutes.class);
 
         Multibinder<JsonTransformerModule> jsonTransformerModuleMultibinder = Multibinder.newSetBinder(binder(), JsonTransformerModule.class);
