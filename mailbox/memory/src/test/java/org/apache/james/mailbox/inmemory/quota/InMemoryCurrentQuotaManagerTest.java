@@ -23,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
+
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaCount;
@@ -33,7 +35,7 @@ import org.junit.Test;
 
 public class InMemoryCurrentQuotaManagerTest {
 
-    public static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa");
+    public static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa", Optional.empty());
 
     private InMemoryCurrentQuotaManager testee;
     private CurrentQuotaCalculator mockedCurrentQuotaCalculator;

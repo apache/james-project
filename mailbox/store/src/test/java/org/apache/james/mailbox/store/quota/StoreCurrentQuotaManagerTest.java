@@ -21,6 +21,8 @@ package org.apache.james.mailbox.store.quota;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Optional;
+
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
@@ -28,7 +30,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public abstract class StoreCurrentQuotaManagerTest {
-    public static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa");
+    public static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa", Optional.empty());
     
     protected abstract StoreCurrentQuotaManager provideTestee();
     

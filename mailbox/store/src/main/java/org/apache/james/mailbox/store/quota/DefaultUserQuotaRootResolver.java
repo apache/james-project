@@ -50,26 +50,42 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
 
     @Override
     public QuotaRoot forUser(User user) {
-        return QuotaRoot.quotaRoot(MailboxConstants.USER_NAMESPACE + SEPARATOR + user.asString());
+        return QuotaRoot.quotaRoot(MailboxConstants.USER_NAMESPACE + SEPARATOR + user.asString(),
+            user.getDomainPart());
     }
 
     @Override
-    public QuotaRoot getQuotaRoot(MailboxPath mailboxPath) throws MailboxException {
+    public QuotaRoot getQuotaRoot(MailboxPath mailboxPath) {
         Preconditions.checkArgument(!mailboxPath.getNamespace().contains(SEPARATOR), "Namespace should not contain " + SEPARATOR);
         Preconditions.checkArgument(!mailboxPath.getUser().contains(SEPARATOR), "Username should not contain " + SEPARATOR);
-        return QuotaRoot.quotaRoot(mailboxPath.getNamespace() + SEPARATOR + mailboxPath.getUser());
+        User user = User.fromUsername(mailboxPath.getUser());
+        return QuotaRoot.quotaRoot(mailboxPath.getNamespace() + SEPARATOR + user.asString(),
+            user.getDomainPart());
+    }
+
+    @Override
+    public QuotaRoot fromString(String serializedQuotaRoot) throws MailboxException {
+        List<String> parts = toParts(serializedQuotaRoot);
+        User user = User.fromUsername(parts.get(1));
+
+        return QuotaRoot.quotaRoot(serializedQuotaRoot, user.getDomainPart());
     }
 
     @Override
     public List<MailboxPath> retrieveAssociatedMailboxes(QuotaRoot quotaRoot, MailboxSession mailboxSession) throws MailboxException {
-        List<String> parts = Lists.newArrayList(Splitter.on(SEPARATOR).split(quotaRoot.getValue()));
-        if (parts.size() != 2) {
-            throw new MailboxException(quotaRoot + " used as QuotaRoot should contain exactly one \"" + SEPARATOR + "\"");
-        }
+        List<String> parts = toParts(quotaRoot.getValue());
         String namespace = parts.get(0);
         String user = parts.get(1);
         return Lists.transform(factory.getMailboxMapper(mailboxSession)
             .findMailboxWithPathLike(new MailboxPath(namespace, user, "%")),
             Mailbox::generateAssociatedPath);
+    }
+
+    public List<String> toParts(String serializedQuotaRoot) throws MailboxException {
+        List<String> parts = Splitter.on(SEPARATOR).splitToList(serializedQuotaRoot);
+        if (parts.size() != 2) {
+            throw new MailboxException(serializedQuotaRoot + " used as QuotaRoot should contain exactly one \"" + SEPARATOR + "\"");
+        }
+        return parts;
     }
 }

@@ -25,6 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Date;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -44,7 +45,7 @@ public class ListeningCurrentQuotaUpdaterTest {
 
     public static final int SIZE = 45;
     public static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("benwa", "INBOX");
-    public static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa");
+    public static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa", Optional.empty());
 
     private StoreCurrentQuotaManager mockedCurrentQuotaManager;
     private QuotaRootResolver mockedQuotaRootResolver;

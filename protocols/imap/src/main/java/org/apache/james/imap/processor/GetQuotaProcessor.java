@@ -77,8 +77,8 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
     @Override
     protected void doProcess(GetQuotaRequest message, ImapSession session, String tag, ImapCommand command, Responder responder) {
         try {
-            if (hasRight(message.getQuotaRoot(), session)) {
-                QuotaRoot quotaRoot = QuotaRoot.quotaRoot(message.getQuotaRoot());
+            QuotaRoot quotaRoot = quotaRootResolver.fromString(message.getQuotaRoot());
+            if (hasRight(quotaRoot, session)) {
                 Quota<QuotaCount> messageQuota = quotaManager.getMessageQuota(quotaRoot);
                 Quota<QuotaSize> storageQuota = quotaManager.getStorageQuota(quotaRoot);
                 if (messageQuota.getLimit().isLimited()) {
@@ -102,10 +102,10 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
         }
     }
 
-    private boolean hasRight(String quotaRoot, ImapSession session) throws MailboxException {
+    private boolean hasRight(QuotaRoot quotaRoot, ImapSession session) throws MailboxException {
         // If any of the mailboxes owned by quotaRoot user can be read by the current user, then we should respond to him.
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
-        List<MailboxPath> mailboxList = quotaRootResolver.retrieveAssociatedMailboxes(QuotaRoot.quotaRoot(quotaRoot), mailboxSession);
+        List<MailboxPath> mailboxList = quotaRootResolver.retrieveAssociatedMailboxes(quotaRoot, mailboxSession);
         for (MailboxPath mailboxPath : mailboxList) {
             if (getMailboxManager().hasRight(mailboxPath, MailboxACL.Right.Read, mailboxSession)) {
                 return true;

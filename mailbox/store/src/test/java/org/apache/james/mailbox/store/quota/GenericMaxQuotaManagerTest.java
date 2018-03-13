@@ -21,6 +21,8 @@ package org.apache.james.mailbox.store.quota;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Optional;
+
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
@@ -41,7 +43,7 @@ public abstract class GenericMaxQuotaManagerTest {
     @Before
     public void setUp() {
         maxQuotaManager = provideMaxQuotaManager();
-        quotaRoot = QuotaRoot.quotaRoot("benwa");
+        quotaRoot = QuotaRoot.quotaRoot("benwa", Optional.empty());
         domain = "domain";
     }
 

@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.model;
 
+import java.util.Optional;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
@@ -27,14 +29,16 @@ import com.google.common.base.Objects;
  */
 public class QuotaRoot {
 
-    public static QuotaRoot quotaRoot(String value) {
-        return new QuotaRoot(value);
+    public static QuotaRoot quotaRoot(String value, Optional<String> domain) {
+        return new QuotaRoot(value, domain);
     }
 
     private final String value;
+    private final Optional<String> domain;
 
-    private QuotaRoot(String value) {
+    private QuotaRoot(String value, Optional<String> domain) {
         this.value = value;
+        this.domain = domain;
     }
 
     public boolean equals(Object o) {
@@ -45,11 +49,15 @@ public class QuotaRoot {
     }
 
     public int hashCode() {
-        return Objects.hashCode(value);
+        return Objects.hashCode(value, domain);
     }
 
     public String getValue() {
         return value;
+    }
+
+    public Optional<String> getDomain() {
+        return domain;
     }
 
     public String toString() {

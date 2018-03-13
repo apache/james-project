@@ -145,6 +145,7 @@
 
     <bean id="quota" class="org.apache.james.container.spring.mailbox.MaxQuotaConfigurationReader">
         <constructor-arg index="0" ref="maxQuotaManager"/>
+        <constructor-arg index="1" ref="quotaRootResolver"/>
     </bean>
 
     <!-- Event system -->

@@ -20,11 +20,14 @@
 package org.apache.james.imap.processor;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+
+import java.util.Optional;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionState;
@@ -56,7 +59,7 @@ import com.google.common.collect.ImmutableList;
 
 public class GetQuotaProcessorTest {
 
-    private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("plop");
+    private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("plop", Optional.empty());
     public static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", "plop", "INBOX");
     public static final Quota<QuotaCount> MESSAGE_QUOTA =
         Quota.<QuotaCount>builder().used(QuotaCount.count(24)).computedLimit(QuotaCount.count(1589)).build();
@@ -72,12 +75,13 @@ public class GetQuotaProcessorTest {
     private MailboxSession mailboxSession;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         mailboxSession = new MockMailboxSession("plop");
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         mockedImapSession = mock(ImapSession.class);
         mockedQuotaManager = mock(QuotaManager.class);
         mockedQuotaRootResolver = mock(QuotaRootResolver.class);
+        when(mockedQuotaRootResolver.fromString(eq(QUOTA_ROOT.getValue()))).thenReturn(QUOTA_ROOT);
         mockedResponder = mock(ImapProcessor.Responder.class);
         mockedMailboxManager = mock(MailboxManager.class);
         testee = new GetQuotaProcessor(mock(ImapProcessor.class), mockedMailboxManager,
