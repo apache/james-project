@@ -193,9 +193,6 @@ public class MDNTest {
     }
 
     private String asString(Message message) throws Exception {
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        DefaultMessageWriter writer = new DefaultMessageWriter();
-        writer.writeMessage(message, buffer);
-        return new String(buffer.toByteArray(), StandardCharsets.UTF_8);
+        return new String(DefaultMessageWriter.asBytes(message), StandardCharsets.UTF_8);
     }
 }

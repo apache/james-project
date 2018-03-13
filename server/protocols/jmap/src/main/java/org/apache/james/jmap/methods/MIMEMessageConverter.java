@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.methods;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
@@ -111,14 +110,11 @@ public class MIMEMessageConverter {
     }
 
     public byte[] asBytes(Message message) {
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        DefaultMessageWriter writer = new DefaultMessageWriter();
         try {
-            writer.writeMessage(message, buffer);
+            return DefaultMessageWriter.asBytes(message);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
-        return buffer.toByteArray();
     }
 
     @VisibleForTesting Message convertToMime(ValueWithId.CreationMessageEntry creationMessageEntry, ImmutableList<MessageAttachment> messageAttachments) {

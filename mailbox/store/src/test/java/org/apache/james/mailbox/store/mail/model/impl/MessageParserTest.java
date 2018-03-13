@@ -22,7 +22,6 @@ package org.apache.james.mailbox.store.mail.model.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.Optional;
 
@@ -296,10 +295,7 @@ public class MessageParserTest {
             .asMime4JMessageBuilder()
             .build();
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        new DefaultMessageWriter().writeMessage(message, outputStream);
-
-        List<MessageAttachment> result = testee.retrieveAttachments(new ByteArrayInputStream(outputStream.toByteArray()));
+        List<MessageAttachment> result = testee.retrieveAttachments(new ByteArrayInputStream(DefaultMessageWriter.asBytes(message)));
         assertThat(result).hasSize(1)
             .allMatch(attachment -> attachment.getAttachment().getType().equals(MDN.DISPOSITION_CONTENT_TYPE));
     }

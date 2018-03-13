@@ -32,7 +32,6 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -54,7 +53,6 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.mime4j.dom.Message;
-import org.apache.james.mime4j.dom.MessageWriter;
 import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.message.BodyPart;
 import org.apache.james.mime4j.message.BodyPartBuilder;
@@ -1022,11 +1020,8 @@ public abstract class GetMessageListMethodTest {
         Message message = Message.Builder.of()
                 .setBody(multipart)
                 .build();
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        MessageWriter writer = new DefaultMessageWriter();
-        writer.writeMessage(message, outputStream);
         mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
-                new ByteArrayInputStream(outputStream.toByteArray()), new Date(), false, new Flags());
+                new ByteArrayInputStream(DefaultMessageWriter.asBytes(message)), new Date(), false, new Flags());
         await();
 
         given()
@@ -1055,11 +1050,8 @@ public abstract class GetMessageListMethodTest {
         Message message = Message.Builder.of()
                 .setBody(multipart)
                 .build();
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        MessageWriter writer = new DefaultMessageWriter();
-        writer.writeMessage(message, outputStream);
         ComposedMessageId composedMessageId = mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
-                new ByteArrayInputStream(outputStream.toByteArray()), new Date(), false, new Flags());
+                new ByteArrayInputStream(DefaultMessageWriter.asBytes(message)), new Date(), false, new Flags());
         await();
 
         given()

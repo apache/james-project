@@ -23,7 +23,6 @@ package org.apache.james.mailbox.store.search;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -49,7 +48,6 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mime4j.dom.Message;
-import org.apache.james.mime4j.dom.MessageWriter;
 import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.message.BodyPart;
 import org.apache.james.mime4j.message.BodyPartBuilder;
@@ -1194,11 +1192,8 @@ public abstract class AbstractMessageSearchIndexTest {
         Message message = Message.Builder.of()
                 .setBody(multipart)
                 .build();
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        MessageWriter writer = new DefaultMessageWriter();
-        writer.writeMessage(message, outputStream);
         ComposedMessageId messageWithBeautifulBananaAsPDFAttachment = myFolderMessageManager.appendMessage(
-                new ByteArrayInputStream(outputStream.toByteArray()),
+                new ByteArrayInputStream(DefaultMessageWriter.asBytes(message)),
                 new Date(1404252000000L),
                 session,
                 RECENT,
