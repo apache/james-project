@@ -227,124 +227,176 @@ Response codes:
  - 404: The user name does not exist
  - 500: Internal error
 
-## Administrating quotas
 
-A quota with a value of -1 means unlimited
+## Administrating quotas by users
 
-### Reading per quotaroot mail count limitation
-
-```
-curl -XGET http://ip:port/quota/count
-```
-
-The answer looks like:
+### Getting the quota for a user
 
 ```
-100000
+curl -XGET http://ip:port/quota/users/usernameToBeUsed
 ```
 
-Response codes:
- - 200: Nothing special
- - 500: Internal error
+Resource name usernameToBeUsed should be an existing user
 
-### Updating per quotaroot mail count limitation
-
-```
-curl -XPUT http://ip:port/quota/count -d '1024000000'
-```
-
-Response codes:
-
- - 204: Value updated
- - 400: The body is not a positive integer
- - 500: Internal error
-
-### Removing per quotaroot mail count limitation
-
-It removes the limitation, and the quota becomes UNILIMITED.
-
-```
-curl -XDELETE http://ip:port/quota/count
-```
-
-Response codes:
-
- - 204: Value updated to UNLIMITED
- - 500: Internal error
-
-### Reading per quotaroot size limitation
-
-```
-curl -XGET http://ip:port/quota/size
-```
-
-The answer looks like:
-
-```
-100000
-```
-
-It represent the allowed Byte count of the mailboxes belonging to this quotaroot.
-
-Response codes:
-
- - 200: Nothing special
- - 500: Internal error
-
-### Updating per quotaroot size limitation
-
-```
-curl -XPUT http://ip:port/quota/size -d '1024000000'
-```
-
-Response codes:
-
- - 204: Value updated
- - 400: The body is not a positive integer
- - 500: Internal error
-
-### Removing per quotaroot size limitation
-
-It removes the limitation, and the quota becomes UNILIMITED.
-
-```
-curl -XDELETE http://ip:port/quota/size
-```
-
-Response codes:
-
- - 204: Value updated to UNLIMITED
- - 500: Internal error
-
-### Managing count and size at the same time
-
-```
-curl -XGET http://ip:port/quota/
-```
-
-Will return:
+The answer can contain a fixed value, an empty value (null) or an unlimited value (-1):
 
 ```
 {"count":52,"size":42}
+
+{"count":null,"size":null}
+
+{"count":52,"size":-1}
 ```
 
 Response codes:
 
- - 200: Success
- - 500: Internal error
+ - 200: The user's quota was successfully retrieved
+ - 404: The user does not exist
+ - 500: Internal error while accessing the user's quota
 
-You can also write the value the same way:
+### Updating the quota for a user
 
 ```
-curl -XPUT http://ip:port/quota/ -d '{"count":52,"size":42}'
+curl -XPUT http://ip:port/quota/users/usernameToBeUsed
+```
+
+Resource name usernameToBeUsed should be an existing user
+
+The body can contain a fixed value, an empty value (null) or an unlimited value (-1):
+
+```
+{"count":52,"size":42}
+
+{"count":null,"size":null}
+
+{"count":52,"size":-1}
 ```
 
 Response codes:
 
- - 204: Success
- - 400: Invalid JSON, or numbers are less than -1.
- - 500: Internal error
+ - 204: The quota has been updated
+ - 400: The body is not a positive integer or not unlimited value (-1).
+ - 404: The user does not exist
+ - 409: The requested restriction can’t be enforced right now.
+ - 500: Internal server error - Something went bad on the server side.
 
+### Getting the quota count for a user
+
+```
+curl -XGET http://ip:port/quota/users/usernameToBeUsed/count
+```
+
+Resource name usernameToBeUsed should be an existing user
+
+The answer looks like:
+
+```
+52
+```
+
+Response codes:
+
+ - 200: The user's quota was successfully retrieved
+ - 404: The user does not exist
+ - 500: Internal error while accessing the user's quota
+
+### Updating the quota count for a user
+
+```
+curl -XPUT http://ip:port/quota/users/usernameToBeUsed/count
+```
+
+Resource name usernameToBeUsed should be an existing user
+
+The body can contain a fixed value or an unlimited value (-1):
+
+```
+52
+```
+
+Response codes:
+
+ - 204: The quota has been updated
+ - 400: The body is not a positive integer or not unlimited value (-1).
+ - 404: The user does not exist
+ - 409: The requested restriction can’t be enforced right now.
+ - 500: Internal server error - Something went bad on the server side.
+
+### Deleting the quota count for a user
+
+```
+curl -XDELETE http://ip:port/quota/users/usernameToBeUsed/count
+```
+
+Resource name usernameToBeUsed should be an existing user
+
+Response codes:
+
+ - 204: The quota has been updated to unlimited value.
+ - 400: The body is not a positive integer or not unlimited value (-1).
+ - 404: The user does not exist
+ - 409: The requested restriction can’t be enforced right now.
+ - 500: Internal server error - Something went bad on the server side.
+
+### Getting the quota size for a user
+
+```
+curl -XGET http://ip:port/quota/users/usernameToBeUsed/size
+```
+
+Resource name usernameToBeUsed should be an existing user
+
+The answer looks like:
+
+```
+52
+```
+
+Response codes:
+
+ - 200: The user's quota was successfully retrieved
+ - 404: The user does not exist
+ - 500: Internal error while accessing the user's quota
+
+### Updating the quota size for a user
+
+```
+curl -XPUT http://ip:port/quota/users/usernameToBeUsed/size
+```
+
+Resource name usernameToBeUsed should be an existing user
+
+The body can contain a fixed value or an unlimited value (-1):
+
+```
+52
+```
+
+Response codes:
+
+ - 204: The quota has been updated
+ - 400: The body is not a positive integer or not unlimited value (-1).
+ - 404: The user does not exist
+ - 409: The requested restriction can’t be enforced right now.
+ - 500: Internal server error - Something went bad on the server side.
+
+### Deleting the quota size for a user
+
+```
+curl -XDELETE http://ip:port/quota/users/usernameToBeUsed/size
+```
+
+Resource name usernameToBeUsed should be an existing user
+
+Response codes:
+
+ - 204: The quota has been updated to unlimited value.
+ - 400: The body is not a positive integer or not unlimited value (-1).
+ - 404: The user does not exist
+ - 409: The requested restriction can’t be enforced right now.
+ - 500: Internal server error - Something went bad on the server side.
+
+ 
 ## Cassandra Schema upgrades
 
 Cassandra upgrades implies the creation of a new table. Thus restarting James is needed, as new tables are created on restart.
