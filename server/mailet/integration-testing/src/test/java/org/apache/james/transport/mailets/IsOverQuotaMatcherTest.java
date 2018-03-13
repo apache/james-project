@@ -29,6 +29,7 @@ import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMin
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.MemoryJamesServerMain;
+import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
@@ -57,9 +58,10 @@ public class IsOverQuotaMatcherTest {
     private static final String BOUNCE_SENDER = "bounce.sender@" + DEFAULT_DOMAIN;
 
     private static final String OVER_QUOTA_MESSAGE = "The recipient is over quota";
-    private static final String RECIPIENT_QUOTA_ROOT = "#private&" + RECIPIENT;
     private static final QuotaSize SMALL_SIZE = QuotaSize.size(1);
     private static final QuotaSize LARGE_SIZE = QuotaSize.size(10000);
+    private static final QuotaCount SMALL_COUNT = QuotaCount.count(0);
+    private static final QuotaCount LARGE_COUNT = QuotaCount.count(100);
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -81,8 +83,7 @@ public class IsOverQuotaMatcherTest {
                                 .addProperty("sender", BOUNCE_SENDER)
                                 .addProperty("message", OVER_QUOTA_MESSAGE)
                                 .addProperty("passThrough", "false"))
-                        .addMailetsFrom(CommonProcessors.transport())
-                        .build());
+                        .addMailetsFrom(CommonProcessors.transport()));
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
@@ -107,7 +108,7 @@ public class IsOverQuotaMatcherTest {
     }
 
     @Test
-    public void aBounceMessageShouldBeSentToTheSenderWhenRecipientAsReachedHisQuota() throws Exception {
+    public void aBounceMessageShouldBeSentToTheSenderWhenRecipientAsReachedHisSizeQuota() throws Exception {
         webAdminApi.given()
             .body(SMALL_SIZE.asLong())
             .put("/quota/users/" + RECIPIENT + "/size");
@@ -126,10 +127,45 @@ public class IsOverQuotaMatcherTest {
     }
 
     @Test
-    public void aBounceMessageShouldBeSentToTheRecipientWhenRecipientQuotaIsNotExceeded() throws Exception {
+    public void aBounceMessageShouldBeSentToTheRecipientWhenRecipientSizeQuotaIsNotExceeded() throws Exception {
         webAdminApi.given()
             .body(LARGE_SIZE.asLong())
             .put("/quota/users/" + RECIPIENT + "/size");
+
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT)
+            .awaitSent(awaitAtMostOneMinute);
+
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(RECIPIENT, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+    }
+
+    @Test
+    public void aBounceMessageShouldBeSentToTheSenderWhenRecipientAsReachedHisCountQuota() throws Exception {
+        webAdminApi.given()
+            .body(SMALL_COUNT.asLong())
+            .put("/quota/users/" + RECIPIENT + "/count");
+
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT)
+            .awaitSent(awaitAtMostOneMinute);
+
+        IMAPMessageReader messageReader = imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(FROM, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+
+        String bounceMessage = messageReader.readFirstMessage();
+        assertThat(bounceMessage).contains(OVER_QUOTA_MESSAGE);
+    }
+
+    @Test
+    public void aBounceMessageShouldBeSentToTheRecipientWhenRecipientCountQuotaIsNotExceeded() throws Exception {
+        webAdminApi.given()
+            .body(LARGE_COUNT.asLong())
+            .put("/quota/users/" + RECIPIENT + "/count");
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT)
