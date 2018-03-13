@@ -192,9 +192,9 @@ public abstract class SendMDNMethodTest {
                     "    \"textBody\":\"textBody\"," +
                     "    \"reportingUA\":\"reportingUA\"," +
                     "    \"disposition\":{" +
-                    "        \"actionMode\":\"automatic-action\","+
-                    "        \"sendingMode\":\"MDN-sent-automatically\","+
-                    "        \"type\":\"processed\""+
+                    "        \"actionMode\":\"automatic-action\"," +
+                    "        \"sendingMode\":\"MDN-sent-automatically\"," +
+                    "        \"type\":\"processed\"" +
                     "    }" +
                     "}" +
                 "}}, \"#0\"]]")
@@ -222,9 +222,9 @@ public abstract class SendMDNMethodTest {
                     "    \"textBody\":\"textBody\"," +
                     "    \"reportingUA\":\"reportingUA\"," +
                     "    \"disposition\":{" +
-                    "        \"actionMode\":\"automatic-action\","+
-                    "        \"sendingMode\":\"MDN-sent-automatically\","+
-                    "        \"type\":\"processed\""+
+                    "        \"actionMode\":\"automatic-action\"," +
+                    "        \"sendingMode\":\"MDN-sent-automatically\"," +
+                    "        \"type\":\"processed\"" +
                     "    }" +
                     "}" +
                 "}}, \"#0\"]]")
@@ -258,9 +258,9 @@ public abstract class SendMDNMethodTest {
                     "    \"textBody\":\"textBody\"," +
                     "    \"reportingUA\":\"reportingUA\"," +
                     "    \"disposition\":{" +
-                    "        \"actionMode\":\"automatic-action\","+
-                    "        \"sendingMode\":\"MDN-sent-automatically\","+
-                    "        \"type\":\"processed\""+
+                    "        \"actionMode\":\"automatic-action\"," +
+                    "        \"sendingMode\":\"MDN-sent-automatically\"," +
+                    "        \"type\":\"processed\"" +
                     "    }" +
                     "}" +
                 "}}, \"#0\"]]")
@@ -297,9 +297,9 @@ public abstract class SendMDNMethodTest {
                 "    \"textBody\":\"Read confirmation\"," +
                 "    \"reportingUA\":\"reportingUA\"," +
                 "    \"disposition\":{" +
-                "        \"actionMode\":\"automatic-action\","+
-                "        \"sendingMode\":\"MDN-sent-automatically\","+
-                "        \"type\":\"processed\""+
+                "        \"actionMode\":\"automatic-action\"," +
+                "        \"sendingMode\":\"MDN-sent-automatically\"," +
+                "        \"type\":\"processed\"" +
                 "    }" +
                 "}" +
                 "}}, \"#0\"]]")
@@ -342,9 +342,9 @@ public abstract class SendMDNMethodTest {
                 "    \"textBody\":\"Read confirmation\"," +
                 "    \"reportingUA\":\"reportingUA\"," +
                 "    \"disposition\":{" +
-                "        \"actionMode\":\"automatic-action\","+
-                "        \"sendingMode\":\"MDN-sent-automatically\","+
-                "        \"type\":\"processed\""+
+                "        \"actionMode\":\"automatic-action\"," +
+                "        \"sendingMode\":\"MDN-sent-automatically\"," +
+                "        \"type\":\"processed\"" +
                 "    }" +
                 "}" +
                 "}}, \"#0\"]]")
@@ -387,9 +387,9 @@ public abstract class SendMDNMethodTest {
                     "    \"textBody\":\"textBody\"," +
                     "    \"reportingUA\":\"reportingUA\"," +
                     "    \"disposition\":{" +
-                    "        \"actionMode\":\"automatic-action\","+
-                    "        \"sendingMode\":\"MDN-sent-automatically\","+
-                    "        \"type\":\"processed\""+
+                    "        \"actionMode\":\"automatic-action\"," +
+                    "        \"sendingMode\":\"MDN-sent-automatically\"," +
+                    "        \"type\":\"processed\"" +
                     "    }" +
                     "}" +
                 "}}, \"#0\"]]")
@@ -416,8 +416,8 @@ public abstract class SendMDNMethodTest {
                 "    \"textBody\":\"textBody\"," +
                 "    \"reportingUA\":\"reportingUA\"," +
                 "    \"disposition\":{" +
-                "        \"sendingMode\":\"MDN-sent-automatically\","+
-                "        \"type\":\"processed\""+
+                "        \"sendingMode\":\"MDN-sent-automatically\"," +
+                "        \"type\":\"processed\"" +
                 "    }" +
                 "}" +
                 "}}, \"#0\"]]")
@@ -443,9 +443,9 @@ public abstract class SendMDNMethodTest {
                 "    \"textBody\":\"textBody\"," +
                 "    \"reportingUA\":\"reportingUA\"," +
                 "    \"disposition\":{" +
-                "        \"actionMode\":\"invalid\","+
-                "        \"sendingMode\":\"MDN-sent-automatically\","+
-                "        \"type\":\"processed\""+
+                "        \"actionMode\":\"invalid\"," +
+                "        \"sendingMode\":\"MDN-sent-automatically\"," +
+                "        \"type\":\"processed\"" +
                 "    }" +
                 "}" +
                 "}}, \"#0\"]]")
