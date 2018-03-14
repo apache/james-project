@@ -265,6 +265,16 @@ public class MessageParserTest {
     }
 
     @Test
+    public void getAttachmentsShouldConsiderICSAsAttachments() throws Exception {
+        List<MessageAttachment> attachments = testee.retrieveAttachments(
+            ClassLoader.getSystemResourceAsStream("eml/calendar.eml"));
+
+        assertThat(attachments)
+            .hasSize(1)
+            .allMatch(messageAttachment -> messageAttachment.getAttachment().getType().equals("text/calendar"));
+    }
+
+    @Test
     public void gpgSignatureShouldBeConsideredAsAnAttachment() throws Exception {
         List<MessageAttachment> attachments = testee.retrieveAttachments(
             ClassLoader.getSystemResourceAsStream("eml/signedMessage.eml"));
