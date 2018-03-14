@@ -32,6 +32,7 @@ public class QuotaDetailsDTO {
 
     public static class Builder {
         private Optional<QuotaDTO> global;
+        private Optional<QuotaDTO> domain;
         private Optional<QuotaDTO> user;
         private Optional<QuotaDTO> computed;
 
@@ -43,6 +44,11 @@ public class QuotaDetailsDTO {
 
         public Builder global(QuotaDTO global) {
             this.global = Optional.of(global);
+            return this;
+        }
+
+        public Builder domain(QuotaDTO domain) {
+            this.domain = Optional.of(domain);
             return this;
         }
 
@@ -60,6 +66,8 @@ public class QuotaDetailsDTO {
             switch (scope) {
                 case Global:
                     return global(value);
+                case Domain:
+                    return domain(value);
                 case User:
                     return user(value);
             }
@@ -67,22 +75,28 @@ public class QuotaDetailsDTO {
         }
 
         public QuotaDetailsDTO build() {
-            return new QuotaDetailsDTO(global, user, computed);
+            return new QuotaDetailsDTO(global, domain, user, computed);
         }
     }
 
     private final Optional<QuotaDTO> global;
+    private final Optional<QuotaDTO> domain;
     private final Optional<QuotaDTO> user;
     private final Optional<QuotaDTO> computed;
 
-    private QuotaDetailsDTO(Optional<QuotaDTO> global, Optional<QuotaDTO> user, Optional<QuotaDTO> computed) {
+    private QuotaDetailsDTO(Optional<QuotaDTO> global, Optional<QuotaDTO> domain, Optional<QuotaDTO> user, Optional<QuotaDTO> computed) {
         this.global = global;
+        this.domain = domain;
         this.user = user;
         this.computed = computed;
     }
 
     public Optional<QuotaDTO> getGlobal() {
         return global;
+    }
+
+    public Optional<QuotaDTO> getDomain() {
+        return domain;
     }
 
     public Optional<QuotaDTO> getUser() {

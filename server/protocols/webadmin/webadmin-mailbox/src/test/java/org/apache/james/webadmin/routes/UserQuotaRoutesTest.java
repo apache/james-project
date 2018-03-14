@@ -395,6 +395,8 @@ public class UserQuotaRoutesTest {
     public void getQuotaShouldReturnBothWhenValueSpecified() throws Exception {
         maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(1111));
         maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(22));
+        maxQuotaManager.setDomainMaxStorage(PERDU_COM, QuotaSize.size(34));
+        maxQuotaManager.setDomainMaxMessage(PERDU_COM, QuotaCount.count(23));
         maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.size(42));
         maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(52));
 
@@ -412,6 +414,8 @@ public class UserQuotaRoutesTest {
         softly.assertThat(jsonPath.getLong("computed." + COUNT)).isEqualTo(52);
         softly.assertThat(jsonPath.getLong("user." + SIZE)).isEqualTo(42);
         softly.assertThat(jsonPath.getLong("user." + COUNT)).isEqualTo(52);
+        softly.assertThat(jsonPath.getLong("domain." + SIZE)).isEqualTo(34);
+        softly.assertThat(jsonPath.getLong("domain." + COUNT)).isEqualTo(23);
         softly.assertThat(jsonPath.getLong("global." + SIZE)).isEqualTo(1111);
         softly.assertThat(jsonPath.getLong("global." + COUNT)).isEqualTo(22);
     }
@@ -419,7 +423,8 @@ public class UserQuotaRoutesTest {
     @Test
     public void getQuotaShouldReturnOnlySpecifiedValues() throws Exception {
         maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(1111));
-        maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(52));
+        maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(18));
+        maxQuotaManager.setDomainMaxMessage(PERDU_COM, QuotaCount.count(52));
 
         JsonPath jsonPath =
             given()
@@ -435,6 +440,8 @@ public class UserQuotaRoutesTest {
         softly.assertThat(jsonPath.getLong("computed." + COUNT)).isEqualTo(52);
         softly.assertThat(jsonPath.getLong("user." + COUNT)).isEqualTo(52);
         softly.assertThat(jsonPath.getObject("user." + SIZE, Long.class)).isNull();
+        softly.assertThat(jsonPath.getObject("domain." + SIZE, Long.class)).isNull();
+        softly.assertThat(jsonPath.getObject("domain." + COUNT, Long.class)).isEqualTo(18);
         softly.assertThat(jsonPath.getLong("global." + SIZE)).isEqualTo(1111);
         softly.assertThat(jsonPath.getObject("global." + COUNT, Long.class)).isNull();
     }
@@ -457,6 +464,7 @@ public class UserQuotaRoutesTest {
         softly.assertThat(jsonPath.getLong("computed." + SIZE)).isEqualTo(1111);
         softly.assertThat(jsonPath.getLong("computed." + COUNT)).isEqualTo(12);
         softly.assertThat(jsonPath.getObject("user", Object.class)).isNull();
+        softly.assertThat(jsonPath.getObject("domain", Object.class)).isNull();
         softly.assertThat(jsonPath.getLong("global." + SIZE)).isEqualTo(1111);
         softly.assertThat(jsonPath.getLong("global." + COUNT)).isEqualTo(12);
     }
